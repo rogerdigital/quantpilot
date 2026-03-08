@@ -1,0 +1,39 @@
+{
+  "name": "quantpilot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "基于 Vite + React Router 的自主决策量化交易系统控制台",
+  "type": "module",
+  "engines": {
+    "node": ">=20.5.0",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "gateway": "node server/index.mjs",
+    "dev": "vite --host 0.0.0.0 --port 8080",
+    "start": "vite --host 0.0.0.0 --port 8080",
+    "typecheck": "tsc --noEmit",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 8080"
+  },
+  "keywords": [
+    "quantitative-trading",
+    "trading-system",
+    "react",
+    "vite",
+    "react-router"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.14"
+  }
+}
