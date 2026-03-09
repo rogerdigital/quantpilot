@@ -1,12 +1,9 @@
-import {
-  listSchedulerTicks as listStoredSchedulerTicks,
-  recordSchedulerTick,
-} from '../../../../../packages/control-plane-store/src/index.mjs';
+import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
 
 export function listSchedulerTicks(limit = 50) {
-  return listStoredSchedulerTicks(limit);
+  return controlPlaneRuntime.listSchedulerTicks(limit);
 }
 
 export function runSchedulerTick(options = {}) {
-  return recordSchedulerTick(options);
+  return controlPlaneRuntime.recordSchedulerTick(options);
 }

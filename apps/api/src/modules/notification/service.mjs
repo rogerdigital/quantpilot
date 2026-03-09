@@ -1,27 +1,21 @@
-import {
-  appendNotification as appendStoredNotification,
-  dispatchPendingNotifications,
-  enqueueNotification,
-  listNotificationJobs,
-  listNotifications as listStoredNotifications,
-} from '../../../../../packages/control-plane-store/src/index.mjs';
+import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
 
 export function listNotifications(limit = 50) {
-  return listStoredNotifications(limit);
+  return controlPlaneRuntime.listNotifications(limit);
 }
 
 export function appendNotification(event) {
-  return appendStoredNotification(event);
+  return controlPlaneRuntime.appendNotification(event);
 }
 
 export function queueNotification(event) {
-  return enqueueNotification(event);
+  return controlPlaneRuntime.enqueueNotification(event);
 }
 
 export function listQueuedNotifications(limit = 50) {
-  return listNotificationJobs(limit);
+  return controlPlaneRuntime.listNotificationJobs(limit);
 }
 
 export function flushQueuedNotifications(options = {}) {
-  return dispatchPendingNotifications(options);
+  return controlPlaneRuntime.dispatchPendingNotifications(options);
 }

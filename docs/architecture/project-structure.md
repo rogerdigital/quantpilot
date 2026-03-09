@@ -36,6 +36,9 @@ quantpilot/
 ├── docs/
 │   └── architecture/
 ├── packages/
+│   ├── control-plane-runtime/
+│   │   ├── src/
+│   │   └── package.json
 │   ├── db/
 │   │   ├── src/
 │   │   └── package.json
@@ -73,6 +76,8 @@ quantpilot/
   - worker 任务级测试，当前覆盖 notification dispatch、risk scan 和 scheduler tick 三类后台任务的核心副作用。
 - `apps/api/src/modules/`
   - 控制中枢的模块规划，包括 API、鉴权、账户、任务编排、通知、风控、审计、监控和调度；其中 `auth / audit / notification / risk / task-orchestrator` 已具备最小原型实现。
+- `packages/control-plane-runtime/src/`
+  - 控制面共享服务装配层，统一封装 audit、notification、risk、scheduler、cycles 和 operator actions 等运行时能力，供 API 与 worker 共同消费。
 - `packages/shared-types/src/`
   - 共享类型层，承接前端、API 和后续 worker 的统一领域模型。
 - `packages/db/src/`
@@ -81,6 +86,8 @@ quantpilot/
   - 控制面文件存储层，当前已拆成 `context + repositories/* + shared + store` 结构，承载 notification outbox、risk scan outbox、已分发通知事件、风险事件流、scheduler ticks、audit records、cycle records 和 operator actions，为 API 与 worker 提供最小跨进程共享状态。
 - `packages/control-plane-store/test/`
   - 控制面核心 repository 的轻量自动化测试，当前覆盖 notification、risk、scheduler 以及 context 注入路径。
+- `packages/control-plane-runtime/test/`
+  - 控制面共享 runtime 的自动化测试，当前覆盖装配委托和 queued job 分发路径。
 - `packages/trading-engine/src/`
   - 共享运行时层，当前已按 `constants / shared / market / execution / risk / strategy / control-plane` 拆分，沉淀市场推进、策略执行、风控裁决、订单意图和控制面状态合并逻辑，供前后端共同消费。
 

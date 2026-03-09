@@ -1,7 +1,7 @@
-import { runSchedulerTick } from '../../../api/src/modules/scheduler/service.mjs';
+import { controlPlaneRuntime } from '../../../../packages/control-plane-runtime/src/index.mjs';
 
 export async function runSchedulerTickTask(config, dependencies = {}) {
-  const recordSchedulerTick = dependencies.runSchedulerTick || runSchedulerTick;
+  const recordSchedulerTick = dependencies.runSchedulerTick || controlPlaneRuntime.recordSchedulerTick;
   const result = recordSchedulerTick({
     worker: config.name,
   });

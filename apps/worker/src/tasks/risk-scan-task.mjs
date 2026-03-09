@@ -1,7 +1,7 @@
-import { flushQueuedRiskScans } from '../../../api/src/modules/risk/service.mjs';
+import { controlPlaneRuntime } from '../../../../packages/control-plane-runtime/src/index.mjs';
 
 export async function runRiskScanTask(config, dependencies = {}) {
-  const flushRiskScans = dependencies.flushQueuedRiskScans || flushQueuedRiskScans;
+  const flushRiskScans = dependencies.flushQueuedRiskScans || controlPlaneRuntime.dispatchPendingRiskScans;
   const result = flushRiskScans({
     worker: config.name,
     limit: config.riskScanBatchSize,
