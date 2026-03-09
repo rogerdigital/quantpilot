@@ -36,6 +36,7 @@
 - `apps/api` 承载后端层和执行接入骨架，当前已经提供最小的 `auth / audit / notification / task-orchestrator` 控制面接口。
 - `apps/worker` 承载后端异步任务进程骨架，用于承接未来从 API 进程迁出的任务编排、风险扫描、通知分发和执行补偿。
 - `packages/shared-types` 承载共享模型。
+- `packages/db` 承载底层存储适配接口，当前提供文件型实现，为从原型期 JSON 存储迁移到数据库预留边界。
 - `packages/control-plane-store` 承载最小跨进程控制面存储，当前主要用于 notification outbox、risk scan outbox、通知事件、风险事件、scheduler ticks、audit records、cycle records 和 operator actions 持久化。
 - `packages/trading-engine` 承载市场、策略、风控、执行和控制面状态合并所需的共享 runtime，并已拆分为按职责划分的内部模块。
 - `apps/web/src/store/trading-system/core/` 已完成第二轮切片，当前包含 `config / market / strategy / risk / execution / lifecycle / controlPlane / state / shared`，并主要作为共享 runtime 的前端封装层存在。

@@ -1,62 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { createJsonFileStore } from '../../db/src/index.mjs';
 
-const packageDir = dirname(fileURLToPath(import.meta.url));
-const repoRoot = join(packageDir, '..', '..', '..');
-const runtimeRoot = join(repoRoot, '.quantpilot-runtime', 'control-plane');
-const notificationsPath = join(runtimeRoot, 'notifications.json');
-const outboxPath = join(runtimeRoot, 'notification-outbox.json');
-const riskEventsPath = join(runtimeRoot, 'risk-events.json');
-const riskScanOutboxPath = join(runtimeRoot, 'risk-scan-outbox.json');
-const schedulerTicksPath = join(runtimeRoot, 'scheduler-ticks.json');
-const schedulerStatePath = join(runtimeRoot, 'scheduler-state.json');
-const auditRecordsPath = join(runtimeRoot, 'audit-records.json');
-const cycleRecordsPath = join(runtimeRoot, 'cycle-records.json');
-const operatorActionsPath = join(runtimeRoot, 'operator-actions.json');
-
-function ensureRuntimeRoot() {
-  mkdirSync(runtimeRoot, { recursive: true });
-}
-
-function readCollection(pathname) {
-  ensureRuntimeRoot();
-  if (!existsSync(pathname)) {
-    return [];
-  }
-  try {
-    const text = readFileSync(pathname, 'utf8');
-    const parsed = JSON.parse(text);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeCollection(pathname, entries) {
-  ensureRuntimeRoot();
-  writeFileSync(pathname, JSON.stringify(entries, null, 2));
-}
-
-function readObject(pathname, fallback) {
-  ensureRuntimeRoot();
-  if (!existsSync(pathname)) {
-    return fallback;
-  }
-  try {
-    const text = readFileSync(pathname, 'utf8');
-    const parsed = JSON.parse(text);
-    return parsed && typeof parsed === 'object' ? parsed : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeObject(pathname, value) {
-  ensureRuntimeRoot();
-  writeFileSync(pathname, JSON.stringify(value, null, 2));
-}
+const store = createJsonFileStore({ namespace: 'control-plane' });
 
 function createNotificationEntry(event) {
   return {
@@ -185,59 +130,59 @@ function buildSchedulerBucket(parts) {
 }
 
 export function listNotifications(limit = 50) {
-  return readCollection(notificationsPath).slice(0, limit);
+  return store.readCollection('notifications.json').slice(0, limit);
 }
 
 export function listAuditRecords(limit = 50) {
-  return readCollection(auditRecordsPath).slice(0, limit);
+  return store.readCollection('audit-records.json').slice(0, limit);
 }
 
 export function appendAuditRecord(record) {
-  const records = readCollection(auditRecordsPath);
+  const records = store.readCollection('audit-records.json');
   const entry = createAuditRecordEntry(record);
   records.unshift(entry);
   records.splice(100);
-  writeCollection(auditRecordsPath, records);
+  store.writeCollection('audit-records.json', records);
   return entry;
 }
 
 export function listCycleRecords(limit = 30) {
-  return readCollection(cycleRecordsPath).slice(0, limit);
+  return store.readCollection('cycle-records.json').slice(0, limit);
 }
 
 export function appendCycleRecord(payload) {
-  const cycles = readCollection(cycleRecordsPath);
+  const cycles = store.readCollection('cycle-records.json');
   const entry = createCycleRecordEntry(payload);
   cycles.unshift(entry);
   cycles.splice(60);
-  writeCollection(cycleRecordsPath, cycles);
+  store.writeCollection('cycle-records.json', cycles);
   return entry;
 }
 
 export function listOperatorActions(limit = 50) {
-  return readCollection(operatorActionsPath).slice(0, limit);
+  return store.readCollection('operator-actions.json').slice(0, limit);
 }
 
 export function appendOperatorAction(payload) {
-  const actions = readCollection(operatorActionsPath);
+  const actions = store.readCollection('operator-actions.json');
   const entry = createOperatorActionEntry(payload);
   actions.unshift(entry);
   actions.splice(100);
-  writeCollection(operatorActionsPath, actions);
+  store.writeCollection('operator-actions.json', actions);
   return entry;
 }
 
 export function appendNotification(event) {
-  const notifications = readCollection(notificationsPath);
+  const notifications = store.readCollection('notifications.json');
   const entry = createNotificationEntry(event);
   notifications.unshift(entry);
   notifications.splice(100);
-  writeCollection(notificationsPath, notifications);
+  store.writeCollection('notifications.json', notifications);
   return entry;
 }
 
 export function enqueueNotification(event) {
-  const jobs = readCollection(outboxPath);
+  const jobs = store.readCollection('notification-outbox.json');
   const job = {
     id: `notification-job-${randomUUID()}`,
     status: 'pending',
@@ -246,19 +191,19 @@ export function enqueueNotification(event) {
   };
   jobs.unshift(job);
   jobs.splice(200);
-  writeCollection(outboxPath, jobs);
+  store.writeCollection('notification-outbox.json', jobs);
   return job;
 }
 
 export function listNotificationJobs(limit = 50) {
-  return readCollection(outboxPath).slice(0, limit);
+  return store.readCollection('notification-outbox.json').slice(0, limit);
 }
 
 export function dispatchPendingNotifications(options = {}) {
   const worker = options.worker || 'quantpilot-worker';
   const limit = Number.isFinite(options.limit) ? options.limit : 20;
-  const jobs = readCollection(outboxPath);
-  const notifications = readCollection(notificationsPath);
+  const jobs = store.readCollection('notification-outbox.json');
+  const notifications = store.readCollection('notifications.json');
   const dispatchedJobs = [];
   const pendingJobs = [];
 
@@ -284,8 +229,8 @@ export function dispatchPendingNotifications(options = {}) {
 
   if (dispatchedJobs.length) {
     notifications.splice(100);
-    writeCollection(notificationsPath, notifications);
-    writeCollection(outboxPath, [...dispatchedJobs, ...pendingJobs].slice(0, 200));
+    store.writeCollection('notifications.json', notifications);
+    store.writeCollection('notification-outbox.json', [...dispatchedJobs, ...pendingJobs].slice(0, 200));
   }
 
   return {
@@ -296,20 +241,20 @@ export function dispatchPendingNotifications(options = {}) {
 }
 
 export function listRiskEvents(limit = 50) {
-  return readCollection(riskEventsPath).slice(0, limit);
+  return store.readCollection('risk-events.json').slice(0, limit);
 }
 
 export function appendRiskEvent(event) {
-  const events = readCollection(riskEventsPath);
+  const events = store.readCollection('risk-events.json');
   const entry = createRiskEventEntry(event);
   events.unshift(entry);
   events.splice(100);
-  writeCollection(riskEventsPath, events);
+  store.writeCollection('risk-events.json', events);
   return entry;
 }
 
 export function enqueueRiskScan(payload) {
-  const jobs = readCollection(riskScanOutboxPath);
+  const jobs = store.readCollection('risk-scan-outbox.json');
   const job = {
     id: `risk-scan-job-${randomUUID()}`,
     status: 'pending',
@@ -330,12 +275,12 @@ export function enqueueRiskScan(payload) {
   };
   jobs.unshift(job);
   jobs.splice(200);
-  writeCollection(riskScanOutboxPath, jobs);
+  store.writeCollection('risk-scan-outbox.json', jobs);
   return job;
 }
 
 export function listRiskScanJobs(limit = 50) {
-  return readCollection(riskScanOutboxPath).slice(0, limit);
+  return store.readCollection('risk-scan-outbox.json').slice(0, limit);
 }
 
 function buildRiskScanResult(payload) {
@@ -378,9 +323,9 @@ function buildRiskScanResult(payload) {
 export function dispatchPendingRiskScans(options = {}) {
   const worker = options.worker || 'quantpilot-worker';
   const limit = Number.isFinite(options.limit) ? options.limit : 20;
-  const jobs = readCollection(riskScanOutboxPath);
-  const events = readCollection(riskEventsPath);
-  const notifications = readCollection(notificationsPath);
+  const jobs = store.readCollection('risk-scan-outbox.json');
+  const events = store.readCollection('risk-events.json');
+  const notifications = store.readCollection('notifications.json');
   const dispatchedJobs = [];
   const pendingJobs = [];
 
@@ -436,9 +381,9 @@ export function dispatchPendingRiskScans(options = {}) {
   if (dispatchedJobs.length) {
     events.splice(100);
     notifications.splice(100);
-    writeCollection(riskEventsPath, events);
-    writeCollection(notificationsPath, notifications);
-    writeCollection(riskScanOutboxPath, [...dispatchedJobs, ...pendingJobs].slice(0, 200));
+    store.writeCollection('risk-events.json', events);
+    store.writeCollection('notifications.json', notifications);
+    store.writeCollection('risk-scan-outbox.json', [...dispatchedJobs, ...pendingJobs].slice(0, 200));
   }
 
   return {
@@ -449,7 +394,7 @@ export function dispatchPendingRiskScans(options = {}) {
 }
 
 export function listSchedulerTicks(limit = 50) {
-  return readCollection(schedulerTicksPath).slice(0, limit);
+  return store.readCollection('scheduler-ticks.json').slice(0, limit);
 }
 
 export function recordSchedulerTick(options = {}) {
@@ -458,7 +403,7 @@ export function recordSchedulerTick(options = {}) {
   const parts = getShanghaiTimeParts(now);
   const phase = resolveSchedulerPhase(parts);
   const bucket = buildSchedulerBucket(parts);
-  const state = readObject(schedulerStatePath, {
+  const state = store.readObject('scheduler-state.json', {
     lastPhase: '',
     lastBucket: '',
     lastTickAt: '',
@@ -488,13 +433,13 @@ export function recordSchedulerTick(options = {}) {
     },
   });
 
-  const ticks = readCollection(schedulerTicksPath);
+  const ticks = store.readCollection('scheduler-ticks.json');
   ticks.unshift(tick);
   ticks.splice(100);
-  writeCollection(schedulerTicksPath, ticks);
+  store.writeCollection('scheduler-ticks.json', ticks);
 
   if (phaseChanged) {
-    const notifications = readCollection(notificationsPath);
+    const notifications = store.readCollection('notifications.json');
     notifications.unshift(createNotificationEntry({
       level: phase === 'OFF_HOURS' ? 'info' : 'warn',
       title: tick.title,
@@ -506,10 +451,10 @@ export function recordSchedulerTick(options = {}) {
       },
     }));
     notifications.splice(100);
-    writeCollection(notificationsPath, notifications);
+    store.writeCollection('notifications.json', notifications);
   }
 
-  writeObject(schedulerStatePath, {
+  store.writeObject('scheduler-state.json', {
     lastPhase: phase,
     lastBucket: bucket,
     lastTickAt: tick.createdAt,

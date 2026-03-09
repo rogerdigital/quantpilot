@@ -7,6 +7,7 @@ QuantPilot 是一个面向量化交易工作流的分层平台原型，当前仓
 - `apps/web`: 用户控制台，承载 Dashboard、Market、Strategy、Backtest、Risk、Execution、Agent、Notifications 和 Settings。
 - `apps/api`: 后端入口和网关骨架，承载 API、鉴权、任务编排、通知、审计、调度等服务边界。
 - `apps/worker`: 异步 worker 骨架，预留回测、风控扫描、通知分发和执行补偿等后台任务进程。
+- `packages/db`: 底层文件存储适配层，为当前原型的 control-plane store 提供统一读写接口，并为后续数据库替换预留边界。
 - `packages/shared-types`: 前后端共享的交易和平台类型定义。
 - `packages/trading-engine`: 市场、策略、风控、执行和控制面合并所需的共享 runtime。
 - `packages/control-plane-store`: 控制面文件存储层，当前承载 notification、risk、scheduler、audit、cycle records、operator actions 等跨进程事件和记录。
@@ -53,9 +54,13 @@ quantpilot/
 npm run dev
 npm run build
 npm run typecheck
+npm run check:lockfile
+npm run verify
 npm run gateway
 npm run worker
 ```
+
+`npm run verify` 当前会执行 `check:lockfile -> typecheck -> build`，用于在推送前复现 CI 的核心校验路径。
 
 前端默认运行在 `http://127.0.0.1:8080`，`/api/*` 会代理到 `http://127.0.0.1:8787`。
 当前通知链路已经拆成 `API 入队 -> worker 分发 -> Notification Center 拉取已分发事件`，风险扫描链路已经拆成 `state runner 入队 -> worker 扫描 -> Risk Console 拉取 risk events`，scheduler 链路已经拆成 `worker tick -> scheduler store -> Notification Center 拉取 scheduler ticks`，运行时文件写入 `.quantpilot-runtime/`。

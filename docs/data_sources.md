@@ -49,6 +49,7 @@
 - scheduler ticks 也已经落到 `.quantpilot-runtime/control-plane/` 下，由 worker 周期性写入，通知中心可直接读取
 - audit records 和 cycle records 也已经落到 `.quantpilot-runtime/control-plane/` 下，不再依赖 API 进程内存
 - operator actions 也已经落到 `.quantpilot-runtime/control-plane/` 下，通知中心可以直接读取独立动作流
+- `.quantpilot-runtime/control-plane/` 的文件读写当前已通过 `packages/db` 统一封装，后续迁移数据库时可以先替换底层适配层
 
 ## 如果接入真实交易
 

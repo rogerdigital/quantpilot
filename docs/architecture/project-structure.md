@@ -36,6 +36,9 @@ quantpilot/
 ├── docs/
 │   └── architecture/
 ├── packages/
+│   ├── db/
+│   │   ├── src/
+│   │   └── package.json
 │   ├── control-plane-store/
 │   │   ├── src/
 │   │   └── package.json
@@ -68,6 +71,8 @@ quantpilot/
   - 控制中枢的模块规划，包括 API、鉴权、账户、任务编排、通知、风控、审计、监控和调度；其中 `auth / audit / notification / risk / task-orchestrator` 已具备最小原型实现。
 - `packages/shared-types/src/`
   - 共享类型层，承接前端、API 和后续 worker 的统一领域模型。
+- `packages/db/src/`
+  - 底层文件存储适配层，当前为 `control-plane-store` 提供统一 JSON 文件读写接口，后续可替换为真正的数据库实现。
 - `packages/control-plane-store/src/`
   - 控制面文件存储层，当前承载 notification outbox、risk scan outbox、已分发通知事件、风险事件流、scheduler ticks、audit records、cycle records 和 operator actions，为 API 与 worker 提供最小跨进程共享状态。
 - `packages/trading-engine/src/`
