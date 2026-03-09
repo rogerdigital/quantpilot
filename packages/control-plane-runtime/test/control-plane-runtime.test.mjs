@@ -93,6 +93,32 @@ test('control plane runtime records operator actions with audit and notification
   assert.equal(runtime.listNotificationJobs()[0].payload.title, 'Approve intent');
 });
 
+test('control plane runtime records execution plans with audit and notification fanout', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  const plan = runtime.recordExecutionPlan({
+    workflowRunId: 'workflow-strategy-1',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'paper',
+    status: 'ready',
+    approvalState: 'not_required',
+    riskStatus: 'approved',
+    summary: 'Execution plan ready for paper execution.',
+    capital: 100000,
+    orderCount: 2,
+    orders: [
+      { symbol: 'NVDA', side: 'BUY', qty: 10, weight: 0.5, rationale: 'trend' },
+      { symbol: 'MSFT', side: 'BUY', qty: 8, weight: 0.5, rationale: 'confirmation' },
+    ],
+  });
+
+  assert.equal(plan.strategyId, 'ema-cross-us');
+  assert.equal(runtime.listExecutionPlans()[0].id, plan.id);
+  assert.equal(runtime.listAuditRecords()[0].type, 'execution-plan');
+  assert.equal(runtime.listNotificationJobs()[0].payload.source, 'execution-planner');
+});
+
 test('control plane runtime persists workflow runs through start and complete transitions', () => {
   const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
 

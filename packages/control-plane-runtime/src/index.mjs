@@ -83,6 +83,43 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return action;
     },
+    listExecutionPlans(limit = 50, filter = {}) {
+      return context.executionPlans.listExecutionPlans(limit, filter);
+    },
+    appendExecutionPlan(payload) {
+      return context.executionPlans.appendExecutionPlan(payload);
+    },
+    recordExecutionPlan(payload) {
+      const plan = context.executionPlans.appendExecutionPlan(payload);
+
+      context.audit.appendAuditRecord({
+        type: 'execution-plan',
+        actor: payload.actor || 'strategy-worker',
+        title: `Execution plan created for ${plan.strategyName}`,
+        detail: plan.summary || 'Execution plan generated.',
+        metadata: {
+          strategyId: plan.strategyId,
+          mode: plan.mode,
+          riskStatus: plan.riskStatus,
+          approvalState: plan.approvalState,
+          orderCount: plan.orderCount,
+        },
+      });
+
+      context.notifications.enqueueNotification({
+        level: plan.riskStatus === 'approved' ? 'info' : (plan.riskStatus === 'blocked' ? 'critical' : 'warn'),
+        source: 'execution-planner',
+        title: `Execution plan ${plan.riskStatus}`,
+        message: plan.summary || `${plan.strategyName} generated an execution plan.`,
+        metadata: {
+          executionPlanId: plan.id,
+          strategyId: plan.strategyId,
+          workflowRunId: plan.workflowRunId,
+        },
+      });
+
+      return plan;
+    },
     listNotifications(limit = 50) {
       return context.notifications.listNotifications(limit);
     },

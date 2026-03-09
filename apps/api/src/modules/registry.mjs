@@ -76,6 +76,13 @@ export const MODULE_REGISTRY = [
     status: 'prototype',
     responsibility: 'research summary, run queue, and performance review data',
   },
+  {
+    id: 'execution',
+    name: 'Execution Planning',
+    layer: 'execution',
+    status: 'prototype',
+    responsibility: 'execution plan persistence and order intent handoff',
+  },
 ];
 
 export function listModules() {

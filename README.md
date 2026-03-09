@@ -17,6 +17,7 @@ QuantPilot 是一个面向量化交易工作流的分层平台原型，目标定
 
 ## 当前进度
 
+- 里程碑 A `平台底座闭环`：已完成最小链路。现在支持 `API 请求策略执行 -> Worker 执行 workflow -> DB(JSON store) 持久化 execution plan -> Risk 审核 -> Execution plan 出队准备`。
 - 平台骨架：`apps/web + apps/api + apps/worker + packages/*` 的 monorepo 结构已经稳定，控制面、共享类型和运行时边界已拆开。
 - 控制面：notification、risk、scheduler、audit、workflow run、operator action 已具备最小持久化和 API/worker 协作链路。
 - 执行闭环：`state run -> control plane -> broker sync -> risk scan -> notification` 已有原型链路，适合继续细化为真实服务。
@@ -25,6 +26,8 @@ QuantPilot 是一个面向量化交易工作流的分层平台原型，目标定
 
 ## 距离最终目标还差什么
 
+- 里程碑 B `控制面与审计闭环`：已有 workflow、notification、audit、risk scan、worker maintenance 基础，但 execution failure recovery、统一任务状态追踪和更多系统告警仍需收口到后端。
+- 里程碑 C `Agent 受控接入`：尚未开始真正实现，仍缺目标解析、tool layer、memory、审批式动作请求和 execution guardrail。
 - 用户系统：缺少真实注册登录、权限模型、租户/账户绑定和用户设置持久化。
 - 行情数据：缺少稳定的数据接入抽象、历史数据存储、订阅分发和多 provider 切换。
 - 策略管理：缺少策略注册中心、参数版本、运行配置、晋级审批和策略生命周期管理。

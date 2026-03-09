@@ -3,6 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { appendAuditRecord, listAuditRecords } from '../modules/audit/service.mjs';
 import { getBacktestSummary, listBacktestRuns } from '../modules/backtest/service.mjs';
+import { listExecutionPlans } from '../modules/execution/service.mjs';
 import { getSession } from '../modules/auth/service.mjs';
 import { listModules } from '../modules/registry.mjs';
 import { listNotifications } from '../modules/notification/service.mjs';
@@ -499,6 +500,13 @@ export function createGatewayHandler(options = {}) {
       writeJson(res, 200, listBacktestRuns());
       return;
     }
+    if (req.method === 'GET' && reqUrl.pathname === '/api/execution/plans') {
+      writeJson(res, 200, {
+        ok: true,
+        plans: listExecutionPlans(),
+      });
+      return;
+    }
     if (req.method === 'GET' && reqUrl.pathname === '/api/audit/records') {
       writeJson(res, 200, {
         ok: true,
@@ -625,6 +633,26 @@ export function createGatewayHandler(options = {}) {
           trigger: 'api',
           payload: {
             state: body.state,
+          },
+          maxAttempts: Number(body.maxAttempts || 3),
+        }),
+      });
+      return;
+    }
+    if (req.method === 'POST' && reqUrl.pathname === '/api/strategy/execute') {
+      const body = await readJsonBody(req);
+      writeJson(res, 200, {
+        ok: true,
+        workflow: queueWorkflow({
+          workflowId: 'task-orchestrator.strategy-execution',
+          workflowType: 'task-orchestrator',
+          actor: body.requestedBy || 'api-queue',
+          trigger: 'api',
+          payload: {
+            strategyId: body.strategyId,
+            mode: body.mode || 'paper',
+            capital: Number(body.capital || 0),
+            requestedBy: body.requestedBy || 'operator',
           },
           maxAttempts: Number(body.maxAttempts || 3),
         }),

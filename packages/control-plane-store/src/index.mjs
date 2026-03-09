@@ -4,6 +4,7 @@ export { createControlPlaneContext, controlPlaneContext } from './context.mjs';
 export { createControlPlaneStore, controlPlaneStore } from './store.mjs';
 export { createAuditRepository } from './repositories/audit-repo.mjs';
 export { createCycleRepository } from './repositories/cycle-repo.mjs';
+export { createExecutionPlanRepository } from './repositories/execution-plan-repo.mjs';
 export { createOperatorActionRepository } from './repositories/operator-action-repo.mjs';
 export { createNotificationRepository } from './repositories/notification-repo.mjs';
 export { createRiskRepository } from './repositories/risk-repo.mjs';
@@ -16,6 +17,9 @@ export const listCycleRecords = (...args) => controlPlaneContext.cycles.listCycl
 export const appendCycleRecord = (...args) => controlPlaneContext.cycles.appendCycleRecord(...args);
 export const listOperatorActions = (...args) => controlPlaneContext.operatorActions.listOperatorActions(...args);
 export const appendOperatorAction = (...args) => controlPlaneContext.operatorActions.appendOperatorAction(...args);
+export const listExecutionPlans = (...args) => controlPlaneContext.executionPlans.listExecutionPlans(...args);
+export const appendExecutionPlan = (...args) => controlPlaneContext.executionPlans.appendExecutionPlan(...args);
+export const updateExecutionPlan = (...args) => controlPlaneContext.executionPlans.updateExecutionPlan(...args);
 export const listNotifications = (...args) => controlPlaneContext.notifications.listNotifications(...args);
 export const appendNotification = (...args) => controlPlaneContext.notifications.appendNotification(...args);
 export const enqueueNotification = (...args) => controlPlaneContext.notifications.enqueueNotification(...args);

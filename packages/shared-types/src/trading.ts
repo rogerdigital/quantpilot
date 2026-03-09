@@ -229,6 +229,39 @@ export type BacktestSummarySnapshot = {
   dataSource: string;
 };
 
+export type StrategyExecutionOrder = {
+  symbol: string;
+  side: 'BUY' | 'SELL';
+  qty: number;
+  weight: number;
+  rationale: string;
+};
+
+export type StrategyExecutionRequest = {
+  strategyId: string;
+  mode: 'paper' | 'live';
+  capital: number;
+  requestedBy?: string;
+};
+
+export type ExecutionPlanRecord = {
+  id: string;
+  workflowRunId: string;
+  strategyId: string;
+  strategyName: string;
+  mode: 'paper' | 'live';
+  status: 'draft' | 'ready' | 'blocked';
+  approvalState: 'pending' | 'not_required' | 'required';
+  riskStatus: 'approved' | 'review' | 'blocked';
+  summary: string;
+  capital: number;
+  orderCount: number;
+  orders: StrategyExecutionOrder[];
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ControlPlaneResolution = {
   ok: boolean;
   cycle: {

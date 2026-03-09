@@ -125,6 +125,48 @@ test('GET /api/backtest/runs returns structured backtest runs', async () => {
   assert.equal(response.json.runs.some((item) => item.status === 'completed'), true);
 });
 
+test('POST /api/strategy/execute queues a strategy execution workflow', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/strategy/execute',
+    body: {
+      strategyId: 'ema-cross-us',
+      mode: 'paper',
+      capital: 150000,
+      requestedBy: 'api-test',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.workflow.workflowId, 'task-orchestrator.strategy-execution');
+  assert.equal(response.json.workflow.status, 'queued');
+});
+
+test('GET /api/execution/plans returns persisted execution plans', async () => {
+  context.executionPlans.appendExecutionPlan({
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'paper',
+    status: 'ready',
+    approvalState: 'not_required',
+    riskStatus: 'approved',
+    summary: 'Seed execution plan',
+    capital: 100000,
+    orderCount: 1,
+    orders: [{ symbol: 'NVDA', side: 'BUY', qty: 10, weight: 1, rationale: 'seed' }],
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/execution/plans',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(Array.isArray(response.json.plans), true);
+  assert.equal(response.json.plans[0].strategyId, 'ema-cross-us');
+});
+
 test('GET /api/scheduler/ticks returns scheduler ticks from shared store', async () => {
   context.scheduler.recordSchedulerTick({
     worker: 'api-test-worker',

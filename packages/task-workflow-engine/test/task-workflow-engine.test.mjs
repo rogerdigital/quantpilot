@@ -4,6 +4,8 @@ import { createControlPlaneContext } from '../../control-plane-store/src/context
 import { createMemoryStore } from '../../control-plane-store/test/helpers/memory-store.mjs';
 import { createControlPlaneRuntime } from '../../control-plane-runtime/src/index.mjs';
 import { createTradingState } from '../../../apps/api/test/helpers/create-trading-state.mjs';
+import { assessExecutionCandidate } from '../../../apps/api/src/modules/risk/service.mjs';
+import { buildStrategyExecutionCandidate } from '../../../apps/api/src/modules/strategy/service.mjs';
 import { executeCycleWorkflow, executeQueuedWorkflow, executeStateWorkflow } from '../src/index.mjs';
 
 function createEngineContext() {
@@ -37,6 +39,9 @@ function createEngineContext() {
       message: 'workflow test market ok',
       quotes: [],
     }),
+    buildStrategyExecutionCandidate,
+    assessExecutionCandidate,
+    recordExecutionPlan: (payload) => runtime.recordExecutionPlan(payload),
   };
 }
 
@@ -82,4 +87,25 @@ test('queued workflow dispatcher executes manual-review workflows', async () => 
 
   assert.equal(queued.workflowId, 'task-orchestrator.manual-review');
   assert.equal(result.workflow.status, 'completed');
+});
+
+test('queued workflow dispatcher executes strategy execution workflows', async () => {
+  const context = createEngineContext();
+  context.enqueueWorkflowRun({
+    workflowId: 'task-orchestrator.strategy-execution',
+    status: 'queued',
+    payload: {
+      strategyId: 'ema-cross-us',
+      mode: 'paper',
+      capital: 120000,
+      requestedBy: 'engine-test',
+    },
+  });
+  const claimed = context.claimQueuedWorkflowRuns({ worker: 'engine-worker' });
+
+  const result = await executeQueuedWorkflow(claimed.workflows[0], context);
+
+  assert.equal(result.ok, true);
+  assert.equal(result.workflow.status, 'completed');
+  assert.equal(context.listExecutionPlans()[0].strategyId, 'ema-cross-us');
 });

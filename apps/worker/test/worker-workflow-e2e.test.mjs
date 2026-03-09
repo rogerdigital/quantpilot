@@ -17,6 +17,9 @@ const [
   { createControlPlaneContext },
   { createControlPlaneStore },
   { createControlPlaneRuntime },
+  { recordExecutionPlan },
+  { assessExecutionCandidate },
+  { buildStrategyExecutionCandidate },
 ] = await Promise.all([
   import('../../api/src/gateways/alpaca.mjs'),
   import('../src/tasks/workflow-execution-task.mjs'),
@@ -25,6 +28,9 @@ const [
   import('../../../packages/control-plane-store/src/context.mjs'),
   import('../../../packages/control-plane-store/src/store.mjs'),
   import('../../../packages/control-plane-runtime/src/index.mjs'),
+  import('../../api/src/modules/execution/service.mjs'),
+  import('../../api/src/modules/risk/service.mjs'),
+  import('../../api/src/modules/strategy/service.mjs'),
 ]);
 
 const workerConfig = {
@@ -76,6 +82,9 @@ function createWorkerContext() {
     getBrokerHealth: async () => fakeBrokerHealth,
     executeBrokerCycle: async () => fakeBrokerExecution,
     getMarketSnapshot: async () => fakeMarketSnapshot,
+    buildStrategyExecutionCandidate,
+    assessExecutionCandidate,
+    recordExecutionPlan,
     queueRiskScan: (payload) => runtime.enqueueRiskScan(payload),
   };
 }
@@ -101,7 +110,7 @@ test('queued state workflow executes end-to-end through worker and persists down
   const execution = await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-10T09:10:00.000Z',
+      now: '2026-03-10T23:59:00.000Z',
     }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
@@ -128,4 +137,45 @@ test('queued state workflow executes end-to-end through worker and persists down
   assert.equal(riskDispatch.dispatchedCount, 1);
   assert.equal(context.risk.listRiskEvents().length, 1);
   assert.equal(context.risk.listRiskEvents()[0].status, 'healthy');
+});
+
+test('queued strategy execution workflow persists execution plan and downstream risk event', async () => {
+  const queued = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/strategy/execute',
+    body: {
+      strategyId: 'multi-factor-rotation',
+      mode: 'live',
+      capital: 250000,
+      requestedBy: 'worker-e2e-test',
+    },
+  });
+
+  assert.equal(queued.statusCode, 200);
+  assert.equal(queued.json.workflow.workflowId, 'task-orchestrator.strategy-execution');
+  assert.equal(queued.json.workflow.status, 'queued');
+
+  const execution = await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
+      ...options,
+      now: '2026-03-10T23:59:00.000Z',
+      workflowId: 'task-orchestrator.strategy-execution',
+    }),
+    executeWorkflow: executeQueuedWorkflow,
+    context: createWorkerContext(),
+  });
+
+  assert.equal(execution.claimedCount, 1);
+  assert.equal(execution.executions[0].ok, true);
+  assert.equal(context.executionPlans.listExecutionPlans().length, 1);
+  assert.equal(context.executionPlans.listExecutionPlans()[0].strategyId, 'multi-factor-rotation');
+  assert.equal(context.executionPlans.listExecutionPlans()[0].riskStatus, 'approved');
+  assert.equal(context.risk.listRiskScanJobs().length >= 1, true);
+
+  const riskDispatch = await runRiskScanTask(workerConfig, {
+    flushQueuedRiskScans: (options) => runtime.dispatchPendingRiskScans(options),
+  });
+
+  assert.equal(riskDispatch.dispatchedCount >= 1, true);
+  assert.equal(context.risk.listRiskEvents().some((item) => item.source === 'risk-monitor'), true);
 });

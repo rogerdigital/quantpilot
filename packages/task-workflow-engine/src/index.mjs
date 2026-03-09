@@ -39,6 +39,94 @@ function getTrackedSymbols(state) {
     : [];
 }
 
+async function executeStrategyExecutionWorkflow(payload, context, options = {}) {
+  const workflow = options.workflow || startWorkflow(context, {
+    workflowId: 'task-orchestrator.strategy-execution',
+    workflowType: 'task-orchestrator',
+    actor: payload.requestedBy || context.getOperatorName(),
+    trigger: options.trigger || 'api',
+    payload,
+    maxAttempts: Number(payload.maxAttempts || 3),
+    steps: [
+      { key: 'load-strategy-candidate', status: 'running' },
+      { key: 'evaluate-risk', status: 'pending' },
+      { key: 'persist-execution-plan', status: 'pending' },
+      { key: 'enqueue-risk-scan', status: 'pending' },
+    ],
+  });
+
+  try {
+    const candidate = await context.buildStrategyExecutionCandidate(payload);
+    const riskDecision = await context.assessExecutionCandidate(candidate);
+    const plan = await context.recordExecutionPlan({
+      workflowRunId: workflow.id,
+      strategyId: candidate.strategyId,
+      strategyName: candidate.strategyName,
+      mode: candidate.mode,
+      status: riskDecision.riskStatus === 'blocked' ? 'blocked' : 'ready',
+      approvalState: riskDecision.approvalState,
+      riskStatus: riskDecision.riskStatus,
+      summary: riskDecision.summary,
+      capital: candidate.capital,
+      orderCount: candidate.orders.length,
+      orders: candidate.orders,
+      actor: payload.requestedBy || context.getOperatorName(),
+      metadata: {
+        ...candidate.metadata,
+        metrics: candidate.metrics,
+        reasons: riskDecision.reasons,
+      },
+    });
+
+    context.queueRiskScan({
+      cycle: 0,
+      mode: payload.mode || 'paper',
+      riskLevel: riskDecision.riskStatus === 'blocked' ? 'RISK OFF' : 'NORMAL',
+      pendingApprovals: riskDecision.approvalState === 'required' ? plan.orderCount : 0,
+      brokerConnected: true,
+      marketConnected: true,
+      paperExposure: 0,
+      liveExposure: payload.mode === 'live' ? 100 : 0,
+      routeHint: riskDecision.summary,
+      source: 'strategy-execution',
+    });
+
+    const persistedWorkflow = completeWorkflow(context, workflow.id, {
+      steps: [
+        { key: 'load-strategy-candidate', status: 'completed', strategyId: candidate.strategyId },
+        { key: 'evaluate-risk', status: 'completed', riskStatus: riskDecision.riskStatus },
+        { key: 'persist-execution-plan', status: 'completed', executionPlanId: plan.id },
+        { key: 'enqueue-risk-scan', status: 'completed' },
+      ],
+      result: {
+        ok: true,
+        executionPlanId: plan.id,
+        riskStatus: riskDecision.riskStatus,
+        orderCount: plan.orderCount,
+      },
+    });
+
+    return {
+      ok: true,
+      executionPlan: plan,
+      riskDecision,
+      workflow: persistedWorkflow,
+    };
+  } catch (error) {
+    const failedWorkflow = failWorkflow(context, workflow.id, error instanceof Error ? error.message : 'unknown strategy execution error', {
+      steps: [
+        { key: 'load-strategy-candidate', status: 'failed' },
+        { key: 'evaluate-risk', status: 'skipped' },
+        { key: 'persist-execution-plan', status: 'skipped' },
+        { key: 'enqueue-risk-scan', status: 'skipped' },
+      ],
+    });
+    throw Object.assign(error instanceof Error ? error : new Error('strategy execution workflow failed'), {
+      workflowId: failedWorkflow?.id,
+    });
+  }
+}
+
 export async function executeCycleWorkflow(payload, context, options = {}) {
   const workflow = options.workflow || startWorkflow(context, {
     workflowId: 'task-orchestrator.cycle-run',
@@ -221,6 +309,12 @@ export async function executeStateWorkflow(previousState, context, options = {})
 }
 
 export async function executeQueuedWorkflow(workflowRun, context) {
+  if (workflowRun.workflowId === 'task-orchestrator.strategy-execution') {
+    return executeStrategyExecutionWorkflow(workflowRun.payload, context, {
+      workflow: workflowRun,
+      trigger: 'worker',
+    });
+  }
   if (workflowRun.workflowId === 'task-orchestrator.cycle-run') {
     return executeCycleWorkflow(workflowRun.payload, context, {
       workflow: workflowRun,
