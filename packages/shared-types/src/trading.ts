@@ -262,6 +262,20 @@ export type ExecutionPlanRecord = {
   updatedAt: string;
 };
 
+export type AgentToolDefinition = {
+  name: string;
+  category: 'strategy' | 'backtest' | 'risk' | 'execution' | 'control-plane';
+  description: string;
+  access: 'read';
+};
+
+export type AgentToolExecutionResult = {
+  ok: boolean;
+  tool: string;
+  summary: string;
+  data: Record<string, unknown>;
+};
+
 export type ControlPlaneResolution = {
   ok: boolean;
   cycle: {

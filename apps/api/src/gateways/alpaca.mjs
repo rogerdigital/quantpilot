@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { executeAgentTool, listAgentTools } from '../modules/agent/service.mjs';
 import { appendAuditRecord, listAuditRecords } from '../modules/audit/service.mjs';
 import { getBacktestSummary, listBacktestRuns } from '../modules/backtest/service.mjs';
 import { listExecutionPlans } from '../modules/execution/service.mjs';
@@ -486,6 +487,16 @@ export function createGatewayHandler(options = {}) {
         ok: true,
         modules: listModules(),
       });
+      return;
+    }
+    if (req.method === 'GET' && reqUrl.pathname === '/api/agent/tools') {
+      writeJson(res, 200, listAgentTools());
+      return;
+    }
+    if (req.method === 'POST' && reqUrl.pathname === '/api/agent/tools/execute') {
+      const body = await readJsonBody(req);
+      const result = executeAgentTool(body);
+      writeJson(res, result.ok ? 200 : 403, result);
       return;
     }
     if (req.method === 'GET' && reqUrl.pathname === '/api/strategy/catalog') {

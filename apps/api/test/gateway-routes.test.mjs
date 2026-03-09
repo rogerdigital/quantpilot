@@ -125,6 +125,46 @@ test('GET /api/backtest/runs returns structured backtest runs', async () => {
   assert.equal(response.json.runs.some((item) => item.status === 'completed'), true);
 });
 
+test('GET /api/agent/tools returns allowlisted read-only tools', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/agent/tools',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(Array.isArray(response.json.tools), true);
+  assert.equal(response.json.tools.some((item) => item.name === 'execution.plans.list'), true);
+  assert.equal(response.json.tools.every((item) => item.access === 'read'), true);
+});
+
+test('POST /api/agent/tools/execute runs an allowlisted read-only tool', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/tools/execute',
+    body: {
+      tool: 'backtest.summary.get',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.tool, 'backtest.summary.get');
+  assert.equal(typeof response.json.summary, 'string');
+});
+
+test('POST /api/agent/tools/execute rejects non-allowlisted tools', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/tools/execute',
+    body: {
+      tool: 'execution.plan.create',
+    },
+  });
+
+  assert.equal(response.statusCode, 403);
+  assert.equal(response.json.ok, false);
+});
+
 test('POST /api/strategy/execute queues a strategy execution workflow', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',

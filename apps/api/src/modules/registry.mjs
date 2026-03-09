@@ -83,6 +83,13 @@ export const MODULE_REGISTRY = [
     status: 'prototype',
     responsibility: 'execution plan persistence and order intent handoff',
   },
+  {
+    id: 'agent',
+    name: 'Agent Tool Layer',
+    layer: 'agent',
+    status: 'prototype',
+    responsibility: 'tool allowlist and structured agent-facing read access',
+  },
 ];
 
 export function listModules() {
