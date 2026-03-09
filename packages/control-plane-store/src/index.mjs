@@ -15,6 +15,7 @@ export { createWorkflowRepository } from './repositories/workflow-repo.mjs';
 export const listAuditRecords = (...args) => controlPlaneContext.audit.listAuditRecords(...args);
 export const appendAuditRecord = (...args) => controlPlaneContext.audit.appendAuditRecord(...args);
 export const listAgentActionRequests = (...args) => controlPlaneContext.agentActionRequests.listAgentActionRequests(...args);
+export const getAgentActionRequest = (...args) => controlPlaneContext.agentActionRequests.getAgentActionRequest(...args);
 export const appendAgentActionRequest = (...args) => controlPlaneContext.agentActionRequests.appendAgentActionRequest(...args);
 export const updateAgentActionRequest = (...args) => controlPlaneContext.agentActionRequests.updateAgentActionRequest(...args);
 export const listCycleRecords = (...args) => controlPlaneContext.cycles.listCycleRecords(...args);

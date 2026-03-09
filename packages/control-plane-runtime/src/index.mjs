@@ -30,6 +30,9 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     listAgentActionRequests(limit = 50, filter = {}) {
       return context.agentActionRequests.listAgentActionRequests(limit, filter);
     },
+    getAgentActionRequest(requestId) {
+      return context.agentActionRequests.getAgentActionRequest(requestId);
+    },
     appendAgentActionRequest(payload) {
       return context.agentActionRequests.appendAgentActionRequest(payload);
     },
@@ -44,6 +47,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         metadata: {
           targetId: request.targetId,
           approvalState: request.approvalState,
+          riskStatus: request.riskStatus,
           workflowRunId: request.workflowRunId,
         },
       });
@@ -61,6 +65,9 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       });
 
       return request;
+    },
+    updateAgentActionRequest(requestId, patch = {}) {
+      return context.agentActionRequests.updateAgentActionRequest(requestId, patch);
     },
     listAuditRecords(limit = 50) {
       return context.audit.listAuditRecords(limit);

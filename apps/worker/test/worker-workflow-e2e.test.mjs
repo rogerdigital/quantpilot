@@ -18,8 +18,9 @@ const [
   { createControlPlaneContext },
   { createControlPlaneStore },
   { createControlPlaneRuntime },
+  { approveAgentActionRequest },
   { recordExecutionPlan },
-  { assessExecutionCandidate },
+  { assessAgentActionRequestRisk, assessExecutionCandidate },
   { buildStrategyExecutionCandidate },
 ] = await Promise.all([
   import('../../api/src/gateways/alpaca.mjs'),
@@ -30,6 +31,7 @@ const [
   import('../../../packages/control-plane-store/src/context.mjs'),
   import('../../../packages/control-plane-store/src/store.mjs'),
   import('../../../packages/control-plane-runtime/src/index.mjs'),
+  import('../../api/src/modules/agent/service.mjs'),
   import('../../api/src/modules/execution/service.mjs'),
   import('../../api/src/modules/risk/service.mjs'),
   import('../../api/src/modules/strategy/service.mjs'),
@@ -84,6 +86,8 @@ function createWorkerContext() {
     getBrokerHealth: async () => fakeBrokerHealth,
     executeBrokerCycle: async () => fakeBrokerExecution,
     getMarketSnapshot: async () => fakeMarketSnapshot,
+    assessAgentActionRequestRisk,
+    recordAgentActionRequest: (payload) => runtime.recordAgentActionRequest(payload),
     buildStrategyExecutionCandidate,
     assessExecutionCandidate,
     recordExecutionPlan,
@@ -254,4 +258,81 @@ test('queued agent action request workflow persists a review request without cha
   assert.equal(context.agentActionRequests.listAgentActionRequests()[0].requestType, 'prepare_execution_plan');
   assert.equal(context.executionPlans.listExecutionPlans().length, executionPlanCountBefore);
   assert.equal(context.notifications.listNotificationJobs().some((item) => item.payload.source === 'agent-control'), true);
+});
+
+test('blocked agent action request is rejected by risk gate before approval stage', async () => {
+  const queued = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/action-requests',
+    body: {
+      requestType: 'prepare_execution_plan',
+      targetId: 'breakout-crypto',
+      summary: 'Agent asks for execution plan review.',
+      rationale: 'Try higher beta setup.',
+      requestedBy: 'agent',
+    },
+  });
+
+  const execution = await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
+      ...options,
+      now: '2026-03-10T23:59:00.000Z',
+      workflowId: 'task-orchestrator.agent-action-request',
+    }),
+    executeWorkflow: executeQueuedWorkflow,
+    context: createWorkerContext(),
+  });
+
+  assert.equal(execution.claimedCount, 1);
+  assert.equal(execution.executions[0].ok, true);
+  assert.equal(context.agentActionRequests.listAgentActionRequests()[0].status, 'rejected');
+  assert.equal(context.agentActionRequests.listAgentActionRequests()[0].riskStatus, 'blocked');
+});
+
+test('approved agent action request is the only path that queues downstream strategy execution workflow', async () => {
+  const strategyWorkflowCountBefore = context.workflows.listWorkflowRuns()
+    .filter((item) => item.workflowId === 'task-orchestrator.strategy-execution').length;
+  const queued = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/action-requests',
+    body: {
+      requestType: 'prepare_execution_plan',
+      targetId: 'ema-cross-us',
+      summary: 'Agent asks for execution plan review.',
+      rationale: 'Trend quality improved.',
+      requestedBy: 'agent',
+    },
+  });
+
+  await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
+      ...options,
+      now: '2026-03-10T23:59:00.000Z',
+      workflowId: 'task-orchestrator.agent-action-request',
+    }),
+    executeWorkflow: executeQueuedWorkflow,
+    context: createWorkerContext(),
+  });
+
+  const request = context.agentActionRequests.listAgentActionRequests()
+    .find((item) => item.workflowRunId === queued.json.workflow.id);
+  assert.equal(request.status, 'pending_review');
+  assert.equal(
+    context.workflows.listWorkflowRuns().filter((item) => item.workflowId === 'task-orchestrator.strategy-execution').length,
+    strategyWorkflowCountBefore
+  );
+
+  const approval = approveAgentActionRequest(request.id, {
+    approvedBy: 'risk-operator',
+    mode: 'paper',
+    capital: 150000,
+  });
+
+  assert.equal(approval.ok, true);
+  assert.equal(approval.request.status, 'approved');
+  assert.equal(approval.workflow.workflowId, 'task-orchestrator.strategy-execution');
+  assert.equal(
+    context.workflows.listWorkflowRuns().filter((item) => item.workflowId === 'task-orchestrator.strategy-execution').length,
+    strategyWorkflowCountBefore + 1
+  );
 });

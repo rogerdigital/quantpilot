@@ -4,7 +4,7 @@ import { createControlPlaneContext } from '../../control-plane-store/src/context
 import { createMemoryStore } from '../../control-plane-store/test/helpers/memory-store.mjs';
 import { createControlPlaneRuntime } from '../../control-plane-runtime/src/index.mjs';
 import { createTradingState } from '../../../apps/api/test/helpers/create-trading-state.mjs';
-import { assessExecutionCandidate } from '../../../apps/api/src/modules/risk/service.mjs';
+import { assessAgentActionRequestRisk, assessExecutionCandidate } from '../../../apps/api/src/modules/risk/service.mjs';
 import { buildStrategyExecutionCandidate } from '../../../apps/api/src/modules/strategy/service.mjs';
 import { executeCycleWorkflow, executeQueuedWorkflow, executeStateWorkflow } from '../src/index.mjs';
 
@@ -39,9 +39,11 @@ function createEngineContext() {
       message: 'workflow test market ok',
       quotes: [],
     }),
+    assessAgentActionRequestRisk,
     buildStrategyExecutionCandidate,
     assessExecutionCandidate,
     recordExecutionPlan: (payload) => runtime.recordExecutionPlan(payload),
+    recordAgentActionRequest: (payload) => runtime.recordAgentActionRequest(payload),
   };
 }
 
@@ -131,4 +133,5 @@ test('queued workflow dispatcher executes agent action request workflows', async
   assert.equal(result.workflow.status, 'completed');
   assert.equal(context.listAgentActionRequests()[0].requestType, 'prepare_execution_plan');
   assert.equal(context.listExecutionPlans().length, 0);
+  assert.equal(context.listAgentActionRequests()[0].approvalState, 'required');
 });

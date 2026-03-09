@@ -137,6 +137,7 @@ test('control plane runtime records agent action requests with audit and notific
   assert.equal(runtime.listAgentActionRequests()[0].id, request.id);
   assert.equal(runtime.listAuditRecords()[0].type, 'agent-action-request');
   assert.equal(runtime.listNotificationJobs()[0].payload.source, 'agent-control');
+  assert.equal(runtime.listAgentActionRequests()[0].riskStatus, 'pending');
 });
 
 test('control plane runtime persists workflow runs through start and complete transitions', () => {

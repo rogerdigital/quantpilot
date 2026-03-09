@@ -219,6 +219,76 @@ test('GET /api/agent/action-requests returns persisted requests', async () => {
   assert.equal(response.json.requests[0].requestType, 'review_backtest');
 });
 
+test('POST /api/agent/action-requests/approve queues downstream workflow only after approval', async () => {
+  const createResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/action-requests',
+    body: {
+      requestType: 'prepare_execution_plan',
+      targetId: 'ema-cross-us',
+      summary: 'Agent asks for execution plan review.',
+      rationale: 'Strategy score improved.',
+      requestedBy: 'agent',
+    },
+  });
+
+  const queuedRequestWorkflowId = createResponse.json.workflow.id;
+  context.workflows.updateWorkflowRun(queuedRequestWorkflowId, {
+    status: 'completed',
+  });
+  const request = context.agentActionRequests.appendAgentActionRequest({
+    workflowRunId: queuedRequestWorkflowId,
+    requestType: 'prepare_execution_plan',
+    targetId: 'ema-cross-us',
+    status: 'pending_review',
+    approvalState: 'required',
+    riskStatus: 'approved',
+    summary: 'Pending review',
+    rationale: 'Strategy score improved.',
+    requestedBy: 'agent',
+  });
+
+  const approveResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/agent/action-requests/${request.id}/approve`,
+    body: {
+      approvedBy: 'risk-operator',
+      mode: 'paper',
+      capital: 125000,
+    },
+  });
+
+  assert.equal(approveResponse.statusCode, 200);
+  assert.equal(approveResponse.json.request.status, 'approved');
+  assert.equal(approveResponse.json.workflow.workflowId, 'task-orchestrator.strategy-execution');
+});
+
+test('POST /api/agent/action-requests/reject marks the request as rejected', async () => {
+  const request = context.agentActionRequests.appendAgentActionRequest({
+    requestType: 'review_backtest',
+    targetId: 'bt-ema-cross-20260310',
+    status: 'pending_review',
+    approvalState: 'required',
+    riskStatus: 'review',
+    summary: 'Pending review',
+    rationale: 'Review needed',
+    requestedBy: 'agent',
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/agent/action-requests/${request.id}/reject`,
+    body: {
+      rejectedBy: 'risk-operator',
+      reason: 'Not enough context',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.request.status, 'rejected');
+  assert.equal(response.json.request.approvalState, 'rejected');
+});
+
 test('POST /api/strategy/execute queues a strategy execution workflow', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',

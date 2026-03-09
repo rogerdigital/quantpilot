@@ -137,29 +137,34 @@ async function executeAgentActionRequestWorkflow(payload, context, options = {})
     maxAttempts: Number(payload.maxAttempts || 2),
     steps: [
       { key: 'validate-request', status: 'running' },
+      { key: 'assess-risk-gate', status: 'pending' },
       { key: 'persist-action-request', status: 'pending' },
       { key: 'fanout-review-notification', status: 'pending' },
     ],
   });
 
   try {
+    const gate = await context.assessAgentActionRequestRisk(payload);
     const request = await context.recordAgentActionRequest({
       workflowRunId: workflow.id,
       requestType: payload.requestType,
       targetId: payload.targetId || '',
-      status: 'pending_review',
-      approvalState: 'pending',
-      summary: payload.summary || `${payload.requestType} request submitted by Agent.`,
+      status: gate.status,
+      approvalState: gate.approvalState,
+      riskStatus: gate.riskStatus,
+      summary: gate.summary || payload.summary || `${payload.requestType} request submitted by Agent.`,
       rationale: payload.rationale || '',
       requestedBy: payload.requestedBy || context.getOperatorName(),
       metadata: {
         channel: 'agent',
+        reasons: gate.reasons,
       },
     });
 
     const persistedWorkflow = completeWorkflow(context, workflow.id, {
       steps: [
         { key: 'validate-request', status: 'completed', requestType: payload.requestType },
+        { key: 'assess-risk-gate', status: 'completed', riskStatus: gate.riskStatus, approvalState: gate.approvalState },
         { key: 'persist-action-request', status: 'completed', agentActionRequestId: request.id },
         { key: 'fanout-review-notification', status: 'completed' },
       ],
@@ -167,6 +172,7 @@ async function executeAgentActionRequestWorkflow(payload, context, options = {})
         ok: true,
         agentActionRequestId: request.id,
         status: request.status,
+        riskStatus: request.riskStatus,
       },
     });
 
@@ -179,6 +185,7 @@ async function executeAgentActionRequestWorkflow(payload, context, options = {})
     const failedWorkflow = failWorkflow(context, workflow.id, error instanceof Error ? error.message : 'unknown agent action request error', {
       steps: [
         { key: 'validate-request', status: 'failed' },
+        { key: 'assess-risk-gate', status: 'skipped' },
         { key: 'persist-action-request', status: 'skipped' },
         { key: 'fanout-review-notification', status: 'skipped' },
       ],

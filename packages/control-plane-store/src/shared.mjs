@@ -144,6 +144,7 @@ export function createAgentActionRequestEntry(payload) {
     targetId: payload.targetId || '',
     status: payload.status || 'submitted',
     approvalState: payload.approvalState || 'pending',
+    riskStatus: payload.riskStatus || 'pending',
     summary: payload.summary || '',
     rationale: payload.rationale || '',
     requestedBy: payload.requestedBy || 'agent',

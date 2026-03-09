@@ -281,8 +281,9 @@ export type AgentActionRequest = {
   workflowRunId: string;
   requestType: 'prepare_execution_plan' | 'explain_risk' | 'review_backtest';
   targetId: string;
-  status: 'submitted' | 'pending_review';
-  approvalState: 'pending';
+  status: 'submitted' | 'pending_review' | 'approved' | 'rejected';
+  approvalState: 'pending' | 'required' | 'approved' | 'rejected' | 'not_required';
+  riskStatus: 'pending' | 'approved' | 'review' | 'blocked';
   summary: string;
   rationale: string;
   requestedBy: string;

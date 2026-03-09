@@ -1,8 +1,9 @@
 import { controlPlaneRuntime } from '../../../../packages/control-plane-runtime/src/index.mjs';
 import { executeQueuedWorkflow } from '../../../../packages/task-workflow-engine/src/index.mjs';
 import { recordExecutionPlan } from '../../../api/src/modules/execution/service.mjs';
-import { assessExecutionCandidate } from '../../../api/src/modules/risk/service.mjs';
+import { assessAgentActionRequestRisk, assessExecutionCandidate } from '../../../api/src/modules/risk/service.mjs';
 import { buildStrategyExecutionCandidate } from '../../../api/src/modules/strategy/service.mjs';
+import { recordAgentActionRequest } from '../../../api/src/modules/agent/service.mjs';
 
 function createWorkerExecutionContext() {
   return {
@@ -33,6 +34,8 @@ function createWorkerExecutionContext() {
       message: 'workflow worker simulated market snapshot',
       quotes: [],
     }),
+    assessAgentActionRequestRisk,
+    recordAgentActionRequest,
     buildStrategyExecutionCandidate,
     assessExecutionCandidate,
     recordExecutionPlan,

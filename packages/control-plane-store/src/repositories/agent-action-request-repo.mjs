@@ -13,6 +13,9 @@ export function createAgentActionRequestRepository(store) {
         })
         .slice(0, limit);
     },
+    getAgentActionRequest(requestId) {
+      return store.readCollection(FILENAME).find((item) => item.id === requestId) || null;
+    },
     appendAgentActionRequest(payload) {
       const requests = store.readCollection(FILENAME);
       const entry = createAgentActionRequestEntry(payload);

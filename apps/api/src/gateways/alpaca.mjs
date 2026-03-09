@@ -1,7 +1,14 @@
 import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { executeAgentTool, listAgentActionRequests, listAgentTools, queueAgentActionRequest } from '../modules/agent/service.mjs';
+import {
+  approveAgentActionRequest,
+  executeAgentTool,
+  listAgentActionRequests,
+  listAgentTools,
+  queueAgentActionRequest,
+  rejectAgentActionRequest,
+} from '../modules/agent/service.mjs';
 import { appendAuditRecord, listAuditRecords } from '../modules/audit/service.mjs';
 import { getBacktestSummary, listBacktestRuns } from '../modules/backtest/service.mjs';
 import { listExecutionPlans } from '../modules/execution/service.mjs';
@@ -507,6 +514,20 @@ export function createGatewayHandler(options = {}) {
       const body = await readJsonBody(req);
       const result = queueAgentActionRequest(body);
       writeJson(res, result.ok ? 200 : 403, result);
+      return;
+    }
+    if (req.method === 'POST' && reqUrl.pathname.endsWith('/approve') && reqUrl.pathname.startsWith('/api/agent/action-requests/')) {
+      const requestId = reqUrl.pathname.split('/').at(-2);
+      const body = await readJsonBody(req);
+      const result = approveAgentActionRequest(requestId, body);
+      writeJson(res, result.ok ? 200 : 404, result);
+      return;
+    }
+    if (req.method === 'POST' && reqUrl.pathname.endsWith('/reject') && reqUrl.pathname.startsWith('/api/agent/action-requests/')) {
+      const requestId = reqUrl.pathname.split('/').at(-2);
+      const body = await readJsonBody(req);
+      const result = rejectAgentActionRequest(requestId, body);
+      writeJson(res, result.ok ? 200 : 404, result);
       return;
     }
     if (req.method === 'GET' && reqUrl.pathname === '/api/strategy/catalog') {
