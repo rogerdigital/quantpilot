@@ -17,6 +17,7 @@
     "start": "vite --config apps/web/vite.config.ts --host 0.0.0.0 --port 8080",
     "build": "vite build --config apps/web/vite.config.ts",
     "preview": "vite preview --config apps/web/vite.config.ts --host 0.0.0.0 --port 8080",
+    "check:workspaces": "node scripts/check-workspace-integrity.mjs",
     "check:lockfile": "node scripts/check-lockfile-sync.mjs",
     "test:api": "node --test apps/api/test/*.test.mjs",
     "test:engine": "node --test packages/task-workflow-engine/test/*.test.mjs",
@@ -24,7 +25,7 @@
     "test:control-plane": "node --test packages/control-plane-store/test/*.test.mjs",
     "test:worker": "node --test apps/worker/test/*.test.mjs",
     "typecheck": "tsc --noEmit -p apps/web/tsconfig.json",
-    "verify": "npm run check:lockfile && npm run test:control-plane && npm run test:runtime && npm run test:engine && npm run test:api && npm run test:worker && npm run typecheck && npm run build",
+    "verify": "npm run check:workspaces && npm run check:lockfile && npm run test:control-plane && npm run test:runtime && npm run test:engine && npm run test:api && npm run test:worker && npm run typecheck && npm run build",
     "gateway": "node apps/api/src/main.mjs",
     "worker": "node apps/worker/src/main.mjs"
   },

@@ -20,6 +20,9 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Check workspace integrity
+        run: npm run check:workspaces
+
       - name: Check lockfile sync
         run: npm run check:lockfile
 

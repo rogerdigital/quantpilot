@@ -1,41 +1,10 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { listWorkspacePaths, readJson } from './workspace-utils.mjs';
 
 const repoRoot = process.cwd();
 const packageJsonPath = join(repoRoot, 'package.json');
 const lockfilePath = join(repoRoot, 'package-lock.json');
-
-function readJson(pathname) {
-  return JSON.parse(readFileSync(pathname, 'utf8'));
-}
-
-function listWorkspacePaths(rootPackage) {
-  const workspacePatterns = Array.isArray(rootPackage.workspaces) ? rootPackage.workspaces : [];
-  const paths = [];
-
-  workspacePatterns.forEach((pattern) => {
-    if (!pattern.endsWith('/*')) {
-      return;
-    }
-
-    const baseDir = pattern.slice(0, -2);
-    const absoluteBaseDir = join(repoRoot, baseDir);
-
-    if (!existsSync(absoluteBaseDir)) {
-      return;
-    }
-
-    readdirSync(absoluteBaseDir, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .forEach((entry) => {
-        paths.push(join(baseDir, entry.name));
-      });
-  });
-
-  return paths
-    .filter((workspacePath) => existsSync(join(repoRoot, workspacePath, 'package.json')))
-    .sort();
-}
 
 function main() {
   if (!existsSync(packageJsonPath) || !existsSync(lockfilePath)) {
@@ -45,7 +14,7 @@ function main() {
   const rootPackage = readJson(packageJsonPath);
   const lockfile = readJson(lockfilePath);
   const lockPackages = lockfile.packages || {};
-  const workspacePaths = listWorkspacePaths(rootPackage);
+  const workspacePaths = listWorkspacePaths(repoRoot, rootPackage);
   const missing = [];
 
   workspacePaths.forEach((workspacePath) => {
