@@ -32,3 +32,4 @@ export const listWorkflowRuns = (...args) => controlPlaneContext.workflows.listW
 export const getWorkflowRun = (...args) => controlPlaneContext.workflows.getWorkflowRun(...args);
 export const appendWorkflowRun = (...args) => controlPlaneContext.workflows.appendWorkflowRun(...args);
 export const updateWorkflowRun = (...args) => controlPlaneContext.workflows.updateWorkflowRun(...args);
+export const releaseScheduledWorkflowRuns = (...args) => controlPlaneContext.workflows.releaseScheduledWorkflowRuns(...args);

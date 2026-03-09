@@ -117,3 +117,29 @@ test('control plane runtime persists workflow runs through start and complete tr
   assert.equal(completed.status, 'completed');
   assert.equal(runtime.listWorkflowRuns()[0].result.ok, true);
 });
+
+test('control plane runtime schedules retries and supports resume/cancel workflow operations', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  runtime.startWorkflowRun({
+    id: 'workflow-runtime-retry',
+    workflowId: 'task-orchestrator.state-run',
+    maxAttempts: 3,
+    attempt: 1,
+  });
+
+  const retryScheduled = runtime.failWorkflowRun('workflow-runtime-retry', 'temporary failure', {
+    nextRunAt: '2026-03-10T10:00:00.000Z',
+  });
+  const released = runtime.releaseScheduledWorkflowRuns({
+    worker: 'runtime-worker',
+    now: '2026-03-10T10:01:00.000Z',
+  });
+  const resumed = runtime.resumeWorkflowRun('workflow-runtime-retry');
+  const canceled = runtime.cancelWorkflowRun('workflow-runtime-retry');
+
+  assert.equal(retryScheduled.status, 'retry_scheduled');
+  assert.equal(released.releasedCount, 1);
+  assert.equal(resumed.status, 'queued');
+  assert.equal(canceled.status, 'canceled');
+});

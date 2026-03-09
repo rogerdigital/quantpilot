@@ -4,8 +4,14 @@ const FILENAME = 'workflow-runs.json';
 
 export function createWorkflowRepository(store) {
   return {
-    listWorkflowRuns(limit = 50) {
-      return store.readCollection(FILENAME).slice(0, limit);
+    listWorkflowRuns(limit = 50, filter = {}) {
+      return store.readCollection(FILENAME)
+        .filter((item) => {
+          if (filter.status && item.status !== filter.status) return false;
+          if (filter.workflowId && item.workflowId !== filter.workflowId) return false;
+          return true;
+        })
+        .slice(0, limit);
     },
     getWorkflowRun(workflowRunId) {
       return store.readCollection(FILENAME).find((item) => item.id === workflowRunId) || null;
@@ -34,6 +40,37 @@ export function createWorkflowRepository(store) {
       workflows[index] = next;
       trimAndSave(store, FILENAME, workflows, 120);
       return next;
+    },
+    releaseScheduledWorkflowRuns(options = {}) {
+      const worker = options.worker || 'quantpilot-worker';
+      const limit = Number.isFinite(options.limit) ? options.limit : 20;
+      const nowIso = options.now || new Date().toISOString();
+      const workflows = store.readCollection(FILENAME);
+      let releasedCount = 0;
+
+      workflows.forEach((workflow, index) => {
+        if (releasedCount >= limit) return;
+        if (workflow.status !== 'retry_scheduled') return;
+        if ((workflow.nextRunAt || nowIso) > nowIso) return;
+        workflows[index] = {
+          ...workflow,
+          status: 'queued',
+          lockedBy: worker,
+          lockedAt: nowIso,
+          updatedAt: nowIso,
+        };
+        releasedCount += 1;
+      });
+
+      if (releasedCount > 0) {
+        trimAndSave(store, FILENAME, workflows, 120);
+      }
+
+      return {
+        worker,
+        releasedCount,
+        workflows: workflows.filter((item) => item.lockedBy === worker && item.lockedAt === nowIso).slice(0, limit),
+      };
     },
   };
 }

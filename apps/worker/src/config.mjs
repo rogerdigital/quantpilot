@@ -10,5 +10,6 @@ export function readWorkerConfig() {
     once: process.env.QUANTPILOT_WORKER_ONCE === '1',
     notificationBatchSize: readNumber(process.env.QUANTPILOT_WORKER_NOTIFICATION_BATCH, 20),
     riskScanBatchSize: readNumber(process.env.QUANTPILOT_WORKER_RISK_SCAN_BATCH, 20),
+    workflowBatchSize: readNumber(process.env.QUANTPILOT_WORKER_WORKFLOW_BATCH, 20),
   };
 }

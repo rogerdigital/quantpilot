@@ -14,6 +14,7 @@ export async function runCycle(payload, context) {
       mode: payload.mode,
       riskLevel: payload.riskLevel,
     },
+    maxAttempts: Number(payload.maxAttempts || 3),
     steps: [
       { key: 'record-cycle', status: 'running' },
       { key: 'execute-broker-cycle', status: 'pending' },

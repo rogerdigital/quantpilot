@@ -129,6 +129,17 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.workflows.appendWorkflowRun({
         ...payload,
         status: payload.status || 'running',
+        attempt: Number(payload.attempt || 1),
+        startedAt: payload.startedAt || new Date().toISOString(),
+        nextRunAt: payload.nextRunAt || new Date().toISOString(),
+      });
+    },
+    enqueueWorkflowRun(payload) {
+      return context.workflows.appendWorkflowRun({
+        ...payload,
+        status: payload.status || 'queued',
+        startedAt: '',
+        nextRunAt: payload.nextRunAt || new Date().toISOString(),
       });
     },
     completeWorkflowRun(workflowRunId, patch = {}) {
@@ -136,15 +147,53 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         ...patch,
         status: 'completed',
         completedAt: patch.completedAt || new Date().toISOString(),
+        lockedBy: '',
+        lockedAt: '',
       });
     },
     failWorkflowRun(workflowRunId, error, patch = {}) {
+      const current = context.workflows.getWorkflowRun(workflowRunId);
+      const nextAttempt = Number(current?.attempt || 1);
+      const maxAttempts = Number(current?.maxAttempts || patch.maxAttempts || 3);
+      const canRetry = patch.retryable !== false && nextAttempt < maxAttempts;
+      const failedAt = patch.failedAt || new Date().toISOString();
       return context.workflows.updateWorkflowRun(workflowRunId, {
         ...patch,
-        status: 'failed',
-        failedAt: patch.failedAt || new Date().toISOString(),
+        status: canRetry ? 'retry_scheduled' : 'failed',
+        failedAt,
+        nextRunAt: canRetry ? (patch.nextRunAt || new Date(Date.now() + 60_000).toISOString()) : (patch.nextRunAt || ''),
         error: error || patch.error || null,
+        lockedBy: '',
+        lockedAt: '',
       });
+    },
+    resumeWorkflowRun(workflowRunId, patch = {}) {
+      const current = context.workflows.getWorkflowRun(workflowRunId);
+      if (!current) return null;
+      return context.workflows.updateWorkflowRun(workflowRunId, {
+        ...patch,
+        status: 'queued',
+        failedAt: '',
+        completedAt: '',
+        error: null,
+        nextRunAt: patch.nextRunAt || new Date().toISOString(),
+        lockedBy: '',
+        lockedAt: '',
+        attempt: Number(current.attempt || 0),
+      });
+    },
+    cancelWorkflowRun(workflowRunId, patch = {}) {
+      return context.workflows.updateWorkflowRun(workflowRunId, {
+        ...patch,
+        status: 'canceled',
+        completedAt: '',
+        failedAt: patch.failedAt || new Date().toISOString(),
+        lockedBy: '',
+        lockedAt: '',
+      });
+    },
+    releaseScheduledWorkflowRuns(options = {}) {
+      return context.workflows.releaseScheduledWorkflowRuns(options);
     },
   };
 }

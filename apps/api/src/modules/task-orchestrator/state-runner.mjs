@@ -31,6 +31,7 @@ export async function runStateCycle(previousState, context) {
       cycle: Number(previousState?.cycle || 0) + 1,
       mode: previousState?.mode || 'autopilot',
     },
+    maxAttempts: Number(previousState?.controlPlane?.maxAttempts || 3),
     steps: [
       { key: 'load-market-snapshot', status: 'running' },
       { key: 'advance-local-state', status: 'pending' },

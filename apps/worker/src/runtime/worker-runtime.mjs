@@ -3,9 +3,11 @@ import { runHeartbeatTask } from '../tasks/heartbeat-task.mjs';
 import { runNotificationDispatchTask } from '../tasks/notification-dispatch-task.mjs';
 import { runRiskScanTask } from '../tasks/risk-scan-task.mjs';
 import { runSchedulerTickTask } from '../tasks/scheduler-tick-task.mjs';
+import { runWorkflowMaintenanceTask } from '../tasks/workflow-maintenance-task.mjs';
 
 async function runTick(config) {
   const results = [
+    await runWorkflowMaintenanceTask(config),
     await runSchedulerTickTask(config),
     await runRiskScanTask(config),
     await runNotificationDispatchTask(config),

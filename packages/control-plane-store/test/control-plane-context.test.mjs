@@ -100,3 +100,21 @@ test('workflow repository persists and updates workflow runs through the injecte
   assert.equal(updated.status, 'completed');
   assert.equal(context.workflows.getWorkflowRun('workflow-1').steps.length, 2);
 });
+
+test('workflow repository releases due retry-scheduled runs back to queued', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  context.workflows.appendWorkflowRun({
+    id: 'workflow-retry-1',
+    workflowId: 'task-orchestrator.cycle-run',
+    status: 'retry_scheduled',
+    nextRunAt: '2026-03-10T09:00:00.000Z',
+  });
+
+  const result = context.workflows.releaseScheduledWorkflowRuns({
+    worker: 'workflow-worker',
+    now: '2026-03-10T09:10:00.000Z',
+  });
+
+  assert.equal(result.releasedCount, 1);
+  assert.equal(context.workflows.getWorkflowRun('workflow-retry-1').status, 'queued');
+});

@@ -8,7 +8,7 @@ QuantPilot 是一个面向量化交易工作流的分层平台原型，当前仓
 - `apps/api`: 后端入口和网关骨架，承载 API、鉴权、任务编排、通知、审计、调度等服务边界。
 - `apps/worker`: 异步 worker 骨架，预留回测、风控扫描、通知分发和执行补偿等后台任务进程。
 - `packages/db`: 底层存储接口层，当前提供 `collection store / kv store` 抽象和 JSON file adapter，为后续数据库替换预留边界。
-- `packages/control-plane-runtime`: API 和 worker 共用的控制面运行时装配层，当前已统一封装 notification、risk、scheduler、audit、task-orchestrator record fanout 和 workflow run 状态流转。
+- `packages/control-plane-runtime`: API 和 worker 共用的控制面运行时装配层，当前已统一封装 notification、risk、scheduler、audit、task-orchestrator record fanout，以及 workflow run 的状态流转、重试调度、恢复和取消。
 - `packages/shared-types`: 前后端共享的交易和平台类型定义。
 - `packages/trading-engine`: 市场、策略、风控、执行和控制面合并所需的共享 runtime。
 - `packages/control-plane-store`: 控制面文件存储层，当前已按 `context + repositories` 结构拆分，承载 notification、risk、scheduler、audit、cycle records、workflow runs、operator actions 等跨进程事件和记录。
@@ -69,7 +69,7 @@ npm run worker
 
 前端默认运行在 `http://127.0.0.1:8080`，`/api/*` 会代理到 `http://127.0.0.1:8787`。
 当前通知链路已经拆成 `API 入队 -> worker 分发 -> Notification Center 拉取已分发事件`，风险扫描链路已经拆成 `state runner 入队 -> worker 扫描 -> Risk Console 拉取 risk events`，scheduler 链路已经拆成 `worker tick -> scheduler store -> Notification Center 拉取 scheduler ticks`，运行时文件写入 `.quantpilot-runtime/`。
-当前 `task-orchestrator` 已开始具备最小持久化工作流能力，`cycles/run` 和 `state/run` 会自动写入 workflow runs，并可通过 `/api/task-orchestrator/workflows` 查询。
+当前 `task-orchestrator` 已开始具备最小持久化工作流能力，`cycles/run` 和 `state/run` 会自动写入 workflow runs，并支持 `queued / running / retry_scheduled / completed / failed / canceled` 这些状态，以及 `/api/task-orchestrator/workflows` 查询、`resume / cancel` 控制和 worker maintenance 重排。
 
 ## 关键入口
 

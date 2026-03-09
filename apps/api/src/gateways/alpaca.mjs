@@ -9,7 +9,17 @@ import { listRiskEvents } from '../modules/risk/service.mjs';
 import { listSchedulerTicks } from '../modules/scheduler/service.mjs';
 import { runCycle } from '../modules/task-orchestrator/cycle-runner.mjs';
 import { runStateCycle } from '../modules/task-orchestrator/state-runner.mjs';
-import { getWorkflow, listActions, listCycles, listWorkflows, recordAction, recordCycleRun } from '../modules/task-orchestrator/service.mjs';
+import {
+  cancelWorkflow,
+  getWorkflow,
+  listActions,
+  listCycles,
+  listWorkflows,
+  queueWorkflow,
+  recordAction,
+  recordCycleRun,
+  resumeWorkflow,
+} from '../modules/task-orchestrator/service.mjs';
 
 function loadEnvFile(pathname) {
   if (!existsSync(pathname)) return;
@@ -528,6 +538,32 @@ export function createGatewayHandler(options = {}) {
     if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')) {
       const workflowRunId = reqUrl.pathname.split('/').at(-1);
       const workflow = getWorkflow(workflowRunId);
+      writeJson(res, workflow ? 200 : 404, workflow
+        ? { ok: true, workflow }
+        : { ok: false, message: 'workflow not found' });
+      return;
+    }
+    if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/workflows/queue') {
+      const body = await readJsonBody(req);
+      writeJson(res, 200, {
+        ok: true,
+        workflow: queueWorkflow(body),
+      });
+      return;
+    }
+    if (req.method === 'POST' && reqUrl.pathname.endsWith('/resume') && reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')) {
+      const workflowRunId = reqUrl.pathname.split('/').at(-2);
+      const body = await readJsonBody(req);
+      const workflow = resumeWorkflow(workflowRunId, body);
+      writeJson(res, workflow ? 200 : 404, workflow
+        ? { ok: true, workflow }
+        : { ok: false, message: 'workflow not found' });
+      return;
+    }
+    if (req.method === 'POST' && reqUrl.pathname.endsWith('/cancel') && reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')) {
+      const workflowRunId = reqUrl.pathname.split('/').at(-2);
+      const body = await readJsonBody(req);
+      const workflow = cancelWorkflow(workflowRunId, body);
       writeJson(res, workflow ? 200 : 404, workflow
         ? { ok: true, workflow }
         : { ok: false, message: 'workflow not found' });

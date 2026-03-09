@@ -5,11 +5,13 @@ import { createMemoryStore } from '../../../packages/control-plane-store/test/he
 import { runNotificationDispatchTask } from '../src/tasks/notification-dispatch-task.mjs';
 import { runRiskScanTask } from '../src/tasks/risk-scan-task.mjs';
 import { runSchedulerTickTask } from '../src/tasks/scheduler-tick-task.mjs';
+import { runWorkflowMaintenanceTask } from '../src/tasks/workflow-maintenance-task.mjs';
 
 const workerConfig = {
   name: 'worker-test',
   notificationBatchSize: 20,
   riskScanBatchSize: 20,
+  workflowBatchSize: 20,
 };
 
 test('notification dispatch task flushes queued notifications', async () => {
@@ -67,4 +69,26 @@ test('scheduler tick task records a scheduler bucket event', async () => {
   assert.equal(result.kind, 'scheduler-tick');
   assert.equal(typeof result.phase, 'string');
   assert.equal(context.scheduler.listSchedulerTicks().length, 1);
+});
+
+test('workflow maintenance task re-queues scheduled workflow runs', async () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  context.workflows.appendWorkflowRun({
+    id: 'workflow-maint-1',
+    workflowId: 'task-orchestrator.cycle-run',
+    status: 'retry_scheduled',
+    nextRunAt: '2026-03-10T09:00:00.000Z',
+  });
+
+  const result = await runWorkflowMaintenanceTask(workerConfig, {
+    releaseScheduledWorkflows: (options) => context.workflows.releaseScheduledWorkflowRuns({
+      ...options,
+      now: '2026-03-10T09:10:00.000Z',
+    }),
+  });
+
+  assert.equal(result.worker, 'worker-test');
+  assert.equal(result.kind, 'workflow-maintenance');
+  assert.equal(result.releasedCount, 1);
+  assert.equal(context.workflows.getWorkflowRun('workflow-maint-1').status, 'queued');
 });

@@ -35,3 +35,19 @@ export function completeWorkflow(workflowRunId, patch = {}) {
 export function failWorkflow(workflowRunId, error, patch = {}) {
   return controlPlaneRuntime.failWorkflowRun(workflowRunId, error, patch);
 }
+
+export function queueWorkflow(payload) {
+  return controlPlaneRuntime.enqueueWorkflowRun(payload);
+}
+
+export function resumeWorkflow(workflowRunId, patch = {}) {
+  return controlPlaneRuntime.resumeWorkflowRun(workflowRunId, patch);
+}
+
+export function cancelWorkflow(workflowRunId, patch = {}) {
+  return controlPlaneRuntime.cancelWorkflowRun(workflowRunId, patch);
+}
+
+export function releaseScheduledWorkflows(options = {}) {
+  return controlPlaneRuntime.releaseScheduledWorkflowRuns(options);
+}
