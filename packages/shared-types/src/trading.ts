@@ -196,6 +196,13 @@ export type ControlPlaneResolution = {
     customBrokerConfigured: boolean;
     alpacaConfigured: boolean;
   };
+  brokerExecution: {
+    connected: boolean;
+    message: string;
+    submittedOrders: BrokerOrder[];
+    rejectedOrders: BrokerOrder[];
+    snapshot?: BrokerSnapshot;
+  };
 };
 
 export type CycleRunPayload = {
@@ -208,6 +215,8 @@ export type CycleRunPayload = {
   liveIntentCount: number;
   brokerConnected: boolean;
   marketConnected: boolean;
+  liveTradeEnabled: boolean;
+  pendingLiveIntents: BrokerOrder[];
 };
 
 export type TradingSystemContextValue = {

@@ -1,8 +1,7 @@
 import type { BrokerOrder, BrokerProvider, MarketDataProvider, TradingState } from '@shared-types/trading.ts';
-import { applyBrokerSnapshot, applyRemoteOrderSubmissions } from './execution.ts';
 import { applyQuotePatch, updateTicker } from './market.ts';
 import { riskOffIfNeeded } from './risk.ts';
-import { computeAccount, cloneState, chinaNow, logEvent } from './shared.ts';
+import { computeAccount, cloneState, chinaNow } from './shared.ts';
 import { executeStrategy } from './strategy.ts';
 
 export async function advanceState(previousState: TradingState, providers: { marketData: MarketDataProvider; broker: BrokerProvider }): Promise<TradingState> {
@@ -61,26 +60,6 @@ export async function advanceState(previousState: TradingState, providers: { mar
 
   state.pendingLiveIntents = Array.from(nextPendingMap.values());
   state.approvalQueue = Array.from(nextApprovalMap.values());
-
-  const brokerMessages: string[] = [];
-  if (state.toggles.liveTrade && providers.broker.supportsRemoteExecution) {
-    const submitSnapshot = await providers.broker.submitOrders({ orders: state.pendingLiveIntents });
-    brokerMessages.push(submitSnapshot.message);
-    applyRemoteOrderSubmissions(state, submitSnapshot.orders || []);
-    (submitSnapshot.rejectedOrders || []).forEach((order) => {
-      logEvent(state, 'info', `Remote order rejected ${order.symbol}`, `${order.side} ${order.qty} shares were rejected by broker.`);
-    });
-  }
-
-  const brokerSnapshot = await providers.broker.syncState({ state });
-  brokerMessages.push(brokerSnapshot.message);
-  state.integrationStatus.broker = {
-    provider: providers.broker.id,
-    label: providers.broker.label,
-    connected: brokerSnapshot.connected,
-    message: brokerMessages.filter(Boolean).join(' '),
-  };
-  applyBrokerSnapshot(state, brokerSnapshot);
 
   computeAccount(state.accounts.paper, state.stockStates);
   computeAccount(state.accounts.live, state.stockStates);

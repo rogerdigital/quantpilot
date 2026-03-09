@@ -28,6 +28,8 @@ function buildCyclePayload(state: TradingState): CycleRunPayload {
     liveIntentCount: state.pendingLiveIntents.length,
     brokerConnected: state.integrationStatus.broker.connected,
     marketConnected: state.integrationStatus.marketData.connected,
+    liveTradeEnabled: state.toggles.liveTrade,
+    pendingLiveIntents: state.pendingLiveIntents,
   };
 }
 

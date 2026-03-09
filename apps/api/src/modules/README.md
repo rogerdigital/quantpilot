@@ -20,3 +20,4 @@
 - `notification/service.mjs`: `GET /api/notification/events`
 - `task-orchestrator/service.mjs`: `GET /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/actions`
 - `task-orchestrator/cycle-runner.mjs`: `POST /api/task-orchestrator/cycles/run`
+  - 在记录周期后执行 broker 提交与状态同步，并返回控制面裁决

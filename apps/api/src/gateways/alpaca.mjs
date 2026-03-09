@@ -103,6 +103,58 @@ async function getBrokerHealthSnapshot() {
   };
 }
 
+async function executeBrokerCycle({ liveTradeEnabled, orders }) {
+  const baseUrl = `http://127.0.0.1:${GATEWAY_PORT}`;
+  const submittedOrders = [];
+  const rejectedOrders = [];
+  const messages = [];
+
+  if (liveTradeEnabled && Array.isArray(orders) && orders.length) {
+    const submitResponse = await fetch(`${baseUrl}/api/broker/orders`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        timestamp: new Date().toISOString(),
+        orders,
+      }),
+    });
+    const submitPayload = await submitResponse.json().catch(() => ({}));
+    messages.push(submitPayload?.message || `Broker order submission HTTP ${submitResponse.status}`);
+    submittedOrders.push(...(Array.isArray(submitPayload?.orders) ? submitPayload.orders : []));
+    rejectedOrders.push(...(Array.isArray(submitPayload?.rejectedOrders) ? submitPayload.rejectedOrders : []));
+  }
+
+  const stateResponse = await fetch(`${baseUrl}/api/broker/state`, {
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+  const statePayload = await stateResponse.json().catch(() => ({}));
+  if (statePayload?.message) {
+    messages.push(statePayload.message);
+  }
+
+  return {
+    connected: Boolean(stateResponse.ok && statePayload),
+    message: messages.filter(Boolean).join(' '),
+    submittedOrders,
+    rejectedOrders,
+    snapshot: stateResponse.ok ? {
+      connected: true,
+      message: statePayload?.message || 'Broker state sync succeeded.',
+      account: statePayload?.account || null,
+      positions: Array.isArray(statePayload?.positions) ? statePayload.positions : [],
+      orders: Array.isArray(statePayload?.orders) ? statePayload.orders : [],
+    } : {
+      connected: false,
+      message: statePayload?.message || `Broker state sync failed with HTTP ${stateResponse.status}.`,
+    },
+  };
+}
+
 function normalizeAlpacaOrder(order) {
   return {
     id: order.id,
@@ -408,6 +460,7 @@ const server = createServer(async (req, res) => {
       const body = await readJsonBody(req);
       writeJson(res, 200, await runCycle(body, {
         getBrokerHealth: getBrokerHealthSnapshot,
+        executeBrokerCycle,
       }));
       return;
     }

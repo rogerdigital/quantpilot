@@ -8,12 +8,16 @@ export async function runCycle(payload, context) {
   const session = getSession();
   const notifications = listNotifications(10);
   const auditCount = listAuditRecords(10).length;
+  const brokerExecution = await context.executeBrokerCycle({
+    liveTradeEnabled: Boolean(payload.liveTradeEnabled),
+    orders: Array.isArray(payload.pendingLiveIntents) ? payload.pendingLiveIntents : [],
+  });
   const brokerHealth = await context.getBrokerHealth();
   const marketConnected = Boolean(payload.marketConnected);
 
   const lastStatus = cycle.pendingApprovals > 0
     ? 'REVIEW'
-    : (!brokerHealth.connected || !marketConnected)
+    : (!brokerExecution.connected || !brokerHealth.connected || !marketConnected)
       ? 'DEGRADED'
       : 'HEALTHY';
 
@@ -43,5 +47,6 @@ export async function runCycle(payload, context) {
     },
     notifications,
     brokerHealth,
+    brokerExecution,
   };
 }
