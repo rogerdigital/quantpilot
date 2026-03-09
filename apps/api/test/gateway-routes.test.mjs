@@ -92,6 +92,39 @@ test('GET /api/risk/events returns seeded risk events', async () => {
   assert.equal(response.json.events[0].id, 'risk-api-test');
 });
 
+test('GET /api/strategy/catalog returns research strategies', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/strategy/catalog',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(Array.isArray(response.json.strategies), true);
+  assert.equal(response.json.strategies.some((item) => item.status === 'candidate'), true);
+});
+
+test('GET /api/backtest/summary returns structured research summary', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/backtest/summary',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(typeof response.json.completedRuns, 'number');
+  assert.equal(typeof response.json.averageSharpe, 'number');
+});
+
+test('GET /api/backtest/runs returns structured backtest runs', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/backtest/runs',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(Array.isArray(response.json.runs), true);
+  assert.equal(response.json.runs.some((item) => item.status === 'completed'), true);
+});
+
 test('GET /api/scheduler/ticks returns scheduler ticks from shared store', async () => {
   context.scheduler.recordSchedulerTick({
     worker: 'api-test-worker',

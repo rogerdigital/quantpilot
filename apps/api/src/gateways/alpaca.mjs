@@ -2,11 +2,13 @@ import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { appendAuditRecord, listAuditRecords } from '../modules/audit/service.mjs';
+import { getBacktestSummary, listBacktestRuns } from '../modules/backtest/service.mjs';
 import { getSession } from '../modules/auth/service.mjs';
 import { listModules } from '../modules/registry.mjs';
 import { listNotifications } from '../modules/notification/service.mjs';
 import { listRiskEvents } from '../modules/risk/service.mjs';
 import { listSchedulerTicks } from '../modules/scheduler/service.mjs';
+import { listStrategyCatalog } from '../modules/strategy/service.mjs';
 import { runCycle } from '../modules/task-orchestrator/cycle-runner.mjs';
 import { runStateCycle } from '../modules/task-orchestrator/state-runner.mjs';
 import {
@@ -483,6 +485,18 @@ export function createGatewayHandler(options = {}) {
         ok: true,
         modules: listModules(),
       });
+      return;
+    }
+    if (req.method === 'GET' && reqUrl.pathname === '/api/strategy/catalog') {
+      writeJson(res, 200, listStrategyCatalog());
+      return;
+    }
+    if (req.method === 'GET' && reqUrl.pathname === '/api/backtest/summary') {
+      writeJson(res, 200, getBacktestSummary());
+      return;
+    }
+    if (req.method === 'GET' && reqUrl.pathname === '/api/backtest/runs') {
+      writeJson(res, 200, listBacktestRuns());
       return;
     }
     if (req.method === 'GET' && reqUrl.pathname === '/api/audit/records') {

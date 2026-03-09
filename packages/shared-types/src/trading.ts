@@ -179,6 +179,56 @@ export type ControlPlaneNotification = {
   createdAt: string;
 };
 
+export type StrategyCatalogItem = {
+  id: string;
+  name: string;
+  family: string;
+  timeframe: string;
+  universe: string;
+  status: 'draft' | 'researching' | 'candidate' | 'paper' | 'live';
+  score: number;
+  expectedReturnPct: number;
+  maxDrawdownPct: number;
+  sharpe: number;
+  summary: string;
+};
+
+export type StrategyCatalogSnapshot = {
+  ok: boolean;
+  asOf: string;
+  strategies: StrategyCatalogItem[];
+};
+
+export type BacktestRunItem = {
+  id: string;
+  strategyId: string;
+  strategyName: string;
+  status: 'queued' | 'running' | 'completed' | 'needs_review';
+  windowLabel: string;
+  startedAt: string;
+  completedAt?: string;
+  annualizedReturnPct: number;
+  maxDrawdownPct: number;
+  sharpe: number;
+  winRatePct: number;
+  turnoverPct: number;
+  summary: string;
+};
+
+export type BacktestSummarySnapshot = {
+  ok: boolean;
+  asOf: string;
+  queuedRuns: number;
+  runningRuns: number;
+  completedRuns: number;
+  candidateStrategies: number;
+  promotedStrategies: number;
+  averageSharpe: number;
+  averageReturnPct: number;
+  reviewQueue: number;
+  dataSource: string;
+};
+
 export type ControlPlaneResolution = {
   ok: boolean;
   cycle: {
@@ -223,6 +273,14 @@ export type StateCycleResult = {
   ok: boolean;
   state: TradingState;
   resolution: ControlPlaneResolution;
+};
+
+export type ResearchHubSnapshot = {
+  ok: boolean;
+  asOf: string;
+  summary: BacktestSummarySnapshot;
+  strategies: StrategyCatalogItem[];
+  runs: BacktestRunItem[];
 };
 
 export type TradingSystemContextValue = {

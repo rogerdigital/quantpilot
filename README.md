@@ -1,6 +1,6 @@
 # QuantPilot
 
-QuantPilot 是一个面向量化交易工作流的分层平台原型，当前仓库已经从单一 Vite 应用重构为面向 `平台底座 + Agent 能力` 的 monorepo 骨架。
+QuantPilot 是一个面向量化交易工作流的分层平台原型，目标定义已经收敛为 `Web2 平台底座 + Web4.0 智能代理能力`。当前仓库已经从单一 Vite 应用重构为面向该目标的 monorepo 骨架。
 
 ## 当前定位
 
@@ -14,6 +14,25 @@ QuantPilot 是一个面向量化交易工作流的分层平台原型，当前仓
 - `packages/control-plane-store`: 控制面文件存储层，当前已按 `context + repositories` 结构拆分，承载 notification、risk、scheduler、audit、cycle records、workflow runs、operator actions 等跨进程事件和记录。
 
 当前版本依然以产品原型和前端工作流为主，不是可直接用于无人值守实盘的生产系统。
+
+## 当前进度
+
+- 平台骨架：`apps/web + apps/api + apps/worker + packages/*` 的 monorepo 结构已经稳定，控制面、共享类型和运行时边界已拆开。
+- 控制面：notification、risk、scheduler、audit、workflow run、operator action 已具备最小持久化和 API/worker 协作链路。
+- 执行闭环：`state run -> control plane -> broker sync -> risk scan -> notification` 已有原型链路，适合继续细化为真实服务。
+- 策略/回测：本轮已补上 `strategy catalog + backtest summary + backtest runs` 的后端接口和前端研究中心视图，开始从“页面占位”进入“结构化研究数据”阶段。
+- Agent：当前仍以协作台和解释层原型为主，尚未进入真正的 LLM orchestration、memory 和 tool calling。
+
+## 距离最终目标还差什么
+
+- 用户系统：缺少真实注册登录、权限模型、租户/账户绑定和用户设置持久化。
+- 行情数据：缺少稳定的数据接入抽象、历史数据存储、订阅分发和多 provider 切换。
+- 策略管理：缺少策略注册中心、参数版本、运行配置、晋级审批和策略生命周期管理。
+- 回测系统：当前只有研究快照接口，缺少真实回测执行器、任务队列、结果持久化和参数优化。
+- 风控系统：缺少组合级规则引擎、阈值配置、审批流和熔断恢复机制。
+- 执行引擎：缺少 broker adapter 抽象层、订单路由、成交回报、补偿重试和真实订单状态机。
+- 仪表盘与日志告警：当前以原型展示为主，缺少系统级指标、日志查询、告警通道和运维面板。
+- Agent 能力：缺少自然语言目标解析、Planner、Tool Router、Prompt/Context 管理、结果解释和受控自动执行。
 
 ## 架构原则
 

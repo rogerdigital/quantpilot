@@ -102,11 +102,13 @@ quantpilot/
 
 - `apps/web/src/store/trading-system/core/` 已从本地状态机实现收敛为共享 runtime 的前端包装层，但前端状态驱动本身仍属原型形态。
 - `apps/api` 已具备最小控制面接口、`cycle runner` 和 `state runner` 能力，其中 `state runner` 已收敛为对共享 runtime 的服务端编排封装，但整体仍是轻量 Node 网关形态，尚未进入真正的 NestJS 模块实现阶段。
+- `apps/api` 现已补上 `strategy / backtest` 研究接口，`apps/web/src/pages/backtest/BacktestPage.tsx` 已开始消费结构化研究数据，但回测执行仍是静态研究快照而非真实任务运行结果。
 - `apps/worker` 当前已接管 notification outbox 分发、risk scan 处理和 scheduler tick，但尚未真正接管重试补偿和更复杂的定时编排。
 - `packages` 目前已落 `shared-types`、`trading-engine` 与 `control-plane-store`，`data-core / strategy-core / risk-core / execution-core` 仍应随着真实实现逐步抽离。
 
 ## 下一步建议
 
-1. 把 `task-orchestrator` 从当前的内存控制面升级为真正的任务流和队列执行层。
-2. 把 `core/lifecycle.ts` 里的异步编排继续迁到后端任务层，前端只保留状态消费和交互动作。
-3. 当后端能力稳定后，再把共享规则和核心逻辑逐步抽成更多 `packages/*`。
+1. 把 `strategy / backtest` 从静态 research snapshot 升级为真实的任务执行与结果持久化模块。
+2. 把 `task-orchestrator` 从当前的文件型控制面升级为真正的任务流和队列执行层。
+3. 把 `core/lifecycle.ts` 里的异步编排继续迁到后端任务层，前端只保留状态消费和交互动作。
+4. 当后端能力稳定后，再把共享规则和核心逻辑逐步抽成更多 `packages/*`。
