@@ -69,6 +69,8 @@ quantpilot/
   - API 网关级集成测试，当前覆盖 notification、risk、scheduler、audit、cycles、cycle resolution 和 state runner 这些控制面核心接口。
 - `apps/worker/src/`
   - 异步任务进程骨架，当前已拆出独立启动入口、worker runtime 和后台 task 目录，已接管 notification dispatch、risk scan 和 scheduler tick 三类后台任务。
+- `apps/worker/test/`
+  - worker 任务级测试，当前覆盖 notification dispatch、risk scan 和 scheduler tick 三类后台任务的核心副作用。
 - `apps/api/src/modules/`
   - 控制中枢的模块规划，包括 API、鉴权、账户、任务编排、通知、风控、审计、监控和调度；其中 `auth / audit / notification / risk / task-orchestrator` 已具备最小原型实现。
 - `packages/shared-types/src/`

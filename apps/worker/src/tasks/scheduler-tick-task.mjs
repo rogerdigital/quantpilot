@@ -1,7 +1,8 @@
 import { runSchedulerTick } from '../../../api/src/modules/scheduler/service.mjs';
 
-export async function runSchedulerTickTask(config) {
-  const result = runSchedulerTick({
+export async function runSchedulerTickTask(config, dependencies = {}) {
+  const recordSchedulerTick = dependencies.runSchedulerTick || runSchedulerTick;
+  const result = recordSchedulerTick({
     worker: config.name,
   });
   return {

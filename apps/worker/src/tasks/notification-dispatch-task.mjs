@@ -1,7 +1,8 @@
 import { flushQueuedNotifications } from '../../../api/src/modules/notification/service.mjs';
 
-export async function runNotificationDispatchTask(config) {
-  const result = flushQueuedNotifications({
+export async function runNotificationDispatchTask(config, dependencies = {}) {
+  const flushNotifications = dependencies.flushQueuedNotifications || flushQueuedNotifications;
+  const result = flushNotifications({
     worker: config.name,
     limit: config.notificationBatchSize,
   });

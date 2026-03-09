@@ -20,8 +20,9 @@
     "check:lockfile": "node scripts/check-lockfile-sync.mjs",
     "test:api": "node --test apps/api/test/*.test.mjs",
     "test:control-plane": "node --test packages/control-plane-store/test/*.test.mjs",
+    "test:worker": "node --test apps/worker/test/*.test.mjs",
     "typecheck": "tsc --noEmit -p apps/web/tsconfig.json",
-    "verify": "npm run check:lockfile && npm run test:control-plane && npm run test:api && npm run typecheck && npm run build",
+    "verify": "npm run check:lockfile && npm run test:control-plane && npm run test:api && npm run test:worker && npm run typecheck && npm run build",
     "gateway": "node apps/api/src/main.mjs",
     "worker": "node apps/worker/src/main.mjs"
   },

@@ -1,7 +1,8 @@
 import { flushQueuedRiskScans } from '../../../api/src/modules/risk/service.mjs';
 
-export async function runRiskScanTask(config) {
-  const result = flushQueuedRiskScans({
+export async function runRiskScanTask(config, dependencies = {}) {
+  const flushRiskScans = dependencies.flushQueuedRiskScans || flushQueuedRiskScans;
+  const result = flushRiskScans({
     worker: config.name,
     limit: config.riskScanBatchSize,
   });
