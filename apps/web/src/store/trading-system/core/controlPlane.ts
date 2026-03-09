@@ -7,6 +7,11 @@ export function applyControlPlaneResolution(state: TradingState, resolution: Con
     ...resolution.controlPlane,
   };
 
+  state.integrationStatus.broker.connected = resolution.brokerHealth.connected;
+  state.integrationStatus.broker.message = resolution.brokerHealth.connected
+    ? `Control plane verified broker adapter ${resolution.brokerHealth.adapter}.`
+    : `Control plane marked broker adapter ${resolution.brokerHealth.adapter} as degraded.`;
+
   if (resolution.controlPlane.routeHint) {
     state.routeCopy = resolution.controlPlane.routeHint;
   }

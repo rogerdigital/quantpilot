@@ -1,4 +1,4 @@
-import type { ControlPlaneResolution, TradingState } from '@shared-types/trading.ts';
+import type { ControlPlaneResolution, CycleRunPayload, TradingState } from '@shared-types/trading.ts';
 
 function jsonHeaders() {
   return {
@@ -17,21 +17,25 @@ export async function fetchOperatorSession() {
   return response.json();
 }
 
-export async function resolveCycle(state: TradingState): Promise<ControlPlaneResolution> {
-  const response = await fetch('/api/task-orchestrator/cycles/resolve', {
+function buildCyclePayload(state: TradingState): CycleRunPayload {
+  return {
+    cycle: state.cycle,
+    mode: state.mode,
+    riskLevel: state.riskLevel,
+    decisionSummary: state.decisionSummary,
+    marketClock: state.marketClock,
+    pendingApprovals: state.approvalQueue.length,
+    liveIntentCount: state.pendingLiveIntents.length,
+    brokerConnected: state.integrationStatus.broker.connected,
+    marketConnected: state.integrationStatus.marketData.connected,
+  };
+}
+
+export async function runCycle(state: TradingState): Promise<ControlPlaneResolution> {
+  const response = await fetch('/api/task-orchestrator/cycles/run', {
     method: 'POST',
     headers: jsonHeaders(),
-    body: JSON.stringify({
-      cycle: state.cycle,
-      mode: state.mode,
-      riskLevel: state.riskLevel,
-      decisionSummary: state.decisionSummary,
-      marketClock: state.marketClock,
-      pendingApprovals: state.approvalQueue.length,
-      liveIntentCount: state.pendingLiveIntents.length,
-      brokerConnected: state.integrationStatus.broker.connected,
-      marketConnected: state.integrationStatus.marketData.connected,
-    }),
+    body: JSON.stringify(buildCyclePayload(state)),
   });
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);

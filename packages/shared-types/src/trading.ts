@@ -190,6 +190,24 @@ export type ControlPlaneResolution = {
   };
   controlPlane: TradingState['controlPlane'];
   notifications: ControlPlaneNotification[];
+  brokerHealth: {
+    adapter: string;
+    connected: boolean;
+    customBrokerConfigured: boolean;
+    alpacaConfigured: boolean;
+  };
+};
+
+export type CycleRunPayload = {
+  cycle: number;
+  mode: string;
+  riskLevel: string;
+  decisionSummary: string;
+  marketClock: string;
+  pendingApprovals: number;
+  liveIntentCount: number;
+  brokerConnected: boolean;
+  marketConnected: boolean;
 };
 
 export type TradingSystemContextValue = {

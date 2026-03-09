@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { runtimeConfig } from '../../services/config/runtime.ts';
-import { fetchOperatorSession, resolveCycle, reportOperatorAction } from '../../services/controlPlane.ts';
+import { fetchOperatorSession, runCycle as runControlPlaneCycle, reportOperatorAction } from '../../services/controlPlane.ts';
 import { createBrokerProvider } from '../../services/providers/broker.ts';
 import { createMarketDataProvider } from '../../services/providers/marketData.ts';
 import type { TradingState, TradingSystemContextValue } from '@shared-types/trading.ts';
@@ -34,7 +34,7 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
       busyRef.current = true;
       try {
         const nextState = await advanceState(stateRef.current, providersRef.current);
-        const resolution = await resolveCycle(nextState).catch(() => null);
+        const resolution = await runControlPlaneCycle(nextState).catch(() => null);
         if (resolution) {
           applyControlPlaneResolution(nextState, resolution);
         }

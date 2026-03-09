@@ -5,7 +5,8 @@ import { appendAuditRecord, listAuditRecords } from '../modules/audit/service.mj
 import { getSession } from '../modules/auth/service.mjs';
 import { listModules } from '../modules/registry.mjs';
 import { listNotifications } from '../modules/notification/service.mjs';
-import { listCycles, recordAction, recordCycleRun, resolveCycle } from '../modules/task-orchestrator/service.mjs';
+import { runCycle } from '../modules/task-orchestrator/cycle-runner.mjs';
+import { listCycles, recordAction, recordCycleRun } from '../modules/task-orchestrator/service.mjs';
 
 function loadEnvFile(pathname) {
   if (!existsSync(pathname)) return;
@@ -91,6 +92,15 @@ function customBrokerHeaders(withJson = false) {
 
 function ensureCustomBrokerConfigured() {
   return Boolean(BROKER_UPSTREAM_URL);
+}
+
+async function getBrokerHealthSnapshot() {
+  return {
+    adapter: BROKER_ADAPTER,
+    connected: BROKER_ADAPTER === 'custom-http' ? ensureCustomBrokerConfigured() : ensureConfigured(),
+    customBrokerConfigured: ensureCustomBrokerConfigured(),
+    alpacaConfigured: ensureConfigured(),
+  };
 }
 
 function normalizeAlpacaOrder(order) {
@@ -394,9 +404,11 @@ const server = createServer(async (req, res) => {
       });
       return;
     }
-    if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/cycles/resolve') {
+    if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/cycles/run') {
       const body = await readJsonBody(req);
-      writeJson(res, 200, resolveCycle(body));
+      writeJson(res, 200, await runCycle(body, {
+        getBrokerHealth: getBrokerHealthSnapshot,
+      }));
       return;
     }
     if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/actions') {
@@ -408,11 +420,13 @@ const server = createServer(async (req, res) => {
       return;
     }
     if (req.method === 'GET' && reqUrl.pathname === '/api/broker/health') {
+      const brokerHealth = await getBrokerHealthSnapshot();
       writeJson(res, 200, {
         ok: true,
-        brokerAdapter: BROKER_ADAPTER,
-        customBrokerConfigured: ensureCustomBrokerConfigured(),
-        alpacaConfigured: ensureConfigured(),
+        brokerAdapter: brokerHealth.adapter,
+        customBrokerConfigured: brokerHealth.customBrokerConfigured,
+        alpacaConfigured: brokerHealth.alpacaConfigured,
+        connected: brokerHealth.connected,
       });
       return;
     }

@@ -57,7 +57,7 @@ quantpilot/
 ## 当前差距
 
 - `apps/web/src/store/trading-system/core/` 已完成第一轮切片，但仍属于前端原型状态机，后续应继续向真正的领域服务和后端任务流迁移。
-- `apps/api` 已具备最小控制面接口和 `cycle resolve` 能力，但仍是轻量 Node 网关形态，尚未进入真正的 NestJS 模块实现阶段。
+- `apps/api` 已具备最小控制面接口和 `cycle runner` 能力，但仍是轻量 Node 网关形态，尚未进入真正的 NestJS 模块实现阶段。
 - `packages` 目前只落了 `shared-types`，`data-core / strategy-core / risk-core / execution-core` 仍应随着真实实现逐步抽离。
 
 ## 下一步建议

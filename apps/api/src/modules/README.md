@@ -18,4 +18,5 @@
 - `auth/service.mjs`: `GET /api/auth/session`
 - `audit/service.mjs`: `GET /api/audit/records`、`POST /api/audit/records`
 - `notification/service.mjs`: `GET /api/notification/events`
-- `task-orchestrator/service.mjs`: `GET /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/cycles/resolve`、`POST /api/task-orchestrator/actions`
+- `task-orchestrator/service.mjs`: `GET /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/actions`
+- `task-orchestrator/cycle-runner.mjs`: `POST /api/task-orchestrator/cycles/run`
