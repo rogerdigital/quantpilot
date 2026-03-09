@@ -20,6 +20,7 @@
 - `audit/service.mjs`: `GET /api/audit/records`、`POST /api/audit/records`
 - `notification/service.mjs`: `GET /api/notification/events`
 - `risk/service.mjs`: `GET /api/risk/events`
+- `scheduler/service.mjs`: `GET /api/scheduler/ticks`
 - `task-orchestrator/service.mjs`: `GET /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/actions`
 - `task-orchestrator/cycle-runner.mjs`: `POST /api/task-orchestrator/cycles/run`
   - 在记录周期后执行 broker 提交与状态同步，并返回控制面裁决
@@ -31,3 +32,4 @@
 - `apps/worker/` 将接管真正的后台任务执行，包括风险扫描、重试补偿、通知分发和定时编排。
 - 当前 notification 已经切到 `queueNotification -> apps/worker dispatch` 模式，不再依赖 API 进程内存直接分发。
 - 当前 risk scan 已经切到 `queueRiskScan -> apps/worker process` 模式，风险事件会单独沉淀到后端事件流。
+- 当前 scheduler tick 已经切到 `apps/worker -> scheduler service/store` 模式，API 只负责读取调度事件流。

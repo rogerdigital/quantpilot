@@ -6,6 +6,7 @@ import { getSession } from '../modules/auth/service.mjs';
 import { listModules } from '../modules/registry.mjs';
 import { listNotifications } from '../modules/notification/service.mjs';
 import { listRiskEvents } from '../modules/risk/service.mjs';
+import { listSchedulerTicks } from '../modules/scheduler/service.mjs';
 import { runCycle } from '../modules/task-orchestrator/cycle-runner.mjs';
 import { runStateCycle } from '../modules/task-orchestrator/state-runner.mjs';
 import { listCycles, recordAction, recordCycleRun } from '../modules/task-orchestrator/service.mjs';
@@ -482,6 +483,13 @@ const server = createServer(async (req, res) => {
       writeJson(res, 200, {
         ok: true,
         events: listRiskEvents(),
+      });
+      return;
+    }
+    if (req.method === 'GET' && reqUrl.pathname === '/api/scheduler/ticks') {
+      writeJson(res, 200, {
+        ok: true,
+        ticks: listSchedulerTicks(),
       });
       return;
     }

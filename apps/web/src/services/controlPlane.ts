@@ -94,3 +94,13 @@ export async function fetchRiskEvents() {
   }
   return response.json();
 }
+
+export async function fetchSchedulerTicks() {
+  const response = await fetch('/api/scheduler/ticks', {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}

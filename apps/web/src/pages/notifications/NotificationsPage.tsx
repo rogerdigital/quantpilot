@@ -1,5 +1,6 @@
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { useNotificationsFeed } from '../../hooks/useNotificationsFeed.ts';
+import { useSchedulerTicksFeed } from '../../hooks/useSchedulerTicksFeed.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { ActivityLog } from '../console/components/ConsoleTables.tsx';
 import { copy, useLocale } from '../console/i18n.tsx';
@@ -8,6 +9,7 @@ export default function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
   const { items, loading } = useNotificationsFeed();
+  const { items: schedulerItems, loading: schedulerLoading } = useSchedulerTicksFeed();
   const connectedCount = Number(state.integrationStatus.marketData.connected) + Number(state.integrationStatus.broker.connected);
 
   return (
@@ -81,6 +83,35 @@ export default function NotificationsPage() {
             <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{state.controlPlane.lastStatus}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '审计记录' : 'Audit Records'}</span><strong>{state.controlPlane.auditCount}</strong></div>
             <div className="status-copy">{state.controlPlane.routeHint}</div>
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '调度节拍' : 'Scheduler Ticks'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '查看 worker 产生的盘前、盘中、盘后调度窗口节拍。'
+                  : 'Inspect worker-produced pre-open, intraday, and post-close scheduler ticks.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{schedulerItems.length}</div>
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {schedulerLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载调度节拍...' : 'Loading scheduler ticks...'}</div> : null}
+            {!schedulerLoading && !schedulerItems.length ? <div className="empty-cell">{locale === 'zh' ? '暂无调度节拍' : 'No scheduler ticks yet.'}</div> : null}
+            {!schedulerLoading ? schedulerItems.map((item) => (
+              <div className="focus-row" key={item.id}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.message}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '窗口' : 'Phase'}</span>
+                  <strong>{item.phase}</strong>
+                </div>
+              </div>
+            )) : null}
           </div>
         </article>
       </section>

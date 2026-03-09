@@ -10,6 +10,8 @@ const notificationsPath = join(runtimeRoot, 'notifications.json');
 const outboxPath = join(runtimeRoot, 'notification-outbox.json');
 const riskEventsPath = join(runtimeRoot, 'risk-events.json');
 const riskScanOutboxPath = join(runtimeRoot, 'risk-scan-outbox.json');
+const schedulerTicksPath = join(runtimeRoot, 'scheduler-ticks.json');
+const schedulerStatePath = join(runtimeRoot, 'scheduler-state.json');
 
 function ensureRuntimeRoot() {
   mkdirSync(runtimeRoot, { recursive: true });
@@ -32,6 +34,25 @@ function readCollection(pathname) {
 function writeCollection(pathname, entries) {
   ensureRuntimeRoot();
   writeFileSync(pathname, JSON.stringify(entries, null, 2));
+}
+
+function readObject(pathname, fallback) {
+  ensureRuntimeRoot();
+  if (!existsSync(pathname)) {
+    return fallback;
+  }
+  try {
+    const text = readFileSync(pathname, 'utf8');
+    const parsed = JSON.parse(text);
+    return parsed && typeof parsed === 'object' ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeObject(pathname, value) {
+  ensureRuntimeRoot();
+  writeFileSync(pathname, JSON.stringify(value, null, 2));
 }
 
 function createNotificationEntry(event) {
@@ -59,6 +80,63 @@ function createRiskEventEntry(event) {
     createdAt: event.createdAt || new Date().toISOString(),
     metadata: event.metadata || {},
   };
+}
+
+function createSchedulerTickEntry(event) {
+  return {
+    id: event.id || `scheduler-tick-${randomUUID()}`,
+    phase: event.phase || 'OFF_HOURS',
+    status: event.status || 'steady',
+    title: event.title || 'Scheduler Tick',
+    message: event.message || '',
+    worker: event.worker || 'quantpilot-worker',
+    createdAt: event.createdAt || new Date().toISOString(),
+    metadata: event.metadata || {},
+  };
+}
+
+function getShanghaiTimeParts(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const map = {};
+  parts.forEach((part) => {
+    if (part.type !== 'literal') {
+      map[part.type] = part.value;
+    }
+  });
+  return {
+    date: `${map.year}-${map.month}-${map.day}`,
+    hour: Number(map.hour || 0),
+    minute: Number(map.minute || 0),
+    second: Number(map.second || 0),
+  };
+}
+
+function resolveSchedulerPhase(parts) {
+  const time = parts.hour * 60 + parts.minute;
+  if (time >= 8 * 60 + 30 && time < 9 * 60 + 30) {
+    return 'PRE_OPEN';
+  }
+  if (time >= 9 * 60 + 30 && time < 15 * 60) {
+    return 'INTRADAY';
+  }
+  if (time >= 15 * 60 && time < 18 * 60) {
+    return 'POST_CLOSE';
+  }
+  return 'OFF_HOURS';
+}
+
+function buildSchedulerBucket(parts) {
+  const minuteBucket = String(Math.floor(parts.minute / 15) * 15).padStart(2, '0');
+  return `${parts.date} ${String(parts.hour).padStart(2, '0')}:${minuteBucket}`;
 }
 
 export function listNotifications(limit = 50) {
@@ -283,5 +361,80 @@ export function dispatchPendingRiskScans(options = {}) {
     worker,
     dispatchedCount: dispatchedJobs.length,
     dispatchedJobs,
+  };
+}
+
+export function listSchedulerTicks(limit = 50) {
+  return readCollection(schedulerTicksPath).slice(0, limit);
+}
+
+export function recordSchedulerTick(options = {}) {
+  const worker = options.worker || 'quantpilot-worker';
+  const now = new Date();
+  const parts = getShanghaiTimeParts(now);
+  const phase = resolveSchedulerPhase(parts);
+  const bucket = buildSchedulerBucket(parts);
+  const state = readObject(schedulerStatePath, {
+    lastPhase: '',
+    lastBucket: '',
+    lastTickAt: '',
+  });
+
+  if (state.lastPhase === phase && state.lastBucket === bucket) {
+    return {
+      worker,
+      emitted: false,
+      phase,
+      tick: null,
+    };
+  }
+
+  const phaseChanged = state.lastPhase !== phase;
+  const tick = createSchedulerTickEntry({
+    phase,
+    status: phaseChanged ? 'phase-change' : 'steady',
+    title: phaseChanged ? `Scheduler entered ${phase}` : `Scheduler tick ${phase}`,
+    message: phaseChanged
+      ? `Scheduler moved into ${phase} window and background jobs can be routed accordingly.`
+      : `Scheduler heartbeat recorded for the ${phase} window.`,
+    worker,
+    metadata: {
+      bucket,
+      previousPhase: state.lastPhase || null,
+    },
+  });
+
+  const ticks = readCollection(schedulerTicksPath);
+  ticks.unshift(tick);
+  ticks.splice(100);
+  writeCollection(schedulerTicksPath, ticks);
+
+  if (phaseChanged) {
+    const notifications = readCollection(notificationsPath);
+    notifications.unshift(createNotificationEntry({
+      level: phase === 'OFF_HOURS' ? 'info' : 'warn',
+      title: tick.title,
+      message: tick.message,
+      source: 'scheduler',
+      metadata: {
+        phase,
+        previousPhase: state.lastPhase || null,
+      },
+    }));
+    notifications.splice(100);
+    writeCollection(notificationsPath, notifications);
+  }
+
+  writeObject(schedulerStatePath, {
+    lastPhase: phase,
+    lastBucket: bucket,
+    lastTickAt: tick.createdAt,
+  });
+
+  return {
+    worker,
+    emitted: true,
+    phase,
+    tick,
   };
 }
