@@ -29,10 +29,13 @@ quantpilot/
 ├── docs/
 │   └── architecture/
 ├── packages/
-│   └── shared-types/
+│   ├── shared-types/
+│   │   ├── src/
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   └── trading-engine/
 │       ├── src/
-│       ├── package.json
-│       └── tsconfig.json
+│       └── package.json
 ├── package.json
 └── tsconfig.base.json
 ```
@@ -44,7 +47,7 @@ quantpilot/
 - `apps/web/src/pages/`
   - 前端页面层，已对齐 `dashboard / market / strategies / backtest / risk / execution / agent / notifications / settings`。
 - `apps/web/src/store/`
-  - 前端状态层，`TradingSystemProvider.tsx` 负责向后端提交当前状态并消费新状态，`core/` 目录下保留市场、策略、风控、执行和控制面的纯计算兼容逻辑。
+  - 前端状态层，`TradingSystemProvider.tsx` 负责向后端提交当前状态并消费新状态，`core/` 目录下主要保留对共享 runtime 的类型化封装。
 - `apps/web/src/services/`
   - 运行配置、provider 接入和控制面通信层，包括 market data、broker 与 control-plane service。
 - `apps/api/src/`
@@ -53,12 +56,14 @@ quantpilot/
   - 控制中枢的模块规划，包括 API、鉴权、账户、任务编排、通知、审计、监控和调度；其中 `auth / audit / notification / task-orchestrator` 已具备最小内存实现。
 - `packages/shared-types/src/`
   - 共享类型层，承接前端、API 和后续 worker 的统一领域模型。
+- `packages/trading-engine/src/`
+  - 共享运行时层，沉淀市场推进、策略执行、风控裁决、订单意图和控制面状态合并逻辑，供前后端共同消费。
 
 ## 当前差距
 
-- `apps/web/src/store/trading-system/core/` 已完成第一轮切片，但仍属于前端原型状态机，后续应继续向真正的领域服务和后端任务流迁移。
-- `apps/api` 已具备最小控制面接口、`cycle runner` 和 `state runner` 能力，但仍是轻量 Node 网关形态，尚未进入真正的 NestJS 模块实现阶段。
-- `packages` 目前只落了 `shared-types`，`data-core / strategy-core / risk-core / execution-core` 仍应随着真实实现逐步抽离。
+- `apps/web/src/store/trading-system/core/` 已从本地状态机实现收敛为共享 runtime 的前端包装层，但前端状态驱动本身仍属原型形态。
+- `apps/api` 已具备最小控制面接口、`cycle runner` 和 `state runner` 能力，其中 `state runner` 已收敛为对共享 runtime 的服务端编排封装，但整体仍是轻量 Node 网关形态，尚未进入真正的 NestJS 模块实现阶段。
+- `packages` 目前已落 `shared-types` 与 `trading-engine`，`data-core / strategy-core / risk-core / execution-core` 仍应随着真实实现逐步抽离。
 
 ## 下一步建议
 

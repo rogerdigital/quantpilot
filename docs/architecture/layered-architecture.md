@@ -35,8 +35,10 @@
 - `apps/web` 承载前端层。
 - `apps/api` 承载后端层和执行接入骨架，当前已经提供最小的 `auth / audit / notification / task-orchestrator` 控制面接口。
 - `packages/shared-types` 承载共享模型。
-- `apps/web/src/store/trading-system/core/` 已完成第二轮切片，当前包含 `config / market / strategy / risk / execution / lifecycle / controlPlane / state / shared`。
+- `packages/trading-engine` 承载市场、策略、风控、执行和控制面状态合并所需的共享 runtime。
+- `apps/web/src/store/trading-system/core/` 已完成第二轮切片，当前包含 `config / market / strategy / risk / execution / lifecycle / controlPlane / state / shared`，并主要作为共享 runtime 的前端封装层存在。
 - `apps/web/src/store/trading-system/core.ts` 现在只保留兼容出口，避免页面层直接感知内部重构。
 - `apps/web/src/store/trading-system/TradingSystemProvider.tsx` 当前会把本地状态快照提交到后端 `state run` 接口，并直接消费服务端返回的新周期状态。
 - 远程 broker 的订单提交和状态同步已由后端 `cycle runner` 统一执行，前端不再在周期内直接调用 broker submit/sync。
 - 市场数据拉取也已进入后端 `state runner`，前端不再在主周期里直接调用 market data provider。
+- `state runner` 当前只负责服务端数据拉取、调用共享 runtime 推进状态、再交由控制面完成 broker 协调，前后端不再各自维护一份独立的交易周期实现。

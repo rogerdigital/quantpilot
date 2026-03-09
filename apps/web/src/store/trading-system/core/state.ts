@@ -1,7 +1,7 @@
 import { runtimeConfig } from '../../../services/config/runtime.ts';
 import type { BrokerProvider, MarketDataProvider, TradingState } from '@shared-types/trading.ts';
 import { APP_CONFIG } from './config.ts';
-import { createInitialStockStates } from './market.ts';
+import { createInitialStockStates } from '../../../../../../packages/trading-engine/src/runtime.mjs';
 import { computeAccount, createAccount, logEvent } from './shared.ts';
 
 function initialState(): TradingState {
@@ -36,7 +36,7 @@ function initialState(): TradingState {
         message: '',
       },
     },
-    stockStates: createInitialStockStates(),
+    stockStates: createInitialStockStates(APP_CONFIG),
     accounts: {
       paper: createAccount('paper', 'Paper', 120000, {
         AAPL: { shares: 42, avgCost: 198.6 },

@@ -7,6 +7,7 @@ QuantPilot 是一个面向量化交易工作流的分层平台原型，当前仓
 - `apps/web`: 用户控制台，承载 Dashboard、Market、Strategy、Backtest、Risk、Execution、Agent、Notifications 和 Settings。
 - `apps/api`: 后端入口和网关骨架，承载 API、鉴权、任务编排、通知、审计、调度等服务边界。
 - `packages/shared-types`: 前后端共享的交易和平台类型定义。
+- `packages/trading-engine`: 市场、策略、风控、执行和控制面合并所需的共享 runtime。
 
 当前版本依然以产品原型和前端工作流为主，不是可直接用于无人值守实盘的生产系统。
 
@@ -32,7 +33,8 @@ quantpilot/
 │       ├── tsconfig.json
 │       └── vite.config.ts
 ├── packages/
-│   └── shared-types/
+│   ├── shared-types/
+│   └── trading-engine/
 ├── docs/
 │   └── architecture/
 ├── package.json
@@ -65,6 +67,7 @@ npm run gateway
 - [alpaca gateway](apps/api/src/gateways/alpaca.mjs)
 - [control-plane service](apps/web/src/services/controlPlane.ts)
 - [shared types](packages/shared-types/src/trading.ts)
+- [shared trading runtime](packages/trading-engine/src/runtime.mjs)
 
 ## 安全边界
 

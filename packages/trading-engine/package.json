@@ -1,0 +1,5 @@
+{
+  "name": "@quantpilot/trading-engine",
+  "private": true,
+  "type": "module"
+}
