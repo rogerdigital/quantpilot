@@ -1,5 +1,10 @@
 {
   "name": "@quantpilot/trading-engine",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "main": "./src/runtime.mjs",
+  "exports": {
+    ".": "./src/runtime.mjs",
+    "./runtime": "./src/runtime.mjs"
+  }
 }

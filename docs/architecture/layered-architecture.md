@@ -34,8 +34,9 @@
 
 - `apps/web` 承载前端层。
 - `apps/api` 承载后端层和执行接入骨架，当前已经提供最小的 `auth / audit / notification / task-orchestrator` 控制面接口。
+- `apps/worker` 承载后端异步任务进程骨架，用于承接未来从 API 进程迁出的任务编排、风险扫描、通知分发和执行补偿。
 - `packages/shared-types` 承载共享模型。
-- `packages/trading-engine` 承载市场、策略、风控、执行和控制面状态合并所需的共享 runtime。
+- `packages/trading-engine` 承载市场、策略、风控、执行和控制面状态合并所需的共享 runtime，并已拆分为按职责划分的内部模块。
 - `apps/web/src/store/trading-system/core/` 已完成第二轮切片，当前包含 `config / market / strategy / risk / execution / lifecycle / controlPlane / state / shared`，并主要作为共享 runtime 的前端封装层存在。
 - `apps/web/src/store/trading-system/core.ts` 现在只保留兼容出口，避免页面层直接感知内部重构。
 - `apps/web/src/store/trading-system/TradingSystemProvider.tsx` 当前会把本地状态快照提交到后端 `state run` 接口，并直接消费服务端返回的新周期状态。

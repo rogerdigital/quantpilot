@@ -6,6 +6,7 @@ QuantPilot 是一个面向量化交易工作流的分层平台原型，当前仓
 
 - `apps/web`: 用户控制台，承载 Dashboard、Market、Strategy、Backtest、Risk、Execution、Agent、Notifications 和 Settings。
 - `apps/api`: 后端入口和网关骨架，承载 API、鉴权、任务编排、通知、审计、调度等服务边界。
+- `apps/worker`: 异步 worker 骨架，预留回测、风控扫描、通知分发和执行补偿等后台任务进程。
 - `packages/shared-types`: 前后端共享的交易和平台类型定义。
 - `packages/trading-engine`: 市场、策略、风控、执行和控制面合并所需的共享 runtime。
 
@@ -24,6 +25,8 @@ QuantPilot 是一个面向量化交易工作流的分层平台原型，当前仓
 quantpilot/
 ├── apps/
 │   ├── api/
+│   │   └── src/
+│   ├── worker/
 │   │   └── src/
 │   └── web/
 │       ├── public/
@@ -50,6 +53,7 @@ npm run dev
 npm run build
 npm run typecheck
 npm run gateway
+npm run worker
 ```
 
 前端默认运行在 `http://127.0.0.1:8080`，`/api/*` 会代理到 `http://127.0.0.1:8787`。

@@ -14,6 +14,13 @@ quantpilot/
 │   │       ├── app/
 │   │       ├── gateways/
 │   │       └── modules/
+│   ├── worker/
+│   │   ├── package.json
+│   │   └── src/
+│   │       ├── main.mjs
+│   │       ├── app/
+│   │       ├── runtime/
+│   │       └── tasks/
 │   └── web/
 │       ├── public/
 │       ├── src/
@@ -52,17 +59,20 @@ quantpilot/
   - 运行配置、provider 接入和控制面通信层，包括 market data、broker 与 control-plane service。
 - `apps/api/src/`
   - 后端入口和平台底座骨架，当前包括 app、gateway、最小控制面服务和模块注册层。
+- `apps/worker/src/`
+  - 异步任务进程骨架，当前已拆出独立启动入口、worker runtime 和后台 task 目录，用来承接后续从 API 进程迁出的编排任务。
 - `apps/api/src/modules/`
   - 控制中枢的模块规划，包括 API、鉴权、账户、任务编排、通知、审计、监控和调度；其中 `auth / audit / notification / task-orchestrator` 已具备最小内存实现。
 - `packages/shared-types/src/`
   - 共享类型层，承接前端、API 和后续 worker 的统一领域模型。
 - `packages/trading-engine/src/`
-  - 共享运行时层，沉淀市场推进、策略执行、风控裁决、订单意图和控制面状态合并逻辑，供前后端共同消费。
+  - 共享运行时层，当前已按 `constants / shared / market / execution / risk / strategy / control-plane` 拆分，沉淀市场推进、策略执行、风控裁决、订单意图和控制面状态合并逻辑，供前后端共同消费。
 
 ## 当前差距
 
 - `apps/web/src/store/trading-system/core/` 已从本地状态机实现收敛为共享 runtime 的前端包装层，但前端状态驱动本身仍属原型形态。
 - `apps/api` 已具备最小控制面接口、`cycle runner` 和 `state runner` 能力，其中 `state runner` 已收敛为对共享 runtime 的服务端编排封装，但整体仍是轻量 Node 网关形态，尚未进入真正的 NestJS 模块实现阶段。
+- `apps/worker` 当前还是最小骨架，尚未真正接管任务队列、重试补偿和定时调度。
 - `packages` 目前已落 `shared-types` 与 `trading-engine`，`data-core / strategy-core / risk-core / execution-core` 仍应随着真实实现逐步抽离。
 
 ## 下一步建议

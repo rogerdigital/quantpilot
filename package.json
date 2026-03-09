@@ -18,7 +18,8 @@
     "build": "vite build --config apps/web/vite.config.ts",
     "preview": "vite preview --config apps/web/vite.config.ts --host 0.0.0.0 --port 8080",
     "typecheck": "tsc --noEmit -p apps/web/tsconfig.json",
-    "gateway": "node apps/api/src/main.mjs"
+    "gateway": "node apps/api/src/main.mjs",
+    "worker": "node apps/worker/src/main.mjs"
   },
   "keywords": [
     "quantitative-trading",
