@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const repoRoot = process.cwd();
@@ -14,15 +14,27 @@ function listWorkspacePaths(rootPackage) {
   const paths = [];
 
   workspacePatterns.forEach((pattern) => {
-    if (pattern === 'apps/*') {
-      paths.push('apps/api', 'apps/web', 'apps/worker');
+    if (!pattern.endsWith('/*')) {
+      return;
     }
-    if (pattern === 'packages/*') {
-      paths.push('packages/shared-types', 'packages/trading-engine', 'packages/control-plane-store', 'packages/db');
+
+    const baseDir = pattern.slice(0, -2);
+    const absoluteBaseDir = join(repoRoot, baseDir);
+
+    if (!existsSync(absoluteBaseDir)) {
+      return;
     }
+
+    readdirSync(absoluteBaseDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .forEach((entry) => {
+        paths.push(join(baseDir, entry.name));
+      });
   });
 
-  return paths.filter((workspacePath) => existsSync(join(repoRoot, workspacePath, 'package.json')));
+  return paths
+    .filter((workspacePath) => existsSync(join(repoRoot, workspacePath, 'package.json')))
+    .sort();
 }
 
 function main() {
