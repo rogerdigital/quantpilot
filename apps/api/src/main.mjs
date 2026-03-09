@@ -1,1 +1,3 @@
-import './app/index.mjs';
+import { startGatewayServer } from './app/index.mjs';
+
+startGatewayServer();

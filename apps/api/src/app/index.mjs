@@ -1,1 +1,1 @@
-import '../gateways/alpaca.mjs';
+export { createGatewayHandler, createGatewayServer, startGatewayServer } from '../gateways/alpaca.mjs';

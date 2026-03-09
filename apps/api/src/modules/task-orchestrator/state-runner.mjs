@@ -2,7 +2,7 @@ import {
   advanceLocalState,
   applyControlPlaneResolution,
   buildCyclePayload,
-} from '../../../../packages/trading-engine/src/runtime.mjs';
+} from '../../../../../packages/trading-engine/src/runtime.mjs';
 import { queueRiskScan } from '../risk/service.mjs';
 import { runCycle } from './cycle-runner.mjs';
 

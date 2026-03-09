@@ -32,5 +32,8 @@ jobs:
       - name: Control Plane Tests
         run: npm run test:control-plane
 
+      - name: API Tests
+        run: npm run test:api
+
       - name: Build app
         run: npm run build
