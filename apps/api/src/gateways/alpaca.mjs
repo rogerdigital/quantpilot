@@ -441,6 +441,11 @@ async function handleUnifiedBrokerCancel(config, orderId, res) {
 
 export function createGatewayHandler(options = {}) {
   const config = createGatewayConfig(options);
+  const gatewayDependencies = {
+    getBrokerHealth: options.getBrokerHealth || (() => getBrokerHealthSnapshot(config)),
+    executeBrokerCycle: options.executeBrokerCycle || ((payload) => executeBrokerCycle(config, payload)),
+    getMarketSnapshot: options.getMarketSnapshot || ((payload) => getMarketSnapshot(config, payload)),
+  };
   return async function gatewayHandler(req, res) {
     try {
     if (req.method === 'OPTIONS') {
@@ -524,17 +529,17 @@ export function createGatewayHandler(options = {}) {
     if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/cycles/run') {
       const body = await readJsonBody(req);
       writeJson(res, 200, await runCycle(body, {
-        getBrokerHealth: () => getBrokerHealthSnapshot(config),
-        executeBrokerCycle: (payload) => executeBrokerCycle(config, payload),
+        getBrokerHealth: gatewayDependencies.getBrokerHealth,
+        executeBrokerCycle: gatewayDependencies.executeBrokerCycle,
       }));
       return;
     }
     if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/state/run') {
       const body = await readJsonBody(req);
       writeJson(res, 200, await runStateCycle(body?.state, {
-        getBrokerHealth: () => getBrokerHealthSnapshot(config),
-        executeBrokerCycle: (payload) => executeBrokerCycle(config, payload),
-        getMarketSnapshot: (payload) => getMarketSnapshot(config, payload),
+        getBrokerHealth: gatewayDependencies.getBrokerHealth,
+        executeBrokerCycle: gatewayDependencies.executeBrokerCycle,
+        getMarketSnapshot: gatewayDependencies.getMarketSnapshot,
       }));
       return;
     }

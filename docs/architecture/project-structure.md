@@ -66,7 +66,7 @@ quantpilot/
 - `apps/api/src/`
   - 后端入口和平台底座骨架，当前包括 app、gateway、最小控制面服务和模块注册层。
 - `apps/api/test/`
-  - API 网关级集成测试，当前覆盖 notification、risk、scheduler 和 task-orchestrator actions 这些控制面核心接口。
+  - API 网关级集成测试，当前覆盖 notification、risk、scheduler、audit、cycles、cycle resolution 和 state runner 这些控制面核心接口。
 - `apps/worker/src/`
   - 异步任务进程骨架，当前已拆出独立启动入口、worker runtime 和后台 task 目录，已接管 notification dispatch、risk scan 和 scheduler tick 三类后台任务。
 - `apps/api/src/modules/`

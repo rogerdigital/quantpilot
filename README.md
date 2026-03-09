@@ -62,7 +62,7 @@ npm run gateway
 npm run worker
 ```
 
-`npm run verify` 当前会执行 `check:lockfile -> test:control-plane -> test:api -> typecheck -> build`，用于在推送前复现 CI 的核心校验路径。
+`npm run verify` 当前会执行 `check:lockfile -> test:control-plane -> test:api -> typecheck -> build`，用于在推送前复现 CI 的核心校验路径。`test:api` 当前覆盖 notification、risk、scheduler、audit、cycle records、cycle resolution 和 state runner 这些控制面关键路由。
 
 前端默认运行在 `http://127.0.0.1:8080`，`/api/*` 会代理到 `http://127.0.0.1:8787`。
 当前通知链路已经拆成 `API 入队 -> worker 分发 -> Notification Center 拉取已分发事件`，风险扫描链路已经拆成 `state runner 入队 -> worker 扫描 -> Risk Console 拉取 risk events`，scheduler 链路已经拆成 `worker tick -> scheduler store -> Notification Center 拉取 scheduler ticks`，运行时文件写入 `.quantpilot-runtime/`。
