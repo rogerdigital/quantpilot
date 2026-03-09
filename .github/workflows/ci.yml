@@ -35,6 +35,9 @@ jobs:
       - name: Control Plane Runtime Tests
         run: npm run test:runtime
 
+      - name: Task Workflow Engine Tests
+        run: npm run test:engine
+
       - name: API Tests
         run: npm run test:api
 

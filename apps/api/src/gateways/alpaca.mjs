@@ -577,12 +577,44 @@ export function createGatewayHandler(options = {}) {
       });
       return;
     }
+    if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/cycles/queue') {
+      const body = await readJsonBody(req);
+      writeJson(res, 200, {
+        ok: true,
+        workflow: queueWorkflow({
+          workflowId: 'task-orchestrator.cycle-run',
+          workflowType: 'task-orchestrator',
+          actor: 'api-queue',
+          trigger: 'api',
+          payload: body,
+          maxAttempts: Number(body.maxAttempts || 3),
+        }),
+      });
+      return;
+    }
     if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/cycles/run') {
       const body = await readJsonBody(req);
       writeJson(res, 200, await runCycle(body, {
         getBrokerHealth: gatewayDependencies.getBrokerHealth,
         executeBrokerCycle: gatewayDependencies.executeBrokerCycle,
       }));
+      return;
+    }
+    if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/state/queue') {
+      const body = await readJsonBody(req);
+      writeJson(res, 200, {
+        ok: true,
+        workflow: queueWorkflow({
+          workflowId: 'task-orchestrator.state-run',
+          workflowType: 'task-orchestrator',
+          actor: 'api-queue',
+          trigger: 'api',
+          payload: {
+            state: body.state,
+          },
+          maxAttempts: Number(body.maxAttempts || 3),
+        }),
+      });
       return;
     }
     if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/state/run') {

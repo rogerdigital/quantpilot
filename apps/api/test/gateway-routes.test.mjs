@@ -315,3 +315,111 @@ test('GET /api/task-orchestrator/workflows/:id returns a persisted workflow run'
   assert.equal(response.json.workflow.id, cycleRun.json.workflow.id);
   assert.equal(response.json.workflow.workflowId, 'task-orchestrator.cycle-run');
 });
+
+test('POST /api/task-orchestrator/workflows/queue creates a queued workflow run', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/task-orchestrator/workflows/queue',
+    body: {
+      workflowId: 'task-orchestrator.manual-review',
+      workflowType: 'task-orchestrator',
+      actor: 'api-test',
+      trigger: 'manual',
+      payload: { symbol: 'AAPL' },
+      maxAttempts: 2,
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.workflow.status, 'queued');
+  assert.equal(response.json.workflow.workflowId, 'task-orchestrator.manual-review');
+});
+
+test('POST /api/task-orchestrator/cycles/queue creates a queued cycle workflow', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/task-orchestrator/cycles/queue',
+    body: {
+      cycle: 26,
+      mode: 'hybrid',
+      riskLevel: 'NORMAL',
+      decisionSummary: 'queued cycle route test',
+      marketClock: '2026-03-10 10:10:00',
+      pendingApprovals: 0,
+      liveIntentCount: 0,
+      brokerConnected: true,
+      marketConnected: true,
+      liveTradeEnabled: false,
+      pendingLiveIntents: [],
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.workflow.workflowId, 'task-orchestrator.cycle-run');
+  assert.equal(response.json.workflow.status, 'queued');
+});
+
+test('POST /api/task-orchestrator/state/queue creates a queued state workflow', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/task-orchestrator/state/queue',
+    body: {
+      state: createTradingState(),
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.workflow.workflowId, 'task-orchestrator.state-run');
+  assert.equal(response.json.workflow.status, 'queued');
+});
+
+test('POST /api/task-orchestrator/workflows/:id/resume resumes a failed workflow run', async () => {
+  const queued = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/task-orchestrator/workflows/queue',
+    body: {
+      workflowId: 'task-orchestrator.resume-test',
+      workflowType: 'task-orchestrator',
+      actor: 'api-test',
+      trigger: 'manual',
+    },
+  });
+
+  context.workflows.updateWorkflowRun(queued.json.workflow.id, {
+    status: 'failed',
+    error: 'manual failure',
+    failedAt: '2026-03-10T10:00:00.000Z',
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/task-orchestrator/workflows/${queued.json.workflow.id}/resume`,
+    body: {},
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.workflow.status, 'queued');
+  assert.equal(response.json.workflow.error, null);
+});
+
+test('POST /api/task-orchestrator/workflows/:id/cancel cancels a workflow run', async () => {
+  const queued = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/task-orchestrator/workflows/queue',
+    body: {
+      workflowId: 'task-orchestrator.cancel-test',
+      workflowType: 'task-orchestrator',
+      actor: 'api-test',
+      trigger: 'manual',
+    },
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/task-orchestrator/workflows/${queued.json.workflow.id}/cancel`,
+    body: {},
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.workflow.status, 'canceled');
+});

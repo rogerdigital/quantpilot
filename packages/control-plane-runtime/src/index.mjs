@@ -195,6 +195,9 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     releaseScheduledWorkflowRuns(options = {}) {
       return context.workflows.releaseScheduledWorkflowRuns(options);
     },
+    claimQueuedWorkflowRuns(options = {}) {
+      return context.workflows.claimQueuedWorkflowRuns(options);
+    },
   };
 }
 

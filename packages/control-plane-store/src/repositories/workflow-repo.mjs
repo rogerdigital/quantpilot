@@ -72,5 +72,41 @@ export function createWorkflowRepository(store) {
         workflows: workflows.filter((item) => item.lockedBy === worker && item.lockedAt === nowIso).slice(0, limit),
       };
     },
+    claimQueuedWorkflowRuns(options = {}) {
+      const worker = options.worker || 'quantpilot-worker';
+      const limit = Number.isFinite(options.limit) ? options.limit : 10;
+      const nowIso = options.now || new Date().toISOString();
+      const workflowId = options.workflowId || '';
+      const workflows = store.readCollection(FILENAME);
+      const claimed = [];
+
+      workflows.forEach((workflow, index) => {
+        if (claimed.length >= limit) return;
+        if (workflow.status !== 'queued') return;
+        if ((workflow.nextRunAt || nowIso) > nowIso) return;
+        if (workflowId && workflow.workflowId !== workflowId) return;
+        const next = {
+          ...workflow,
+          status: 'running',
+          attempt: Number(workflow.attempt || 0) + 1,
+          lockedBy: worker,
+          lockedAt: nowIso,
+          startedAt: workflow.startedAt || nowIso,
+          updatedAt: nowIso,
+        };
+        workflows[index] = next;
+        claimed.push(next);
+      });
+
+      if (claimed.length > 0) {
+        trimAndSave(store, FILENAME, workflows, 120);
+      }
+
+      return {
+        worker,
+        claimedCount: claimed.length,
+        workflows: claimed,
+      };
+    },
   };
 }

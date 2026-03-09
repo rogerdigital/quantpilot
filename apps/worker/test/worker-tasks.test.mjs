@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createControlPlaneContext } from '../../../packages/control-plane-store/src/context.mjs';
+import { createControlPlaneRuntime } from '../../../packages/control-plane-runtime/src/index.mjs';
 import { createMemoryStore } from '../../../packages/control-plane-store/test/helpers/memory-store.mjs';
 import { runNotificationDispatchTask } from '../src/tasks/notification-dispatch-task.mjs';
 import { runRiskScanTask } from '../src/tasks/risk-scan-task.mjs';
 import { runSchedulerTickTask } from '../src/tasks/scheduler-tick-task.mjs';
+import { runWorkflowExecutionTask } from '../src/tasks/workflow-execution-task.mjs';
 import { runWorkflowMaintenanceTask } from '../src/tasks/workflow-maintenance-task.mjs';
 
 const workerConfig = {
@@ -91,4 +93,35 @@ test('workflow maintenance task re-queues scheduled workflow runs', async () => 
   assert.equal(result.kind, 'workflow-maintenance');
   assert.equal(result.releasedCount, 1);
   assert.equal(context.workflows.getWorkflowRun('workflow-maint-1').status, 'queued');
+});
+
+test('workflow execution task claims and executes queued workflow runs', async () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const runtime = createControlPlaneRuntime(context);
+  context.workflows.appendWorkflowRun({
+    id: 'workflow-exec-1',
+    workflowId: 'task-orchestrator.manual-review',
+    status: 'queued',
+    nextRunAt: '2026-03-10T09:00:00.000Z',
+  });
+
+  const result = await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => context.workflows.claimQueuedWorkflowRuns({
+      ...options,
+      now: '2026-03-10T09:10:00.000Z',
+    }),
+    executeWorkflow: async (workflow, runtimeContext) => {
+      runtimeContext.completeWorkflowRun(workflow.id, {
+        steps: [{ key: 'manual-review', status: 'completed' }],
+        result: { ok: true },
+      });
+      return { ok: true };
+    },
+    context: runtime,
+  });
+
+  assert.equal(result.worker, 'worker-test');
+  assert.equal(result.kind, 'workflow-execution');
+  assert.equal(result.claimedCount, 1);
+  assert.equal(context.workflows.getWorkflowRun('workflow-exec-1').status, 'completed');
 });

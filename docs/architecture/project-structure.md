@@ -39,6 +39,9 @@ quantpilot/
 │   ├── control-plane-runtime/
 │   │   ├── src/
 │   │   └── package.json
+│   ├── task-workflow-engine/
+│   │   ├── src/
+│   │   └── package.json
 │   ├── db/
 │   │   ├── src/
 │   │   └── package.json
@@ -71,9 +74,9 @@ quantpilot/
 - `apps/api/test/`
   - API 网关级集成测试，当前覆盖 notification、risk、scheduler、audit、cycles、workflow runs、cycle resolution 和 state runner 这些控制面核心接口。
 - `apps/worker/src/`
-  - 异步任务进程骨架，当前已拆出独立启动入口、worker runtime 和后台 task 目录，已接管 notification dispatch、risk scan、scheduler tick 以及 workflow maintenance 四类后台任务。
+  - 异步任务进程骨架，当前已拆出独立启动入口、worker runtime 和后台 task 目录，已接管 notification dispatch、risk scan、scheduler tick、workflow maintenance 和 workflow execution 五类后台任务。
 - `apps/worker/test/`
-  - worker 任务级测试，当前覆盖 notification dispatch、risk scan、scheduler tick 和 workflow maintenance 四类后台任务的核心副作用。
+  - worker 任务级测试，当前覆盖 notification dispatch、risk scan、scheduler tick、workflow maintenance 和 workflow execution 五类后台任务的核心副作用。
 - `apps/api/src/modules/`
   - 控制中枢的模块规划，包括 API、鉴权、账户、任务编排、通知、风控、审计、监控和调度；其中 `auth / audit / notification / risk / task-orchestrator` 已具备最小原型实现。
 - `packages/control-plane-runtime/src/`
@@ -88,6 +91,10 @@ quantpilot/
   - 控制面核心 repository 的轻量自动化测试，当前覆盖 notification、risk、scheduler 以及 context 注入路径。
 - `packages/control-plane-runtime/test/`
   - 控制面共享 runtime 的自动化测试，当前覆盖装配委托、queued job 分发、workflow lifecycle、retry scheduling 和 resume/cancel 路径。
+- `packages/task-workflow-engine/src/`
+  - task workflow shared execution layer，当前承载 `cycle-run / state-run / manual-review` 这些 workflow 的 executor registry 和执行逻辑，供 API 与 worker 共同消费。
+- `packages/task-workflow-engine/test/`
+  - task workflow shared engine 的自动化测试，当前覆盖 cycle/state workflow 执行和 queued workflow dispatch。
 - `packages/trading-engine/src/`
   - 共享运行时层，当前已按 `constants / shared / market / execution / risk / strategy / control-plane` 拆分，沉淀市场推进、策略执行、风控裁决、订单意图和控制面状态合并逻辑，供前后端共同消费。
 

@@ -1,0 +1,253 @@
+import {
+  advanceLocalState,
+  applyControlPlaneResolution,
+  buildCyclePayload,
+} from '../../trading-engine/src/runtime.mjs';
+
+function startWorkflow(context, payload) {
+  if (typeof context.startWorkflow === 'function') {
+    return context.startWorkflow(payload);
+  }
+  return context.startWorkflowRun(payload);
+}
+
+function completeWorkflow(context, workflowRunId, patch) {
+  if (typeof context.completeWorkflow === 'function') {
+    return context.completeWorkflow(workflowRunId, patch);
+  }
+  return context.completeWorkflowRun(workflowRunId, patch);
+}
+
+function failWorkflow(context, workflowRunId, error, patch) {
+  if (typeof context.failWorkflow === 'function') {
+    return context.failWorkflow(workflowRunId, error, patch);
+  }
+  return context.failWorkflowRun(workflowRunId, error, patch);
+}
+
+function getBrokerProvider(state) {
+  return state?.integrationStatus?.broker?.provider || 'simulated';
+}
+
+function getMarketProvider(state) {
+  return state?.integrationStatus?.marketData?.provider || 'simulated';
+}
+
+function getTrackedSymbols(state) {
+  return Array.isArray(state?.stockStates)
+    ? state.stockStates.map((stock) => stock.symbol).filter(Boolean)
+    : [];
+}
+
+export async function executeCycleWorkflow(payload, context, options = {}) {
+  const workflow = options.workflow || startWorkflow(context, {
+    workflowId: 'task-orchestrator.cycle-run',
+    workflowType: 'task-orchestrator',
+    actor: context.getOperatorName(),
+    trigger: options.trigger || 'api',
+    payload: {
+      cycle: payload.cycle,
+      mode: payload.mode,
+      riskLevel: payload.riskLevel,
+    },
+    maxAttempts: Number(payload.maxAttempts || 3),
+    steps: [
+      { key: 'record-cycle', status: 'running' },
+      { key: 'execute-broker-cycle', status: 'pending' },
+      { key: 'resolve-control-plane', status: 'pending' },
+    ],
+  });
+
+  try {
+    const cycle = await context.recordCycleRun(payload);
+    const notifications = context.listNotifications(10);
+    const auditCount = context.listAuditRecords(10).length;
+    const brokerExecution = await context.executeBrokerCycle({
+      liveTradeEnabled: Boolean(payload.liveTradeEnabled),
+      orders: Array.isArray(payload.pendingLiveIntents) ? payload.pendingLiveIntents : [],
+    });
+    const brokerHealth = await context.getBrokerHealth();
+    const marketConnected = Boolean(payload.marketConnected);
+
+    const lastStatus = cycle.pendingApprovals > 0
+      ? 'REVIEW'
+      : (!brokerExecution.connected || !brokerHealth.connected || !marketConnected)
+        ? 'DEGRADED'
+        : 'HEALTHY';
+
+    const routeHint = cycle.pendingApprovals > 0
+      ? 'Control plane is holding live actions for manual approval.'
+      : (!brokerHealth.connected || !marketConnected)
+        ? 'Control plane detected degraded connectivity and is routing through fallback-aware execution.'
+        : 'Control plane confirmed the cycle and kept the default execution route.';
+
+    const resolution = {
+      ok: true,
+      cycle: {
+        id: cycle.id,
+        cycle: cycle.cycle,
+        mode: cycle.mode,
+        riskLevel: cycle.riskLevel,
+        createdAt: cycle.createdAt,
+      },
+      controlPlane: {
+        lastCycleId: cycle.id,
+        lastStatus,
+        operator: context.getOperatorName(),
+        notificationCount: notifications.length,
+        auditCount,
+        routeHint,
+        lastSyncAt: new Date().toISOString(),
+      },
+      notifications,
+      brokerHealth,
+      brokerExecution,
+    };
+
+    const persistedWorkflow = completeWorkflow(context, workflow.id, {
+      steps: [
+        { key: 'record-cycle', status: 'completed', refId: cycle.id },
+        { key: 'execute-broker-cycle', status: 'completed' },
+        { key: 'resolve-control-plane', status: 'completed', statusLabel: lastStatus },
+      ],
+      result: {
+        ok: true,
+        cycleId: cycle.id,
+        lastStatus,
+        brokerConnected: brokerHealth.connected,
+      },
+    });
+
+    return {
+      ...resolution,
+      workflow: persistedWorkflow,
+    };
+  } catch (error) {
+    const failedWorkflow = failWorkflow(context, workflow.id, error instanceof Error ? error.message : 'unknown workflow error', {
+      steps: [
+        { key: 'record-cycle', status: 'failed' },
+        { key: 'execute-broker-cycle', status: 'skipped' },
+        { key: 'resolve-control-plane', status: 'skipped' },
+      ],
+    });
+    throw Object.assign(error instanceof Error ? error : new Error('cycle workflow failed'), {
+      workflowId: failedWorkflow?.id,
+    });
+  }
+}
+
+export async function executeStateWorkflow(previousState, context, options = {}) {
+  const workflow = options.workflow || startWorkflow(context, {
+    workflowId: 'task-orchestrator.state-run',
+    workflowType: 'task-orchestrator',
+    actor: options.actor || 'state-runner',
+    trigger: options.trigger || 'api',
+    payload: {
+      cycle: Number(previousState?.cycle || 0) + 1,
+      mode: previousState?.mode || 'autopilot',
+      state: previousState,
+    },
+    maxAttempts: Number(options.maxAttempts || 3),
+    steps: [
+      { key: 'load-market-snapshot', status: 'running' },
+      { key: 'advance-local-state', status: 'pending' },
+      { key: 'resolve-cycle', status: 'pending' },
+      { key: 'enqueue-risk-scan', status: 'pending' },
+    ],
+  });
+
+  try {
+    const marketSnapshot = await context.getMarketSnapshot({
+      provider: getMarketProvider(previousState),
+      symbols: getTrackedSymbols(previousState),
+    });
+
+    const state = advanceLocalState(previousState, {
+      marketSnapshot,
+      brokerSupportsRemoteExecution: getBrokerProvider(previousState) !== 'simulated',
+    });
+
+    const resolution = await executeCycleWorkflow(buildCyclePayload(state), context, {
+      trigger: 'workflow',
+    });
+    applyControlPlaneResolution(state, resolution);
+    context.queueRiskScan({
+      cycle: state.cycle,
+      mode: state.mode,
+      riskLevel: state.riskLevel,
+      pendingApprovals: state.approvalQueue.length,
+      brokerConnected: state.integrationStatus.broker.connected,
+      marketConnected: state.integrationStatus.marketData.connected,
+      paperExposure: state.accounts.paper.exposure,
+      liveExposure: state.accounts.live.exposure,
+      routeHint: state.controlPlane.routeHint,
+      source: 'state-runner',
+    });
+
+    const persistedWorkflow = completeWorkflow(context, workflow.id, {
+      steps: [
+        { key: 'load-market-snapshot', status: 'completed' },
+        { key: 'advance-local-state', status: 'completed', cycle: state.cycle },
+        { key: 'resolve-cycle', status: 'completed', workflowId: resolution.workflow?.id || '' },
+        { key: 'enqueue-risk-scan', status: 'completed' },
+      ],
+      result: {
+        ok: true,
+        cycle: state.cycle,
+        lastStatus: state.controlPlane.lastStatus,
+        riskLevel: state.riskLevel,
+      },
+    });
+
+    return {
+      ok: true,
+      state,
+      resolution,
+      workflow: persistedWorkflow,
+    };
+  } catch (error) {
+    const failedWorkflow = failWorkflow(context, workflow.id, error instanceof Error ? error.message : 'unknown state workflow error', {
+      steps: [
+        { key: 'load-market-snapshot', status: 'failed' },
+        { key: 'advance-local-state', status: 'skipped' },
+        { key: 'resolve-cycle', status: 'skipped' },
+        { key: 'enqueue-risk-scan', status: 'skipped' },
+      ],
+    });
+    throw Object.assign(error instanceof Error ? error : new Error('state workflow failed'), {
+      workflowId: failedWorkflow?.id,
+    });
+  }
+}
+
+export async function executeQueuedWorkflow(workflowRun, context) {
+  if (workflowRun.workflowId === 'task-orchestrator.cycle-run') {
+    return executeCycleWorkflow(workflowRun.payload, context, {
+      workflow: workflowRun,
+      trigger: 'worker',
+    });
+  }
+  if (workflowRun.workflowId === 'task-orchestrator.state-run') {
+    return executeStateWorkflow(workflowRun.payload?.state || workflowRun.payload, context, {
+      workflow: workflowRun,
+      trigger: 'worker',
+      actor: 'workflow-worker',
+    });
+  }
+  if (workflowRun.workflowId === 'task-orchestrator.manual-review') {
+    return {
+      ok: true,
+      workflow: completeWorkflow(context, workflowRun.id, {
+        steps: [{ key: 'manual-review', status: 'completed' }],
+        result: { ok: true, manual: true },
+      }),
+    };
+  }
+  return {
+    ok: false,
+    workflow: failWorkflow(context, workflowRun.id, `No executor registered for ${workflowRun.workflowId}`, {
+      retryable: false,
+      steps: [{ key: 'dispatch', status: 'failed' }],
+    }),
+  };
+}

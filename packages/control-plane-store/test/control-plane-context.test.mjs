@@ -118,3 +118,22 @@ test('workflow repository releases due retry-scheduled runs back to queued', () 
   assert.equal(result.releasedCount, 1);
   assert.equal(context.workflows.getWorkflowRun('workflow-retry-1').status, 'queued');
 });
+
+test('workflow repository claims queued runs for execution', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  context.workflows.appendWorkflowRun({
+    id: 'workflow-queue-1',
+    workflowId: 'task-orchestrator.cycle-run',
+    status: 'queued',
+    nextRunAt: '2026-03-10T09:00:00.000Z',
+  });
+
+  const result = context.workflows.claimQueuedWorkflowRuns({
+    worker: 'queue-worker',
+    now: '2026-03-10T09:01:00.000Z',
+  });
+
+  assert.equal(result.claimedCount, 1);
+  assert.equal(result.workflows[0].status, 'running');
+  assert.equal(context.workflows.getWorkflowRun('workflow-queue-1').attempt, 1);
+});
