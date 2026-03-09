@@ -1,12 +1,7 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { runtimeConfig } from '../config/runtime.ts';
-import { createBrokerProvider } from '../providers/broker.ts';
-import { createMarketDataProvider } from '../providers/marketData.ts';
-import type { AccountState, BrokerOrder, BrokerProvider, BrokerSnapshot, Holding, MarketDataProvider, StockState, TradingState, TradingSystemContextValue } from '../types/trading.ts';
+import { runtimeConfig } from '../../services/config/runtime.ts';
+import type { AccountState, BrokerOrder, BrokerProvider, BrokerSnapshot, Holding, MarketDataProvider, StockState, TradingState } from '../../shared/types/trading.ts';
 
-const TradingSystemContext = createContext<TradingSystemContextValue | null>(null);
-
-const APP_CONFIG = {
+export const APP_CONFIG = {
   refreshMs: runtimeConfig.refreshMs,
   maxPositionWeight: 0.24,
   targetCashBuffer: 0.18,
@@ -31,12 +26,12 @@ const STOCK_UNIVERSE = [
 const INITIAL_SERIES_LENGTH = 48;
 const OPEN_ORDER_STATUSES = new Set(['new', 'accepted', 'pending_new', 'partially_filled']);
 
-function seededNoise(index, step) {
+function seededNoise(index: number, step: number) {
   const base = Math.sin(index * 12.9898 + step * 78.233) * 43758.5453;
   return base - Math.floor(base);
 }
 
-function buildPriceSeries(basePrice, index) {
+function buildPriceSeries(basePrice: number, index: number) {
   const series = [];
   let price = basePrice;
   for (let i = 0; i < INITIAL_SERIES_LENGTH; i += 1) {
@@ -48,7 +43,7 @@ function buildPriceSeries(basePrice, index) {
   return series;
 }
 
-function createTickerState(ticker: any, index: number): StockState {
+function createTickerState(ticker: StockState, index: number): StockState {
   const history = buildPriceSeries(ticker.price, index);
   const lastPrice = history[history.length - 1];
   return {
@@ -110,8 +105,8 @@ function sanitizeQuoteNumber(value: number, fallback: number): number {
 
 function scoreStock(stock: StockState) {
   const history = stock.history;
-  const last = history.at(-1);
-  const prev = history.at(-2);
+  const last = history.at(-1) || stock.price;
+  const prev = history.at(-2) || stock.prevClose || stock.price;
   const short = history.slice(-5).reduce((sum, value) => sum + value, 0) / 5;
   const long = history.slice(-18).reduce((sum, value) => sum + value, 0) / 18;
   const momentum = (last / history[Math.max(history.length - 8, 0)] - 1) * 100;
@@ -149,7 +144,7 @@ function updateTicker(stock: StockState, index: number, cycle: number, riskGuard
   scoreStock(stock);
 }
 
-function computeAccount(account: AccountState, stockStates: StockState[]) {
+export function computeAccount(account: AccountState, stockStates: StockState[]) {
   let marketValue = 0;
   Object.entries(account.holdings).forEach(([symbol, holding]) => {
     const stock = stockStates.find((item) => item.symbol === symbol);
@@ -164,7 +159,7 @@ function computeAccount(account: AccountState, stockStates: StockState[]) {
 }
 
 function initialState(): TradingState {
-  const stockStates = STOCK_UNIVERSE.map(createTickerState);
+  const stockStates = STOCK_UNIVERSE.map((ticker, index) => createTickerState(ticker as StockState, index));
   stockStates.forEach(scoreStock);
   return {
     config: APP_CONFIG,
@@ -216,7 +211,7 @@ function initialState(): TradingState {
   };
 }
 
-function cloneState(state: TradingState): TradingState {
+export function cloneState(state: TradingState): TradingState {
   return {
     ...state,
     integrationStatus: {
@@ -249,7 +244,7 @@ function cloneState(state: TradingState): TradingState {
   };
 }
 
-function logEvent(state: TradingState, kind: string, title: string, copy: string) {
+export function logEvent(state: TradingState, kind: string, title: string, copy: string) {
   const now = chinaNow();
   state.activityLog.unshift({ kind, title, copy, time: now.time });
   state.activityLog = state.activityLog.slice(0, 40);
@@ -314,7 +309,7 @@ function prependOrder(account: AccountState, order: BrokerOrder) {
   account.orders = account.orders.slice(0, 50);
 }
 
-function applyQuotePatch(stockStates: StockState[], quotes: Array<any>) {
+function applyQuotePatch(stockStates: StockState[], quotes: Array<{ symbol: string; price: number; prevClose: number; high: number; low: number; volume: number; turnover: number }>) {
   if (!quotes.length) return;
   const quoteMap = new Map(quotes.map((quote) => [quote.symbol, quote]));
   stockStates.forEach((stock) => {
@@ -416,11 +411,10 @@ function riskOffIfNeeded(state: TradingState, brokerSupportsRemoteExecution: boo
   return liveRiskIntents;
 }
 
-function executeStrategy(state: TradingState, brokerSupportsRemoteExecution: boolean): { executedOrders: BrokerOrder[]; liveIntents: BrokerOrder[] } {
+function executeStrategy(state: TradingState, brokerSupportsRemoteExecution: boolean): { liveIntents: BrokerOrder[] } {
   const ranked = state.stockStates.slice().sort((a, b) => b.score - a.score);
   const topBuy = ranked.filter((stock) => stock.signal === 'BUY').slice(0, 3);
   const topSell = ranked.filter((stock) => stock.signal === 'SELL').slice(0, 3);
-  const executedOrders: BrokerOrder[] = [];
   const liveIntents: BrokerOrder[] = [];
   const liveShadow: AccountState = {
     ...state.accounts.live,
@@ -441,12 +435,11 @@ function executeStrategy(state: TradingState, brokerSupportsRemoteExecution: boo
     ? (brokerSupportsRemoteExecution ? 'Paper execution is active and remote live orders are submitted in sync.' : 'The system writes to both the paper and local live accounts.')
     : 'Only the paper account is executing. Live execution is paused.';
 
-  if (!state.toggles.autoTrade) return { executedOrders, liveIntents };
+  if (!state.toggles.autoTrade) return { liveIntents };
 
   topBuy.forEach((stock, index) => {
     const weight = Math.max(APP_CONFIG.maxPositionWeight - index * 0.05, 0.08);
-    const paperOrder = buyPosition(state.accounts.paper, stock, weight, 'Paper', state);
-    if (paperOrder) executedOrders.push(paperOrder);
+    buyPosition(state.accounts.paper, stock, weight, 'Paper', state);
     if (!state.toggles.liveTrade) return;
     if (brokerSupportsRemoteExecution) {
       const liveIntent = buildRemoteBuyIntent(state, liveShadow, stock, weight * APP_CONFIG.liveSyncRatio, 'Live Sandbox');
@@ -455,14 +448,12 @@ function executeStrategy(state: TradingState, brokerSupportsRemoteExecution: boo
         reserveIntentOnShadowAccount(liveShadow, liveIntent);
       }
     } else {
-      const liveOrder = buyPosition(state.accounts.live, stock, weight * APP_CONFIG.liveSyncRatio, 'Live Account', state);
-      if (liveOrder) executedOrders.push(liveOrder);
+      buyPosition(state.accounts.live, stock, weight * APP_CONFIG.liveSyncRatio, 'Live Account', state);
     }
   });
 
   topSell.forEach((stock) => {
-    const paperOrder = sellPosition(state.accounts.paper, stock, 0.5, 'Paper', state);
-    if (paperOrder) executedOrders.push(paperOrder);
+    sellPosition(state.accounts.paper, stock, 0.5, 'Paper', state);
     if (!state.toggles.liveTrade) return;
     if (brokerSupportsRemoteExecution) {
       const liveIntent = buildRemoteSellIntent(state, liveShadow, stock, 0.5, 'Live Sandbox');
@@ -471,12 +462,11 @@ function executeStrategy(state: TradingState, brokerSupportsRemoteExecution: boo
         reserveIntentOnShadowAccount(liveShadow, liveIntent);
       }
     } else {
-      const liveOrder = sellPosition(state.accounts.live, stock, 0.5, 'Live Account', state);
-      if (liveOrder) executedOrders.push(liveOrder);
+      sellPosition(state.accounts.live, stock, 0.5, 'Live Account', state);
     }
   });
 
-  return { executedOrders, liveIntents };
+  return { liveIntents };
 }
 
 function applyRemoteOrderSubmissions(state: TradingState, orders: BrokerOrder[]) {
@@ -516,11 +506,12 @@ function syncRemoteOrders(state: TradingState, orders: BrokerOrder[] | undefined
     account: 'live',
     tag: 'Remote',
   }));
-  const nextMap = {};
+  const nextMap: TradingState['brokerOrderStatusMap'] = {};
   nextOrders.forEach((order) => {
+    if (!order.id) return;
     nextMap[order.id] = {
-      status: order.status,
-      filledQty: order.filledQty,
+      status: order.status || 'unknown',
+      filledQty: order.filledQty || 0,
     };
     const previous = state.brokerOrderStatusMap[order.id];
     if (!previous) {
@@ -550,7 +541,7 @@ function syncRemoteOrders(state: TradingState, orders: BrokerOrder[] | undefined
   )));
 }
 
-function applyBrokerSnapshot(state: TradingState, snapshot: BrokerSnapshot | undefined) {
+export function applyBrokerSnapshot(state: TradingState, snapshot: BrokerSnapshot | undefined) {
   if (!snapshot) return;
   const live = state.accounts.live;
   if (snapshot.account) {
@@ -558,7 +549,7 @@ function applyBrokerSnapshot(state: TradingState, snapshot: BrokerSnapshot | und
     live.buyingPower = Number.isFinite(snapshot.account.buyingPower) ? snapshot.account.buyingPower : live.cash;
   }
   if (Array.isArray(snapshot.positions)) {
-    const nextHoldings = {};
+    const nextHoldings: AccountState['holdings'] = {};
     snapshot.positions.forEach((position) => {
       if (position.qty > 0) {
         nextHoldings[position.symbol] = {
@@ -572,7 +563,7 @@ function applyBrokerSnapshot(state: TradingState, snapshot: BrokerSnapshot | und
   if (Array.isArray(snapshot.orders)) syncRemoteOrders(state, snapshot.orders);
 }
 
-async function advanceState(previousState: TradingState, providers: { marketData: MarketDataProvider; broker: BrokerProvider }): Promise<TradingState> {
+export async function advanceState(previousState: TradingState, providers: { marketData: MarketDataProvider; broker: BrokerProvider }): Promise<TradingState> {
   const state = cloneState(previousState);
   state.cycle += 1;
   const now = chinaNow();
@@ -590,16 +581,17 @@ async function advanceState(previousState: TradingState, providers: { marketData
   applyQuotePatch(state.stockStates, marketSnapshot.quotes || []);
 
   const riskIntents = riskOffIfNeeded(state, providers.broker.supportsRemoteExecution);
-
   const { liveIntents } = executeStrategy(state, providers.broker.supportsRemoteExecution);
   const nextPendingMap = new Map<string, BrokerOrder>();
   const nextApprovalMap = new Map<string, BrokerOrder>();
+
   state.pendingLiveIntents.forEach((order) => {
     if (order.clientOrderId) nextPendingMap.set(order.clientOrderId, order);
   });
   state.approvalQueue.forEach((order) => {
     if (order.clientOrderId) nextApprovalMap.set(order.clientOrderId, order);
   });
+
   const newlyCreatedIntents = [...riskIntents, ...liveIntents];
   if (state.toggles.manualApproval) {
     newlyCreatedIntents.forEach((order) => {
@@ -614,6 +606,7 @@ async function advanceState(previousState: TradingState, providers: { marketData
     });
     nextApprovalMap.clear();
   }
+
   state.pendingLiveIntents = Array.from(nextPendingMap.values());
   state.approvalQueue = Array.from(nextApprovalMap.values());
 
@@ -642,134 +635,14 @@ async function advanceState(previousState: TradingState, providers: { marketData
   return state;
 }
 
-export function TradingSystemProvider({ children }: { children: React.ReactNode }) {
-  const providersRef = useRef({
-    marketData: createMarketDataProvider(runtimeConfig),
-    broker: createBrokerProvider(runtimeConfig),
-  });
-  const [state, setState] = useState(() => {
-    const base = initialState();
-    base.integrationStatus.marketData.label = providersRef.current.marketData.label;
-    base.integrationStatus.marketData.message = 'Waiting for the first market sync.';
-    base.integrationStatus.broker.label = providersRef.current.broker.label;
-    base.integrationStatus.broker.message = 'Waiting for the first broker sync.';
-    computeAccount(base.accounts.paper, base.stockStates);
-    computeAccount(base.accounts.live, base.stockStates);
-    logEvent(base, 'info', 'System Started', 'The trading engine finished universe initialization and account loading.');
-    return base;
-  });
-  const stateRef = useRef(state);
-  const busyRef = useRef(false);
-  const timerRef = useRef(null);
-
-  useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const runCycle = async () => {
-      if (busyRef.current) return;
-      busyRef.current = true;
-      try {
-        const nextState = await advanceState(stateRef.current, providersRef.current);
-        if (!cancelled) {
-          stateRef.current = nextState;
-          setState(nextState);
-        }
-      } finally {
-        busyRef.current = false;
-      }
-    };
-
-    runCycle();
-    timerRef.current = window.setInterval(runCycle, APP_CONFIG.refreshMs);
-    return () => {
-      cancelled = true;
-      if (timerRef.current) window.clearInterval(timerRef.current);
-    };
-  }, []);
-
-  const setMode = (mode) => {
-    setState((current) => {
-      const next = { ...current, mode, engineStatus: mode === 'manual' ? 'MANUAL READY' : 'LIVE EXECUTION' };
-      stateRef.current = next;
-      return next;
-    });
-  };
-
-  const updateToggle = (key, value) => {
-    setState((current) => {
-      const next = {
-        ...current,
-        toggles: { ...current.toggles, [key]: value },
-      };
-      stateRef.current = next;
-      return next;
-    });
-  };
-
-  const cancelLiveOrder = async (orderId) => {
-    if (!providersRef.current.broker.supportsRemoteExecution || !orderId || busyRef.current) return;
-    busyRef.current = true;
-    try {
-      const cancelSnapshot = await providersRef.current.broker.cancelOrder(orderId);
-      const synced = await providersRef.current.broker.syncState({ state: stateRef.current });
-      const nextState = cloneState(stateRef.current);
-      nextState.integrationStatus.broker = {
-        provider: providersRef.current.broker.id,
-        label: providersRef.current.broker.label,
-        connected: synced.connected,
-        message: `${cancelSnapshot.message} ${synced.message}`.trim(),
-      };
-      logEvent(nextState, 'info', `Cancel request ${orderId}`, cancelSnapshot.message);
-      applyBrokerSnapshot(nextState, synced);
-      computeAccount(nextState.accounts.paper, nextState.stockStates);
-      computeAccount(nextState.accounts.live, nextState.stockStates);
-      stateRef.current = nextState;
-      setState(nextState);
-    } finally {
-      busyRef.current = false;
-    }
-  };
-
-  const approveLiveIntent = (clientOrderId) => {
-    if (!clientOrderId) return;
-    setState((current) => {
-      const next = cloneState(current);
-      const order = next.approvalQueue.find((item) => item.clientOrderId === clientOrderId);
-      if (!order) return current;
-      next.approvalQueue = next.approvalQueue.filter((item) => item.clientOrderId !== clientOrderId);
-      next.pendingLiveIntents = [...next.pendingLiveIntents, order];
-      logEvent(next, 'info', `Approval granted ${order.symbol}`, `${order.side} ${order.qty} shares moved to broker submission queue.`);
-      stateRef.current = next;
-      return next;
-    });
-  };
-
-  const rejectLiveIntent = (clientOrderId) => {
-    if (!clientOrderId) return;
-    setState((current) => {
-      const next = cloneState(current);
-      const order = next.approvalQueue.find((item) => item.clientOrderId === clientOrderId);
-      if (!order) return current;
-      next.approvalQueue = next.approvalQueue.filter((item) => item.clientOrderId !== clientOrderId);
-      logEvent(next, 'info', `Approval rejected ${order.symbol}`, `${order.side} ${order.qty} shares were rejected before broker submission.`);
-      stateRef.current = next;
-      return next;
-    });
-  };
-
-  return (
-    <TradingSystemContext.Provider value={{ state, setMode, updateToggle, cancelLiveOrder, approveLiveIntent, rejectLiveIntent }}>
-      {children}
-    </TradingSystemContext.Provider>
-  );
-}
-
-export function useTradingSystem() {
-  const context = useContext(TradingSystemContext);
-  if (!context) throw new Error('useTradingSystem must be used inside TradingSystemProvider');
-  return context;
+export function createInitialState(providers: { marketData: MarketDataProvider; broker: BrokerProvider }) {
+  const base = initialState();
+  base.integrationStatus.marketData.label = providers.marketData.label;
+  base.integrationStatus.marketData.message = 'Waiting for the first market sync.';
+  base.integrationStatus.broker.label = providers.broker.label;
+  base.integrationStatus.broker.message = 'Waiting for the first broker sync.';
+  computeAccount(base.accounts.paper, base.stockStates);
+  computeAccount(base.accounts.live, base.stockStates);
+  logEvent(base, 'info', 'System Started', 'The trading engine finished universe initialization and account loading.');
+  return base;
 }

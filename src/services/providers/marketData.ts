@@ -1,4 +1,4 @@
-import type { MarketDataProvider, MarketDataSnapshot, Quote, RuntimeConfig, StockState } from '../types/trading.ts';
+import type { MarketDataProvider, MarketDataSnapshot, Quote, RuntimeConfig, StockState } from '../../shared/types/trading.ts';
 
 function normalizeQuote(rawQuote: Partial<Quote> & { symbol?: string } | null | undefined): Quote | null {
   if (!rawQuote || !rawQuote.symbol) return null;

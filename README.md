@@ -58,13 +58,13 @@ quantpilot 面向两个目标：
 
 ```mermaid
 flowchart LR
-    UI["React Console<br/>Dashboard / Routes / Trading System"] --> CFG["Runtime Config<br/>src/config/runtime.ts"]
-    CFG --> MKT["Market Data Provider<br/>src/providers/marketData.ts"]
-    CFG --> BRK["Broker Provider<br/>src/providers/broker.ts"]
+    UI["React Console<br/>App / Routes / Trading System"] --> CFG["Runtime Config<br/>src/services/config/runtime.ts"]
+    CFG --> MKT["Market Data Provider<br/>src/services/providers/marketData.ts"]
+    CFG --> BRK["Broker Provider<br/>src/services/providers/broker.ts"]
 
     MKT --> SIMM["Simulated Market"]
     MKT --> HTTPM["Custom HTTP Market"]
-    MKT --> GW["Gateway Entry<br/>server/index.mjs"]
+    MKT --> GW["Gateway Entry<br/>server/app/index.mjs"]
 
     BRK --> SIMB["Simulated Broker"]
     BRK --> HTTPB["Custom HTTP Broker"]
@@ -79,14 +79,20 @@ flowchart LR
 ## Route Map
 
 核心页面包括：
-- `/overview`
-- `/market`
-- `/signals`
+- `/dashboard`
+- `/strategies`
+- `/risk`
 - `/execution`
-- `/portfolio`
+- `/agent`
 - `/settings`
 
-根路径 `/` 会重定向到 `/overview`。
+兼容旧原型路径：
+- `/overview -> /dashboard`
+- `/market -> /strategies`
+- `/signals -> /strategies`
+- `/portfolio -> /risk`
+
+根路径 `/` 会重定向到 `/dashboard`。
 
 ## Stack
 
@@ -134,10 +140,10 @@ npm run preview
 - `alpaca`
 
 关键接入文件：
-- [runtime.ts](src/config/runtime.ts)
-- [marketData.ts](src/providers/marketData.ts)
-- [broker.ts](src/providers/broker.ts)
-- [index.mjs](server/index.mjs)
+- [runtime.ts](src/services/config/runtime.ts)
+- [marketData.ts](src/services/providers/marketData.ts)
+- [broker.ts](src/services/providers/broker.ts)
+- [index.mjs](server/app/index.mjs)
 - [alpaca.mjs](server/gateways/alpaca.mjs)
 - [.env.example](.env.example)
 
@@ -175,29 +181,53 @@ quantpilot/
 ├── package.json
 ├── vite.config.js
 ├── server/
+│   ├── app/
+│   │   └── index.mjs
 │   ├── index.mjs
 │   └── gateways/
 │       └── alpaca.mjs
 ├── public/
 │   └── favicon.svg
 └── src/
-    ├── App.tsx
+    ├── app/
+    │   ├── App.tsx
+    │   ├── providers/
+    │   │   └── AppProviders.tsx
+    │   ├── routes/
+    │   │   └── AppRouter.tsx
+    │   └── styles/
+    │       └── style.css
     ├── main.tsx
-    ├── components/
-    │   └── Dashboard.tsx
-    ├── css/
-    │   └── style.css
     ├── data/
     │   └── market_data.json
-    ├── config/
-    │   └── runtime.ts
-    ├── providers/
-    │   ├── broker.ts
-    │   └── marketData.ts
-    ├── types/
-    │   └── trading.ts
-    └── system/
-        └── useTradingSystem.tsx
+    ├── pages/
+    │   ├── agent/
+    │   │   └── AgentPage.tsx
+    │   ├── console/
+    │   │   └── DashboardConsole.tsx
+    │   ├── dashboard/
+    │   │   └── DashboardPage.tsx
+    │   ├── execution/
+    │   │   └── ExecutionPage.tsx
+    │   ├── risk/
+    │   │   └── RiskPage.tsx
+    │   ├── settings/
+    │   │   └── SettingsPage.tsx
+    │   └── strategies/
+    │       └── StrategiesPage.tsx
+    ├── services/
+    │   ├── config/
+    │   │   └── runtime.ts
+    │   └── providers/
+    │       ├── broker.ts
+    │       └── marketData.ts
+    ├── shared/
+    │   └── types/
+    │       └── trading.ts
+    └── store/
+        └── trading-system/
+            ├── core.ts
+            └── TradingSystemProvider.tsx
 ```
 
 ## Environment

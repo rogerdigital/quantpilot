@@ -1,4 +1,4 @@
-import type { RuntimeConfig } from '../types/trading.ts';
+import type { RuntimeConfig } from '../../shared/types/trading.ts';
 
 function numberFromEnv(value: string | undefined, fallback: number): number {
   const parsed = Number(value);

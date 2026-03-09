@@ -4,7 +4,10 @@
 
 ## 当前数据分层
 
-- [src/system/useTradingSystem.tsx](../src/system/useTradingSystem.tsx)
+- [src/store/trading-system/TradingSystemProvider.tsx](../src/store/trading-system/TradingSystemProvider.tsx)
+  - Provider 生命周期和用户交互动作
+
+- [src/store/trading-system/core.ts](../src/store/trading-system/core.ts)
   - 股票池定义
   - 系统参数
   - 模拟盘与实盘账户初始状态
@@ -13,12 +16,12 @@
   - 自动买卖执行
   - 风控与活动日志
 
-- [src/components/Dashboard.tsx](../src/components/Dashboard.tsx)
+- [src/pages/console/DashboardConsole.tsx](../src/pages/console/DashboardConsole.tsx)
   - 各个路由页面的展示层
   - 图表绘制
   - 股票池、持仓、订单、日志渲染
 
-- [src/types/trading.ts](../src/types/trading.ts)
+- [src/shared/types/trading.ts](../src/shared/types/trading.ts)
   - 交易系统核心类型
   - Provider、账户、订单、行情、状态定义
 
@@ -36,7 +39,7 @@
 
 ## 如果接入真实交易
 
-建议优先替换 [src/system/useTradingSystem.tsx](../src/system/useTradingSystem.tsx) 中这几类逻辑：
+建议优先替换 [src/store/trading-system/core.ts](../src/store/trading-system/core.ts) 中这几类逻辑：
 
 1. 行情刷新逻辑替换为实时行情 API
 2. 买卖执行逻辑替换为 broker / OMS 下单接口
@@ -44,13 +47,13 @@
 
 ## 路由说明
 
-当前前端路由为：
+当前前端产品路由为：
 
-- `/overview`
-- `/market`
-- `/signals`
+- `/dashboard`
+- `/strategies`
+- `/risk`
 - `/execution`
-- `/portfolio`
+- `/agent`
 - `/settings`
 
 部署时需要确保这些路径都被重写到根入口 `index.html`。

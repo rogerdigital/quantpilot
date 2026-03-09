@@ -1,4 +1,4 @@
-import type { BrokerOrder, BrokerProvider, BrokerSnapshot, RuntimeConfig } from '../types/trading.ts';
+import type { BrokerOrder, BrokerProvider, BrokerSnapshot, RuntimeConfig } from '../../shared/types/trading.ts';
 
 function resolveBrowserBrokerBase(config: RuntimeConfig): string {
   if (config.brokerHttpUrl) return config.brokerHttpUrl.replace(/\/$/, '');

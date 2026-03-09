@@ -4,9 +4,9 @@
 
 ## 配置入口
 
-- [runtime.ts](../src/config/runtime.ts)
+- [runtime.ts](../src/services/config/runtime.ts)
 - [.env.example](../.env.example)
-- [index.mjs](../server/index.mjs)
+- [index.mjs](../server/app/index.mjs)
 - [alpaca.mjs](../server/gateways/alpaca.mjs)
 
 ## 推荐接法
@@ -22,7 +22,7 @@ VITE_BROKER_HTTP_URL=/api/broker
 
 ## 行情 Provider
 
-[marketData.ts](../src/providers/marketData.ts) 当前支持：
+[marketData.ts](../src/services/providers/marketData.ts) 当前支持：
 
 - `simulated`
 - `custom-http`
@@ -53,7 +53,7 @@ VITE_BROKER_HTTP_URL=/api/broker
 
 ## Broker Provider
 
-[broker.ts](../src/providers/broker.ts) 当前支持：
+[broker.ts](../src/services/providers/broker.ts) 当前支持：
 
 - `simulated`
 - `custom-http`

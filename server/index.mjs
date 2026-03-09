@@ -1,1 +1,1 @@
-import './gateways/alpaca.mjs';
+import './app/index.mjs';
