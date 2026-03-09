@@ -1,10 +1,16 @@
 import { readWorkerConfig } from '../config.mjs';
 import { runHeartbeatTask } from '../tasks/heartbeat-task.mjs';
+import { runNotificationDispatchTask } from '../tasks/notification-dispatch-task.mjs';
 
 async function runTick(config) {
-  const result = await runHeartbeatTask(config);
-  console.info(`[worker:${result.worker}] ${result.kind} ${result.timestamp} ${result.summary}`);
-  return result;
+  const results = [
+    await runNotificationDispatchTask(config),
+    await runHeartbeatTask(config),
+  ];
+  results.forEach((result) => {
+    console.info(`[worker:${result.worker}] ${result.kind} ${result.timestamp} ${result.summary}`);
+  });
+  return results;
 }
 
 export async function startWorker() {

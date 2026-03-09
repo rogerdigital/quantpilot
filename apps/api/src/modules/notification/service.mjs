@@ -1,20 +1,27 @@
-const notificationEvents = [];
+import {
+  appendNotification as appendStoredNotification,
+  dispatchPendingNotifications,
+  enqueueNotification,
+  listNotificationJobs,
+  listNotifications as listStoredNotifications,
+} from '../../../../../packages/control-plane-store/src/index.mjs';
 
 export function listNotifications(limit = 50) {
-  return notificationEvents.slice(0, limit);
+  return listStoredNotifications(limit);
 }
 
 export function appendNotification(event) {
-  const entry = {
-    id: `notification-${Date.now()}-${notificationEvents.length + 1}`,
-    level: event.level || 'info',
-    title: event.title || 'Notification',
-    message: event.message || '',
-    source: event.source || 'system',
-    createdAt: event.createdAt || new Date().toISOString(),
-    metadata: event.metadata || {},
-  };
-  notificationEvents.unshift(entry);
-  notificationEvents.splice(100);
-  return entry;
+  return appendStoredNotification(event);
+}
+
+export function queueNotification(event) {
+  return enqueueNotification(event);
+}
+
+export function listQueuedNotifications(limit = 50) {
+  return listNotificationJobs(limit);
+}
+
+export function flushQueuedNotifications(options = {}) {
+  return dispatchPendingNotifications(options);
 }

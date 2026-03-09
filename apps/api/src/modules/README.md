@@ -27,3 +27,4 @@
 后续演进方向：
 
 - `apps/worker/` 将接管真正的后台任务执行，包括风险扫描、重试补偿、通知分发和定时编排。
+- 当前 notification 已经切到 `queueNotification -> apps/worker dispatch` 模式，不再依赖 API 进程内存直接分发。

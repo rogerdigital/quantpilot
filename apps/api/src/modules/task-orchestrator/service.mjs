@@ -1,5 +1,5 @@
 import { appendAuditRecord } from '../audit/service.mjs';
-import { appendNotification } from '../notification/service.mjs';
+import { queueNotification } from '../notification/service.mjs';
 
 const cycleRuns = [];
 
@@ -39,7 +39,7 @@ export function recordCycleRun(payload) {
   });
 
   if (entry.pendingApprovals > 0) {
-    appendNotification({
+    queueNotification({
       level: 'warn',
       source: 'task-orchestrator',
       title: `Cycle ${entry.cycle} requires approval`,
@@ -49,7 +49,7 @@ export function recordCycleRun(payload) {
   }
 
   if (!entry.brokerConnected || !entry.marketConnected) {
-    appendNotification({
+    queueNotification({
       level: 'warn',
       source: 'task-orchestrator',
       title: `Cycle ${entry.cycle} degraded`,
@@ -83,7 +83,7 @@ export function recordAction(payload) {
     metadata: { symbol: action.symbol },
   });
 
-  appendNotification({
+  queueNotification({
     level: payload.level || 'info',
     source: 'control-plane',
     title: payload.title || 'Operator action',

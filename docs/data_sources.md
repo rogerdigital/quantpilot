@@ -44,6 +44,7 @@
 - 对市场数据的拉取和应用，当前也已由后端 `state runner` 承担
 - 远程 broker 订单会先进入待确认意图队列，再根据网关回包和 broker 状态同步更新
 - 开启人工确认后，live 订单会先进入审批队列，只有批准后才会进入提交队列
+- 通知事件不再只驻留在 API 内存里，当前已经落到 `.quantpilot-runtime/control-plane/` 下的文件型 outbox 和事件流中，由 worker 负责分发
 
 ## 如果接入真实交易
 
