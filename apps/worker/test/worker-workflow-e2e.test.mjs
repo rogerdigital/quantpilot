@@ -13,6 +13,7 @@ const [
   { createGatewayHandler },
   { runWorkflowExecutionTask },
   { runRiskScanTask },
+  { runWorkflowMaintenanceTask },
   { executeQueuedWorkflow },
   { createControlPlaneContext },
   { createControlPlaneStore },
@@ -24,6 +25,7 @@ const [
   import('../../api/src/gateways/alpaca.mjs'),
   import('../src/tasks/workflow-execution-task.mjs'),
   import('../src/tasks/risk-scan-task.mjs'),
+  import('../src/tasks/workflow-maintenance-task.mjs'),
   import('../../../packages/task-workflow-engine/src/index.mjs'),
   import('../../../packages/control-plane-store/src/context.mjs'),
   import('../../../packages/control-plane-store/src/store.mjs'),
@@ -178,4 +180,43 @@ test('queued strategy execution workflow persists execution plan and downstream 
 
   assert.equal(riskDispatch.dispatchedCount >= 1, true);
   assert.equal(context.risk.listRiskEvents().some((item) => item.source === 'risk-monitor'), true);
+});
+
+test('failed strategy execution workflow is scheduled for retry and re-queued by maintenance task', async () => {
+  const queued = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/strategy/execute',
+    body: {
+      strategyId: 'unknown-strategy',
+      mode: 'paper',
+      capital: 50000,
+      requestedBy: 'worker-e2e-test',
+    },
+  });
+
+  assert.equal(queued.statusCode, 200);
+
+  const execution = await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
+      ...options,
+      now: '2026-03-10T23:59:00.000Z',
+      workflowId: 'task-orchestrator.strategy-execution',
+    }),
+    executeWorkflow: executeQueuedWorkflow,
+    context: createWorkerContext(),
+  });
+
+  assert.equal(execution.claimedCount, 1);
+  assert.equal(execution.executions[0].workflow?.status, 'retry_scheduled');
+  assert.equal(context.notifications.listNotificationJobs().some((item) => item.payload.source === 'workflow-control'), true);
+
+  const maintenance = await runWorkflowMaintenanceTask(workerConfig, {
+    releaseScheduledWorkflows: (options) => runtime.releaseScheduledWorkflowRuns({
+      ...options,
+      now: '2026-03-11T00:01:00.000Z',
+    }),
+  });
+
+  assert.equal(maintenance.releasedCount, 1);
+  assert.equal(context.workflows.getWorkflowRun(queued.json.workflow.id).status, 'queued');
 });

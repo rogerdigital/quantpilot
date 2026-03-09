@@ -13,6 +13,12 @@ export function createExecutionPlanRepository(store) {
         })
         .slice(0, limit);
     },
+    getExecutionPlan(planId) {
+      return store.readCollection(FILENAME).find((item) => item.id === planId) || null;
+    },
+    findExecutionPlanByWorkflowRunId(workflowRunId) {
+      return store.readCollection(FILENAME).find((item) => item.workflowRunId === workflowRunId) || null;
+    },
     appendExecutionPlan(payload) {
       const plans = store.readCollection(FILENAME);
       const entry = createExecutionPlanEntry(payload);

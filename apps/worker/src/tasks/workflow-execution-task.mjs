@@ -51,7 +51,15 @@ export async function runWorkflowExecutionTask(config, dependencies = {}) {
 
   const executions = [];
   for (const workflow of claimResult.workflows) {
-    executions.push(await executeWorkflow(workflow, context));
+    try {
+      executions.push(await executeWorkflow(workflow, context));
+    } catch (error) {
+      executions.push({
+        ok: false,
+        workflow: controlPlaneRuntime.getWorkflowRun(workflow.id),
+        error: error instanceof Error ? error.message : 'unknown workflow execution error',
+      });
+    }
   }
 
   return {

@@ -18,6 +18,8 @@ export const appendCycleRecord = (...args) => controlPlaneContext.cycles.appendC
 export const listOperatorActions = (...args) => controlPlaneContext.operatorActions.listOperatorActions(...args);
 export const appendOperatorAction = (...args) => controlPlaneContext.operatorActions.appendOperatorAction(...args);
 export const listExecutionPlans = (...args) => controlPlaneContext.executionPlans.listExecutionPlans(...args);
+export const getExecutionPlan = (...args) => controlPlaneContext.executionPlans.getExecutionPlan(...args);
+export const findExecutionPlanByWorkflowRunId = (...args) => controlPlaneContext.executionPlans.findExecutionPlanByWorkflowRunId(...args);
 export const appendExecutionPlan = (...args) => controlPlaneContext.executionPlans.appendExecutionPlan(...args);
 export const updateExecutionPlan = (...args) => controlPlaneContext.executionPlans.updateExecutionPlan(...args);
 export const listNotifications = (...args) => controlPlaneContext.notifications.listNotifications(...args);

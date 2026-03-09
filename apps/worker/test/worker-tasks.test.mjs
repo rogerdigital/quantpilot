@@ -75,6 +75,7 @@ test('scheduler tick task records a scheduler bucket event', async () => {
 
 test('workflow maintenance task re-queues scheduled workflow runs', async () => {
   const context = createControlPlaneContext(createMemoryStore());
+  const runtime = createControlPlaneRuntime(context);
   context.workflows.appendWorkflowRun({
     id: 'workflow-maint-1',
     workflowId: 'task-orchestrator.cycle-run',
@@ -83,7 +84,7 @@ test('workflow maintenance task re-queues scheduled workflow runs', async () => 
   });
 
   const result = await runWorkflowMaintenanceTask(workerConfig, {
-    releaseScheduledWorkflows: (options) => context.workflows.releaseScheduledWorkflowRuns({
+    releaseScheduledWorkflows: (options) => runtime.releaseScheduledWorkflowRuns({
       ...options,
       now: '2026-03-10T09:10:00.000Z',
     }),
@@ -93,6 +94,7 @@ test('workflow maintenance task re-queues scheduled workflow runs', async () => 
   assert.equal(result.kind, 'workflow-maintenance');
   assert.equal(result.releasedCount, 1);
   assert.equal(context.workflows.getWorkflowRun('workflow-maint-1').status, 'queued');
+  assert.equal(context.notifications.listNotificationJobs().some((item) => item.payload.source === 'workflow-control'), true);
 });
 
 test('workflow execution task claims and executes queued workflow runs', async () => {

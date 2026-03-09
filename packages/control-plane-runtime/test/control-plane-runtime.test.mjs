@@ -169,3 +169,47 @@ test('control plane runtime schedules retries and supports resume/cancel workflo
   assert.equal(resumed.status, 'queued');
   assert.equal(canceled.status, 'canceled');
 });
+
+test('control plane runtime fans out workflow failure and recovery events and syncs linked execution plans', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  runtime.startWorkflowRun({
+    id: 'workflow-runtime-strategy',
+    workflowId: 'task-orchestrator.strategy-execution',
+    actor: 'runtime-test',
+    status: 'running',
+    attempt: 1,
+    maxAttempts: 3,
+  });
+  runtime.recordExecutionPlan({
+    workflowRunId: 'workflow-runtime-strategy',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'live',
+    status: 'ready',
+    approvalState: 'required',
+    riskStatus: 'approved',
+    summary: 'Ready before failure',
+    capital: 120000,
+    orderCount: 2,
+    orders: [],
+  });
+
+  const retryScheduled = runtime.failWorkflowRun('workflow-runtime-strategy', 'temporary failure', {
+    nextRunAt: '2026-03-10T10:00:00.000Z',
+  });
+  const failedPlan = runtime.findExecutionPlanByWorkflowRunId('workflow-runtime-strategy');
+  const resumed = runtime.resumeWorkflowRun('workflow-runtime-strategy');
+  const resumedPlan = runtime.findExecutionPlanByWorkflowRunId('workflow-runtime-strategy');
+  const canceled = runtime.cancelWorkflowRun('workflow-runtime-strategy');
+  const canceledPlan = runtime.findExecutionPlanByWorkflowRunId('workflow-runtime-strategy');
+
+  assert.equal(retryScheduled.status, 'retry_scheduled');
+  assert.equal(failedPlan.status, 'blocked');
+  assert.equal(resumed.status, 'queued');
+  assert.equal(resumedPlan.riskStatus, 'review');
+  assert.equal(canceled.status, 'canceled');
+  assert.equal(canceledPlan.status, 'blocked');
+  assert.equal(runtime.listAuditRecords().some((item) => item.title.includes('Workflow resumed')), true);
+  assert.equal(runtime.listNotificationJobs().some((item) => item.payload.source === 'workflow-control'), true);
+});

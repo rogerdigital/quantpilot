@@ -167,6 +167,34 @@ test('GET /api/execution/plans returns persisted execution plans', async () => {
   assert.equal(response.json.plans[0].strategyId, 'ema-cross-us');
 });
 
+test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control notification for recovery', async () => {
+  const queued = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/strategy/execute',
+    body: {
+      strategyId: 'ema-cross-us',
+      mode: 'live',
+      capital: 150000,
+      requestedBy: 'api-test',
+    },
+  });
+
+  context.workflows.updateWorkflowRun(queued.json.workflow.id, {
+    status: 'failed',
+    error: 'seeded failure',
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/task-orchestrator/workflows/${queued.json.workflow.id}/resume`,
+    body: {},
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.workflow.status, 'queued');
+  assert.equal(context.notifications.listNotificationJobs().some((item) => item.payload.source === 'workflow-control'), true);
+});
+
 test('GET /api/scheduler/ticks returns scheduler ticks from shared store', async () => {
   context.scheduler.recordSchedulerTick({
     worker: 'api-test-worker',

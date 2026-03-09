@@ -101,6 +101,7 @@ quantpilot/
 ## 当前差距
 
 - 里程碑 A 的最小闭环已打通：`strategy-execution` workflow 现在会经过 API 入队、worker 执行、JSON store 持久化、risk 审核和 execution plan 落库。
+- 里程碑 B 的最小闭环也已打通：workflow lifecycle 的失败、重试、恢复、取消和 maintenance re-queue 现在都会统一 fanout 到后端 audit 与 notification，并联动 execution plan 状态。
 - `apps/web/src/store/trading-system/core/` 已从本地状态机实现收敛为共享 runtime 的前端包装层，但前端状态驱动本身仍属原型形态。
 - `apps/api` 已具备最小控制面接口、`cycle runner` 和 `state runner` 能力，其中 `state runner` 已收敛为对共享 runtime 的服务端编排封装，但整体仍是轻量 Node 网关形态，尚未进入真正的 NestJS 模块实现阶段。
 - `apps/api` 现已补上 `strategy / backtest` 研究接口，`apps/web/src/pages/backtest/BacktestPage.tsx` 已开始消费结构化研究数据，但回测执行仍是静态研究快照而非真实任务运行结果。
@@ -109,7 +110,7 @@ quantpilot/
 
 ## 下一步建议
 
-1. 完成里程碑 B，把 execution failure recovery、统一告警 fanout 和失败重试规则全部收口到后端。
+1. 推进里程碑 C，把 Agent 接入限制在 tool layer 和受控动作请求之内。
 2. 把 `strategy / backtest` 从静态 research snapshot 升级为真实的任务执行与结果持久化模块。
 3. 把 `task-orchestrator` 从当前的文件型控制面升级为真正的任务流和队列执行层。
 4. 把 `core/lifecycle.ts` 里的异步编排继续迁到后端任务层，前端只保留状态消费和交互动作。

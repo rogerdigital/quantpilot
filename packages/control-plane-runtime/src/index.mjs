@@ -1,6 +1,31 @@
 import { controlPlaneContext } from '../../control-plane-store/src/context.mjs';
 
 export function createControlPlaneRuntime(context = controlPlaneContext) {
+  function fanoutWorkflowEvent(level, title, message, metadata = {}) {
+    context.audit.appendAuditRecord({
+      type: 'workflow',
+      actor: metadata.actor || 'task-orchestrator',
+      title,
+      detail: message,
+      metadata,
+    });
+
+    context.notifications.enqueueNotification({
+      level,
+      source: 'workflow-control',
+      title,
+      message,
+      metadata,
+    });
+  }
+
+  function syncExecutionPlanForWorkflow(workflowRunId, patch = {}) {
+    if (!workflowRunId || !context.executionPlans?.findExecutionPlanByWorkflowRunId) return null;
+    const existing = context.executionPlans.findExecutionPlanByWorkflowRunId(workflowRunId);
+    if (!existing) return null;
+    return context.executionPlans.updateExecutionPlan(existing.id, patch);
+  }
+
   return {
     listAuditRecords(limit = 50) {
       return context.audit.listAuditRecords(limit);
@@ -85,6 +110,12 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     },
     listExecutionPlans(limit = 50, filter = {}) {
       return context.executionPlans.listExecutionPlans(limit, filter);
+    },
+    getExecutionPlan(planId) {
+      return context.executionPlans.getExecutionPlan(planId);
+    },
+    findExecutionPlanByWorkflowRunId(workflowRunId) {
+      return context.executionPlans.findExecutionPlanByWorkflowRunId(workflowRunId);
     },
     appendExecutionPlan(payload) {
       return context.executionPlans.appendExecutionPlan(payload);
@@ -194,7 +225,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       const maxAttempts = Number(current?.maxAttempts || patch.maxAttempts || 3);
       const canRetry = patch.retryable !== false && nextAttempt < maxAttempts;
       const failedAt = patch.failedAt || new Date().toISOString();
-      return context.workflows.updateWorkflowRun(workflowRunId, {
+      const workflow = context.workflows.updateWorkflowRun(workflowRunId, {
         ...patch,
         status: canRetry ? 'retry_scheduled' : 'failed',
         failedAt,
@@ -203,11 +234,40 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         lockedBy: '',
         lockedAt: '',
       });
+      if (workflow) {
+        syncExecutionPlanForWorkflow(workflowRunId, {
+          status: 'blocked',
+          riskStatus: 'blocked',
+          summary: canRetry
+            ? `Workflow failed and was scheduled for retry: ${workflow.error}`
+            : `Workflow failed permanently: ${workflow.error}`,
+          metadata: {
+            workflowStatus: workflow.status,
+            workflowError: workflow.error,
+          },
+        });
+        fanoutWorkflowEvent(
+          canRetry ? 'warn' : 'critical',
+          canRetry ? `Workflow retry scheduled ${workflow.workflowId}` : `Workflow failed ${workflow.workflowId}`,
+          canRetry
+            ? `Workflow ${workflow.workflowId} failed and was scheduled for retry.`
+            : `Workflow ${workflow.workflowId} failed without remaining retries.`,
+          {
+            workflowRunId,
+            workflowId: workflow.workflowId,
+            status: workflow.status,
+            actor: workflow.actor,
+            error: workflow.error,
+            nextRunAt: workflow.nextRunAt,
+          }
+        );
+      }
+      return workflow;
     },
     resumeWorkflowRun(workflowRunId, patch = {}) {
       const current = context.workflows.getWorkflowRun(workflowRunId);
       if (!current) return null;
-      return context.workflows.updateWorkflowRun(workflowRunId, {
+      const workflow = context.workflows.updateWorkflowRun(workflowRunId, {
         ...patch,
         status: 'queued',
         failedAt: '',
@@ -218,9 +278,31 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         lockedAt: '',
         attempt: Number(current.attempt || 0),
       });
+      if (workflow) {
+        syncExecutionPlanForWorkflow(workflowRunId, {
+          status: 'draft',
+          riskStatus: 'review',
+          summary: 'Execution workflow was resumed and is waiting to be processed again.',
+          metadata: {
+            workflowStatus: workflow.status,
+          },
+        });
+        fanoutWorkflowEvent(
+          'info',
+          `Workflow resumed ${workflow.workflowId}`,
+          `Workflow ${workflow.workflowId} was resumed and re-queued.`,
+          {
+            workflowRunId,
+            workflowId: workflow.workflowId,
+            status: workflow.status,
+            actor: workflow.actor,
+          }
+        );
+      }
+      return workflow;
     },
     cancelWorkflowRun(workflowRunId, patch = {}) {
-      return context.workflows.updateWorkflowRun(workflowRunId, {
+      const workflow = context.workflows.updateWorkflowRun(workflowRunId, {
         ...patch,
         status: 'canceled',
         completedAt: '',
@@ -228,9 +310,46 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         lockedBy: '',
         lockedAt: '',
       });
+      if (workflow) {
+        syncExecutionPlanForWorkflow(workflowRunId, {
+          status: 'blocked',
+          riskStatus: 'blocked',
+          summary: 'Execution workflow was canceled by an operator or control-plane action.',
+          metadata: {
+            workflowStatus: workflow.status,
+          },
+        });
+        fanoutWorkflowEvent(
+          'warn',
+          `Workflow canceled ${workflow.workflowId}`,
+          `Workflow ${workflow.workflowId} was canceled.`,
+          {
+            workflowRunId,
+            workflowId: workflow.workflowId,
+            status: workflow.status,
+            actor: workflow.actor,
+          }
+        );
+      }
+      return workflow;
     },
     releaseScheduledWorkflowRuns(options = {}) {
-      return context.workflows.releaseScheduledWorkflowRuns(options);
+      const result = context.workflows.releaseScheduledWorkflowRuns(options);
+      result.workflows.forEach((workflow) => {
+        fanoutWorkflowEvent(
+          'info',
+          `Workflow re-queued ${workflow.workflowId}`,
+          `Workflow ${workflow.workflowId} moved from retry schedule back to queued state.`,
+          {
+            workflowRunId: workflow.id,
+            workflowId: workflow.workflowId,
+            status: workflow.status,
+            actor: workflow.actor,
+            worker: result.worker,
+          }
+        );
+      });
+      return result;
     },
     claimQueuedWorkflowRuns(options = {}) {
       return context.workflows.claimQueuedWorkflowRuns(options);
