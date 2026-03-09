@@ -3,6 +3,7 @@ import {
   applyControlPlaneResolution,
   buildCyclePayload,
 } from '../../../../packages/trading-engine/src/runtime.mjs';
+import { queueRiskScan } from '../risk/service.mjs';
 import { runCycle } from './cycle-runner.mjs';
 
 function getBrokerProvider(state) {
@@ -32,6 +33,18 @@ export async function runStateCycle(previousState, context) {
 
   const resolution = await runCycle(buildCyclePayload(state), context);
   applyControlPlaneResolution(state, resolution);
+  queueRiskScan({
+    cycle: state.cycle,
+    mode: state.mode,
+    riskLevel: state.riskLevel,
+    pendingApprovals: state.approvalQueue.length,
+    brokerConnected: state.integrationStatus.broker.connected,
+    marketConnected: state.integrationStatus.marketData.connected,
+    paperExposure: state.accounts.paper.exposure,
+    liveExposure: state.accounts.live.exposure,
+    routeHint: state.controlPlane.routeHint,
+    source: 'state-runner',
+  });
 
   return {
     ok: true,

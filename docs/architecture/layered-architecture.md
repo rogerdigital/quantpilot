@@ -36,7 +36,7 @@
 - `apps/api` 承载后端层和执行接入骨架，当前已经提供最小的 `auth / audit / notification / task-orchestrator` 控制面接口。
 - `apps/worker` 承载后端异步任务进程骨架，用于承接未来从 API 进程迁出的任务编排、风险扫描、通知分发和执行补偿。
 - `packages/shared-types` 承载共享模型。
-- `packages/control-plane-store` 承载最小跨进程控制面存储，当前主要用于 notification outbox 和事件持久化。
+- `packages/control-plane-store` 承载最小跨进程控制面存储，当前主要用于 notification outbox、risk scan outbox、通知事件和风险事件持久化。
 - `packages/trading-engine` 承载市场、策略、风控、执行和控制面状态合并所需的共享 runtime，并已拆分为按职责划分的内部模块。
 - `apps/web/src/store/trading-system/core/` 已完成第二轮切片，当前包含 `config / market / strategy / risk / execution / lifecycle / controlPlane / state / shared`，并主要作为共享 runtime 的前端封装层存在。
 - `apps/web/src/store/trading-system/core.ts` 现在只保留兼容出口，避免页面层直接感知内部重构。
@@ -45,3 +45,4 @@
 - 市场数据拉取也已进入后端 `state runner`，前端不再在主周期里直接调用 market data provider。
 - `state runner` 当前只负责服务端数据拉取、调用共享 runtime 推进状态、再交由控制面完成 broker 协调，前后端不再各自维护一份独立的交易周期实现。
 - 通知链路当前已从 API 单进程内存改成 `API 入队 -> worker 分发 -> 前端拉取已分发事件`，为后续告警、邮件和 IM 通道扩展预留了后台执行边界。
+- 风险扫描链路当前已从主周期内联判断扩展为 `state runner 入队 -> worker 扫描 -> 风控页拉取 risk events`，为后续组合风险、审批和熔断事件独立建模预留了边界。

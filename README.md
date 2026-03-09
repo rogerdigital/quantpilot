@@ -58,7 +58,7 @@ npm run worker
 ```
 
 前端默认运行在 `http://127.0.0.1:8080`，`/api/*` 会代理到 `http://127.0.0.1:8787`。
-当前通知链路已经拆成 `API 入队 -> worker 分发 -> Notification Center 拉取已分发事件`，运行时文件写入 `.quantpilot-runtime/`。
+当前通知链路已经拆成 `API 入队 -> worker 分发 -> Notification Center 拉取已分发事件`，风险扫描链路已经拆成 `state runner 入队 -> worker 扫描 -> Risk Console 拉取 risk events`，运行时文件写入 `.quantpilot-runtime/`。
 
 ## 关键入口
 

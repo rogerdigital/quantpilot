@@ -35,6 +35,13 @@ export const MODULE_REGISTRY = [
     responsibility: 'inbox, email, and IM alert delivery',
   },
   {
+    id: 'risk',
+    name: 'Risk',
+    layer: 'backend',
+    status: 'planned',
+    responsibility: 'risk scan jobs, risk events, and approval-oriented controls',
+  },
+  {
     id: 'audit',
     name: 'Audit',
     layer: 'backend',

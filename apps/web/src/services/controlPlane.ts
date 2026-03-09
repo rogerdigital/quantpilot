@@ -84,3 +84,13 @@ export async function fetchNotifications() {
   }
   return response.json();
 }
+
+export async function fetchRiskEvents() {
+  const response = await fetch('/api/risk/events', {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}

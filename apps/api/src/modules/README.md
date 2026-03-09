@@ -9,6 +9,7 @@
 - `user-account/`: 用户资料、账户状态、券商绑定
 - `task-orchestrator/`: 回测、优化、Agent、执行等异步任务编排
 - `notification/`: 站内信、邮件、IM 告警
+- `risk/`: 风险扫描、风险事件流、审批前风险结论
 - `audit/`: 审计日志、操作留痕、执行理由
 - `monitoring/`: 日志、指标、运行健康监控
 - `scheduler/`: 定时任务、盘前盘后批处理
@@ -18,6 +19,7 @@
 - `auth/service.mjs`: `GET /api/auth/session`
 - `audit/service.mjs`: `GET /api/audit/records`、`POST /api/audit/records`
 - `notification/service.mjs`: `GET /api/notification/events`
+- `risk/service.mjs`: `GET /api/risk/events`
 - `task-orchestrator/service.mjs`: `GET /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/actions`
 - `task-orchestrator/cycle-runner.mjs`: `POST /api/task-orchestrator/cycles/run`
   - 在记录周期后执行 broker 提交与状态同步，并返回控制面裁决
@@ -28,3 +30,4 @@
 
 - `apps/worker/` 将接管真正的后台任务执行，包括风险扫描、重试补偿、通知分发和定时编排。
 - 当前 notification 已经切到 `queueNotification -> apps/worker dispatch` 模式，不再依赖 API 进程内存直接分发。
+- 当前 risk scan 已经切到 `queueRiskScan -> apps/worker process` 模式，风险事件会单独沉淀到后端事件流。

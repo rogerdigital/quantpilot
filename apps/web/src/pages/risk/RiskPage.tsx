@@ -1,6 +1,7 @@
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
+import { useRiskEventsFeed } from '../../hooks/useRiskEventsFeed.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
-import { ActivityLog, ApprovalQueueTable, PositionsTable } from '../console/components/ConsoleTables.tsx';
+import { ApprovalQueueTable, PositionsTable } from '../console/components/ConsoleTables.tsx';
 import { useSummary } from '../console/hooks.ts';
 import { copy, useLocale } from '../console/i18n.tsx';
 import { fmtCurrency, integrationTone, riskTone, translateRiskLevel } from '../console/utils.ts';
@@ -9,6 +10,7 @@ export default function RiskPage() {
   const { state, approveLiveIntent, rejectLiveIntent } = useTradingSystem();
   const { locale } = useLocale();
   const { paper, live } = useSummary();
+  const { items, loading } = useRiskEventsFeed();
 
   return (
     <>
@@ -32,8 +34,23 @@ export default function RiskPage() {
           <ApprovalQueueTable onApprove={approveLiveIntent} onReject={rejectLiveIntent} />
         </article>
         <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '风险事件流' : 'Risk Event Stream'}</div><div className="panel-copy">{locale === 'zh' ? '当前先复用系统事件流，后续可以单独落 risk_events。' : 'The prototype reuses the system event stream for now and can later move to a dedicated risk_events model.'}</div></div><div className="panel-badge badge-info">EVENTS</div></div>
-          <ActivityLog />
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '风险事件流' : 'Risk Event Stream'}</div><div className="panel-copy">{locale === 'zh' ? '后端 worker 生成的风险扫描事件会集中展示在这里。' : 'Risk scan events produced by the backend worker are aggregated here.'}</div></div><div className="panel-badge badge-info">{items.length}</div></div>
+          <div className="focus-list focus-list-terminal">
+            {loading ? <div className="empty-cell">{locale === 'zh' ? '正在加载风险事件...' : 'Loading risk events...'}</div> : null}
+            {!loading && !items.length ? <div className="empty-cell">{locale === 'zh' ? '暂无风险事件' : 'No risk events yet.'}</div> : null}
+            {!loading ? items.map((item) => (
+              <div className="focus-row" key={item.id}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.message}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                  <strong>{item.status}</strong>
+                </div>
+              </div>
+            )) : null}
+          </div>
         </article>
       </section>
 
