@@ -1,6 +1,29 @@
-export * from './repositories/audit-repo.mjs';
-export * from './repositories/cycle-repo.mjs';
-export * from './repositories/operator-action-repo.mjs';
-export * from './repositories/notification-repo.mjs';
-export * from './repositories/risk-repo.mjs';
-export * from './repositories/scheduler-repo.mjs';
+import { controlPlaneContext } from './context.mjs';
+
+export { createControlPlaneContext, controlPlaneContext } from './context.mjs';
+export { createControlPlaneStore, controlPlaneStore } from './store.mjs';
+export { createAuditRepository } from './repositories/audit-repo.mjs';
+export { createCycleRepository } from './repositories/cycle-repo.mjs';
+export { createOperatorActionRepository } from './repositories/operator-action-repo.mjs';
+export { createNotificationRepository } from './repositories/notification-repo.mjs';
+export { createRiskRepository } from './repositories/risk-repo.mjs';
+export { createSchedulerRepository } from './repositories/scheduler-repo.mjs';
+
+export const listAuditRecords = (...args) => controlPlaneContext.audit.listAuditRecords(...args);
+export const appendAuditRecord = (...args) => controlPlaneContext.audit.appendAuditRecord(...args);
+export const listCycleRecords = (...args) => controlPlaneContext.cycles.listCycleRecords(...args);
+export const appendCycleRecord = (...args) => controlPlaneContext.cycles.appendCycleRecord(...args);
+export const listOperatorActions = (...args) => controlPlaneContext.operatorActions.listOperatorActions(...args);
+export const appendOperatorAction = (...args) => controlPlaneContext.operatorActions.appendOperatorAction(...args);
+export const listNotifications = (...args) => controlPlaneContext.notifications.listNotifications(...args);
+export const appendNotification = (...args) => controlPlaneContext.notifications.appendNotification(...args);
+export const enqueueNotification = (...args) => controlPlaneContext.notifications.enqueueNotification(...args);
+export const listNotificationJobs = (...args) => controlPlaneContext.notifications.listNotificationJobs(...args);
+export const dispatchPendingNotifications = (...args) => controlPlaneContext.notifications.dispatchPendingNotifications(...args);
+export const listRiskEvents = (...args) => controlPlaneContext.risk.listRiskEvents(...args);
+export const appendRiskEvent = (...args) => controlPlaneContext.risk.appendRiskEvent(...args);
+export const enqueueRiskScan = (...args) => controlPlaneContext.risk.enqueueRiskScan(...args);
+export const listRiskScanJobs = (...args) => controlPlaneContext.risk.listRiskScanJobs(...args);
+export const dispatchPendingRiskScans = (...args) => controlPlaneContext.risk.dispatchPendingRiskScans(...args);
+export const listSchedulerTicks = (...args) => controlPlaneContext.scheduler.listSchedulerTicks(...args);
+export const recordSchedulerTick = (...args) => controlPlaneContext.scheduler.recordSchedulerTick(...args);

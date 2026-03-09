@@ -10,7 +10,7 @@ QuantPilot 是一个面向量化交易工作流的分层平台原型，当前仓
 - `packages/db`: 底层存储接口层，当前提供 `collection store / kv store` 抽象和 JSON file adapter，为后续数据库替换预留边界。
 - `packages/shared-types`: 前后端共享的交易和平台类型定义。
 - `packages/trading-engine`: 市场、策略、风控、执行和控制面合并所需的共享 runtime。
-- `packages/control-plane-store`: 控制面文件存储层，当前已按 repository 结构拆分，承载 notification、risk、scheduler、audit、cycle records、operator actions 等跨进程事件和记录。
+- `packages/control-plane-store`: 控制面文件存储层，当前已按 `context + repositories` 结构拆分，承载 notification、risk、scheduler、audit、cycle records、operator actions 等跨进程事件和记录。
 
 当前版本依然以产品原型和前端工作流为主，不是可直接用于无人值守实盘的生产系统。
 
