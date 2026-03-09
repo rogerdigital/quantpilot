@@ -8,6 +8,7 @@ export { createOperatorActionRepository } from './repositories/operator-action-r
 export { createNotificationRepository } from './repositories/notification-repo.mjs';
 export { createRiskRepository } from './repositories/risk-repo.mjs';
 export { createSchedulerRepository } from './repositories/scheduler-repo.mjs';
+export { createWorkflowRepository } from './repositories/workflow-repo.mjs';
 
 export const listAuditRecords = (...args) => controlPlaneContext.audit.listAuditRecords(...args);
 export const appendAuditRecord = (...args) => controlPlaneContext.audit.appendAuditRecord(...args);
@@ -27,3 +28,7 @@ export const listRiskScanJobs = (...args) => controlPlaneContext.risk.listRiskSc
 export const dispatchPendingRiskScans = (...args) => controlPlaneContext.risk.dispatchPendingRiskScans(...args);
 export const listSchedulerTicks = (...args) => controlPlaneContext.scheduler.listSchedulerTicks(...args);
 export const recordSchedulerTick = (...args) => controlPlaneContext.scheduler.recordSchedulerTick(...args);
+export const listWorkflowRuns = (...args) => controlPlaneContext.workflows.listWorkflowRuns(...args);
+export const getWorkflowRun = (...args) => controlPlaneContext.workflows.getWorkflowRun(...args);
+export const appendWorkflowRun = (...args) => controlPlaneContext.workflows.appendWorkflowRun(...args);
+export const updateWorkflowRun = (...args) => controlPlaneContext.workflows.updateWorkflowRun(...args);

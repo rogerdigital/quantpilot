@@ -69,7 +69,7 @@ quantpilot/
 - `apps/api/src/`
   - 后端入口和平台底座骨架，当前包括 app、gateway、最小控制面服务和模块注册层。
 - `apps/api/test/`
-  - API 网关级集成测试，当前覆盖 notification、risk、scheduler、audit、cycles、cycle resolution 和 state runner 这些控制面核心接口。
+  - API 网关级集成测试，当前覆盖 notification、risk、scheduler、audit、cycles、workflow runs、cycle resolution 和 state runner 这些控制面核心接口。
 - `apps/worker/src/`
   - 异步任务进程骨架，当前已拆出独立启动入口、worker runtime 和后台 task 目录，已接管 notification dispatch、risk scan 和 scheduler tick 三类后台任务。
 - `apps/worker/test/`
@@ -77,13 +77,13 @@ quantpilot/
 - `apps/api/src/modules/`
   - 控制中枢的模块规划，包括 API、鉴权、账户、任务编排、通知、风控、审计、监控和调度；其中 `auth / audit / notification / risk / task-orchestrator` 已具备最小原型实现。
 - `packages/control-plane-runtime/src/`
-  - 控制面共享服务装配层，统一封装 audit、notification、risk、scheduler、cycles、operator actions 以及 task-orchestrator 的 audit/notification fanout 规则，供 API 与 worker 共同消费。
+  - 控制面共享服务装配层，统一封装 audit、notification、risk、scheduler、cycles、workflow runs、operator actions 以及 task-orchestrator 的 audit/notification fanout 规则，供 API 与 worker 共同消费。
 - `packages/shared-types/src/`
   - 共享类型层，承接前端、API 和后续 worker 的统一领域模型。
 - `packages/db/src/`
   - 底层存储接口层，当前提供 `collection store`、`kv store` 和 JSON file adapter，`control-plane-store` 通过这些接口组合当前文件型实现，后续可替换为真正的数据库实现。
 - `packages/control-plane-store/src/`
-  - 控制面文件存储层，当前已拆成 `context + repositories/* + shared + store` 结构，承载 notification outbox、risk scan outbox、已分发通知事件、风险事件流、scheduler ticks、audit records、cycle records 和 operator actions，为 API 与 worker 提供最小跨进程共享状态。
+  - 控制面文件存储层，当前已拆成 `context + repositories/* + shared + store` 结构，承载 notification outbox、risk scan outbox、已分发通知事件、风险事件流、scheduler ticks、audit records、cycle records、workflow runs 和 operator actions，为 API 与 worker 提供最小跨进程共享状态。
 - `packages/control-plane-store/test/`
   - 控制面核心 repository 的轻量自动化测试，当前覆盖 notification、risk、scheduler 以及 context 注入路径。
 - `packages/control-plane-runtime/test/`

@@ -119,6 +119,33 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     recordSchedulerTick(options = {}) {
       return context.scheduler.recordSchedulerTick(options);
     },
+    listWorkflowRuns(limit = 50) {
+      return context.workflows.listWorkflowRuns(limit);
+    },
+    getWorkflowRun(workflowRunId) {
+      return context.workflows.getWorkflowRun(workflowRunId);
+    },
+    startWorkflowRun(payload) {
+      return context.workflows.appendWorkflowRun({
+        ...payload,
+        status: payload.status || 'running',
+      });
+    },
+    completeWorkflowRun(workflowRunId, patch = {}) {
+      return context.workflows.updateWorkflowRun(workflowRunId, {
+        ...patch,
+        status: 'completed',
+        completedAt: patch.completedAt || new Date().toISOString(),
+      });
+    },
+    failWorkflowRun(workflowRunId, error, patch = {}) {
+      return context.workflows.updateWorkflowRun(workflowRunId, {
+        ...patch,
+        status: 'failed',
+        failedAt: patch.failedAt || new Date().toISOString(),
+        error: error || patch.error || null,
+      });
+    },
   };
 }
 

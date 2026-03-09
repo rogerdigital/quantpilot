@@ -9,7 +9,7 @@ import { listRiskEvents } from '../modules/risk/service.mjs';
 import { listSchedulerTicks } from '../modules/scheduler/service.mjs';
 import { runCycle } from '../modules/task-orchestrator/cycle-runner.mjs';
 import { runStateCycle } from '../modules/task-orchestrator/state-runner.mjs';
-import { listActions, listCycles, recordAction, recordCycleRun } from '../modules/task-orchestrator/service.mjs';
+import { getWorkflow, listActions, listCycles, listWorkflows, recordAction, recordCycleRun } from '../modules/task-orchestrator/service.mjs';
 
 function loadEnvFile(pathname) {
   if (!existsSync(pathname)) return;
@@ -516,6 +516,21 @@ export function createGatewayHandler(options = {}) {
         ok: true,
         cycles: listCycles(),
       });
+      return;
+    }
+    if (req.method === 'GET' && reqUrl.pathname === '/api/task-orchestrator/workflows') {
+      writeJson(res, 200, {
+        ok: true,
+        workflows: listWorkflows(),
+      });
+      return;
+    }
+    if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')) {
+      const workflowRunId = reqUrl.pathname.split('/').at(-1);
+      const workflow = getWorkflow(workflowRunId);
+      writeJson(res, workflow ? 200 : 404, workflow
+        ? { ok: true, workflow }
+        : { ok: false, message: 'workflow not found' });
       return;
     }
     if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/cycles') {

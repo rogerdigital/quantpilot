@@ -212,6 +212,8 @@ test('POST /api/task-orchestrator/cycles/run returns control plane resolution', 
   assert.equal(response.json.ok, true);
   assert.equal(response.json.controlPlane.lastStatus, 'HEALTHY');
   assert.equal(response.json.brokerExecution.message, 'test broker execution ok');
+  assert.equal(response.json.workflow.workflowId, 'task-orchestrator.cycle-run');
+  assert.equal(response.json.workflow.status, 'completed');
 });
 
 test('POST /api/task-orchestrator/cycles queues review notifications when approvals are pending', async () => {
@@ -253,6 +255,63 @@ test('POST /api/task-orchestrator/state/run returns next state and enqueues risk
   assert.equal(response.json.state.cycle, 1);
   assert.equal(response.json.resolution.ok, true);
   assert.equal(response.json.state.integrationStatus.marketData.message, 'test market snapshot ok');
+  assert.equal(response.json.workflow.workflowId, 'task-orchestrator.state-run');
+  assert.equal(response.json.workflow.status, 'completed');
   assert.equal(riskJobs.length >= 1, true);
   assert.equal(riskJobs[0].payload.source, 'state-runner');
+});
+
+test('GET /api/task-orchestrator/workflows returns persisted workflow runs', async () => {
+  await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/task-orchestrator/cycles/run',
+    body: {
+      cycle: 24,
+      mode: 'autopilot',
+      riskLevel: 'NORMAL',
+      decisionSummary: 'workflow list route test',
+      marketClock: '2026-03-10 09:45:00',
+      pendingApprovals: 0,
+      liveIntentCount: 0,
+      brokerConnected: true,
+      marketConnected: true,
+      liveTradeEnabled: false,
+      pendingLiveIntents: [],
+    },
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/task-orchestrator/workflows',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.workflows.some((item) => item.workflowId === 'task-orchestrator.cycle-run'), true);
+});
+
+test('GET /api/task-orchestrator/workflows/:id returns a persisted workflow run', async () => {
+  const cycleRun = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/task-orchestrator/cycles/run',
+    body: {
+      cycle: 25,
+      mode: 'autopilot',
+      riskLevel: 'NORMAL',
+      decisionSummary: 'workflow detail route test',
+      marketClock: '2026-03-10 09:50:00',
+      pendingApprovals: 0,
+      liveIntentCount: 0,
+      brokerConnected: true,
+      marketConnected: true,
+      liveTradeEnabled: false,
+      pendingLiveIntents: [],
+    },
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: `/api/task-orchestrator/workflows/${cycleRun.json.workflow.id}`,
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.workflow.id, cycleRun.json.workflow.id);
+  assert.equal(response.json.workflow.workflowId, 'task-orchestrator.cycle-run');
 });

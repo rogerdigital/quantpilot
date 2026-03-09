@@ -78,3 +78,25 @@ test('audit and cycle repositories remain available through the injected context
   assert.equal(context.cycles.listCycleRecords(5)[0].id, cycle.id);
   assert.equal(context.audit.listAuditRecords(5)[0].id, audit.id);
 });
+
+test('workflow repository persists and updates workflow runs through the injected context', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const workflow = context.workflows.appendWorkflowRun({
+    id: 'workflow-1',
+    workflowId: 'task-orchestrator.state-run',
+    status: 'running',
+    steps: [{ key: 'start', status: 'completed' }],
+  });
+  const updated = context.workflows.updateWorkflowRun('workflow-1', {
+    status: 'completed',
+    completedAt: '2026-03-10T09:45:00.000Z',
+    steps: [
+      { key: 'start', status: 'completed' },
+      { key: 'finish', status: 'completed' },
+    ],
+  });
+
+  assert.equal(context.workflows.listWorkflowRuns(5)[0].id, workflow.id);
+  assert.equal(updated.status, 'completed');
+  assert.equal(context.workflows.getWorkflowRun('workflow-1').steps.length, 2);
+});

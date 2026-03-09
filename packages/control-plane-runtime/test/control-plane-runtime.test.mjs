@@ -92,3 +92,28 @@ test('control plane runtime records operator actions with audit and notification
   assert.equal(runtime.listAuditRecords()[0].actor, 'runtime-test');
   assert.equal(runtime.listNotificationJobs()[0].payload.title, 'Approve intent');
 });
+
+test('control plane runtime persists workflow runs through start and complete transitions', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  const workflow = runtime.startWorkflowRun({
+    id: 'workflow-runtime-1',
+    workflowId: 'task-orchestrator.cycle-run',
+    actor: 'runtime-test',
+    trigger: 'api',
+    steps: [{ key: 'record-cycle', status: 'completed' }],
+    payload: { cycle: 12 },
+  });
+  const completed = runtime.completeWorkflowRun('workflow-runtime-1', {
+    steps: [
+      { key: 'record-cycle', status: 'completed' },
+      { key: 'resolve-control-plane', status: 'completed' },
+    ],
+    result: { ok: true },
+  });
+
+  assert.equal(workflow.status, 'running');
+  assert.equal(runtime.getWorkflowRun('workflow-runtime-1').workflowId, 'task-orchestrator.cycle-run');
+  assert.equal(completed.status, 'completed');
+  assert.equal(runtime.listWorkflowRuns()[0].result.ok, true);
+});

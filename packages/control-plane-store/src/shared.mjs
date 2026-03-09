@@ -87,6 +87,28 @@ export function createOperatorActionEntry(payload) {
   };
 }
 
+export function createWorkflowRunEntry(payload) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `workflow-${randomUUID()}`,
+    workflowId: payload.workflowId || 'task-orchestrator.run',
+    workflowType: payload.workflowType || 'control-plane',
+    status: payload.status || 'pending',
+    actor: payload.actor || 'system',
+    trigger: payload.trigger || 'api',
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+    startedAt: payload.startedAt || now,
+    completedAt: payload.completedAt || '',
+    failedAt: payload.failedAt || '',
+    steps: Array.isArray(payload.steps) ? payload.steps : [],
+    payload: payload.payload || {},
+    result: payload.result || null,
+    error: payload.error || null,
+    metadata: payload.metadata || {},
+  };
+}
+
 export function getShanghaiTimeParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('zh-CN', {
     timeZone: 'Asia/Shanghai',
