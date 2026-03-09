@@ -74,7 +74,7 @@ quantpilot/
 - `packages/db/src/`
   - 底层文件存储适配层，当前为 `control-plane-store` 提供统一 JSON 文件读写接口，后续可替换为真正的数据库实现。
 - `packages/control-plane-store/src/`
-  - 控制面文件存储层，当前承载 notification outbox、risk scan outbox、已分发通知事件、风险事件流、scheduler ticks、audit records、cycle records 和 operator actions，为 API 与 worker 提供最小跨进程共享状态。
+  - 控制面文件存储层，当前已拆成 `repositories/* + shared + store` 结构，承载 notification outbox、risk scan outbox、已分发通知事件、风险事件流、scheduler ticks、audit records、cycle records 和 operator actions，为 API 与 worker 提供最小跨进程共享状态。
 - `packages/trading-engine/src/`
   - 共享运行时层，当前已按 `constants / shared / market / execution / risk / strategy / control-plane` 拆分，沉淀市场推进、策略执行、风控裁决、订单意图和控制面状态合并逻辑，供前后端共同消费。
 
