@@ -33,3 +33,4 @@
 - 当前 notification 已经切到 `queueNotification -> apps/worker dispatch` 模式，不再依赖 API 进程内存直接分发。
 - 当前 risk scan 已经切到 `queueRiskScan -> apps/worker process` 模式，风险事件会单独沉淀到后端事件流。
 - 当前 scheduler tick 已经切到 `apps/worker -> scheduler service/store` 模式，API 只负责读取调度事件流。
+- 当前 audit records 和 cycle records 也已经切到 `control-plane-store`，不再驻留在 API 进程内存里。

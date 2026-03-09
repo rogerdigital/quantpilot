@@ -12,6 +12,8 @@ const riskEventsPath = join(runtimeRoot, 'risk-events.json');
 const riskScanOutboxPath = join(runtimeRoot, 'risk-scan-outbox.json');
 const schedulerTicksPath = join(runtimeRoot, 'scheduler-ticks.json');
 const schedulerStatePath = join(runtimeRoot, 'scheduler-state.json');
+const auditRecordsPath = join(runtimeRoot, 'audit-records.json');
+const cycleRecordsPath = join(runtimeRoot, 'cycle-records.json');
 
 function ensureRuntimeRoot() {
   mkdirSync(runtimeRoot, { recursive: true });
@@ -95,6 +97,34 @@ function createSchedulerTickEntry(event) {
   };
 }
 
+function createAuditRecordEntry(record) {
+  return {
+    id: record.id || `audit-${randomUUID()}`,
+    type: record.type || 'system',
+    actor: record.actor || 'system',
+    title: record.title || 'Untitled audit event',
+    detail: record.detail || '',
+    createdAt: record.createdAt || new Date().toISOString(),
+    metadata: record.metadata || {},
+  };
+}
+
+function createCycleRecordEntry(payload) {
+  return {
+    id: payload.id || `cycle-${randomUUID()}`,
+    cycle: Number(payload.cycle || 0),
+    mode: payload.mode || 'autopilot',
+    riskLevel: payload.riskLevel || 'NORMAL',
+    decisionSummary: payload.decisionSummary || '',
+    marketClock: payload.marketClock || '',
+    pendingApprovals: Number(payload.pendingApprovals || 0),
+    liveIntentCount: Number(payload.liveIntentCount || 0),
+    brokerConnected: Boolean(payload.brokerConnected),
+    marketConnected: Boolean(payload.marketConnected),
+    createdAt: payload.createdAt || new Date().toISOString(),
+  };
+}
+
 function getShanghaiTimeParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('zh-CN', {
     timeZone: 'Asia/Shanghai',
@@ -141,6 +171,32 @@ function buildSchedulerBucket(parts) {
 
 export function listNotifications(limit = 50) {
   return readCollection(notificationsPath).slice(0, limit);
+}
+
+export function listAuditRecords(limit = 50) {
+  return readCollection(auditRecordsPath).slice(0, limit);
+}
+
+export function appendAuditRecord(record) {
+  const records = readCollection(auditRecordsPath);
+  const entry = createAuditRecordEntry(record);
+  records.unshift(entry);
+  records.splice(100);
+  writeCollection(auditRecordsPath, records);
+  return entry;
+}
+
+export function listCycleRecords(limit = 30) {
+  return readCollection(cycleRecordsPath).slice(0, limit);
+}
+
+export function appendCycleRecord(payload) {
+  const cycles = readCollection(cycleRecordsPath);
+  const entry = createCycleRecordEntry(payload);
+  cycles.unshift(entry);
+  cycles.splice(60);
+  writeCollection(cycleRecordsPath, cycles);
+  return entry;
 }
 
 export function appendNotification(event) {

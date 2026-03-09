@@ -69,7 +69,7 @@ quantpilot/
 - `packages/shared-types/src/`
   - 共享类型层，承接前端、API 和后续 worker 的统一领域模型。
 - `packages/control-plane-store/src/`
-  - 控制面文件存储层，当前承载 notification outbox、risk scan outbox、已分发通知事件、风险事件流和 scheduler ticks，为 API 与 worker 提供最小跨进程共享状态。
+  - 控制面文件存储层，当前承载 notification outbox、risk scan outbox、已分发通知事件、风险事件流、scheduler ticks、audit records 和 cycle records，为 API 与 worker 提供最小跨进程共享状态。
 - `packages/trading-engine/src/`
   - 共享运行时层，当前已按 `constants / shared / market / execution / risk / strategy / control-plane` 拆分，沉淀市场推进、策略执行、风控裁决、订单意图和控制面状态合并逻辑，供前后端共同消费。
 

@@ -47,6 +47,7 @@
 - 通知事件不再只驻留在 API 内存里，当前已经落到 `.quantpilot-runtime/control-plane/` 下的文件型 outbox 和事件流中，由 worker 负责分发
 - 风险扫描任务和风险事件也已经落到 `.quantpilot-runtime/control-plane/` 下，由 `state runner` 入队、worker 处理、风控页读取
 - scheduler ticks 也已经落到 `.quantpilot-runtime/control-plane/` 下，由 worker 周期性写入，通知中心可直接读取
+- audit records 和 cycle records 也已经落到 `.quantpilot-runtime/control-plane/` 下，不再依赖 API 进程内存
 
 ## 如果接入真实交易
 

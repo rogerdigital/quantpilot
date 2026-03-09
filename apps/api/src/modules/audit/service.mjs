@@ -1,20 +1,12 @@
-const auditRecords = [];
+import {
+  appendAuditRecord as appendStoredAuditRecord,
+  listAuditRecords as listStoredAuditRecords,
+} from '../../../../../packages/control-plane-store/src/index.mjs';
 
 export function listAuditRecords(limit = 50) {
-  return auditRecords.slice(0, limit);
+  return listStoredAuditRecords(limit);
 }
 
 export function appendAuditRecord(record) {
-  const entry = {
-    id: `audit-${Date.now()}-${auditRecords.length + 1}`,
-    type: record.type || 'system',
-    actor: record.actor || 'system',
-    title: record.title || 'Untitled audit event',
-    detail: record.detail || '',
-    createdAt: record.createdAt || new Date().toISOString(),
-    metadata: record.metadata || {},
-  };
-  auditRecords.unshift(entry);
-  auditRecords.splice(100);
-  return entry;
+  return appendStoredAuditRecord(record);
 }

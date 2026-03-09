@@ -1,29 +1,13 @@
 import { appendAuditRecord } from '../audit/service.mjs';
 import { queueNotification } from '../notification/service.mjs';
-
-const cycleRuns = [];
+import { appendCycleRecord, listCycleRecords } from '../../../../../packages/control-plane-store/src/index.mjs';
 
 export function listCycles(limit = 30) {
-  return cycleRuns.slice(0, limit);
+  return listCycleRecords(limit);
 }
 
 export function recordCycleRun(payload) {
-  const entry = {
-    id: `cycle-${Date.now()}-${cycleRuns.length + 1}`,
-    cycle: Number(payload.cycle || 0),
-    mode: payload.mode || 'autopilot',
-    riskLevel: payload.riskLevel || 'NORMAL',
-    decisionSummary: payload.decisionSummary || '',
-    marketClock: payload.marketClock || '',
-    pendingApprovals: Number(payload.pendingApprovals || 0),
-    liveIntentCount: Number(payload.liveIntentCount || 0),
-    brokerConnected: Boolean(payload.brokerConnected),
-    marketConnected: Boolean(payload.marketConnected),
-    createdAt: payload.createdAt || new Date().toISOString(),
-  };
-
-  cycleRuns.unshift(entry);
-  cycleRuns.splice(60);
+  const entry = appendCycleRecord(payload);
 
   appendAuditRecord({
     type: 'cycle',

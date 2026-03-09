@@ -9,7 +9,7 @@ QuantPilot 是一个面向量化交易工作流的分层平台原型，当前仓
 - `apps/worker`: 异步 worker 骨架，预留回测、风控扫描、通知分发和执行补偿等后台任务进程。
 - `packages/shared-types`: 前后端共享的交易和平台类型定义。
 - `packages/trading-engine`: 市场、策略、风控、执行和控制面合并所需的共享 runtime。
-- `packages/control-plane-store`: 控制面文件存储层，当前承载 notification、risk、scheduler 相关的跨进程事件和 outbox。
+- `packages/control-plane-store`: 控制面文件存储层，当前承载 notification、risk、scheduler、audit、cycle records 等跨进程事件和记录。
 
 当前版本依然以产品原型和前端工作流为主，不是可直接用于无人值守实盘的生产系统。
 
