@@ -44,7 +44,7 @@ quantpilot/
 - `apps/web/src/pages/`
   - 前端页面层，已对齐 `dashboard / market / strategies / backtest / risk / execution / agent / notifications / settings`。
 - `apps/web/src/store/`
-  - 前端状态层，`TradingSystemProvider.tsx` 负责本地周期推进和后端控制面协同，`core/` 目录下按市场、策略、风控、执行、控制面和生命周期切分纯计算逻辑。
+  - 前端状态层，`TradingSystemProvider.tsx` 负责向后端提交当前状态并消费新状态，`core/` 目录下保留市场、策略、风控、执行和控制面的纯计算兼容逻辑。
 - `apps/web/src/services/`
   - 运行配置、provider 接入和控制面通信层，包括 market data、broker 与 control-plane service。
 - `apps/api/src/`
@@ -57,7 +57,7 @@ quantpilot/
 ## 当前差距
 
 - `apps/web/src/store/trading-system/core/` 已完成第一轮切片，但仍属于前端原型状态机，后续应继续向真正的领域服务和后端任务流迁移。
-- `apps/api` 已具备最小控制面接口和 `cycle runner` 能力，但仍是轻量 Node 网关形态，尚未进入真正的 NestJS 模块实现阶段。
+- `apps/api` 已具备最小控制面接口、`cycle runner` 和 `state runner` 能力，但仍是轻量 Node 网关形态，尚未进入真正的 NestJS 模块实现阶段。
 - `packages` 目前只落了 `shared-types`，`data-core / strategy-core / risk-core / execution-core` 仍应随着真实实现逐步抽离。
 
 ## 下一步建议

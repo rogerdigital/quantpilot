@@ -1,10 +1,10 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { runtimeConfig } from '../../services/config/runtime.ts';
-import { fetchOperatorSession, runCycle as runControlPlaneCycle, reportOperatorAction } from '../../services/controlPlane.ts';
+import { fetchOperatorSession, reportOperatorAction, runStateCycle } from '../../services/controlPlane.ts';
 import { createBrokerProvider } from '../../services/providers/broker.ts';
 import { createMarketDataProvider } from '../../services/providers/marketData.ts';
 import type { TradingState, TradingSystemContextValue } from '@shared-types/trading.ts';
-import { APP_CONFIG, advanceState, applyBrokerSnapshot, applyControlPlaneResolution, cloneState, computeAccount, createInitialState, logEvent } from './core.ts';
+import { APP_CONFIG, applyBrokerSnapshot, cloneState, computeAccount, createInitialState, logEvent } from './core.ts';
 
 const TradingSystemContext = createContext<TradingSystemContextValue | null>(null);
 
@@ -33,12 +33,9 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
       if (busyRef.current) return;
       busyRef.current = true;
       try {
-        const nextState = await advanceState(stateRef.current, providersRef.current);
-        const resolution = await runControlPlaneCycle(nextState).catch(() => null);
-        if (resolution) {
-          applyControlPlaneResolution(nextState, resolution);
-        }
+        const result = await runStateCycle(stateRef.current).catch(() => null);
         if (!cancelled) {
+          const nextState = result?.state || stateRef.current;
           stateRef.current = nextState;
           setState(nextState);
         }

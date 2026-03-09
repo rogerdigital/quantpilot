@@ -6,6 +6,7 @@ import { getSession } from '../modules/auth/service.mjs';
 import { listModules } from '../modules/registry.mjs';
 import { listNotifications } from '../modules/notification/service.mjs';
 import { runCycle } from '../modules/task-orchestrator/cycle-runner.mjs';
+import { runStateCycle } from '../modules/task-orchestrator/state-runner.mjs';
 import { listCycles, recordAction, recordCycleRun } from '../modules/task-orchestrator/service.mjs';
 
 function loadEnvFile(pathname) {
@@ -152,6 +153,41 @@ async function executeBrokerCycle({ liveTradeEnabled, orders }) {
       connected: false,
       message: statePayload?.message || `Broker state sync failed with HTTP ${stateResponse.status}.`,
     },
+  };
+}
+
+async function getMarketSnapshot({ provider, symbols }) {
+  if (!Array.isArray(symbols) || !symbols.length || provider === 'simulated') {
+    return {
+      label: provider === 'simulated' ? 'Local Simulated Market Data' : 'Market Data',
+      connected: true,
+      message: 'Using the local simulated market data stream.',
+      quotes: [],
+    };
+  }
+
+  if (provider === 'alpaca') {
+    const upstream = new URL(`http://127.0.0.1:${GATEWAY_PORT}/api/alpaca/market/snapshots`);
+    upstream.searchParams.set('symbols', symbols.join(','));
+    const response = await fetch(upstream, {
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+    const payload = await response.json().catch(() => ({}));
+    return {
+      label: 'Alpaca Market Data via Gateway',
+      connected: Boolean(response.ok),
+      message: payload?.message || `Market snapshot HTTP ${response.status}`,
+      quotes: Array.isArray(payload?.quotes) ? payload.quotes : [],
+    };
+  }
+
+  return {
+    label: 'HTTP Market Gateway',
+    connected: false,
+    message: 'Custom HTTP market snapshot is not implemented on the backend yet. Falling back to simulated prices.',
+    quotes: [],
   };
 }
 
@@ -461,6 +497,15 @@ const server = createServer(async (req, res) => {
       writeJson(res, 200, await runCycle(body, {
         getBrokerHealth: getBrokerHealthSnapshot,
         executeBrokerCycle,
+      }));
+      return;
+    }
+    if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/state/run') {
+      const body = await readJsonBody(req);
+      writeJson(res, 200, await runStateCycle(body?.state, {
+        getBrokerHealth: getBrokerHealthSnapshot,
+        executeBrokerCycle,
+        getMarketSnapshot,
       }));
       return;
     }

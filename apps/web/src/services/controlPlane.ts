@@ -1,4 +1,4 @@
-import type { ControlPlaneResolution, CycleRunPayload, TradingState } from '@shared-types/trading.ts';
+import type { ControlPlaneResolution, CycleRunPayload, StateCycleResult, TradingState } from '@shared-types/trading.ts';
 
 function jsonHeaders() {
   return {
@@ -38,6 +38,18 @@ export async function runCycle(state: TradingState): Promise<ControlPlaneResolut
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(buildCyclePayload(state)),
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function runStateCycle(state: TradingState): Promise<StateCycleResult> {
+  const response = await fetch('/api/task-orchestrator/state/run', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify({ state }),
   });
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);

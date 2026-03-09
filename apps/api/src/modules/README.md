@@ -21,3 +21,5 @@
 - `task-orchestrator/service.mjs`: `GET /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/actions`
 - `task-orchestrator/cycle-runner.mjs`: `POST /api/task-orchestrator/cycles/run`
   - 在记录周期后执行 broker 提交与状态同步，并返回控制面裁决
+- `task-orchestrator/state-runner.mjs`: `POST /api/task-orchestrator/state/run`
+  - 基于前端提交的当前状态，在后端执行市场更新、策略推进、风控检查和周期编排，再返回新的完整状态

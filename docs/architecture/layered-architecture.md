@@ -37,5 +37,6 @@
 - `packages/shared-types` 承载共享模型。
 - `apps/web/src/store/trading-system/core/` 已完成第二轮切片，当前包含 `config / market / strategy / risk / execution / lifecycle / controlPlane / state / shared`。
 - `apps/web/src/store/trading-system/core.ts` 现在只保留兼容出口，避免页面层直接感知内部重构。
-- `apps/web/src/store/trading-system/TradingSystemProvider.tsx` 当前会在本地推进交易周期后调用后端 `cycle run` 接口，并消费控制面返回的裁决结果。
+- `apps/web/src/store/trading-system/TradingSystemProvider.tsx` 当前会把本地状态快照提交到后端 `state run` 接口，并直接消费服务端返回的新周期状态。
 - 远程 broker 的订单提交和状态同步已由后端 `cycle runner` 统一执行，前端不再在周期内直接调用 broker submit/sync。
+- 市场数据拉取也已进入后端 `state runner`，前端不再在主周期里直接调用 market data provider。

@@ -219,6 +219,12 @@ export type CycleRunPayload = {
   pendingLiveIntents: BrokerOrder[];
 };
 
+export type StateCycleResult = {
+  ok: boolean;
+  state: TradingState;
+  resolution: ControlPlaneResolution;
+};
+
 export type TradingSystemContextValue = {
   state: TradingState;
   setMode: (mode: TradingState['mode']) => void;
