@@ -2,6 +2,7 @@ import { controlPlaneContext } from './context.mjs';
 
 export { createControlPlaneContext, controlPlaneContext } from './context.mjs';
 export { createControlPlaneStore, controlPlaneStore } from './store.mjs';
+export { createAgentActionRequestRepository } from './repositories/agent-action-request-repo.mjs';
 export { createAuditRepository } from './repositories/audit-repo.mjs';
 export { createCycleRepository } from './repositories/cycle-repo.mjs';
 export { createExecutionPlanRepository } from './repositories/execution-plan-repo.mjs';
@@ -13,6 +14,9 @@ export { createWorkflowRepository } from './repositories/workflow-repo.mjs';
 
 export const listAuditRecords = (...args) => controlPlaneContext.audit.listAuditRecords(...args);
 export const appendAuditRecord = (...args) => controlPlaneContext.audit.appendAuditRecord(...args);
+export const listAgentActionRequests = (...args) => controlPlaneContext.agentActionRequests.listAgentActionRequests(...args);
+export const appendAgentActionRequest = (...args) => controlPlaneContext.agentActionRequests.appendAgentActionRequest(...args);
+export const updateAgentActionRequest = (...args) => controlPlaneContext.agentActionRequests.updateAgentActionRequest(...args);
 export const listCycleRecords = (...args) => controlPlaneContext.cycles.listCycleRecords(...args);
 export const appendCycleRecord = (...args) => controlPlaneContext.cycles.appendCycleRecord(...args);
 export const listOperatorActions = (...args) => controlPlaneContext.operatorActions.listOperatorActions(...args);

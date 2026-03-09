@@ -220,3 +220,38 @@ test('failed strategy execution workflow is scheduled for retry and re-queued by
   assert.equal(maintenance.releasedCount, 1);
   assert.equal(context.workflows.getWorkflowRun(queued.json.workflow.id).status, 'queued');
 });
+
+test('queued agent action request workflow persists a review request without changing execution plans', async () => {
+  const executionPlanCountBefore = context.executionPlans.listExecutionPlans().length;
+  const queued = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/action-requests',
+    body: {
+      requestType: 'prepare_execution_plan',
+      targetId: 'ema-cross-us',
+      summary: 'Agent asks for execution plan review.',
+      rationale: 'Signal quality improved.',
+      requestedBy: 'agent',
+    },
+  });
+
+  assert.equal(queued.statusCode, 200);
+  assert.equal(queued.json.workflow.workflowId, 'task-orchestrator.agent-action-request');
+
+  const execution = await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
+      ...options,
+      now: '2026-03-10T23:59:00.000Z',
+      workflowId: 'task-orchestrator.agent-action-request',
+    }),
+    executeWorkflow: executeQueuedWorkflow,
+    context: createWorkerContext(),
+  });
+
+  assert.equal(execution.claimedCount, 1);
+  assert.equal(execution.executions[0].ok, true);
+  assert.equal(context.agentActionRequests.listAgentActionRequests().length, 1);
+  assert.equal(context.agentActionRequests.listAgentActionRequests()[0].requestType, 'prepare_execution_plan');
+  assert.equal(context.executionPlans.listExecutionPlans().length, executionPlanCountBefore);
+  assert.equal(context.notifications.listNotificationJobs().some((item) => item.payload.source === 'agent-control'), true);
+});

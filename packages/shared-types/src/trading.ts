@@ -276,6 +276,21 @@ export type AgentToolExecutionResult = {
   data: Record<string, unknown>;
 };
 
+export type AgentActionRequest = {
+  id: string;
+  workflowRunId: string;
+  requestType: 'prepare_execution_plan' | 'explain_risk' | 'review_backtest';
+  targetId: string;
+  status: 'submitted' | 'pending_review';
+  approvalState: 'pending';
+  summary: string;
+  rationale: string;
+  requestedBy: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ControlPlaneResolution = {
   ok: boolean;
   cycle: {

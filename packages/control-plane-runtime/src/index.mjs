@@ -27,6 +27,41 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
   }
 
   return {
+    listAgentActionRequests(limit = 50, filter = {}) {
+      return context.agentActionRequests.listAgentActionRequests(limit, filter);
+    },
+    appendAgentActionRequest(payload) {
+      return context.agentActionRequests.appendAgentActionRequest(payload);
+    },
+    recordAgentActionRequest(payload) {
+      const request = context.agentActionRequests.appendAgentActionRequest(payload);
+
+      context.audit.appendAuditRecord({
+        type: 'agent-action-request',
+        actor: payload.requestedBy || 'agent',
+        title: `Agent requested ${request.requestType}`,
+        detail: request.summary || 'Agent action request submitted.',
+        metadata: {
+          targetId: request.targetId,
+          approvalState: request.approvalState,
+          workflowRunId: request.workflowRunId,
+        },
+      });
+
+      context.notifications.enqueueNotification({
+        level: 'warn',
+        source: 'agent-control',
+        title: `Agent action request submitted`,
+        message: request.summary || `${request.requestType} request is waiting for operator review.`,
+        metadata: {
+          agentActionRequestId: request.id,
+          requestType: request.requestType,
+          targetId: request.targetId,
+        },
+      });
+
+      return request;
+    },
     listAuditRecords(limit = 50) {
       return context.audit.listAuditRecords(limit);
     },

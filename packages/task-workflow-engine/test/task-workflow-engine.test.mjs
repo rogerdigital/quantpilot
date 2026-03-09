@@ -109,3 +109,26 @@ test('queued workflow dispatcher executes strategy execution workflows', async (
   assert.equal(result.workflow.status, 'completed');
   assert.equal(context.listExecutionPlans()[0].strategyId, 'ema-cross-us');
 });
+
+test('queued workflow dispatcher executes agent action request workflows', async () => {
+  const context = createEngineContext();
+  context.enqueueWorkflowRun({
+    workflowId: 'task-orchestrator.agent-action-request',
+    status: 'queued',
+    payload: {
+      requestType: 'prepare_execution_plan',
+      targetId: 'ema-cross-us',
+      summary: 'Agent requests execution plan review.',
+      rationale: 'Score has improved.',
+      requestedBy: 'agent',
+    },
+  });
+  const claimed = context.claimQueuedWorkflowRuns({ worker: 'engine-worker' });
+
+  const result = await executeQueuedWorkflow(claimed.workflows[0], context);
+
+  assert.equal(result.ok, true);
+  assert.equal(result.workflow.status, 'completed');
+  assert.equal(context.listAgentActionRequests()[0].requestType, 'prepare_execution_plan');
+  assert.equal(context.listExecutionPlans().length, 0);
+});

@@ -2,6 +2,8 @@ import { getBacktestSummary, listBacktestRuns } from '../backtest/service.mjs';
 import { listExecutionPlans } from '../execution/service.mjs';
 import { listRiskEvents } from '../risk/service.mjs';
 import { listStrategyCatalog } from '../strategy/service.mjs';
+import { queueWorkflow } from '../task-orchestrator/service.mjs';
+import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
 
 const AGENT_TOOLS = [
   {
@@ -132,4 +134,46 @@ export function executeAgentTool(payload = {}) {
         data: {},
       };
   }
+}
+
+const ALLOWED_AGENT_REQUEST_TYPES = new Set([
+  'prepare_execution_plan',
+  'explain_risk',
+  'review_backtest',
+]);
+
+export function listAgentActionRequests(limit = 50) {
+  return {
+    ok: true,
+    requests: controlPlaneRuntime.listAgentActionRequests(limit),
+  };
+}
+
+export function queueAgentActionRequest(payload = {}) {
+  if (!ALLOWED_AGENT_REQUEST_TYPES.has(payload.requestType)) {
+    return {
+      ok: false,
+      message: `Agent request type ${payload.requestType || 'unknown'} is not allowed.`,
+    };
+  }
+
+  const workflow = queueWorkflow({
+    workflowId: 'task-orchestrator.agent-action-request',
+    workflowType: 'task-orchestrator',
+    actor: payload.requestedBy || 'agent',
+    trigger: 'agent',
+    payload: {
+      requestType: payload.requestType,
+      targetId: payload.targetId || '',
+      summary: payload.summary || '',
+      rationale: payload.rationale || '',
+      requestedBy: payload.requestedBy || 'agent',
+    },
+    maxAttempts: Number(payload.maxAttempts || 2),
+  });
+
+  return {
+    ok: true,
+    workflow,
+  };
 }

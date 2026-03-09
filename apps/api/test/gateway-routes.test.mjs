@@ -165,6 +165,60 @@ test('POST /api/agent/tools/execute rejects non-allowlisted tools', async () => 
   assert.equal(response.json.ok, false);
 });
 
+test('POST /api/agent/action-requests queues an agent action request workflow', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/action-requests',
+    body: {
+      requestType: 'prepare_execution_plan',
+      targetId: 'ema-cross-us',
+      summary: 'Agent asks for execution plan review.',
+      rationale: 'Strategy score has improved.',
+      requestedBy: 'agent',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.workflow.workflowId, 'task-orchestrator.agent-action-request');
+});
+
+test('POST /api/agent/action-requests rejects unsupported request types', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/action-requests',
+    body: {
+      requestType: 'direct_execute',
+      targetId: 'ema-cross-us',
+      requestedBy: 'agent',
+    },
+  });
+
+  assert.equal(response.statusCode, 403);
+  assert.equal(response.json.ok, false);
+});
+
+test('GET /api/agent/action-requests returns persisted requests', async () => {
+  context.agentActionRequests.appendAgentActionRequest({
+    requestType: 'review_backtest',
+    targetId: 'bt-ema-cross-20260310',
+    status: 'pending_review',
+    approvalState: 'pending',
+    summary: 'Agent requests backtest review.',
+    rationale: 'Drawdown breach needs review.',
+    requestedBy: 'agent',
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/agent/action-requests',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(Array.isArray(response.json.requests), true);
+  assert.equal(response.json.requests[0].requestType, 'review_backtest');
+});
+
 test('POST /api/strategy/execute queues a strategy execution workflow', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',

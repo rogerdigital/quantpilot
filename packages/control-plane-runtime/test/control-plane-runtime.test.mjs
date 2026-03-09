@@ -119,6 +119,26 @@ test('control plane runtime records execution plans with audit and notification 
   assert.equal(runtime.listNotificationJobs()[0].payload.source, 'execution-planner');
 });
 
+test('control plane runtime records agent action requests with audit and notification fanout', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  const request = runtime.recordAgentActionRequest({
+    workflowRunId: 'workflow-agent-1',
+    requestType: 'prepare_execution_plan',
+    targetId: 'ema-cross-us',
+    status: 'pending_review',
+    approvalState: 'pending',
+    summary: 'Agent requests an execution plan review.',
+    rationale: 'Strategy score improved and needs operator review.',
+    requestedBy: 'agent',
+  });
+
+  assert.equal(request.requestType, 'prepare_execution_plan');
+  assert.equal(runtime.listAgentActionRequests()[0].id, request.id);
+  assert.equal(runtime.listAuditRecords()[0].type, 'agent-action-request');
+  assert.equal(runtime.listNotificationJobs()[0].payload.source, 'agent-control');
+});
+
 test('control plane runtime persists workflow runs through start and complete transitions', () => {
   const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
 

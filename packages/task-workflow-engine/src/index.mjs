@@ -127,6 +127,69 @@ async function executeStrategyExecutionWorkflow(payload, context, options = {}) 
   }
 }
 
+async function executeAgentActionRequestWorkflow(payload, context, options = {}) {
+  const workflow = options.workflow || startWorkflow(context, {
+    workflowId: 'task-orchestrator.agent-action-request',
+    workflowType: 'task-orchestrator',
+    actor: payload.requestedBy || context.getOperatorName(),
+    trigger: options.trigger || 'agent',
+    payload,
+    maxAttempts: Number(payload.maxAttempts || 2),
+    steps: [
+      { key: 'validate-request', status: 'running' },
+      { key: 'persist-action-request', status: 'pending' },
+      { key: 'fanout-review-notification', status: 'pending' },
+    ],
+  });
+
+  try {
+    const request = await context.recordAgentActionRequest({
+      workflowRunId: workflow.id,
+      requestType: payload.requestType,
+      targetId: payload.targetId || '',
+      status: 'pending_review',
+      approvalState: 'pending',
+      summary: payload.summary || `${payload.requestType} request submitted by Agent.`,
+      rationale: payload.rationale || '',
+      requestedBy: payload.requestedBy || context.getOperatorName(),
+      metadata: {
+        channel: 'agent',
+      },
+    });
+
+    const persistedWorkflow = completeWorkflow(context, workflow.id, {
+      steps: [
+        { key: 'validate-request', status: 'completed', requestType: payload.requestType },
+        { key: 'persist-action-request', status: 'completed', agentActionRequestId: request.id },
+        { key: 'fanout-review-notification', status: 'completed' },
+      ],
+      result: {
+        ok: true,
+        agentActionRequestId: request.id,
+        status: request.status,
+      },
+    });
+
+    return {
+      ok: true,
+      request,
+      workflow: persistedWorkflow,
+    };
+  } catch (error) {
+    const failedWorkflow = failWorkflow(context, workflow.id, error instanceof Error ? error.message : 'unknown agent action request error', {
+      steps: [
+        { key: 'validate-request', status: 'failed' },
+        { key: 'persist-action-request', status: 'skipped' },
+        { key: 'fanout-review-notification', status: 'skipped' },
+      ],
+      retryable: false,
+    });
+    throw Object.assign(error instanceof Error ? error : new Error('agent action request workflow failed'), {
+      workflowId: failedWorkflow?.id,
+    });
+  }
+}
+
 export async function executeCycleWorkflow(payload, context, options = {}) {
   const workflow = options.workflow || startWorkflow(context, {
     workflowId: 'task-orchestrator.cycle-run',
@@ -309,6 +372,12 @@ export async function executeStateWorkflow(previousState, context, options = {})
 }
 
 export async function executeQueuedWorkflow(workflowRun, context) {
+  if (workflowRun.workflowId === 'task-orchestrator.agent-action-request') {
+    return executeAgentActionRequestWorkflow(workflowRun.payload, context, {
+      workflow: workflowRun,
+      trigger: 'worker',
+    });
+  }
   if (workflowRun.workflowId === 'task-orchestrator.strategy-execution') {
     return executeStrategyExecutionWorkflow(workflowRun.payload, context, {
       workflow: workflowRun,

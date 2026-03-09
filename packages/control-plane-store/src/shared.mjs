@@ -135,6 +135,24 @@ export function createExecutionPlanEntry(payload) {
   };
 }
 
+export function createAgentActionRequestEntry(payload) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `agent-action-request-${randomUUID()}`,
+    workflowRunId: payload.workflowRunId || '',
+    requestType: payload.requestType || 'analysis',
+    targetId: payload.targetId || '',
+    status: payload.status || 'submitted',
+    approvalState: payload.approvalState || 'pending',
+    summary: payload.summary || '',
+    rationale: payload.rationale || '',
+    requestedBy: payload.requestedBy || 'agent',
+    metadata: payload.metadata || {},
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+  };
+}
+
 export function getShanghaiTimeParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('zh-CN', {
     timeZone: 'Asia/Shanghai',
