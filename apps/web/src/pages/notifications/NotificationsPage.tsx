@@ -1,5 +1,6 @@
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { useNotificationsFeed } from '../../hooks/useNotificationsFeed.ts';
+import { useOperatorActionsFeed } from '../../hooks/useOperatorActionsFeed.ts';
 import { useSchedulerTicksFeed } from '../../hooks/useSchedulerTicksFeed.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { ActivityLog } from '../console/components/ConsoleTables.tsx';
@@ -9,6 +10,7 @@ export default function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
   const { items, loading } = useNotificationsFeed();
+  const { items: actionItems, loading: actionLoading } = useOperatorActionsFeed();
   const { items: schedulerItems, loading: schedulerLoading } = useSchedulerTicksFeed();
   const connectedCount = Number(state.integrationStatus.marketData.connected) + Number(state.integrationStatus.broker.connected);
 
@@ -36,6 +38,35 @@ export default function NotificationsPage() {
             <div className="panel-badge badge-info">EVENTS</div>
           </div>
           <ActivityLog />
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '操作动作流' : 'Operator Actions'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '查看批准、拒绝、撤单等操作员动作的后端记录。'
+                  : 'Review backend-recorded operator actions such as approvals, rejections, and cancellations.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{actionItems.length}</div>
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {actionLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载操作动作...' : 'Loading operator actions...'}</div> : null}
+            {!actionLoading && !actionItems.length ? <div className="empty-cell">{locale === 'zh' ? '暂无操作动作' : 'No operator actions yet.'}</div> : null}
+            {!actionLoading ? actionItems.map((item) => (
+              <div className="focus-row" key={item.id}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '执行人' : 'Actor'}</span>
+                  <strong>{item.actor}</strong>
+                </div>
+              </div>
+            )) : null}
+          </div>
         </article>
         <article className="panel">
           <div className="panel-head">

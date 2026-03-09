@@ -104,3 +104,13 @@ export async function fetchSchedulerTicks() {
   }
   return response.json();
 }
+
+export async function fetchOperatorActions() {
+  const response = await fetch('/api/task-orchestrator/actions', {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}

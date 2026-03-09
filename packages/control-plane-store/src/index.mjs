@@ -14,6 +14,7 @@ const schedulerTicksPath = join(runtimeRoot, 'scheduler-ticks.json');
 const schedulerStatePath = join(runtimeRoot, 'scheduler-state.json');
 const auditRecordsPath = join(runtimeRoot, 'audit-records.json');
 const cycleRecordsPath = join(runtimeRoot, 'cycle-records.json');
+const operatorActionsPath = join(runtimeRoot, 'operator-actions.json');
 
 function ensureRuntimeRoot() {
   mkdirSync(runtimeRoot, { recursive: true });
@@ -125,6 +126,20 @@ function createCycleRecordEntry(payload) {
   };
 }
 
+function createOperatorActionEntry(payload) {
+  return {
+    id: payload.id || `action-${randomUUID()}`,
+    type: payload.type || 'manual',
+    symbol: payload.symbol || '',
+    detail: payload.detail || '',
+    actor: payload.actor || 'operator',
+    title: payload.title || 'Operator action',
+    level: payload.level || 'info',
+    createdAt: payload.createdAt || new Date().toISOString(),
+    metadata: payload.metadata || {},
+  };
+}
+
 function getShanghaiTimeParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('zh-CN', {
     timeZone: 'Asia/Shanghai',
@@ -196,6 +211,19 @@ export function appendCycleRecord(payload) {
   cycles.unshift(entry);
   cycles.splice(60);
   writeCollection(cycleRecordsPath, cycles);
+  return entry;
+}
+
+export function listOperatorActions(limit = 50) {
+  return readCollection(operatorActionsPath).slice(0, limit);
+}
+
+export function appendOperatorAction(payload) {
+  const actions = readCollection(operatorActionsPath);
+  const entry = createOperatorActionEntry(payload);
+  actions.unshift(entry);
+  actions.splice(100);
+  writeCollection(operatorActionsPath, actions);
   return entry;
 }
 

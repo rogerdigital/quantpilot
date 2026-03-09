@@ -21,7 +21,7 @@
 - `notification/service.mjs`: `GET /api/notification/events`
 - `risk/service.mjs`: `GET /api/risk/events`
 - `scheduler/service.mjs`: `GET /api/scheduler/ticks`
-- `task-orchestrator/service.mjs`: `GET /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/actions`
+- `task-orchestrator/service.mjs`: `GET /api/task-orchestrator/cycles`、`POST /api/task-orchestrator/cycles`、`GET /api/task-orchestrator/actions`、`POST /api/task-orchestrator/actions`
 - `task-orchestrator/cycle-runner.mjs`: `POST /api/task-orchestrator/cycles/run`
   - 在记录周期后执行 broker 提交与状态同步，并返回控制面裁决
 - `task-orchestrator/state-runner.mjs`: `POST /api/task-orchestrator/state/run`
@@ -34,3 +34,4 @@
 - 当前 risk scan 已经切到 `queueRiskScan -> apps/worker process` 模式，风险事件会单独沉淀到后端事件流。
 - 当前 scheduler tick 已经切到 `apps/worker -> scheduler service/store` 模式，API 只负责读取调度事件流。
 - 当前 audit records 和 cycle records 也已经切到 `control-plane-store`，不再驻留在 API 进程内存里。
+- 当前 operator actions 也已经切到 `control-plane-store`，通知中心可直接查看独立动作流。

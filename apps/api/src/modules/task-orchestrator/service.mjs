@@ -1,6 +1,11 @@
 import { appendAuditRecord } from '../audit/service.mjs';
 import { queueNotification } from '../notification/service.mjs';
-import { appendCycleRecord, listCycleRecords } from '../../../../../packages/control-plane-store/src/index.mjs';
+import {
+  appendCycleRecord,
+  appendOperatorAction,
+  listCycleRecords,
+  listOperatorActions,
+} from '../../../../../packages/control-plane-store/src/index.mjs';
 
 export function listCycles(limit = 30) {
   return listCycleRecords(limit);
@@ -50,30 +55,27 @@ export function recordCycleRun(payload) {
 }
 
 export function recordAction(payload) {
-  const action = {
-    id: `action-${Date.now()}`,
-    type: payload.type || 'manual',
-    symbol: payload.symbol || '',
-    detail: payload.detail || '',
-    actor: payload.actor || 'operator',
-    createdAt: new Date().toISOString(),
-  };
+  const action = appendOperatorAction(payload);
 
   appendAuditRecord({
     type: action.type,
     actor: action.actor,
-    title: payload.title || 'Operator action',
+    title: action.title,
     detail: action.detail,
-    metadata: { symbol: action.symbol },
+    metadata: { symbol: action.symbol, level: action.level },
   });
 
   queueNotification({
-    level: payload.level || 'info',
+    level: action.level,
     source: 'control-plane',
-    title: payload.title || 'Operator action',
+    title: action.title,
     message: action.detail,
     metadata: { symbol: action.symbol, type: action.type },
   });
 
   return action;
+}
+
+export function listActions(limit = 50) {
+  return listOperatorActions(limit);
 }

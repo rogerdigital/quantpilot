@@ -9,7 +9,7 @@ import { listRiskEvents } from '../modules/risk/service.mjs';
 import { listSchedulerTicks } from '../modules/scheduler/service.mjs';
 import { runCycle } from '../modules/task-orchestrator/cycle-runner.mjs';
 import { runStateCycle } from '../modules/task-orchestrator/state-runner.mjs';
-import { listCycles, recordAction, recordCycleRun } from '../modules/task-orchestrator/service.mjs';
+import { listActions, listCycles, recordAction, recordCycleRun } from '../modules/task-orchestrator/service.mjs';
 
 function loadEnvFile(pathname) {
   if (!existsSync(pathname)) return;
@@ -523,6 +523,13 @@ const server = createServer(async (req, res) => {
         executeBrokerCycle,
         getMarketSnapshot,
       }));
+      return;
+    }
+    if (req.method === 'GET' && reqUrl.pathname === '/api/task-orchestrator/actions') {
+      writeJson(res, 200, {
+        ok: true,
+        actions: listActions(),
+      });
       return;
     }
     if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/actions') {
