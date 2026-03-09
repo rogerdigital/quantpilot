@@ -51,3 +51,44 @@ test('control plane runtime dispatches queued jobs through injected context', ()
   assert.equal(runtime.listNotifications()[0].source, 'risk-monitor');
   assert.equal(runtime.listRiskEvents()[0].status, 'risk-off');
 });
+
+test('control plane runtime records cycle runs with audit and notifications', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  const cycle = runtime.recordCycleRun({
+    cycle: 11,
+    mode: 'hybrid',
+    riskLevel: 'NORMAL',
+    decisionSummary: 'runtime cycle',
+    pendingApprovals: 2,
+    liveIntentCount: 2,
+    brokerConnected: false,
+    marketConnected: true,
+  });
+
+  const audits = runtime.listAuditRecords();
+  const jobs = runtime.listNotificationJobs();
+
+  assert.equal(cycle.cycle, 11);
+  assert.equal(audits[0].type, 'cycle');
+  assert.equal(jobs.length, 2);
+  assert.equal(jobs[0].payload.title.includes('degraded'), true);
+});
+
+test('control plane runtime records operator actions with audit and notification fanout', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  const action = runtime.recordOperatorAction({
+    type: 'approve-intent',
+    actor: 'runtime-test',
+    title: 'Approve intent',
+    detail: 'approved from runtime test',
+    symbol: 'AAPL',
+    level: 'info',
+  });
+
+  assert.equal(action.type, 'approve-intent');
+  assert.equal(runtime.listOperatorActions()[0].id, action.id);
+  assert.equal(runtime.listAuditRecords()[0].actor, 'runtime-test');
+  assert.equal(runtime.listNotificationJobs()[0].payload.title, 'Approve intent');
+});

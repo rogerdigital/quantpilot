@@ -8,7 +8,7 @@ QuantPilot 是一个面向量化交易工作流的分层平台原型，当前仓
 - `apps/api`: 后端入口和网关骨架，承载 API、鉴权、任务编排、通知、审计、调度等服务边界。
 - `apps/worker`: 异步 worker 骨架，预留回测、风控扫描、通知分发和执行补偿等后台任务进程。
 - `packages/db`: 底层存储接口层，当前提供 `collection store / kv store` 抽象和 JSON file adapter，为后续数据库替换预留边界。
-- `packages/control-plane-runtime`: API 和 worker 共用的控制面运行时装配层。
+- `packages/control-plane-runtime`: API 和 worker 共用的控制面运行时装配层，当前已统一封装 notification、risk、scheduler、audit 和 task-orchestrator record fanout。
 - `packages/shared-types`: 前后端共享的交易和平台类型定义。
 - `packages/trading-engine`: 市场、策略、风控、执行和控制面合并所需的共享 runtime。
 - `packages/control-plane-store`: 控制面文件存储层，当前已按 `context + repositories` 结构拆分，承载 notification、risk、scheduler、audit、cycle records、operator actions 等跨进程事件和记录。

@@ -77,7 +77,7 @@ quantpilot/
 - `apps/api/src/modules/`
   - 控制中枢的模块规划，包括 API、鉴权、账户、任务编排、通知、风控、审计、监控和调度；其中 `auth / audit / notification / risk / task-orchestrator` 已具备最小原型实现。
 - `packages/control-plane-runtime/src/`
-  - 控制面共享服务装配层，统一封装 audit、notification、risk、scheduler、cycles 和 operator actions 等运行时能力，供 API 与 worker 共同消费。
+  - 控制面共享服务装配层，统一封装 audit、notification、risk、scheduler、cycles、operator actions 以及 task-orchestrator 的 audit/notification fanout 规则，供 API 与 worker 共同消费。
 - `packages/shared-types/src/`
   - 共享类型层，承接前端、API 和后续 worker 的统一领域模型。
 - `packages/db/src/`

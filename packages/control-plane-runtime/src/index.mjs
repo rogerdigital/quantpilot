@@ -14,11 +14,74 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     appendCycleRecord(payload) {
       return context.cycles.appendCycleRecord(payload);
     },
+    recordCycleRun(payload) {
+      const entry = context.cycles.appendCycleRecord(payload);
+
+      context.audit.appendAuditRecord({
+        type: 'cycle',
+        actor: 'task-orchestrator',
+        title: `Cycle ${entry.cycle} completed`,
+        detail: entry.decisionSummary || 'Cycle completed without a new priority decision.',
+        metadata: {
+          mode: entry.mode,
+          riskLevel: entry.riskLevel,
+          pendingApprovals: entry.pendingApprovals,
+          liveIntentCount: entry.liveIntentCount,
+        },
+      });
+
+      if (entry.pendingApprovals > 0) {
+        context.notifications.enqueueNotification({
+          level: 'warn',
+          source: 'task-orchestrator',
+          title: `Cycle ${entry.cycle} requires approval`,
+          message: `${entry.pendingApprovals} live actions are waiting for review.`,
+          metadata: { cycle: entry.cycle },
+        });
+      }
+
+      if (!entry.brokerConnected || !entry.marketConnected) {
+        context.notifications.enqueueNotification({
+          level: 'warn',
+          source: 'task-orchestrator',
+          title: `Cycle ${entry.cycle} degraded`,
+          message: 'One or more platform integrations are disconnected or running in fallback mode.',
+          metadata: {
+            cycle: entry.cycle,
+            brokerConnected: entry.brokerConnected,
+            marketConnected: entry.marketConnected,
+          },
+        });
+      }
+
+      return entry;
+    },
     listOperatorActions(limit = 50) {
       return context.operatorActions.listOperatorActions(limit);
     },
     appendOperatorAction(payload) {
       return context.operatorActions.appendOperatorAction(payload);
+    },
+    recordOperatorAction(payload) {
+      const action = context.operatorActions.appendOperatorAction(payload);
+
+      context.audit.appendAuditRecord({
+        type: action.type,
+        actor: action.actor,
+        title: action.title,
+        detail: action.detail,
+        metadata: { symbol: action.symbol, level: action.level },
+      });
+
+      context.notifications.enqueueNotification({
+        level: action.level,
+        source: 'control-plane',
+        title: action.title,
+        message: action.detail,
+        metadata: { symbol: action.symbol, type: action.type },
+      });
+
+      return action;
     },
     listNotifications(limit = 50) {
       return context.notifications.listNotifications(limit);

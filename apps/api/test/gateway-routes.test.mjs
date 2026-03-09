@@ -185,6 +185,8 @@ test('POST then GET /api/task-orchestrator/cycles persists cycle records', async
   assert.equal(createResponse.json.cycle.cycle, 21);
   assert.equal(listResponse.statusCode, 200);
   assert.equal(listResponse.json.cycles.some((item) => item.id === createResponse.json.cycle.id), true);
+  assert.equal(context.audit.listAuditRecords().some((item) => item.title.includes('Cycle 21 completed')), true);
+  assert.equal(context.notifications.listNotificationJobs().length >= 0, true);
 });
 
 test('POST /api/task-orchestrator/cycles/run returns control plane resolution', async () => {
@@ -210,6 +212,29 @@ test('POST /api/task-orchestrator/cycles/run returns control plane resolution', 
   assert.equal(response.json.ok, true);
   assert.equal(response.json.controlPlane.lastStatus, 'HEALTHY');
   assert.equal(response.json.brokerExecution.message, 'test broker execution ok');
+});
+
+test('POST /api/task-orchestrator/cycles queues review notifications when approvals are pending', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/task-orchestrator/cycles',
+    body: {
+      cycle: 23,
+      mode: 'autopilot',
+      riskLevel: 'NORMAL',
+      decisionSummary: 'pending approvals route test',
+      marketClock: '2026-03-10 09:40:00',
+      pendingApprovals: 2,
+      liveIntentCount: 2,
+      brokerConnected: true,
+      marketConnected: true,
+    },
+  });
+
+  const notificationJobs = context.notifications.listNotificationJobs();
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(notificationJobs.some((job) => job.payload.title.includes('requires approval')), true);
 });
 
 test('POST /api/task-orchestrator/state/run returns next state and enqueues risk scan', async () => {

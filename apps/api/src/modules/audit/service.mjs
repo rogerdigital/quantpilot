@@ -1,12 +1,9 @@
-import {
-  appendAuditRecord as appendStoredAuditRecord,
-  listAuditRecords as listStoredAuditRecords,
-} from '../../../../../packages/control-plane-store/src/index.mjs';
+import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
 
 export function listAuditRecords(limit = 50) {
-  return listStoredAuditRecords(limit);
+  return controlPlaneRuntime.listAuditRecords(limit);
 }
 
 export function appendAuditRecord(record) {
-  return appendStoredAuditRecord(record);
+  return controlPlaneRuntime.appendAuditRecord(record);
 }
