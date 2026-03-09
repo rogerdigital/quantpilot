@@ -2,23 +2,28 @@
   "name": "quantpilot",
   "version": "0.1.0",
   "private": true,
-  "description": "基于 Vite + React Router 的自主决策量化交易系统控制台",
+  "description": "QuantPilot monorepo skeleton for the platform layer and agent-facing trading workspace",
   "type": "module",
   "engines": {
     "node": ">=20.5.0",
     "npm": ">=10"
   },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "gateway": "node server/index.mjs",
-    "dev": "vite --host 0.0.0.0 --port 8080",
-    "start": "vite --host 0.0.0.0 --port 8080",
-    "typecheck": "tsc --noEmit",
-    "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0 --port 8080"
+    "dev": "vite --config apps/web/vite.config.ts --host 0.0.0.0 --port 8080",
+    "start": "vite --config apps/web/vite.config.ts --host 0.0.0.0 --port 8080",
+    "build": "vite build --config apps/web/vite.config.ts",
+    "preview": "vite preview --config apps/web/vite.config.ts --host 0.0.0.0 --port 8080",
+    "typecheck": "tsc --noEmit -p apps/web/tsconfig.json",
+    "gateway": "node apps/api/src/main.mjs"
   },
   "keywords": [
     "quantitative-trading",
     "trading-system",
+    "agent-platform",
     "react",
     "vite",
     "react-router"

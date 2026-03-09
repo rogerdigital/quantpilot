@@ -1,0 +1,5 @@
+{
+  "name": "@quantpilot/shared-types",
+  "private": true,
+  "type": "module"
+}

@@ -4,10 +4,10 @@
 
 ## 配置入口
 
-- [runtime.ts](../src/services/config/runtime.ts)
+- [runtime.ts](../apps/web/src/services/config/runtime.ts)
 - [.env.example](../.env.example)
-- [index.mjs](../server/app/index.mjs)
-- [alpaca.mjs](../server/gateways/alpaca.mjs)
+- [main.mjs](../apps/api/src/main.mjs)
+- [alpaca.mjs](../apps/api/src/gateways/alpaca.mjs)
 
 ## 推荐接法
 
@@ -22,7 +22,7 @@ VITE_BROKER_HTTP_URL=/api/broker
 
 ## 行情 Provider
 
-[marketData.ts](../src/services/providers/marketData.ts) 当前支持：
+[marketData.ts](../apps/web/src/services/providers/marketData.ts) 当前支持：
 
 - `simulated`
 - `custom-http`
@@ -53,7 +53,7 @@ VITE_BROKER_HTTP_URL=/api/broker
 
 ## Broker Provider
 
-[broker.ts](../src/services/providers/broker.ts) 当前支持：
+[broker.ts](../apps/web/src/services/providers/broker.ts) 当前支持：
 
 - `simulated`
 - `custom-http`
@@ -125,7 +125,7 @@ VITE_BROKER_HTTP_URL=/api/broker
 - `/api/broker/state`
 - `/api/broker/orders/:id`
 
-这些接口由 [alpaca.mjs](../server/gateways/alpaca.mjs) 代理到 Alpaca。
+这些接口由 [alpaca.mjs](../apps/api/src/gateways/alpaca.mjs) 代理到 Alpaca。
 
 ## 启动方式
 

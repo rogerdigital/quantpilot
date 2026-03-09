@@ -4,28 +4,33 @@
 
 ## 当前数据分层
 
-- [src/store/trading-system/TradingSystemProvider.tsx](../src/store/trading-system/TradingSystemProvider.tsx)
+- [TradingSystemProvider.tsx](../apps/web/src/store/trading-system/TradingSystemProvider.tsx)
   - Provider 生命周期和用户交互动作
 
-- [src/store/trading-system/core.ts](../src/store/trading-system/core.ts)
-  - 股票池定义
-  - 系统参数
-  - 模拟盘与实盘账户初始状态
-  - 行情扰动与刷新周期
-  - 信号评分
-  - 自动买卖执行
-  - 风控与活动日志
+- [core.ts](../apps/web/src/store/trading-system/core.ts)
+  - 统一导出入口，向 Provider 暴露状态机构建和推进函数
 
-- [src/pages/console/DashboardConsole.tsx](../src/pages/console/DashboardConsole.tsx)
+- `apps/web/src/store/trading-system/core/`
+  - `config.ts`: 系统参数和股票池定义
+  - `market.ts`: 行情扰动、评分、报价补丁
+  - `strategy.ts`: 候选信号到动作意图的转换
+  - `risk.ts`: 风险闸门和减仓保护
+  - `execution.ts`: 本地成交、远程意图、broker 同步
+  - `lifecycle.ts`: 本地市场与交易周期推进
+  - `controlPlane.ts`: 后端控制面裁决结果并入本地状态
+  - `state.ts`: 初始状态装配
+  - `shared.ts`: 深拷贝、记账、日志等共享工具
+
+- [DashboardConsole.tsx](../apps/web/src/pages/console/DashboardConsole.tsx)
   - 各个路由页面的展示层
   - 图表绘制
   - 股票池、持仓、订单、日志渲染
 
-- [src/shared/types/trading.ts](../src/shared/types/trading.ts)
+- [trading.ts](../packages/shared-types/src/trading.ts)
   - 交易系统核心类型
   - Provider、账户、订单、行情、状态定义
 
-- [src/data/market_data.json](../src/data/market_data.json)
+- [market_data.json](../apps/web/src/data/market_data.json)
   - 当前未接入核心运行链路
   - 仅保留为历史样例数据文件
 
@@ -39,7 +44,7 @@
 
 ## 如果接入真实交易
 
-建议优先替换 [src/store/trading-system/core.ts](../src/store/trading-system/core.ts) 中这几类逻辑：
+建议优先后移 `apps/web/src/store/trading-system/core/` 中这几类逻辑：
 
 1. 行情刷新逻辑替换为实时行情 API
 2. 买卖执行逻辑替换为 broker / OMS 下单接口
@@ -50,10 +55,13 @@
 当前前端产品路由为：
 
 - `/dashboard`
+- `/market`
 - `/strategies`
+- `/backtest`
 - `/risk`
 - `/execution`
 - `/agent`
+- `/notifications`
 - `/settings`
 
 部署时需要确保这些路径都被重写到根入口 `index.html`。
