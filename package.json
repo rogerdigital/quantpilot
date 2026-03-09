@@ -18,8 +18,9 @@
     "build": "vite build --config apps/web/vite.config.ts",
     "preview": "vite preview --config apps/web/vite.config.ts --host 0.0.0.0 --port 8080",
     "check:lockfile": "node scripts/check-lockfile-sync.mjs",
+    "test:control-plane": "node --test packages/control-plane-store/test/*.test.mjs",
     "typecheck": "tsc --noEmit -p apps/web/tsconfig.json",
-    "verify": "npm run check:lockfile && npm run typecheck && npm run build",
+    "verify": "npm run check:lockfile && npm run test:control-plane && npm run typecheck && npm run build",
     "gateway": "node apps/api/src/main.mjs",
     "worker": "node apps/worker/src/main.mjs"
   },

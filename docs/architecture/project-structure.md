@@ -75,6 +75,8 @@ quantpilot/
   - 底层存储接口层，当前提供 `collection store`、`kv store` 和 JSON file adapter，`control-plane-store` 通过这些接口组合当前文件型实现，后续可替换为真正的数据库实现。
 - `packages/control-plane-store/src/`
   - 控制面文件存储层，当前已拆成 `context + repositories/* + shared + store` 结构，承载 notification outbox、risk scan outbox、已分发通知事件、风险事件流、scheduler ticks、audit records、cycle records 和 operator actions，为 API 与 worker 提供最小跨进程共享状态。
+- `packages/control-plane-store/test/`
+  - 控制面核心 repository 的轻量自动化测试，当前覆盖 notification、risk、scheduler 以及 context 注入路径。
 - `packages/trading-engine/src/`
   - 共享运行时层，当前已按 `constants / shared / market / execution / risk / strategy / control-plane` 拆分，沉淀市场推进、策略执行、风控裁决、订单意图和控制面状态合并逻辑，供前后端共同消费。
 
