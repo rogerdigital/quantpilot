@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { fetchExecutionAccountSnapshots, fetchExecutionRuntime } from '../../../app/api/controlPlane.ts';
+import { fetchExecutionAccountSnapshots, fetchExecutionLedger, fetchExecutionRuntime } from '../../../app/api/controlPlane.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { TopMeta } from '../components/ConsoleChrome.tsx';
 import { ActivityLog, ApprovalQueueTable, OrdersTable } from '../components/ConsoleTables.tsx';
 import { onShortcutKeyDown, useSettingsNavigation } from '../hooks.ts';
 import { copy, useLocale } from '../i18n.tsx';
 import { modeTone, translateEngineStatus, translateMode, translateRiskLevel, translateRuntimeText } from '../utils.ts';
-import type { BrokerAccountSnapshotRecord, ExecutionRuntimeEvent } from '@shared-types/trading.ts';
+import type { BrokerAccountSnapshotRecord, ExecutionLedgerEntry, ExecutionRuntimeEvent } from '@shared-types/trading.ts';
 
 export function ExecutionPage() {
   const { state, approveLiveIntent, rejectLiveIntent } = useTradingSystem();
@@ -14,19 +14,22 @@ export function ExecutionPage() {
   const goToSettings = useSettingsNavigation();
   const [runtimeEvents, setRuntimeEvents] = useState<ExecutionRuntimeEvent[]>([]);
   const [accountSnapshots, setAccountSnapshots] = useState<BrokerAccountSnapshotRecord[]>([]);
+  const [ledgerEntries, setLedgerEntries] = useState<ExecutionLedgerEntry[]>([]);
 
   useEffect(() => {
     let active = true;
-    Promise.all([fetchExecutionRuntime(), fetchExecutionAccountSnapshots()])
-      .then(([runtimeResponse, snapshotResponse]) => {
+    Promise.all([fetchExecutionRuntime(), fetchExecutionAccountSnapshots(), fetchExecutionLedger()])
+      .then(([runtimeResponse, snapshotResponse, ledgerResponse]) => {
         if (!active) return;
         setRuntimeEvents(runtimeResponse.events);
         setAccountSnapshots(snapshotResponse.snapshots);
+        setLedgerEntries(ledgerResponse.entries);
       })
       .catch(() => {
         if (!active) return;
         setRuntimeEvents([]);
         setAccountSnapshots([]);
+        setLedgerEntries([]);
       });
     return () => {
       active = false;
@@ -99,6 +102,23 @@ export function ExecutionPage() {
               </div>
             ))}
             {!accountSnapshots.length ? <div className="status-copy">{locale === 'zh' ? '尚无 broker 账户快照。' : 'No broker account snapshots yet.'}</div> : null}
+          </div>
+        </article>
+      </section>
+
+      <section className="panel-grid">
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '执行计划账本' : 'Execution Plan Ledger'}</div><div className="panel-copy">{locale === 'zh' ? '把 execution plan、workflow 状态和最新服务端执行结果放到同一视图。' : 'A single view for execution plans, workflow status, and the latest backend execution result.'}</div></div><div className="panel-badge badge-info">{ledgerEntries.length}</div></div>
+          <div className="focus-list">
+            {ledgerEntries.slice(0, 6).map((entry) => (
+              <div key={entry.plan.id} className="focus-row">
+                <div className="focus-metric"><span>{locale === 'zh' ? '策略' : 'Strategy'}</span><strong>{entry.plan.strategyName}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '计划状态' : 'Plan'}</span><strong>{entry.plan.status}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '工作流' : 'Workflow'}</span><strong>{entry.workflow?.status || '--'}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '最近执行' : 'Latest Runtime'}</span><strong>{entry.latestRuntime ? `${entry.latestRuntime.submittedOrderCount}/${entry.latestRuntime.openOrderCount}` : '--'}</strong></div>
+              </div>
+            ))}
+            {!ledgerEntries.length ? <div className="status-copy">{locale === 'zh' ? '尚无 execution ledger 数据。' : 'No execution ledger data yet.'}</div> : null}
           </div>
         </article>
       </section>

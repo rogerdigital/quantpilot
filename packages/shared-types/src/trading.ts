@@ -308,6 +308,19 @@ export type BrokerAccountSnapshotRecord = {
   createdAt: string;
 };
 
+export type ExecutionLedgerEntry = {
+  plan: ExecutionPlanRecord;
+  workflow: {
+    id: string;
+    workflowId: string;
+    status: string;
+    updatedAt: string;
+    completedAt: string;
+    failedAt: string;
+  } | null;
+  latestRuntime: ExecutionRuntimeEvent | null;
+};
+
 export type StrategyCatalogItem = {
   id: string;
   name: string;

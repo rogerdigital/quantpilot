@@ -4,6 +4,7 @@ import type {
   OperatorSession,
   ExecutionRuntimeEvent,
   BrokerAccountSnapshotRecord,
+  ExecutionLedgerEntry,
   StateCycleResult,
   TradingState,
   UserAccountProfileSnapshot,
@@ -219,6 +220,16 @@ export async function fetchExecutionRuntime(): Promise<{ ok: boolean; events: Ex
 
 export async function fetchExecutionAccountSnapshots(): Promise<{ ok: boolean; snapshots: BrokerAccountSnapshotRecord[] }> {
   const response = await fetch('/api/execution/account-snapshots', {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function fetchExecutionLedger(): Promise<{ ok: boolean; entries: ExecutionLedgerEntry[] }> {
+  const response = await fetch('/api/execution/ledger', {
     headers: { Accept: 'application/json' },
   });
   if (!response.ok) {

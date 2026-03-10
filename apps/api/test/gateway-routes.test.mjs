@@ -519,6 +519,48 @@ test('GET /api/execution/account-snapshots returns broker account snapshots', as
   assert.equal(response.json.snapshots[0].provider, 'simulated');
 });
 
+test('GET /api/execution/ledger returns plans joined with workflow and runtime state', async () => {
+  const workflow = context.workflows.appendWorkflowRun({
+    id: 'workflow-ledger-1',
+    workflowId: 'task-orchestrator.strategy-execution',
+    status: 'completed',
+  });
+  context.executionPlans.appendExecutionPlan({
+    id: 'plan-ledger-1',
+    workflowRunId: workflow.id,
+    strategyId: 'ema-cross-us',
+    strategyName: 'EMA Cross US',
+    mode: 'live',
+    status: 'ready',
+    approvalState: 'required',
+    riskStatus: 'review',
+    summary: 'Plan ready for review.',
+    capital: 100000,
+    orderCount: 2,
+    orders: [],
+  });
+  context.executionRuntime.appendExecutionRuntimeEvent({
+    cycle: 30,
+    mode: 'live',
+    brokerAdapter: 'simulated',
+    brokerConnected: true,
+    marketConnected: true,
+    submittedOrderCount: 2,
+    openOrderCount: 1,
+    createdAt: '2026-03-11T09:10:00.000Z',
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/execution/ledger',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.entries[0].plan.id, 'plan-ledger-1');
+  assert.equal(response.json.entries[0].workflow.status, 'completed');
+  assert.equal(response.json.entries[0].latestRuntime.submittedOrderCount, 2);
+});
+
 test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control notification for recovery', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',

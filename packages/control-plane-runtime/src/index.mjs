@@ -474,3 +474,5 @@ export const listBrokerBindings = (...args) => controlPlaneRuntime.listBrokerBin
 export const upsertBrokerBinding = (...args) => controlPlaneRuntime.upsertBrokerBinding(...args);
 export const listExecutionRuntimeEvents = (...args) => controlPlaneRuntime.listExecutionRuntimeEvents(...args);
 export const listBrokerAccountSnapshots = (...args) => controlPlaneRuntime.listBrokerAccountSnapshots(...args);
+export const listWorkflowRuns = (...args) => controlPlaneRuntime.listWorkflowRuns(...args);
+export const getWorkflowRun = (...args) => controlPlaneRuntime.getWorkflowRun(...args);
