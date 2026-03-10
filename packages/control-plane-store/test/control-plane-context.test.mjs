@@ -103,6 +103,30 @@ test('user account repository persists profile preferences and broker bindings',
   assert.equal(context.userAccount.listBrokerBindings()[0].id, 'broker-binding-live');
 });
 
+test('execution runtime repository persists runtime events and broker snapshots', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const event = context.executionRuntime.appendExecutionRuntimeEvent({
+    cycle: 12,
+    mode: 'live',
+    brokerAdapter: 'alpaca',
+    brokerConnected: true,
+    marketConnected: true,
+    submittedOrderCount: 2,
+    equity: 102400,
+  });
+  const snapshot = context.executionRuntime.appendBrokerAccountSnapshot({
+    cycle: 12,
+    provider: 'alpaca',
+    connected: true,
+    account: { cash: 50000, buyingPower: 80000, equity: 102400 },
+    positions: [],
+    orders: [],
+  });
+
+  assert.equal(context.executionRuntime.listExecutionRuntimeEvents(5)[0].id, event.id);
+  assert.equal(context.executionRuntime.listBrokerAccountSnapshots(5)[0].id, snapshot.id);
+});
+
 test('workflow repository persists and updates workflow runs through the injected context', () => {
   const context = createControlPlaneContext(createMemoryStore());
   const workflow = context.workflows.appendWorkflowRun({

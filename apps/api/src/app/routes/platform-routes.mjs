@@ -7,7 +7,7 @@ import {
 import { listAgentTools, executeAgentTool } from '../../domains/agent/services/tools-service.mjs';
 import { getBacktestSummary } from '../../domains/backtest/services/summary-service.mjs';
 import { listBacktestRuns } from '../../domains/backtest/services/runs-service.mjs';
-import { listExecutionPlans } from '../../domains/execution/services/query-service.mjs';
+import { listBrokerAccountSnapshots, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { describeArchitecture, listArchitectureLayers, listModules } from '../../modules/registry.mjs';
 import {
@@ -181,6 +181,22 @@ export async function handlePlatformRoutes(context) {
     writeJson(res, 200, {
       ok: true,
       plans: listExecutionPlans(),
+    });
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/execution/runtime') {
+    writeJson(res, 200, {
+      ok: true,
+      events: listExecutionRuntimeEvents(),
+    });
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/execution/account-snapshots') {
+    writeJson(res, 200, {
+      ok: true,
+      snapshots: listBrokerAccountSnapshots(),
     });
     return true;
   }

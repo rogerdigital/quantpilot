@@ -275,6 +275,39 @@ export type UserBrokerBindingRuntimeSnapshot = {
   };
 };
 
+export type ExecutionRuntimeEvent = {
+  id: string;
+  cycleId: string;
+  cycle: number;
+  mode: string;
+  brokerAdapter: string;
+  brokerConnected: boolean;
+  marketConnected: boolean;
+  submittedOrderCount: number;
+  rejectedOrderCount: number;
+  openOrderCount: number;
+  positionCount: number;
+  cash: number;
+  buyingPower: number;
+  equity: number;
+  message: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+};
+
+export type BrokerAccountSnapshotRecord = {
+  id: string;
+  cycleId: string;
+  cycle: number;
+  provider: string;
+  connected: boolean;
+  account: BrokerAccountSnapshot | null;
+  positions: BrokerPositionSnapshot[];
+  orders: BrokerOrder[];
+  message: string;
+  createdAt: string;
+};
+
 export type StrategyCatalogItem = {
   id: string;
   name: string;

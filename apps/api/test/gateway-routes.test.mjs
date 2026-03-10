@@ -477,6 +477,48 @@ test('GET /api/execution/plans returns persisted execution plans', async () => {
   assert.equal(response.json.plans[0].strategyId, 'ema-cross-us');
 });
 
+test('GET /api/execution/runtime returns persisted execution runtime events', async () => {
+  context.executionRuntime.appendExecutionRuntimeEvent({
+    cycle: 21,
+    mode: 'live',
+    brokerAdapter: 'simulated',
+    brokerConnected: true,
+    marketConnected: true,
+    submittedOrderCount: 1,
+    positionCount: 2,
+    equity: 101200,
+    message: 'Execution runtime synced.',
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/execution/runtime',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.events[0].cycle, 21);
+});
+
+test('GET /api/execution/account-snapshots returns broker account snapshots', async () => {
+  context.executionRuntime.appendBrokerAccountSnapshot({
+    cycle: 21,
+    provider: 'simulated',
+    connected: true,
+    account: { cash: 50000, buyingPower: 80000, equity: 101200 },
+    positions: [],
+    orders: [],
+    message: 'Snapshot ok',
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/execution/account-snapshots',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.snapshots[0].provider, 'simulated');
+});
+
 test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control notification for recovery', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',

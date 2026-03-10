@@ -226,6 +226,27 @@ export async function executeCycleWorkflow(payload, context, options = {}) {
     });
     const brokerHealth = await context.getBrokerHealth();
     const marketConnected = Boolean(payload.marketConnected);
+    const brokerSnapshot = brokerExecution.snapshot || {};
+    context.recordExecutionRuntime?.({
+      cycleId: cycle.id,
+      cycle: cycle.cycle,
+      mode: cycle.mode,
+      brokerAdapter: brokerHealth.adapter || 'simulated',
+      brokerConnected: brokerHealth.connected,
+      marketConnected,
+      submittedOrderCount: Array.isArray(brokerExecution.submittedOrders) ? brokerExecution.submittedOrders.length : 0,
+      rejectedOrderCount: Array.isArray(brokerExecution.rejectedOrders) ? brokerExecution.rejectedOrders.length : 0,
+      openOrderCount: Array.isArray(brokerSnapshot.orders) ? brokerSnapshot.orders.length : 0,
+      positionCount: Array.isArray(brokerSnapshot.positions) ? brokerSnapshot.positions.length : 0,
+      cash: Number(brokerSnapshot.account?.cash || 0),
+      buyingPower: Number(brokerSnapshot.account?.buyingPower || 0),
+      equity: Number(brokerSnapshot.account?.equity || 0),
+      message: brokerExecution.message,
+      account: brokerSnapshot.account || null,
+      positions: brokerSnapshot.positions || [],
+      orders: brokerSnapshot.orders || [],
+      actor: context.getOperatorName(),
+    });
 
     const lastStatus = cycle.pendingApprovals > 0
       ? 'REVIEW'

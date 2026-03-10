@@ -198,6 +198,29 @@ export function createBrokerBindingEntry(payload = {}) {
   };
 }
 
+export function createExecutionRuntimeEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `execution-runtime-${randomUUID()}`,
+    cycleId: payload.cycleId || '',
+    cycle: Number(payload.cycle || 0),
+    mode: payload.mode || 'paper',
+    brokerAdapter: payload.brokerAdapter || 'simulated',
+    brokerConnected: Boolean(payload.brokerConnected),
+    marketConnected: Boolean(payload.marketConnected),
+    submittedOrderCount: Number(payload.submittedOrderCount || 0),
+    rejectedOrderCount: Number(payload.rejectedOrderCount || 0),
+    openOrderCount: Number(payload.openOrderCount || 0),
+    positionCount: Number(payload.positionCount || 0),
+    cash: Number(payload.cash || 0),
+    buyingPower: Number(payload.buyingPower || 0),
+    equity: Number(payload.equity || 0),
+    message: payload.message || '',
+    metadata: payload.metadata || {},
+    createdAt: now,
+  };
+}
+
 export function getShanghaiTimeParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('zh-CN', {
     timeZone: 'Asia/Shanghai',

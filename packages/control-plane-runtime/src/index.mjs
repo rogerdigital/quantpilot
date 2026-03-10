@@ -193,6 +193,50 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return plan;
     },
+    listExecutionRuntimeEvents(limit = 50) {
+      return context.executionRuntime.listExecutionRuntimeEvents(limit);
+    },
+    appendExecutionRuntimeEvent(payload) {
+      return context.executionRuntime.appendExecutionRuntimeEvent(payload);
+    },
+    listBrokerAccountSnapshots(limit = 50) {
+      return context.executionRuntime.listBrokerAccountSnapshots(limit);
+    },
+    appendBrokerAccountSnapshot(payload) {
+      return context.executionRuntime.appendBrokerAccountSnapshot(payload);
+    },
+    recordExecutionRuntime(payload) {
+      const runtimeEvent = context.executionRuntime.appendExecutionRuntimeEvent(payload);
+      const brokerSnapshot = context.executionRuntime.appendBrokerAccountSnapshot({
+        cycleId: payload.cycleId,
+        cycle: payload.cycle,
+        provider: payload.brokerAdapter,
+        connected: payload.brokerConnected,
+        account: payload.account || null,
+        positions: payload.positions || [],
+        orders: payload.orders || [],
+        message: payload.message,
+        createdAt: payload.createdAt,
+      });
+
+      context.audit.appendAuditRecord({
+        type: 'execution-runtime',
+        actor: payload.actor || 'task-orchestrator',
+        title: `Execution runtime synced for cycle ${payload.cycle}`,
+        detail: payload.message || 'Execution runtime snapshot recorded.',
+        metadata: {
+          cycleId: payload.cycleId,
+          submittedOrderCount: payload.submittedOrderCount,
+          rejectedOrderCount: payload.rejectedOrderCount,
+          brokerConnected: payload.brokerConnected,
+        },
+      });
+
+      return {
+        runtimeEvent,
+        brokerSnapshot,
+      };
+    },
     listNotifications(limit = 50) {
       return context.notifications.listNotifications(limit);
     },
@@ -428,3 +472,5 @@ export const getUserPreferences = (...args) => controlPlaneRuntime.getUserPrefer
 export const updateUserPreferences = (...args) => controlPlaneRuntime.updateUserPreferences(...args);
 export const listBrokerBindings = (...args) => controlPlaneRuntime.listBrokerBindings(...args);
 export const upsertBrokerBinding = (...args) => controlPlaneRuntime.upsertBrokerBinding(...args);
+export const listExecutionRuntimeEvents = (...args) => controlPlaneRuntime.listExecutionRuntimeEvents(...args);
+export const listBrokerAccountSnapshots = (...args) => controlPlaneRuntime.listBrokerAccountSnapshots(...args);

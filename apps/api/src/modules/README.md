@@ -37,6 +37,7 @@
   - 在记录周期后执行 broker 提交与状态同步，并返回控制面裁决
 - `task-orchestrator/state-runner.mjs`: `POST /api/task-orchestrator/state/run`
   - 基于前端提交的当前状态，在后端拉取市场快照、调用 `packages/trading-engine` 共享 runtime 推进状态，再返回新的完整状态
+- `execution/query-service.mjs`: `GET /api/execution/plans`、`GET /api/execution/runtime`、`GET /api/execution/account-snapshots`
 
 当前目录迁移状态：
 

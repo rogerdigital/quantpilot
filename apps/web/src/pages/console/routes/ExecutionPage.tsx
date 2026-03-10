@@ -1,14 +1,37 @@
+import { useEffect, useState } from 'react';
+import { fetchExecutionAccountSnapshots, fetchExecutionRuntime } from '../../../app/api/controlPlane.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { TopMeta } from '../components/ConsoleChrome.tsx';
 import { ActivityLog, ApprovalQueueTable, OrdersTable } from '../components/ConsoleTables.tsx';
 import { onShortcutKeyDown, useSettingsNavigation } from '../hooks.ts';
 import { copy, useLocale } from '../i18n.tsx';
 import { modeTone, translateEngineStatus, translateMode, translateRiskLevel, translateRuntimeText } from '../utils.ts';
+import type { BrokerAccountSnapshotRecord, ExecutionRuntimeEvent } from '@shared-types/trading.ts';
 
 export function ExecutionPage() {
   const { state, approveLiveIntent, rejectLiveIntent } = useTradingSystem();
   const { locale } = useLocale();
   const goToSettings = useSettingsNavigation();
+  const [runtimeEvents, setRuntimeEvents] = useState<ExecutionRuntimeEvent[]>([]);
+  const [accountSnapshots, setAccountSnapshots] = useState<BrokerAccountSnapshotRecord[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([fetchExecutionRuntime(), fetchExecutionAccountSnapshots()])
+      .then(([runtimeResponse, snapshotResponse]) => {
+        if (!active) return;
+        setRuntimeEvents(runtimeResponse.events);
+        setAccountSnapshots(snapshotResponse.snapshots);
+      })
+      .catch(() => {
+        if (!active) return;
+        setRuntimeEvents([]);
+        setAccountSnapshots([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [state.controlPlane.lastSyncAt]);
 
   return (
     <>
@@ -45,6 +68,37 @@ export function ExecutionPage() {
             <div className="status-row"><span>{copy[locale].labels.brokerState}</span><strong>{state.integrationStatus.broker.connected ? copy[locale].labels.connected : copy[locale].labels.fallback}</strong></div>
             <div className="status-copy">{translateRuntimeText(locale, state.decisionCopy)}</div>
             <div className="status-copy">{translateRuntimeText(locale, state.integrationStatus.broker.message)}</div>
+          </div>
+        </article>
+      </section>
+
+      <section className="panel-grid">
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '服务端执行记录' : 'Server Execution Runtime'}</div><div className="panel-copy">{locale === 'zh' ? '来自后端持久化的 broker 执行摘要，不依赖当前页面内存状态。' : 'Backend-persisted broker execution summaries, independent of the current page runtime state.'}</div></div><div className="panel-badge badge-info">{runtimeEvents.length}</div></div>
+          <div className="focus-list">
+            {runtimeEvents.slice(0, 6).map((event) => (
+              <div key={event.id} className="focus-row">
+                <div className="focus-metric"><span>{locale === 'zh' ? '周期' : 'Cycle'}</span><strong>{event.cycle}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '已提交' : 'Submitted'}</span><strong>{event.submittedOrderCount}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '持仓数' : 'Positions'}</span><strong>{event.positionCount}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '权益' : 'Equity'}</span><strong>{event.equity.toFixed(0)}</strong></div>
+              </div>
+            ))}
+            {!runtimeEvents.length ? <div className="status-copy">{locale === 'zh' ? '尚无后端执行记录。执行一个周期后这里会出现服务端快照。' : 'No backend execution records yet. Run a cycle to persist server-side snapshots.'}</div> : null}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Broker 账户快照' : 'Broker Account Snapshots'}</div><div className="panel-copy">{locale === 'zh' ? '查看最近一次后端同步回来的账户、订单和持仓规模。' : 'Inspect the latest backend-synced account, order, and position state.'}</div></div><div className="panel-badge badge-ok">{accountSnapshots.length}</div></div>
+          <div className="focus-list">
+            {accountSnapshots.slice(0, 4).map((snapshot) => (
+              <div key={snapshot.id} className="focus-row">
+                <div className="focus-metric"><span>{locale === 'zh' ? '提供商' : 'Provider'}</span><strong>{snapshot.provider}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '订单数' : 'Orders'}</span><strong>{snapshot.orders.length}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '现金' : 'Cash'}</span><strong>{Number(snapshot.account?.cash || 0).toFixed(0)}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{snapshot.connected ? 'connected' : 'disconnected'}</strong></div>
+              </div>
+            ))}
+            {!accountSnapshots.length ? <div className="status-copy">{locale === 'zh' ? '尚无 broker 账户快照。' : 'No broker account snapshots yet.'}</div> : null}
           </div>
         </article>
       </section>

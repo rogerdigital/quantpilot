@@ -2,6 +2,8 @@ import type {
   ControlPlaneResolution,
   CycleRunPayload,
   OperatorSession,
+  ExecutionRuntimeEvent,
+  BrokerAccountSnapshotRecord,
   StateCycleResult,
   TradingState,
   UserAccountProfileSnapshot,
@@ -197,6 +199,26 @@ export async function fetchSchedulerTicks() {
 
 export async function fetchOperatorActions() {
   const response = await fetch('/api/task-orchestrator/actions', {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function fetchExecutionRuntime(): Promise<{ ok: boolean; events: ExecutionRuntimeEvent[] }> {
+  const response = await fetch('/api/execution/runtime', {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function fetchExecutionAccountSnapshots(): Promise<{ ok: boolean; snapshots: BrokerAccountSnapshotRecord[] }> {
+  const response = await fetch('/api/execution/account-snapshots', {
     headers: { Accept: 'application/json' },
   });
   if (!response.ok) {

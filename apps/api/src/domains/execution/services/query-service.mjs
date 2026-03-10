@@ -11,3 +11,11 @@ export function getExecutionPlan(planId) {
 export function findExecutionPlanByWorkflowRunId(workflowRunId) {
   return controlPlaneRuntime.findExecutionPlanByWorkflowRunId(workflowRunId);
 }
+
+export function listExecutionRuntimeEvents(limit = 50) {
+  return controlPlaneRuntime.listExecutionRuntimeEvents(limit);
+}
+
+export function listBrokerAccountSnapshots(limit = 50) {
+  return controlPlaneRuntime.listBrokerAccountSnapshots(limit);
+}
