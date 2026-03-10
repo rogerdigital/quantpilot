@@ -1,2 +1,2 @@
-export * from './services/tools-service.mjs';
-export * from './services/action-request-service.mjs';
+export * from '../../domains/agent/services/tools-service.mjs';
+export * from '../../domains/agent/services/action-request-service.mjs';

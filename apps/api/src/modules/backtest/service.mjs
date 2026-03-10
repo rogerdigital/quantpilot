@@ -1,2 +1,2 @@
-export * from './services/runs-service.mjs';
-export * from './services/summary-service.mjs';
+export * from '../../domains/backtest/services/runs-service.mjs';
+export * from '../../domains/backtest/services/summary-service.mjs';

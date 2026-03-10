@@ -39,12 +39,12 @@
 
 当前目录迁移状态：
 
-- `strategy/services/*` 已迁到 `apps/api/src/domains/strategy/services/`
-- `backtest/services/*` 已迁到 `apps/api/src/domains/backtest/services/`
-- `agent/services/*` 已迁到 `apps/api/src/domains/agent/services/`
-- `risk/services/*` 已迁到 `apps/api/src/domains/risk/services/`
-- `execution/services/*` 已迁到 `apps/api/src/domains/execution/services/`
-- `task-orchestrator/services/*` 已迁到 `apps/api/src/control-plane/task-orchestrator/services/`
+- `strategy/service.mjs` 直接转发到 `apps/api/src/domains/strategy/services/`
+- `backtest/service.mjs` 直接转发到 `apps/api/src/domains/backtest/services/`
+- `agent/service.mjs` 直接转发到 `apps/api/src/domains/agent/services/`
+- `risk/service.mjs` 直接转发到 `apps/api/src/domains/risk/services/`
+- `execution/service.mjs` 直接转发到 `apps/api/src/domains/execution/services/`
+- `task-orchestrator/service.mjs` 直接转发到 `apps/api/src/control-plane/task-orchestrator/services/`
 
 后续演进方向：
 
