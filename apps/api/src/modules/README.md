@@ -1,15 +1,25 @@
 # Backend Modules
 
-`apps/api/src/modules/` 先按 QuantPilot 的平台底座拆出后端模块边界。当前仓库仍以前端原型为主，但已经在控制面落下最小可运行服务。
+`apps/api/src/modules/` 现在主要承担 2 个角色：
 
-当前模块规划：
+- 对外稳定导出入口
+- 尚未完全迁移到 `domains/` 或 `control-plane/` 的兼容壳层
+
+当前仓库已经不再把 `modules/` 视作唯一实现目录。真实实现正在逐步迁到：
+
+- `apps/api/src/domains/`
+- `apps/api/src/control-plane/`
+
+因此，这里的职责重点已经从“承载全部后端实现”转为“维持模块边界稳定、避免重构打断主链路”。
+
+当前模块边界：
 
 - `api-gateway/`: REST、WebSocket、限流、入口编排
 - `auth/`: 登录、鉴权、令牌、权限模型
 - `user-account/`: 用户资料、账户状态、券商绑定
-- `task-orchestrator/`: 回测、优化、Agent、执行等异步任务编排
+- `task-orchestrator/`: 回测、优化、Agent、执行等异步任务编排入口，真实服务已迁到 `control-plane/task-orchestrator/`
 - `notification/`: 站内信、邮件、IM 告警
-- `risk/`: 风险扫描、风险事件流、审批前风险结论
+- `risk/`: 风险扫描、风险事件流、审批前风险结论，真实服务已迁到 `domains/risk/`
 - `audit/`: 审计日志、操作留痕、执行理由
 - `monitoring/`: 日志、指标、运行健康监控
 - `scheduler/`: 定时任务、盘前盘后批处理
@@ -26,6 +36,15 @@
   - 在记录周期后执行 broker 提交与状态同步，并返回控制面裁决
 - `task-orchestrator/state-runner.mjs`: `POST /api/task-orchestrator/state/run`
   - 基于前端提交的当前状态，在后端拉取市场快照、调用 `packages/trading-engine` 共享 runtime 推进状态，再返回新的完整状态
+
+当前目录迁移状态：
+
+- `strategy/services/*` 已迁到 `apps/api/src/domains/strategy/services/`
+- `backtest/services/*` 已迁到 `apps/api/src/domains/backtest/services/`
+- `agent/services/*` 已迁到 `apps/api/src/domains/agent/services/`
+- `risk/services/*` 已迁到 `apps/api/src/domains/risk/services/`
+- `execution/services/*` 已迁到 `apps/api/src/domains/execution/services/`
+- `task-orchestrator/services/*` 已迁到 `apps/api/src/control-plane/task-orchestrator/services/`
 
 后续演进方向：
 

@@ -48,6 +48,9 @@ QuantPilot 是一个 AI 自动量化交易平台项目，目标定义为：
 当前代码落点：
 
 - `apps/api`
+- `apps/api/src/app`
+- `apps/api/src/control-plane`
+- `apps/api/src/domains`
 - `apps/api/src/modules`
 - `packages/control-plane-runtime`
 
@@ -67,7 +70,9 @@ QuantPilot 是一个 AI 自动量化交易平台项目，目标定义为：
 
 当前代码落点：
 
-- `packages/trading-engine/src/strategy.mjs`
+- `packages/trading-engine/src/strategy`
+- `apps/api/src/domains/strategy`
+- `apps/api/src/domains/backtest`
 - `apps/api/src/modules/strategy`
 - `apps/api/src/modules/backtest`
 
@@ -79,6 +84,7 @@ QuantPilot 是一个 AI 自动量化交易平台项目，目标定义为：
 
 - `apps/web/src/pages/agent`
 - `apps/web/src/services/agentTools.ts`
+- `apps/api/src/domains/agent`
 - `apps/api/src/modules/agent`
 
 ### 6. Risk Layer
@@ -87,7 +93,8 @@ QuantPilot 是一个 AI 自动量化交易平台项目，目标定义为：
 
 当前代码落点：
 
-- `packages/trading-engine/src/risk.mjs`
+- `packages/trading-engine/src/risk`
+- `apps/api/src/domains/risk`
 - `apps/api/src/modules/risk`
 - `apps/worker/src/tasks/risk-scan-task.mjs`
 
@@ -97,7 +104,8 @@ QuantPilot 是一个 AI 自动量化交易平台项目，目标定义为：
 
 当前代码落点：
 
-- `packages/trading-engine/src/execution.mjs`
+- `packages/trading-engine/src/execution`
+- `apps/api/src/domains/execution`
 - `apps/api/src/modules/execution`
 - `apps/api/src/gateways/alpaca.mjs`
 
@@ -185,7 +193,12 @@ quantpilot/
 
 ### `apps/api`
 
-后端入口和服务模块聚合层，负责同步请求处理、控制面接口、研究接口和工作流启动。
+后端入口和服务聚合层，当前内部已经开始按 `app / control-plane / domains / modules` 四类目录组织：
+
+- `app`: 路由与请求入口
+- `control-plane`: 编排与控制面工作流
+- `domains`: 研究、Agent、风险、执行等领域实现
+- `modules`: 兼容导出与稳定边界
 
 ### `apps/worker`
 
