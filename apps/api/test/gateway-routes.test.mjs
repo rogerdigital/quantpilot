@@ -278,6 +278,8 @@ test('account write routes reject requests without account:write permission', as
 
   assert.equal(response.statusCode, 403);
   assert.equal(response.json.ok, false);
+  assert.equal(response.json.missingPermission, 'account:write');
+  assert.equal(response.json.message, 'missing required permission: account:write');
 
   context.userAccount.updateUserAccess({
     role: 'admin',
@@ -515,6 +517,7 @@ test('POST /api/agent/action-requests requires strategy:write permission', async
   assert.equal(response.statusCode, 403);
   assert.equal(response.json.ok, false);
   assert.equal(response.json.error, 'forbidden');
+  assert.equal(response.json.missingPermission, 'strategy:write');
 
   context.userAccount.updateUserAccess({
     role: 'admin',
@@ -645,6 +648,7 @@ test('POST /api/agent/action-requests/:id/approve requires risk:review permissio
   assert.equal(response.statusCode, 403);
   assert.equal(response.json.ok, false);
   assert.equal(response.json.error, 'forbidden');
+  assert.equal(response.json.missingPermission, 'risk:review');
 
   context.userAccount.updateUserAccess({
     role: 'admin',
@@ -692,6 +696,7 @@ test('POST /api/strategy/execute requires strategy:write permission', async () =
   assert.equal(response.statusCode, 403);
   assert.equal(response.json.ok, false);
   assert.equal(response.json.error, 'forbidden');
+  assert.equal(response.json.missingPermission, 'strategy:write');
 
   context.userAccount.updateUserAccess({
     role: 'admin',
@@ -927,6 +932,7 @@ test('POST /api/task-orchestrator/actions requires execution:approve permission'
   assert.equal(response.statusCode, 403);
   assert.equal(response.json.ok, false);
   assert.equal(response.json.error, 'forbidden');
+  assert.equal(response.json.missingPermission, 'execution:approve');
 
   context.userAccount.updateUserAccess({
     role: 'admin',
@@ -1242,6 +1248,7 @@ test('POST /api/task-orchestrator/workflows/:id/resume requires execution:approv
   assert.equal(response.statusCode, 403);
   assert.equal(response.json.ok, false);
   assert.equal(response.json.error, 'forbidden');
+  assert.equal(response.json.missingPermission, 'execution:approve');
 
   context.userAccount.updateUserAccess({
     role: 'admin',
@@ -1299,6 +1306,7 @@ test('POST /api/task-orchestrator/workflows/:id/cancel requires execution:approv
   assert.equal(response.statusCode, 403);
   assert.equal(response.json.ok, false);
   assert.equal(response.json.error, 'forbidden');
+  assert.equal(response.json.missingPermission, 'execution:approve');
 
   context.userAccount.updateUserAccess({
     role: 'admin',

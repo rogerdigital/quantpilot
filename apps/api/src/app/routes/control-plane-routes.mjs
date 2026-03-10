@@ -17,9 +17,17 @@ import { listCycles, recordCycleRun } from '../../control-plane/task-orchestrato
 
 export async function handleControlPlaneRoutes(context) {
   const { req, reqUrl, res, readJsonBody, writeJson, gatewayDependencies } = context;
+  const writeForbidden = (permission) => {
+    writeJson(res, 403, {
+      ok: false,
+      error: 'forbidden',
+      missingPermission: permission,
+      message: `missing required permission: ${permission}`,
+    });
+  };
   const requirePermission = (permission) => {
     if (!hasPermission(permission)) {
-      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      writeForbidden(permission);
       return false;
     }
     return true;

@@ -18,6 +18,35 @@ import type {
   UserProfileUpdateSnapshot,
 } from '@shared-types/trading.ts';
 
+export class ApiPermissionError extends Error {
+  missingPermission?: string;
+  status: number;
+
+  constructor(message: string, status: number, missingPermission?: string) {
+    super(message);
+    this.name = 'ApiPermissionError';
+    this.status = status;
+    this.missingPermission = missingPermission;
+  }
+}
+
+async function assertOk(response: Response) {
+  if (response.ok) return;
+
+  let payload: { message?: string; missingPermission?: string } | null = null;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = null;
+  }
+
+  throw new ApiPermissionError(
+    payload?.message || `HTTP ${response.status}`,
+    response.status,
+    payload?.missingPermission,
+  );
+}
+
 function jsonHeaders() {
   return {
     Accept: 'application/json',
@@ -29,9 +58,7 @@ export async function fetchOperatorSession(): Promise<OperatorSession> {
   const response = await fetch('/api/auth/session', {
     headers: { Accept: 'application/json' },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 
@@ -39,9 +66,7 @@ export async function fetchUserAccountProfile(): Promise<UserAccountProfileSnaps
   const response = await fetch('/api/user-account/profile', {
     headers: { Accept: 'application/json' },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 
@@ -51,9 +76,7 @@ export async function updateUserAccountProfile(payload: Record<string, unknown>)
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 
@@ -63,9 +86,7 @@ export async function updateUserAccountPreferences(payload: Record<string, unkno
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 
@@ -75,9 +96,7 @@ export async function updateUserAccountAccess(payload: Record<string, unknown>):
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 
@@ -85,9 +104,7 @@ export async function fetchBrokerBindings(): Promise<UserBrokerBindingsSnapshot>
   const response = await fetch('/api/user-account/broker-bindings', {
     headers: { Accept: 'application/json' },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 
@@ -97,9 +114,7 @@ export async function saveBrokerBinding(payload: Record<string, unknown>): Promi
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 
@@ -109,9 +124,7 @@ export async function setDefaultBrokerBinding(bindingId: string): Promise<UserBr
     headers: jsonHeaders(),
     body: JSON.stringify({}),
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 
@@ -120,9 +133,7 @@ export async function deleteBrokerBinding(bindingId: string): Promise<UserBroker
     method: 'DELETE',
     headers: { Accept: 'application/json' },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 
@@ -130,9 +141,7 @@ export async function fetchBrokerBindingRuntime(): Promise<UserBrokerBindingRunt
   const response = await fetch('/api/user-account/broker-bindings/runtime', {
     headers: { Accept: 'application/json' },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 
@@ -142,9 +151,7 @@ export async function syncBrokerBindingRuntime(): Promise<UserBrokerBindingRunti
     headers: jsonHeaders(),
     body: JSON.stringify({}),
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 
@@ -170,9 +177,7 @@ export async function runCycle(state: TradingState): Promise<ControlPlaneResolut
     headers: jsonHeaders(),
     body: JSON.stringify(buildCyclePayload(state)),
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 
@@ -182,9 +187,7 @@ export async function runStateCycle(state: TradingState): Promise<StateCycleResu
     headers: jsonHeaders(),
     body: JSON.stringify({ state }),
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 
@@ -200,9 +203,7 @@ export async function reportOperatorAction(payload: {
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
+  await assertOk(response);
   return response.json();
 }
 

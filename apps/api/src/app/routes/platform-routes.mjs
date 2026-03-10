@@ -27,6 +27,14 @@ import { listStrategyCatalog } from '../../domains/strategy/services/catalog-ser
 
 export async function handlePlatformRoutes(context) {
   const { req, reqUrl, res, config, readJsonBody, writeJson } = context;
+  const writeForbidden = (permission) => {
+    writeJson(res, 403, {
+      ok: false,
+      error: 'forbidden',
+      missingPermission: permission,
+      message: `missing required permission: ${permission}`,
+    });
+  };
   const canWriteAccount = () => hasPermission('account:write');
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/health') {
@@ -54,7 +62,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/profile') {
     if (!canWriteAccount()) {
-      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      writeForbidden('account:write');
       return true;
     }
     const body = await readJsonBody(req);
@@ -69,7 +77,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/preferences') {
     if (!canWriteAccount()) {
-      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      writeForbidden('account:write');
       return true;
     }
     const body = await readJsonBody(req);
@@ -79,7 +87,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/access') {
     if (!canWriteAccount()) {
-      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      writeForbidden('account:write');
       return true;
     }
     const body = await readJsonBody(req);
@@ -100,7 +108,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/broker-bindings') {
     if (!canWriteAccount()) {
-      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      writeForbidden('account:write');
       return true;
     }
     const body = await readJsonBody(req);
@@ -111,7 +119,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/default') && reqUrl.pathname.startsWith('/api/user-account/broker-bindings/')) {
     if (!canWriteAccount()) {
-      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      writeForbidden('account:write');
       return true;
     }
     const bindingId = reqUrl.pathname.split('/').at(-2);
@@ -122,7 +130,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'DELETE' && reqUrl.pathname.startsWith('/api/user-account/broker-bindings/')) {
     if (!canWriteAccount()) {
-      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      writeForbidden('account:write');
       return true;
     }
     const bindingId = reqUrl.pathname.split('/').at(-1);
@@ -133,7 +141,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/broker-bindings/sync') {
     if (!canWriteAccount()) {
-      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      writeForbidden('account:write');
       return true;
     }
     const result = await syncBrokerBindingRuntime(context.gatewayDependencies.getBrokerHealth);
@@ -176,7 +184,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/action-requests') {
     if (!hasPermission('strategy:write')) {
-      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      writeForbidden('strategy:write');
       return true;
     }
     const body = await readJsonBody(req);
@@ -187,7 +195,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/approve') && reqUrl.pathname.startsWith('/api/agent/action-requests/')) {
     if (!hasPermission('risk:review')) {
-      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      writeForbidden('risk:review');
       return true;
     }
     const requestId = reqUrl.pathname.split('/').at(-2);
@@ -199,7 +207,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/reject') && reqUrl.pathname.startsWith('/api/agent/action-requests/')) {
     if (!hasPermission('risk:review')) {
-      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      writeForbidden('risk:review');
       return true;
     }
     const requestId = reqUrl.pathname.split('/').at(-2);

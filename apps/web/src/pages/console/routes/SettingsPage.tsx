@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
+  ApiPermissionError,
   deleteBrokerBinding,
   fetchBrokerBindings,
   fetchBrokerBindingRuntime,
@@ -72,6 +73,15 @@ export function SettingsPage() {
     'execution:approve',
     'account:write',
   ];
+
+  function permissionFailureCopy(error: unknown, fallbackZh: string, fallbackEn: string) {
+    if (error instanceof ApiPermissionError && error.missingPermission) {
+      return locale === 'zh'
+        ? `权限不足，缺少 ${error.missingPermission}。`
+        : `Permission denied. Missing ${error.missingPermission}.`;
+    }
+    return locale === 'zh' ? fallbackZh : fallbackEn;
+  }
 
   function syncBindingForm(binding?: UserBrokerBinding | null) {
     setBindingForm({
@@ -151,8 +161,8 @@ export function SettingsPage() {
       const result = await updateUserAccountProfile(profileForm);
       setAccount((current) => current ? { ...current, profile: result.profile } : current);
       setSaveState((current) => ({ ...current, profile: locale === 'zh' ? '账户档案已保存' : 'Profile saved' }));
-    } catch {
-      setSaveState((current) => ({ ...current, profile: locale === 'zh' ? '账户档案保存失败' : 'Profile save failed' }));
+    } catch (error) {
+      setSaveState((current) => ({ ...current, profile: permissionFailureCopy(error, '账户档案保存失败', 'Profile save failed') }));
     }
   }
 
@@ -167,8 +177,8 @@ export function SettingsPage() {
       });
       setAccount((current) => current ? { ...current, preferences: result.preferences } : current);
       setSaveState((current) => ({ ...current, preferences: locale === 'zh' ? '偏好设置已保存' : 'Preferences saved' }));
-    } catch {
-      setSaveState((current) => ({ ...current, preferences: locale === 'zh' ? '偏好设置保存失败' : 'Preferences save failed' }));
+    } catch (error) {
+      setSaveState((current) => ({ ...current, preferences: permissionFailureCopy(error, '偏好设置保存失败', 'Preferences save failed') }));
     }
   }
 
@@ -188,8 +198,8 @@ export function SettingsPage() {
         permissions: result.access.permissions.join(', '),
       });
       setSaveState((current) => ({ ...current, access: locale === 'zh' ? '访问策略已保存' : 'Access policy saved' }));
-    } catch {
-      setSaveState((current) => ({ ...current, access: locale === 'zh' ? '访问策略保存失败' : 'Access policy save failed' }));
+    } catch (error) {
+      setSaveState((current) => ({ ...current, access: permissionFailureCopy(error, '访问策略保存失败', 'Access policy save failed') }));
     }
   }
 
@@ -220,8 +230,8 @@ export function SettingsPage() {
       const currentBinding = nextBindings.find((item) => item.id === result.binding.id) || result.binding;
       syncBindingForm(currentBinding);
       setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '券商绑定已保存' : 'Broker binding saved' }));
-    } catch {
-      setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '券商绑定保存失败' : 'Broker binding save failed' }));
+    } catch (error) {
+      setSaveState((current) => ({ ...current, binding: permissionFailureCopy(error, '券商绑定保存失败', 'Broker binding save failed') }));
     }
   }
 
@@ -234,8 +244,8 @@ export function SettingsPage() {
       setBindingRuntime(runtimeSnapshot);
       setBindings(brokerSnapshot.bindings);
       setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '运行状态已同步' : 'Runtime synced' }));
-    } catch {
-      setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '运行状态同步失败' : 'Runtime sync failed' }));
+    } catch (error) {
+      setSaveState((current) => ({ ...current, binding: permissionFailureCopy(error, '运行状态同步失败', 'Runtime sync failed') }));
     }
   }
 
@@ -249,8 +259,8 @@ export function SettingsPage() {
       const runtimeSnapshot = await fetchBrokerBindingRuntime().catch(() => null);
       setBindingRuntime(runtimeSnapshot);
       setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '默认券商绑定已更新' : 'Default broker binding updated' }));
-    } catch {
-      setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '默认券商绑定更新失败' : 'Default broker binding update failed' }));
+    } catch (error) {
+      setSaveState((current) => ({ ...current, binding: permissionFailureCopy(error, '默认券商绑定更新失败', 'Default broker binding update failed') }));
     }
   }
 
@@ -266,8 +276,8 @@ export function SettingsPage() {
       const runtimeSnapshot = await fetchBrokerBindingRuntime().catch(() => null);
       setBindingRuntime(runtimeSnapshot);
       setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '券商绑定已删除' : 'Broker binding deleted' }));
-    } catch {
-      setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '券商绑定删除失败' : 'Broker binding delete failed' }));
+    } catch (error) {
+      setSaveState((current) => ({ ...current, binding: permissionFailureCopy(error, '券商绑定删除失败', 'Broker binding delete failed') }));
     }
   }
 
