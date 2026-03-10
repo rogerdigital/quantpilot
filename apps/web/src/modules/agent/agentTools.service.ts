@@ -1,3 +1,4 @@
+import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import type { AgentToolDefinition, AgentToolExecutionResult } from '@shared-types/trading.ts';
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
@@ -9,7 +10,18 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
+    let payload: { message?: string; missingPermission?: string } | null = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+
+    throw new ApiPermissionError(
+      payload?.message || `HTTP ${response.status}`,
+      response.status,
+      payload?.missingPermission,
+    );
   }
   return response.json();
 }

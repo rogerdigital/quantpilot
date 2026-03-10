@@ -59,7 +59,13 @@ export default function AgentPage() {
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '工具白名单' : 'Tool Allowlist'}</div><div className="panel-copy">{locale === 'zh' ? '这些是 Agent 当前被允许调用的结构化工具。' : 'These are the structured tools currently allowed for Agent access.'}</div></div><div className="panel-badge badge-info">{tools.length}</div></div>
           <div className="focus-list focus-list-terminal">
             {loading ? <div className="empty-cell">{locale === 'zh' ? '正在加载工具目录...' : 'Loading tool registry...'}</div> : null}
-            {error ? <div className="empty-cell">{locale === 'zh' ? `工具目录不可用：${error}` : `Tool registry unavailable: ${error}`}</div> : null}
+            {error ? (
+              <div className="empty-cell">
+                {locale === 'zh'
+                  ? `Agent 工具层当前不可用：${error}`
+                  : `Agent tool layer is currently unavailable: ${error}`}
+              </div>
+            ) : null}
             {!loading && !error ? tools.map((tool) => (
               <div className="focus-row" key={tool.name}>
                 <div className="symbol-cell">

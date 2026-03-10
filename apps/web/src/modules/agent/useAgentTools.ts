@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import type { AgentToolDefinition, AgentToolExecutionResult } from '@shared-types/trading.ts';
 import { executeAgentTool, fetchAgentTools } from './agentTools.service.ts';
 
@@ -37,7 +38,9 @@ export function useAgentTools() {
         tools: [],
         preview: null,
         loading: false,
-        error: error instanceof Error ? error.message : 'unknown error',
+        error: error instanceof ApiPermissionError && error.missingPermission
+          ? `Permission denied. Missing ${error.missingPermission}.`
+          : (error instanceof Error ? error.message : 'unknown error'),
       });
     });
 
