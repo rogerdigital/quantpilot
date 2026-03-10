@@ -19,7 +19,7 @@ function fmtDateTime(value: string, locale: 'zh' | 'en') {
     });
 }
 
-export default function BacktestPage() {
+function BacktestPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
   const { totalPnlPct } = useSummary();
@@ -161,3 +161,5 @@ export default function BacktestPage() {
     </>
   );
 }
+
+export default BacktestPage;

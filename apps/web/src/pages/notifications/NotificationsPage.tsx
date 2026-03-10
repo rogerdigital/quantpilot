@@ -6,7 +6,7 @@ import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx'
 import { ActivityLog } from '../console/components/ConsoleTables.tsx';
 import { copy, useLocale } from '../console/i18n.tsx';
 
-export default function NotificationsPage() {
+function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
   const { items, loading } = useNotificationsFeed();
@@ -149,3 +149,5 @@ export default function NotificationsPage() {
     </>
   );
 }
+
+export default NotificationsPage;

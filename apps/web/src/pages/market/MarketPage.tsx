@@ -1,1 +1,1 @@
-export { MarketPage as default } from '../console/routes/MarketPage.tsx';
+export { default } from '../../modules/console/pages/MarketPage.tsx';

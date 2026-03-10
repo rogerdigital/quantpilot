@@ -5,7 +5,7 @@ import { onShortcutKeyDown, useSettingsNavigation } from '../console/hooks.ts';
 import { copy, useLocale } from '../console/i18n.tsx';
 import { translateMode, translateRuntimeText } from '../console/utils.ts';
 
-export default function StrategiesPage() {
+function StrategiesPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
   const goToSettings = useSettingsNavigation();
@@ -71,3 +71,5 @@ export default function StrategiesPage() {
     </>
   );
 }
+
+export default StrategiesPage;

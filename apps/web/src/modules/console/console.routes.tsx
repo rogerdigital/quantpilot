@@ -1,14 +1,14 @@
 import type { AppLocale } from '@shared-types/trading.ts';
 import type { ReactElement } from 'react';
-import AgentPage from '../../pages/agent/AgentPage.tsx';
-import BacktestPage from '../../pages/backtest/BacktestPage.tsx';
-import DashboardPage from '../../pages/dashboard/DashboardPage.tsx';
-import ExecutionPage from '../../pages/execution/ExecutionPage.tsx';
-import MarketPage from '../../pages/market/MarketPage.tsx';
-import NotificationsPage from '../../pages/notifications/NotificationsPage.tsx';
-import RiskPage from '../../pages/risk/RiskPage.tsx';
-import SettingsPage from '../../pages/settings/SettingsPage.tsx';
-import StrategiesPage from '../../pages/strategies/StrategiesPage.tsx';
+import AgentPage from '../agent/AgentPage.tsx';
+import DashboardPage from './pages/DashboardPage.tsx';
+import ExecutionPage from './pages/ExecutionPage.tsx';
+import MarketPage from './pages/MarketPage.tsx';
+import SettingsPage from './pages/SettingsPage.tsx';
+import NotificationsPage from '../notifications/NotificationsPage.tsx';
+import BacktestPage from '../research/BacktestPage.tsx';
+import StrategiesPage from '../research/StrategiesPage.tsx';
+import RiskPage from '../risk/RiskPage.tsx';
 import { copy, type ConsolePageKey } from './console.i18n.tsx';
 
 type ConsoleNavKey =

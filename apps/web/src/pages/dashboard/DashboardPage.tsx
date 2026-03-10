@@ -1,1 +1,1 @@
-export { OverviewPage as default } from '../console/routes/OverviewPage.tsx';
+export { default } from '../../modules/console/pages/DashboardPage.tsx';

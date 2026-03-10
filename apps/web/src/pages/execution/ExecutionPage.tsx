@@ -1,1 +1,1 @@
-export { ExecutionPage as default } from '../console/routes/ExecutionPage.tsx';
+export { default } from '../../modules/console/pages/ExecutionPage.tsx';

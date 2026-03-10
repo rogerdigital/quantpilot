@@ -6,7 +6,7 @@ import { useSummary } from '../console/hooks.ts';
 import { copy, useLocale } from '../console/i18n.tsx';
 import { fmtCurrency, integrationTone, riskTone, translateRiskLevel } from '../console/utils.ts';
 
-export default function RiskPage() {
+function RiskPage() {
   const { state, approveLiveIntent, rejectLiveIntent } = useTradingSystem();
   const { locale } = useLocale();
   const { paper, live } = useSummary();
@@ -67,3 +67,5 @@ export default function RiskPage() {
     </>
   );
 }
+
+export default RiskPage;

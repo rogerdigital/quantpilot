@@ -1,1 +1,1 @@
-export { SettingsPage as default } from '../console/routes/SettingsPage.tsx';
+export { default } from '../../modules/console/pages/SettingsPage.tsx';

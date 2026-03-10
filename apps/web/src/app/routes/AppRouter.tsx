@@ -1,4 +1,4 @@
-import DashboardConsole from '../../pages/console/DashboardConsole.tsx';
+import DashboardConsole from '../../modules/console/DashboardConsole.tsx';
 
 export function AppRouter() {
   return <DashboardConsole />;
