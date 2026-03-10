@@ -1,4 +1,4 @@
-import type { BrokerOrder } from '@shared-types/trading.ts';
+import type { BrokerOrder, BrokerPositionSnapshot } from '@shared-types/trading.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
 import {
@@ -62,6 +62,32 @@ export function PositionsTable({ accountKey }: { accountKey: 'paper' | 'live' })
               <td>{row.avgCost.toFixed(2)}</td>
               <td>{fmtCurrency(row.marketValue)}</td>
               <td className={row.pnl >= 0 ? 'text-up' : 'text-down'}>{fmtCurrency(row.pnl)}</td>
+            </tr>
+          )) : <tr><td colSpan={5} className="empty-cell">{copy[locale].terms.noPositions}</td></tr>}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export function BrokerSnapshotPositionsTable({ positions }: { positions: BrokerPositionSnapshot[] }) {
+  const { locale } = useLocale();
+  const rows = positions
+    .slice()
+    .sort((a, b) => Number(b.marketValue || 0) - Number(a.marketValue || 0));
+
+  return (
+    <div className="table-wrap">
+      <table>
+        <thead><tr><th>{copy[locale].terms.symbol}</th><th>{copy[locale].labels.positions}</th><th>{copy[locale].terms.avgCost}</th><th>{copy[locale].terms.marketValue}</th><th>{locale === 'zh' ? '来源' : 'Source'}</th></tr></thead>
+        <tbody>
+          {rows.length ? rows.map((row) => (
+            <tr key={`broker-${row.symbol}`}>
+              <td><div className="symbol-cell"><strong>{row.symbol}</strong><span>{locale === 'zh' ? '后端快照' : 'Backend snapshot'}</span></div></td>
+              <td>{row.qty}</td>
+              <td>{row.avgCost.toFixed(2)}</td>
+              <td>{fmtCurrency(Number(row.marketValue || row.qty * row.avgCost || 0))}</td>
+              <td><span className="table-note">{locale === 'zh' ? 'broker' : 'broker'}</span></td>
             </tr>
           )) : <tr><td colSpan={5} className="empty-cell">{copy[locale].terms.noPositions}</td></tr>}
         </tbody>

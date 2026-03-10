@@ -2,7 +2,7 @@ import { useTradingSystem } from '../../store/trading-system/TradingSystemProvid
 import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useRiskEventsFeed } from '../../modules/risk/useRiskEventsFeed.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
-import { ApprovalQueueTable, PositionsTable } from '../console/components/ConsoleTables.tsx';
+import { ApprovalQueueTable, BrokerSnapshotPositionsTable, PositionsTable } from '../console/components/ConsoleTables.tsx';
 import { useSummary } from '../console/hooks.ts';
 import { copy, useLocale } from '../console/i18n.tsx';
 import { fmtCurrency, integrationTone, riskTone, translateRiskLevel } from '../console/utils.ts';
@@ -68,7 +68,7 @@ function RiskPage() {
         </article>
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '实盘持仓风险' : 'Live Position Risk'}</div><div className="panel-copy">{locale === 'zh' ? '用同步回来的持仓观察真实执行面的风险状态。' : 'Inspect broker-synced holdings to understand live-side risk posture.'}</div></div><div className="panel-badge badge-ok">LIVE</div></div>
-          <PositionsTable accountKey="live" />
+          <BrokerSnapshotPositionsTable positions={snapshot?.positions || []} />
         </article>
       </section>
     </>

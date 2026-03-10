@@ -1,7 +1,7 @@
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { useLatestBrokerSnapshot } from '../../../hooks/useLatestBrokerSnapshot.ts';
 import { ChartCanvas, TopMeta } from '../components/ConsoleChrome.tsx';
-import { PositionsTable } from '../components/ConsoleTables.tsx';
+import { BrokerSnapshotPositionsTable, PositionsTable } from '../components/ConsoleTables.tsx';
 import { onShortcutKeyDown, useSettingsNavigation, useSummary } from '../hooks.ts';
 import { copy, useLocale } from '../i18n.tsx';
 import { engineTone, fmtCurrency, fmtPct, translateEngineStatus, translateMode, translateRiskLevel, translateRuntimeText } from '../utils.ts';
@@ -68,7 +68,7 @@ export function PortfolioPage() {
         </article>
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '实盘持仓' : 'Live Positions'}</div><div className="panel-copy">{locale === 'zh' ? '远程 broker 同步回来的持仓状态。' : 'Positions synchronized from the remote broker.'}</div></div><div className="panel-badge badge-ok">LIVE</div></div>
-          <PositionsTable accountKey="live" />
+          <BrokerSnapshotPositionsTable positions={snapshot?.positions || []} />
         </article>
       </section>
     </>
