@@ -25,7 +25,7 @@ export const ARCHITECTURE_LAYERS = [
     name: 'Strategy Layer',
     status: 'prototype',
     responsibility: 'strategy catalog, signal generation, backtest entry, and research promotion flow',
-    codeLocations: ['packages/trading-engine/src/strategy', 'apps/api/src/modules/strategy', 'apps/api/src/modules/backtest'],
+    codeLocations: ['packages/trading-engine/src/strategy', 'apps/api/src/domains/strategy', 'apps/api/src/domains/backtest', 'apps/api/src/modules/strategy', 'apps/api/src/modules/backtest'],
   },
   {
     id: 'agent',
