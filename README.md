@@ -145,11 +145,15 @@ quantpilot/
 - 共享运行时已经拆分到 `trading-engine / control-plane-runtime / task-workflow-engine / shared-types`。
 - 控制面持久化已抽到 `control-plane-store`，当前以文件型存储为主。
 - 最小工作流链路已经打通：`API 入队 -> worker 执行 -> control-plane 持久化 -> risk 审核 -> execution plan 准备 / notification fanout`。
+- `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
+- 账户写操作和券商绑定变更已经进入 audit records，基础对象变更具备最小留痕能力。
+- `auth/session` 已改为由持久化账户访问策略驱动，前后端对 `strategy:write / risk:review / execution:approve / account:write` 的权限判断已经开始收敛。
+- Settings、Risk、Execution、Agent 等前端页面已经接入权限禁用、页面级拦截反馈和结构化 API 错误解释。
 
 ### 当前边界
 
 - 当前仍不适合直接用于无人值守实盘。
-- 用户系统、权限和租户模型尚未真正落地。
+- 用户系统和权限边界已经开始从 demo 常量迁到持久化账户配置，但租户、多用户隔离和完整 RBAC 仍未真正落地。
 - 行情接入、历史数据、研究结果持久化仍处于简化阶段。
 - Agent 仍处于受控协作原型阶段，尚未形成真正的规划、记忆和工具编排系统。
 - 执行引擎仍是骨架，距离真实订单状态机、补偿重试和多 broker 抽象还有较大差距。
@@ -318,8 +322,9 @@ npm run verify
 当前以“阶段 1：平台底座产品化”为主，优先级如下：
 
 1. 完成用户、账户、鉴权和券商绑定等平台基础对象的真实数据模型。
-2. 将市场数据、研究数据、执行数据从原型读写升级为稳定 API 与持久化存储。
-3. 继续把研究、风控、执行相关异步动作收敛到后端任务流与 worker。
-4. 为阶段 2 的策略研究闭环预留统一任务协议、结果模型和审计链路。
+2. 将前后端权限判断、错误反馈和页面禁用逻辑继续收敛到统一的 account/access 模型。
+3. 将市场数据、研究数据、执行数据从原型读写升级为稳定 API 与持久化存储。
+4. 继续把研究、风控、执行相关异步动作收敛到后端任务流与 worker。
+5. 为阶段 2 的策略研究闭环预留统一任务协议、结果模型和审计链路。
 
 研发节奏保持为“设计对齐 -> 小步实现 -> 自动化验证 -> 再推进下一层能力”。
