@@ -8,7 +8,7 @@ import { copy, useLocale } from '../console/i18n.tsx';
 import { fmtCurrency, integrationTone, riskTone, translateRiskLevel } from '../console/utils.ts';
 
 function RiskPage() {
-  const { state, approveLiveIntent, rejectLiveIntent, hasPermission } = useTradingSystem();
+  const { state, approveLiveIntent, rejectLiveIntent, hasPermission, actionGuardNotice } = useTradingSystem();
   const { locale } = useLocale();
   const canApproveExecution = hasPermission('execution:approve');
   const { paper, live } = useSummary();
@@ -40,6 +40,9 @@ function RiskPage() {
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.pendingApprovals}</div><div className="panel-copy">{locale === 'zh' ? '把所有需要人工确认的 live 动作集中到风险闸门。' : 'Keep all live actions that require confirmation behind one risk gate.'}</div></div><div className={`panel-badge ${state.approvalQueue.length ? 'badge-warn' : 'badge-muted'}`}>{state.approvalQueue.length}</div></div>
           <ApprovalQueueTable onApprove={approveLiveIntent} onReject={rejectLiveIntent} canReview={canApproveExecution} />
+          {actionGuardNotice?.permission === 'execution:approve' ? (
+            <div className="status-copy">{locale === 'zh' ? '风险闸门动作已被拦截：当前会话缺少 execution:approve 权限。' : 'Risk-gate action blocked: this session is missing execution:approve permission.'}</div>
+          ) : null}
         </article>
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '风险事件流' : 'Risk Event Stream'}</div><div className="panel-copy">{locale === 'zh' ? '后端 worker 生成的风险扫描事件会集中展示在这里。' : 'Risk scan events produced by the backend worker are aggregated here.'}</div></div><div className="panel-badge badge-info">{items.length}</div></div>

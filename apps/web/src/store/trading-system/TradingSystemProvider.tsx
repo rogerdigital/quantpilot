@@ -15,6 +15,7 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   });
   const [state, setState] = useState(() => createInitialState(providersRef.current));
   const [session, setSession] = useState<OperatorSession | null>(null);
+  const [actionGuardNotice, setActionGuardNotice] = useState<{ permission: string; action: string } | null>(null);
   const stateRef = useRef(state);
   const busyRef = useRef(false);
   const timerRef = useRef<number | null>(null);
@@ -54,6 +55,9 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const hasPermission = (permission: string) => Boolean(session?.user.permissions.includes(permission));
+  const emitPermissionNotice = (permission: string, action: string) => {
+    setActionGuardNotice({ permission, action });
+  };
   const togglePermissionMap: Record<keyof TradingState['toggles'], string> = {
     autoTrade: 'strategy:write',
     liveTrade: 'execution:approve',
@@ -62,7 +66,11 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   };
 
   const setMode = (mode: TradingState['mode']) => {
-    if (!hasPermission('strategy:write')) return;
+    if (!hasPermission('strategy:write')) {
+      emitPermissionNotice('strategy:write', 'set-mode');
+      return;
+    }
+    setActionGuardNotice(null);
     setState((current) => {
       const next = { ...current, mode, engineStatus: mode === 'manual' ? 'MANUAL READY' : 'LIVE EXECUTION' };
       stateRef.current = next;
@@ -71,7 +79,11 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   };
 
   const updateToggle = (key: keyof TradingState['toggles'], value: boolean) => {
-    if (!hasPermission(togglePermissionMap[key])) return;
+    if (!hasPermission(togglePermissionMap[key])) {
+      emitPermissionNotice(togglePermissionMap[key], `toggle:${key}`);
+      return;
+    }
+    setActionGuardNotice(null);
     setState((current) => {
       const next = {
         ...current,
@@ -83,8 +95,12 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   };
 
   const cancelLiveOrder = async (orderId: string) => {
-    if (!hasPermission('execution:approve')) return;
+    if (!hasPermission('execution:approve')) {
+      emitPermissionNotice('execution:approve', 'cancel-live-order');
+      return;
+    }
     if (!providersRef.current.broker.supportsRemoteExecution || !orderId || busyRef.current) return;
+    setActionGuardNotice(null);
     busyRef.current = true;
     try {
       const cancelSnapshot = await providersRef.current.broker.cancelOrder(orderId);
@@ -113,8 +129,12 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   };
 
   const approveLiveIntent = (clientOrderId: string) => {
-    if (!hasPermission('execution:approve')) return;
+    if (!hasPermission('execution:approve')) {
+      emitPermissionNotice('execution:approve', 'approve-live-intent');
+      return;
+    }
     if (!clientOrderId) return;
+    setActionGuardNotice(null);
     setState((current) => {
       const next = cloneState(current);
       const order = next.approvalQueue.find((item) => item.clientOrderId === clientOrderId);
@@ -134,8 +154,12 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   };
 
   const rejectLiveIntent = (clientOrderId: string) => {
-    if (!hasPermission('execution:approve')) return;
+    if (!hasPermission('execution:approve')) {
+      emitPermissionNotice('execution:approve', 'reject-live-intent');
+      return;
+    }
     if (!clientOrderId) return;
+    setActionGuardNotice(null);
     setState((current) => {
       const next = cloneState(current);
       const order = next.approvalQueue.find((item) => item.clientOrderId === clientOrderId);
@@ -155,7 +179,18 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   };
 
   return (
-    <TradingSystemContext.Provider value={{ state, session, hasPermission, setMode, updateToggle, cancelLiveOrder, approveLiveIntent, rejectLiveIntent }}>
+    <TradingSystemContext.Provider value={{
+      state,
+      session,
+      hasPermission,
+      actionGuardNotice,
+      clearActionGuardNotice: () => setActionGuardNotice(null),
+      setMode,
+      updateToggle,
+      cancelLiveOrder,
+      approveLiveIntent,
+      rejectLiveIntent,
+    }}>
       {children}
     </TradingSystemContext.Provider>
   );

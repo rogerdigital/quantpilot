@@ -21,7 +21,7 @@ import type { UserAccountProfileSnapshot, UserBrokerBinding, UserBrokerBindingRu
 
 export function SettingsPage() {
   const { locale } = useLocale();
-  const { state, session, hasPermission, setMode, updateToggle } = useTradingSystem();
+  const { state, session, hasPermission, actionGuardNotice, setMode, updateToggle } = useTradingSystem();
   const location = useLocation();
   const canWriteAccount = hasPermission('account:write');
   const canWriteStrategy = hasPermission('strategy:write');
@@ -331,6 +331,7 @@ export function SettingsPage() {
             ))}
           </div>
           {!canWriteStrategy ? <div className="status-copy">{locale === 'zh' ? '当前会话没有 strategy:write 权限，系统模式切换已禁用。' : 'This session does not have strategy:write permission. Mode switching is disabled.'}</div> : null}
+          {actionGuardNotice?.action === 'set-mode' ? <div className="status-copy">{locale === 'zh' ? '模式切换未生效：当前会话缺少 strategy:write 权限。' : 'Mode change was blocked: this session is missing strategy:write permission.'}</div> : null}
         </article>
         <article className="panel" id="switches">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].labels.switches}</div><div className="panel-copy">{copy[locale].terms.switchesCopy}</div></div><div className="panel-badge badge-muted">CONTROL</div></div>
@@ -343,6 +344,13 @@ export function SettingsPage() {
               ? `autoTrade 需要 strategy:write，riskGuard 需要 risk:review，allowLive / manualApproval 需要 execution:approve。`
               : 'autoTrade requires strategy:write, riskGuard requires risk:review, and allowLive/manualApproval require execution:approve.'}
           </div>
+          {actionGuardNotice?.action?.startsWith('toggle:') ? (
+            <div className="status-copy">
+              {locale === 'zh'
+                ? `开关更新未生效：当前会话缺少 ${actionGuardNotice.permission} 权限。`
+                : `Toggle change was blocked: this session is missing ${actionGuardNotice.permission} permission.`}
+            </div>
+          ) : null}
         </article>
       </section>
 

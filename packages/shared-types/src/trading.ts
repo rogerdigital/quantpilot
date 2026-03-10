@@ -516,6 +516,8 @@ export type TradingSystemContextValue = {
   state: TradingState;
   session: OperatorSession | null;
   hasPermission: (permission: string) => boolean;
+  actionGuardNotice: { permission: string; action: string } | null;
+  clearActionGuardNotice: () => void;
   setMode: (mode: TradingState['mode']) => void;
   updateToggle: (key: keyof TradingState['toggles'], value: boolean) => void;
   cancelLiveOrder: (orderId: string) => Promise<void>;

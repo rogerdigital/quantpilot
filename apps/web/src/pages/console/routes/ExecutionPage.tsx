@@ -9,7 +9,7 @@ import { modeTone, translateEngineStatus, translateMode, translateRiskLevel, tra
 import type { BrokerAccountSnapshotRecord, ExecutionLedgerEntry, ExecutionRuntimeEvent } from '@shared-types/trading.ts';
 
 export function ExecutionPage() {
-  const { state, approveLiveIntent, rejectLiveIntent, hasPermission } = useTradingSystem();
+  const { state, approveLiveIntent, rejectLiveIntent, hasPermission, actionGuardNotice } = useTradingSystem();
   const { locale } = useLocale();
   const goToSettings = useSettingsNavigation();
   const canApproveExecution = hasPermission('execution:approve');
@@ -128,6 +128,9 @@ export function ExecutionPage() {
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.pendingApprovals}</div><div className="panel-copy">{locale === 'zh' ? '人工确认开启时，live 订单先进入这里，批准后才会发往 broker。' : 'When manual approval is enabled, live orders stay here until you release them to the broker.'}</div></div><div className={`panel-badge ${state.approvalQueue.length ? 'badge-warn' : 'badge-muted'}`}>{state.approvalQueue.length}</div></div>
           <ApprovalQueueTable onApprove={approveLiveIntent} onReject={rejectLiveIntent} canReview={canApproveExecution} />
+          {actionGuardNotice?.permission === 'execution:approve' ? (
+            <div className="status-copy">{locale === 'zh' ? '操作已被拦截：当前会话缺少 execution:approve 权限。' : 'Action blocked: this session is missing execution:approve permission.'}</div>
+          ) : null}
         </article>
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.paperOrders}</div><div className="panel-copy">{locale === 'zh' ? '策略测试账户最近 12 笔委托。' : 'Latest 12 orders from the paper account.'}</div></div><div className="panel-badge badge-muted">PAPER</div></div>
@@ -136,6 +139,9 @@ export function ExecutionPage() {
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.liveOrderState}</div><div className="panel-copy">{locale === 'zh' ? '查看远程订单状态、部分成交、撤单与成交回报。' : 'Track remote order states, partial fills, cancels, and fill feedback.'}</div></div><div className="panel-badge badge-ok">LIVE</div></div>
           <OrdersTable accountKey="live" />
+          {actionGuardNotice?.action === 'cancel-live-order' ? (
+            <div className="status-copy">{locale === 'zh' ? '撤单请求未发送：当前会话缺少 execution:approve 权限。' : 'Cancel request was not sent: this session is missing execution:approve permission.'}</div>
+          ) : null}
         </article>
       </section>
     </>
