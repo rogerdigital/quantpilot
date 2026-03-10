@@ -1,4 +1,5 @@
 import { appendAuditRecord, listAuditRecords } from '../../modules/audit/service.mjs';
+import { hasPermission } from '../../modules/auth/service.mjs';
 import { listNotifications } from '../../modules/notification/service.mjs';
 import { listRiskEvents } from '../../domains/risk/services/feed-service.mjs';
 import { listSchedulerTicks } from '../../modules/scheduler/service.mjs';
@@ -16,6 +17,13 @@ import { listCycles, recordCycleRun } from '../../control-plane/task-orchestrato
 
 export async function handleControlPlaneRoutes(context) {
   const { req, reqUrl, res, readJsonBody, writeJson, gatewayDependencies } = context;
+  const requirePermission = (permission) => {
+    if (!hasPermission(permission)) {
+      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      return false;
+    }
+    return true;
+  };
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/audit/records') {
     writeJson(res, 200, {
@@ -93,6 +101,7 @@ export async function handleControlPlaneRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/resume') && reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')) {
+    if (!requirePermission('execution:approve')) return true;
     const workflowRunId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const workflow = resumeWorkflow(workflowRunId, body);
@@ -103,6 +112,7 @@ export async function handleControlPlaneRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/cancel') && reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')) {
+    if (!requirePermission('execution:approve')) return true;
     const workflowRunId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const workflow = cancelWorkflow(workflowRunId, body);
@@ -165,6 +175,7 @@ export async function handleControlPlaneRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/strategy/execute') {
+    if (!requirePermission('strategy:write')) return true;
     const body = await readJsonBody(req);
     writeJson(res, 200, {
       ok: true,
@@ -204,6 +215,7 @@ export async function handleControlPlaneRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/actions') {
+    if (!requirePermission('execution:approve')) return true;
     const body = await readJsonBody(req);
     writeJson(res, 200, {
       ok: true,

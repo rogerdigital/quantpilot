@@ -231,6 +231,11 @@ export type UserAccountProfileSnapshot = {
     timezone: string;
     locale: string;
   };
+  access: {
+    role: string;
+    status: string;
+    permissions: string[];
+  };
   preferences: {
     locale: string;
     timezone: string;
@@ -246,6 +251,11 @@ export type UserPreferencesUpdateSnapshot = {
   preferences: UserAccountProfileSnapshot['preferences'];
 };
 
+export type UserAccessUpdateSnapshot = {
+  ok: boolean;
+  access: UserAccountProfileSnapshot['access'];
+};
+
 export type UserProfileUpdateSnapshot = {
   ok: boolean;
   profile: UserAccountProfileSnapshot['profile'];
@@ -259,6 +269,8 @@ export type UserBrokerBindingsSnapshot = {
 export type UserBrokerBindingSaveSnapshot = {
   ok: boolean;
   binding: UserBrokerBinding;
+  bindings?: UserBrokerBinding[];
+  error?: string;
 };
 
 export type UserBrokerBindingRuntimeSnapshot = {
@@ -273,6 +285,13 @@ export type UserBrokerBindingRuntimeSnapshot = {
     lastCheckedAt: string;
     mismatch: boolean;
   };
+};
+
+export type UserBrokerBindingDeleteSnapshot = {
+  ok: boolean;
+  binding?: UserBrokerBinding;
+  bindings?: UserBrokerBinding[];
+  error?: string;
 };
 
 export type ExecutionRuntimeEvent = {
@@ -495,6 +514,8 @@ export type ResearchHubSnapshot = {
 
 export type TradingSystemContextValue = {
   state: TradingState;
+  session: OperatorSession | null;
+  hasPermission: (permission: string) => boolean;
   setMode: (mode: TradingState['mode']) => void;
   updateToggle: (key: keyof TradingState['toggles'], value: boolean) => void;
   cancelLiveOrder: (orderId: string) => Promise<void>;

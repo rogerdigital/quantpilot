@@ -285,14 +285,26 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     getUserPreferences() {
       return context.userAccount.getUserPreferences();
     },
+    getUserAccess() {
+      return context.userAccount.getUserAccess();
+    },
     updateUserPreferences(patch = {}) {
       return context.userAccount.updateUserPreferences(patch);
+    },
+    updateUserAccess(patch = {}) {
+      return context.userAccount.updateUserAccess(patch);
     },
     listBrokerBindings() {
       return context.userAccount.listBrokerBindings();
     },
     upsertBrokerBinding(payload = {}) {
       return context.userAccount.upsertBrokerBinding(payload);
+    },
+    setDefaultBrokerBinding(bindingId) {
+      return context.userAccount.setDefaultBrokerBinding(bindingId);
+    },
+    deleteBrokerBinding(bindingId) {
+      return context.userAccount.deleteBrokerBinding(bindingId);
     },
     listWorkflowRuns(limit = 50) {
       return context.workflows.listWorkflowRuns(limit);
@@ -469,9 +481,13 @@ export const getUserAccount = (...args) => controlPlaneRuntime.getUserAccount(..
 export const getUserProfile = (...args) => controlPlaneRuntime.getUserProfile(...args);
 export const updateUserProfile = (...args) => controlPlaneRuntime.updateUserProfile(...args);
 export const getUserPreferences = (...args) => controlPlaneRuntime.getUserPreferences(...args);
+export const getUserAccess = (...args) => controlPlaneRuntime.getUserAccess(...args);
 export const updateUserPreferences = (...args) => controlPlaneRuntime.updateUserPreferences(...args);
+export const updateUserAccess = (...args) => controlPlaneRuntime.updateUserAccess(...args);
 export const listBrokerBindings = (...args) => controlPlaneRuntime.listBrokerBindings(...args);
 export const upsertBrokerBinding = (...args) => controlPlaneRuntime.upsertBrokerBinding(...args);
+export const setDefaultBrokerBinding = (...args) => controlPlaneRuntime.setDefaultBrokerBinding(...args);
+export const deleteBrokerBinding = (...args) => controlPlaneRuntime.deleteBrokerBinding(...args);
 export const listExecutionRuntimeEvents = (...args) => controlPlaneRuntime.listExecutionRuntimeEvents(...args);
 export const listBrokerAccountSnapshots = (...args) => controlPlaneRuntime.listBrokerAccountSnapshots(...args);
 export const listWorkflowRuns = (...args) => controlPlaneRuntime.listWorkflowRuns(...args);

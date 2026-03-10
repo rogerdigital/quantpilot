@@ -6,11 +6,12 @@ import { copy, useLocale } from '../console/i18n.tsx';
 import { translateMode, translateRuntimeText } from '../console/utils.ts';
 
 function StrategiesPage() {
-  const { state } = useTradingSystem();
+  const { state, hasPermission } = useTradingSystem();
   const { locale } = useLocale();
   const goToSettings = useSettingsNavigation();
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
+  const canWriteStrategy = hasPermission('strategy:write');
 
   return (
     <>
@@ -64,6 +65,7 @@ function StrategiesPage() {
             <div className="status-row"><span>{locale === 'zh' ? '候选买入' : 'Candidate buys'}</span><strong>{buyCount}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '候选减仓' : 'Candidate trims'}</span><strong>{sellCount}</strong></div>
             <div className="status-row"><span>{copy[locale].terms.executionRoute}</span><strong>{translateMode(locale, state.mode)}</strong></div>
+            {!canWriteStrategy ? <div className="status-copy">{locale === 'zh' ? '当前会话没有 strategy:write 权限，策略工作台处于只读态。' : 'This session does not have strategy:write permission. The strategy workspace is read-only.'}</div> : null}
             <div className="status-copy">{locale === 'zh' ? '后续可以把这里继续拆成 Strategy Registry / Backtest / Optimizer / Evaluator 四块。' : 'This can later split into Strategy Registry, Backtest, Optimizer, and Evaluator modules.'}</div>
           </div>
         </article>

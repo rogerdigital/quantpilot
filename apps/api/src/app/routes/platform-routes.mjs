@@ -16,8 +16,11 @@ import {
   getUserAccountSnapshot,
   getUserProfileSnapshot,
   patchUserProfile,
+  patchUserAccess,
   patchUserPreferences,
+  removeBrokerBinding,
   saveBrokerBinding,
+  setPrimaryBrokerBinding,
   syncBrokerBindingRuntime,
 } from '../../modules/user-account/service.mjs';
 import { listStrategyCatalog } from '../../domains/strategy/services/catalog-service.mjs';
@@ -74,6 +77,16 @@ export async function handlePlatformRoutes(context) {
     return true;
   }
 
+  if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/access') {
+    if (!canWriteAccount()) {
+      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      return true;
+    }
+    const body = await readJsonBody(req);
+    writeJson(res, 200, patchUserAccess(body));
+    return true;
+  }
+
   if (req.method === 'GET' && reqUrl.pathname === '/api/user-account/broker-bindings') {
     writeJson(res, 200, getBrokerBindingsSnapshot());
     return true;
@@ -93,6 +106,28 @@ export async function handlePlatformRoutes(context) {
     const body = await readJsonBody(req);
     const result = saveBrokerBinding(body);
     writeJson(res, result.ok ? 200 : 400, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname.endsWith('/default') && reqUrl.pathname.startsWith('/api/user-account/broker-bindings/')) {
+    if (!canWriteAccount()) {
+      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      return true;
+    }
+    const bindingId = reqUrl.pathname.split('/').at(-2);
+    const result = setPrimaryBrokerBinding(bindingId);
+    writeJson(res, result.ok ? 200 : 404, result);
+    return true;
+  }
+
+  if (req.method === 'DELETE' && reqUrl.pathname.startsWith('/api/user-account/broker-bindings/')) {
+    if (!canWriteAccount()) {
+      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      return true;
+    }
+    const bindingId = reqUrl.pathname.split('/').at(-1);
+    const result = removeBrokerBinding(bindingId);
+    writeJson(res, result.ok ? 200 : (result.error === 'default broker binding cannot be deleted' ? 409 : 404), result);
     return true;
   }
 
@@ -140,6 +175,10 @@ export async function handlePlatformRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/action-requests') {
+    if (!hasPermission('strategy:write')) {
+      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      return true;
+    }
     const body = await readJsonBody(req);
     const result = queueAgentActionRequest(body);
     writeJson(res, result.ok ? 200 : 403, result);
@@ -147,6 +186,10 @@ export async function handlePlatformRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/approve') && reqUrl.pathname.startsWith('/api/agent/action-requests/')) {
+    if (!hasPermission('risk:review')) {
+      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      return true;
+    }
     const requestId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = approveAgentActionRequest(requestId, body);
@@ -155,6 +198,10 @@ export async function handlePlatformRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/reject') && reqUrl.pathname.startsWith('/api/agent/action-requests/')) {
+    if (!hasPermission('risk:review')) {
+      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      return true;
+    }
     const requestId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = rejectAgentActionRequest(requestId, body);

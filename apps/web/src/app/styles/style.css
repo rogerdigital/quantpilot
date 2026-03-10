@@ -322,6 +322,61 @@ body::before {
   background: rgba(127, 180, 255, 0.08);
 }
 
+.policy-row-split {
+  align-items: center;
+  gap: 12px;
+}
+
+.policy-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.settings-inline-button {
+  border: 1px solid rgba(127, 180, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(127, 180, 255, 0.08);
+  color: var(--muted);
+  padding: 6px 10px;
+  cursor: pointer;
+  font: 600 11px/1 "Space Grotesk", sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.settings-inline-button-danger {
+  border-color: rgba(255, 120, 120, 0.22);
+  background: rgba(255, 120, 120, 0.08);
+  color: #ffb1b1;
+}
+
+.settings-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.settings-chip {
+  border: 1px solid rgba(127, 180, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(127, 180, 255, 0.08);
+  color: var(--muted);
+  padding: 8px 12px;
+  cursor: pointer;
+  font: 600 11px/1 "Space Grotesk", sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.settings-chip.active {
+  border-color: rgba(79, 226, 198, 0.45);
+  background: linear-gradient(90deg, rgba(79, 226, 198, 0.16), rgba(127, 180, 255, 0.16));
+  color: var(--text);
+}
+
 .policy-card {
   display: grid;
   gap: 10px;

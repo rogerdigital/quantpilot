@@ -9,9 +9,10 @@ import { modeTone, translateEngineStatus, translateMode, translateRiskLevel, tra
 import type { BrokerAccountSnapshotRecord, ExecutionLedgerEntry, ExecutionRuntimeEvent } from '@shared-types/trading.ts';
 
 export function ExecutionPage() {
-  const { state, approveLiveIntent, rejectLiveIntent } = useTradingSystem();
+  const { state, approveLiveIntent, rejectLiveIntent, hasPermission } = useTradingSystem();
   const { locale } = useLocale();
   const goToSettings = useSettingsNavigation();
+  const canApproveExecution = hasPermission('execution:approve');
   const [runtimeEvents, setRuntimeEvents] = useState<ExecutionRuntimeEvent[]>([]);
   const [accountSnapshots, setAccountSnapshots] = useState<BrokerAccountSnapshotRecord[]>([]);
   const [ledgerEntries, setLedgerEntries] = useState<ExecutionLedgerEntry[]>([]);
@@ -126,7 +127,7 @@ export function ExecutionPage() {
       <section className="panel-grid">
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.pendingApprovals}</div><div className="panel-copy">{locale === 'zh' ? '人工确认开启时，live 订单先进入这里，批准后才会发往 broker。' : 'When manual approval is enabled, live orders stay here until you release them to the broker.'}</div></div><div className={`panel-badge ${state.approvalQueue.length ? 'badge-warn' : 'badge-muted'}`}>{state.approvalQueue.length}</div></div>
-          <ApprovalQueueTable onApprove={approveLiveIntent} onReject={rejectLiveIntent} />
+          <ApprovalQueueTable onApprove={approveLiveIntent} onReject={rejectLiveIntent} canReview={canApproveExecution} />
         </article>
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.paperOrders}</div><div className="panel-copy">{locale === 'zh' ? '策略测试账户最近 12 笔委托。' : 'Latest 12 orders from the paper account.'}</div></div><div className="panel-badge badge-muted">PAPER</div></div>

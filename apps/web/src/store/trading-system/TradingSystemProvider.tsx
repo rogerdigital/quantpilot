@@ -3,7 +3,7 @@ import { runtimeConfig } from '../../app/config/runtime.ts';
 import { fetchOperatorSession, reportOperatorAction, runStateCycle } from '../../app/api/controlPlane.ts';
 import { createBrokerProvider } from '../../app/providers/broker.ts';
 import { createMarketDataProvider } from '../../app/providers/marketData.ts';
-import type { TradingState, TradingSystemContextValue } from '@shared-types/trading.ts';
+import type { OperatorSession, TradingState, TradingSystemContextValue } from '@shared-types/trading.ts';
 import { APP_CONFIG, applyBrokerSnapshot, cloneState, computeAccount, createInitialState, logEvent } from './core.ts';
 
 const TradingSystemContext = createContext<TradingSystemContextValue | null>(null);
@@ -14,6 +14,7 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
     broker: createBrokerProvider(runtimeConfig),
   });
   const [state, setState] = useState(() => createInitialState(providersRef.current));
+  const [session, setSession] = useState<OperatorSession | null>(null);
   const stateRef = useRef(state);
   const busyRef = useRef(false);
   const timerRef = useRef<number | null>(null);
@@ -23,7 +24,7 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   }, [state]);
 
   useEffect(() => {
-    fetchOperatorSession().catch(() => null);
+    fetchOperatorSession().then(setSession).catch(() => null);
   }, []);
 
   useEffect(() => {
@@ -52,7 +53,16 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
     };
   }, []);
 
+  const hasPermission = (permission: string) => Boolean(session?.user.permissions.includes(permission));
+  const togglePermissionMap: Record<keyof TradingState['toggles'], string> = {
+    autoTrade: 'strategy:write',
+    liveTrade: 'execution:approve',
+    riskGuard: 'risk:review',
+    manualApproval: 'execution:approve',
+  };
+
   const setMode = (mode: TradingState['mode']) => {
+    if (!hasPermission('strategy:write')) return;
     setState((current) => {
       const next = { ...current, mode, engineStatus: mode === 'manual' ? 'MANUAL READY' : 'LIVE EXECUTION' };
       stateRef.current = next;
@@ -61,6 +71,7 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   };
 
   const updateToggle = (key: keyof TradingState['toggles'], value: boolean) => {
+    if (!hasPermission(togglePermissionMap[key])) return;
     setState((current) => {
       const next = {
         ...current,
@@ -72,6 +83,7 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   };
 
   const cancelLiveOrder = async (orderId: string) => {
+    if (!hasPermission('execution:approve')) return;
     if (!providersRef.current.broker.supportsRemoteExecution || !orderId || busyRef.current) return;
     busyRef.current = true;
     try {
@@ -101,6 +113,7 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   };
 
   const approveLiveIntent = (clientOrderId: string) => {
+    if (!hasPermission('execution:approve')) return;
     if (!clientOrderId) return;
     setState((current) => {
       const next = cloneState(current);
@@ -121,6 +134,7 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   };
 
   const rejectLiveIntent = (clientOrderId: string) => {
+    if (!hasPermission('execution:approve')) return;
     if (!clientOrderId) return;
     setState((current) => {
       const next = cloneState(current);
@@ -141,7 +155,7 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   };
 
   return (
-    <TradingSystemContext.Provider value={{ state, setMode, updateToggle, cancelLiveOrder, approveLiveIntent, rejectLiveIntent }}>
+    <TradingSystemContext.Provider value={{ state, session, hasPermission, setMode, updateToggle, cancelLiveOrder, approveLiveIntent, rejectLiveIntent }}>
       {children}
     </TradingSystemContext.Provider>
   );

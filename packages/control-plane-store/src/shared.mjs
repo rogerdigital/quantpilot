@@ -181,6 +181,26 @@ export function createUserPreferences(payload = {}) {
   };
 }
 
+export function getDefaultPermissionsForRole(role = 'viewer') {
+  const permissionMap = {
+    admin: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+    operator: ['dashboard:read', 'strategy:write', 'risk:review'],
+    viewer: ['dashboard:read'],
+  };
+  return permissionMap[role] || permissionMap.viewer;
+}
+
+export function createUserAccessPolicy(payload = {}) {
+  const role = payload.role || 'admin';
+  return {
+    role,
+    status: payload.status || 'active',
+    permissions: Array.isArray(payload.permissions) && payload.permissions.length
+      ? [...new Set(payload.permissions.map((item) => String(item).trim()).filter(Boolean))]
+      : getDefaultPermissionsForRole(role),
+  };
+}
+
 export function createBrokerBindingEntry(payload = {}) {
   return {
     id: payload.id || `broker-binding-${randomUUID()}`,

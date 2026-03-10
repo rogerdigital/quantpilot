@@ -97,9 +97,10 @@ export function BrokerSnapshotPositionsTable({ positions }: { positions: BrokerP
 }
 
 export function OrdersTable({ accountKey }: { accountKey: 'paper' | 'live' }) {
-  const { state, cancelLiveOrder } = useTradingSystem();
+  const { state, cancelLiveOrder, hasPermission } = useTradingSystem();
   const { locale } = useLocale();
   const rows: BrokerOrder[] = state.accounts[accountKey].orders.slice(0, 12);
+  const canCancelLiveOrders = hasPermission('execution:approve');
 
   return (
     <div className="table-wrap">
@@ -116,7 +117,7 @@ export function OrdersTable({ accountKey }: { accountKey: 'paper' | 'live' }) {
               <td>{fmtDateTime(order.updatedAt || order.submittedAt, locale)}</td>
               <td>
                 {accountKey === 'live' && order.cancelable ? (
-                  <button type="button" className="inline-action" onClick={() => cancelLiveOrder(order.id || '')}>{copy[locale].terms.cancel}</button>
+                  <button type="button" className="inline-action" disabled={!canCancelLiveOrders} onClick={() => cancelLiveOrder(order.id || '')}>{copy[locale].terms.cancel}</button>
                 ) : (
                   <span className="table-note">{order.tag || order.source || '--'}</span>
                 )}
@@ -125,11 +126,20 @@ export function OrdersTable({ accountKey }: { accountKey: 'paper' | 'live' }) {
           )) : <tr><td colSpan={7} className="empty-cell">{copy[locale].terms.noFills}</td></tr>}
         </tbody>
       </table>
+      {accountKey === 'live' && !canCancelLiveOrders ? <div className="status-copy">{locale === 'zh' ? '当前账户没有 execution:approve 权限，实盘撤单已禁用。' : 'This account does not have execution:approve permission. Live order cancellation is disabled.'}</div> : null}
     </div>
   );
 }
 
-export function ApprovalQueueTable({ onApprove, onReject }: { onApprove: (clientOrderId: string) => void; onReject: (clientOrderId: string) => void }) {
+export function ApprovalQueueTable({
+  onApprove,
+  onReject,
+  canReview = true,
+}: {
+  onApprove: (clientOrderId: string) => void;
+  onReject: (clientOrderId: string) => void;
+  canReview?: boolean;
+}) {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
   const rows: BrokerOrder[] = state.approvalQueue.slice(0, 12);
@@ -148,13 +158,14 @@ export function ApprovalQueueTable({ onApprove, onReject }: { onApprove: (client
               <td><span className="order-status order-status-open">{locale === 'zh' ? '待审批' : 'Pending'}</span></td>
               <td>{fmtDateTime(order.updatedAt || order.submittedAt, locale)}</td>
               <td className="action-group">
-                <button type="button" className="inline-action inline-action-approve" onClick={() => onApprove(order.clientOrderId || '')}>{copy[locale].terms.approve}</button>
-                <button type="button" className="inline-action" onClick={() => onReject(order.clientOrderId || '')}>{copy[locale].terms.reject}</button>
+                <button type="button" className="inline-action inline-action-approve" disabled={!canReview} onClick={() => onApprove(order.clientOrderId || '')}>{copy[locale].terms.approve}</button>
+                <button type="button" className="inline-action" disabled={!canReview} onClick={() => onReject(order.clientOrderId || '')}>{copy[locale].terms.reject}</button>
               </td>
             </tr>
           )) : <tr><td colSpan={7} className="empty-cell">{locale === 'zh' ? '当前没有待审批实盘订单' : 'No live orders are waiting for approval'}</td></tr>}
         </tbody>
       </table>
+      {!canReview ? <div className="status-copy">{locale === 'zh' ? '当前账户没有 execution:approve 权限，审批动作已禁用。' : 'This account does not have execution:approve permission. Approval actions are disabled.'}</div> : null}
     </div>
   );
 }

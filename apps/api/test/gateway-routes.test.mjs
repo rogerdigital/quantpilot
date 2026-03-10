@@ -175,7 +175,46 @@ test('GET /api/user-account/profile returns profile and preferences', async () =
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(response.json.profile.email, 'operator@quantpilot.local');
+  assert.equal(Array.isArray(response.json.access.permissions), true);
   assert.equal(typeof response.json.preferences.defaultMode, 'string');
+});
+
+test('POST /api/user-account/access updates persisted access policy and session permissions', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/user-account/access',
+    body: {
+      role: 'operator',
+      permissions: ['dashboard:read', 'risk:review'],
+      status: 'active',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.access.role, 'operator');
+  assert.equal(response.json.access.permissions.includes('risk:review'), true);
+  assert.equal(response.json.access.permissions.includes('account:write'), false);
+
+  const sessionResponse = await invokeGatewayRoute(handler, {
+    path: '/api/auth/session',
+  });
+  assert.equal(sessionResponse.statusCode, 200);
+  assert.equal(sessionResponse.json.user.role, 'operator');
+  assert.equal(sessionResponse.json.user.permissions.includes('risk:review'), true);
+  assert.equal(sessionResponse.json.user.permissions.includes('account:write'), false);
+
+  const auditResponse = await invokeGatewayRoute(handler, {
+    path: '/api/audit/records',
+  });
+  assert.equal(auditResponse.statusCode, 200);
+  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.access.updated' && item.metadata.role === 'operator'), true);
+
+  context.userAccount.updateUserAccess({
+    role: 'admin',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+  });
 });
 
 test('POST /api/user-account/profile updates persisted profile data', async () => {
@@ -192,6 +231,12 @@ test('POST /api/user-account/profile updates persisted profile data', async () =
   assert.equal(response.json.ok, true);
   assert.equal(response.json.profile.name, 'Operator One');
   assert.equal(response.json.profile.organization, 'QuantPilot Research');
+
+  const auditResponse = await invokeGatewayRoute(handler, {
+    path: '/api/audit/records',
+  });
+  assert.equal(auditResponse.statusCode, 200);
+  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.profile.updated' && item.metadata.userId === 'operator-demo'), true);
 });
 
 test('POST /api/user-account/preferences updates persisted preferences', async () => {
@@ -208,11 +253,19 @@ test('POST /api/user-account/preferences updates persisted preferences', async (
   assert.equal(response.json.ok, true);
   assert.equal(response.json.preferences.locale, 'en-US');
   assert.equal(response.json.preferences.notificationChannels.includes('email'), true);
+
+  const auditResponse = await invokeGatewayRoute(handler, {
+    path: '/api/audit/records',
+  });
+  assert.equal(auditResponse.statusCode, 200);
+  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.preferences.updated' && item.metadata.locale === 'en-US'), true);
 });
 
 test('account write routes reject requests without account:write permission', async () => {
-  context.userAccount.updateUserProfile({
+  context.userAccount.updateUserAccess({
     role: 'viewer',
+    status: 'active',
+    permissions: ['dashboard:read'],
   });
 
   const response = await invokeGatewayRoute(handler, {
@@ -226,8 +279,10 @@ test('account write routes reject requests without account:write permission', as
   assert.equal(response.statusCode, 403);
   assert.equal(response.json.ok, false);
 
-  context.userAccount.updateUserProfile({
+  context.userAccount.updateUserAccess({
     role: 'admin',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
   });
 });
 
@@ -257,6 +312,96 @@ test('POST /api/user-account/broker-bindings upserts broker bindings', async () 
   assert.equal(listResponse.statusCode, 200);
   assert.equal(listResponse.json.ok, true);
   assert.equal(listResponse.json.bindings.some((item) => item.id === 'binding-live' && item.isDefault), true);
+
+  const auditResponse = await invokeGatewayRoute(handler, {
+    path: '/api/audit/records',
+  });
+  assert.equal(auditResponse.statusCode, 200);
+  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.broker-binding.saved' && item.metadata.bindingId === 'binding-live'), true);
+});
+
+test('POST /api/user-account/broker-bindings/:id/default switches the default binding', async () => {
+  await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/user-account/broker-bindings',
+    body: {
+      id: 'binding-paper',
+      provider: 'alpaca',
+      label: 'Paper Backup',
+      environment: 'paper',
+      accountId: 'paper-backup',
+      status: 'disconnected',
+      permissions: ['read'],
+      isDefault: false,
+    },
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/user-account/broker-bindings/binding-paper/default',
+    body: {},
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.binding.id, 'binding-paper');
+  assert.equal(response.json.bindings.find((item) => item.id === 'binding-paper')?.isDefault, true);
+  assert.equal(response.json.bindings.filter((item) => item.isDefault).length, 1);
+
+  const auditResponse = await invokeGatewayRoute(handler, {
+    path: '/api/audit/records',
+  });
+  assert.equal(auditResponse.statusCode, 200);
+  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.broker-binding.default-set' && item.metadata.bindingId === 'binding-paper'), true);
+});
+
+test('DELETE /api/user-account/broker-bindings/:id removes a non-default binding', async () => {
+  await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/user-account/broker-bindings',
+    body: {
+      id: 'binding-delete',
+      provider: 'custom-http',
+      label: 'Delete Me',
+      environment: 'paper',
+      accountId: 'delete-me',
+      status: 'disconnected',
+      permissions: ['read'],
+      isDefault: false,
+    },
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'DELETE',
+    path: '/api/user-account/broker-bindings/binding-delete',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.binding.id, 'binding-delete');
+  assert.equal(response.json.bindings.some((item) => item.id === 'binding-delete'), false);
+
+  const auditResponse = await invokeGatewayRoute(handler, {
+    path: '/api/audit/records',
+  });
+  assert.equal(auditResponse.statusCode, 200);
+  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.broker-binding.deleted' && item.metadata.bindingId === 'binding-delete'), true);
+});
+
+test('DELETE /api/user-account/broker-bindings/:id rejects deleting the default binding', async () => {
+  const listResponse = await invokeGatewayRoute(handler, {
+    path: '/api/user-account/broker-bindings',
+  });
+  const defaultBinding = listResponse.json.bindings.find((item) => item.isDefault);
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'DELETE',
+    path: `/api/user-account/broker-bindings/${defaultBinding.id}`,
+  });
+
+  assert.equal(response.statusCode, 409);
+  assert.equal(response.json.ok, false);
+  assert.equal(response.json.error, 'default broker binding cannot be deleted');
 });
 
 test('GET /api/user-account/broker-bindings/runtime returns default binding runtime health', async () => {
@@ -281,6 +426,12 @@ test('POST /api/user-account/broker-bindings/sync updates default binding runtim
   assert.equal(response.json.ok, true);
   assert.equal(response.json.binding.status, 'connected');
   assert.equal(typeof response.json.binding.lastSyncAt, 'string');
+
+  const auditResponse = await invokeGatewayRoute(handler, {
+    path: '/api/audit/records',
+  });
+  assert.equal(auditResponse.statusCode, 200);
+  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.broker-binding.runtime-synced' && item.metadata.bindingId === response.json.binding.id), true);
 });
 
 test('POST /api/agent/tools/execute runs an allowlisted read-only tool', async () => {
@@ -342,6 +493,34 @@ test('POST /api/agent/action-requests rejects unsupported request types', async 
 
   assert.equal(response.statusCode, 403);
   assert.equal(response.json.ok, false);
+});
+
+test('POST /api/agent/action-requests requires strategy:write permission', async () => {
+  context.userAccount.updateUserAccess({
+    role: 'viewer',
+    status: 'active',
+    permissions: ['dashboard:read'],
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/action-requests',
+    body: {
+      requestType: 'prepare_execution_plan',
+      targetId: 'ema-cross-us',
+      requestedBy: 'agent',
+    },
+  });
+
+  assert.equal(response.statusCode, 403);
+  assert.equal(response.json.ok, false);
+  assert.equal(response.json.error, 'forbidden');
+
+  context.userAccount.updateUserAccess({
+    role: 'admin',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+  });
 });
 
 test('GET /api/agent/action-requests returns persisted requests', async () => {
@@ -435,6 +614,45 @@ test('POST /api/agent/action-requests/reject marks the request as rejected', asy
   assert.equal(response.json.request.approvalState, 'rejected');
 });
 
+test('POST /api/agent/action-requests/:id/approve requires risk:review permission', async () => {
+  const request = context.agentActionRequests.appendAgentActionRequest({
+    requestType: 'prepare_execution_plan',
+    targetId: 'ema-cross-us',
+    status: 'pending_review',
+    approvalState: 'required',
+    riskStatus: 'approved',
+    summary: 'Pending review',
+    rationale: 'Strategy score improved.',
+    requestedBy: 'agent',
+  });
+
+  context.userAccount.updateUserAccess({
+    role: 'operator',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write'],
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/agent/action-requests/${request.id}/approve`,
+    body: {
+      approvedBy: 'operator-without-risk-review',
+      mode: 'paper',
+      capital: 125000,
+    },
+  });
+
+  assert.equal(response.statusCode, 403);
+  assert.equal(response.json.ok, false);
+  assert.equal(response.json.error, 'forbidden');
+
+  context.userAccount.updateUserAccess({
+    role: 'admin',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+  });
+});
+
 test('POST /api/strategy/execute queues a strategy execution workflow', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
@@ -451,6 +669,35 @@ test('POST /api/strategy/execute queues a strategy execution workflow', async ()
   assert.equal(response.json.ok, true);
   assert.equal(response.json.workflow.workflowId, 'task-orchestrator.strategy-execution');
   assert.equal(response.json.workflow.status, 'queued');
+});
+
+test('POST /api/strategy/execute requires strategy:write permission', async () => {
+  context.userAccount.updateUserAccess({
+    role: 'viewer',
+    status: 'active',
+    permissions: ['dashboard:read'],
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/strategy/execute',
+    body: {
+      strategyId: 'ema-cross-us',
+      mode: 'paper',
+      capital: 150000,
+      requestedBy: 'api-test',
+    },
+  });
+
+  assert.equal(response.statusCode, 403);
+  assert.equal(response.json.ok, false);
+  assert.equal(response.json.error, 'forbidden');
+
+  context.userAccount.updateUserAccess({
+    role: 'admin',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+  });
 });
 
 test('GET /api/execution/plans returns persisted execution plans', async () => {
@@ -655,6 +902,37 @@ test('POST then GET /api/task-orchestrator/actions persists operator actions', a
   assert.equal(createResponse.json.action.title, 'Approve from API test');
   assert.equal(listResponse.statusCode, 200);
   assert.equal(listResponse.json.actions.some((item) => item.id === createResponse.json.action.id), true);
+});
+
+test('POST /api/task-orchestrator/actions requires execution:approve permission', async () => {
+  context.userAccount.updateUserAccess({
+    role: 'operator',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review'],
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/task-orchestrator/actions',
+    body: {
+      type: 'approve-intent',
+      actor: 'api-test',
+      title: 'Blocked approval',
+      detail: 'approved via gateway route',
+      symbol: 'AAPL',
+      level: 'info',
+    },
+  });
+
+  assert.equal(response.statusCode, 403);
+  assert.equal(response.json.ok, false);
+  assert.equal(response.json.error, 'forbidden');
+
+  context.userAccount.updateUserAccess({
+    role: 'admin',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+  });
 });
 
 test('GET /api/health exposes gateway module status', async () => {
@@ -931,6 +1209,47 @@ test('POST /api/task-orchestrator/workflows/:id/resume resumes a failed workflow
   assert.equal(response.json.workflow.error, null);
 });
 
+test('POST /api/task-orchestrator/workflows/:id/resume requires execution:approve permission', async () => {
+  const queued = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/task-orchestrator/workflows/queue',
+    body: {
+      workflowId: 'task-orchestrator.resume-gate-test',
+      workflowType: 'task-orchestrator',
+      actor: 'api-test',
+      trigger: 'manual',
+    },
+  });
+
+  context.workflows.updateWorkflowRun(queued.json.workflow.id, {
+    status: 'failed',
+    error: 'manual failure',
+    failedAt: '2026-03-10T10:00:00.000Z',
+  });
+
+  context.userAccount.updateUserAccess({
+    role: 'operator',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review'],
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/task-orchestrator/workflows/${queued.json.workflow.id}/resume`,
+    body: {},
+  });
+
+  assert.equal(response.statusCode, 403);
+  assert.equal(response.json.ok, false);
+  assert.equal(response.json.error, 'forbidden');
+
+  context.userAccount.updateUserAccess({
+    role: 'admin',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+  });
+});
+
 test('POST /api/task-orchestrator/workflows/:id/cancel cancels a workflow run', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
@@ -951,4 +1270,39 @@ test('POST /api/task-orchestrator/workflows/:id/cancel cancels a workflow run', 
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.workflow.status, 'canceled');
+});
+
+test('POST /api/task-orchestrator/workflows/:id/cancel requires execution:approve permission', async () => {
+  const queued = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/task-orchestrator/workflows/queue',
+    body: {
+      workflowId: 'task-orchestrator.cancel-gate-test',
+      workflowType: 'task-orchestrator',
+      actor: 'api-test',
+      trigger: 'manual',
+    },
+  });
+
+  context.userAccount.updateUserAccess({
+    role: 'operator',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review'],
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/task-orchestrator/workflows/${queued.json.workflow.id}/cancel`,
+    body: {},
+  });
+
+  assert.equal(response.statusCode, 403);
+  assert.equal(response.json.ok, false);
+  assert.equal(response.json.error, 'forbidden');
+
+  context.userAccount.updateUserAccess({
+    role: 'admin',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+  });
 });

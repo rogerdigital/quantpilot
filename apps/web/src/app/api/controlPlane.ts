@@ -12,7 +12,9 @@ import type {
   UserBrokerBindingsSnapshot,
   UserBrokerBindingSaveSnapshot,
   UserBrokerBindingRuntimeSnapshot,
+  UserBrokerBindingDeleteSnapshot,
   UserPreferencesUpdateSnapshot,
+  UserAccessUpdateSnapshot,
   UserProfileUpdateSnapshot,
 } from '@shared-types/trading.ts';
 
@@ -67,6 +69,18 @@ export async function updateUserAccountPreferences(payload: Record<string, unkno
   return response.json();
 }
 
+export async function updateUserAccountAccess(payload: Record<string, unknown>): Promise<UserAccessUpdateSnapshot> {
+  const response = await fetch('/api/user-account/access', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
 export async function fetchBrokerBindings(): Promise<UserBrokerBindingsSnapshot> {
   const response = await fetch('/api/user-account/broker-bindings', {
     headers: { Accept: 'application/json' },
@@ -82,6 +96,29 @@ export async function saveBrokerBinding(payload: Record<string, unknown>): Promi
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function setDefaultBrokerBinding(bindingId: string): Promise<UserBrokerBindingSaveSnapshot> {
+  const response = await fetch(`/api/user-account/broker-bindings/${bindingId}/default`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify({}),
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function deleteBrokerBinding(bindingId: string): Promise<UserBrokerBindingDeleteSnapshot> {
+  const response = await fetch(`/api/user-account/broker-bindings/${bindingId}`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json' },
   });
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);

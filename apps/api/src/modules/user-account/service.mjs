@@ -1,18 +1,35 @@
 import {
+  deleteBrokerBinding,
   getUserAccount,
+  getUserAccess,
   getUserPreferences,
   getUserProfile,
   listBrokerBindings,
+  setDefaultBrokerBinding,
   updateUserProfile,
+  updateUserAccess,
   updateUserPreferences,
   upsertBrokerBinding,
 } from '../../../../../packages/control-plane-runtime/src/index.mjs';
+import { appendAuditRecord } from '../audit/service.mjs';
+
+function recordAccountAuditEvent(type, title, detail, metadata = {}) {
+  const account = getUserAccount();
+  appendAuditRecord({
+    type,
+    actor: account.profile.id || 'operator-demo',
+    title,
+    detail,
+    metadata,
+  });
+}
 
 export function getUserAccountSnapshot() {
   const account = getUserAccount();
   return {
     ok: true,
     profile: account.profile,
+    access: account.access,
     preferences: account.preferences,
     subscription: account.subscription,
     brokerBindings: account.brokerBindings,
@@ -24,12 +41,23 @@ export function getUserProfileSnapshot() {
   return {
     ok: true,
     profile: getUserProfile(),
+    access: getUserAccess(),
     preferences: getUserPreferences(),
   };
 }
 
 export function patchUserProfile(payload = {}) {
   const updated = updateUserProfile(payload);
+  recordAccountAuditEvent(
+    'user-account.profile.updated',
+    'User profile updated',
+    `Updated account profile for ${updated.name}.`,
+    {
+      userId: updated.id,
+      email: updated.email,
+      organization: updated.organization,
+    },
+  );
   return {
     ok: true,
     profile: updated,
@@ -38,9 +66,38 @@ export function patchUserProfile(payload = {}) {
 
 export function patchUserPreferences(payload = {}) {
   const updated = updateUserPreferences(payload);
+  recordAccountAuditEvent(
+    'user-account.preferences.updated',
+    'User preferences updated',
+    `Updated preferences for locale ${updated.locale} and mode ${updated.defaultMode}.`,
+    {
+      locale: updated.locale,
+      timezone: updated.timezone,
+      defaultMode: updated.defaultMode,
+      notificationChannels: updated.notificationChannels,
+    },
+  );
   return {
     ok: true,
     preferences: updated,
+  };
+}
+
+export function patchUserAccess(payload = {}) {
+  const updated = updateUserAccess(payload);
+  recordAccountAuditEvent(
+    'user-account.access.updated',
+    'User access policy updated',
+    `Updated access policy for role ${updated.role}.`,
+    {
+      role: updated.role,
+      status: updated.status,
+      permissions: updated.permissions,
+    },
+  );
+  return {
+    ok: true,
+    access: updated,
   };
 }
 
@@ -101,6 +158,19 @@ export async function syncBrokerBindingRuntime(getBrokerHealth) {
     },
   });
 
+  recordAccountAuditEvent(
+    'user-account.broker-binding.runtime-synced',
+    'Broker binding runtime synced',
+    `Synced runtime state for ${updatedBinding.label}.`,
+    {
+      bindingId: updatedBinding.id,
+      provider: updatedBinding.provider,
+      adapter: runtimeSnapshot.runtime.adapter,
+      connected: runtimeSnapshot.runtime.connected,
+      mismatch: runtimeSnapshot.runtime.mismatch,
+    },
+  );
+
   return {
     ok: true,
     binding: updatedBinding,
@@ -117,8 +187,71 @@ export function saveBrokerBinding(payload = {}) {
   }
 
   const binding = upsertBrokerBinding(payload);
+  recordAccountAuditEvent(
+    'user-account.broker-binding.saved',
+    'Broker binding saved',
+    `Saved broker binding ${binding.label}.`,
+    {
+      bindingId: binding.id,
+      provider: binding.provider,
+      environment: binding.environment,
+      isDefault: binding.isDefault,
+      status: binding.status,
+    },
+  );
   return {
     ok: true,
     binding,
+  };
+}
+
+export function setPrimaryBrokerBinding(bindingId) {
+  const binding = setDefaultBrokerBinding(bindingId);
+  if (!binding) {
+    return {
+      ok: false,
+      error: 'broker binding was not found',
+    };
+  }
+
+  recordAccountAuditEvent(
+    'user-account.broker-binding.default-set',
+    'Default broker binding updated',
+    `Set ${binding.label} as the default broker binding.`,
+    {
+      bindingId: binding.id,
+      provider: binding.provider,
+      environment: binding.environment,
+    },
+  );
+
+  return {
+    ok: true,
+    binding,
+    bindings: listBrokerBindings(),
+  };
+}
+
+export function removeBrokerBinding(bindingId) {
+  const result = deleteBrokerBinding(bindingId);
+  if (!result.ok) {
+    return result;
+  }
+
+  recordAccountAuditEvent(
+    'user-account.broker-binding.deleted',
+    'Broker binding deleted',
+    `Deleted broker binding ${result.binding.label}.`,
+    {
+      bindingId: result.binding.id,
+      provider: result.binding.provider,
+      environment: result.binding.environment,
+    },
+  );
+
+  return {
+    ok: true,
+    binding: result.binding,
+    bindings: result.bindings,
   };
 }

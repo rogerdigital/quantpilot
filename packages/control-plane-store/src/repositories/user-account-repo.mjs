@@ -1,5 +1,6 @@
 import {
   createBrokerBindingEntry,
+  createUserAccessPolicy,
   createUserAccountProfile,
   createUserPreferences,
 } from '../shared.mjs';
@@ -10,6 +11,9 @@ function createDefaultAccountSnapshot() {
   const profile = createUserAccountProfile();
   return {
     profile,
+    access: createUserAccessPolicy({
+      role: profile.role,
+    }),
     preferences: createUserPreferences({
       locale: profile.locale,
       timezone: profile.timezone,
@@ -40,6 +44,10 @@ function normalizeSnapshot(snapshot = {}) {
     ...defaults.profile,
     ...(snapshot.profile || {}),
   });
+  const access = createUserAccessPolicy({
+    role: profile.role,
+    ...(snapshot.access || {}),
+  });
   const preferences = createUserPreferences({
     ...defaults.preferences,
     ...(snapshot.preferences || {}),
@@ -60,6 +68,7 @@ function normalizeSnapshot(snapshot = {}) {
 
   return {
     profile,
+    access,
     preferences,
     subscription: {
       ...defaults.subscription,
@@ -99,13 +108,21 @@ export function createUserAccountRepository(store) {
         ...snapshot.profile,
         ...patch,
       });
+      const access = createUserAccessPolicy({
+        ...snapshot.access,
+        role: profile.role,
+      });
       return writeSnapshot({
         ...snapshot,
         profile,
+        access,
       }).profile;
     },
     getUserPreferences() {
       return readSnapshot().preferences;
+    },
+    getUserAccess() {
+      return readSnapshot().access;
     },
     updateUserPreferences(patch = {}) {
       const snapshot = readSnapshot();
@@ -117,6 +134,23 @@ export function createUserAccountRepository(store) {
         ...snapshot,
         preferences,
       }).preferences;
+    },
+    updateUserAccess(patch = {}) {
+      const snapshot = readSnapshot();
+      const access = createUserAccessPolicy({
+        ...snapshot.access,
+        ...patch,
+        role: patch.role || snapshot.profile.role,
+      });
+      const profile = createUserAccountProfile({
+        ...snapshot.profile,
+        role: access.role,
+      });
+      return writeSnapshot({
+        ...snapshot,
+        profile,
+        access,
+      }).access;
     },
     listBrokerBindings() {
       return readSnapshot().brokerBindings;
@@ -155,6 +189,61 @@ export function createUserAccountRepository(store) {
       });
 
       return normalizedBindings.find((binding) => binding.id === nextBinding.id) || nextBinding;
+    },
+    setDefaultBrokerBinding(bindingId) {
+      if (!bindingId) return null;
+      const snapshot = readSnapshot();
+      if (!snapshot.brokerBindings.some((binding) => binding.id === bindingId)) {
+        return null;
+      }
+
+      const brokerBindings = snapshot.brokerBindings.map((binding) => ({
+        ...binding,
+        isDefault: binding.id === bindingId,
+      }));
+
+      writeSnapshot({
+        ...snapshot,
+        brokerBindings,
+      });
+
+      return brokerBindings.find((binding) => binding.id === bindingId) || null;
+    },
+    deleteBrokerBinding(bindingId) {
+      if (!bindingId) {
+        return {
+          ok: false,
+          error: 'binding id is required',
+        };
+      }
+
+      const snapshot = readSnapshot();
+      const binding = snapshot.brokerBindings.find((item) => item.id === bindingId);
+      if (!binding) {
+        return {
+          ok: false,
+          error: 'broker binding was not found',
+        };
+      }
+
+      if (binding.isDefault) {
+        return {
+          ok: false,
+          error: 'default broker binding cannot be deleted',
+        };
+      }
+
+      const brokerBindings = snapshot.brokerBindings.filter((item) => item.id !== bindingId);
+      writeSnapshot({
+        ...snapshot,
+        brokerBindings,
+      });
+
+      return {
+        ok: true,
+        binding,
+        bindings: brokerBindings,
+      };
     },
   };
 }
