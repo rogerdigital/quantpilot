@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ApiPermissionError } from '../../app/api/controlPlane.ts';
+import { ApiPermissionError } from '../../app/api/http.ts';
 import type { AgentToolDefinition, AgentToolExecutionResult } from '@shared-types/trading.ts';
 import { executeAgentTool, fetchAgentTools } from './agentTools.service.ts';
 

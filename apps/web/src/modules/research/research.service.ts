@@ -1,21 +1,10 @@
+import { fetchJson } from '../../app/api/http.ts';
 import type {
   BacktestRunItem,
   BacktestSummarySnapshot,
   ResearchHubSnapshot,
   StrategyCatalogItem,
 } from '@shared-types/trading.ts';
-
-async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, {
-    headers: {
-      Accept: 'application/json',
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-  return response.json();
-}
 
 export async function fetchResearchHub(): Promise<ResearchHubSnapshot> {
   const [summary, strategyCatalog, backtestRuns] = await Promise.all([

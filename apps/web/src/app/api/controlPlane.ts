@@ -17,57 +17,19 @@ import type {
   UserAccessUpdateSnapshot,
   UserProfileUpdateSnapshot,
 } from '@shared-types/trading.ts';
-
-export class ApiPermissionError extends Error {
-  missingPermission?: string;
-  status: number;
-
-  constructor(message: string, status: number, missingPermission?: string) {
-    super(message);
-    this.name = 'ApiPermissionError';
-    this.status = status;
-    this.missingPermission = missingPermission;
-  }
-}
-
-async function assertOk(response: Response) {
-  if (response.ok) return;
-
-  let payload: { message?: string; missingPermission?: string } | null = null;
-  try {
-    payload = await response.json();
-  } catch {
-    payload = null;
-  }
-
-  throw new ApiPermissionError(
-    payload?.message || `HTTP ${response.status}`,
-    response.status,
-    payload?.missingPermission,
-  );
-}
-
-function jsonHeaders() {
-  return {
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-  };
-}
+export { ApiPermissionError } from './http.ts';
+import { assertOk, fetchJson, jsonHeaders } from './http.ts';
 
 export async function fetchOperatorSession(): Promise<OperatorSession> {
-  const response = await fetch('/api/auth/session', {
+  return fetchJson('/api/auth/session', {
     headers: { Accept: 'application/json' },
   });
-  await assertOk(response);
-  return response.json();
 }
 
 export async function fetchUserAccountProfile(): Promise<UserAccountProfileSnapshot> {
-  const response = await fetch('/api/user-account/profile', {
+  return fetchJson('/api/user-account/profile', {
     headers: { Accept: 'application/json' },
   });
-  await assertOk(response);
-  return response.json();
 }
 
 export async function updateUserAccountProfile(payload: Record<string, unknown>): Promise<UserProfileUpdateSnapshot> {
@@ -207,82 +169,96 @@ export async function reportOperatorAction(payload: {
   return response.json();
 }
 
-export async function fetchNotifications() {
-  const response = await fetch('/api/notification/events', {
+export async function fetchNotifications(): Promise<{
+  ok: boolean;
+  events: Array<{
+    id: string;
+    level: string;
+    title: string;
+    message: string;
+    source: string;
+    createdAt: string;
+  }>;
+}> {
+  return fetchJson('/api/notification/events', {
     headers: { Accept: 'application/json' },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-  return response.json();
 }
 
-export async function fetchRiskEvents() {
-  const response = await fetch('/api/risk/events', {
+export async function fetchRiskEvents(): Promise<{
+  ok: boolean;
+  events: Array<{
+    id: string;
+    level: string;
+    status: string;
+    title: string;
+    message: string;
+    cycle: number;
+    riskLevel: string;
+    source: string;
+    createdAt: string;
+  }>;
+}> {
+  return fetchJson('/api/risk/events', {
     headers: { Accept: 'application/json' },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-  return response.json();
 }
 
-export async function fetchSchedulerTicks() {
-  const response = await fetch('/api/scheduler/ticks', {
+export async function fetchSchedulerTicks(): Promise<{
+  ok: boolean;
+  ticks: Array<{
+    id: string;
+    phase: string;
+    status: string;
+    title: string;
+    message: string;
+    worker: string;
+    createdAt: string;
+  }>;
+}> {
+  return fetchJson('/api/scheduler/ticks', {
     headers: { Accept: 'application/json' },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-  return response.json();
 }
 
-export async function fetchOperatorActions() {
-  const response = await fetch('/api/task-orchestrator/actions', {
+export async function fetchOperatorActions(): Promise<{
+  ok: boolean;
+  actions: Array<{
+    id: string;
+    type: string;
+    symbol: string;
+    detail: string;
+    actor: string;
+    title: string;
+    level: string;
+    createdAt: string;
+  }>;
+}> {
+  return fetchJson('/api/task-orchestrator/actions', {
     headers: { Accept: 'application/json' },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-  return response.json();
 }
 
 export async function fetchExecutionRuntime(): Promise<{ ok: boolean; events: ExecutionRuntimeEvent[] }> {
-  const response = await fetch('/api/execution/runtime', {
+  return fetchJson('/api/execution/runtime', {
     headers: { Accept: 'application/json' },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-  return response.json();
 }
 
 export async function fetchExecutionAccountSnapshots(): Promise<{ ok: boolean; snapshots: BrokerAccountSnapshotRecord[] }> {
-  const response = await fetch('/api/execution/account-snapshots', {
+  return fetchJson('/api/execution/account-snapshots', {
     headers: { Accept: 'application/json' },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-  return response.json();
 }
 
 export async function fetchExecutionLedger(): Promise<{ ok: boolean; entries: ExecutionLedgerEntry[] }> {
-  const response = await fetch('/api/execution/ledger', {
+  return fetchJson('/api/execution/ledger', {
     headers: { Accept: 'application/json' },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-  return response.json();
 }
 
 export async function fetchLatestBrokerAccountSnapshot(): Promise<LatestBrokerAccountSnapshotResponse> {
-  const response = await fetch('/api/execution/account-snapshots/latest', {
+  return fetchJson('/api/execution/account-snapshots/latest', {
     headers: { Accept: 'application/json' },
   });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-  return response.json();
 }
