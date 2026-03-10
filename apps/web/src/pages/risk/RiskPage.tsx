@@ -1,5 +1,5 @@
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
-import { useRiskEventsFeed } from '../../hooks/useRiskEventsFeed.ts';
+import { useRiskEventsFeed } from '../../modules/risk/useRiskEventsFeed.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { ApprovalQueueTable, PositionsTable } from '../console/components/ConsoleTables.tsx';
 import { useSummary } from '../console/hooks.ts';

@@ -1,7 +1,7 @@
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
-import { useNotificationsFeed } from '../../hooks/useNotificationsFeed.ts';
-import { useOperatorActionsFeed } from '../../hooks/useOperatorActionsFeed.ts';
-import { useSchedulerTicksFeed } from '../../hooks/useSchedulerTicksFeed.ts';
+import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
+import { useOperatorActionsFeed } from '../../modules/notifications/useOperatorActionsFeed.ts';
+import { useSchedulerTicksFeed } from '../../modules/notifications/useSchedulerTicksFeed.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { ActivityLog } from '../console/components/ConsoleTables.tsx';
 import { copy, useLocale } from '../console/i18n.tsx';

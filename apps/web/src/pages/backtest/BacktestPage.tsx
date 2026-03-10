@@ -1,4 +1,4 @@
-import { useResearchHub } from '../../hooks/useResearchHub.ts';
+import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { useSummary } from '../console/hooks.ts';

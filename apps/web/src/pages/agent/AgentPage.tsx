@@ -1,4 +1,4 @@
-import { useAgentTools } from '../../hooks/useAgentTools.ts';
+import { useAgentTools } from '../../modules/agent/useAgentTools.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { copy, useLocale } from '../console/i18n.tsx';
