@@ -11,7 +11,7 @@ export const ARCHITECTURE_LAYERS = [
     name: 'Backend',
     status: 'prototype',
     responsibility: 'gateway entry, auth, orchestration, notifications, audit, monitoring, and scheduler boundaries',
-    codeLocations: ['apps/api', 'packages/control-plane-runtime'],
+    codeLocations: ['apps/api', 'apps/api/src/control-plane', 'packages/control-plane-runtime'],
   },
   {
     id: 'data',
@@ -32,7 +32,7 @@ export const ARCHITECTURE_LAYERS = [
     name: 'Agent Layer',
     status: 'prototype',
     responsibility: 'tool allowlist, structured summaries, and approval-gated action requests',
-    codeLocations: ['apps/api/src/modules/agent', 'apps/web/src/pages/agent'],
+    codeLocations: ['apps/api/src/domains/agent', 'apps/api/src/modules/agent', 'apps/web/src/pages/agent'],
   },
   {
     id: 'risk',
