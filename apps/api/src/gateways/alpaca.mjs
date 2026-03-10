@@ -13,7 +13,7 @@ import { appendAuditRecord, listAuditRecords } from '../modules/audit/service.mj
 import { getBacktestSummary, listBacktestRuns } from '../modules/backtest/service.mjs';
 import { listExecutionPlans } from '../modules/execution/service.mjs';
 import { getSession } from '../modules/auth/service.mjs';
-import { listModules } from '../modules/registry.mjs';
+import { describeArchitecture, listArchitectureLayers, listModules } from '../modules/registry.mjs';
 import { listNotifications } from '../modules/notification/service.mjs';
 import { listRiskEvents } from '../modules/risk/service.mjs';
 import { listSchedulerTicks } from '../modules/scheduler/service.mjs';
@@ -477,6 +477,7 @@ export function createGatewayHandler(options = {}) {
     if (req.method === 'GET' && reqUrl.pathname === '/api/health') {
       writeJson(res, 200, {
         ok: true,
+        architectureLayers: listArchitectureLayers().length,
         modules: listModules().length,
         brokerAdapter: config.brokerAdapter,
         alpacaConfigured: ensureConfigured(config),
@@ -493,6 +494,13 @@ export function createGatewayHandler(options = {}) {
       writeJson(res, 200, {
         ok: true,
         modules: listModules(),
+      });
+      return;
+    }
+    if (req.method === 'GET' && reqUrl.pathname === '/api/architecture') {
+      writeJson(res, 200, {
+        ok: true,
+        architecture: describeArchitecture(),
       });
       return;
     }

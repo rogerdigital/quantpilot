@@ -1,3 +1,55 @@
+export const ARCHITECTURE_LAYERS = [
+  {
+    id: 'frontend',
+    name: 'Frontend',
+    status: 'prototype',
+    responsibility: 'dashboard, strategy workspace, risk console, execution console, and agent interaction surfaces',
+    codeLocations: ['apps/web'],
+  },
+  {
+    id: 'backend',
+    name: 'Backend',
+    status: 'prototype',
+    responsibility: 'gateway entry, auth, orchestration, notifications, audit, monitoring, and scheduler boundaries',
+    codeLocations: ['apps/api', 'packages/control-plane-runtime'],
+  },
+  {
+    id: 'data',
+    name: 'Data Layer',
+    status: 'prototype',
+    responsibility: 'market, research, control-plane, and state persistence abstractions',
+    codeLocations: ['packages/db', 'packages/control-plane-store'],
+  },
+  {
+    id: 'strategy',
+    name: 'Strategy Layer',
+    status: 'prototype',
+    responsibility: 'strategy catalog, signal generation, backtest entry, and research promotion flow',
+    codeLocations: ['packages/trading-engine', 'apps/api/src/modules/strategy', 'apps/api/src/modules/backtest'],
+  },
+  {
+    id: 'agent',
+    name: 'Agent Layer',
+    status: 'prototype',
+    responsibility: 'tool allowlist, structured summaries, and approval-gated action requests',
+    codeLocations: ['apps/api/src/modules/agent', 'apps/web/src/pages/agent'],
+  },
+  {
+    id: 'risk',
+    name: 'Risk Layer',
+    status: 'prototype',
+    responsibility: 'risk scan jobs, risk events, approvals, and final execution gates',
+    codeLocations: ['packages/trading-engine/src/risk.mjs', 'apps/api/src/modules/risk', 'apps/worker/src/tasks/risk-scan-task.mjs'],
+  },
+  {
+    id: 'execution',
+    name: 'Execution Layer',
+    status: 'prototype',
+    responsibility: 'execution plans, broker handoff, order intent routing, and execution-facing workflows',
+    codeLocations: ['packages/trading-engine/src/execution.mjs', 'apps/api/src/modules/execution', 'apps/api/src/gateways/alpaca.mjs'],
+  },
+];
+
 export const MODULE_REGISTRY = [
   {
     id: 'api-gateway',
@@ -94,4 +146,27 @@ export const MODULE_REGISTRY = [
 
 export function listModules() {
   return MODULE_REGISTRY;
+}
+
+export function listArchitectureLayers() {
+  return ARCHITECTURE_LAYERS;
+}
+
+export function describeArchitecture() {
+  const moduleCountByLayer = MODULE_REGISTRY.reduce((acc, module) => {
+    acc[module.layer] = (acc[module.layer] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    summary: {
+      layerCount: ARCHITECTURE_LAYERS.length,
+      moduleCount: MODULE_REGISTRY.length,
+    },
+    layers: ARCHITECTURE_LAYERS.map((layer) => ({
+      ...layer,
+      moduleCount: moduleCountByLayer[layer.id] || 0,
+      modules: MODULE_REGISTRY.filter((module) => module.layer === layer.id),
+    })),
+  };
 }

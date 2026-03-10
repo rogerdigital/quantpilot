@@ -137,6 +137,24 @@ test('GET /api/agent/tools returns allowlisted read-only tools', async () => {
   assert.equal(response.json.tools.every((item) => item.access === 'read'), true);
 });
 
+test('GET /api/architecture returns the seven-layer architecture summary', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/architecture',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.architecture.summary.layerCount, 7);
+  assert.equal(response.json.architecture.layers.some((item) => item.id === 'frontend'), true);
+  assert.equal(response.json.architecture.layers.some((item) => item.id === 'backend' && item.moduleCount >= 1), true);
+  assert.equal(
+    response.json.architecture.layers.some(
+      (item) => item.id === 'agent' && item.modules.some((module) => module.id === 'agent'),
+    ),
+    true,
+  );
+});
+
 test('POST /api/agent/tools/execute runs an allowlisted read-only tool', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
@@ -404,6 +422,7 @@ test('GET /api/health exposes gateway module status', async () => {
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(response.json.brokerAdapter, 'alpaca');
+  assert.equal(response.json.architectureLayers, 7);
   assert.equal(typeof response.json.modules, 'number');
 });
 
