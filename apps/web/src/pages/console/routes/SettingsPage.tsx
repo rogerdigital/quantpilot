@@ -83,6 +83,19 @@ export function SettingsPage() {
     return locale === 'zh' ? fallbackZh : fallbackEn;
   }
 
+  const modeDisabledReason = locale === 'zh'
+    ? '缺少 strategy:write 权限，不能切换系统模式。'
+    : 'Missing strategy:write permission. Mode switching is disabled.';
+  const autoTradeDisabledReason = locale === 'zh'
+    ? '缺少 strategy:write 权限，不能修改自动交易开关。'
+    : 'Missing strategy:write permission. Auto-trade toggle is disabled.';
+  const riskGuardDisabledReason = locale === 'zh'
+    ? '缺少 risk:review 权限，不能修改风险闸门。'
+    : 'Missing risk:review permission. Risk guard toggle is disabled.';
+  const executionDisabledReason = locale === 'zh'
+    ? '缺少 execution:approve 权限，不能修改实盘相关开关。'
+    : 'Missing execution:approve permission. Live execution toggles are disabled.';
+
   function syncBindingForm(binding?: UserBrokerBinding | null) {
     setBindingForm({
       id: binding?.id || '',
@@ -312,7 +325,7 @@ export function SettingsPage() {
           <div className="panel-head"><div><div className="panel-title">{copy[locale].labels.systemMode}</div><div className="panel-copy">{copy[locale].terms.systemModeCopy}</div></div><div className={`panel-badge badge-${modeTone(state.mode)}`}>{translateMode(locale, state.mode)}</div></div>
           <div className="mode-stack">
             {modes.map(([key, label]) => (
-              <button key={key} type="button" disabled={!canWriteStrategy} className={`mode-pill${state.mode === key ? ' active' : ''}`} onClick={() => setMode(key)}>
+              <button key={key} type="button" title={!canWriteStrategy ? modeDisabledReason : undefined} disabled={!canWriteStrategy} className={`mode-pill${state.mode === key ? ' active' : ''}`} onClick={() => setMode(key)}>
                 {translateMode(locale, label)}
               </button>
             ))}
@@ -321,10 +334,10 @@ export function SettingsPage() {
         </article>
         <article className="panel" id="switches">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].labels.switches}</div><div className="panel-copy">{copy[locale].terms.switchesCopy}</div></div><div className="panel-badge badge-muted">CONTROL</div></div>
-          <label className="switch-row"><span>{copy[locale].labels.autoTrade}</span><input type="checkbox" disabled={!canWriteStrategy} checked={state.toggles.autoTrade} onChange={(event) => updateToggle('autoTrade', event.target.checked)} /></label>
-          <label className="switch-row"><span>{copy[locale].labels.allowLive}</span><input type="checkbox" disabled={!canApproveExecution} checked={state.toggles.liveTrade} onChange={(event) => updateToggle('liveTrade', event.target.checked)} /></label>
-          <label className="switch-row"><span>{copy[locale].labels.riskGuard}</span><input type="checkbox" disabled={!canReviewRisk} checked={state.toggles.riskGuard} onChange={(event) => updateToggle('riskGuard', event.target.checked)} /></label>
-          <label className="switch-row"><span>{copy[locale].labels.manualApproval}</span><input type="checkbox" disabled={!canApproveExecution} checked={state.toggles.manualApproval} onChange={(event) => updateToggle('manualApproval', event.target.checked)} /></label>
+          <label className="switch-row"><span>{copy[locale].labels.autoTrade}</span><input title={!canWriteStrategy ? autoTradeDisabledReason : undefined} type="checkbox" disabled={!canWriteStrategy} checked={state.toggles.autoTrade} onChange={(event) => updateToggle('autoTrade', event.target.checked)} /></label>
+          <label className="switch-row"><span>{copy[locale].labels.allowLive}</span><input title={!canApproveExecution ? executionDisabledReason : undefined} type="checkbox" disabled={!canApproveExecution} checked={state.toggles.liveTrade} onChange={(event) => updateToggle('liveTrade', event.target.checked)} /></label>
+          <label className="switch-row"><span>{copy[locale].labels.riskGuard}</span><input title={!canReviewRisk ? riskGuardDisabledReason : undefined} type="checkbox" disabled={!canReviewRisk} checked={state.toggles.riskGuard} onChange={(event) => updateToggle('riskGuard', event.target.checked)} /></label>
+          <label className="switch-row"><span>{copy[locale].labels.manualApproval}</span><input title={!canApproveExecution ? executionDisabledReason : undefined} type="checkbox" disabled={!canApproveExecution} checked={state.toggles.manualApproval} onChange={(event) => updateToggle('manualApproval', event.target.checked)} /></label>
           <div className="status-copy">
             {locale === 'zh'
               ? `autoTrade 需要 strategy:write，riskGuard 需要 risk:review，allowLive / manualApproval 需要 execution:approve。`

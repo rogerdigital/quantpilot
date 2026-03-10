@@ -1251,6 +1251,15 @@ tbody tr:hover {
   background: rgba(255, 107, 124, 0.14);
 }
 
+.inline-action:disabled,
+.settings-button:disabled,
+.settings-inline-button:disabled,
+.settings-chip:disabled,
+.mode-pill:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
 .inline-action-approve {
   border-color: rgba(89, 242, 143, 0.28);
   background: rgba(89, 242, 143, 0.08);
