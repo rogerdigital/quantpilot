@@ -69,7 +69,7 @@ export const MODULE_REGISTRY = [
     id: 'user-account',
     name: 'User Account',
     layer: 'backend',
-    status: 'planned',
+    status: 'prototype',
     responsibility: 'user profile, account state, and broker bindings',
   },
   {

@@ -79,6 +79,30 @@ test('audit and cycle repositories remain available through the injected context
   assert.equal(context.audit.listAuditRecords(5)[0].id, audit.id);
 });
 
+test('user account repository persists profile preferences and broker bindings', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const initial = context.userAccount.getUserAccount();
+  const preferences = context.userAccount.updateUserPreferences({
+    locale: 'en-US',
+    notificationChannels: ['inbox', 'email'],
+  });
+  const binding = context.userAccount.upsertBrokerBinding({
+    id: 'broker-binding-live',
+    provider: 'custom-http',
+    label: 'Live Broker',
+    environment: 'live',
+    accountId: 'live-main',
+    status: 'connected',
+    permissions: ['read', 'trade'],
+    isDefault: true,
+  });
+
+  assert.equal(initial.profile.id, 'operator-demo');
+  assert.equal(preferences.locale, 'en-US');
+  assert.equal(binding.isDefault, true);
+  assert.equal(context.userAccount.listBrokerBindings()[0].id, 'broker-binding-live');
+});
+
 test('workflow repository persists and updates workflow runs through the injected context', () => {
   const context = createControlPlaneContext(createMemoryStore());
   const workflow = context.workflows.appendWorkflowRun({

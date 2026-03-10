@@ -155,6 +155,110 @@ test('GET /api/architecture returns the seven-layer architecture summary', async
   );
 });
 
+test('GET /api/auth/session returns account-backed session data', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/auth/session',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.user.id, 'operator-demo');
+  assert.equal(Array.isArray(response.json.user.permissions), true);
+  assert.equal(typeof response.json.preferences.timezone, 'string');
+});
+
+test('GET /api/user-account/profile returns profile and preferences', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/user-account/profile',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.profile.email, 'operator@quantpilot.local');
+  assert.equal(typeof response.json.preferences.defaultMode, 'string');
+});
+
+test('POST /api/user-account/profile updates persisted profile data', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/user-account/profile',
+    body: {
+      name: 'Operator One',
+      organization: 'QuantPilot Research',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.profile.name, 'Operator One');
+  assert.equal(response.json.profile.organization, 'QuantPilot Research');
+});
+
+test('POST /api/user-account/preferences updates persisted preferences', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/user-account/preferences',
+    body: {
+      locale: 'en-US',
+      notificationChannels: ['inbox', 'email'],
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.preferences.locale, 'en-US');
+  assert.equal(response.json.preferences.notificationChannels.includes('email'), true);
+});
+
+test('account write routes reject requests without account:write permission', async () => {
+  context.userAccount.updateUserProfile({
+    role: 'viewer',
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/user-account/preferences',
+    body: {
+      locale: 'zh-CN',
+    },
+  });
+
+  assert.equal(response.statusCode, 403);
+  assert.equal(response.json.ok, false);
+
+  context.userAccount.updateUserProfile({
+    role: 'admin',
+  });
+});
+
+test('POST /api/user-account/broker-bindings upserts broker bindings', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/user-account/broker-bindings',
+    body: {
+      id: 'binding-live',
+      provider: 'custom-http',
+      label: 'Live Broker',
+      environment: 'live',
+      accountId: 'live-main',
+      status: 'connected',
+      permissions: ['read', 'trade'],
+      isDefault: true,
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.binding.id, 'binding-live');
+
+  const listResponse = await invokeGatewayRoute(handler, {
+    path: '/api/user-account/broker-bindings',
+  });
+  assert.equal(listResponse.statusCode, 200);
+  assert.equal(listResponse.json.ok, true);
+  assert.equal(listResponse.json.bindings.some((item) => item.id === 'binding-live' && item.isDefault), true);
+});
+
 test('POST /api/agent/tools/execute runs an allowlisted read-only tool', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',

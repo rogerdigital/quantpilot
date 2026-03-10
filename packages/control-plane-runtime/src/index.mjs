@@ -229,6 +229,27 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     recordSchedulerTick(options = {}) {
       return context.scheduler.recordSchedulerTick(options);
     },
+    getUserAccount() {
+      return context.userAccount.getUserAccount();
+    },
+    getUserProfile() {
+      return context.userAccount.getUserProfile();
+    },
+    updateUserProfile(patch = {}) {
+      return context.userAccount.updateUserProfile(patch);
+    },
+    getUserPreferences() {
+      return context.userAccount.getUserPreferences();
+    },
+    updateUserPreferences(patch = {}) {
+      return context.userAccount.updateUserPreferences(patch);
+    },
+    listBrokerBindings() {
+      return context.userAccount.listBrokerBindings();
+    },
+    upsertBrokerBinding(payload = {}) {
+      return context.userAccount.upsertBrokerBinding(payload);
+    },
     listWorkflowRuns(limit = 50) {
       return context.workflows.listWorkflowRuns(limit);
     },
@@ -400,3 +421,10 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 }
 
 export const controlPlaneRuntime = createControlPlaneRuntime();
+export const getUserAccount = (...args) => controlPlaneRuntime.getUserAccount(...args);
+export const getUserProfile = (...args) => controlPlaneRuntime.getUserProfile(...args);
+export const updateUserProfile = (...args) => controlPlaneRuntime.updateUserProfile(...args);
+export const getUserPreferences = (...args) => controlPlaneRuntime.getUserPreferences(...args);
+export const updateUserPreferences = (...args) => controlPlaneRuntime.updateUserPreferences(...args);
+export const listBrokerBindings = (...args) => controlPlaneRuntime.listBrokerBindings(...args);
+export const upsertBrokerBinding = (...args) => controlPlaneRuntime.upsertBrokerBinding(...args);

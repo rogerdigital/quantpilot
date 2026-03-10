@@ -6,6 +6,7 @@ import { createNotificationRepository } from './repositories/notification-repo.m
 import { createOperatorActionRepository } from './repositories/operator-action-repo.mjs';
 import { createRiskRepository } from './repositories/risk-repo.mjs';
 import { createSchedulerRepository } from './repositories/scheduler-repo.mjs';
+import { createUserAccountRepository } from './repositories/user-account-repo.mjs';
 import { createWorkflowRepository } from './repositories/workflow-repo.mjs';
 import { controlPlaneStore } from './store.mjs';
 
@@ -20,6 +21,7 @@ export function createControlPlaneContext(store = controlPlaneStore) {
     operatorActions: createOperatorActionRepository(store),
     risk: createRiskRepository(store),
     scheduler: createSchedulerRepository(store),
+    userAccount: createUserAccountRepository(store),
     workflows: createWorkflowRepository(store),
   };
 }

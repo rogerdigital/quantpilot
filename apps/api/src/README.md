@@ -5,7 +5,7 @@
 - `app/`: API 路由装配与请求入口
 - `control-plane/`: 控制面编排与任务工作流实现
 - `domains/`: 领域能力实现，包括 `agent / strategy / backtest / risk / execution`
-- `modules/`: 兼容层与稳定导出入口，避免结构重构时打断现有调用方
+- `modules/`: 兼容层与稳定导出入口，避免目录演进时打断现有调用方
 
 当前目录目标不是把所有代码都永久留在 `modules/`，而是逐步把真实实现迁到 `domains/` 和 `control-plane/`，同时让 `modules/` 退化为薄适配层。
 

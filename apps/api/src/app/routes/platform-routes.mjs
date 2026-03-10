@@ -8,12 +8,21 @@ import { listAgentTools, executeAgentTool } from '../../domains/agent/services/t
 import { getBacktestSummary } from '../../domains/backtest/services/summary-service.mjs';
 import { listBacktestRuns } from '../../domains/backtest/services/runs-service.mjs';
 import { listExecutionPlans } from '../../domains/execution/services/query-service.mjs';
-import { getSession } from '../../modules/auth/service.mjs';
+import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { describeArchitecture, listArchitectureLayers, listModules } from '../../modules/registry.mjs';
+import {
+  getBrokerBindingsSnapshot,
+  getUserAccountSnapshot,
+  getUserProfileSnapshot,
+  patchUserProfile,
+  patchUserPreferences,
+  saveBrokerBinding,
+} from '../../modules/user-account/service.mjs';
 import { listStrategyCatalog } from '../../domains/strategy/services/catalog-service.mjs';
 
 export async function handlePlatformRoutes(context) {
   const { req, reqUrl, res, config, readJsonBody, writeJson } = context;
+  const canWriteAccount = () => hasPermission('account:write');
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/health') {
     writeJson(res, 200, {
@@ -30,6 +39,52 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/auth/session') {
     writeJson(res, 200, getSession());
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/user-account/profile') {
+    writeJson(res, 200, getUserProfileSnapshot());
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/profile') {
+    if (!canWriteAccount()) {
+      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      return true;
+    }
+    const body = await readJsonBody(req);
+    writeJson(res, 200, patchUserProfile(body));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/user-account') {
+    writeJson(res, 200, getUserAccountSnapshot());
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/preferences') {
+    if (!canWriteAccount()) {
+      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      return true;
+    }
+    const body = await readJsonBody(req);
+    writeJson(res, 200, patchUserPreferences(body));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/user-account/broker-bindings') {
+    writeJson(res, 200, getBrokerBindingsSnapshot());
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/broker-bindings') {
+    if (!canWriteAccount()) {
+      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      return true;
+    }
+    const body = await readJsonBody(req);
+    const result = saveBrokerBinding(body);
+    writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
 

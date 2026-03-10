@@ -260,6 +260,63 @@ body::before {
   height: 18px;
 }
 
+.settings-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.settings-field {
+  display: grid;
+  gap: 6px;
+}
+
+.settings-field span {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-field input,
+.settings-field select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(9, 18, 29, 0.92);
+  color: var(--text);
+  padding: 11px 12px;
+  font: inherit;
+}
+
+.settings-field-wide {
+  grid-column: 1 / -1;
+}
+
+.settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.settings-button {
+  border: 1px solid rgba(79, 226, 198, 0.28);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(79, 226, 198, 0.14), rgba(127, 180, 255, 0.16));
+  color: var(--text);
+  padding: 10px 14px;
+  cursor: pointer;
+  font: 700 12px/1 "Space Grotesk", sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-button:hover {
+  border-color: rgba(79, 226, 198, 0.5);
+}
+
 .policy-card {
   display: grid;
   gap: 10px;

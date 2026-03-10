@@ -10,7 +10,7 @@
 - `apps/api/src/domains/`
 - `apps/api/src/control-plane/`
 
-因此，这里的职责重点已经从“承载全部后端实现”转为“维持模块边界稳定、避免重构打断主链路”。
+因此，这里的职责重点已经从“承载全部后端实现”转为“维持模块边界稳定、避免目录演进打断主链路”。
 
 当前模块边界：
 
@@ -27,6 +27,7 @@
 当前已实现的最小接口：
 
 - `auth/service.mjs`: `GET /api/auth/session`
+- `user-account/service.mjs`: `GET /api/user-account`、`GET /api/user-account/profile`、`POST /api/user-account/profile`、`POST /api/user-account/preferences`、`GET /api/user-account/broker-bindings`、`POST /api/user-account/broker-bindings`
 - `audit/service.mjs`: `GET /api/audit/records`、`POST /api/audit/records`
 - `notification/service.mjs`: `GET /api/notification/events`
 - `risk/service.mjs`: `GET /api/risk/events`

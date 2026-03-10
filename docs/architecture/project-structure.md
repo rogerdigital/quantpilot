@@ -1,6 +1,6 @@
 # QuantPilot 目录结构
 
-仓库已经按 `apps / packages / docs` 重构为第一阶段 monorepo 形态，用来承接你定义的七层架构。
+仓库已经形成面向七层架构的 monorepo 目录体系，当前持续处于“研发迭代”阶段，用这套结构承接平台能力落地。
 
 ## 当前目录骨架
 
@@ -100,18 +100,61 @@ quantpilot/
 
 ## 当前差距
 
-- 里程碑 A 的最小闭环已打通：`strategy-execution` workflow 现在会经过 API 入队、worker 执行、JSON store 持久化、risk 审核和 execution plan 落库。
-- 里程碑 B 的最小闭环也已打通：workflow lifecycle 的失败、重试、恢复、取消和 maintenance re-queue 现在都会统一 fanout 到后端 audit 与 notification，并联动 execution plan 状态。
+- 当前交付物仍主要是“平台骨架 + 最小闭环”，还不是成熟的专业交易平台。
+- `strategy-execution` workflow 的最小闭环已打通：现在会经过 API 入队、worker 执行、JSON store 持久化、risk 审核和 execution plan 落库。
+- workflow lifecycle 的失败、重试、恢复、取消和 maintenance re-queue 也已统一 fanout 到后端 audit 与 notification，并联动 execution plan 状态。
 - `apps/web/src/store/trading-system/core/` 已从本地状态机实现收敛为共享 runtime 的前端包装层，但前端状态驱动本身仍属原型形态。
 - `apps/api` 已具备最小控制面接口、`cycle runner` 和 `state runner` 能力，其中 `state runner` 已收敛为对共享 runtime 的服务端编排封装，但整体仍是轻量 Node 网关形态，尚未进入真正的 NestJS 模块实现阶段。
 - `apps/api` 现已补上 `strategy / backtest` 研究接口，`apps/web/src/pages/backtest/BacktestPage.tsx` 已开始消费结构化研究数据，但回测执行仍是静态研究快照而非真实任务运行结果。
 - `apps/worker` 当前已接管 notification outbox 分发、risk scan 处理和 scheduler tick，但尚未真正接管重试补偿和更复杂的定时编排。
 - `packages` 目前已落 `shared-types`、`trading-engine` 与 `control-plane-store`，`data-core / strategy-core / risk-core / execution-core` 仍应随着真实实现逐步抽离。
+- 用户系统、权限模型、账户体系、券商绑定、真实市场数据、订单状态机和 Agent 规划能力仍未真正落地。
 
-## 下一步建议
+## 研发迭代阶段
 
-1. 推进里程碑 C，把 Agent 接入限制在 tool layer 和受控动作请求之内。
-2. 把 `strategy / backtest` 从静态 research snapshot 升级为真实的任务执行与结果持久化模块。
-3. 把 `task-orchestrator` 从当前的文件型控制面升级为真正的任务流和队列执行层。
-4. 把 `core/lifecycle.ts` 里的异步编排继续迁到后端任务层，前端只保留状态消费和交互动作。
-5. 当后端能力稳定后，再把共享规则和核心逻辑逐步抽成更多 `packages/*`。
+### 当前阶段：阶段 1 平台底座产品化
+
+当前仓库当前以平台底座产品化为主：
+
+1. 让 `auth / user-account / scheduler / notification / audit / task-orchestrator` 这些基础模块从骨架走向真实可用服务。
+2. 把文件型控制面和前端示例数据逐步替换为稳定的数据访问契约，为数据库和缓存升级铺路。
+3. 让前端页面完全退回到 API 消费者角色，把研究、风控、执行的编排职责继续迁往后端和 worker。
+
+### 阶段 2 研究与策略闭环
+
+1. 把 `strategy / backtest` 从静态 research snapshot 升级为真实任务执行与结果持久化模块。
+2. 沉淀统一的策略注册、回测运行、绩效评估、参数优化和研究报告模型。
+3. 让策略输出稳定进入风控和执行前的候选决策接口。
+
+### 阶段 3 执行闭环与交易中台
+
+1. 把 `execution` 从计划骨架升级为真实订单状态机、持仓同步和失败补偿体系。
+2. 扩展 broker 适配边界，形成多券商接入和环境切换能力。
+3. 让审计、通知、风险、执行状态在控制面内形成完整闭环。
+
+### 阶段 4 风控与调度中台深化
+
+1. 把风险事件从基础扫描扩展为组合风险、回撤保护、规则引擎和熔断控制。
+2. 把 scheduler 从 tick 记录升级为盘前、盘中、盘后和定时报表的任务中枢。
+3. 强化恢复、取消、重试、审批和人工接管路径。
+
+### 阶段 5 Agent 受控协作
+
+1. 将 Agent 接入限制在 tool layer、分析解释和受控动作请求之内。
+2. 建立意图解析、任务规划、工具路由、结果解释和审批控制链路。
+3. 确保 Agent 永远不绕过风险和执行边界。
+
+### 阶段 6 生产化与专业化
+
+1. 升级数据库、缓存、对象存储、日志监控和部署体系。
+2. 补齐租户、权限、订阅、备份恢复和运维能力。
+3. 以稳定性、可观测性和可运营性为目标推进实盘级平台建设。
+
+## 当前阶段的具体建议
+
+1. 优先补齐 `auth / user-account / broker binding` 的真实服务与数据边界，因为这是平台底座产品化的主要缺口。
+2. 把文件型控制面和页面示例数据逐步收敛为稳定 repository 与 service contract，为数据库和缓存升级铺路。
+3. 把 `strategy / backtest` 从静态 research snapshot 升级为真实的任务执行与结果持久化模块，为阶段 2 做准备。
+4. 把 `task-orchestrator` 从当前的文件型控制面升级为真正的任务流和队列执行层。
+5. 把 `core/lifecycle.ts` 里的异步编排继续迁到后端任务层，前端只保留状态消费和交互动作。
+6. 在平台底座和交易闭环稳定后，再推进 Agent 的 tool layer、分析解释和受控动作请求能力。

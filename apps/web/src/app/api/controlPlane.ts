@@ -1,4 +1,15 @@
-import type { ControlPlaneResolution, CycleRunPayload, StateCycleResult, TradingState } from '@shared-types/trading.ts';
+import type {
+  ControlPlaneResolution,
+  CycleRunPayload,
+  OperatorSession,
+  StateCycleResult,
+  TradingState,
+  UserAccountProfileSnapshot,
+  UserBrokerBindingsSnapshot,
+  UserBrokerBindingSaveSnapshot,
+  UserPreferencesUpdateSnapshot,
+  UserProfileUpdateSnapshot,
+} from '@shared-types/trading.ts';
 
 function jsonHeaders() {
   return {
@@ -7,9 +18,65 @@ function jsonHeaders() {
   };
 }
 
-export async function fetchOperatorSession() {
+export async function fetchOperatorSession(): Promise<OperatorSession> {
   const response = await fetch('/api/auth/session', {
     headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function fetchUserAccountProfile(): Promise<UserAccountProfileSnapshot> {
+  const response = await fetch('/api/user-account/profile', {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function updateUserAccountProfile(payload: Record<string, unknown>): Promise<UserProfileUpdateSnapshot> {
+  const response = await fetch('/api/user-account/profile', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function updateUserAccountPreferences(payload: Record<string, unknown>): Promise<UserPreferencesUpdateSnapshot> {
+  const response = await fetch('/api/user-account/preferences', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function fetchBrokerBindings(): Promise<UserBrokerBindingsSnapshot> {
+  const response = await fetch('/api/user-account/broker-bindings', {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function saveBrokerBinding(payload: Record<string, unknown>): Promise<UserBrokerBindingSaveSnapshot> {
+  const response = await fetch('/api/user-account/broker-bindings', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
   });
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);

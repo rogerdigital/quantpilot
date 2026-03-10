@@ -40,7 +40,7 @@
 - `packages/control-plane-store` 承载最小跨进程控制面存储，当前主要用于 notification outbox、risk scan outbox、通知事件、风险事件、scheduler ticks、audit records、cycle records 和 operator actions 持久化，并已按 `context + repository` 结构拆分内部实现。
 - `packages/trading-engine` 承载市场、策略、风控、执行和控制面状态合并所需的共享 runtime，并已拆分为按职责划分的内部模块。
 - `apps/web/src/store/trading-system/core/` 已完成第二轮切片，当前包含 `config / market / strategy / risk / execution / lifecycle / controlPlane / state / shared`，并主要作为共享 runtime 的前端封装层存在。
-- `apps/web/src/store/trading-system/core.ts` 现在只保留兼容出口，避免页面层直接感知内部重构。
+- `apps/web/src/store/trading-system/core.ts` 现在只保留兼容出口，避免页面层直接感知内部目录演进。
 - `apps/web/src/store/trading-system/TradingSystemProvider.tsx` 当前会把本地状态快照提交到后端 `state run` 接口，并直接消费服务端返回的新周期状态。
 - 远程 broker 的订单提交和状态同步已由后端 `cycle runner` 统一执行，前端不再在周期内直接调用 broker submit/sync。
 - 市场数据拉取也已进入后端 `state runner`，前端不再在主周期里直接调用 market data provider。

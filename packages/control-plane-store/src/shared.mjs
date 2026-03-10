@@ -154,6 +154,50 @@ export function createAgentActionRequestEntry(payload) {
   };
 }
 
+export function createUserAccountProfile(payload = {}) {
+  const timezone = payload.timezone || 'Asia/Shanghai';
+  const locale = payload.locale || 'zh-CN';
+  return {
+    id: payload.id || 'operator-demo',
+    name: payload.name || 'QuantPilot Operator',
+    email: payload.email || 'operator@quantpilot.local',
+    role: payload.role || 'admin',
+    organization: payload.organization || 'QuantPilot Labs',
+    timezone,
+    locale,
+  };
+}
+
+export function createUserPreferences(payload = {}) {
+  return {
+    locale: payload.locale || 'zh-CN',
+    timezone: payload.timezone || 'Asia/Shanghai',
+    theme: payload.theme || 'system',
+    defaultMode: payload.defaultMode || 'hybrid',
+    riskReviewRequired: payload.riskReviewRequired !== false,
+    notificationChannels: Array.isArray(payload.notificationChannels) && payload.notificationChannels.length
+      ? [...new Set(payload.notificationChannels.map((item) => String(item).trim()).filter(Boolean))]
+      : ['inbox'],
+  };
+}
+
+export function createBrokerBindingEntry(payload = {}) {
+  return {
+    id: payload.id || `broker-binding-${randomUUID()}`,
+    provider: payload.provider || 'alpaca',
+    label: payload.label || 'Primary Broker',
+    environment: payload.environment || 'paper',
+    accountId: payload.accountId || '',
+    status: payload.status || 'disconnected',
+    permissions: Array.isArray(payload.permissions) && payload.permissions.length
+      ? [...new Set(payload.permissions.map((item) => String(item).trim()).filter(Boolean))]
+      : ['read'],
+    lastSyncAt: payload.lastSyncAt || '',
+    isDefault: Boolean(payload.isDefault),
+    metadata: payload.metadata || {},
+  };
+}
+
 export function getShanghaiTimeParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('zh-CN', {
     timeZone: 'Asia/Shanghai',

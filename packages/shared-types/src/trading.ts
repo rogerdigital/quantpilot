@@ -179,6 +179,88 @@ export type ControlPlaneNotification = {
   createdAt: string;
 };
 
+export type OperatorSession = {
+  ok: boolean;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    organization: string;
+    permissions: string[];
+  };
+  preferences: {
+    locale: string;
+    timezone: string;
+    theme: string;
+    defaultMode: string;
+    riskReviewRequired: boolean;
+    notificationChannels: string[];
+  };
+  brokerBinding: {
+    id: string;
+    provider: string;
+    label: string;
+    environment: string;
+    status: string;
+  } | null;
+  issuedAt: string;
+};
+
+export type UserBrokerBinding = {
+  id: string;
+  provider: string;
+  label: string;
+  environment: string;
+  accountId: string;
+  status: string;
+  permissions: string[];
+  lastSyncAt: string;
+  isDefault: boolean;
+  metadata: Record<string, unknown>;
+};
+
+export type UserAccountProfileSnapshot = {
+  ok: boolean;
+  profile: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    organization: string;
+    timezone: string;
+    locale: string;
+  };
+  preferences: {
+    locale: string;
+    timezone: string;
+    theme: string;
+    defaultMode: string;
+    riskReviewRequired: boolean;
+    notificationChannels: string[];
+  };
+};
+
+export type UserPreferencesUpdateSnapshot = {
+  ok: boolean;
+  preferences: UserAccountProfileSnapshot['preferences'];
+};
+
+export type UserProfileUpdateSnapshot = {
+  ok: boolean;
+  profile: UserAccountProfileSnapshot['profile'];
+};
+
+export type UserBrokerBindingsSnapshot = {
+  ok: boolean;
+  bindings: UserBrokerBinding[];
+};
+
+export type UserBrokerBindingSaveSnapshot = {
+  ok: boolean;
+  binding: UserBrokerBinding;
+};
+
 export type StrategyCatalogItem = {
   id: string;
   name: string;
