@@ -12,11 +12,13 @@ import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { describeArchitecture, listArchitectureLayers, listModules } from '../../modules/registry.mjs';
 import {
   getBrokerBindingsSnapshot,
+  getBrokerBindingRuntimeSnapshot,
   getUserAccountSnapshot,
   getUserProfileSnapshot,
   patchUserProfile,
   patchUserPreferences,
   saveBrokerBinding,
+  syncBrokerBindingRuntime,
 } from '../../modules/user-account/service.mjs';
 import { listStrategyCatalog } from '../../domains/strategy/services/catalog-service.mjs';
 
@@ -77,6 +79,12 @@ export async function handlePlatformRoutes(context) {
     return true;
   }
 
+  if (req.method === 'GET' && reqUrl.pathname === '/api/user-account/broker-bindings/runtime') {
+    const result = await getBrokerBindingRuntimeSnapshot(context.gatewayDependencies.getBrokerHealth);
+    writeJson(res, result.ok ? 200 : 404, result);
+    return true;
+  }
+
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/broker-bindings') {
     if (!canWriteAccount()) {
       writeJson(res, 403, { ok: false, error: 'forbidden' });
@@ -85,6 +93,16 @@ export async function handlePlatformRoutes(context) {
     const body = await readJsonBody(req);
     const result = saveBrokerBinding(body);
     writeJson(res, result.ok ? 200 : 400, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/broker-bindings/sync') {
+    if (!canWriteAccount()) {
+      writeJson(res, 403, { ok: false, error: 'forbidden' });
+      return true;
+    }
+    const result = await syncBrokerBindingRuntime(context.gatewayDependencies.getBrokerHealth);
+    writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
 

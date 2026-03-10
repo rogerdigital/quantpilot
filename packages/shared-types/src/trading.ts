@@ -261,6 +261,20 @@ export type UserBrokerBindingSaveSnapshot = {
   binding: UserBrokerBinding;
 };
 
+export type UserBrokerBindingRuntimeSnapshot = {
+  ok: boolean;
+  binding: UserBrokerBinding;
+  runtime: {
+    adapter: string;
+    connected: boolean;
+    customBrokerConfigured: boolean;
+    alpacaConfigured: boolean;
+    status: string;
+    lastCheckedAt: string;
+    mismatch: boolean;
+  };
+};
+
 export type StrategyCatalogItem = {
   id: string;
   name: string;

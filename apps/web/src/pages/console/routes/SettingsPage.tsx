@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   fetchBrokerBindings,
+  fetchBrokerBindingRuntime,
   fetchUserAccountProfile,
   saveBrokerBinding,
+  syncBrokerBindingRuntime,
   updateUserAccountPreferences,
   updateUserAccountProfile,
 } from '../../../app/api/controlPlane.ts';
@@ -11,7 +13,7 @@ import { useTradingSystem } from '../../../store/trading-system/TradingSystemPro
 import { SectionHeader } from '../components/ConsoleChrome.tsx';
 import { copy, useLocale } from '../i18n.tsx';
 import { modeTone, translateMode, translateProviderLabel, translateRuntimeText } from '../utils.ts';
-import type { UserAccountProfileSnapshot, UserBrokerBinding } from '@shared-types/trading.ts';
+import type { UserAccountProfileSnapshot, UserBrokerBinding, UserBrokerBindingRuntimeSnapshot } from '@shared-types/trading.ts';
 
 export function SettingsPage() {
   const { locale } = useLocale();
@@ -19,6 +21,7 @@ export function SettingsPage() {
   const location = useLocation();
   const [account, setAccount] = useState<UserAccountProfileSnapshot | null>(null);
   const [bindings, setBindings] = useState<UserBrokerBinding[]>([]);
+  const [bindingRuntime, setBindingRuntime] = useState<UserBrokerBindingRuntimeSnapshot | null>(null);
   const [profileForm, setProfileForm] = useState({
     name: '',
     email: '',
@@ -58,11 +61,12 @@ export function SettingsPage() {
   useEffect(() => {
     let active = true;
 
-    Promise.all([fetchUserAccountProfile(), fetchBrokerBindings()])
-      .then(([profileSnapshot, brokerSnapshot]) => {
+    Promise.all([fetchUserAccountProfile(), fetchBrokerBindings(), fetchBrokerBindingRuntime().catch(() => null)])
+      .then(([profileSnapshot, brokerSnapshot, runtimeSnapshot]) => {
         if (!active) return;
         setAccount(profileSnapshot);
         setBindings(brokerSnapshot.bindings);
+        setBindingRuntime(runtimeSnapshot);
         setProfileForm({
           name: profileSnapshot.profile.name,
           email: profileSnapshot.profile.email,
@@ -129,11 +133,28 @@ export function SettingsPage() {
         permissions: bindingForm.environment === 'live' ? ['read', 'trade'] : ['read'],
         isDefault: true,
       });
-      const brokerSnapshot = await fetchBrokerBindings();
+      const [brokerSnapshot, runtimeSnapshot] = await Promise.all([
+        fetchBrokerBindings(),
+        fetchBrokerBindingRuntime().catch(() => null),
+      ]);
       setBindings(brokerSnapshot.bindings);
+      setBindingRuntime(runtimeSnapshot);
       setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '券商绑定已保存' : 'Broker binding saved' }));
     } catch {
       setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '券商绑定保存失败' : 'Broker binding save failed' }));
+    }
+  }
+
+  async function handleBindingRuntimeSync() {
+    setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '同步中...' : 'Syncing...' }));
+    try {
+      const runtimeSnapshot = await syncBrokerBindingRuntime();
+      const brokerSnapshot = await fetchBrokerBindings();
+      setBindingRuntime(runtimeSnapshot);
+      setBindings(brokerSnapshot.bindings);
+      setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '运行状态已同步' : 'Runtime synced' }));
+    } catch {
+      setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '运行状态同步失败' : 'Runtime sync failed' }));
     }
   }
 
@@ -268,6 +289,16 @@ export function SettingsPage() {
             {!bindings.length ? (
               <div className="status-copy">{locale === 'zh' ? '尚未加载到远程绑定，当前显示默认券商档案。' : 'No remote bindings loaded yet. Showing the default broker record.'}</div>
             ) : null}
+            {bindingRuntime?.ok ? (
+              <>
+                <div className="policy-row"><span>{locale === 'zh' ? '运行时适配器' : 'Runtime Adapter'}</span><strong>{bindingRuntime.runtime.adapter}</strong></div>
+                <div className="policy-row"><span>{locale === 'zh' ? '运行时连接' : 'Runtime Connectivity'}</span><strong>{bindingRuntime.runtime.connected ? 'connected' : 'disconnected'}</strong></div>
+                <div className="policy-row"><span>{locale === 'zh' ? '最近检查' : 'Last Checked'}</span><strong>{bindingRuntime.runtime.lastCheckedAt}</strong></div>
+                {bindingRuntime.runtime.mismatch ? (
+                  <div className="status-copy">{locale === 'zh' ? '默认绑定提供商与当前网关适配器不一致，请校准配置。' : 'The default binding provider does not match the active gateway adapter.'}</div>
+                ) : null}
+              </>
+            ) : null}
           </div>
           <div className="settings-form-grid">
             <label className="settings-field">
@@ -303,6 +334,7 @@ export function SettingsPage() {
           </div>
           <div className="settings-actions">
             <button type="button" className="settings-button" onClick={handleBindingSave}>{locale === 'zh' ? '保存券商绑定' : 'Save Broker Binding'}</button>
+            <button type="button" className="settings-button settings-button-secondary" onClick={handleBindingRuntimeSync}>{locale === 'zh' ? '同步运行状态' : 'Sync Runtime'}</button>
             <div className="status-copy">{saveState.binding}</div>
           </div>
         </article>

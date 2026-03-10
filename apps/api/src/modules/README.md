@@ -27,7 +27,7 @@
 当前已实现的最小接口：
 
 - `auth/service.mjs`: `GET /api/auth/session`
-- `user-account/service.mjs`: `GET /api/user-account`、`GET /api/user-account/profile`、`POST /api/user-account/profile`、`POST /api/user-account/preferences`、`GET /api/user-account/broker-bindings`、`POST /api/user-account/broker-bindings`
+- `user-account/service.mjs`: `GET /api/user-account`、`GET /api/user-account/profile`、`POST /api/user-account/profile`、`POST /api/user-account/preferences`、`GET /api/user-account/broker-bindings`、`GET /api/user-account/broker-bindings/runtime`、`POST /api/user-account/broker-bindings`、`POST /api/user-account/broker-bindings/sync`
 - `audit/service.mjs`: `GET /api/audit/records`、`POST /api/audit/records`
 - `notification/service.mjs`: `GET /api/notification/events`
 - `risk/service.mjs`: `GET /api/risk/events`

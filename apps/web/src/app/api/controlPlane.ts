@@ -7,6 +7,7 @@ import type {
   UserAccountProfileSnapshot,
   UserBrokerBindingsSnapshot,
   UserBrokerBindingSaveSnapshot,
+  UserBrokerBindingRuntimeSnapshot,
   UserPreferencesUpdateSnapshot,
   UserProfileUpdateSnapshot,
 } from '@shared-types/trading.ts';
@@ -77,6 +78,28 @@ export async function saveBrokerBinding(payload: Record<string, unknown>): Promi
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function fetchBrokerBindingRuntime(): Promise<UserBrokerBindingRuntimeSnapshot> {
+  const response = await fetch('/api/user-account/broker-bindings/runtime', {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function syncBrokerBindingRuntime(): Promise<UserBrokerBindingRuntimeSnapshot> {
+  const response = await fetch('/api/user-account/broker-bindings/sync', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify({}),
   });
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);

@@ -259,6 +259,30 @@ test('POST /api/user-account/broker-bindings upserts broker bindings', async () 
   assert.equal(listResponse.json.bindings.some((item) => item.id === 'binding-live' && item.isDefault), true);
 });
 
+test('GET /api/user-account/broker-bindings/runtime returns default binding runtime health', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/user-account/broker-bindings/runtime',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.runtime.adapter, 'simulated');
+  assert.equal(typeof response.json.runtime.lastCheckedAt, 'string');
+});
+
+test('POST /api/user-account/broker-bindings/sync updates default binding runtime status', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/user-account/broker-bindings/sync',
+    body: {},
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.binding.status, 'connected');
+  assert.equal(typeof response.json.binding.lastSyncAt, 'string');
+});
+
 test('POST /api/agent/tools/execute runs an allowlisted read-only tool', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',

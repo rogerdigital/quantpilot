@@ -317,6 +317,11 @@ body::before {
   border-color: rgba(79, 226, 198, 0.5);
 }
 
+.settings-button-secondary {
+  border-color: rgba(127, 180, 255, 0.24);
+  background: rgba(127, 180, 255, 0.08);
+}
+
 .policy-card {
   display: grid;
   gap: 10px;
