@@ -20,6 +20,10 @@ export function listBrokerAccountSnapshots(limit = 50) {
   return controlPlaneRuntime.listBrokerAccountSnapshots(limit);
 }
 
+export function getLatestBrokerAccountSnapshot() {
+  return controlPlaneRuntime.listBrokerAccountSnapshots(1)[0] || null;
+}
+
 export function listExecutionLedger(limit = 20) {
   const plans = controlPlaneRuntime.listExecutionPlans(limit);
   const runtimeEvents = controlPlaneRuntime.listExecutionRuntimeEvents(60);

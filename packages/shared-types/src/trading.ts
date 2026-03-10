@@ -321,6 +321,11 @@ export type ExecutionLedgerEntry = {
   latestRuntime: ExecutionRuntimeEvent | null;
 };
 
+export type LatestBrokerAccountSnapshotResponse = {
+  ok: boolean;
+  snapshot: BrokerAccountSnapshotRecord | null;
+};
+
 export type StrategyCatalogItem = {
   id: string;
   name: string;

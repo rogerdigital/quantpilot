@@ -1,4 +1,5 @@
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
+import { useLatestBrokerSnapshot } from '../../../hooks/useLatestBrokerSnapshot.ts';
 import { useSettingsNavigation, useSummary } from '../hooks.ts';
 import { copy, useLocale } from '../i18n.tsx';
 import { ChartCanvas, TopMeta } from '../components/ConsoleChrome.tsx';
@@ -25,6 +26,7 @@ export function OverviewPage() {
   const { locale } = useLocale();
   const goToSettings = useSettingsNavigation();
   const { paper, live, totalNav, totalPnlPct, positionCount } = useSummary();
+  const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
   const pendingApprovals = state.approvalQueue.length;
@@ -46,6 +48,8 @@ export function OverviewPage() {
       return bTime - aTime;
     })
     .slice(0, 6);
+  const liveMirrorNav = Number(snapshot?.account?.equity || live.nav);
+  const brokerConnected = Boolean(snapshot?.connected ?? state.integrationStatus.broker.connected);
 
   return (
     <>
@@ -83,7 +87,7 @@ export function OverviewPage() {
             </div>
             <div className="overview-stat">
               <span>{copy[locale].terms.liveMirror}</span>
-              <strong>{fmtCurrency(live.nav)}</strong>
+              <strong>{fmtCurrency(liveMirrorNav)}</strong>
             </div>
             <div className="overview-stat">
               <span>{copy[locale].terms.signalSummary}</span>
@@ -123,7 +127,7 @@ export function OverviewPage() {
           <ChartCanvas kind="equity" />
           <div className="overview-inline-metrics">
             <div className="overview-inline-metric"><span>{copy[locale].labels.marketState}</span><strong>{connectionLabel(locale, state.integrationStatus.marketData.connected, true)}</strong></div>
-            <div className="overview-inline-metric"><span>{copy[locale].labels.brokerState}</span><strong>{connectionLabel(locale, state.integrationStatus.broker.connected, false, true)}</strong></div>
+            <div className="overview-inline-metric"><span>{copy[locale].labels.brokerState}</span><strong>{connectionLabel(locale, brokerConnected, false, true)}</strong></div>
             <div className="overview-inline-metric"><span>{copy[locale].terms.tradeDecision}</span><strong>{translateRuntimeText(locale, state.decisionSummary)}</strong></div>
           </div>
         </article>
@@ -136,7 +140,7 @@ export function OverviewPage() {
             <div className="status-row"><span>{copy[locale].labels.positions}</span><strong>{positionCount}</strong></div>
             <div className="status-row"><span>{copy[locale].terms.activityToday}</span><strong>{state.activityLog.length}</strong></div>
             <button type="button" className="status-row status-row-button" onClick={() => goToSettings('integrations')}><span>{copy[locale].labels.marketState}</span><strong className={`status-chip tone-${integrationTone(state.integrationStatus.marketData.connected, true)}`}>{connectionLabel(locale, state.integrationStatus.marketData.connected, true)}</strong></button>
-            <button type="button" className="status-row status-row-button" onClick={() => goToSettings('integrations')}><span>{copy[locale].labels.brokerState}</span><strong className={`status-chip tone-${integrationTone(state.integrationStatus.broker.connected, false, true)}`}>{connectionLabel(locale, state.integrationStatus.broker.connected, false, true)}</strong></button>
+            <button type="button" className="status-row status-row-button" onClick={() => goToSettings('integrations')}><span>{copy[locale].labels.brokerState}</span><strong className={`status-chip tone-${integrationTone(brokerConnected, false, true)}`}>{connectionLabel(locale, brokerConnected, false, true)}</strong></button>
             <div className="status-copy">{translateRuntimeText(locale, state.decisionCopy)}</div>
             <div className="status-copy">{state.activityLog[0] ? `${locale === 'zh' ? '最新动作' : 'Latest action'}: ${translateRuntimeText(locale, state.activityLog[0].title)}` : translateRuntimeText(locale, '当前没有新的执行记录。')}</div>
           </div>

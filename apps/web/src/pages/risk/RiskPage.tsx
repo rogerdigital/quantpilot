@@ -1,4 +1,5 @@
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
+import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useRiskEventsFeed } from '../../modules/risk/useRiskEventsFeed.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { ApprovalQueueTable, PositionsTable } from '../console/components/ConsoleTables.tsx';
@@ -11,6 +12,12 @@ function RiskPage() {
   const { locale } = useLocale();
   const { paper, live } = useSummary();
   const { items, loading } = useRiskEventsFeed();
+  const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
+  const liveEquity = Number(snapshot?.account?.equity || live.nav);
+  const liveMarketValue = Array.isArray(snapshot?.positions)
+    ? snapshot.positions.reduce((sum, position) => sum + Number(position.marketValue || 0), 0)
+    : 0;
+  const liveExposure = liveEquity ? (liveMarketValue / liveEquity) * 100 : live.exposure;
 
   return (
     <>
@@ -24,8 +31,8 @@ function RiskPage() {
       <section className="metrics-grid">
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '组合风险' : 'Portfolio Risk'}</div><div className={`tile-value tone-${riskTone(state.riskLevel)}`}>{translateRiskLevel(locale, state.riskLevel)}</div><div className="tile-sub">{locale === 'zh' ? '当前系统风控结论' : 'Current system risk posture'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '模拟盘暴露' : 'Paper Exposure'}</div><div className="tile-value">{paper.exposure.toFixed(1)}%</div><div className="tile-sub">{fmtCurrency(paper.nav)}</div></article>
-        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '实盘暴露' : 'Live Exposure'}</div><div className="tile-value">{live.exposure.toFixed(1)}%</div><div className="tile-sub">{fmtCurrency(live.nav)}</div></article>
-        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '接入健康' : 'Connectivity'}</div><div className={`tile-value tone-${integrationTone(state.integrationStatus.broker.connected, false, true)}`}>{state.integrationStatus.broker.connected ? copy[locale].labels.connected : copy[locale].labels.localMirror}</div><div className="tile-sub">{locale === 'zh' ? '影响风控审批与执行闭环' : 'Affects approvals and execution closure'}</div></article>
+        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '实盘暴露' : 'Live Exposure'}</div><div className="tile-value">{liveExposure.toFixed(1)}%</div><div className="tile-sub">{fmtCurrency(liveEquity)}</div></article>
+        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '接入健康' : 'Connectivity'}</div><div className={`tile-value tone-${integrationTone(Boolean(snapshot?.connected ?? state.integrationStatus.broker.connected), false, true)}`}>{snapshot?.connected ? copy[locale].labels.connected : copy[locale].labels.localMirror}</div><div className="tile-sub">{locale === 'zh' ? '优先显示后端快照中的 broker 状态' : 'Broker status is taken from the backend snapshot when available'}</div></article>
       </section>
 
       <section className="panel-grid">

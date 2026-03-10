@@ -519,6 +519,37 @@ test('GET /api/execution/account-snapshots returns broker account snapshots', as
   assert.equal(response.json.snapshots[0].provider, 'simulated');
 });
 
+test('GET /api/execution/account-snapshots/latest returns the latest broker snapshot', async () => {
+  context.executionRuntime.appendBrokerAccountSnapshot({
+    id: 'snapshot-old',
+    cycle: 20,
+    provider: 'simulated',
+    connected: false,
+    account: { cash: 10000, buyingPower: 10000, equity: 10000 },
+    positions: [],
+    orders: [],
+    createdAt: '2026-03-11T09:00:00.000Z',
+  });
+  context.executionRuntime.appendBrokerAccountSnapshot({
+    id: 'snapshot-new',
+    cycle: 21,
+    provider: 'simulated',
+    connected: true,
+    account: { cash: 50000, buyingPower: 80000, equity: 101200 },
+    positions: [],
+    orders: [],
+    createdAt: '2026-03-11T09:10:00.000Z',
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/execution/account-snapshots/latest',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.snapshot.id, 'snapshot-new');
+});
+
 test('GET /api/execution/ledger returns plans joined with workflow and runtime state', async () => {
   const workflow = context.workflows.appendWorkflowRun({
     id: 'workflow-ledger-1',

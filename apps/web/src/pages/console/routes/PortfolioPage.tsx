@@ -1,4 +1,5 @@
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
+import { useLatestBrokerSnapshot } from '../../../hooks/useLatestBrokerSnapshot.ts';
 import { ChartCanvas, TopMeta } from '../components/ConsoleChrome.tsx';
 import { PositionsTable } from '../components/ConsoleTables.tsx';
 import { onShortcutKeyDown, useSettingsNavigation, useSummary } from '../hooks.ts';
@@ -10,6 +11,11 @@ export function PortfolioPage() {
   const { locale } = useLocale();
   const goToSettings = useSettingsNavigation();
   const { paper, live, totalNav } = useSummary();
+  const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
+  const liveCash = Number(snapshot?.account?.cash || live.cash);
+  const liveBuyingPower = Number(snapshot?.account?.buyingPower || live.buyingPower || live.cash);
+  const liveEquity = Number(snapshot?.account?.equity || live.nav);
+  const livePositionCount = Array.isArray(snapshot?.positions) ? snapshot.positions.length : 0;
 
   return (
     <>
@@ -29,8 +35,8 @@ export function PortfolioPage() {
       <section className="metrics-grid">
         <article className="metric-tile"><div className="tile-label">{copy[locale].terms.paperNav}</div><div className="tile-value">{fmtCurrency(paper.nav)}</div><div className="tile-sub">{copy[locale].labels.exposure} {paper.exposure.toFixed(1)}%</div></article>
         <article className="metric-tile"><div className="tile-label">{copy[locale].terms.paperCash}</div><div className="tile-value">{fmtCurrency(paper.cash)}</div><div className="tile-sub">{copy[locale].terms.availableForEntries}</div></article>
-        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '实盘账户净值' : 'Live NAV'}</div><div className="tile-value">{fmtCurrency(live.nav)}</div><div className="tile-sub">{copy[locale].labels.exposure} {live.exposure.toFixed(1)}%</div></article>
-        <article className="metric-tile"><div className="tile-label">{copy[locale].terms.liveBuyingPower}</div><div className="tile-value">{fmtCurrency(live.buyingPower || live.cash)}</div><div className="tile-sub">{copy[locale].terms.remoteBuyingPower}</div></article>
+        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '实盘账户净值' : 'Live NAV'}</div><div className="tile-value">{fmtCurrency(liveEquity)}</div><div className="tile-sub">{locale === 'zh' ? `服务端持仓 ${livePositionCount}` : `${livePositionCount} backend positions`}</div></article>
+        <article className="metric-tile"><div className="tile-label">{copy[locale].terms.liveBuyingPower}</div><div className="tile-value">{fmtCurrency(liveBuyingPower)}</div><div className="tile-sub">{fmtCurrency(liveCash)}</div></article>
       </section>
 
       <section className="panel-grid panel-grid-wide">
