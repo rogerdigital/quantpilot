@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { useSettingsNavigation } from '../../modules/console/console.hooks.ts';
 import { copy, type ConsolePageKey, useLocale } from '../../modules/console/console.i18n.tsx';
+import { getConsoleDocumentTitle, listSidebarRoutes } from '../../modules/console/console.routes.tsx';
 import { connectionLabel, integrationTone, translateEngineStatus, translateMode, translateSignal } from '../../modules/console/console.utils.ts';
 
 export type TopMetaItem = {
@@ -131,6 +132,8 @@ export function TopMeta({ items }: { items: TopMetaItem[] }) {
 
 function Sidebar() {
   const { locale } = useLocale();
+  const routes = listSidebarRoutes();
+
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -142,15 +145,11 @@ function Sidebar() {
       </div>
 
       <nav className="nav-stack">
-        <NavLink to="/dashboard" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>{copy[locale].nav.dashboard}</NavLink>
-        <NavLink to="/market" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>{copy[locale].nav.market}</NavLink>
-        <NavLink to="/strategies" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>{copy[locale].nav.strategies}</NavLink>
-        <NavLink to="/backtest" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>{copy[locale].nav.backtest}</NavLink>
-        <NavLink to="/risk" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>{copy[locale].nav.risk}</NavLink>
-        <NavLink to="/execution" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>{copy[locale].nav.execution}</NavLink>
-        <NavLink to="/agent" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>{copy[locale].nav.agent}</NavLink>
-        <NavLink to="/notifications" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>{copy[locale].nav.notifications}</NavLink>
-        <NavLink to="/settings" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>{copy[locale].nav.settings}</NavLink>
+        {routes.map((route) => (
+          <NavLink key={route.path} to={route.path} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+            {copy[locale].nav[route.id]}
+          </NavLink>
+        ))}
       </nav>
     </aside>
   );
@@ -250,18 +249,7 @@ export function Layout() {
   const { locale } = useLocale();
 
   useEffect(() => {
-    const titleMap = {
-      '/dashboard': `${copy[locale].nav.dashboard} | quantpilot`,
-      '/market': `${copy[locale].nav.market} | quantpilot`,
-      '/strategies': `${copy[locale].nav.strategies} | quantpilot`,
-      '/backtest': `${copy[locale].nav.backtest} | quantpilot`,
-      '/risk': `${copy[locale].nav.risk} | quantpilot`,
-      '/execution': `${copy[locale].nav.execution} | quantpilot`,
-      '/agent': `${copy[locale].nav.agent} | quantpilot`,
-      '/notifications': `${copy[locale].nav.notifications} | quantpilot`,
-      '/settings': `${copy[locale].nav.settings} | quantpilot`,
-    };
-    document.title = titleMap[location.pathname as keyof typeof titleMap] || 'quantpilot';
+    document.title = getConsoleDocumentTitle(locale, location.pathname);
   }, [locale, location.pathname]);
 
   return (
