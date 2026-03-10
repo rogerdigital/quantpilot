@@ -1,3 +1,4 @@
+import { fetchJson } from '../api/http.ts';
 import type { MarketDataProvider, MarketDataSnapshot, Quote, RuntimeConfig, StockState } from '@shared-types/trading.ts';
 
 function normalizeQuote(rawQuote: Partial<Quote> & { symbol?: string } | null | undefined): Quote | null {
@@ -47,13 +48,11 @@ function customHttpProvider(config: RuntimeConfig): MarketDataProvider {
       try {
         const query = new URL(config.marketDataHttpUrl);
         query.searchParams.set('symbols', stockStates.map((stock) => stock.symbol).join(','));
-        const response = await fetch(query.toString(), {
+        const payload = await fetchJson<{ data?: Array<Partial<Quote> & { symbol?: string }> }>(query.toString(), {
           headers: {
             Accept: 'application/json',
           },
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const payload = await response.json();
         const rawQuotes = Array.isArray(payload?.data) ? payload.data : [];
         const quotes = rawQuotes.map(normalizeQuote).filter(Boolean);
         return {
@@ -82,13 +81,11 @@ function alpacaProvider(config: RuntimeConfig): MarketDataProvider {
       try {
         const query = new URL(`${config.alpacaProxyBase}/market/snapshots`, window.location.origin);
         query.searchParams.set('symbols', stockStates.map((stock) => stock.symbol).join(','));
-        const response = await fetch(query.toString(), {
+        const payload = await fetchJson<{ quotes?: Array<Partial<Quote> & { symbol?: string }> }>(query.toString(), {
           headers: {
             Accept: 'application/json',
           },
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const payload = await response.json();
         const quotes = Array.isArray(payload?.quotes) ? payload.quotes.map(normalizeQuote).filter(Boolean) : [];
         return {
           connected: true,

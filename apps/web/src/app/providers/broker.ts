@@ -1,3 +1,4 @@
+import { fetchJson, jsonHeaders } from '../api/http.ts';
 import type { BrokerOrder, BrokerProvider, BrokerSnapshot, RuntimeConfig } from '@shared-types/trading.ts';
 
 function resolveBrowserBrokerBase(config: RuntimeConfig): string {
@@ -41,19 +42,14 @@ function customHttpBroker(config: RuntimeConfig): BrokerProvider {
     supportsRemoteExecution: true,
     async submitOrders({ orders }: { orders: BrokerOrder[] }): Promise<{ connected: boolean; message: string; orders: BrokerOrder[]; rejectedOrders?: BrokerOrder[] }> {
       try {
-        const response = await fetch(`${baseUrl}/orders`, {
+        const payload = await fetchJson<{ message?: string; orders?: BrokerOrder[]; rejectedOrders?: BrokerOrder[] }>(`${baseUrl}/orders`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
+          headers: jsonHeaders(),
           body: JSON.stringify({
             timestamp: new Date().toISOString(),
             orders,
           }),
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const payload = await response.json();
         return {
           connected: true,
           message: payload?.message || `Broker gateway synced ${orders.length} orders.`,
@@ -71,13 +67,11 @@ function customHttpBroker(config: RuntimeConfig): BrokerProvider {
     },
     async syncState(): Promise<BrokerSnapshot> {
       try {
-        const response = await fetch(`${baseUrl}/state`, {
+        const payload = await fetchJson<{ message?: string; account?: BrokerSnapshot['account']; positions?: BrokerSnapshot['positions']; orders?: BrokerSnapshot['orders'] }>(`${baseUrl}/state`, {
           headers: {
             Accept: 'application/json',
           },
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const payload = await response.json();
         return {
           connected: true,
           message: payload?.message || 'Broker gateway state sync succeeded.',
@@ -94,16 +88,15 @@ function customHttpBroker(config: RuntimeConfig): BrokerProvider {
     },
     async cancelOrder(orderId: string): Promise<{ connected: boolean; message: string }> {
       try {
-        const response = await fetch(`${baseUrl}/orders/${orderId}`, {
+        const payload = await fetchJson<{ message?: string }>(`${baseUrl}/orders/${orderId}`, {
           method: 'DELETE',
           headers: {
             Accept: 'application/json',
           },
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return {
           connected: true,
-          message: `Broker gateway submitted a cancel request for ${orderId}.`,
+          message: payload?.message || `Broker gateway submitted a cancel request for ${orderId}.`,
         };
       } catch (error) {
         return {
@@ -157,16 +150,11 @@ function alpacaBroker(config: RuntimeConfig): BrokerProvider {
         };
       }
       try {
-        const response = await fetch(`${baseUrl}/orders`, {
+        const payload = await fetchJson<{ message?: string; orders?: unknown[]; rejectedOrders?: BrokerOrder[] }>(`${baseUrl}/orders`, {
           method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
+          headers: jsonHeaders(),
           body: JSON.stringify({ orders }),
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const payload = await response.json();
         const results = Array.isArray(payload?.orders) ? payload.orders.map(normalizeAlpacaOrder) : [];
         return {
           connected: true,
@@ -185,13 +173,16 @@ function alpacaBroker(config: RuntimeConfig): BrokerProvider {
     },
     async syncState(): Promise<BrokerSnapshot> {
       try {
-        const response = await fetch(`${baseUrl}/state`, {
+        const payload = await fetchJson<{
+          message?: string;
+          account?: { cash?: number | string; buyingPower?: number | string; equity?: number | string };
+          positions?: unknown[];
+          orders?: unknown[];
+        }>(`${baseUrl}/state`, {
           headers: {
             Accept: 'application/json',
           },
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const payload = await response.json();
         return {
           connected: true,
           message: payload?.message || 'Alpaca account, positions, and order state sync succeeded.',
@@ -212,14 +203,12 @@ function alpacaBroker(config: RuntimeConfig): BrokerProvider {
     },
     async cancelOrder(orderId: string): Promise<{ connected: boolean; message: string }> {
       try {
-        const response = await fetch(`${baseUrl}/orders/${orderId}`, {
+        const payload = await fetchJson<{ message?: string }>(`${baseUrl}/orders/${orderId}`, {
           method: 'DELETE',
           headers: {
             Accept: 'application/json',
           },
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const payload = await response.json();
         return {
           connected: true,
           message: payload?.message || `Alpaca submitted a cancel request for ${orderId}.`,
