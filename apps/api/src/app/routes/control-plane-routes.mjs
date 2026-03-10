@@ -2,8 +2,8 @@ import { appendAuditRecord, listAuditRecords } from '../../modules/audit/service
 import { listNotifications } from '../../modules/notification/service.mjs';
 import { listRiskEvents } from '../../domains/risk/services/feed-service.mjs';
 import { listSchedulerTicks } from '../../modules/scheduler/service.mjs';
-import { runCycle } from '../../modules/task-orchestrator/cycle-runner.mjs';
-import { runStateCycle } from '../../modules/task-orchestrator/state-runner.mjs';
+import { runCycle } from '../../control-plane/task-orchestrator/cycle-runner.mjs';
+import { runStateCycle } from '../../control-plane/task-orchestrator/state-runner.mjs';
 import {
   cancelWorkflow,
   getWorkflow,
