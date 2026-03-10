@@ -25,7 +25,7 @@ export const ARCHITECTURE_LAYERS = [
     name: 'Strategy Layer',
     status: 'prototype',
     responsibility: 'strategy catalog, signal generation, backtest entry, and research promotion flow',
-    codeLocations: ['packages/trading-engine', 'apps/api/src/modules/strategy', 'apps/api/src/modules/backtest'],
+    codeLocations: ['packages/trading-engine/src/strategy', 'apps/api/src/modules/strategy', 'apps/api/src/modules/backtest'],
   },
   {
     id: 'agent',
@@ -39,14 +39,14 @@ export const ARCHITECTURE_LAYERS = [
     name: 'Risk Layer',
     status: 'prototype',
     responsibility: 'risk scan jobs, risk events, approvals, and final execution gates',
-    codeLocations: ['packages/trading-engine/src/risk.mjs', 'apps/api/src/modules/risk', 'apps/worker/src/tasks/risk-scan-task.mjs'],
+    codeLocations: ['packages/trading-engine/src/risk', 'apps/api/src/modules/risk', 'apps/worker/src/tasks/risk-scan-task.mjs'],
   },
   {
     id: 'execution',
     name: 'Execution Layer',
     status: 'prototype',
     responsibility: 'execution plans, broker handoff, order intent routing, and execution-facing workflows',
-    codeLocations: ['packages/trading-engine/src/execution.mjs', 'apps/api/src/modules/execution', 'apps/api/src/gateways/alpaca.mjs'],
+    codeLocations: ['packages/trading-engine/src/execution', 'apps/api/src/modules/execution', 'apps/api/src/gateways/alpaca.mjs'],
   },
 ];
 
