@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchRiskEvents } from '../../services/controlPlane.ts';
+import { fetchRiskEvents } from '../../app/api/controlPlane.ts';
 
 export type RiskEventFeedItem = {
   id: string;

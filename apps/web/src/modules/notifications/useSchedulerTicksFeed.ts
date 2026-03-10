@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchSchedulerTicks } from '../../services/controlPlane.ts';
+import { fetchSchedulerTicks } from '../../app/api/controlPlane.ts';
 
 export type SchedulerTickFeedItem = {
   id: string;

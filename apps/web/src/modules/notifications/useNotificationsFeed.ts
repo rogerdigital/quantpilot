@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchNotifications } from '../../services/controlPlane.ts';
+import { fetchNotifications } from '../../app/api/controlPlane.ts';
 
 export type NotificationFeedItem = {
   id: string;

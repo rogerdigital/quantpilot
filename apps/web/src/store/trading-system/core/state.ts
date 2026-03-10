@@ -1,4 +1,4 @@
-import { runtimeConfig } from '../../../services/config/runtime.ts';
+import { runtimeConfig } from '../../../app/config/runtime.ts';
 import type { BrokerProvider, MarketDataProvider, TradingState } from '@shared-types/trading.ts';
 import { APP_CONFIG } from './config.ts';
 import { createInitialStockStates } from '../../../../../../packages/trading-engine/src/runtime.mjs';

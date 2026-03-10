@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchOperatorActions } from '../../services/controlPlane.ts';
+import { fetchOperatorActions } from '../../app/api/controlPlane.ts';
 
 export type OperatorActionFeedItem = {
   id: string;

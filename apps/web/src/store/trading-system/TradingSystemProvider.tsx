@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { runtimeConfig } from '../../services/config/runtime.ts';
-import { fetchOperatorSession, reportOperatorAction, runStateCycle } from '../../services/controlPlane.ts';
-import { createBrokerProvider } from '../../services/providers/broker.ts';
-import { createMarketDataProvider } from '../../services/providers/marketData.ts';
+import { runtimeConfig } from '../../app/config/runtime.ts';
+import { fetchOperatorSession, reportOperatorAction, runStateCycle } from '../../app/api/controlPlane.ts';
+import { createBrokerProvider } from '../../app/providers/broker.ts';
+import { createMarketDataProvider } from '../../app/providers/marketData.ts';
 import type { TradingState, TradingSystemContextValue } from '@shared-types/trading.ts';
 import { APP_CONFIG, applyBrokerSnapshot, cloneState, computeAccount, createInitialState, logEvent } from './core.ts';
 
