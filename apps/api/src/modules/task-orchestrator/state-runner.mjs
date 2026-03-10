@@ -1,8 +1,8 @@
 import { executeStateWorkflow } from '../../../../../packages/task-workflow-engine/src/index.mjs';
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
-import { queueRiskScan } from '../risk/service.mjs';
+import { queueRiskScan } from '../../domains/risk/services/scan-service.mjs';
 import { getSession } from '../auth/service.mjs';
-import { recordCycleRun } from './service.mjs';
+import { recordCycleRun } from '../../control-plane/task-orchestrator/services/cycle-service.mjs';
 
 export async function runStateCycle(previousState, context) {
   return executeStateWorkflow(previousState, {

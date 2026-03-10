@@ -1,7 +1,8 @@
-import { getBacktestSummary, listBacktestRuns } from '../../../modules/backtest/service.mjs';
-import { listExecutionPlans } from '../../../modules/execution/service.mjs';
-import { listRiskEvents } from '../../../modules/risk/service.mjs';
-import { listStrategyCatalog } from '../../../modules/strategy/service.mjs';
+import { getBacktestSummary } from '../../backtest/services/summary-service.mjs';
+import { listBacktestRuns } from '../../backtest/services/runs-service.mjs';
+import { listExecutionPlans } from '../../execution/services/query-service.mjs';
+import { listRiskEvents } from '../../risk/services/feed-service.mjs';
+import { listStrategyCatalog } from '../../strategy/services/catalog-service.mjs';
 
 const AGENT_TOOLS = [
   {

@@ -1,16 +1,16 @@
 import {
   approveAgentActionRequest,
-  executeAgentTool,
   listAgentActionRequests,
-  listAgentTools,
   queueAgentActionRequest,
   rejectAgentActionRequest,
-} from '../../modules/agent/service.mjs';
-import { getBacktestSummary, listBacktestRuns } from '../../modules/backtest/service.mjs';
-import { listExecutionPlans } from '../../modules/execution/service.mjs';
+} from '../../domains/agent/services/action-request-service.mjs';
+import { listAgentTools, executeAgentTool } from '../../domains/agent/services/tools-service.mjs';
+import { getBacktestSummary } from '../../domains/backtest/services/summary-service.mjs';
+import { listBacktestRuns } from '../../domains/backtest/services/runs-service.mjs';
+import { listExecutionPlans } from '../../domains/execution/services/query-service.mjs';
 import { getSession } from '../../modules/auth/service.mjs';
 import { describeArchitecture, listArchitectureLayers, listModules } from '../../modules/registry.mjs';
-import { listStrategyCatalog } from '../../modules/strategy/service.mjs';
+import { listStrategyCatalog } from '../../domains/strategy/services/catalog-service.mjs';
 
 export async function handlePlatformRoutes(context) {
   const { req, reqUrl, res, config, readJsonBody, writeJson } = context;

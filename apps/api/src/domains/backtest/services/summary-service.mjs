@@ -1,4 +1,4 @@
-import { listStrategyCatalog } from '../../../modules/strategy/service.mjs';
+import { listStrategyCatalog } from '../../strategy/services/catalog-service.mjs';
 import { listBacktestRuns } from './runs-service.mjs';
 
 export function getBacktestSummary() {

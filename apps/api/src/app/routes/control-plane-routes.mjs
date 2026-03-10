@@ -1,20 +1,18 @@
 import { appendAuditRecord, listAuditRecords } from '../../modules/audit/service.mjs';
 import { listNotifications } from '../../modules/notification/service.mjs';
-import { listRiskEvents } from '../../modules/risk/service.mjs';
+import { listRiskEvents } from '../../domains/risk/services/feed-service.mjs';
 import { listSchedulerTicks } from '../../modules/scheduler/service.mjs';
 import { runCycle } from '../../modules/task-orchestrator/cycle-runner.mjs';
 import { runStateCycle } from '../../modules/task-orchestrator/state-runner.mjs';
 import {
   cancelWorkflow,
   getWorkflow,
-  listActions,
-  listCycles,
   listWorkflows,
   queueWorkflow,
-  recordAction,
-  recordCycleRun,
   resumeWorkflow,
-} from '../../modules/task-orchestrator/service.mjs';
+} from '../../control-plane/task-orchestrator/services/workflow-service.mjs';
+import { listActions, recordAction } from '../../control-plane/task-orchestrator/services/action-service.mjs';
+import { listCycles, recordCycleRun } from '../../control-plane/task-orchestrator/services/cycle-service.mjs';
 
 export async function handleControlPlaneRoutes(context) {
   const { req, reqUrl, res, readJsonBody, writeJson, gatewayDependencies } = context;

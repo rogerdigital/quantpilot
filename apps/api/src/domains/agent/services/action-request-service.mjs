@@ -1,4 +1,4 @@
-import { queueWorkflow } from '../../../modules/task-orchestrator/service.mjs';
+import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.mjs';
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
 
 const ALLOWED_AGENT_REQUEST_TYPES = new Set([

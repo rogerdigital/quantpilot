@@ -1,6 +1,6 @@
-import { listBacktestRuns } from '../../../modules/backtest/service.mjs';
-import { listExecutionPlans } from '../../../modules/execution/service.mjs';
-import { getStrategyCatalogItem } from '../../../modules/strategy/service.mjs';
+import { listBacktestRuns } from '../../backtest/services/runs-service.mjs';
+import { listExecutionPlans } from '../../execution/services/query-service.mjs';
+import { getStrategyCatalogItem } from '../../strategy/services/catalog-service.mjs';
 import { listRiskEvents } from './feed-service.mjs';
 
 export function assessExecutionCandidate(candidate) {
