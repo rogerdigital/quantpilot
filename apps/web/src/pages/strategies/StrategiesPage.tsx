@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
 import { saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
@@ -26,6 +26,7 @@ function StrategiesPage() {
   const goToSettings = useSettingsNavigation();
   const [refreshKey, setRefreshKey] = useState(0);
   const [registryFilter, setRegistryFilter] = useState<'active' | 'archived' | 'all'>('active');
+  const [selectedStrategyId, setSelectedStrategyId] = useState('');
   const [saving, setSaving] = useState(false);
   const [promotingId, setPromotingId] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
@@ -61,6 +62,18 @@ function StrategiesPage() {
       return registryFilter === 'all' ? true : visibleStrategyIds.includes(strategyId);
     })
     .slice(0, 8);
+  const selectedStrategy = [...visibleActiveStrategies, ...visibleArchivedStrategies].find((item) => item.id === selectedStrategyId)
+    || visibleActiveStrategies[0]
+    || visibleArchivedStrategies[0]
+    || null;
+  const selectedStrategyRuns = data?.runs.filter((item) => item.strategyId === selectedStrategy?.id).slice(0, 6) || [];
+  const selectedStrategyAuditItems = auditItems
+    .filter((item) => item.type === 'strategy-catalog.saved')
+    .filter((item) => {
+      const strategyId = typeof item.metadata?.strategyId === 'string' ? item.metadata.strategyId : '';
+      return selectedStrategy ? strategyId === selectedStrategy.id : false;
+    })
+    .slice(0, 6);
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
     setForm((current) => ({
@@ -207,6 +220,17 @@ function StrategiesPage() {
       setPromotingId('');
     }
   };
+
+  useEffect(() => {
+    const visibleStrategies = [...visibleActiveStrategies, ...visibleArchivedStrategies];
+    if (!visibleStrategies.length) {
+      setSelectedStrategyId('');
+      return;
+    }
+    if (!selectedStrategyId || !visibleStrategies.some((item) => item.id === selectedStrategyId)) {
+      setSelectedStrategyId(visibleStrategies[0].id);
+    }
+  }, [selectedStrategyId, visibleActiveStrategies, visibleArchivedStrategies]);
 
   return (
     <>
@@ -424,6 +448,16 @@ function StrategiesPage() {
                             ? (locale === 'zh' ? '恢复到 draft' : 'Restore to draft')
                             : (locale === 'zh' ? '归档' : 'Archive'))}
                     </button>
+                    <button
+                      type="button"
+                      className="inline-action"
+                      disabled={selectedStrategyId === item.id}
+                      onClick={() => setSelectedStrategyId(item.id)}
+                    >
+                      {selectedStrategyId === item.id
+                        ? (locale === 'zh' ? '已选中' : 'Selected')
+                        : (locale === 'zh' ? '查看' : 'Inspect')}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -470,6 +504,16 @@ function StrategiesPage() {
                         ? (locale === 'zh' ? '恢复中...' : 'Restoring...')
                         : (locale === 'zh' ? '恢复到 draft' : 'Restore to draft')}
                     </button>
+                    <button
+                      type="button"
+                      className="inline-action"
+                      disabled={selectedStrategyId === item.id}
+                      onClick={() => setSelectedStrategyId(item.id)}
+                    >
+                      {selectedStrategyId === item.id
+                        ? (locale === 'zh' ? '已选中' : 'Selected')
+                        : (locale === 'zh' ? '查看' : 'Inspect')}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -493,6 +537,83 @@ function StrategiesPage() {
                   <div className="focus-metric">
                     <span>{locale === 'zh' ? '策略 ID' : 'Strategy ID'}</span>
                     <strong>{strategyId}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                    <strong>{status}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '操作人' : 'Actor'}</span>
+                    <strong>{item.actor}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                    <strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </article>
+      </section>
+
+      <section className="panel-grid">
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中策略详情' : 'Selected Strategy Detail'}</div><div className="panel-copy">{locale === 'zh' ? '聚合当前策略的阶段、收益预期、风险参数和研究摘要。' : 'Aggregate the selected strategy’s stage, expected return, risk profile, and research summary.'}</div></div><div className="panel-badge badge-info">{selectedStrategy?.status || '--'}</div></div>
+          {!selectedStrategy ? (
+            <div className="empty-cell">{locale === 'zh' ? '当前没有可查看的策略。' : 'No strategy is available for inspection.'}</div>
+          ) : (
+            <div className="status-stack">
+              <div className="status-row"><span>{locale === 'zh' ? '名称' : 'Name'}</span><strong>{selectedStrategy.name}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '家族' : 'Family'}</span><strong>{selectedStrategy.family}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '周期' : 'Timeframe'}</span><strong>{selectedStrategy.timeframe}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '标的池' : 'Universe'}</span><strong>{selectedStrategy.universe}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '预期收益' : 'Expected return'}</span><strong>{selectedStrategy.expectedReturnPct.toFixed(1)}%</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '最大回撤' : 'Max drawdown'}</span><strong>{selectedStrategy.maxDrawdownPct.toFixed(1)}%</strong></div>
+              <div className="status-row"><span>Sharpe</span><strong>{selectedStrategy.sharpe.toFixed(2)}</strong></div>
+              <div className="status-copy">{selectedStrategy.summary}</div>
+            </div>
+          )}
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中策略研究记录' : 'Selected Strategy Research Runs'}</div><div className="panel-copy">{locale === 'zh' ? '查看当前策略关联的最近回测运行记录。' : 'Review the most recent backtest runs associated with the selected strategy.'}</div></div><div className="panel-badge badge-warn">{selectedStrategyRuns.length}</div></div>
+          <div className="focus-list focus-list-terminal">
+            {!selectedStrategy ? <div className="empty-cell">{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</div> : null}
+            {selectedStrategy && !selectedStrategyRuns.length ? <div className="empty-cell">{locale === 'zh' ? '当前策略还没有研究运行记录。' : 'No research runs exist for the selected strategy yet.'}</div> : null}
+            {selectedStrategyRuns.map((run) => (
+              <div className="focus-row" key={run.id}>
+                <div className="symbol-cell">
+                  <strong>{run.windowLabel}</strong>
+                  <span>{run.summary}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                  <strong>{run.status}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '收益' : 'Return'}</span>
+                  <strong>{run.status === 'completed' || run.status === 'needs_review' ? `${run.annualizedReturnPct.toFixed(1)}%` : '--'}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>Sharpe</span>
+                  <strong>{run.status === 'completed' || run.status === 'needs_review' ? run.sharpe.toFixed(2) : '--'}</strong>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中策略审计轨迹' : 'Selected Strategy Audit Trail'}</div><div className="panel-copy">{locale === 'zh' ? '只展示当前策略的注册、晋级、归档与恢复留痕。' : 'Show only the selected strategy’s registry, promotion, archive, and restore audit trail.'}</div></div><div className="panel-badge badge-info">{selectedStrategyAuditItems.length}</div></div>
+          <div className="focus-list focus-list-terminal">
+            {!selectedStrategy ? <div className="empty-cell">{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</div> : null}
+            {selectedStrategy && !selectedStrategyAuditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前策略还没有审计轨迹。' : 'No audit trail exists for the selected strategy yet.'}</div> : null}
+            {selectedStrategyAuditItems.map((item) => {
+              const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
+              return (
+                <div className="focus-row" key={item.id}>
+                  <div className="symbol-cell">
+                    <strong>{item.title}</strong>
+                    <span>{item.detail}</span>
                   </div>
                   <div className="focus-metric">
                     <span>{locale === 'zh' ? '状态' : 'Status'}</span>
