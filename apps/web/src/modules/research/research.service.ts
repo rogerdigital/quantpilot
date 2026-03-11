@@ -1,5 +1,6 @@
-import { fetchJson } from '../../app/api/http.ts';
+import { assertOk, fetchJson, jsonHeaders } from '../../app/api/http.ts';
 import type {
+  BacktestRunCreateSnapshot,
   BacktestRunItem,
   BacktestSummarySnapshot,
   ResearchHubSnapshot,
@@ -20,4 +21,31 @@ export async function fetchResearchHub(): Promise<ResearchHubSnapshot> {
     strategies: strategyCatalog.strategies,
     runs: backtestRuns.runs,
   };
+}
+
+export async function queueBacktestRun(payload: {
+  strategyId: string;
+  windowLabel?: string;
+  requestedBy?: string;
+}): Promise<BacktestRunCreateSnapshot> {
+  const response = await fetch('/api/backtest/runs', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
+export async function reviewBacktestRun(runId: string, payload: {
+  reviewedBy?: string;
+  summary?: string;
+}) {
+  const response = await fetch(`/api/backtest/runs/${runId}/review`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
 }

@@ -8,7 +8,7 @@ type ResearchHubState = {
   error: string;
 };
 
-export function useResearchHub() {
+export function useResearchHub(refreshKey?: string | number) {
   const [state, setState] = useState<ResearchHubState>({
     data: null,
     loading: true,
@@ -39,7 +39,7 @@ export function useResearchHub() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshKey]);
 
   return state;
 }

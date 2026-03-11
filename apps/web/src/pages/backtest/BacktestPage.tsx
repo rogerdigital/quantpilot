@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { ApiPermissionError } from '../../app/api/controlPlane.ts';
+import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
@@ -20,12 +23,89 @@ function fmtDateTime(value: string, locale: 'zh' | 'en') {
 }
 
 function BacktestPage() {
-  const { state } = useTradingSystem();
+  const { state, session, hasPermission } = useTradingSystem();
   const { locale } = useLocale();
   const { totalPnlPct } = useSummary();
-  const { data, loading, error } = useResearchHub();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [submittingStrategyId, setSubmittingStrategyId] = useState('');
+  const [reviewingRunId, setReviewingRunId] = useState('');
+  const [actionMessage, setActionMessage] = useState('');
+  const [actionError, setActionError] = useState('');
+  const { data, loading, error } = useResearchHub(refreshKey);
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
+  const canQueueBacktest = hasPermission('strategy:write');
+  const canReviewBacktest = hasPermission('risk:review');
+
+  const handleQueueBacktest = async (strategyId: string) => {
+    setSubmittingStrategyId(strategyId);
+    setActionMessage('');
+    setActionError('');
+    try {
+      const result = await queueBacktestRun({
+        strategyId,
+        requestedBy: session?.user.id || 'operator',
+      });
+      setActionMessage(
+        locale === 'zh'
+          ? `已提交回测任务 ${result.run.strategyName}，工作流 ${result.workflow.id} 已入队。`
+          : `Queued backtest for ${result.run.strategyName}. Workflow ${result.workflow.id} is now pending.`,
+      );
+      setRefreshKey((current) => current + 1);
+    } catch (requestError) {
+      if (requestError instanceof ApiPermissionError) {
+        setActionError(
+          locale === 'zh'
+            ? `回测操作被拦截：当前会话缺少 ${requestError.missingPermission || 'strategy:write'} 权限。`
+            : `Backtest action blocked: this session is missing ${requestError.missingPermission || 'strategy:write'} permission.`,
+        );
+      } else {
+        setActionError(
+          locale === 'zh'
+            ? `提交回测失败：${requestError instanceof Error ? requestError.message : 'unknown error'}`
+            : `Failed to queue backtest: ${requestError instanceof Error ? requestError.message : 'unknown error'}`,
+        );
+      }
+    } finally {
+      setSubmittingStrategyId('');
+    }
+  };
+
+  const handleReviewRun = async (runId: string) => {
+    setReviewingRunId(runId);
+    setActionMessage('');
+    setActionError('');
+    try {
+      const result = await reviewBacktestRun(runId, {
+        reviewedBy: session?.user.id || 'risk-operator',
+        summary: locale === 'zh'
+          ? '操作员已完成回测复核，允许进入后续研究晋级。'
+          : 'Operator completed the backtest review and cleared it for downstream research promotion.',
+      });
+      setActionMessage(
+        locale === 'zh'
+          ? `已完成 ${result.run.strategyName} 的人工复核。`
+          : `Completed operator review for ${result.run.strategyName}.`,
+      );
+      setRefreshKey((current) => current + 1);
+    } catch (requestError) {
+      if (requestError instanceof ApiPermissionError) {
+        setActionError(
+          locale === 'zh'
+            ? `复核操作被拦截：当前会话缺少 ${requestError.missingPermission || 'risk:review'} 权限。`
+            : `Review action blocked: this session is missing ${requestError.missingPermission || 'risk:review'} permission.`,
+        );
+      } else {
+        setActionError(
+          locale === 'zh'
+            ? `回测复核失败：${requestError instanceof Error ? requestError.message : 'unknown error'}`
+            : `Failed to review backtest: ${requestError instanceof Error ? requestError.message : 'unknown error'}`,
+        );
+      }
+    } finally {
+      setReviewingRunId('');
+    }
+  };
 
   return (
     <>
@@ -71,6 +151,8 @@ function BacktestPage() {
             <div className="status-row"><span>{locale === 'zh' ? '已完成回测' : 'Completed runs'}</span><strong>{data?.summary.completedRuns ?? '--'}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '待复核' : 'Review queue'}</span><strong>{data?.summary.reviewQueue ?? '--'}</strong></div>
             <div className="status-copy">{translateRuntimeText(locale, state.decisionCopy)}</div>
+            {actionMessage ? <div className="status-copy">{actionMessage}</div> : null}
+            {actionError ? <div className="status-copy">{actionError}</div> : null}
             {loading ? <div className="status-copy">{locale === 'zh' ? '正在同步研究服务...' : 'Syncing research service...'}</div> : null}
             {error ? <div className="status-copy">{locale === 'zh' ? `研究服务不可用：${error}` : `Research service unavailable: ${error}`}</div> : null}
           </div>
@@ -117,9 +199,23 @@ function BacktestPage() {
                   <span>{locale === 'zh' ? '回撤' : 'Drawdown'}</span>
                   <strong>{fmtPct(item.maxDrawdownPct)}</strong>
                 </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '动作' : 'Action'}</span>
+                  <button
+                    type="button"
+                    className="inline-action inline-action-approve"
+                    disabled={!canQueueBacktest || submittingStrategyId === item.id}
+                    onClick={() => handleQueueBacktest(item.id)}
+                  >
+                    {submittingStrategyId === item.id
+                      ? (locale === 'zh' ? '提交中...' : 'Queueing...')
+                      : (locale === 'zh' ? '发起回测' : 'Queue Backtest')}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
+          {!canQueueBacktest ? <div className="status-copy">{locale === 'zh' ? '当前会话缺少 strategy:write 权限，不能提交新的回测任务。' : 'This session is missing strategy:write permission, so new backtests cannot be queued.'}</div> : null}
         </article>
         <article className="panel">
           <div className="panel-head">
@@ -153,9 +249,27 @@ function BacktestPage() {
                   <span>{locale === 'zh' ? '更新时间' : 'Updated'}</span>
                   <strong>{fmtDateTime(run.completedAt || run.startedAt, locale)}</strong>
                 </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '复核' : 'Review'}</span>
+                  {run.status === 'needs_review' ? (
+                    <button
+                      type="button"
+                      className="inline-action"
+                      disabled={!canReviewBacktest || reviewingRunId === run.id}
+                      onClick={() => handleReviewRun(run.id)}
+                    >
+                      {reviewingRunId === run.id
+                        ? (locale === 'zh' ? '处理中...' : 'Reviewing...')
+                        : (locale === 'zh' ? '人工复核' : 'Approve Review')}
+                    </button>
+                  ) : (
+                    <strong>{locale === 'zh' ? '无' : 'None'}</strong>
+                  )}
+                </div>
               </div>
             ))}
           </div>
+          {!canReviewBacktest ? <div className="status-copy">{locale === 'zh' ? '当前会话缺少 risk:review 权限，不能处理待复核回测。' : 'This session is missing risk:review permission, so review-queue runs stay read-only.'}</div> : null}
         </article>
       </section>
     </>
