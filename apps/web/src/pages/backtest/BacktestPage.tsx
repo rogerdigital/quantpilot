@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
+import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
 import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
@@ -41,6 +42,7 @@ function BacktestPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [windowLabel, setWindowLabel] = useState('2024-01-01 -> 2026-03-01');
   const { data, loading, error } = useResearchHub(refreshKey);
+  const { items: auditItems, loading: auditLoading } = useAuditFeed(refreshKey);
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
   const canQueueBacktest = hasPermission('strategy:write');
@@ -58,6 +60,14 @@ function BacktestPage() {
       || run.windowLabel.toLowerCase().includes(keyword);
   }) || [];
   const hasActiveRuns = Boolean(data?.runs.some((run) => run.status === 'queued' || run.status === 'running'));
+  const visibleRunIds = filteredRuns.map((run) => run.id);
+  const backtestAuditItems = auditItems
+    .filter((item) => item.type === 'backtest-run.created' || item.type === 'backtest-run.completed' || item.type === 'backtest-run.reviewed')
+    .filter((item) => {
+      const runId = typeof item.metadata?.runId === 'string' ? item.metadata.runId : '';
+      return !visibleRunIds.length || visibleRunIds.includes(runId);
+    })
+    .slice(0, 10);
 
   useEffect(() => {
     const pollMs = hasActiveRuns ? 5000 : 15000;
@@ -387,6 +397,52 @@ function BacktestPage() {
             ))}
           </div>
           {!canReviewBacktest ? <div className="status-copy">{locale === 'zh' ? '当前会话缺少 risk:review 权限，不能处理待复核回测。' : 'This session is missing risk:review permission, so review-queue runs stay read-only.'}</div> : null}
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '研究操作历史' : 'Research Activity Feed'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把回测入队、worker 完成和人工复核的审计记录汇总到同一面板，并跟随当前筛选条件联动。'
+                  : 'Aggregate queue, worker completion, and manual review audit records into one panel that follows the current run filter.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">AUDIT</div>
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {auditLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载研究操作历史...' : 'Loading research activity...'}</div> : null}
+            {!auditLoading && !backtestAuditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有研究操作历史。' : 'No research activity for the current filter.'}</div> : null}
+            {backtestAuditItems.map((item) => {
+              const runId = typeof item.metadata?.runId === 'string' ? item.metadata.runId : '--';
+              const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
+              const workflowRunId = typeof item.metadata?.workflowRunId === 'string' ? item.metadata.workflowRunId : '--';
+              return (
+                <div className="focus-row" key={item.id}>
+                  <div className="symbol-cell">
+                    <strong>{item.title}</strong>
+                    <span>{item.detail}</span>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? 'Run ID' : 'Run ID'}</span>
+                    <strong>{runId}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                    <strong>{status}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '工作流' : 'Workflow'}</span>
+                    <strong>{workflowRunId}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                    <strong>{fmtDateTime(item.createdAt, locale)}</strong>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </article>
       </section>
     </>
