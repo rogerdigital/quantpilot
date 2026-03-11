@@ -367,6 +367,13 @@ export type StrategyCatalogSnapshot = {
   strategies: StrategyCatalogItem[];
 };
 
+export type StrategyCatalogSaveSnapshot = {
+  ok: boolean;
+  strategy?: StrategyCatalogItem;
+  error?: string;
+  message?: string;
+};
+
 export type BacktestRunItem = {
   id: string;
   strategyId: string;

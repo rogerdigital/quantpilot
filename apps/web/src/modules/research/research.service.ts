@@ -4,6 +4,7 @@ import type {
   BacktestRunItem,
   BacktestSummarySnapshot,
   ResearchHubSnapshot,
+  StrategyCatalogSaveSnapshot,
   StrategyCatalogItem,
 } from '@shared-types/trading.ts';
 
@@ -42,6 +43,16 @@ export async function reviewBacktestRun(runId: string, payload: {
   summary?: string;
 }) {
   const response = await fetch(`/api/backtest/runs/${runId}/review`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
+export async function saveStrategyCatalogItem(payload: Record<string, unknown>): Promise<StrategyCatalogSaveSnapshot> {
+  const response = await fetch('/api/strategy/catalog', {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),

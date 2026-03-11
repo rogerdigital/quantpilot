@@ -24,7 +24,7 @@ import {
   setPrimaryBrokerBinding,
   syncBrokerBindingRuntime,
 } from '../../modules/user-account/service.mjs';
-import { listStrategyCatalog } from '../../domains/strategy/services/catalog-service.mjs';
+import { listStrategyCatalog, saveStrategyCatalogItem } from '../../domains/strategy/services/catalog-service.mjs';
 
 export async function handlePlatformRoutes(context) {
   const { req, reqUrl, res, config, readJsonBody, writeJson } = context;
@@ -220,6 +220,17 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/strategy/catalog') {
     writeJson(res, 200, listStrategyCatalog());
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/strategy/catalog') {
+    if (!hasPermission('strategy:write')) {
+      writeForbidden('strategy:write');
+      return true;
+    }
+    const body = await readJsonBody(req);
+    const result = saveStrategyCatalogItem(body);
+    writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
 

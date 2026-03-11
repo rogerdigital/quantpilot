@@ -103,6 +103,32 @@ test('GET /api/strategy/catalog returns research strategies', async () => {
   assert.equal(response.json.strategies.some((item) => item.status === 'candidate'), true);
 });
 
+test('POST /api/strategy/catalog saves strategy catalog entries', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/strategy/catalog',
+    body: {
+      id: 'stat-arb-us',
+      name: 'US Stat Arb',
+      family: 'stat-arb',
+      timeframe: '30m',
+      universe: 'S&P 500',
+      status: 'researching',
+      score: 68,
+      expectedReturnPct: 11.4,
+      maxDrawdownPct: 6.2,
+      sharpe: 1.11,
+      summary: 'Mean reversion basket candidate.',
+      updatedBy: 'api-test',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.strategy.id, 'stat-arb-us');
+  assert.equal(context.strategyCatalog.getStrategy('stat-arb-us').family, 'stat-arb');
+});
+
 test('GET /api/market/provider-status returns backend market provider status', async () => {
   context.marketProviders.updateMarketProviderStatus({
     provider: 'alpaca',

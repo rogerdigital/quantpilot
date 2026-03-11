@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { ApiPermissionError } from '../../app/api/controlPlane.ts';
+import { saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
@@ -7,14 +10,76 @@ import { copy, useLocale } from '../console/i18n.tsx';
 import { translateMode, translateRuntimeText } from '../console/utils.ts';
 
 function StrategiesPage() {
-  const { state, hasPermission } = useTradingSystem();
+  const { state, session, hasPermission } = useTradingSystem();
   const { locale } = useLocale();
   const goToSettings = useSettingsNavigation();
-  const { data, loading, error } = useResearchHub();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [form, setForm] = useState({
+    id: 'new-strategy',
+    name: '',
+    family: 'trend',
+    timeframe: '1d',
+    universe: 'NASDAQ 100',
+    status: 'draft',
+    score: '60',
+    expectedReturnPct: '10',
+    maxDrawdownPct: '8',
+    sharpe: '1',
+    summary: '',
+  });
+  const { data, loading, error } = useResearchHub(refreshKey);
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
   const canWriteStrategy = hasPermission('strategy:write');
   const promotedCount = data?.strategies.filter((item) => item.status === 'paper' || item.status === 'live').length || 0;
+
+  const handleFormChange = (key: keyof typeof form, value: string) => {
+    setForm((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  };
+
+  const handleSaveStrategy = async () => {
+    setSaving(true);
+    setSaveMessage('');
+    setSaveError('');
+    try {
+      const result = await saveStrategyCatalogItem({
+        ...form,
+        score: Number(form.score),
+        expectedReturnPct: Number(form.expectedReturnPct),
+        maxDrawdownPct: Number(form.maxDrawdownPct),
+        sharpe: Number(form.sharpe),
+        updatedBy: session?.user.id || 'operator',
+      });
+      setSaveMessage(
+        locale === 'zh'
+          ? `策略 ${result.strategy?.name || form.name} 已写入注册表。`
+          : `Strategy ${result.strategy?.name || form.name} was saved to the registry.`,
+      );
+      setRefreshKey((current) => current + 1);
+    } catch (requestError) {
+      if (requestError instanceof ApiPermissionError) {
+        setSaveError(
+          locale === 'zh'
+            ? `保存策略被拦截：当前会话缺少 ${requestError.missingPermission || 'strategy:write'} 权限。`
+            : `Strategy save blocked: this session is missing ${requestError.missingPermission || 'strategy:write'} permission.`,
+        );
+      } else {
+        setSaveError(
+          locale === 'zh'
+            ? `保存策略失败：${requestError instanceof Error ? requestError.message : 'unknown error'}`
+            : `Failed to save strategy: ${requestError instanceof Error ? requestError.message : 'unknown error'}`,
+        );
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <>
@@ -72,6 +137,67 @@ function StrategiesPage() {
             {loading ? <div className="status-copy">{locale === 'zh' ? '正在同步策略注册表...' : 'Syncing strategy registry...'}</div> : null}
             {error ? <div className="status-copy">{locale === 'zh' ? `策略服务不可用：${error}` : `Strategy service unavailable: ${error}`}</div> : null}
             <div className="status-copy">{locale === 'zh' ? '策略注册表已经切到后端事实源，运行时信号视图仅作为当下市场上下文。' : 'The strategy registry now comes from the backend source of truth, while runtime signals stay as contextual market state.'}</div>
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '注册新策略' : 'Register Strategy'}</div><div className="panel-copy">{locale === 'zh' ? '先提供最小策略元信息写路径，后续再补版本、参数和优化历史。' : 'Start with a minimal metadata write path, then add versioning, parameters, and optimization history later.'}</div></div><div className="panel-badge badge-warn">{canWriteStrategy ? 'WRITE' : 'READ ONLY'}</div></div>
+          <div className="settings-form-grid">
+            <label className="settings-field">
+              <span>ID</span>
+              <input disabled={!canWriteStrategy || saving} value={form.id} onChange={(event) => handleFormChange('id', event.target.value)} />
+            </label>
+            <label className="settings-field">
+              <span>{locale === 'zh' ? '名称' : 'Name'}</span>
+              <input disabled={!canWriteStrategy || saving} value={form.name} onChange={(event) => handleFormChange('name', event.target.value)} />
+            </label>
+            <label className="settings-field">
+              <span>{locale === 'zh' ? '家族' : 'Family'}</span>
+              <input disabled={!canWriteStrategy || saving} value={form.family} onChange={(event) => handleFormChange('family', event.target.value)} />
+            </label>
+            <label className="settings-field">
+              <span>{locale === 'zh' ? '周期' : 'Timeframe'}</span>
+              <input disabled={!canWriteStrategy || saving} value={form.timeframe} onChange={(event) => handleFormChange('timeframe', event.target.value)} />
+            </label>
+            <label className="settings-field">
+              <span>{locale === 'zh' ? '标的池' : 'Universe'}</span>
+              <input disabled={!canWriteStrategy || saving} value={form.universe} onChange={(event) => handleFormChange('universe', event.target.value)} />
+            </label>
+            <label className="settings-field">
+              <span>{locale === 'zh' ? '阶段' : 'Stage'}</span>
+              <select disabled={!canWriteStrategy || saving} value={form.status} onChange={(event) => handleFormChange('status', event.target.value)}>
+                <option value="draft">draft</option>
+                <option value="researching">researching</option>
+                <option value="candidate">candidate</option>
+                <option value="paper">paper</option>
+                <option value="live">live</option>
+              </select>
+            </label>
+            <label className="settings-field">
+              <span>{locale === 'zh' ? '评分' : 'Score'}</span>
+              <input disabled={!canWriteStrategy || saving} value={form.score} onChange={(event) => handleFormChange('score', event.target.value)} />
+            </label>
+            <label className="settings-field">
+              <span>{locale === 'zh' ? '预期收益' : 'Expected Return'}</span>
+              <input disabled={!canWriteStrategy || saving} value={form.expectedReturnPct} onChange={(event) => handleFormChange('expectedReturnPct', event.target.value)} />
+            </label>
+            <label className="settings-field">
+              <span>{locale === 'zh' ? '最大回撤' : 'Max Drawdown'}</span>
+              <input disabled={!canWriteStrategy || saving} value={form.maxDrawdownPct} onChange={(event) => handleFormChange('maxDrawdownPct', event.target.value)} />
+            </label>
+            <label className="settings-field">
+              <span>Sharpe</span>
+              <input disabled={!canWriteStrategy || saving} value={form.sharpe} onChange={(event) => handleFormChange('sharpe', event.target.value)} />
+            </label>
+            <label className="settings-field settings-field-wide">
+              <span>{locale === 'zh' ? '摘要' : 'Summary'}</span>
+              <input disabled={!canWriteStrategy || saving} value={form.summary} onChange={(event) => handleFormChange('summary', event.target.value)} />
+            </label>
+          </div>
+          <div className="settings-actions">
+            <button type="button" className="settings-button" disabled={!canWriteStrategy || saving || !form.id || !form.name} onClick={handleSaveStrategy}>
+              {saving ? (locale === 'zh' ? '保存中...' : 'Saving...') : (locale === 'zh' ? '写入策略注册表' : 'Save Strategy')}
+            </button>
+            <div className="status-copy">{saveMessage || saveError || (locale === 'zh' ? '写入后会自动刷新后端策略目录。' : 'The backend strategy registry refreshes automatically after save.')}</div>
           </div>
         </article>
         <article className="panel">
