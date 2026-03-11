@@ -1,18 +1,34 @@
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
+import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
+import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
 import { useOperatorActionsFeed } from '../../modules/notifications/useOperatorActionsFeed.ts';
 import { useSchedulerTicksFeed } from '../../modules/notifications/useSchedulerTicksFeed.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { ActivityLog } from '../console/components/ConsoleTables.tsx';
 import { copy, useLocale } from '../console/i18n.tsx';
+import { connectionLabel, fmtDateTime, translateProviderLabel } from '../console/utils.ts';
 
 function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
+  const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
+  const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const { items, loading } = useNotificationsFeed();
   const { items: actionItems, loading: actionLoading } = useOperatorActionsFeed();
   const { items: schedulerItems, loading: schedulerLoading } = useSchedulerTicksFeed();
-  const connectedCount = Number(state.integrationStatus.marketData.connected) + Number(state.integrationStatus.broker.connected);
+  const marketConnected = marketStatus?.connected ?? state.integrationStatus.marketData.connected;
+  const marketFallback = marketStatus?.fallback ?? !marketConnected;
+  const brokerConnected = Boolean(snapshot?.connected ?? state.integrationStatus.broker.connected);
+  const connectedCount = Number(marketConnected) + Number(brokerConnected);
+  const marketProviderLabel = translateProviderLabel(
+    locale,
+    marketStatus?.provider === 'alpaca'
+      ? 'Alpaca Market Data via Gateway'
+      : marketStatus?.provider === 'custom-http'
+        ? 'HTTP 行情网关'
+        : (state.integrationStatus.marketData.label || state.integrationStatus.marketData.provider),
+  );
 
   return (
     <>
@@ -114,6 +130,27 @@ function NotificationsPage() {
             <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{state.controlPlane.lastStatus}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '审计记录' : 'Audit Records'}</span><strong>{state.controlPlane.auditCount}</strong></div>
             <div className="status-copy">{state.controlPlane.routeHint}</div>
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '后端链路健康' : 'Backend Connectivity'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '通知中心里的接入状态以 worker 和后端快照为准。'
+                  : 'Connectivity inside the notifications center is derived from worker and backend snapshots.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{connectedCount}/2</div>
+          </div>
+          <div className="status-stack">
+            <div className="status-row"><span>{copy[locale].labels.marketData}</span><strong>{marketProviderLabel}</strong></div>
+            <div className="status-row"><span>{copy[locale].labels.marketState}</span><strong>{connectionLabel(locale, marketConnected, marketFallback)}</strong></div>
+            <div className="status-row"><span>{copy[locale].labels.brokerState}</span><strong>{connectionLabel(locale, brokerConnected, false, true)}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '最近行情同步' : 'Last market sync'}</span><strong>{fmtDateTime(marketStatus?.asOf, locale)}</strong></div>
+            <div className="status-copy">{marketStatus?.message || state.integrationStatus.marketData.message}</div>
+            <div className="status-copy">{snapshot?.message || state.integrationStatus.broker.message}</div>
           </div>
         </article>
         <article className="panel">
