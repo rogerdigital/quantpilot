@@ -52,6 +52,15 @@ export function assessAgentActionRequestRisk(payload = {}) {
         reasons: ['unknown strategy target'],
       };
     }
+    if (strategy.status === 'archived') {
+      return {
+        riskStatus: 'blocked',
+        approvalState: 'rejected',
+        status: 'rejected',
+        summary: 'Risk blocked the request because the target strategy is archived.',
+        reasons: ['archived strategy cannot be routed into execution planning'],
+      };
+    }
     if (strategy.maxDrawdownPct > 12 || strategy.sharpe < 0.9) {
       return {
         riskStatus: 'blocked',

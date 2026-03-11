@@ -351,7 +351,7 @@ export type StrategyCatalogItem = {
   family: string;
   timeframe: string;
   universe: string;
-  status: 'draft' | 'researching' | 'candidate' | 'paper' | 'live';
+  status: 'draft' | 'researching' | 'candidate' | 'paper' | 'live' | 'archived';
   score: number;
   expectedReturnPct: number;
   maxDrawdownPct: number;

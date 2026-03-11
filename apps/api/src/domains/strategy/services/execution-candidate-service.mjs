@@ -35,6 +35,9 @@ export function buildStrategyExecutionCandidate(payload) {
   if (!strategy) {
     throw new Error(`Unknown strategy: ${payload.strategyId}`);
   }
+  if (strategy.status === 'archived') {
+    throw new Error(`Strategy ${payload.strategyId} is archived and cannot produce execution candidates`);
+  }
 
   const capital = Number(payload.capital || 0);
   const orders = buildTemplateOrders(strategy).map((item) => ({

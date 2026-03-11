@@ -152,6 +152,47 @@ function StrategiesPage() {
     }
   };
 
+  const handleArchiveStrategy = async (strategy: NonNullable<typeof data>['strategies'][number]) => {
+    const nextStatus = strategy.status === 'archived' ? 'draft' : 'archived';
+
+    setPromotingId(strategy.id);
+    setSaveMessage('');
+    setSaveError('');
+    try {
+      const result = await saveStrategyCatalogItem({
+        ...strategy,
+        status: nextStatus,
+        updatedBy: session?.user.id || 'operator',
+      });
+      setSaveMessage(
+        locale === 'zh'
+          ? (nextStatus === 'archived'
+              ? `策略 ${result.strategy?.name || strategy.name} 已归档。`
+              : `策略 ${result.strategy?.name || strategy.name} 已恢复到 draft。`)
+          : (nextStatus === 'archived'
+              ? `Strategy ${result.strategy?.name || strategy.name} was archived.`
+              : `Strategy ${result.strategy?.name || strategy.name} was restored to draft.`),
+      );
+      setRefreshKey((current) => current + 1);
+    } catch (requestError) {
+      if (requestError instanceof ApiPermissionError) {
+        setSaveError(
+          locale === 'zh'
+            ? `策略归档被拦截：当前会话缺少 ${requestError.missingPermission || 'strategy:write'} 权限。`
+            : `Strategy archive blocked: this session is missing ${requestError.missingPermission || 'strategy:write'} permission.`,
+        );
+      } else {
+        setSaveError(
+          locale === 'zh'
+            ? `策略状态更新失败：${requestError instanceof Error ? requestError.message : 'unknown error'}`
+            : `Failed to update strategy lifecycle state: ${requestError instanceof Error ? requestError.message : 'unknown error'}`,
+        );
+      }
+    } finally {
+      setPromotingId('');
+    }
+  };
+
   return (
     <>
       <header className="topbar">
@@ -241,6 +282,7 @@ function StrategiesPage() {
                 <option value="candidate">candidate</option>
                 <option value="paper">paper</option>
                 <option value="live">live</option>
+                <option value="archived">archived</option>
               </select>
             </label>
             <label className="settings-field">
@@ -318,6 +360,20 @@ function StrategiesPage() {
                               : `Promote to ${getNextStrategyStage(item.status)}`)}
                       </button>
                     ) : null}
+                    <button
+                      type="button"
+                      className={item.status === 'archived' ? 'inline-action inline-action-approve' : 'inline-action'}
+                      disabled={!canWriteStrategy || saving || promotingId === item.id}
+                      onClick={() => handleArchiveStrategy(item)}
+                    >
+                      {promotingId === item.id
+                        ? (item.status === 'archived'
+                            ? (locale === 'zh' ? '恢复中...' : 'Restoring...')
+                            : (locale === 'zh' ? '归档中...' : 'Archiving...'))
+                        : (item.status === 'archived'
+                            ? (locale === 'zh' ? '恢复到 draft' : 'Restore to draft')
+                            : (locale === 'zh' ? '归档' : 'Archive'))}
+                    </button>
                   </div>
                 </div>
               </div>
