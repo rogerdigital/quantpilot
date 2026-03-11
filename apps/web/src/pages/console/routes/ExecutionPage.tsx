@@ -3,7 +3,7 @@ import { fetchExecutionAccountSnapshots, fetchExecutionLedger, fetchExecutionRun
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { TopMeta } from '../components/ConsoleChrome.tsx';
-import { InspectionListPanel, InspectionPanel } from '../components/InspectionPanels.tsx';
+import { InspectionListPanel, InspectionMetricsRow, InspectionPanel } from '../components/InspectionPanels.tsx';
 import { ActivityLog, ApprovalQueueTable, OrdersTable } from '../components/ConsoleTables.tsx';
 import { onShortcutKeyDown, useSettingsNavigation } from '../hooks.ts';
 import { copy, useLocale } from '../i18n.tsx';
@@ -242,12 +242,15 @@ export function ExecutionPage() {
             {!auditLoading && !selectedEntry ? <div className="status-copy">{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</div> : null}
             {!auditLoading && selectedEntry && !selectedExecutionAuditItems.length ? <div className="status-copy">{locale === 'zh' ? '当前执行计划暂无审计留痕。' : 'No audit records exist for the selected execution plan yet.'}</div> : null}
             {selectedExecutionAuditItems.map((item) => (
-              <div key={item.id} className="focus-row">
-                <div className="focus-metric"><span>{locale === 'zh' ? '标题' : 'Title'}</span><strong>{item.title}</strong></div>
-                <div className="focus-metric"><span>{locale === 'zh' ? '操作人' : 'Actor'}</span><strong>{item.actor}</strong></div>
-                <div className="focus-metric"><span>{locale === 'zh' ? '类型' : 'Type'}</span><strong>{item.type}</strong></div>
-                <div className="focus-metric"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong></div>
-              </div>
+              <InspectionMetricsRow
+                key={item.id}
+                metrics={[
+                  { label: locale === 'zh' ? '标题' : 'Title', value: item.title },
+                  { label: locale === 'zh' ? '操作人' : 'Actor', value: item.actor },
+                  { label: locale === 'zh' ? '类型' : 'Type', value: item.type },
+                  { label: locale === 'zh' ? '时间' : 'Time', value: new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US') },
+                ]}
+              />
             ))}
         </InspectionListPanel>
         <InspectionPanel
@@ -281,12 +284,15 @@ export function ExecutionPage() {
             {!actionsLoading && !selectedEntry ? <div className="status-copy">{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</div> : null}
             {!actionsLoading && selectedEntry && !selectedExecutionActions.length ? <div className="status-copy">{locale === 'zh' ? '当前执行计划还没有关联的审批动作。' : 'No approval actions are associated with the selected execution plan yet.'}</div> : null}
             {selectedExecutionActions.map((item) => (
-              <div key={item.id} className="focus-row">
-                <div className="focus-metric"><span>{locale === 'zh' ? '动作' : 'Action'}</span><strong>{item.type}</strong></div>
-                <div className="focus-metric"><span>{locale === 'zh' ? '标的' : 'Symbol'}</span><strong>{item.symbol || '--'}</strong></div>
-                <div className="focus-metric"><span>{locale === 'zh' ? '操作人' : 'Actor'}</span><strong>{item.actor}</strong></div>
-                <div className="focus-metric"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong></div>
-              </div>
+              <InspectionMetricsRow
+                key={item.id}
+                metrics={[
+                  { label: locale === 'zh' ? '动作' : 'Action', value: item.type },
+                  { label: locale === 'zh' ? '标的' : 'Symbol', value: item.symbol || '--' },
+                  { label: locale === 'zh' ? '操作人' : 'Actor', value: item.actor },
+                  { label: locale === 'zh' ? '时间' : 'Time', value: new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US') },
+                ]}
+              />
             ))}
         </InspectionListPanel>
         <InspectionPanel
@@ -324,13 +330,16 @@ export function ExecutionPage() {
               const riskStatus = typeof item.metadata?.riskStatus === 'string' ? item.metadata.riskStatus : '--';
               const approvalState = typeof item.metadata?.approvalState === 'string' ? item.metadata.approvalState : '--';
               return (
-                <div key={item.id} className="focus-row">
-                  <div className="focus-metric"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong></div>
-                  <div className="focus-metric"><span>{locale === 'zh' ? '风控' : 'Risk'}</span><strong>{riskStatus}</strong></div>
-                  <div className="focus-metric"><span>{locale === 'zh' ? '审批' : 'Approval'}</span><strong>{approvalState}</strong></div>
-                  <div className="focus-metric"><span>{locale === 'zh' ? '订单数' : 'Orders'}</span><strong>{orderCount ?? '--'}</strong></div>
-                  <div className="focus-metric"><span>{locale === 'zh' ? '资金规模' : 'Capital'}</span><strong>{capital !== null ? capital.toFixed(0) : '--'}</strong></div>
-                </div>
+                <InspectionMetricsRow
+                  key={item.id}
+                  metrics={[
+                    { label: locale === 'zh' ? '时间' : 'Time', value: new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US') },
+                    { label: locale === 'zh' ? '风控' : 'Risk', value: riskStatus },
+                    { label: locale === 'zh' ? '审批' : 'Approval', value: approvalState },
+                    { label: locale === 'zh' ? '订单数' : 'Orders', value: orderCount ?? '--' },
+                    { label: locale === 'zh' ? '资金规模' : 'Capital', value: capital !== null ? capital.toFixed(0) : '--' },
+                  ]}
+                />
               );
             })}
         </InspectionListPanel>

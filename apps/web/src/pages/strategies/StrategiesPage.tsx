@@ -5,7 +5,7 @@ import { saveStrategyCatalogItem } from '../../modules/research/research.service
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
-import { InspectionListPanel, InspectionPanel } from '../console/components/InspectionPanels.tsx';
+import { InspectionListPanel, InspectionMetricsRow, InspectionPanel } from '../console/components/InspectionPanels.tsx';
 import { UniverseTable } from '../console/components/ConsoleTables.tsx';
 import { onShortcutKeyDown, useSettingsNavigation } from '../console/hooks.ts';
 import { copy, useLocale } from '../console/i18n.tsx';
@@ -626,24 +626,16 @@ function StrategiesPage() {
             {selectedStrategyAuditItems.map((item) => {
               const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
               return (
-                <div className="focus-row" key={item.id}>
-                  <div className="symbol-cell">
-                    <strong>{item.title}</strong>
-                    <span>{item.detail}</span>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                    <strong>{status}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '操作人' : 'Actor'}</span>
-                    <strong>{item.actor}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '时间' : 'Time'}</span>
-                    <strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong>
-                  </div>
-                </div>
+                <InspectionMetricsRow
+                  key={item.id}
+                  leadTitle={item.title}
+                  leadCopy={item.detail}
+                  metrics={[
+                    { label: locale === 'zh' ? '状态' : 'Status', value: status },
+                    { label: locale === 'zh' ? '操作人' : 'Actor', value: item.actor },
+                    { label: locale === 'zh' ? '时间' : 'Time', value: new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US') },
+                  ]}
+                />
               );
             })}
         </InspectionListPanel>
@@ -662,28 +654,17 @@ function StrategiesPage() {
               const maxDrawdownPct = typeof item.metadata?.maxDrawdownPct === 'number' ? item.metadata.maxDrawdownPct : null;
               const sharpe = typeof item.metadata?.sharpe === 'number' ? item.metadata.sharpe : null;
               return (
-                <div className="focus-row" key={item.id}>
-                  <div className="symbol-cell">
-                    <strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong>
-                    <span>{item.detail}</span>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '阶段' : 'Stage'}</span>
-                    <strong>{typeof item.metadata?.status === 'string' ? item.metadata.status : '--'}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '评分' : 'Score'}</span>
-                    <strong>{score ?? '--'}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '收益/回撤' : 'Return / Drawdown'}</span>
-                    <strong>{expectedReturnPct !== null && maxDrawdownPct !== null ? `${expectedReturnPct.toFixed(1)}% / ${maxDrawdownPct.toFixed(1)}%` : '--'}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>Sharpe</span>
-                    <strong>{sharpe !== null ? sharpe.toFixed(2) : '--'}</strong>
-                  </div>
-                </div>
+                <InspectionMetricsRow
+                  key={item.id}
+                  leadTitle={new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}
+                  leadCopy={item.detail}
+                  metrics={[
+                    { label: locale === 'zh' ? '阶段' : 'Stage', value: typeof item.metadata?.status === 'string' ? item.metadata.status : '--' },
+                    { label: locale === 'zh' ? '评分' : 'Score', value: score ?? '--' },
+                    { label: locale === 'zh' ? '收益/回撤' : 'Return / Drawdown', value: expectedReturnPct !== null && maxDrawdownPct !== null ? `${expectedReturnPct.toFixed(1)}% / ${maxDrawdownPct.toFixed(1)}%` : '--' },
+                    { label: 'Sharpe', value: sharpe !== null ? sharpe.toFixed(2) : '--' },
+                  ]}
+                />
               );
             })}
         </InspectionListPanel>

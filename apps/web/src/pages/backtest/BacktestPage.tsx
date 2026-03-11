@@ -6,7 +6,7 @@ import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/rese
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
-import { InspectionListPanel, InspectionPanel } from '../console/components/InspectionPanels.tsx';
+import { InspectionListPanel, InspectionMetricsRow, InspectionPanel } from '../console/components/InspectionPanels.tsx';
 import { useSummary } from '../console/hooks.ts';
 import { copy, useLocale } from '../console/i18n.tsx';
 import { fmtPct, translateMode, translateRiskLevel, translateRuntimeText } from '../console/utils.ts';
@@ -595,24 +595,16 @@ function BacktestPage() {
             {!selectedRun ? <div className="empty-cell">{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</div> : null}
             {selectedRun && !selectedRunAuditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前 run 暂无审计轨迹。' : 'No audit trail exists for the selected run yet.'}</div> : null}
             {selectedRunAuditItems.map((item) => (
-              <div className="focus-row" key={item.id}>
-                <div className="symbol-cell">
-                  <strong>{item.title}</strong>
-                  <span>{item.detail}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '类型' : 'Type'}</span>
-                  <strong>{item.type}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '操作人' : 'Actor'}</span>
-                  <strong>{item.actor}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '时间' : 'Time'}</span>
-                  <strong>{fmtDateTime(item.createdAt, locale)}</strong>
-                </div>
-              </div>
+              <InspectionMetricsRow
+                key={item.id}
+                leadTitle={item.title}
+                leadCopy={item.detail}
+                metrics={[
+                  { label: locale === 'zh' ? '类型' : 'Type', value: item.type },
+                  { label: locale === 'zh' ? '操作人' : 'Actor', value: item.actor },
+                  { label: locale === 'zh' ? '时间' : 'Time', value: fmtDateTime(item.createdAt, locale) },
+                ]}
+              />
             ))}
         </InspectionListPanel>
         <InspectionPanel
@@ -658,28 +650,17 @@ function BacktestPage() {
               const sharpe = typeof item.metadata?.sharpe === 'number' ? item.metadata.sharpe : null;
               const winRatePct = typeof item.metadata?.winRatePct === 'number' ? item.metadata.winRatePct : null;
               return (
-                <div className="focus-row" key={item.id}>
-                  <div className="symbol-cell">
-                    <strong>{fmtDateTime(item.createdAt, locale)}</strong>
-                    <span>{item.detail}</span>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '类型' : 'Type'}</span>
-                    <strong>{item.type}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '收益/回撤' : 'Return / Drawdown'}</span>
-                    <strong>{annualizedReturnPct !== null && maxDrawdownPct !== null ? `${annualizedReturnPct.toFixed(1)}% / ${maxDrawdownPct.toFixed(1)}%` : '--'}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>Sharpe</span>
-                    <strong>{sharpe !== null ? sharpe.toFixed(2) : '--'}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '胜率' : 'Win Rate'}</span>
-                    <strong>{winRatePct !== null ? `${winRatePct.toFixed(1)}%` : '--'}</strong>
-                  </div>
-                </div>
+                <InspectionMetricsRow
+                  key={item.id}
+                  leadTitle={fmtDateTime(item.createdAt, locale)}
+                  leadCopy={item.detail}
+                  metrics={[
+                    { label: locale === 'zh' ? '类型' : 'Type', value: item.type },
+                    { label: locale === 'zh' ? '收益/回撤' : 'Return / Drawdown', value: annualizedReturnPct !== null && maxDrawdownPct !== null ? `${annualizedReturnPct.toFixed(1)}% / ${maxDrawdownPct.toFixed(1)}%` : '--' },
+                    { label: 'Sharpe', value: sharpe !== null ? sharpe.toFixed(2) : '--' },
+                    { label: locale === 'zh' ? '胜率' : 'Win Rate', value: winRatePct !== null ? `${winRatePct.toFixed(1)}%` : '--' },
+                  ]}
+                />
               );
             })}
         </InspectionListPanel>

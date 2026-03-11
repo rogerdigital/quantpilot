@@ -36,3 +36,33 @@ export function InspectionListPanel({ title, copy, badge, terminal = false, chil
     </InspectionPanel>
   );
 }
+
+type InspectionMetricItem = {
+  label: string;
+  value: ReactNode;
+};
+
+type InspectionMetricsRowProps = {
+  leadTitle?: ReactNode;
+  leadCopy?: ReactNode;
+  metrics: InspectionMetricItem[];
+};
+
+export function InspectionMetricsRow({ leadTitle, leadCopy, metrics }: InspectionMetricsRowProps) {
+  return (
+    <div className="focus-row">
+      {leadTitle || leadCopy ? (
+        <div className="symbol-cell">
+          {leadTitle ? <strong>{leadTitle}</strong> : null}
+          {leadCopy ? <span>{leadCopy}</span> : null}
+        </div>
+      ) : null}
+      {metrics.map((metric) => (
+        <div className="focus-metric" key={metric.label}>
+          <span>{metric.label}</span>
+          <strong>{metric.value}</strong>
+        </div>
+      ))}
+    </div>
+  );
+}
