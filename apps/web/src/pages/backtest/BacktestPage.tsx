@@ -6,6 +6,7 @@ import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/rese
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
+import { InspectionListPanel, InspectionPanel } from '../console/components/InspectionPanels.tsx';
 import { useSummary } from '../console/hooks.ts';
 import { copy, useLocale } from '../console/i18n.tsx';
 import { fmtPct, translateMode, translateRiskLevel, translateRuntimeText } from '../console/utils.ts';
@@ -561,18 +562,13 @@ function BacktestPage() {
       </section>
 
       <section className="panel-grid">
-        <article className="panel">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{locale === 'zh' ? '选中回测详情' : 'Selected Backtest Detail'}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '把单条 run 的回测结果、审计留痕和 workflow 进度聚合到一个视图，减少跨面板对照。'
-                  : 'Aggregate one run’s result metrics, audit trail, and workflow progress into a single detail view.'}
-              </div>
-            </div>
-            <div className="panel-badge badge-info">{selectedRun?.status || '--'}</div>
-          </div>
+        <InspectionPanel
+          title={locale === 'zh' ? '选中回测详情' : 'Selected Backtest Detail'}
+          copy={locale === 'zh'
+            ? '把单条 run 的回测结果、审计留痕和 workflow 进度聚合到一个视图，减少跨面板对照。'
+            : 'Aggregate one run’s result metrics, audit trail, and workflow progress into a single detail view.'}
+          badge={selectedRun?.status || '--'}
+        >
           {!selectedRun ? (
             <div className="empty-cell">{locale === 'zh' ? '当前没有可查看的回测记录。' : 'No backtest run is available for inspection.'}</div>
           ) : (
@@ -586,20 +582,16 @@ function BacktestPage() {
               <div className="status-copy">{selectedRun.summary}</div>
             </div>
           )}
-        </article>
-        <article className="panel">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{locale === 'zh' ? '选中回测审计轨迹' : 'Selected Audit Trail'}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '只展示当前选中 run 的队列、完成和复核记录。'
-                  : 'Show only the queue, completion, and review records for the selected run.'}
-              </div>
-            </div>
-            <div className="panel-badge badge-warn">{selectedRunAuditItems.length}</div>
-          </div>
-          <div className="focus-list focus-list-terminal">
+        </InspectionPanel>
+        <InspectionListPanel
+          title={locale === 'zh' ? '选中回测审计轨迹' : 'Selected Audit Trail'}
+          copy={locale === 'zh'
+            ? '只展示当前选中 run 的队列、完成和复核记录。'
+            : 'Show only the queue, completion, and review records for the selected run.'}
+          badge={selectedRunAuditItems.length}
+          badgeClassName="badge-warn"
+          terminal
+        >
             {!selectedRun ? <div className="empty-cell">{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</div> : null}
             {selectedRun && !selectedRunAuditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前 run 暂无审计轨迹。' : 'No audit trail exists for the selected run yet.'}</div> : null}
             {selectedRunAuditItems.map((item) => (
@@ -622,20 +614,14 @@ function BacktestPage() {
                 </div>
               </div>
             ))}
-          </div>
-        </article>
-        <article className="panel">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{locale === 'zh' ? '选中回测工作流' : 'Selected Workflow'}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '查看当前 run 对应的 task orchestrator 工作流状态和步骤进度。'
-                  : 'Inspect the task-orchestrator workflow state and step progress for the selected run.'}
-              </div>
-            </div>
-            <div className="panel-badge badge-info">{selectedWorkflow?.status || '--'}</div>
-          </div>
+        </InspectionListPanel>
+        <InspectionPanel
+          title={locale === 'zh' ? '选中回测工作流' : 'Selected Workflow'}
+          copy={locale === 'zh'
+            ? '查看当前 run 对应的 task orchestrator 工作流状态和步骤进度。'
+            : 'Inspect the task-orchestrator workflow state and step progress for the selected run.'}
+          badge={selectedWorkflow?.status || '--'}
+        >
           {!selectedRun ? (
             <div className="empty-cell">{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</div>
           ) : !selectedWorkflow ? (
@@ -654,20 +640,16 @@ function BacktestPage() {
               <div className="status-copy">{locale === 'zh' ? `最近更新时间 ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}` : `Last updated ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}`}</div>
             </div>
           )}
-        </article>
-        <article className="panel">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{locale === 'zh' ? '选中回测版本轨迹' : 'Selected Backtest Version History'}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '从 audit metadata 回放当前 run 在完成和人工复核时落下的关键绩效快照。'
-                  : 'Replay the selected run’s key performance snapshots from audit metadata when it completed or was reviewed.'}
-              </div>
-            </div>
-            <div className="panel-badge badge-warn">{selectedRunVersionItems.length}</div>
-          </div>
-          <div className="focus-list focus-list-terminal">
+        </InspectionPanel>
+        <InspectionListPanel
+          title={locale === 'zh' ? '选中回测版本轨迹' : 'Selected Backtest Version History'}
+          copy={locale === 'zh'
+            ? '从 audit metadata 回放当前 run 在完成和人工复核时落下的关键绩效快照。'
+            : 'Replay the selected run’s key performance snapshots from audit metadata when it completed or was reviewed.'}
+          badge={selectedRunVersionItems.length}
+          badgeClassName="badge-warn"
+          terminal
+        >
             {!selectedRun ? <div className="empty-cell">{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</div> : null}
             {selectedRun && !selectedRunVersionItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前 run 还没有可回放的版本快照。' : 'No version snapshots are available for the selected run yet.'}</div> : null}
             {selectedRunVersionItems.map((item) => {
@@ -700,8 +682,7 @@ function BacktestPage() {
                 </div>
               );
             })}
-          </div>
-        </article>
+        </InspectionListPanel>
       </section>
     </>
   );

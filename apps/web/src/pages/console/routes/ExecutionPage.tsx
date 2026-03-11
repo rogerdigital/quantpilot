@@ -3,6 +3,7 @@ import { fetchExecutionAccountSnapshots, fetchExecutionLedger, fetchExecutionRun
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { TopMeta } from '../components/ConsoleChrome.tsx';
+import { InspectionListPanel, InspectionPanel } from '../components/InspectionPanels.tsx';
 import { ActivityLog, ApprovalQueueTable, OrdersTable } from '../components/ConsoleTables.tsx';
 import { onShortcutKeyDown, useSettingsNavigation } from '../hooks.ts';
 import { copy, useLocale } from '../i18n.tsx';
@@ -203,8 +204,11 @@ export function ExecutionPage() {
       </section>
 
       <section className="panel-grid">
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中执行计划详情' : 'Selected Execution Detail'}</div><div className="panel-copy">{locale === 'zh' ? '聚合展示单条 execution plan 的模式、风控、订单规模和运行时结果。' : 'Aggregate one execution plan’s mode, risk state, order count, and runtime result in one place.'}</div></div><div className="panel-badge badge-info">{selectedEntry?.plan.riskStatus || '--'}</div></div>
+        <InspectionPanel
+          title={locale === 'zh' ? '选中执行计划详情' : 'Selected Execution Detail'}
+          copy={locale === 'zh' ? '聚合展示单条 execution plan 的模式、风控、订单规模和运行时结果。' : 'Aggregate one execution plan’s mode, risk state, order count, and runtime result in one place.'}
+          badge={selectedEntry?.plan.riskStatus || '--'}
+        >
           {!selectedEntry ? (
             <div className="status-copy">{locale === 'zh' ? '当前没有可查看的执行计划。' : 'No execution plan is available for inspection.'}</div>
           ) : (
@@ -227,10 +231,13 @@ export function ExecutionPage() {
               </div>
             </div>
           )}
-        </article>
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中执行审计轨迹' : 'Selected Execution Audit'}</div><div className="panel-copy">{locale === 'zh' ? '按策略 ID 聚合当前选中 execution plan 对应的审计留痕。' : 'Aggregate audit trail for the selected execution plan by strategy id.'}</div></div><div className="panel-badge badge-warn">{selectedExecutionAuditItems.length}</div></div>
-          <div className="focus-list">
+        </InspectionPanel>
+        <InspectionListPanel
+          title={locale === 'zh' ? '选中执行审计轨迹' : 'Selected Execution Audit'}
+          copy={locale === 'zh' ? '按策略 ID 聚合当前选中 execution plan 对应的审计留痕。' : 'Aggregate audit trail for the selected execution plan by strategy id.'}
+          badge={selectedExecutionAuditItems.length}
+          badgeClassName="badge-warn"
+        >
             {auditLoading ? <div className="status-copy">{locale === 'zh' ? '正在加载执行审计...' : 'Loading execution audit...'}</div> : null}
             {!auditLoading && !selectedEntry ? <div className="status-copy">{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</div> : null}
             {!auditLoading && selectedEntry && !selectedExecutionAuditItems.length ? <div className="status-copy">{locale === 'zh' ? '当前执行计划暂无审计留痕。' : 'No audit records exist for the selected execution plan yet.'}</div> : null}
@@ -242,10 +249,12 @@ export function ExecutionPage() {
                 <div className="focus-metric"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong></div>
               </div>
             ))}
-          </div>
-        </article>
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中执行工作流' : 'Selected Execution Workflow'}</div><div className="panel-copy">{locale === 'zh' ? '查看 strategy-execution workflow 的状态、尝试次数和步骤进度。' : 'Inspect strategy-execution workflow status, attempts, and step progress.'}</div></div><div className="panel-badge badge-info">{selectedWorkflow?.status || '--'}</div></div>
+        </InspectionListPanel>
+        <InspectionPanel
+          title={locale === 'zh' ? '选中执行工作流' : 'Selected Execution Workflow'}
+          copy={locale === 'zh' ? '查看 strategy-execution workflow 的状态、尝试次数和步骤进度。' : 'Inspect strategy-execution workflow status, attempts, and step progress.'}
+          badge={selectedWorkflow?.status || '--'}
+        >
           {!selectedEntry ? (
             <div className="status-copy">{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</div>
           ) : workflowLoading ? (
@@ -261,10 +270,13 @@ export function ExecutionPage() {
               <div className="status-copy">{selectedWorkflow.steps.map((step) => `${step.key}:${step.status}`).join(' | ') || '--'}</div>
             </div>
           )}
-        </article>
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中审批动作历史' : 'Selected Approval Actions'}</div><div className="panel-copy">{locale === 'zh' ? '按当前 execution plan 的订单标的聚合 approve / reject / cancel 动作历史。' : 'Aggregate approve, reject, and cancel actions by the selected execution plan’s order symbols.'}</div></div><div className="panel-badge badge-warn">{selectedExecutionActions.length}</div></div>
-          <div className="focus-list">
+        </InspectionPanel>
+        <InspectionListPanel
+          title={locale === 'zh' ? '选中审批动作历史' : 'Selected Approval Actions'}
+          copy={locale === 'zh' ? '按当前 execution plan 的订单标的聚合 approve / reject / cancel 动作历史。' : 'Aggregate approve, reject, and cancel actions by the selected execution plan’s order symbols.'}
+          badge={selectedExecutionActions.length}
+          badgeClassName="badge-warn"
+        >
             {actionsLoading ? <div className="status-copy">{locale === 'zh' ? '正在加载审批动作历史...' : 'Loading approval actions...'}</div> : null}
             {!actionsLoading && !selectedEntry ? <div className="status-copy">{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</div> : null}
             {!actionsLoading && selectedEntry && !selectedExecutionActions.length ? <div className="status-copy">{locale === 'zh' ? '当前执行计划还没有关联的审批动作。' : 'No approval actions are associated with the selected execution plan yet.'}</div> : null}
@@ -276,10 +288,13 @@ export function ExecutionPage() {
                 <div className="focus-metric"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong></div>
               </div>
             ))}
-          </div>
-        </article>
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中 Broker 快照' : 'Selected Broker Snapshot'}</div><div className="panel-copy">{locale === 'zh' ? '优先关联当前 plan 最新 runtime 所在周期的 broker snapshot；若不存在则回退到最新快照。' : 'Prefer the broker snapshot from the selected plan’s latest runtime cycle, then fall back to the latest snapshot.'}</div></div><div className="panel-badge badge-ok">{selectedAccountSnapshot?.provider || '--'}</div></div>
+        </InspectionListPanel>
+        <InspectionPanel
+          title={locale === 'zh' ? '选中 Broker 快照' : 'Selected Broker Snapshot'}
+          copy={locale === 'zh' ? '优先关联当前 plan 最新 runtime 所在周期的 broker snapshot；若不存在则回退到最新快照。' : 'Prefer the broker snapshot from the selected plan’s latest runtime cycle, then fall back to the latest snapshot.'}
+          badge={selectedAccountSnapshot?.provider || '--'}
+          badgeClassName="badge-ok"
+        >
           {!selectedEntry ? (
             <div className="status-copy">{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</div>
           ) : !selectedAccountSnapshot ? (
@@ -295,10 +310,12 @@ export function ExecutionPage() {
               <div className="status-copy">{selectedAccountSnapshot.message}</div>
             </div>
           )}
-        </article>
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中执行版本轨迹' : 'Selected Execution Version History'}</div><div className="panel-copy">{locale === 'zh' ? '从 execution audit metadata 回放订单规模、风控状态和资金规模的历史快照。' : 'Replay order count, risk status, and capital snapshots from execution audit metadata.'}</div></div><div className="panel-badge badge-info">{selectedExecutionVersionItems.length}</div></div>
-          <div className="focus-list">
+        </InspectionPanel>
+        <InspectionListPanel
+          title={locale === 'zh' ? '选中执行版本轨迹' : 'Selected Execution Version History'}
+          copy={locale === 'zh' ? '从 execution audit metadata 回放订单规模、风控状态和资金规模的历史快照。' : 'Replay order count, risk status, and capital snapshots from execution audit metadata.'}
+          badge={selectedExecutionVersionItems.length}
+        >
             {!selectedEntry ? <div className="status-copy">{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</div> : null}
             {selectedEntry && !selectedExecutionVersionItems.length ? <div className="status-copy">{locale === 'zh' ? '当前执行计划还没有可回放的版本快照。' : 'No version snapshots are available for the selected execution plan yet.'}</div> : null}
             {selectedExecutionVersionItems.map((item) => {
@@ -316,8 +333,7 @@ export function ExecutionPage() {
                 </div>
               );
             })}
-          </div>
-        </article>
+        </InspectionListPanel>
       </section>
 
       <section className="panel-grid">

@@ -5,6 +5,7 @@ import { saveStrategyCatalogItem } from '../../modules/research/research.service
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
+import { InspectionListPanel, InspectionPanel } from '../console/components/InspectionPanels.tsx';
 import { UniverseTable } from '../console/components/ConsoleTables.tsx';
 import { onShortcutKeyDown, useSettingsNavigation } from '../console/hooks.ts';
 import { copy, useLocale } from '../console/i18n.tsx';
@@ -564,8 +565,11 @@ function StrategiesPage() {
       </section>
 
       <section className="panel-grid">
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中策略详情' : 'Selected Strategy Detail'}</div><div className="panel-copy">{locale === 'zh' ? '聚合当前策略的阶段、收益预期、风险参数和研究摘要。' : 'Aggregate the selected strategy’s stage, expected return, risk profile, and research summary.'}</div></div><div className="panel-badge badge-info">{selectedStrategy?.status || '--'}</div></div>
+        <InspectionPanel
+          title={locale === 'zh' ? '选中策略详情' : 'Selected Strategy Detail'}
+          copy={locale === 'zh' ? '聚合当前策略的阶段、收益预期、风险参数和研究摘要。' : 'Aggregate the selected strategy’s stage, expected return, risk profile, and research summary.'}
+          badge={selectedStrategy?.status || '--'}
+        >
           {!selectedStrategy ? (
             <div className="empty-cell">{locale === 'zh' ? '当前没有可查看的策略。' : 'No strategy is available for inspection.'}</div>
           ) : (
@@ -580,10 +584,14 @@ function StrategiesPage() {
               <div className="status-copy">{selectedStrategy.summary}</div>
             </div>
           )}
-        </article>
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中策略研究记录' : 'Selected Strategy Research Runs'}</div><div className="panel-copy">{locale === 'zh' ? '查看当前策略关联的最近回测运行记录。' : 'Review the most recent backtest runs associated with the selected strategy.'}</div></div><div className="panel-badge badge-warn">{selectedStrategyRuns.length}</div></div>
-          <div className="focus-list focus-list-terminal">
+        </InspectionPanel>
+        <InspectionListPanel
+          title={locale === 'zh' ? '选中策略研究记录' : 'Selected Strategy Research Runs'}
+          copy={locale === 'zh' ? '查看当前策略关联的最近回测运行记录。' : 'Review the most recent backtest runs associated with the selected strategy.'}
+          badge={selectedStrategyRuns.length}
+          badgeClassName="badge-warn"
+          terminal
+        >
             {!selectedStrategy ? <div className="empty-cell">{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</div> : null}
             {selectedStrategy && !selectedStrategyRuns.length ? <div className="empty-cell">{locale === 'zh' ? '当前策略还没有研究运行记录。' : 'No research runs exist for the selected strategy yet.'}</div> : null}
             {selectedStrategyRuns.map((run) => (
@@ -606,11 +614,13 @@ function StrategiesPage() {
                 </div>
               </div>
             ))}
-          </div>
-        </article>
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中策略审计轨迹' : 'Selected Strategy Audit Trail'}</div><div className="panel-copy">{locale === 'zh' ? '只展示当前策略的注册、晋级、归档与恢复留痕。' : 'Show only the selected strategy’s registry, promotion, archive, and restore audit trail.'}</div></div><div className="panel-badge badge-info">{selectedStrategyAuditItems.length}</div></div>
-          <div className="focus-list focus-list-terminal">
+        </InspectionListPanel>
+        <InspectionListPanel
+          title={locale === 'zh' ? '选中策略审计轨迹' : 'Selected Strategy Audit Trail'}
+          copy={locale === 'zh' ? '只展示当前策略的注册、晋级、归档与恢复留痕。' : 'Show only the selected strategy’s registry, promotion, archive, and restore audit trail.'}
+          badge={selectedStrategyAuditItems.length}
+          terminal
+        >
             {!selectedStrategy ? <div className="empty-cell">{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</div> : null}
             {selectedStrategy && !selectedStrategyAuditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前策略还没有审计轨迹。' : 'No audit trail exists for the selected strategy yet.'}</div> : null}
             {selectedStrategyAuditItems.map((item) => {
@@ -636,11 +646,14 @@ function StrategiesPage() {
                 </div>
               );
             })}
-          </div>
-        </article>
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中策略版本轨迹' : 'Selected Strategy Version History'}</div><div className="panel-copy">{locale === 'zh' ? '从 audit metadata 读取最近版本的评分和风险参数，观察策略快照如何变化。' : 'Read the latest score and risk parameter snapshots from audit metadata to track how the strategy evolved.'}</div></div><div className="panel-badge badge-warn">{selectedStrategyVersionItems.length}</div></div>
-          <div className="focus-list focus-list-terminal">
+        </InspectionListPanel>
+        <InspectionListPanel
+          title={locale === 'zh' ? '选中策略版本轨迹' : 'Selected Strategy Version History'}
+          copy={locale === 'zh' ? '从 audit metadata 读取最近版本的评分和风险参数，观察策略快照如何变化。' : 'Read the latest score and risk parameter snapshots from audit metadata to track how the strategy evolved.'}
+          badge={selectedStrategyVersionItems.length}
+          badgeClassName="badge-warn"
+          terminal
+        >
             {!selectedStrategy ? <div className="empty-cell">{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</div> : null}
             {selectedStrategy && !selectedStrategyVersionItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前策略还没有可回放的版本快照。' : 'No version snapshots are available for the selected strategy yet.'}</div> : null}
             {selectedStrategyVersionItems.map((item) => {
@@ -673,8 +686,7 @@ function StrategiesPage() {
                 </div>
               );
             })}
-          </div>
-        </article>
+        </InspectionListPanel>
       </section>
     </>
   );
