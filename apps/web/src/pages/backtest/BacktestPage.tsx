@@ -97,6 +97,9 @@ function BacktestPage() {
     ? workflowRuns.find((workflow) => workflow.id === selectedRun.workflowRunId) || null
     : null;
   const requestedRunId = searchParams.get('run');
+  const requestedStrategyId = searchParams.get('strategy');
+  const requestedTimelineId = searchParams.get('timeline');
+  const sourcePage = searchParams.get('source');
 
   useEffect(() => {
     const pollMs = hasActiveRuns ? 5000 : 15000;
@@ -594,6 +597,15 @@ function BacktestPage() {
                 >
                   {locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
                 </button>
+                {sourcePage === 'strategies' && requestedStrategyId ? (
+                  <button
+                    type="button"
+                    className="inline-action"
+                    onClick={() => navigate(`/strategies?strategy=${requestedStrategyId}${requestedTimelineId ? `&timeline=${requestedTimelineId}` : ''}`)}
+                  >
+                    {locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
+                  </button>
+                ) : null}
               </div>
               <InspectionStatus>{selectedRun.summary}</InspectionStatus>
             </div>

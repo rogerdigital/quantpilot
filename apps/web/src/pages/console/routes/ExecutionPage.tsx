@@ -65,6 +65,9 @@ export function ExecutionPage() {
     ? accountSnapshots.find((snapshot) => snapshot.cycle === selectedEntry.latestRuntime?.cycle) || accountSnapshots[0] || null
     : accountSnapshots[0] || null;
   const requestedPlanId = searchParams.get('plan');
+  const requestedStrategyId = searchParams.get('strategy');
+  const requestedTimelineId = searchParams.get('timeline');
+  const sourcePage = searchParams.get('source');
 
   useEffect(() => {
     let active = true;
@@ -245,6 +248,15 @@ export function ExecutionPage() {
                 >
                   {locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
                 </button>
+                {sourcePage === 'strategies' && requestedStrategyId ? (
+                  <button
+                    type="button"
+                    className="inline-action"
+                    onClick={() => navigate(`/strategies?strategy=${requestedStrategyId}${requestedTimelineId ? `&timeline=${requestedTimelineId}` : ''}`)}
+                  >
+                    {locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
+                  </button>
+                ) : null}
               </div>
               <InspectionStatus>{selectedEntry.plan.summary}</InspectionStatus>
               <InspectionStatus>

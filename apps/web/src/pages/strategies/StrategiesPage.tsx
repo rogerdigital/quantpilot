@@ -140,6 +140,7 @@ function StrategiesPage() {
     .slice(0, 10);
   const selectedTimelineItem = selectedStrategyTimelineItems.find((item) => item.id === selectedTimelineId) || selectedStrategyTimelineItems[0] || null;
   const requestedStrategyId = searchParams.get('strategy');
+  const requestedTimelineId = searchParams.get('timeline');
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
     setForm((current) => ({
@@ -315,10 +316,22 @@ function StrategiesPage() {
       setSelectedTimelineId('');
       return;
     }
-    if (!selectedTimelineId || !selectedStrategyTimelineItems.some((item) => item.id === selectedTimelineId)) {
-      setSelectedTimelineId(selectedStrategyTimelineItems[0].id);
+    if (requestedTimelineId && selectedStrategyTimelineItems.some((item) => item.id === requestedTimelineId) && selectedTimelineId !== requestedTimelineId) {
+      setSelectedTimelineId(requestedTimelineId);
+      return;
     }
-  }, [selectedTimelineId, selectedStrategyTimelineItems]);
+    if (!selectedTimelineId || !selectedStrategyTimelineItems.some((item) => item.id === selectedTimelineId)) {
+      setSelectedTimelineId(requestedTimelineId && selectedStrategyTimelineItems.some((item) => item.id === requestedTimelineId) ? requestedTimelineId : selectedStrategyTimelineItems[0].id);
+    }
+  }, [requestedTimelineId, selectedTimelineId, selectedStrategyTimelineItems]);
+
+  useEffect(() => {
+    if (!selectedTimelineId) return;
+    if (searchParams.get('timeline') === selectedTimelineId) return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('timeline', selectedTimelineId);
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, selectedTimelineId, setSearchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -715,7 +728,7 @@ function StrategiesPage() {
                   <button
                     type="button"
                     className="inline-action inline-action-approve"
-                    onClick={() => navigate(`/backtest?run=${selectedTimelineItem.reference}`)}
+                    onClick={() => navigate(`/backtest?run=${selectedTimelineItem.reference}&strategy=${selectedStrategy?.id || ''}&timeline=${selectedTimelineItem.id}&source=strategies`)}
                   >
                     {locale === 'zh' ? '打开回测详情' : 'Open Backtest Detail'}
                   </button>
@@ -726,7 +739,7 @@ function StrategiesPage() {
                   <button
                     type="button"
                     className="inline-action inline-action-approve"
-                    onClick={() => navigate(`/execution?plan=${selectedTimelineItem.reference}`)}
+                    onClick={() => navigate(`/execution?plan=${selectedTimelineItem.reference}&strategy=${selectedStrategy?.id || ''}&timeline=${selectedTimelineItem.id}&source=strategies`)}
                   >
                     {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
                   </button>
