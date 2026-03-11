@@ -22,6 +22,12 @@ function fmtDateTime(value: string, locale: 'zh' | 'en') {
     });
 }
 
+const WINDOW_PRESETS = [
+  '2024-01-01 -> 2026-03-01',
+  '2023-01-01 -> 2024-12-31',
+  '2025-01-01 -> 2026-03-01',
+] as const;
+
 function BacktestPage() {
   const { state, session, hasPermission } = useTradingSystem();
   const { locale } = useLocale();
@@ -33,6 +39,7 @@ function BacktestPage() {
   const [actionError, setActionError] = useState('');
   const [runFilter, setRunFilter] = useState<'all' | 'queued' | 'running' | 'completed' | 'needs_review'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [windowLabel, setWindowLabel] = useState('2024-01-01 -> 2026-03-01');
   const { data, loading, error } = useResearchHub(refreshKey);
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
@@ -67,12 +74,13 @@ function BacktestPage() {
     try {
       const result = await queueBacktestRun({
         strategyId,
+        windowLabel,
         requestedBy: session?.user.id || 'operator',
       });
       setActionMessage(
         locale === 'zh'
-          ? `已提交回测任务 ${result.run.strategyName}，工作流 ${result.workflow.id} 已入队。`
-          : `Queued backtest for ${result.run.strategyName}. Workflow ${result.workflow.id} is now pending.`,
+          ? `已提交回测任务 ${result.run.strategyName}，窗口 ${result.run.windowLabel}，工作流 ${result.workflow.id} 已入队。`
+          : `Queued backtest for ${result.run.strategyName} with window ${result.run.windowLabel}. Workflow ${result.workflow.id} is now pending.`,
       );
       setRefreshKey((current) => current + 1);
     } catch (requestError) {
@@ -138,6 +146,47 @@ function BacktestPage() {
         { label: copy[locale].labels.mode, value: translateMode(locale, state.mode) },
         { label: copy[locale].terms.riskLevel, value: translateRiskLevel(locale, state.riskLevel), accent: true },
       ]} />
+
+      <section className="panel-grid">
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '回测参数' : 'Backtest Parameters'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '统一设置本次发起回测使用的时间窗口，候选策略列表会复用这个参数。'
+                  : 'Set the date window used by the next backtest request. The candidate strategy list reuses this parameter.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">PARAMS</div>
+          </div>
+          <div className="settings-form-grid">
+            <label className="settings-field settings-field-wide">
+              <span>{locale === 'zh' ? '时间窗口' : 'Window Label'}</span>
+              <input
+                disabled={!canQueueBacktest || Boolean(submittingStrategyId)}
+                value={windowLabel}
+                onChange={(event) => setWindowLabel(event.target.value)}
+                placeholder="2024-01-01 -> 2026-03-01"
+              />
+            </label>
+          </div>
+          <div className="action-group">
+            {WINDOW_PRESETS.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                className="inline-action"
+                disabled={!canQueueBacktest || Boolean(submittingStrategyId)}
+                onClick={() => setWindowLabel(preset)}
+              >
+                {preset}
+              </button>
+            ))}
+          </div>
+          {!canQueueBacktest ? <div className="status-copy">{locale === 'zh' ? '当前会话缺少 strategy:write 权限，不能调整或提交回测参数。' : 'This session is missing strategy:write permission, so backtest parameters stay read-only.'}</div> : null}
+        </article>
+      </section>
 
       <section className="panel-grid">
         <article className="panel">
@@ -279,7 +328,11 @@ function BacktestPage() {
               </div>
             ))}
           </div>
-          {!canQueueBacktest ? <div className="status-copy">{locale === 'zh' ? '当前会话缺少 strategy:write 权限，不能提交新的回测任务。' : 'This session is missing strategy:write permission, so new backtests cannot be queued.'}</div> : null}
+          <div className="status-copy">
+            {locale === 'zh'
+              ? `当前发起回测会复用窗口 ${windowLabel}。`
+              : `New backtests currently reuse the window ${windowLabel}.`}
+          </div>
         </article>
         <article className="panel">
           <div className="panel-head">
