@@ -48,6 +48,7 @@ function BacktestPage() {
   const [windowLabel, setWindowLabel] = useState('2024-01-01 -> 2026-03-01');
   const [selectedRunId, setSelectedRunId] = useState('');
   const [selectedAuditEventId, setSelectedAuditEventId] = useState('');
+  const [selectedWorkflowStepKey, setSelectedWorkflowStepKey] = useState('');
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRunRecord[]>([]);
   const [workflowLoading, setWorkflowLoading] = useState(true);
   const { data, loading, error } = useResearchHub(refreshKey);
@@ -102,7 +103,9 @@ function BacktestPage() {
   const requestedTimelineId = searchParams.get('timeline');
   const sourcePage = searchParams.get('source');
   const requestedAuditEventId = searchParams.get('audit');
+  const requestedWorkflowStepKey = searchParams.get('step');
   const selectedAuditEvent = selectedRunAuditItems.find((item) => item.id === selectedAuditEventId) || selectedRunAuditItems[0] || null;
+  const selectedWorkflowStep = selectedWorkflow?.steps.find((step) => step.key === selectedWorkflowStepKey) || selectedWorkflow?.steps[0] || null;
 
   useEffect(() => {
     const pollMs = hasActiveRuns ? 5000 : 15000;
@@ -178,6 +181,32 @@ function BacktestPage() {
     nextParams.set('audit', selectedAuditEventId);
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, selectedAuditEventId, setSearchParams]);
+
+  useEffect(() => {
+    if (!selectedWorkflow?.steps.length) {
+      setSelectedWorkflowStepKey('');
+      return;
+    }
+    if (requestedWorkflowStepKey && selectedWorkflow.steps.some((step) => step.key === requestedWorkflowStepKey) && selectedWorkflowStepKey !== requestedWorkflowStepKey) {
+      setSelectedWorkflowStepKey(requestedWorkflowStepKey);
+      return;
+    }
+    if (!selectedWorkflowStepKey || !selectedWorkflow.steps.some((step) => step.key === selectedWorkflowStepKey)) {
+      setSelectedWorkflowStepKey(
+        requestedWorkflowStepKey && selectedWorkflow.steps.some((step) => step.key === requestedWorkflowStepKey)
+          ? requestedWorkflowStepKey
+          : selectedWorkflow.steps[0].key,
+      );
+    }
+  }, [requestedWorkflowStepKey, selectedWorkflow, selectedWorkflowStepKey]);
+
+  useEffect(() => {
+    if (!selectedWorkflowStepKey) return;
+    if (searchParams.get('step') === selectedWorkflowStepKey) return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('step', selectedWorkflowStepKey);
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, selectedWorkflowStepKey, setSearchParams]);
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);
@@ -711,12 +740,52 @@ function BacktestPage() {
               <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{selectedWorkflow.status}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '尝试次数' : 'Attempts'}</span><strong>{selectedWorkflow.attempt}/{selectedWorkflow.maxAttempts}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '触发方式' : 'Trigger'}</span><strong>{selectedWorkflow.trigger}</strong></div>
-              <InspectionStatus>
-                {selectedWorkflow.steps.length
-                  ? selectedWorkflow.steps.map((step) => `${step.key}:${step.status}`).join(' | ')
-                  : (locale === 'zh' ? '尚未记录步骤进度。' : 'No workflow steps recorded yet.')}
-              </InspectionStatus>
+              {selectedWorkflow.steps.length ? (
+                <div className="focus-list">
+                  {selectedWorkflow.steps.map((step) => (
+                    <InspectionSelectableRow
+                      key={step.key}
+                      metrics={[
+                        { label: locale === 'zh' ? '步骤' : 'Step', value: step.key },
+                        { label: locale === 'zh' ? '状态' : 'Status', value: step.status },
+                      ]}
+                      actions={(
+                        <button
+                          type="button"
+                          className="inline-action"
+                          disabled={selectedWorkflowStepKey === step.key}
+                          onClick={() => setSelectedWorkflowStepKey(step.key)}
+                        >
+                          {selectedWorkflowStepKey === step.key
+                            ? (locale === 'zh' ? '已选中' : 'Selected')
+                            : (locale === 'zh' ? '查看' : 'Inspect')}
+                        </button>
+                      )}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <InspectionStatus>{locale === 'zh' ? '尚未记录步骤进度。' : 'No workflow steps recorded yet.'}</InspectionStatus>
+              )}
               <InspectionStatus>{locale === 'zh' ? `最近更新时间 ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}` : `Last updated ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}`}</InspectionStatus>
+            </div>
+          )}
+        </InspectionPanel>
+        <InspectionPanel
+          title={locale === 'zh' ? '选中工作流步骤' : 'Selected Workflow Step'}
+          copy={locale === 'zh' ? '把当前 workflow 节点单独展开，便于深链定位到具体步骤。' : 'Expand the current workflow node so deep links can target a specific step.'}
+          badge={selectedWorkflowStep?.status || '--'}
+          badgeClassName="badge-info"
+        >
+          {!selectedWorkflow ? (
+            <InspectionEmpty>{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</InspectionEmpty>
+          ) : !selectedWorkflowStep ? (
+            <InspectionEmpty>{locale === 'zh' ? '当前工作流还没有可定位的步骤。' : 'No workflow step is available for inspection yet.'}</InspectionEmpty>
+          ) : (
+            <div className="status-stack">
+              <div className="status-row"><span>{locale === 'zh' ? '步骤' : 'Step'}</span><strong>{selectedWorkflowStep.key}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{selectedWorkflowStep.status}</strong></div>
+              <InspectionStatus>{locale === 'zh' ? `当前深链已定位到步骤 ${selectedWorkflowStep.key}。` : `The current deep link is focused on step ${selectedWorkflowStep.key}.`}</InspectionStatus>
             </div>
           )}
         </InspectionPanel>
