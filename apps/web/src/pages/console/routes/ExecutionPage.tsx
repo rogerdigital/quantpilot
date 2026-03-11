@@ -52,6 +52,9 @@ export function ExecutionPage() {
   const selectedWorkflow = selectedEntry?.plan.workflowRunId
     ? workflowRuns.find((workflow) => workflow.id === selectedEntry.plan.workflowRunId) || null
     : null;
+  const selectedAccountSnapshot = selectedEntry?.latestRuntime
+    ? accountSnapshots.find((snapshot) => snapshot.cycle === selectedEntry.latestRuntime?.cycle) || accountSnapshots[0] || null
+    : accountSnapshots[0] || null;
 
   useEffect(() => {
     let active = true;
@@ -269,6 +272,24 @@ export function ExecutionPage() {
               </div>
             ))}
           </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中 Broker 快照' : 'Selected Broker Snapshot'}</div><div className="panel-copy">{locale === 'zh' ? '优先关联当前 plan 最新 runtime 所在周期的 broker snapshot；若不存在则回退到最新快照。' : 'Prefer the broker snapshot from the selected plan’s latest runtime cycle, then fall back to the latest snapshot.'}</div></div><div className="panel-badge badge-ok">{selectedAccountSnapshot?.provider || '--'}</div></div>
+          {!selectedEntry ? (
+            <div className="status-copy">{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</div>
+          ) : !selectedAccountSnapshot ? (
+            <div className="status-copy">{locale === 'zh' ? '当前没有可用的 broker 快照。' : 'No broker snapshot is available for the selected execution plan.'}</div>
+          ) : (
+            <div className="status-stack">
+              <div className="status-row"><span>{locale === 'zh' ? '提供商' : 'Provider'}</span><strong>{selectedAccountSnapshot.provider}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '周期' : 'Cycle'}</span><strong>{selectedAccountSnapshot.cycle}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{selectedAccountSnapshot.connected ? 'connected' : 'disconnected'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '现金' : 'Cash'}</span><strong>{Number(selectedAccountSnapshot.account?.cash || 0).toFixed(0)}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '持仓数' : 'Positions'}</span><strong>{selectedAccountSnapshot.positions.length}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '订单数' : 'Orders'}</span><strong>{selectedAccountSnapshot.orders.length}</strong></div>
+              <div className="status-copy">{selectedAccountSnapshot.message}</div>
+            </div>
+          )}
         </article>
       </section>
 
