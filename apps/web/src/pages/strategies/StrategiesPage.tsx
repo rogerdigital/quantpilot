@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ApiPermissionError } from '../../app/api/controlPlane.ts';
+import type { ExecutionLedgerEntry } from '@shared-types/trading.ts';
+import { ApiPermissionError, fetchExecutionLedger } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
 import { saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
@@ -28,6 +29,8 @@ function StrategiesPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [registryFilter, setRegistryFilter] = useState<'active' | 'archived' | 'all'>('active');
   const [selectedStrategyId, setSelectedStrategyId] = useState('');
+  const [executionEntries, setExecutionEntries] = useState<ExecutionLedgerEntry[]>([]);
+  const [executionLoading, setExecutionLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [promotingId, setPromotingId] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
@@ -81,6 +84,9 @@ function StrategiesPage() {
     || typeof item.metadata?.maxDrawdownPct === 'number'
     || typeof item.metadata?.sharpe === 'number'
   ));
+  const selectedStrategyExecutionEntries = executionEntries
+    .filter((entry) => entry.plan.strategyId === selectedStrategy?.id)
+    .slice(0, 6);
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
     setForm((current) => ({
@@ -238,6 +244,28 @@ function StrategiesPage() {
       setSelectedStrategyId(visibleStrategies[0].id);
     }
   }, [selectedStrategyId, visibleActiveStrategies, visibleArchivedStrategies]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setExecutionLoading(true);
+    fetchExecutionLedger()
+      .then((result) => {
+        if (cancelled) return;
+        setExecutionEntries(result.entries);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setExecutionEntries([]);
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setExecutionLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey]);
 
   return (
     <>
@@ -596,6 +624,30 @@ function StrategiesPage() {
                 </div>
               </div>
             ))}
+        </InspectionListPanel>
+        <InspectionListPanel
+          title={locale === 'zh' ? '选中策略执行计划' : 'Selected Strategy Execution Plans'}
+          copy={locale === 'zh' ? '直接查看当前策略在执行侧的承接情况，包括计划状态、workflow 和最新 runtime。' : 'Inspect how the selected strategy is handed off downstream through execution plan status, workflow, and latest runtime.'}
+          badge={selectedStrategyExecutionEntries.length}
+          badgeClassName="badge-info"
+          terminal
+        >
+          {!selectedStrategy ? <InspectionEmpty>{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</InspectionEmpty> : null}
+          {selectedStrategy && executionLoading ? <InspectionEmpty>{locale === 'zh' ? '正在加载关联执行计划...' : 'Loading linked execution plans...'}</InspectionEmpty> : null}
+          {selectedStrategy && !executionLoading && !selectedStrategyExecutionEntries.length ? <InspectionEmpty>{locale === 'zh' ? '当前策略还没有进入执行侧。' : 'The selected strategy has not produced downstream execution plans yet.'}</InspectionEmpty> : null}
+          {selectedStrategyExecutionEntries.map((entry) => (
+            <InspectionMetricsRow
+              key={entry.plan.id}
+              leadTitle={entry.plan.summary}
+              leadCopy={entry.latestRuntime?.message || `${entry.plan.orderCount} ${locale === 'zh' ? '笔订单候选' : 'candidate orders'}`}
+              metrics={[
+                { label: locale === 'zh' ? '计划状态' : 'Plan status', value: entry.plan.status },
+                { label: locale === 'zh' ? '风控' : 'Risk', value: entry.plan.riskStatus },
+                { label: locale === 'zh' ? 'Workflow' : 'Workflow', value: entry.workflow?.status || '--' },
+                { label: locale === 'zh' ? '运行时' : 'Runtime', value: entry.latestRuntime ? `${entry.latestRuntime.submittedOrderCount}/${entry.latestRuntime.openOrderCount}` : '--' },
+              ]}
+            />
+          ))}
         </InspectionListPanel>
         <InspectionListPanel
           title={locale === 'zh' ? '选中策略审计轨迹' : 'Selected Strategy Audit Trail'}
