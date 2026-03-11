@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ExecutionLedgerEntry } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchExecutionLedger } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
@@ -31,6 +31,7 @@ function StrategiesPage() {
   const { state, session, hasPermission } = useTradingSystem();
   const { locale } = useLocale();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const goToSettings = useSettingsNavigation();
   const [refreshKey, setRefreshKey] = useState(0);
   const [registryFilter, setRegistryFilter] = useState<'active' | 'archived' | 'all'>('active');
@@ -138,6 +139,7 @@ function StrategiesPage() {
     .sort((left, right) => new Date(right.at).getTime() - new Date(left.at).getTime())
     .slice(0, 10);
   const selectedTimelineItem = selectedStrategyTimelineItems.find((item) => item.id === selectedTimelineId) || selectedStrategyTimelineItems[0] || null;
+  const requestedStrategyId = searchParams.get('strategy');
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
     setForm((current) => ({
@@ -291,10 +293,22 @@ function StrategiesPage() {
       setSelectedStrategyId('');
       return;
     }
-    if (!selectedStrategyId || !visibleStrategies.some((item) => item.id === selectedStrategyId)) {
-      setSelectedStrategyId(visibleStrategies[0].id);
+    if (requestedStrategyId && visibleStrategies.some((item) => item.id === requestedStrategyId) && selectedStrategyId !== requestedStrategyId) {
+      setSelectedStrategyId(requestedStrategyId);
+      return;
     }
-  }, [selectedStrategyId, visibleActiveStrategies, visibleArchivedStrategies]);
+    if (!selectedStrategyId || !visibleStrategies.some((item) => item.id === selectedStrategyId)) {
+      setSelectedStrategyId(requestedStrategyId && visibleStrategies.some((item) => item.id === requestedStrategyId) ? requestedStrategyId : visibleStrategies[0].id);
+    }
+  }, [requestedStrategyId, selectedStrategyId, visibleActiveStrategies, visibleArchivedStrategies]);
+
+  useEffect(() => {
+    if (!selectedStrategyId) return;
+    if (searchParams.get('strategy') === selectedStrategyId) return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('strategy', selectedStrategyId);
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, selectedStrategyId, setSearchParams]);
 
   useEffect(() => {
     if (!selectedStrategyTimelineItems.length) {

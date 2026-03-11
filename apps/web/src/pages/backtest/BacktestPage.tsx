@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { WorkflowRunRecord } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
@@ -36,6 +36,7 @@ function BacktestPage() {
   const { state, session, hasPermission } = useTradingSystem();
   const { locale } = useLocale();
   const { totalPnlPct } = useSummary();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [refreshKey, setRefreshKey] = useState(0);
   const [submittingStrategyId, setSubmittingStrategyId] = useState('');
@@ -585,6 +586,15 @@ function BacktestPage() {
               <div className="status-row"><span>{locale === 'zh' ? '最大回撤' : 'Max Drawdown'}</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? fmtPct(selectedRun.maxDrawdownPct) : '--'}</strong></div>
               <div className="status-row"><span>Sharpe</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? selectedRun.sharpe.toFixed(2) : '--'}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '胜率' : 'Win Rate'}</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? fmtPct(selectedRun.winRatePct) : '--'}</strong></div>
+              <div className="settings-actions">
+                <button
+                  type="button"
+                  className="inline-action inline-action-approve"
+                  onClick={() => navigate(`/strategies?strategy=${selectedRun.strategyId}`)}
+                >
+                  {locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
+                </button>
+              </div>
               <InspectionStatus>{selectedRun.summary}</InspectionStatus>
             </div>
           )}

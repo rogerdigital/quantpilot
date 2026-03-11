@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchExecutionAccountSnapshots, fetchExecutionLedger, fetchExecutionRuntime, fetchOperatorActions, fetchTaskWorkflows } from '../../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
@@ -14,6 +14,7 @@ import type { BrokerAccountSnapshotRecord, ExecutionLedgerEntry, ExecutionRuntim
 export function ExecutionPage() {
   const { state, approveLiveIntent, rejectLiveIntent, hasPermission, actionGuardNotice } = useTradingSystem();
   const { locale } = useLocale();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const goToSettings = useSettingsNavigation();
   const canApproveExecution = hasPermission('execution:approve');
@@ -236,6 +237,15 @@ export function ExecutionPage() {
               <div className="status-row"><span>{locale === 'zh' ? '审批状态' : 'Approval'}</span><strong>{selectedEntry.plan.approvalState}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '订单数' : 'Order count'}</span><strong>{selectedEntry.plan.orderCount}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '资金规模' : 'Capital'}</span><strong>{selectedEntry.plan.capital.toFixed(0)}</strong></div>
+              <div className="settings-actions">
+                <button
+                  type="button"
+                  className="inline-action inline-action-approve"
+                  onClick={() => navigate(`/strategies?strategy=${selectedEntry.plan.strategyId}`)}
+                >
+                  {locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
+                </button>
+              </div>
               <InspectionStatus>{selectedEntry.plan.summary}</InspectionStatus>
               <InspectionStatus>
                 {selectedEntry.latestRuntime
