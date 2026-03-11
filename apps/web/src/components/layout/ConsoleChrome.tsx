@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { useSettingsNavigation } from '../../modules/console/console.hooks.ts';
 import { copy, type ConsolePageKey, useLocale } from '../../modules/console/console.i18n.tsx';
@@ -158,10 +159,13 @@ function Sidebar() {
 function GlobalToolbar() {
   const { locale, setLocale } = useLocale();
   const { state } = useTradingSystem();
+  const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const goToSettings = useSettingsNavigation();
   const [localeOpen, setLocaleOpen] = useState(false);
   const localeMenuRef = useRef<HTMLDivElement | null>(null);
   const localeLabel = locale === 'zh' ? '中文' : 'English';
+  const marketConnected = marketStatus?.connected ?? state.integrationStatus.marketData.connected;
+  const marketDegraded = marketStatus?.fallback ?? !marketConnected;
 
   useEffect(() => {
     if (!localeOpen) return;
@@ -186,12 +190,12 @@ function GlobalToolbar() {
         <div className="toolbar-sub">{`${translateEngineStatus(locale, state.engineStatus)} · ${translateMode(locale, state.mode)} · ${state.marketClock || '--:--:--'}`}</div>
       </div>
       <div className="toolbar-actions">
-        <button type="button" className={`toolbar-pill toolbar-pill-button tone-${integrationTone(state.integrationStatus.marketData.connected, true)}`} onClick={() => goToSettings('integrations')}>
+        <button type="button" className={`toolbar-pill toolbar-pill-button tone-${integrationTone(marketConnected, marketDegraded)}`} onClick={() => goToSettings('integrations')}>
           <span className="toolbar-pill-main">
             <span className="status-dot" aria-hidden="true" />
             <span className="toolbar-pill-label">{copy[locale].labels.marketData}</span>
           </span>
-          <strong>{connectionLabel(locale, state.integrationStatus.marketData.connected, true)}</strong>
+          <strong>{connectionLabel(locale, marketConnected, marketDegraded)}</strong>
         </button>
         <button type="button" className={`toolbar-pill toolbar-pill-button tone-${integrationTone(state.integrationStatus.broker.connected, false, true)}`} onClick={() => goToSettings('integrations')}>
           <span className="toolbar-pill-main">

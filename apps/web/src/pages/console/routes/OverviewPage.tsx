@@ -1,5 +1,6 @@
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { useLatestBrokerSnapshot } from '../../../hooks/useLatestBrokerSnapshot.ts';
+import { useMarketProviderStatus } from '../../../hooks/useMarketProviderStatus.ts';
 import { useSettingsNavigation, useSummary } from '../hooks.ts';
 import { copy, useLocale } from '../i18n.tsx';
 import { ChartCanvas, TopMeta } from '../components/ConsoleChrome.tsx';
@@ -27,6 +28,7 @@ export function OverviewPage() {
   const goToSettings = useSettingsNavigation();
   const { paper, live, totalNav, totalPnlPct, positionCount } = useSummary();
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
+  const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
   const pendingApprovals = state.approvalQueue.length;
@@ -50,6 +52,8 @@ export function OverviewPage() {
     .slice(0, 6);
   const liveMirrorNav = Number(snapshot?.account?.equity || live.nav);
   const brokerConnected = Boolean(snapshot?.connected ?? state.integrationStatus.broker.connected);
+  const marketConnected = marketStatus?.connected ?? state.integrationStatus.marketData.connected;
+  const marketDegraded = marketStatus?.fallback ?? !marketConnected;
 
   return (
     <>
@@ -126,7 +130,7 @@ export function OverviewPage() {
           <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.equityCurve}</div><div className="panel-copy">{locale === 'zh' ? '用一个主图盯盘总资产变化，并将信号、仓位和执行后果收敛到同一观察面。' : 'Use one primary chart to track consolidated NAV, then read signal, exposure, and execution impact from the same desk.'}</div></div><div className="panel-badge badge-ok">LIVE DESK</div></div>
           <ChartCanvas kind="equity" />
           <div className="overview-inline-metrics">
-            <div className="overview-inline-metric"><span>{copy[locale].labels.marketState}</span><strong>{connectionLabel(locale, state.integrationStatus.marketData.connected, true)}</strong></div>
+            <div className="overview-inline-metric"><span>{copy[locale].labels.marketState}</span><strong>{connectionLabel(locale, marketConnected, marketDegraded)}</strong></div>
             <div className="overview-inline-metric"><span>{copy[locale].labels.brokerState}</span><strong>{connectionLabel(locale, brokerConnected, false, true)}</strong></div>
             <div className="overview-inline-metric"><span>{copy[locale].terms.tradeDecision}</span><strong>{translateRuntimeText(locale, state.decisionSummary)}</strong></div>
           </div>
@@ -139,7 +143,7 @@ export function OverviewPage() {
             <button type="button" className="status-row status-row-button" onClick={() => goToSettings('switches')}><span>{copy[locale].labels.manualApproval}</span><strong className={`status-chip tone-${toggleTone(state.toggles.manualApproval)}`}>{state.toggles.manualApproval ? copy[locale].labels.enabled : copy[locale].labels.disabled}</strong></button>
             <div className="status-row"><span>{copy[locale].labels.positions}</span><strong>{positionCount}</strong></div>
             <div className="status-row"><span>{copy[locale].terms.activityToday}</span><strong>{state.activityLog.length}</strong></div>
-            <button type="button" className="status-row status-row-button" onClick={() => goToSettings('integrations')}><span>{copy[locale].labels.marketState}</span><strong className={`status-chip tone-${integrationTone(state.integrationStatus.marketData.connected, true)}`}>{connectionLabel(locale, state.integrationStatus.marketData.connected, true)}</strong></button>
+            <button type="button" className="status-row status-row-button" onClick={() => goToSettings('integrations')}><span>{copy[locale].labels.marketState}</span><strong className={`status-chip tone-${integrationTone(marketConnected, marketDegraded)}`}>{connectionLabel(locale, marketConnected, marketDegraded)}</strong></button>
             <button type="button" className="status-row status-row-button" onClick={() => goToSettings('integrations')}><span>{copy[locale].labels.brokerState}</span><strong className={`status-chip tone-${integrationTone(brokerConnected, false, true)}`}>{connectionLabel(locale, brokerConnected, false, true)}</strong></button>
             <div className="status-copy">{translateRuntimeText(locale, state.decisionCopy)}</div>
             <div className="status-copy">{state.activityLog[0] ? `${locale === 'zh' ? '最新动作' : 'Latest action'}: ${translateRuntimeText(locale, state.activityLog[0].title)}` : translateRuntimeText(locale, '当前没有新的执行记录。')}</div>

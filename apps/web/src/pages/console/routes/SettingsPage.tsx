@@ -13,10 +13,11 @@ import {
   updateUserAccountPreferences,
   updateUserAccountProfile,
 } from '../../../app/api/controlPlane.ts';
+import { useMarketProviderStatus } from '../../../hooks/useMarketProviderStatus.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { SectionHeader } from '../components/ConsoleChrome.tsx';
 import { copy, useLocale } from '../i18n.tsx';
-import { modeTone, translateMode, translateProviderLabel, translateRuntimeText } from '../utils.ts';
+import { connectionLabel, fmtDateTime, modeTone, translateMode, translateProviderLabel, translateRuntimeText } from '../utils.ts';
 import type { UserAccountProfileSnapshot, UserBrokerBinding, UserBrokerBindingRuntimeSnapshot } from '@shared-types/trading.ts';
 
 export function SettingsPage() {
@@ -61,6 +62,7 @@ export function SettingsPage() {
     access: '',
     binding: '',
   });
+  const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const modes = [
     ['autopilot', 'AUTO PILOT'],
     ['hybrid', 'HYBRID'],
@@ -95,6 +97,17 @@ export function SettingsPage() {
   const executionDisabledReason = locale === 'zh'
     ? '缺少 execution:approve 权限，不能修改实盘相关开关。'
     : 'Missing execution:approve permission. Live execution toggles are disabled.';
+  const marketProviderLabel = translateProviderLabel(
+    locale,
+    marketStatus?.provider === 'alpaca'
+      ? 'Alpaca Market Data via Gateway'
+      : marketStatus?.provider === 'custom-http'
+        ? 'HTTP 行情网关'
+        : (state.integrationStatus.marketData.label || state.integrationStatus.marketData.provider),
+  );
+  const marketConnected = marketStatus?.connected ?? state.integrationStatus.marketData.connected;
+  const marketFallback = marketStatus?.fallback ?? !marketConnected;
+  const marketMessage = marketStatus?.message || state.integrationStatus.marketData.message;
 
   function syncBindingForm(binding?: UserBrokerBinding | null) {
     setBindingForm({
@@ -481,11 +494,13 @@ export function SettingsPage() {
         <article className="panel" id="integrations">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].labels.integrations}</div><div className="panel-copy">{copy[locale].terms.marketConnectivity}</div></div><div className="panel-badge badge-info">INTEGRATION</div></div>
           <div className="policy-card policy-card-inline">
-            <div className="policy-row"><span>{copy[locale].labels.marketData}</span><strong>{translateProviderLabel(locale, state.integrationStatus.marketData.label || state.integrationStatus.marketData.provider)}</strong></div>
-            <div className="policy-row"><span>{copy[locale].labels.marketState}</span><strong>{state.integrationStatus.marketData.connected ? copy[locale].labels.connected : copy[locale].labels.fallback}</strong></div>
+            <div className="policy-row"><span>{copy[locale].labels.marketData}</span><strong>{marketProviderLabel}</strong></div>
+            <div className="policy-row"><span>{copy[locale].labels.marketState}</span><strong>{connectionLabel(locale, marketConnected, marketFallback)}</strong></div>
+            <div className="policy-row"><span>{locale === 'zh' ? 'Fallback' : 'Fallback'}</span><strong>{marketFallback ? 'ON' : 'OFF'}</strong></div>
+            <div className="policy-row"><span>{locale === 'zh' ? '最近同步' : 'Last Sync'}</span><strong>{fmtDateTime(marketStatus?.asOf, locale)}</strong></div>
             <div className="policy-row"><span>{copy[locale].labels.broker}</span><strong>{translateProviderLabel(locale, state.integrationStatus.broker.label || state.integrationStatus.broker.provider)}</strong></div>
             <div className="policy-row"><span>{copy[locale].labels.brokerState}</span><strong>{state.integrationStatus.broker.connected ? copy[locale].labels.connected : copy[locale].labels.localOnly}</strong></div>
-            <div className="status-copy">{translateRuntimeText(locale, state.integrationStatus.marketData.message)}</div>
+            <div className="status-copy">{translateRuntimeText(locale, marketMessage)}</div>
             <div className="status-copy">{translateRuntimeText(locale, state.integrationStatus.broker.message)}</div>
           </div>
         </article>
