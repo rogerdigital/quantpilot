@@ -278,6 +278,13 @@ async function executeBacktestRunWorkflow(payload, context, options = {}) {
         runId: completedRun.id,
         workflowRunId: workflow.id,
         status: completedRun.status,
+        strategyId: completedRun.strategyId,
+        windowLabel: completedRun.windowLabel,
+        annualizedReturnPct: completedRun.annualizedReturnPct,
+        maxDrawdownPct: completedRun.maxDrawdownPct,
+        sharpe: completedRun.sharpe,
+        winRatePct: completedRun.winRatePct,
+        turnoverPct: completedRun.turnoverPct,
       },
     });
 

@@ -223,6 +223,9 @@ test('POST /api/backtest/runs/:id/review updates reviewable backtest runs', asyn
   assert.equal(reviewResponse.json.ok, true);
   assert.equal(reviewResponse.json.run.status, 'completed');
   assert.equal(reviewResponse.json.run.reviewedBy, 'risk-operator');
+  const audit = context.audit.listAuditRecords(10).find((item) => item.type === 'backtest-run.reviewed' && item.metadata?.runId === created.json.run.id);
+  assert.equal(audit.metadata?.windowLabel, '2023-01-01 -> 2024-12-31');
+  assert.equal(audit.metadata?.annualizedReturnPct, 0);
 });
 
 test('GET /api/agent/tools returns allowlisted read-only tools', async () => {

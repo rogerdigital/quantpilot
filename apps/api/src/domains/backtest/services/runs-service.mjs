@@ -128,6 +128,12 @@ export function reviewBacktestRun(runId, payload = {}) {
       runId: reviewed.id,
       status: reviewed.status,
       strategyId: reviewed.strategyId,
+      windowLabel: reviewed.windowLabel,
+      annualizedReturnPct: reviewed.annualizedReturnPct,
+      maxDrawdownPct: reviewed.maxDrawdownPct,
+      sharpe: reviewed.sharpe,
+      winRatePct: reviewed.winRatePct,
+      turnoverPct: reviewed.turnoverPct,
     },
   });
 

@@ -86,6 +86,9 @@ function BacktestPage() {
       })
       .slice(0, 6)
     : [];
+  const selectedRunVersionItems = selectedRunAuditItems.filter((item) => (
+    item.type === 'backtest-run.completed' || item.type === 'backtest-run.reviewed'
+  ));
   const selectedWorkflow = selectedRun?.workflowRunId
     ? workflowRuns.find((workflow) => workflow.id === selectedRun.workflowRunId) || null
     : null;
@@ -651,6 +654,53 @@ function BacktestPage() {
               <div className="status-copy">{locale === 'zh' ? `最近更新时间 ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}` : `Last updated ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}`}</div>
             </div>
           )}
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '选中回测版本轨迹' : 'Selected Backtest Version History'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '从 audit metadata 回放当前 run 在完成和人工复核时落下的关键绩效快照。'
+                  : 'Replay the selected run’s key performance snapshots from audit metadata when it completed or was reviewed.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-warn">{selectedRunVersionItems.length}</div>
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {!selectedRun ? <div className="empty-cell">{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</div> : null}
+            {selectedRun && !selectedRunVersionItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前 run 还没有可回放的版本快照。' : 'No version snapshots are available for the selected run yet.'}</div> : null}
+            {selectedRunVersionItems.map((item) => {
+              const annualizedReturnPct = typeof item.metadata?.annualizedReturnPct === 'number' ? item.metadata.annualizedReturnPct : null;
+              const maxDrawdownPct = typeof item.metadata?.maxDrawdownPct === 'number' ? item.metadata.maxDrawdownPct : null;
+              const sharpe = typeof item.metadata?.sharpe === 'number' ? item.metadata.sharpe : null;
+              const winRatePct = typeof item.metadata?.winRatePct === 'number' ? item.metadata.winRatePct : null;
+              return (
+                <div className="focus-row" key={item.id}>
+                  <div className="symbol-cell">
+                    <strong>{fmtDateTime(item.createdAt, locale)}</strong>
+                    <span>{item.detail}</span>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '类型' : 'Type'}</span>
+                    <strong>{item.type}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '收益/回撤' : 'Return / Drawdown'}</span>
+                    <strong>{annualizedReturnPct !== null && maxDrawdownPct !== null ? `${annualizedReturnPct.toFixed(1)}% / ${maxDrawdownPct.toFixed(1)}%` : '--'}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>Sharpe</span>
+                    <strong>{sharpe !== null ? sharpe.toFixed(2) : '--'}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '胜率' : 'Win Rate'}</span>
+                    <strong>{winRatePct !== null ? `${winRatePct.toFixed(1)}%` : '--'}</strong>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </article>
       </section>
     </>
