@@ -111,11 +111,21 @@ test('control plane runtime records execution plans with audit and notification 
       { symbol: 'NVDA', side: 'BUY', qty: 10, weight: 0.5, rationale: 'trend' },
       { symbol: 'MSFT', side: 'BUY', qty: 8, weight: 0.5, rationale: 'confirmation' },
     ],
+    metadata: {
+      metrics: {
+        score: 74,
+        expectedReturnPct: 12.6,
+      },
+      reasons: ['risk approved for paper execution'],
+    },
   });
 
   assert.equal(plan.strategyId, 'ema-cross-us');
   assert.equal(runtime.listExecutionPlans()[0].id, plan.id);
   assert.equal(runtime.listAuditRecords()[0].type, 'execution-plan');
+  assert.equal(runtime.listAuditRecords()[0].metadata.executionPlanId, plan.id);
+  assert.equal(runtime.listAuditRecords()[0].metadata.capital, 100000);
+  assert.equal(runtime.listAuditRecords()[0].metadata.metrics.score, 74);
   assert.equal(runtime.listNotificationJobs()[0].payload.source, 'execution-planner');
 });
 

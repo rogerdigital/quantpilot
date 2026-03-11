@@ -186,11 +186,17 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         title: `Execution plan created for ${plan.strategyName}`,
         detail: plan.summary || 'Execution plan generated.',
         metadata: {
+          executionPlanId: plan.id,
           strategyId: plan.strategyId,
           mode: plan.mode,
+          status: plan.status,
           riskStatus: plan.riskStatus,
           approvalState: plan.approvalState,
           orderCount: plan.orderCount,
+          capital: plan.capital,
+          summary: plan.summary,
+          metrics: plan.metadata?.metrics || {},
+          reasons: plan.metadata?.reasons || [],
         },
       });
 

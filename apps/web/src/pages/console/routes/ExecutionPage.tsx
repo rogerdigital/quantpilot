@@ -43,6 +43,11 @@ export function ExecutionPage() {
       })
       .slice(0, 6)
     : [];
+  const selectedExecutionVersionItems = selectedExecutionAuditItems.filter((item) => (
+    typeof item.metadata?.orderCount === 'number'
+    || typeof item.metadata?.capital === 'number'
+    || typeof item.metadata?.riskStatus === 'string'
+  ));
   const selectedExecutionActions = selectedEntry
     ? operatorActions
       .filter((item) => item.type === 'approve-intent' || item.type === 'reject-intent' || item.type === 'cancel-order')
@@ -290,6 +295,28 @@ export function ExecutionPage() {
               <div className="status-copy">{selectedAccountSnapshot.message}</div>
             </div>
           )}
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中执行版本轨迹' : 'Selected Execution Version History'}</div><div className="panel-copy">{locale === 'zh' ? '从 execution audit metadata 回放订单规模、风控状态和资金规模的历史快照。' : 'Replay order count, risk status, and capital snapshots from execution audit metadata.'}</div></div><div className="panel-badge badge-info">{selectedExecutionVersionItems.length}</div></div>
+          <div className="focus-list">
+            {!selectedEntry ? <div className="status-copy">{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</div> : null}
+            {selectedEntry && !selectedExecutionVersionItems.length ? <div className="status-copy">{locale === 'zh' ? '当前执行计划还没有可回放的版本快照。' : 'No version snapshots are available for the selected execution plan yet.'}</div> : null}
+            {selectedExecutionVersionItems.map((item) => {
+              const orderCount = typeof item.metadata?.orderCount === 'number' ? item.metadata.orderCount : null;
+              const capital = typeof item.metadata?.capital === 'number' ? item.metadata.capital : null;
+              const riskStatus = typeof item.metadata?.riskStatus === 'string' ? item.metadata.riskStatus : '--';
+              const approvalState = typeof item.metadata?.approvalState === 'string' ? item.metadata.approvalState : '--';
+              return (
+                <div key={item.id} className="focus-row">
+                  <div className="focus-metric"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong></div>
+                  <div className="focus-metric"><span>{locale === 'zh' ? '风控' : 'Risk'}</span><strong>{riskStatus}</strong></div>
+                  <div className="focus-metric"><span>{locale === 'zh' ? '审批' : 'Approval'}</span><strong>{approvalState}</strong></div>
+                  <div className="focus-metric"><span>{locale === 'zh' ? '订单数' : 'Orders'}</span><strong>{orderCount ?? '--'}</strong></div>
+                  <div className="focus-metric"><span>{locale === 'zh' ? '资金规模' : 'Capital'}</span><strong>{capital !== null ? capital.toFixed(0) : '--'}</strong></div>
+                </div>
+              );
+            })}
+          </div>
         </article>
       </section>
 
