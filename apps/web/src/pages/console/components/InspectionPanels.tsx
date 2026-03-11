@@ -98,3 +98,15 @@ export function InspectionSelectableRow({ leadTitle, leadCopy, metrics, actions 
     </div>
   );
 }
+
+type InspectionNoticeProps = {
+  children: ReactNode;
+};
+
+export function InspectionEmpty({ children }: InspectionNoticeProps) {
+  return <div className="empty-cell">{children}</div>;
+}
+
+export function InspectionStatus({ children }: InspectionNoticeProps) {
+  return <div className="status-copy">{children}</div>;
+}

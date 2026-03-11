@@ -6,7 +6,7 @@ import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/rese
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
-import { InspectionListPanel, InspectionMetricsRow, InspectionPanel, InspectionSelectableRow } from '../console/components/InspectionPanels.tsx';
+import { InspectionEmpty, InspectionListPanel, InspectionMetricsRow, InspectionPanel, InspectionSelectableRow, InspectionStatus } from '../console/components/InspectionPanels.tsx';
 import { useSummary } from '../console/hooks.ts';
 import { copy, useLocale } from '../console/i18n.tsx';
 import { fmtPct, translateMode, translateRiskLevel, translateRuntimeText } from '../console/utils.ts';
@@ -561,7 +561,7 @@ function BacktestPage() {
           badge={selectedRun?.status || '--'}
         >
           {!selectedRun ? (
-            <div className="empty-cell">{locale === 'zh' ? '当前没有可查看的回测记录。' : 'No backtest run is available for inspection.'}</div>
+            <InspectionEmpty>{locale === 'zh' ? '当前没有可查看的回测记录。' : 'No backtest run is available for inspection.'}</InspectionEmpty>
           ) : (
             <div className="status-stack">
               <div className="status-row"><span>{locale === 'zh' ? '策略' : 'Strategy'}</span><strong>{selectedRun.strategyName}</strong></div>
@@ -570,7 +570,7 @@ function BacktestPage() {
               <div className="status-row"><span>{locale === 'zh' ? '最大回撤' : 'Max Drawdown'}</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? fmtPct(selectedRun.maxDrawdownPct) : '--'}</strong></div>
               <div className="status-row"><span>Sharpe</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? selectedRun.sharpe.toFixed(2) : '--'}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '胜率' : 'Win Rate'}</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? fmtPct(selectedRun.winRatePct) : '--'}</strong></div>
-              <div className="status-copy">{selectedRun.summary}</div>
+              <InspectionStatus>{selectedRun.summary}</InspectionStatus>
             </div>
           )}
         </InspectionPanel>
@@ -583,8 +583,8 @@ function BacktestPage() {
           badgeClassName="badge-warn"
           terminal
         >
-            {!selectedRun ? <div className="empty-cell">{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</div> : null}
-            {selectedRun && !selectedRunAuditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前 run 暂无审计轨迹。' : 'No audit trail exists for the selected run yet.'}</div> : null}
+            {!selectedRun ? <InspectionEmpty>{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</InspectionEmpty> : null}
+            {selectedRun && !selectedRunAuditItems.length ? <InspectionEmpty>{locale === 'zh' ? '当前 run 暂无审计轨迹。' : 'No audit trail exists for the selected run yet.'}</InspectionEmpty> : null}
             {selectedRunAuditItems.map((item) => (
               <InspectionMetricsRow
                 key={item.id}
@@ -606,21 +606,21 @@ function BacktestPage() {
           badge={selectedWorkflow?.status || '--'}
         >
           {!selectedRun ? (
-            <div className="empty-cell">{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</div>
+            <InspectionEmpty>{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</InspectionEmpty>
           ) : !selectedWorkflow ? (
-            <div className="empty-cell">{locale === 'zh' ? '当前 run 还没有可见的 workflow 详情。' : 'No workflow detail is available for the selected run yet.'}</div>
+            <InspectionEmpty>{locale === 'zh' ? '当前 run 还没有可见的 workflow 详情。' : 'No workflow detail is available for the selected run yet.'}</InspectionEmpty>
           ) : (
             <div className="status-stack">
               <div className="status-row"><span>{locale === 'zh' ? '工作流 ID' : 'Workflow ID'}</span><strong>{selectedWorkflow.id}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{selectedWorkflow.status}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '尝试次数' : 'Attempts'}</span><strong>{selectedWorkflow.attempt}/{selectedWorkflow.maxAttempts}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '触发方式' : 'Trigger'}</span><strong>{selectedWorkflow.trigger}</strong></div>
-              <div className="status-copy">
+              <InspectionStatus>
                 {selectedWorkflow.steps.length
                   ? selectedWorkflow.steps.map((step) => `${step.key}:${step.status}`).join(' | ')
                   : (locale === 'zh' ? '尚未记录步骤进度。' : 'No workflow steps recorded yet.')}
-              </div>
-              <div className="status-copy">{locale === 'zh' ? `最近更新时间 ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}` : `Last updated ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}`}</div>
+              </InspectionStatus>
+              <InspectionStatus>{locale === 'zh' ? `最近更新时间 ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}` : `Last updated ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}`}</InspectionStatus>
             </div>
           )}
         </InspectionPanel>
@@ -633,8 +633,8 @@ function BacktestPage() {
           badgeClassName="badge-warn"
           terminal
         >
-            {!selectedRun ? <div className="empty-cell">{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</div> : null}
-            {selectedRun && !selectedRunVersionItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前 run 还没有可回放的版本快照。' : 'No version snapshots are available for the selected run yet.'}</div> : null}
+            {!selectedRun ? <InspectionEmpty>{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</InspectionEmpty> : null}
+            {selectedRun && !selectedRunVersionItems.length ? <InspectionEmpty>{locale === 'zh' ? '当前 run 还没有可回放的版本快照。' : 'No version snapshots are available for the selected run yet.'}</InspectionEmpty> : null}
             {selectedRunVersionItems.map((item) => {
               const annualizedReturnPct = typeof item.metadata?.annualizedReturnPct === 'number' ? item.metadata.annualizedReturnPct : null;
               const maxDrawdownPct = typeof item.metadata?.maxDrawdownPct === 'number' ? item.metadata.maxDrawdownPct : null;

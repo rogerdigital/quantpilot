@@ -5,7 +5,7 @@ import { saveStrategyCatalogItem } from '../../modules/research/research.service
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
-import { InspectionListPanel, InspectionMetricsRow, InspectionPanel, InspectionSelectableRow } from '../console/components/InspectionPanels.tsx';
+import { InspectionEmpty, InspectionListPanel, InspectionMetricsRow, InspectionPanel, InspectionSelectableRow, InspectionStatus } from '../console/components/InspectionPanels.tsx';
 import { UniverseTable } from '../console/components/ConsoleTables.tsx';
 import { onShortcutKeyDown, useSettingsNavigation } from '../console/hooks.ts';
 import { copy, useLocale } from '../console/i18n.tsx';
@@ -553,7 +553,7 @@ function StrategiesPage() {
           badge={selectedStrategy?.status || '--'}
         >
           {!selectedStrategy ? (
-            <div className="empty-cell">{locale === 'zh' ? '当前没有可查看的策略。' : 'No strategy is available for inspection.'}</div>
+            <InspectionEmpty>{locale === 'zh' ? '当前没有可查看的策略。' : 'No strategy is available for inspection.'}</InspectionEmpty>
           ) : (
             <div className="status-stack">
               <div className="status-row"><span>{locale === 'zh' ? '名称' : 'Name'}</span><strong>{selectedStrategy.name}</strong></div>
@@ -563,7 +563,7 @@ function StrategiesPage() {
               <div className="status-row"><span>{locale === 'zh' ? '预期收益' : 'Expected return'}</span><strong>{selectedStrategy.expectedReturnPct.toFixed(1)}%</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '最大回撤' : 'Max drawdown'}</span><strong>{selectedStrategy.maxDrawdownPct.toFixed(1)}%</strong></div>
               <div className="status-row"><span>Sharpe</span><strong>{selectedStrategy.sharpe.toFixed(2)}</strong></div>
-              <div className="status-copy">{selectedStrategy.summary}</div>
+              <InspectionStatus>{selectedStrategy.summary}</InspectionStatus>
             </div>
           )}
         </InspectionPanel>
@@ -574,8 +574,8 @@ function StrategiesPage() {
           badgeClassName="badge-warn"
           terminal
         >
-            {!selectedStrategy ? <div className="empty-cell">{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</div> : null}
-            {selectedStrategy && !selectedStrategyRuns.length ? <div className="empty-cell">{locale === 'zh' ? '当前策略还没有研究运行记录。' : 'No research runs exist for the selected strategy yet.'}</div> : null}
+            {!selectedStrategy ? <InspectionEmpty>{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</InspectionEmpty> : null}
+            {selectedStrategy && !selectedStrategyRuns.length ? <InspectionEmpty>{locale === 'zh' ? '当前策略还没有研究运行记录。' : 'No research runs exist for the selected strategy yet.'}</InspectionEmpty> : null}
             {selectedStrategyRuns.map((run) => (
               <div className="focus-row" key={run.id}>
                 <div className="symbol-cell">
@@ -603,8 +603,8 @@ function StrategiesPage() {
           badge={selectedStrategyAuditItems.length}
           terminal
         >
-            {!selectedStrategy ? <div className="empty-cell">{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</div> : null}
-            {selectedStrategy && !selectedStrategyAuditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前策略还没有审计轨迹。' : 'No audit trail exists for the selected strategy yet.'}</div> : null}
+            {!selectedStrategy ? <InspectionEmpty>{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</InspectionEmpty> : null}
+            {selectedStrategy && !selectedStrategyAuditItems.length ? <InspectionEmpty>{locale === 'zh' ? '当前策略还没有审计轨迹。' : 'No audit trail exists for the selected strategy yet.'}</InspectionEmpty> : null}
             {selectedStrategyAuditItems.map((item) => {
               const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
               return (
@@ -628,8 +628,8 @@ function StrategiesPage() {
           badgeClassName="badge-warn"
           terminal
         >
-            {!selectedStrategy ? <div className="empty-cell">{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</div> : null}
-            {selectedStrategy && !selectedStrategyVersionItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前策略还没有可回放的版本快照。' : 'No version snapshots are available for the selected strategy yet.'}</div> : null}
+            {!selectedStrategy ? <InspectionEmpty>{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</InspectionEmpty> : null}
+            {selectedStrategy && !selectedStrategyVersionItems.length ? <InspectionEmpty>{locale === 'zh' ? '当前策略还没有可回放的版本快照。' : 'No version snapshots are available for the selected strategy yet.'}</InspectionEmpty> : null}
             {selectedStrategyVersionItems.map((item) => {
               const score = typeof item.metadata?.score === 'number' ? item.metadata.score : null;
               const expectedReturnPct = typeof item.metadata?.expectedReturnPct === 'number' ? item.metadata.expectedReturnPct : null;
