@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
@@ -31,11 +31,34 @@ function BacktestPage() {
   const [reviewingRunId, setReviewingRunId] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [actionError, setActionError] = useState('');
+  const [runFilter, setRunFilter] = useState<'all' | 'queued' | 'running' | 'completed' | 'needs_review'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const { data, loading, error } = useResearchHub(refreshKey);
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
   const canQueueBacktest = hasPermission('strategy:write');
   const canReviewBacktest = hasPermission('risk:review');
+  const filteredRuns = data?.runs.filter((run) => {
+    if (runFilter !== 'all' && run.status !== runFilter) {
+      return false;
+    }
+    if (!searchTerm.trim()) {
+      return true;
+    }
+    const keyword = searchTerm.trim().toLowerCase();
+    return run.strategyName.toLowerCase().includes(keyword)
+      || run.strategyId.toLowerCase().includes(keyword)
+      || run.windowLabel.toLowerCase().includes(keyword);
+  }) || [];
+  const hasActiveRuns = Boolean(data?.runs.some((run) => run.status === 'queued' || run.status === 'running'));
+
+  useEffect(() => {
+    const pollMs = hasActiveRuns ? 5000 : 15000;
+    const timer = window.setInterval(() => {
+      setRefreshKey((current) => current + 1);
+    }, pollMs);
+    return () => window.clearInterval(timer);
+  }, [hasActiveRuns]);
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);
@@ -170,6 +193,47 @@ function BacktestPage() {
         <article className="panel">
           <div className="panel-head">
             <div>
+              <div className="panel-title">{locale === 'zh' ? '回测筛选器' : 'Backtest Filters'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '按状态和关键字收窄研究队列，页面会在活跃任务期间自动轮询。'
+                  : 'Filter the research queue by status and keyword. Active queues auto-refresh in the background.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{hasActiveRuns ? 'AUTO POLL' : 'IDLE'}</div>
+          </div>
+          <div className="settings-form-grid">
+            <label className="settings-field">
+              <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+              <select value={runFilter} onChange={(event) => setRunFilter(event.target.value as typeof runFilter)}>
+                <option value="all">{locale === 'zh' ? '全部' : 'All'}</option>
+                <option value="queued">queued</option>
+                <option value="running">running</option>
+                <option value="completed">completed</option>
+                <option value="needs_review">needs_review</option>
+              </select>
+            </label>
+            <label className="settings-field settings-field-wide">
+              <span>{locale === 'zh' ? '关键字' : 'Keyword'}</span>
+              <input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder={locale === 'zh' ? '按策略名、ID 或窗口筛选' : 'Filter by strategy name, id, or window'}
+              />
+            </label>
+          </div>
+          <div className="status-copy">
+            {locale === 'zh'
+              ? `当前展示 ${filteredRuns.length} 条记录，轮询频率 ${hasActiveRuns ? '5 秒' : '15 秒'}。`
+              : `Showing ${filteredRuns.length} runs. Polling every ${hasActiveRuns ? '5 seconds' : '15 seconds'}.`}
+          </div>
+        </article>
+      </section>
+
+      <section className="panel-grid">
+        <article className="panel">
+          <div className="panel-head">
+            <div>
               <div className="panel-title">{locale === 'zh' ? '候选策略注册表' : 'Candidate Strategy Registry'}</div>
               <div className="panel-copy">
                 {locale === 'zh'
@@ -221,17 +285,17 @@ function BacktestPage() {
           <div className="panel-head">
             <div>
               <div className="panel-title">{locale === 'zh' ? '回测运行队列' : 'Backtest Run Queue'}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '把 queued / running / completed / needs_review 明确拆开，为后续 worker 和审批闸门接管做准备。'
-                  : 'Separate queued, running, completed, and needs_review runs now so worker ownership and review gates can plug in later.'}
-              </div>
+            <div className="panel-copy">
+              {locale === 'zh'
+                ? '把 queued / running / completed / needs_review 明确拆开，为后续 worker 和审批闸门接管做准备。'
+                : 'Separate queued, running, completed, and needs_review runs now so worker ownership and review gates can plug in later.'}
             </div>
-            <div className="panel-badge badge-warn">{data?.runs.length ?? 0}</div>
+          </div>
+            <div className="panel-badge badge-warn">{filteredRuns.length}</div>
           </div>
           <div className="focus-list focus-list-terminal">
-            {!loading && !data?.runs.length ? <div className="empty-cell">{locale === 'zh' ? '暂无回测运行记录' : 'No backtest runs yet.'}</div> : null}
-            {data?.runs.map((run) => (
+            {!loading && !filteredRuns.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有回测记录' : 'No backtest runs match the current filter.'}</div> : null}
+            {filteredRuns.map((run) => (
               <div className="focus-row" key={run.id}>
                 <div className="symbol-cell">
                   <strong>{run.strategyName}</strong>
