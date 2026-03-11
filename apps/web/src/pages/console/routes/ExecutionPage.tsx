@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchExecutionAccountSnapshots, fetchExecutionLedger, fetchExecutionRuntime, fetchTaskWorkflows } from '../../../app/api/controlPlane.ts';
+import { fetchExecutionAccountSnapshots, fetchExecutionLedger, fetchExecutionRuntime, fetchOperatorActions, fetchTaskWorkflows } from '../../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { TopMeta } from '../components/ConsoleChrome.tsx';
@@ -20,8 +20,20 @@ export function ExecutionPage() {
   const [ledgerEntries, setLedgerEntries] = useState<ExecutionLedgerEntry[]>([]);
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRunRecord[]>([]);
   const [workflowLoading, setWorkflowLoading] = useState(true);
+  const [operatorActions, setOperatorActions] = useState<Array<{
+    id: string;
+    type: string;
+    symbol: string;
+    detail: string;
+    actor: string;
+    title: string;
+    level: string;
+    createdAt: string;
+  }>>([]);
+  const [actionsLoading, setActionsLoading] = useState(true);
   const { items: auditItems, loading: auditLoading } = useAuditFeed(state.controlPlane.lastSyncAt);
   const selectedEntry = ledgerEntries.find((entry) => entry.plan.id === selectedPlanId) || ledgerEntries[0] || null;
+  const selectedSymbols = selectedEntry ? [...new Set(selectedEntry.plan.orders.map((order) => order.symbol))] : [];
   const selectedExecutionAuditItems = selectedEntry
     ? auditItems
       .filter((item) => item.type === 'execution-plan')
@@ -31,6 +43,12 @@ export function ExecutionPage() {
       })
       .slice(0, 6)
     : [];
+  const selectedExecutionActions = selectedEntry
+    ? operatorActions
+      .filter((item) => item.type === 'approve-intent' || item.type === 'reject-intent' || item.type === 'cancel-order')
+      .filter((item) => selectedSymbols.includes(item.symbol))
+      .slice(0, 6)
+    : [];
   const selectedWorkflow = selectedEntry?.plan.workflowRunId
     ? workflowRuns.find((workflow) => workflow.id === selectedEntry.plan.workflowRunId) || null
     : null;
@@ -38,13 +56,15 @@ export function ExecutionPage() {
   useEffect(() => {
     let active = true;
     setWorkflowLoading(true);
-    Promise.all([fetchExecutionRuntime(), fetchExecutionAccountSnapshots(), fetchExecutionLedger(), fetchTaskWorkflows()])
-      .then(([runtimeResponse, snapshotResponse, ledgerResponse, workflowResponse]) => {
+    setActionsLoading(true);
+    Promise.all([fetchExecutionRuntime(), fetchExecutionAccountSnapshots(), fetchExecutionLedger(), fetchTaskWorkflows(), fetchOperatorActions()])
+      .then(([runtimeResponse, snapshotResponse, ledgerResponse, workflowResponse, actionResponse]) => {
         if (!active) return;
         setRuntimeEvents(runtimeResponse.events);
         setAccountSnapshots(snapshotResponse.snapshots);
         setLedgerEntries(ledgerResponse.entries);
         setWorkflowRuns(Array.isArray(workflowResponse.workflows) ? workflowResponse.workflows : []);
+        setOperatorActions(Array.isArray(actionResponse.actions) ? actionResponse.actions : []);
       })
       .catch(() => {
         if (!active) return;
@@ -52,10 +72,12 @@ export function ExecutionPage() {
         setAccountSnapshots([]);
         setLedgerEntries([]);
         setWorkflowRuns([]);
+        setOperatorActions([]);
       })
       .finally(() => {
         if (!active) return;
         setWorkflowLoading(false);
+        setActionsLoading(false);
       });
     return () => {
       active = false;
@@ -231,6 +253,22 @@ export function ExecutionPage() {
               <div className="status-copy">{selectedWorkflow.steps.map((step) => `${step.key}:${step.status}`).join(' | ') || '--'}</div>
             </div>
           )}
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中审批动作历史' : 'Selected Approval Actions'}</div><div className="panel-copy">{locale === 'zh' ? '按当前 execution plan 的订单标的聚合 approve / reject / cancel 动作历史。' : 'Aggregate approve, reject, and cancel actions by the selected execution plan’s order symbols.'}</div></div><div className="panel-badge badge-warn">{selectedExecutionActions.length}</div></div>
+          <div className="focus-list">
+            {actionsLoading ? <div className="status-copy">{locale === 'zh' ? '正在加载审批动作历史...' : 'Loading approval actions...'}</div> : null}
+            {!actionsLoading && !selectedEntry ? <div className="status-copy">{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</div> : null}
+            {!actionsLoading && selectedEntry && !selectedExecutionActions.length ? <div className="status-copy">{locale === 'zh' ? '当前执行计划还没有关联的审批动作。' : 'No approval actions are associated with the selected execution plan yet.'}</div> : null}
+            {selectedExecutionActions.map((item) => (
+              <div key={item.id} className="focus-row">
+                <div className="focus-metric"><span>{locale === 'zh' ? '动作' : 'Action'}</span><strong>{item.type}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '标的' : 'Symbol'}</span><strong>{item.symbol || '--'}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '操作人' : 'Actor'}</span><strong>{item.actor}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong></div>
+              </div>
+            ))}
+          </div>
         </article>
       </section>
 
