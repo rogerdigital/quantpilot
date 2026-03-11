@@ -47,6 +47,7 @@ function BacktestPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [windowLabel, setWindowLabel] = useState('2024-01-01 -> 2026-03-01');
   const [selectedRunId, setSelectedRunId] = useState('');
+  const [selectedAuditEventId, setSelectedAuditEventId] = useState('');
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRunRecord[]>([]);
   const [workflowLoading, setWorkflowLoading] = useState(true);
   const { data, loading, error } = useResearchHub(refreshKey);
@@ -100,6 +101,8 @@ function BacktestPage() {
   const requestedStrategyId = searchParams.get('strategy');
   const requestedTimelineId = searchParams.get('timeline');
   const sourcePage = searchParams.get('source');
+  const requestedAuditEventId = searchParams.get('audit');
+  const selectedAuditEvent = selectedRunAuditItems.find((item) => item.id === selectedAuditEventId) || selectedRunAuditItems[0] || null;
 
   useEffect(() => {
     const pollMs = hasActiveRuns ? 5000 : 15000;
@@ -153,6 +156,28 @@ function BacktestPage() {
     nextParams.set('run', selectedRunId);
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, selectedRunId, setSearchParams]);
+
+  useEffect(() => {
+    if (!selectedRunAuditItems.length) {
+      setSelectedAuditEventId('');
+      return;
+    }
+    if (requestedAuditEventId && selectedRunAuditItems.some((item) => item.id === requestedAuditEventId) && selectedAuditEventId !== requestedAuditEventId) {
+      setSelectedAuditEventId(requestedAuditEventId);
+      return;
+    }
+    if (!selectedAuditEventId || !selectedRunAuditItems.some((item) => item.id === selectedAuditEventId)) {
+      setSelectedAuditEventId(requestedAuditEventId && selectedRunAuditItems.some((item) => item.id === requestedAuditEventId) ? requestedAuditEventId : selectedRunAuditItems[0].id);
+    }
+  }, [requestedAuditEventId, selectedAuditEventId, selectedRunAuditItems]);
+
+  useEffect(() => {
+    if (!selectedAuditEventId) return;
+    if (searchParams.get('audit') === selectedAuditEventId) return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('audit', selectedAuditEventId);
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, selectedAuditEventId, setSearchParams]);
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);
@@ -623,7 +648,7 @@ function BacktestPage() {
             {!selectedRun ? <InspectionEmpty>{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</InspectionEmpty> : null}
             {selectedRun && !selectedRunAuditItems.length ? <InspectionEmpty>{locale === 'zh' ? '当前 run 暂无审计轨迹。' : 'No audit trail exists for the selected run yet.'}</InspectionEmpty> : null}
             {selectedRunAuditItems.map((item) => (
-              <InspectionMetricsRow
+              <InspectionSelectableRow
                 key={item.id}
                 leadTitle={item.title}
                 leadCopy={item.detail}
@@ -632,9 +657,43 @@ function BacktestPage() {
                   { label: locale === 'zh' ? '操作人' : 'Actor', value: item.actor },
                   { label: locale === 'zh' ? '时间' : 'Time', value: fmtDateTime(item.createdAt, locale) },
                 ]}
+                actions={(
+                  <button
+                    type="button"
+                    className="inline-action"
+                    disabled={selectedAuditEventId === item.id}
+                    onClick={() => setSelectedAuditEventId(item.id)}
+                  >
+                    {selectedAuditEventId === item.id
+                      ? (locale === 'zh' ? '已选中' : 'Selected')
+                      : (locale === 'zh' ? '查看' : 'Inspect')}
+                  </button>
+                )}
               />
             ))}
         </InspectionListPanel>
+        <InspectionPanel
+          title={locale === 'zh' ? '选中研究事件' : 'Selected Research Event'}
+          copy={locale === 'zh'
+            ? '钻取当前回测审计事件，便于把 run、审计和 workflow 三条线对到同一个节点。'
+            : 'Inspect the selected backtest audit event so the run, audit, and workflow can be aligned to one node.'}
+          badge={selectedAuditEvent?.type || '--'}
+          badgeClassName="badge-warn"
+        >
+          {!selectedRun ? (
+            <InspectionEmpty>{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</InspectionEmpty>
+          ) : !selectedAuditEvent ? (
+            <InspectionEmpty>{locale === 'zh' ? '当前 run 还没有可钻取的研究事件。' : 'No research event is available for inspection yet.'}</InspectionEmpty>
+          ) : (
+            <div className="status-stack">
+              <div className="status-row"><span>{locale === 'zh' ? '标题' : 'Title'}</span><strong>{selectedAuditEvent.title}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '类型' : 'Type'}</span><strong>{selectedAuditEvent.type}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '操作人' : 'Actor'}</span><strong>{selectedAuditEvent.actor}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{fmtDateTime(selectedAuditEvent.createdAt, locale)}</strong></div>
+              <InspectionStatus>{selectedAuditEvent.detail}</InspectionStatus>
+            </div>
+          )}
+        </InspectionPanel>
         <InspectionPanel
           title={locale === 'zh' ? '选中回测工作流' : 'Selected Workflow'}
           copy={locale === 'zh'

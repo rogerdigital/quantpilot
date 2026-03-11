@@ -19,6 +19,7 @@ export function ExecutionPage() {
   const goToSettings = useSettingsNavigation();
   const canApproveExecution = hasPermission('execution:approve');
   const [selectedPlanId, setSelectedPlanId] = useState('');
+  const [selectedAuditEventId, setSelectedAuditEventId] = useState('');
   const [runtimeEvents, setRuntimeEvents] = useState<ExecutionRuntimeEvent[]>([]);
   const [accountSnapshots, setAccountSnapshots] = useState<BrokerAccountSnapshotRecord[]>([]);
   const [ledgerEntries, setLedgerEntries] = useState<ExecutionLedgerEntry[]>([]);
@@ -68,6 +69,8 @@ export function ExecutionPage() {
   const requestedStrategyId = searchParams.get('strategy');
   const requestedTimelineId = searchParams.get('timeline');
   const sourcePage = searchParams.get('source');
+  const requestedAuditEventId = searchParams.get('audit');
+  const selectedAuditEvent = selectedExecutionAuditItems.find((item) => item.id === selectedAuditEventId) || selectedExecutionAuditItems[0] || null;
 
   useEffect(() => {
     let active = true;
@@ -121,6 +124,28 @@ export function ExecutionPage() {
     nextParams.set('plan', selectedPlanId);
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, selectedPlanId, setSearchParams]);
+
+  useEffect(() => {
+    if (!selectedExecutionAuditItems.length) {
+      setSelectedAuditEventId('');
+      return;
+    }
+    if (requestedAuditEventId && selectedExecutionAuditItems.some((item) => item.id === requestedAuditEventId) && selectedAuditEventId !== requestedAuditEventId) {
+      setSelectedAuditEventId(requestedAuditEventId);
+      return;
+    }
+    if (!selectedAuditEventId || !selectedExecutionAuditItems.some((item) => item.id === selectedAuditEventId)) {
+      setSelectedAuditEventId(requestedAuditEventId && selectedExecutionAuditItems.some((item) => item.id === requestedAuditEventId) ? requestedAuditEventId : selectedExecutionAuditItems[0].id);
+    }
+  }, [requestedAuditEventId, selectedAuditEventId, selectedExecutionAuditItems]);
+
+  useEffect(() => {
+    if (!selectedAuditEventId) return;
+    if (searchParams.get('audit') === selectedAuditEventId) return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('audit', selectedAuditEventId);
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, selectedAuditEventId, setSearchParams]);
 
   return (
     <>
@@ -281,7 +306,7 @@ export function ExecutionPage() {
             {!auditLoading && !selectedEntry ? <InspectionStatus>{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</InspectionStatus> : null}
             {!auditLoading && selectedEntry && !selectedExecutionAuditItems.length ? <InspectionStatus>{locale === 'zh' ? '当前执行计划暂无审计留痕。' : 'No audit records exist for the selected execution plan yet.'}</InspectionStatus> : null}
             {selectedExecutionAuditItems.map((item) => (
-              <InspectionMetricsRow
+              <InspectionSelectableRow
                 key={item.id}
                 metrics={[
                   { label: locale === 'zh' ? '标题' : 'Title', value: item.title },
@@ -289,9 +314,41 @@ export function ExecutionPage() {
                   { label: locale === 'zh' ? '类型' : 'Type', value: item.type },
                   { label: locale === 'zh' ? '时间' : 'Time', value: new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US') },
                 ]}
+                actions={(
+                  <button
+                    type="button"
+                    className="inline-action"
+                    disabled={selectedAuditEventId === item.id}
+                    onClick={() => setSelectedAuditEventId(item.id)}
+                  >
+                    {selectedAuditEventId === item.id
+                      ? (locale === 'zh' ? '已选中' : 'Selected')
+                      : (locale === 'zh' ? '查看' : 'Inspect')}
+                  </button>
+                )}
               />
             ))}
         </InspectionListPanel>
+        <InspectionPanel
+          title={locale === 'zh' ? '选中执行审计事件' : 'Selected Execution Audit Event'}
+          copy={locale === 'zh' ? '钻取当前审计事件，便于对齐 execution plan、audit 和 workflow 三条线。' : 'Inspect the selected audit event so execution plan, audit, and workflow can be aligned to one node.'}
+          badge={selectedAuditEvent?.type || '--'}
+          badgeClassName="badge-warn"
+        >
+          {!selectedEntry ? (
+            <InspectionStatus>{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</InspectionStatus>
+          ) : !selectedAuditEvent ? (
+            <InspectionStatus>{locale === 'zh' ? '当前执行计划还没有可钻取的审计事件。' : 'No execution audit event is available for inspection yet.'}</InspectionStatus>
+          ) : (
+            <div className="status-stack">
+              <div className="status-row"><span>{locale === 'zh' ? '标题' : 'Title'}</span><strong>{selectedAuditEvent.title}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '类型' : 'Type'}</span><strong>{selectedAuditEvent.type}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '操作人' : 'Actor'}</span><strong>{selectedAuditEvent.actor}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{new Date(selectedAuditEvent.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong></div>
+              <InspectionStatus>{selectedAuditEvent.detail}</InspectionStatus>
+            </div>
+          )}
+        </InspectionPanel>
         <InspectionPanel
           title={locale === 'zh' ? '选中执行工作流' : 'Selected Execution Workflow'}
           copy={locale === 'zh' ? '查看 strategy-execution workflow 的状态、尝试次数和步骤进度。' : 'Inspect strategy-execution workflow status, attempts, and step progress.'}
