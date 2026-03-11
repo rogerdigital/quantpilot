@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { WorkflowRunRecord } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
@@ -35,6 +36,7 @@ function BacktestPage() {
   const { state, session, hasPermission } = useTradingSystem();
   const { locale } = useLocale();
   const { totalPnlPct } = useSummary();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [refreshKey, setRefreshKey] = useState(0);
   const [submittingStrategyId, setSubmittingStrategyId] = useState('');
   const [reviewingRunId, setReviewingRunId] = useState('');
@@ -93,6 +95,7 @@ function BacktestPage() {
   const selectedWorkflow = selectedRun?.workflowRunId
     ? workflowRuns.find((workflow) => workflow.id === selectedRun.workflowRunId) || null
     : null;
+  const requestedRunId = searchParams.get('run');
 
   useEffect(() => {
     const pollMs = hasActiveRuns ? 5000 : 15000;
@@ -130,10 +133,22 @@ function BacktestPage() {
       setSelectedRunId('');
       return;
     }
-    if (!selectedRunId || !filteredRuns.some((run) => run.id === selectedRunId)) {
-      setSelectedRunId(filteredRuns[0].id);
+    if (requestedRunId && filteredRuns.some((run) => run.id === requestedRunId) && selectedRunId !== requestedRunId) {
+      setSelectedRunId(requestedRunId);
+      return;
     }
-  }, [filteredRuns, selectedRunId]);
+    if (!selectedRunId || !filteredRuns.some((run) => run.id === selectedRunId)) {
+      setSelectedRunId(requestedRunId && filteredRuns.some((run) => run.id === requestedRunId) ? requestedRunId : filteredRuns[0].id);
+    }
+  }, [filteredRuns, requestedRunId, selectedRunId]);
+
+  useEffect(() => {
+    if (!selectedRunId) return;
+    if (searchParams.get('run') === selectedRunId) return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('run', selectedRunId);
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, selectedRunId, setSearchParams]);
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);

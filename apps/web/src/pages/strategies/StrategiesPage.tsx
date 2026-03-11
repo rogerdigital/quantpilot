@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { ExecutionLedgerEntry } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchExecutionLedger } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
@@ -29,6 +30,7 @@ function formatDateTime(value: string, locale: 'zh' | 'en') {
 function StrategiesPage() {
   const { state, session, hasPermission } = useTradingSystem();
   const { locale } = useLocale();
+  const navigate = useNavigate();
   const goToSettings = useSettingsNavigation();
   const [refreshKey, setRefreshKey] = useState(0);
   const [registryFilter, setRegistryFilter] = useState<'active' | 'archived' | 'all'>('active');
@@ -694,6 +696,28 @@ function StrategiesPage() {
                     ? (locale === 'zh' ? '继续查看下方研究记录面板，确认回测结果、窗口参数和版本快照是否匹配。' : 'Continue with the research runs panel below to verify backtest results, window parameters, and version snapshots.')
                     : (locale === 'zh' ? '继续查看下方审计轨迹和版本轨迹，确认这次策略写入带来的状态变化。' : 'Continue with the audit trail and version history panels below to confirm the state change from this registry update.')}
               </InspectionStatus>
+              {selectedTimelineItem.eventType === 'run' ? (
+                <div className="settings-actions">
+                  <button
+                    type="button"
+                    className="inline-action inline-action-approve"
+                    onClick={() => navigate(`/backtest?run=${selectedTimelineItem.reference}`)}
+                  >
+                    {locale === 'zh' ? '打开回测详情' : 'Open Backtest Detail'}
+                  </button>
+                </div>
+              ) : null}
+              {selectedTimelineItem.eventType === 'execution' ? (
+                <div className="settings-actions">
+                  <button
+                    type="button"
+                    className="inline-action inline-action-approve"
+                    onClick={() => navigate(`/execution?plan=${selectedTimelineItem.reference}`)}
+                  >
+                    {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
+                  </button>
+                </div>
+              ) : null}
             </div>
           )}
         </InspectionPanel>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { fetchExecutionAccountSnapshots, fetchExecutionLedger, fetchExecutionRuntime, fetchOperatorActions, fetchTaskWorkflows } from '../../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
@@ -13,6 +14,7 @@ import type { BrokerAccountSnapshotRecord, ExecutionLedgerEntry, ExecutionRuntim
 export function ExecutionPage() {
   const { state, approveLiveIntent, rejectLiveIntent, hasPermission, actionGuardNotice } = useTradingSystem();
   const { locale } = useLocale();
+  const [searchParams, setSearchParams] = useSearchParams();
   const goToSettings = useSettingsNavigation();
   const canApproveExecution = hasPermission('execution:approve');
   const [selectedPlanId, setSelectedPlanId] = useState('');
@@ -61,6 +63,7 @@ export function ExecutionPage() {
   const selectedAccountSnapshot = selectedEntry?.latestRuntime
     ? accountSnapshots.find((snapshot) => snapshot.cycle === selectedEntry.latestRuntime?.cycle) || accountSnapshots[0] || null
     : accountSnapshots[0] || null;
+  const requestedPlanId = searchParams.get('plan');
 
   useEffect(() => {
     let active = true;
@@ -98,10 +101,22 @@ export function ExecutionPage() {
       setSelectedPlanId('');
       return;
     }
-    if (!selectedPlanId || !ledgerEntries.some((entry) => entry.plan.id === selectedPlanId)) {
-      setSelectedPlanId(ledgerEntries[0].plan.id);
+    if (requestedPlanId && ledgerEntries.some((entry) => entry.plan.id === requestedPlanId) && selectedPlanId !== requestedPlanId) {
+      setSelectedPlanId(requestedPlanId);
+      return;
     }
-  }, [ledgerEntries, selectedPlanId]);
+    if (!selectedPlanId || !ledgerEntries.some((entry) => entry.plan.id === selectedPlanId)) {
+      setSelectedPlanId(requestedPlanId && ledgerEntries.some((entry) => entry.plan.id === requestedPlanId) ? requestedPlanId : ledgerEntries[0].plan.id);
+    }
+  }, [ledgerEntries, requestedPlanId, selectedPlanId]);
+
+  useEffect(() => {
+    if (!selectedPlanId) return;
+    if (searchParams.get('plan') === selectedPlanId) return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('plan', selectedPlanId);
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, selectedPlanId, setSearchParams]);
 
   return (
     <>
