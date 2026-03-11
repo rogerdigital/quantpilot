@@ -33,6 +33,7 @@ function StrategiesPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [registryFilter, setRegistryFilter] = useState<'active' | 'archived' | 'all'>('active');
   const [selectedStrategyId, setSelectedStrategyId] = useState('');
+  const [selectedTimelineId, setSelectedTimelineId] = useState('');
   const [executionEntries, setExecutionEntries] = useState<ExecutionLedgerEntry[]>([]);
   const [executionLoading, setExecutionLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -94,10 +95,12 @@ function StrategiesPage() {
   const selectedStrategyTimelineItems = [
     ...selectedStrategyAuditItems.map((item) => ({
       id: `audit-${item.id}`,
+      eventType: 'audit',
       lane: locale === 'zh' ? '注册表' : 'Registry',
       title: item.title,
       detail: item.detail,
       at: item.createdAt,
+      reference: typeof item.metadata?.strategyId === 'string' ? item.metadata.strategyId : '--',
       metrics: [
         { label: locale === 'zh' ? '状态' : 'Status', value: typeof item.metadata?.status === 'string' ? item.metadata.status : '--' },
         { label: locale === 'zh' ? '操作人' : 'Actor', value: item.actor },
@@ -105,10 +108,12 @@ function StrategiesPage() {
     })),
     ...selectedStrategyRuns.map((run) => ({
       id: `run-${run.id}`,
+      eventType: 'run',
       lane: locale === 'zh' ? '研究' : 'Research',
       title: `${run.windowLabel} · ${run.status}`,
       detail: run.summary,
       at: run.completedAt || run.reviewedAt || run.updatedAt || run.startedAt,
+      reference: run.id,
       metrics: [
         { label: locale === 'zh' ? '收益' : 'Return', value: run.status === 'completed' || run.status === 'needs_review' ? `${run.annualizedReturnPct.toFixed(1)}%` : '--' },
         { label: 'Sharpe', value: run.status === 'completed' || run.status === 'needs_review' ? run.sharpe.toFixed(2) : '--' },
@@ -116,10 +121,12 @@ function StrategiesPage() {
     })),
     ...selectedStrategyExecutionEntries.map((entry) => ({
       id: `execution-${entry.plan.id}`,
+      eventType: 'execution',
       lane: locale === 'zh' ? '执行' : 'Execution',
       title: entry.plan.summary,
       detail: entry.latestRuntime?.message || `${entry.plan.orderCount} ${locale === 'zh' ? '笔订单候选' : 'candidate orders'}`,
       at: entry.latestRuntime?.createdAt || entry.plan.updatedAt || entry.plan.createdAt,
+      reference: entry.plan.id,
       metrics: [
         { label: locale === 'zh' ? '计划状态' : 'Plan', value: entry.plan.status },
         { label: locale === 'zh' ? 'Workflow' : 'Workflow', value: entry.workflow?.status || '--' },
@@ -128,6 +135,7 @@ function StrategiesPage() {
   ]
     .sort((left, right) => new Date(right.at).getTime() - new Date(left.at).getTime())
     .slice(0, 10);
+  const selectedTimelineItem = selectedStrategyTimelineItems.find((item) => item.id === selectedTimelineId) || selectedStrategyTimelineItems[0] || null;
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
     setForm((current) => ({
@@ -285,6 +293,16 @@ function StrategiesPage() {
       setSelectedStrategyId(visibleStrategies[0].id);
     }
   }, [selectedStrategyId, visibleActiveStrategies, visibleArchivedStrategies]);
+
+  useEffect(() => {
+    if (!selectedStrategyTimelineItems.length) {
+      setSelectedTimelineId('');
+      return;
+    }
+    if (!selectedTimelineId || !selectedStrategyTimelineItems.some((item) => item.id === selectedTimelineId)) {
+      setSelectedTimelineId(selectedStrategyTimelineItems[0].id);
+    }
+  }, [selectedTimelineId, selectedStrategyTimelineItems]);
 
   useEffect(() => {
     let cancelled = false;
@@ -627,7 +645,7 @@ function StrategiesPage() {
           {selectedStrategy && executionLoading && auditLoading && loading ? <InspectionEmpty>{locale === 'zh' ? '正在汇总策略时间线...' : 'Assembling the strategy timeline...'}</InspectionEmpty> : null}
           {selectedStrategy && !selectedStrategyTimelineItems.length ? <InspectionEmpty>{locale === 'zh' ? '当前策略还没有可回放的端到端轨迹。' : 'No end-to-end activity is available for the selected strategy yet.'}</InspectionEmpty> : null}
           {selectedStrategyTimelineItems.map((item) => (
-            <InspectionMetricsRow
+            <InspectionSelectableRow
               key={item.id}
               leadTitle={item.title}
               leadCopy={item.detail}
@@ -636,9 +654,49 @@ function StrategiesPage() {
                 { label: locale === 'zh' ? '时间' : 'Time', value: formatDateTime(item.at, locale) },
                 ...item.metrics,
               ]}
+              actions={(
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={selectedTimelineId === item.id}
+                  onClick={() => setSelectedTimelineId(item.id)}
+                >
+                  {selectedTimelineId === item.id
+                    ? (locale === 'zh' ? '已选中' : 'Selected')
+                    : (locale === 'zh' ? '查看' : 'Inspect')}
+                </button>
+              )}
             />
           ))}
         </InspectionListPanel>
+        <InspectionPanel
+          title={locale === 'zh' ? '选中时间线事件' : 'Selected Timeline Event'}
+          copy={locale === 'zh' ? '钻取当前时间线节点，查看它属于哪条链路、对应哪条记录，以及当前应该到哪里继续排查。' : 'Inspect the selected timeline node to see which lane it belongs to, which record it references, and where to continue investigation.'}
+          badge={selectedTimelineItem?.lane || '--'}
+          badgeClassName="badge-warn"
+        >
+          {!selectedStrategy ? (
+            <InspectionEmpty>{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</InspectionEmpty>
+          ) : !selectedTimelineItem ? (
+            <InspectionEmpty>{locale === 'zh' ? '当前还没有可钻取的时间线节点。' : 'No timeline node is available for inspection yet.'}</InspectionEmpty>
+          ) : (
+            <div className="status-stack">
+              <div className="status-row"><span>{locale === 'zh' ? '事件' : 'Event'}</span><strong>{selectedTimelineItem.title}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '链路' : 'Lane'}</span><strong>{selectedTimelineItem.lane}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{formatDateTime(selectedTimelineItem.at, locale)}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '关联记录' : 'Reference'}</span><strong>{selectedTimelineItem.reference}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '事件类型' : 'Event type'}</span><strong>{selectedTimelineItem.eventType}</strong></div>
+              <InspectionStatus>{selectedTimelineItem.detail}</InspectionStatus>
+              <InspectionStatus>
+                {selectedTimelineItem.eventType === 'execution'
+                  ? (locale === 'zh' ? '继续查看下方执行计划面板，确认 plan、risk、workflow 和 runtime 是否一致。' : 'Continue with the execution plan panel below to verify plan, risk, workflow, and runtime consistency.')
+                  : selectedTimelineItem.eventType === 'run'
+                    ? (locale === 'zh' ? '继续查看下方研究记录面板，确认回测结果、窗口参数和版本快照是否匹配。' : 'Continue with the research runs panel below to verify backtest results, window parameters, and version snapshots.')
+                    : (locale === 'zh' ? '继续查看下方审计轨迹和版本轨迹，确认这次策略写入带来的状态变化。' : 'Continue with the audit trail and version history panels below to confirm the state change from this registry update.')}
+              </InspectionStatus>
+            </div>
+          )}
+        </InspectionPanel>
         <InspectionPanel
           title={locale === 'zh' ? '选中策略详情' : 'Selected Strategy Detail'}
           copy={locale === 'zh' ? '聚合当前策略的阶段、收益预期、风险参数和研究摘要。' : 'Aggregate the selected strategy’s stage, expected return, risk profile, and research summary.'}
