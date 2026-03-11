@@ -36,6 +36,12 @@ export function saveStrategyCatalogItem(payload = {}) {
       strategyId: strategy.id,
       status: strategy.status,
       family: strategy.family,
+      timeframe: strategy.timeframe,
+      universe: strategy.universe,
+      score: strategy.score,
+      expectedReturnPct: strategy.expectedReturnPct,
+      maxDrawdownPct: strategy.maxDrawdownPct,
+      sharpe: strategy.sharpe,
     },
   });
 

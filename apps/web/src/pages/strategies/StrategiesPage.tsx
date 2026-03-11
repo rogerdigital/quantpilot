@@ -74,6 +74,12 @@ function StrategiesPage() {
       return selectedStrategy ? strategyId === selectedStrategy.id : false;
     })
     .slice(0, 6);
+  const selectedStrategyVersionItems = selectedStrategyAuditItems.filter((item) => (
+    typeof item.metadata?.score === 'number'
+    || typeof item.metadata?.expectedReturnPct === 'number'
+    || typeof item.metadata?.maxDrawdownPct === 'number'
+    || typeof item.metadata?.sharpe === 'number'
+  ));
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
     setForm((current) => ({
@@ -626,6 +632,43 @@ function StrategiesPage() {
                   <div className="focus-metric">
                     <span>{locale === 'zh' ? '时间' : 'Time'}</span>
                     <strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中策略版本轨迹' : 'Selected Strategy Version History'}</div><div className="panel-copy">{locale === 'zh' ? '从 audit metadata 读取最近版本的评分和风险参数，观察策略快照如何变化。' : 'Read the latest score and risk parameter snapshots from audit metadata to track how the strategy evolved.'}</div></div><div className="panel-badge badge-warn">{selectedStrategyVersionItems.length}</div></div>
+          <div className="focus-list focus-list-terminal">
+            {!selectedStrategy ? <div className="empty-cell">{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</div> : null}
+            {selectedStrategy && !selectedStrategyVersionItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前策略还没有可回放的版本快照。' : 'No version snapshots are available for the selected strategy yet.'}</div> : null}
+            {selectedStrategyVersionItems.map((item) => {
+              const score = typeof item.metadata?.score === 'number' ? item.metadata.score : null;
+              const expectedReturnPct = typeof item.metadata?.expectedReturnPct === 'number' ? item.metadata.expectedReturnPct : null;
+              const maxDrawdownPct = typeof item.metadata?.maxDrawdownPct === 'number' ? item.metadata.maxDrawdownPct : null;
+              const sharpe = typeof item.metadata?.sharpe === 'number' ? item.metadata.sharpe : null;
+              return (
+                <div className="focus-row" key={item.id}>
+                  <div className="symbol-cell">
+                    <strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong>
+                    <span>{item.detail}</span>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '阶段' : 'Stage'}</span>
+                    <strong>{typeof item.metadata?.status === 'string' ? item.metadata.status : '--'}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '评分' : 'Score'}</span>
+                    <strong>{score ?? '--'}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '收益/回撤' : 'Return / Drawdown'}</span>
+                    <strong>{expectedReturnPct !== null && maxDrawdownPct !== null ? `${expectedReturnPct.toFixed(1)}% / ${maxDrawdownPct.toFixed(1)}%` : '--'}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>Sharpe</span>
+                    <strong>{sharpe !== null ? sharpe.toFixed(2) : '--'}</strong>
                   </div>
                 </div>
               );

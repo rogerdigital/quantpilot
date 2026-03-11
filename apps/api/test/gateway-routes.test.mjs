@@ -127,6 +127,10 @@ test('POST /api/strategy/catalog saves strategy catalog entries', async () => {
   assert.equal(response.json.ok, true);
   assert.equal(response.json.strategy.id, 'stat-arb-us');
   assert.equal(context.strategyCatalog.getStrategy('stat-arb-us').family, 'stat-arb');
+  const audit = context.audit.listAuditRecords(5).find((item) => item.type === 'strategy-catalog.saved' && item.metadata?.strategyId === 'stat-arb-us');
+  assert.equal(audit.metadata?.timeframe, '30m');
+  assert.equal(audit.metadata?.score, 68);
+  assert.equal(audit.metadata?.expectedReturnPct, 11.4);
 });
 
 test('GET /api/market/provider-status returns backend market provider status', async () => {
