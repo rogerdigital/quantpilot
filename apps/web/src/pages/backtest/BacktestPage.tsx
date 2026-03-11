@@ -42,6 +42,7 @@ function BacktestPage() {
   const [runFilter, setRunFilter] = useState<'all' | 'queued' | 'running' | 'completed' | 'needs_review'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [windowLabel, setWindowLabel] = useState('2024-01-01 -> 2026-03-01');
+  const [selectedRunId, setSelectedRunId] = useState('');
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRunRecord[]>([]);
   const [workflowLoading, setWorkflowLoading] = useState(true);
   const { data, loading, error } = useResearchHub(refreshKey);
@@ -76,6 +77,18 @@ function BacktestPage() {
     .filter((workflow) => workflow.workflowId === 'task-orchestrator.backtest-run')
     .filter((workflow) => !visibleWorkflowIds.length || visibleWorkflowIds.includes(workflow.id))
     .slice(0, 10);
+  const selectedRun = filteredRuns.find((run) => run.id === selectedRunId) || filteredRuns[0] || null;
+  const selectedRunAuditItems = selectedRun
+    ? auditItems
+      .filter((item) => {
+        const runId = typeof item.metadata?.runId === 'string' ? item.metadata.runId : '';
+        return runId === selectedRun.id;
+      })
+      .slice(0, 6)
+    : [];
+  const selectedWorkflow = selectedRun?.workflowRunId
+    ? workflowRuns.find((workflow) => workflow.id === selectedRun.workflowRunId) || null
+    : null;
 
   useEffect(() => {
     const pollMs = hasActiveRuns ? 5000 : 15000;
@@ -107,6 +120,16 @@ function BacktestPage() {
       active = false;
     };
   }, [refreshKey]);
+
+  useEffect(() => {
+    if (!filteredRuns.length) {
+      setSelectedRunId('');
+      return;
+    }
+    if (!selectedRunId || !filteredRuns.some((run) => run.id === selectedRunId)) {
+      setSelectedRunId(filteredRuns[0].id);
+    }
+  }, [filteredRuns, selectedRunId]);
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);
@@ -424,6 +447,19 @@ function BacktestPage() {
                     <strong>{locale === 'zh' ? '无' : 'None'}</strong>
                   )}
                 </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '详情' : 'Details'}</span>
+                  <button
+                    type="button"
+                    className="inline-action"
+                    disabled={selectedRunId === run.id}
+                    onClick={() => setSelectedRunId(run.id)}
+                  >
+                    {selectedRunId === run.id
+                      ? (locale === 'zh' ? '已选中' : 'Selected')
+                      : (locale === 'zh' ? '查看' : 'Inspect')}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -518,6 +554,103 @@ function BacktestPage() {
               );
             })}
           </div>
+        </article>
+      </section>
+
+      <section className="panel-grid">
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '选中回测详情' : 'Selected Backtest Detail'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把单条 run 的回测结果、审计留痕和 workflow 进度聚合到一个视图，减少跨面板对照。'
+                  : 'Aggregate one run’s result metrics, audit trail, and workflow progress into a single detail view.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{selectedRun?.status || '--'}</div>
+          </div>
+          {!selectedRun ? (
+            <div className="empty-cell">{locale === 'zh' ? '当前没有可查看的回测记录。' : 'No backtest run is available for inspection.'}</div>
+          ) : (
+            <div className="status-stack">
+              <div className="status-row"><span>{locale === 'zh' ? '策略' : 'Strategy'}</span><strong>{selectedRun.strategyName}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '窗口' : 'Window'}</span><strong>{selectedRun.windowLabel}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '收益率' : 'Return'}</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? fmtPct(selectedRun.annualizedReturnPct) : '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '最大回撤' : 'Max Drawdown'}</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? fmtPct(selectedRun.maxDrawdownPct) : '--'}</strong></div>
+              <div className="status-row"><span>Sharpe</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? selectedRun.sharpe.toFixed(2) : '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '胜率' : 'Win Rate'}</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? fmtPct(selectedRun.winRatePct) : '--'}</strong></div>
+              <div className="status-copy">{selectedRun.summary}</div>
+            </div>
+          )}
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '选中回测审计轨迹' : 'Selected Audit Trail'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '只展示当前选中 run 的队列、完成和复核记录。'
+                  : 'Show only the queue, completion, and review records for the selected run.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-warn">{selectedRunAuditItems.length}</div>
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {!selectedRun ? <div className="empty-cell">{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</div> : null}
+            {selectedRun && !selectedRunAuditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前 run 暂无审计轨迹。' : 'No audit trail exists for the selected run yet.'}</div> : null}
+            {selectedRunAuditItems.map((item) => (
+              <div className="focus-row" key={item.id}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '类型' : 'Type'}</span>
+                  <strong>{item.type}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '操作人' : 'Actor'}</span>
+                  <strong>{item.actor}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                  <strong>{fmtDateTime(item.createdAt, locale)}</strong>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '选中回测工作流' : 'Selected Workflow'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '查看当前 run 对应的 task orchestrator 工作流状态和步骤进度。'
+                  : 'Inspect the task-orchestrator workflow state and step progress for the selected run.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{selectedWorkflow?.status || '--'}</div>
+          </div>
+          {!selectedRun ? (
+            <div className="empty-cell">{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</div>
+          ) : !selectedWorkflow ? (
+            <div className="empty-cell">{locale === 'zh' ? '当前 run 还没有可见的 workflow 详情。' : 'No workflow detail is available for the selected run yet.'}</div>
+          ) : (
+            <div className="status-stack">
+              <div className="status-row"><span>{locale === 'zh' ? '工作流 ID' : 'Workflow ID'}</span><strong>{selectedWorkflow.id}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{selectedWorkflow.status}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '尝试次数' : 'Attempts'}</span><strong>{selectedWorkflow.attempt}/{selectedWorkflow.maxAttempts}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '触发方式' : 'Trigger'}</span><strong>{selectedWorkflow.trigger}</strong></div>
+              <div className="status-copy">
+                {selectedWorkflow.steps.length
+                  ? selectedWorkflow.steps.map((step) => `${step.key}:${step.status}`).join(' | ')
+                  : (locale === 'zh' ? '尚未记录步骤进度。' : 'No workflow steps recorded yet.')}
+              </div>
+              <div className="status-copy">{locale === 'zh' ? `最近更新时间 ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}` : `Last updated ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}`}</div>
+            </div>
+          )}
         </article>
       </section>
     </>
