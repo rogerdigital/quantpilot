@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ApiPermissionError } from '../../app/api/controlPlane.ts';
+import type { WorkflowRunRecord } from '@shared-types/trading.ts';
+import { ApiPermissionError, fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
 import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
@@ -41,6 +42,8 @@ function BacktestPage() {
   const [runFilter, setRunFilter] = useState<'all' | 'queued' | 'running' | 'completed' | 'needs_review'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [windowLabel, setWindowLabel] = useState('2024-01-01 -> 2026-03-01');
+  const [workflowRuns, setWorkflowRuns] = useState<WorkflowRunRecord[]>([]);
+  const [workflowLoading, setWorkflowLoading] = useState(true);
   const { data, loading, error } = useResearchHub(refreshKey);
   const { items: auditItems, loading: auditLoading } = useAuditFeed(refreshKey);
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
@@ -61,12 +64,17 @@ function BacktestPage() {
   }) || [];
   const hasActiveRuns = Boolean(data?.runs.some((run) => run.status === 'queued' || run.status === 'running'));
   const visibleRunIds = filteredRuns.map((run) => run.id);
+  const visibleWorkflowIds = filteredRuns.map((run) => run.workflowRunId).filter(Boolean);
   const backtestAuditItems = auditItems
     .filter((item) => item.type === 'backtest-run.created' || item.type === 'backtest-run.completed' || item.type === 'backtest-run.reviewed')
     .filter((item) => {
       const runId = typeof item.metadata?.runId === 'string' ? item.metadata.runId : '';
       return !visibleRunIds.length || visibleRunIds.includes(runId);
     })
+    .slice(0, 10);
+  const visibleWorkflowRuns = workflowRuns
+    .filter((workflow) => workflow.workflowId === 'task-orchestrator.backtest-run')
+    .filter((workflow) => !visibleWorkflowIds.length || visibleWorkflowIds.includes(workflow.id))
     .slice(0, 10);
 
   useEffect(() => {
@@ -76,6 +84,29 @@ function BacktestPage() {
     }, pollMs);
     return () => window.clearInterval(timer);
   }, [hasActiveRuns]);
+
+  useEffect(() => {
+    let active = true;
+    setWorkflowLoading(true);
+
+    fetchTaskWorkflows()
+      .then((payload) => {
+        if (!active) return;
+        setWorkflowRuns(Array.isArray(payload?.workflows) ? payload.workflows : []);
+      })
+      .catch(() => {
+        if (!active) return;
+        setWorkflowRuns([]);
+      })
+      .finally(() => {
+        if (!active) return;
+        setWorkflowLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [refreshKey]);
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);
@@ -438,6 +469,50 @@ function BacktestPage() {
                   <div className="focus-metric">
                     <span>{locale === 'zh' ? '时间' : 'Time'}</span>
                     <strong>{fmtDateTime(item.createdAt, locale)}</strong>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '研究工作流状态' : 'Research Workflow State'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '直接读取 task orchestrator 的 workflow runs，把回测记录和编排层状态、尝试次数、步骤进度放在同一视图。'
+                  : 'Read task-orchestrator workflow runs directly so each backtest can be viewed alongside orchestration status, attempt count, and step progress.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-warn">{visibleWorkflowRuns.length}</div>
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {workflowLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载研究工作流...' : 'Loading research workflows...'}</div> : null}
+            {!workflowLoading && !visibleWorkflowRuns.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有研究工作流。' : 'No research workflows for the current filter.'}</div> : null}
+            {visibleWorkflowRuns.map((workflow) => {
+              const completedSteps = workflow.steps.filter((step) => step.status === 'completed').length;
+              return (
+                <div className="focus-row" key={workflow.id}>
+                  <div className="symbol-cell">
+                    <strong>{workflow.id}</strong>
+                    <span>{workflow.workflowId}</span>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                    <strong>{workflow.status}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '尝试' : 'Attempt'}</span>
+                    <strong>{workflow.attempt}/{workflow.maxAttempts}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '步骤' : 'Steps'}</span>
+                    <strong>{completedSteps}/{workflow.steps.length || 0}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '更新时间' : 'Updated'}</span>
+                    <strong>{fmtDateTime(workflow.updatedAt || workflow.createdAt, locale)}</strong>
                   </div>
                 </div>
               );

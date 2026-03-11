@@ -7,6 +7,7 @@ import type {
   ExecutionLedgerEntry,
   LatestBrokerAccountSnapshotResponse,
   MarketProviderStatusSnapshot,
+  WorkflowRunsSnapshot,
   StateCycleResult,
   TradingState,
   UserAccountProfileSnapshot,
@@ -253,6 +254,12 @@ export async function fetchOperatorActions(): Promise<{
   }>;
 }> {
   return fetchJson('/api/task-orchestrator/actions', {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export async function fetchTaskWorkflows(): Promise<WorkflowRunsSnapshot> {
+  return fetchJson('/api/task-orchestrator/workflows', {
     headers: { Accept: 'application/json' },
   });
 }

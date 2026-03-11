@@ -555,6 +555,41 @@ export type BacktestRunCreateSnapshot = {
   };
 };
 
+export type WorkflowStepRecord = {
+  key: string;
+  status: string;
+  [key: string]: unknown;
+};
+
+export type WorkflowRunRecord = {
+  id: string;
+  workflowId: string;
+  workflowType: string;
+  status: string;
+  actor: string;
+  trigger: string;
+  attempt: number;
+  maxAttempts: number;
+  nextRunAt: string;
+  lockedBy: string;
+  lockedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  startedAt: string;
+  completedAt: string;
+  failedAt: string;
+  steps: WorkflowStepRecord[];
+  payload: Record<string, unknown>;
+  result: Record<string, unknown> | null;
+  error: Record<string, unknown> | string | null;
+  metadata: Record<string, unknown>;
+};
+
+export type WorkflowRunsSnapshot = {
+  ok: boolean;
+  workflows: WorkflowRunRecord[];
+};
+
 export type TradingSystemContextValue = {
   state: TradingState;
   session: OperatorSession | null;
