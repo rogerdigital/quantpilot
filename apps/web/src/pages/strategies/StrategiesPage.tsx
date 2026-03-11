@@ -5,7 +5,7 @@ import { saveStrategyCatalogItem } from '../../modules/research/research.service
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
-import { InspectionListPanel, InspectionMetricsRow, InspectionPanel } from '../console/components/InspectionPanels.tsx';
+import { InspectionListPanel, InspectionMetricsRow, InspectionPanel, InspectionSelectableRow } from '../console/components/InspectionPanels.tsx';
 import { UniverseTable } from '../console/components/ConsoleTables.tsx';
 import { onShortcutKeyDown, useSettingsNavigation } from '../console/hooks.ts';
 import { copy, useLocale } from '../console/i18n.tsx';
@@ -399,25 +399,16 @@ function StrategiesPage() {
               <div className="status-copy">{locale === 'zh' ? '活跃策略' : 'Active strategies'}</div>
             ) : null}
             {visibleActiveStrategies.map((item) => (
-              <div className="focus-row" key={item.id}>
-                <div className="symbol-cell">
-                  <strong>{item.name}</strong>
-                  <span>{item.summary}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '阶段' : 'Stage'}</span>
-                  <strong>{item.status}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>Sharpe</span>
-                  <strong>{item.sharpe.toFixed(2)}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '预期收益' : 'Expected return'}</span>
-                  <strong>{item.expectedReturnPct.toFixed(1)}%</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '动作' : 'Actions'}</span>
+              <InspectionSelectableRow
+                key={item.id}
+                leadTitle={item.name}
+                leadCopy={item.summary}
+                metrics={[
+                  { label: locale === 'zh' ? '阶段' : 'Stage', value: item.status },
+                  { label: 'Sharpe', value: item.sharpe.toFixed(2) },
+                  { label: locale === 'zh' ? '预期收益' : 'Expected return', value: `${item.expectedReturnPct.toFixed(1)}%` },
+                ]}
+                actions={(
                   <div className="action-group">
                     <button
                       type="button"
@@ -466,32 +457,23 @@ function StrategiesPage() {
                         : (locale === 'zh' ? '查看' : 'Inspect')}
                     </button>
                   </div>
-                </div>
-              </div>
+                )}
+              />
             ))}
             {visibleArchivedStrategies.length ? (
               <div className="status-copy">{locale === 'zh' ? '已归档策略' : 'Archived strategies'}</div>
             ) : null}
             {visibleArchivedStrategies.map((item) => (
-              <div className="focus-row" key={item.id}>
-                <div className="symbol-cell">
-                  <strong>{item.name}</strong>
-                  <span>{item.summary}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '阶段' : 'Stage'}</span>
-                  <strong>{item.status}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>Sharpe</span>
-                  <strong>{item.sharpe.toFixed(2)}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '预期收益' : 'Expected return'}</span>
-                  <strong>{item.expectedReturnPct.toFixed(1)}%</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '动作' : 'Actions'}</span>
+              <InspectionSelectableRow
+                key={item.id}
+                leadTitle={item.name}
+                leadCopy={item.summary}
+                metrics={[
+                  { label: locale === 'zh' ? '阶段' : 'Stage', value: item.status },
+                  { label: 'Sharpe', value: item.sharpe.toFixed(2) },
+                  { label: locale === 'zh' ? '预期收益' : 'Expected return', value: `${item.expectedReturnPct.toFixed(1)}%` },
+                ]}
+                actions={(
                   <div className="action-group">
                     <button
                       type="button"
@@ -522,8 +504,8 @@ function StrategiesPage() {
                         : (locale === 'zh' ? '查看' : 'Inspect')}
                     </button>
                   </div>
-                </div>
-              </div>
+                )}
+              />
             ))}
           </div>
         </article>

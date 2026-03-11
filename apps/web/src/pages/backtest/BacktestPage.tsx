@@ -6,7 +6,7 @@ import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/rese
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
-import { InspectionListPanel, InspectionMetricsRow, InspectionPanel } from '../console/components/InspectionPanels.tsx';
+import { InspectionListPanel, InspectionMetricsRow, InspectionPanel, InspectionSelectableRow } from '../console/components/InspectionPanels.tsx';
 import { useSummary } from '../console/hooks.ts';
 import { copy, useLocale } from '../console/i18n.tsx';
 import { fmtPct, translateMode, translateRiskLevel, translateRuntimeText } from '../console/utils.ts';
@@ -417,42 +417,33 @@ function BacktestPage() {
           <div className="focus-list focus-list-terminal">
             {!loading && !filteredRuns.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有回测记录' : 'No backtest runs match the current filter.'}</div> : null}
             {filteredRuns.map((run) => (
-              <div className="focus-row" key={run.id}>
-                <div className="symbol-cell">
-                  <strong>{run.strategyName}</strong>
-                  <span>{run.windowLabel} · {run.summary}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                  <strong>{run.status}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '收益' : 'Return'}</span>
-                  <strong>{run.status === 'completed' || run.status === 'needs_review' ? fmtPct(run.annualizedReturnPct) : '--'}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '更新时间' : 'Updated'}</span>
-                  <strong>{fmtDateTime(run.completedAt || run.startedAt, locale)}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '复核' : 'Review'}</span>
-                  {run.status === 'needs_review' ? (
-                    <button
-                      type="button"
-                      className="inline-action"
-                      disabled={!canReviewBacktest || reviewingRunId === run.id}
-                      onClick={() => handleReviewRun(run.id)}
-                    >
-                      {reviewingRunId === run.id
-                        ? (locale === 'zh' ? '处理中...' : 'Reviewing...')
-                        : (locale === 'zh' ? '人工复核' : 'Approve Review')}
-                    </button>
-                  ) : (
-                    <strong>{locale === 'zh' ? '无' : 'None'}</strong>
-                  )}
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '详情' : 'Details'}</span>
+              <InspectionSelectableRow
+                key={run.id}
+                leadTitle={run.strategyName}
+                leadCopy={`${run.windowLabel} · ${run.summary}`}
+                metrics={[
+                  { label: locale === 'zh' ? '状态' : 'Status', value: run.status },
+                  { label: locale === 'zh' ? '收益' : 'Return', value: run.status === 'completed' || run.status === 'needs_review' ? fmtPct(run.annualizedReturnPct) : '--' },
+                  { label: locale === 'zh' ? '更新时间' : 'Updated', value: fmtDateTime(run.completedAt || run.startedAt, locale) },
+                  {
+                    label: locale === 'zh' ? '复核' : 'Review',
+                    value: run.status === 'needs_review'
+                      ? (
+                        <button
+                          type="button"
+                          className="inline-action"
+                          disabled={!canReviewBacktest || reviewingRunId === run.id}
+                          onClick={() => handleReviewRun(run.id)}
+                        >
+                          {reviewingRunId === run.id
+                            ? (locale === 'zh' ? '处理中...' : 'Reviewing...')
+                            : (locale === 'zh' ? '人工复核' : 'Approve Review')}
+                        </button>
+                      )
+                      : (locale === 'zh' ? '无' : 'None'),
+                  },
+                ]}
+                actions={(
                   <button
                     type="button"
                     className="inline-action"
@@ -463,8 +454,8 @@ function BacktestPage() {
                       ? (locale === 'zh' ? '已选中' : 'Selected')
                       : (locale === 'zh' ? '查看' : 'Inspect')}
                   </button>
-                </div>
-              </div>
+                )}
+              />
             ))}
           </div>
           {!canReviewBacktest ? <div className="status-copy">{locale === 'zh' ? '当前会话缺少 risk:review 权限，不能处理待复核回测。' : 'This session is missing risk:review permission, so review-queue runs stay read-only.'}</div> : null}

@@ -48,6 +48,13 @@ type InspectionMetricsRowProps = {
   metrics: InspectionMetricItem[];
 };
 
+type InspectionSelectableRowProps = {
+  leadTitle?: ReactNode;
+  leadCopy?: ReactNode;
+  metrics: InspectionMetricItem[];
+  actions?: ReactNode;
+};
+
 export function InspectionMetricsRow({ leadTitle, leadCopy, metrics }: InspectionMetricsRowProps) {
   return (
     <div className="focus-row">
@@ -63,6 +70,31 @@ export function InspectionMetricsRow({ leadTitle, leadCopy, metrics }: Inspectio
           <strong>{metric.value}</strong>
         </div>
       ))}
+    </div>
+  );
+}
+
+export function InspectionSelectableRow({ leadTitle, leadCopy, metrics, actions }: InspectionSelectableRowProps) {
+  return (
+    <div className="focus-row">
+      {leadTitle || leadCopy ? (
+        <div className="symbol-cell">
+          {leadTitle ? <strong>{leadTitle}</strong> : null}
+          {leadCopy ? <span>{leadCopy}</span> : null}
+        </div>
+      ) : null}
+      {metrics.map((metric) => (
+        <div className="focus-metric" key={metric.label}>
+          <span>{metric.label}</span>
+          <strong>{metric.value}</strong>
+        </div>
+      ))}
+      {actions ? (
+        <div className="focus-metric">
+          <span>Actions</span>
+          {actions}
+        </div>
+      ) : null}
     </div>
   );
 }
