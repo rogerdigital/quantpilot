@@ -10,6 +10,7 @@ import { createBacktestRun, listBacktestRuns, reviewBacktestRun } from '../../do
 import { getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { describeArchitecture, listArchitectureLayers, listModules } from '../../modules/registry.mjs';
+import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
 import {
   getBrokerBindingsSnapshot,
   getBrokerBindingRuntimeSnapshot,
@@ -219,6 +220,14 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/strategy/catalog') {
     writeJson(res, 200, listStrategyCatalog());
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/market/provider-status') {
+    writeJson(res, 200, {
+      ok: true,
+      status: controlPlaneRuntime.getMarketProviderStatus(),
+    });
     return true;
   }
 

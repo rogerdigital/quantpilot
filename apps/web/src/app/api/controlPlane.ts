@@ -6,6 +6,7 @@ import type {
   BrokerAccountSnapshotRecord,
   ExecutionLedgerEntry,
   LatestBrokerAccountSnapshotResponse,
+  MarketProviderStatusSnapshot,
   StateCycleResult,
   TradingState,
   UserAccountProfileSnapshot,
@@ -259,6 +260,12 @@ export async function fetchExecutionLedger(): Promise<{ ok: boolean; entries: Ex
 
 export async function fetchLatestBrokerAccountSnapshot(): Promise<LatestBrokerAccountSnapshotResponse> {
   return fetchJson('/api/execution/account-snapshots/latest', {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export async function fetchMarketProviderStatus(): Promise<{ ok: boolean; status: MarketProviderStatusSnapshot }> {
+  return fetchJson('/api/market/provider-status', {
     headers: { Accept: 'application/json' },
   });
 }

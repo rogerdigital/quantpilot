@@ -522,6 +522,15 @@ export type ResearchHubSnapshot = {
   runs: BacktestRunItem[];
 };
 
+export type MarketProviderStatusSnapshot = {
+  asOf: string;
+  provider: string;
+  connected: boolean;
+  fallback: boolean;
+  message: string;
+  symbolCount: number;
+};
+
 export type BacktestRunCreateRequest = {
   strategyId: string;
   windowLabel?: string;

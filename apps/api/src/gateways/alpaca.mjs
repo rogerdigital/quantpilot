@@ -167,6 +167,7 @@ async function getMarketSnapshot(config, { provider, symbols }) {
     return {
       label: provider === 'simulated' ? 'Local Simulated Market Data' : 'Market Data',
       connected: true,
+      fallback: provider !== 'simulated',
       message: 'Using the local simulated market data stream.',
       quotes: [],
     };
@@ -184,6 +185,7 @@ async function getMarketSnapshot(config, { provider, symbols }) {
     return {
       label: 'Alpaca Market Data via Gateway',
       connected: Boolean(response.ok),
+      fallback: !response.ok,
       message: payload?.message || `Market snapshot HTTP ${response.status}`,
       quotes: Array.isArray(payload?.quotes) ? payload.quotes : [],
     };
@@ -192,6 +194,7 @@ async function getMarketSnapshot(config, { provider, symbols }) {
   return {
     label: 'HTTP Market Gateway',
     connected: false,
+    fallback: true,
     message: 'Custom HTTP market snapshot is not implemented on the backend yet. Falling back to simulated prices.',
     quotes: [],
   };

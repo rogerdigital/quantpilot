@@ -103,6 +103,26 @@ test('GET /api/strategy/catalog returns research strategies', async () => {
   assert.equal(response.json.strategies.some((item) => item.status === 'candidate'), true);
 });
 
+test('GET /api/market/provider-status returns backend market provider status', async () => {
+  context.marketProviders.updateMarketProviderStatus({
+    provider: 'alpaca',
+    connected: true,
+    fallback: false,
+    message: 'market provider synced from backend',
+    symbolCount: 5,
+    asOf: '2026-03-11T09:30:00.000Z',
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/market/provider-status',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.status.provider, 'alpaca');
+  assert.equal(response.json.status.symbolCount, 5);
+});
+
 test('GET /api/backtest/summary returns structured research summary', async () => {
   const response = await invokeGatewayRoute(handler, {
     path: '/api/backtest/summary',
