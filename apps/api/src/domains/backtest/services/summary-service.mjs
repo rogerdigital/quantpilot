@@ -1,12 +1,10 @@
-import { listStrategyCatalog } from '../../strategy/services/catalog-service.mjs';
-import { listBacktestRuns } from './runs-service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
 
-export function getBacktestSummary() {
-  const { strategies } = listStrategyCatalog();
-  const { runs } = listBacktestRuns();
+function buildSummary(strategies, runs, dataSource = 'control-plane-runtime.research-summary') {
   const completedRuns = runs.filter((run) => run.status === 'completed');
   const queuedRuns = runs.filter((run) => run.status === 'queued').length;
   const runningRuns = runs.filter((run) => run.status === 'running').length;
+  const failedRuns = runs.filter((run) => run.status === 'failed').length;
   const reviewQueue = runs.filter((run) => run.status === 'needs_review').length;
   const averageSharpe = completedRuns.length
     ? completedRuns.reduce((sum, run) => sum + run.sharpe, 0) / completedRuns.length
@@ -19,15 +17,31 @@ export function getBacktestSummary() {
 
   return {
     ok: true,
-    asOf: '2026-03-10T09:30:00.000Z',
+    asOf: new Date().toISOString(),
     queuedRuns,
     runningRuns,
     completedRuns: completedRuns.length,
+    failedRuns,
     candidateStrategies,
     promotedStrategies,
     averageSharpe: Number(averageSharpe.toFixed(2)),
     averageReturnPct: Number(averageReturnPct.toFixed(2)),
     reviewQueue,
-    dataSource: 'QuantPilot research service mock snapshot',
+    dataSource,
   };
+}
+
+export function refreshBacktestSummary(dataSource = 'control-plane-runtime.research-summary') {
+  const strategies = controlPlaneRuntime.listStrategyCatalog();
+  const runs = controlPlaneRuntime.listBacktestRuns();
+  const summary = buildSummary(strategies, runs, dataSource);
+  return controlPlaneRuntime.updateResearchSummary(summary);
+}
+
+export function getBacktestSummary() {
+  const summary = controlPlaneRuntime.getResearchSummary();
+  if (!summary?.asOf) {
+    return refreshBacktestSummary();
+  }
+  return summary;
 }

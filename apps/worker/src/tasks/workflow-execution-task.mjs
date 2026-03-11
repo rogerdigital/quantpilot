@@ -1,6 +1,7 @@
 import { controlPlaneRuntime } from '../../../../packages/control-plane-runtime/src/index.mjs';
 import { executeQueuedWorkflow } from '../../../../packages/task-workflow-engine/src/index.mjs';
 import { recordExecutionPlan } from '../../../api/src/modules/execution/service.mjs';
+import { refreshBacktestSummary } from '../../../api/src/domains/backtest/services/summary-service.mjs';
 import { assessAgentActionRequestRisk, assessExecutionCandidate } from '../../../api/src/modules/risk/service.mjs';
 import { buildStrategyExecutionCandidate } from '../../../api/src/modules/strategy/service.mjs';
 import { recordAgentActionRequest } from '../../../api/src/modules/agent/service.mjs';
@@ -32,6 +33,7 @@ function createWorkerExecutionContext() {
       label: 'Worker Simulated Market',
       connected: true,
       message: 'workflow worker simulated market snapshot',
+      fallback: false,
       quotes: [],
     }),
     assessAgentActionRequestRisk,
@@ -39,6 +41,7 @@ function createWorkerExecutionContext() {
     buildStrategyExecutionCandidate,
     assessExecutionCandidate,
     recordExecutionPlan,
+    refreshBacktestSummary,
     queueRiskScan: (payload) => controlPlaneRuntime.enqueueRiskScan(payload),
   };
 }

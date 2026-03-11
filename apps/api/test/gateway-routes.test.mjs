@@ -125,6 +125,56 @@ test('GET /api/backtest/runs returns structured backtest runs', async () => {
   assert.equal(response.json.runs.some((item) => item.status === 'completed'), true);
 });
 
+test('POST /api/backtest/runs queues a persisted research workflow run', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/backtest/runs',
+    body: {
+      strategyId: 'ema-cross-us',
+      windowLabel: '2024-01-01 -> 2024-12-31',
+      requestedBy: 'api-test',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.workflow.workflowId, 'task-orchestrator.backtest-run');
+  assert.equal(response.json.run.strategyId, 'ema-cross-us');
+  assert.equal(response.json.run.status, 'queued');
+});
+
+test('POST /api/backtest/runs/:id/review updates reviewable backtest runs', async () => {
+  const created = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/backtest/runs',
+    body: {
+      strategyId: 'rsi-revert-index',
+      windowLabel: '2023-01-01 -> 2024-12-31',
+      requestedBy: 'api-test',
+    },
+  });
+
+  context.backtestRuns.updateBacktestRun(created.json.run.id, {
+    status: 'needs_review',
+    summary: 'Needs operator review.',
+    completedAt: '2026-03-10T09:45:00.000Z',
+  });
+
+  const reviewResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/backtest/runs/${created.json.run.id}/review`,
+    body: {
+      reviewedBy: 'risk-operator',
+      summary: 'Operator accepted the run for promotion review.',
+    },
+  });
+
+  assert.equal(reviewResponse.statusCode, 200);
+  assert.equal(reviewResponse.json.ok, true);
+  assert.equal(reviewResponse.json.run.status, 'completed');
+  assert.equal(reviewResponse.json.run.reviewedBy, 'risk-operator');
+});
+
 test('GET /api/agent/tools returns allowlisted read-only tools', async () => {
   const response = await invokeGatewayRoute(handler, {
     path: '/api/agent/tools',
@@ -808,7 +858,7 @@ test('GET /api/execution/ledger returns plans joined with workflow and runtime s
     workflowId: 'task-orchestrator.strategy-execution',
     status: 'completed',
   });
-  context.executionPlans.appendExecutionPlan({
+  const plan = context.executionPlans.appendExecutionPlan({
     id: 'plan-ledger-1',
     workflowRunId: workflow.id,
     strategyId: 'ema-cross-us',
@@ -830,7 +880,7 @@ test('GET /api/execution/ledger returns plans joined with workflow and runtime s
     marketConnected: true,
     submittedOrderCount: 2,
     openOrderCount: 1,
-    createdAt: '2026-03-11T09:10:00.000Z',
+    createdAt: new Date(new Date(plan.createdAt).getTime() + 60_000).toISOString(),
   });
 
   const response = await invokeGatewayRoute(handler, {

@@ -8,6 +8,29 @@ import { assessAgentActionRequestRisk, assessExecutionCandidate } from '../../..
 import { buildStrategyExecutionCandidate } from '../../../apps/api/src/modules/strategy/service.mjs';
 import { executeCycleWorkflow, executeQueuedWorkflow, executeStateWorkflow } from '../src/index.mjs';
 
+function refreshSummaryForRuntime(runtime) {
+  const strategies = runtime.listStrategyCatalog();
+  const runs = runtime.listBacktestRuns();
+  const completedRuns = runs.filter((run) => run.status === 'completed');
+  return runtime.updateResearchSummary({
+    asOf: '2026-03-11T09:30:00.000Z',
+    queuedRuns: runs.filter((run) => run.status === 'queued').length,
+    runningRuns: runs.filter((run) => run.status === 'running').length,
+    completedRuns: completedRuns.length,
+    failedRuns: runs.filter((run) => run.status === 'failed').length,
+    candidateStrategies: strategies.filter((item) => ['candidate', 'paper', 'live'].includes(item.status)).length,
+    promotedStrategies: strategies.filter((item) => ['paper', 'live'].includes(item.status)).length,
+    averageSharpe: completedRuns.length
+      ? Number((completedRuns.reduce((sum, run) => sum + run.sharpe, 0) / completedRuns.length).toFixed(2))
+      : 0,
+    averageReturnPct: completedRuns.length
+      ? Number((completedRuns.reduce((sum, run) => sum + run.annualizedReturnPct, 0) / completedRuns.length).toFixed(2))
+      : 0,
+    reviewQueue: runs.filter((run) => run.status === 'needs_review').length,
+    dataSource: 'task-workflow-engine.test',
+  });
+}
+
 function createEngineContext() {
   const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
   return {
@@ -42,6 +65,7 @@ function createEngineContext() {
     assessAgentActionRequestRisk,
     buildStrategyExecutionCandidate,
     assessExecutionCandidate,
+    refreshBacktestSummary: () => refreshSummaryForRuntime(runtime),
     recordExecutionPlan: (payload) => runtime.recordExecutionPlan(payload),
     recordAgentActionRequest: (payload) => runtime.recordAgentActionRequest(payload),
   };
@@ -134,4 +158,25 @@ test('queued workflow dispatcher executes agent action request workflows', async
   assert.equal(context.listAgentActionRequests()[0].requestType, 'prepare_execution_plan');
   assert.equal(context.listExecutionPlans().length, 0);
   assert.equal(context.listAgentActionRequests()[0].approvalState, 'required');
+});
+
+test('queued workflow dispatcher executes backtest workflows and refreshes research summary', async () => {
+  const context = createEngineContext();
+  context.enqueueWorkflowRun({
+    workflowId: 'task-orchestrator.backtest-run',
+    status: 'queued',
+    payload: {
+      strategyId: 'ema-cross-us',
+      windowLabel: '2024-01-01 -> 2024-12-31',
+      requestedBy: 'engine-test',
+    },
+  });
+  const claimed = context.claimQueuedWorkflowRuns({ worker: 'engine-worker' });
+
+  const result = await executeQueuedWorkflow(claimed.workflows[0], context);
+
+  assert.equal(result.ok, true);
+  assert.equal(result.workflow.status, 'completed');
+  assert.equal(context.listBacktestRuns().length >= 1, true);
+  assert.equal(typeof context.getResearchSummary().averageSharpe, 'number');
 });

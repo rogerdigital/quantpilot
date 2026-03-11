@@ -185,3 +185,46 @@ test('workflow repository claims queued runs for execution', () => {
   assert.equal(result.workflows[0].status, 'running');
   assert.equal(context.workflows.getWorkflowRun('workflow-queue-1').attempt, 1);
 });
+
+test('research repositories persist strategy catalog, backtest runs, summary, and market provider status', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const strategy = context.strategyCatalog.getStrategy('ema-cross-us');
+  const run = context.backtestRuns.appendBacktestRun({
+    id: 'backtest-run-test',
+    strategyId: strategy.id,
+    strategyName: strategy.name,
+    workflowRunId: 'workflow-backtest-1',
+    status: 'queued',
+    windowLabel: '2024-01-01 -> 2024-12-31',
+  });
+  const updated = context.backtestRuns.updateBacktestRun(run.id, {
+    status: 'completed',
+    sharpe: 1.21,
+    annualizedReturnPct: 14.2,
+  });
+  const summary = context.researchSummary.updateResearchSummary({
+    asOf: '2026-03-11T09:30:00.000Z',
+    queuedRuns: 0,
+    runningRuns: 0,
+    completedRuns: 2,
+    failedRuns: 0,
+    candidateStrategies: 3,
+    promotedStrategies: 1,
+    averageSharpe: 1.3,
+    averageReturnPct: 16.1,
+    reviewQueue: 1,
+  });
+  const marketStatus = context.marketProviders.updateMarketProviderStatus({
+    provider: 'simulated',
+    connected: true,
+    fallback: false,
+    message: 'market provider synced',
+    symbolCount: 4,
+  });
+
+  assert.equal(strategy.id, 'ema-cross-us');
+  assert.equal(context.backtestRuns.findBacktestRunByWorkflowRunId('workflow-backtest-1').id, run.id);
+  assert.equal(updated.status, 'completed');
+  assert.equal(summary.completedRuns, 2);
+  assert.equal(marketStatus.connected, true);
+});

@@ -69,6 +69,21 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     updateAgentActionRequest(requestId, patch = {}) {
       return context.agentActionRequests.updateAgentActionRequest(requestId, patch);
     },
+    listBacktestRuns(limit = 100, filter = {}) {
+      return context.backtestRuns.listBacktestRuns(limit, filter);
+    },
+    getBacktestRun(runId) {
+      return context.backtestRuns.getBacktestRun(runId);
+    },
+    findBacktestRunByWorkflowRunId(workflowRunId) {
+      return context.backtestRuns.findBacktestRunByWorkflowRunId(workflowRunId);
+    },
+    appendBacktestRun(payload) {
+      return context.backtestRuns.appendBacktestRun(payload);
+    },
+    updateBacktestRun(runId, patch = {}) {
+      return context.backtestRuns.updateBacktestRun(runId, patch);
+    },
     listAuditRecords(limit = 50) {
       return context.audit.listAuditRecords(limit);
     },
@@ -237,6 +252,12 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         brokerSnapshot,
       };
     },
+    getMarketProviderStatus() {
+      return context.marketProviders.getMarketProviderStatus();
+    },
+    updateMarketProviderStatus(snapshot = {}) {
+      return context.marketProviders.updateMarketProviderStatus(snapshot);
+    },
     listNotifications(limit = 50) {
       return context.notifications.listNotifications(limit);
     },
@@ -251,6 +272,12 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     },
     dispatchPendingNotifications(options = {}) {
       return context.notifications.dispatchPendingNotifications(options);
+    },
+    getResearchSummary() {
+      return context.researchSummary.getResearchSummary();
+    },
+    updateResearchSummary(summary = {}) {
+      return context.researchSummary.updateResearchSummary(summary);
     },
     listRiskEvents(limit = 50) {
       return context.risk.listRiskEvents(limit);
@@ -272,6 +299,15 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     },
     recordSchedulerTick(options = {}) {
       return context.scheduler.recordSchedulerTick(options);
+    },
+    listStrategyCatalog(limit = 100) {
+      return context.strategyCatalog.listStrategies(limit);
+    },
+    getStrategyCatalogItem(strategyId) {
+      return context.strategyCatalog.getStrategy(strategyId);
+    },
+    upsertStrategyCatalogItem(payload = {}) {
+      return context.strategyCatalog.upsertStrategy(payload);
     },
     getUserAccount() {
       return context.userAccount.getUserAccount();
@@ -490,5 +526,17 @@ export const setDefaultBrokerBinding = (...args) => controlPlaneRuntime.setDefau
 export const deleteBrokerBinding = (...args) => controlPlaneRuntime.deleteBrokerBinding(...args);
 export const listExecutionRuntimeEvents = (...args) => controlPlaneRuntime.listExecutionRuntimeEvents(...args);
 export const listBrokerAccountSnapshots = (...args) => controlPlaneRuntime.listBrokerAccountSnapshots(...args);
+export const listBacktestRuns = (...args) => controlPlaneRuntime.listBacktestRuns(...args);
+export const getBacktestRun = (...args) => controlPlaneRuntime.getBacktestRun(...args);
+export const findBacktestRunByWorkflowRunId = (...args) => controlPlaneRuntime.findBacktestRunByWorkflowRunId(...args);
+export const appendBacktestRun = (...args) => controlPlaneRuntime.appendBacktestRun(...args);
+export const updateBacktestRun = (...args) => controlPlaneRuntime.updateBacktestRun(...args);
+export const getResearchSummary = (...args) => controlPlaneRuntime.getResearchSummary(...args);
+export const updateResearchSummary = (...args) => controlPlaneRuntime.updateResearchSummary(...args);
+export const listStrategyCatalog = (...args) => controlPlaneRuntime.listStrategyCatalog(...args);
+export const getStrategyCatalogItem = (...args) => controlPlaneRuntime.getStrategyCatalogItem(...args);
+export const upsertStrategyCatalogItem = (...args) => controlPlaneRuntime.upsertStrategyCatalogItem(...args);
+export const getMarketProviderStatus = (...args) => controlPlaneRuntime.getMarketProviderStatus(...args);
+export const updateMarketProviderStatus = (...args) => controlPlaneRuntime.updateMarketProviderStatus(...args);
 export const listWorkflowRuns = (...args) => controlPlaneRuntime.listWorkflowRuns(...args);
 export const getWorkflowRun = (...args) => controlPlaneRuntime.getWorkflowRun(...args);

@@ -18,6 +18,7 @@ const [
   { createControlPlaneContext },
   { createControlPlaneStore },
   { createControlPlaneRuntime },
+  { refreshBacktestSummary },
   { approveAgentActionRequest },
   { recordExecutionPlan },
   { assessAgentActionRequestRisk, assessExecutionCandidate },
@@ -31,6 +32,7 @@ const [
   import('../../../packages/control-plane-store/src/context.mjs'),
   import('../../../packages/control-plane-store/src/store.mjs'),
   import('../../../packages/control-plane-runtime/src/index.mjs'),
+  import('../../api/src/domains/backtest/services/summary-service.mjs'),
   import('../../api/src/modules/agent/service.mjs'),
   import('../../api/src/modules/execution/service.mjs'),
   import('../../api/src/modules/risk/service.mjs'),
@@ -68,6 +70,7 @@ const fakeMarketSnapshot = {
   label: 'Worker E2E Market',
   connected: true,
   message: 'worker e2e market snapshot ok',
+  fallback: false,
   quotes: [],
 };
 
@@ -90,6 +93,7 @@ function createWorkerContext() {
     recordAgentActionRequest: (payload) => runtime.recordAgentActionRequest(payload),
     buildStrategyExecutionCandidate,
     assessExecutionCandidate,
+    refreshBacktestSummary,
     recordExecutionPlan,
     queueRiskScan: (payload) => runtime.enqueueRiskScan(payload),
   };
@@ -116,7 +120,7 @@ test('queued state workflow executes end-to-end through worker and persists down
   const execution = await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-10T23:59:00.000Z',
+      now: '2026-03-11T23:59:00.000Z',
     }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
@@ -164,7 +168,7 @@ test('queued strategy execution workflow persists execution plan and downstream 
   const execution = await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-10T23:59:00.000Z',
+      now: '2026-03-11T23:59:00.000Z',
       workflowId: 'task-orchestrator.strategy-execution',
     }),
     executeWorkflow: executeQueuedWorkflow,
@@ -203,7 +207,7 @@ test('failed strategy execution workflow is scheduled for retry and re-queued by
   const execution = await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-10T23:59:00.000Z',
+      now: '2026-03-11T23:59:00.000Z',
       workflowId: 'task-orchestrator.strategy-execution',
     }),
     executeWorkflow: executeQueuedWorkflow,
@@ -217,7 +221,7 @@ test('failed strategy execution workflow is scheduled for retry and re-queued by
   const maintenance = await runWorkflowMaintenanceTask(workerConfig, {
     releaseScheduledWorkflows: (options) => runtime.releaseScheduledWorkflowRuns({
       ...options,
-      now: '2026-03-11T00:01:00.000Z',
+      now: '2026-03-12T00:01:00.000Z',
     }),
   });
 
@@ -245,7 +249,7 @@ test('queued agent action request workflow persists a review request without cha
   const execution = await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-10T23:59:00.000Z',
+      now: '2026-03-11T23:59:00.000Z',
       workflowId: 'task-orchestrator.agent-action-request',
     }),
     executeWorkflow: executeQueuedWorkflow,
@@ -276,7 +280,7 @@ test('blocked agent action request is rejected by risk gate before approval stag
   const execution = await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-10T23:59:00.000Z',
+      now: '2026-03-11T23:59:00.000Z',
       workflowId: 'task-orchestrator.agent-action-request',
     }),
     executeWorkflow: executeQueuedWorkflow,
@@ -307,7 +311,7 @@ test('approved agent action request is the only path that queues downstream stra
   await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-10T23:59:00.000Z',
+      now: '2026-03-11T23:59:00.000Z',
       workflowId: 'task-orchestrator.agent-action-request',
     }),
     executeWorkflow: executeQueuedWorkflow,
@@ -335,4 +339,35 @@ test('approved agent action request is the only path that queues downstream stra
     context.workflows.listWorkflowRuns().filter((item) => item.workflowId === 'task-orchestrator.strategy-execution').length,
     strategyWorkflowCountBefore + 1
   );
+});
+
+test('queued backtest workflow persists research run and summary through worker execution', async () => {
+  const queued = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/backtest/runs',
+    body: {
+      strategyId: 'ema-cross-us',
+      windowLabel: '2024-01-01 -> 2024-12-31',
+      requestedBy: 'worker-e2e-test',
+    },
+  });
+
+  assert.equal(queued.statusCode, 200);
+  assert.equal(queued.json.workflow.workflowId, 'task-orchestrator.backtest-run');
+  assert.equal(queued.json.run.status, 'queued');
+
+  const execution = await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
+      ...options,
+      now: '2026-03-11T23:59:00.000Z',
+      workflowId: 'task-orchestrator.backtest-run',
+    }),
+    executeWorkflow: executeQueuedWorkflow,
+    context: createWorkerContext(),
+  });
+
+  assert.equal(execution.claimedCount, 1);
+  assert.equal(execution.executions[0].ok, true);
+  assert.equal(context.backtestRuns.findBacktestRunByWorkflowRunId(queued.json.workflow.id).status !== 'queued', true);
+  assert.equal(context.researchSummary.getResearchSummary().completedRuns >= 1, true);
 });

@@ -6,7 +6,7 @@ import {
 } from '../../domains/agent/services/action-request-service.mjs';
 import { listAgentTools, executeAgentTool } from '../../domains/agent/services/tools-service.mjs';
 import { getBacktestSummary } from '../../domains/backtest/services/summary-service.mjs';
-import { listBacktestRuns } from '../../domains/backtest/services/runs-service.mjs';
+import { createBacktestRun, listBacktestRuns, reviewBacktestRun } from '../../domains/backtest/services/runs-service.mjs';
 import { getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { describeArchitecture, listArchitectureLayers, listModules } from '../../modules/registry.mjs';
@@ -229,6 +229,29 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/backtest/runs') {
     writeJson(res, 200, listBacktestRuns());
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/backtest/runs') {
+    if (!hasPermission('strategy:write')) {
+      writeForbidden('strategy:write');
+      return true;
+    }
+    const body = await readJsonBody(req);
+    const result = createBacktestRun(body);
+    writeJson(res, result.ok ? 200 : 400, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname.endsWith('/review') && reqUrl.pathname.startsWith('/api/backtest/runs/')) {
+    if (!hasPermission('risk:review')) {
+      writeForbidden('risk:review');
+      return true;
+    }
+    const runId = reqUrl.pathname.split('/').at(-2);
+    const body = await readJsonBody(req);
+    const result = reviewBacktestRun(runId, body);
+    writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
 

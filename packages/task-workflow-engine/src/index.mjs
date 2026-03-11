@@ -39,6 +39,31 @@ function getTrackedSymbols(state) {
     : [];
 }
 
+function buildMockBacktestMetrics(strategy, runId) {
+  const seed = String(runId || strategy.id)
+    .split('')
+    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const variance = (seed % 9) / 10;
+  const annualizedReturnPct = Number((Math.max(strategy.expectedReturnPct - 2 + variance, 4)).toFixed(1));
+  const maxDrawdownPct = Number((Math.max(strategy.maxDrawdownPct + (seed % 4) * 0.6, 4)).toFixed(1));
+  const sharpe = Number((Math.max(strategy.sharpe - 0.15 + variance / 4, 0.4)).toFixed(2));
+  const winRatePct = Number((52 + (seed % 10) * 1.1).toFixed(1));
+  const turnoverPct = Number((110 + (seed % 7) * 14).toFixed(0));
+  const status = maxDrawdownPct > 10 || sharpe < 1 ? 'needs_review' : 'completed';
+
+  return {
+    status,
+    annualizedReturnPct,
+    maxDrawdownPct,
+    sharpe,
+    winRatePct,
+    turnoverPct,
+    summary: status === 'needs_review'
+      ? `${strategy.name} completed with elevated review pressure because drawdown or Sharpe is outside the current promotion gate.`
+      : `${strategy.name} completed inside the current research promotion envelope.`,
+  };
+}
+
 async function executeStrategyExecutionWorkflow(payload, context, options = {}) {
   const workflow = options.workflow || startWorkflow(context, {
     workflowId: 'task-orchestrator.strategy-execution',
@@ -197,6 +222,122 @@ async function executeAgentActionRequestWorkflow(payload, context, options = {})
   }
 }
 
+async function executeBacktestRunWorkflow(payload, context, options = {}) {
+  const workflow = options.workflow || startWorkflow(context, {
+    workflowId: 'task-orchestrator.backtest-run',
+    workflowType: 'task-orchestrator',
+    actor: payload.requestedBy || context.getOperatorName(),
+    trigger: options.trigger || 'api',
+    payload,
+    maxAttempts: Number(payload.maxAttempts || 2),
+    steps: [
+      { key: 'load-strategy', status: 'running' },
+      { key: 'mark-run-running', status: 'pending' },
+      { key: 'produce-backtest-result', status: 'pending' },
+      { key: 'refresh-research-summary', status: 'pending' },
+    ],
+  });
+
+  const existingRun = context.findBacktestRunByWorkflowRunId?.(workflow.id);
+
+  try {
+    const strategy = context.getStrategyCatalogItem(payload.strategyId);
+    if (!strategy) {
+      throw new Error(`Unknown strategy: ${payload.strategyId}`);
+    }
+
+    const run = existingRun || context.appendBacktestRun({
+      workflowRunId: workflow.id,
+      strategyId: strategy.id,
+      strategyName: strategy.name,
+      status: 'queued',
+      windowLabel: payload.windowLabel || '2024-01-01 -> 2026-03-01',
+      requestedBy: payload.requestedBy || context.getOperatorName(),
+      summary: `${strategy.name} was reconstructed from workflow state before execution.`,
+    });
+
+    const runningRun = context.updateBacktestRun(run.id, {
+      status: 'running',
+      startedAt: run.startedAt || new Date().toISOString(),
+      summary: `${strategy.name} is running inside the research workflow executor.`,
+    });
+
+    const metrics = buildMockBacktestMetrics(strategy, run.id);
+    const completedRun = context.updateBacktestRun(run.id, {
+      ...metrics,
+      completedAt: new Date().toISOString(),
+    });
+    const summary = context.refreshBacktestSummary?.('task-workflow-engine.backtest-run') || null;
+
+    context.appendAuditRecord?.({
+      type: 'backtest-run.completed',
+      actor: payload.requestedBy || context.getOperatorName(),
+      title: `Backtest completed for ${strategy.name}`,
+      detail: completedRun.summary,
+      metadata: {
+        runId: completedRun.id,
+        workflowRunId: workflow.id,
+        status: completedRun.status,
+      },
+    });
+
+    context.enqueueNotification?.({
+      level: completedRun.status === 'needs_review' ? 'warn' : 'info',
+      source: 'research-control',
+      title: completedRun.status === 'needs_review' ? 'Backtest requires review' : 'Backtest completed',
+      message: completedRun.summary,
+      metadata: {
+        runId: completedRun.id,
+        workflowRunId: workflow.id,
+        strategyId: completedRun.strategyId,
+      },
+    });
+
+    const persistedWorkflow = completeWorkflow(context, workflow.id, {
+      steps: [
+        { key: 'load-strategy', status: 'completed', strategyId: strategy.id },
+        { key: 'mark-run-running', status: 'completed', runId: runningRun.id },
+        { key: 'produce-backtest-result', status: 'completed', statusLabel: completedRun.status },
+        { key: 'refresh-research-summary', status: 'completed' },
+      ],
+      result: {
+        ok: true,
+        runId: completedRun.id,
+        status: completedRun.status,
+        summaryAsOf: summary?.asOf || '',
+      },
+    });
+
+    return {
+      ok: true,
+      run: completedRun,
+      summary,
+      workflow: persistedWorkflow,
+    };
+  } catch (error) {
+    if (existingRun) {
+      context.updateBacktestRun(existingRun.id, {
+        status: 'failed',
+        completedAt: new Date().toISOString(),
+        summary: error instanceof Error ? error.message : 'unknown backtest workflow error',
+      });
+      context.refreshBacktestSummary?.('task-workflow-engine.backtest-run');
+    }
+
+    const failedWorkflow = failWorkflow(context, workflow.id, error instanceof Error ? error.message : 'unknown backtest workflow error', {
+      steps: [
+        { key: 'load-strategy', status: 'failed' },
+        { key: 'mark-run-running', status: 'skipped' },
+        { key: 'produce-backtest-result', status: 'skipped' },
+        { key: 'refresh-research-summary', status: 'skipped' },
+      ],
+    });
+    throw Object.assign(error instanceof Error ? error : new Error('backtest workflow failed'), {
+      workflowId: failedWorkflow?.id,
+    });
+  }
+}
+
 export async function executeCycleWorkflow(payload, context, options = {}) {
   const workflow = options.workflow || startWorkflow(context, {
     workflowId: 'task-orchestrator.cycle-run',
@@ -340,6 +481,14 @@ export async function executeStateWorkflow(previousState, context, options = {})
       provider: getMarketProvider(previousState),
       symbols: getTrackedSymbols(previousState),
     });
+    context.updateMarketProviderStatus?.({
+      provider: getMarketProvider(previousState),
+      connected: marketSnapshot.connected,
+      fallback: marketSnapshot.fallback,
+      message: marketSnapshot.message,
+      symbolCount: Array.isArray(marketSnapshot.quotes) ? marketSnapshot.quotes.length : 0,
+      asOf: new Date().toISOString(),
+    });
 
     const state = advanceLocalState(previousState, {
       marketSnapshot,
@@ -400,6 +549,12 @@ export async function executeStateWorkflow(previousState, context, options = {})
 }
 
 export async function executeQueuedWorkflow(workflowRun, context) {
+  if (workflowRun.workflowId === 'task-orchestrator.backtest-run') {
+    return executeBacktestRunWorkflow(workflowRun.payload, context, {
+      workflow: workflowRun,
+      trigger: 'worker',
+    });
+  }
   if (workflowRun.workflowId === 'task-orchestrator.agent-action-request') {
     return executeAgentActionRequestWorkflow(workflowRun.payload, context, {
       workflow: workflowRun,

@@ -357,6 +357,8 @@ export type StrategyCatalogItem = {
   maxDrawdownPct: number;
   sharpe: number;
   summary: string;
+  updatedAt?: string;
+  dataSource?: string;
 };
 
 export type StrategyCatalogSnapshot = {
@@ -369,7 +371,8 @@ export type BacktestRunItem = {
   id: string;
   strategyId: string;
   strategyName: string;
-  status: 'queued' | 'running' | 'completed' | 'needs_review';
+  workflowRunId?: string;
+  status: 'queued' | 'running' | 'completed' | 'needs_review' | 'failed';
   windowLabel: string;
   startedAt: string;
   completedAt?: string;
@@ -379,6 +382,12 @@ export type BacktestRunItem = {
   winRatePct: number;
   turnoverPct: number;
   summary: string;
+  requestedBy?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  dataSource?: string;
 };
 
 export type BacktestSummarySnapshot = {
@@ -387,6 +396,7 @@ export type BacktestSummarySnapshot = {
   queuedRuns: number;
   runningRuns: number;
   completedRuns: number;
+  failedRuns?: number;
   candidateStrategies: number;
   promotedStrategies: number;
   averageSharpe: number;
@@ -510,6 +520,23 @@ export type ResearchHubSnapshot = {
   summary: BacktestSummarySnapshot;
   strategies: StrategyCatalogItem[];
   runs: BacktestRunItem[];
+};
+
+export type BacktestRunCreateRequest = {
+  strategyId: string;
+  windowLabel?: string;
+  requestedBy?: string;
+  maxAttempts?: number;
+};
+
+export type BacktestRunCreateSnapshot = {
+  ok: boolean;
+  run: BacktestRunItem;
+  workflow: {
+    id: string;
+    workflowId: string;
+    status: string;
+  };
 };
 
 export type TradingSystemContextValue = {
