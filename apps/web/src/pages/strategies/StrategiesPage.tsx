@@ -9,12 +9,23 @@ import { onShortcutKeyDown, useSettingsNavigation } from '../console/hooks.ts';
 import { copy, useLocale } from '../console/i18n.tsx';
 import { translateMode, translateRuntimeText } from '../console/utils.ts';
 
+const STRATEGY_STAGE_FLOW = ['draft', 'researching', 'candidate', 'paper', 'live'] as const;
+
+function getNextStrategyStage(status: string) {
+  const index = STRATEGY_STAGE_FLOW.indexOf(status as typeof STRATEGY_STAGE_FLOW[number]);
+  if (index === -1 || index === STRATEGY_STAGE_FLOW.length - 1) {
+    return null;
+  }
+  return STRATEGY_STAGE_FLOW[index + 1];
+}
+
 function StrategiesPage() {
   const { state, session, hasPermission } = useTradingSystem();
   const { locale } = useLocale();
   const goToSettings = useSettingsNavigation();
   const [refreshKey, setRefreshKey] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [promotingId, setPromotingId] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
   const [saveError, setSaveError] = useState('');
   const [form, setForm] = useState({
@@ -78,6 +89,66 @@ function StrategiesPage() {
       }
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleEditStrategy = (strategy: NonNullable<typeof data>['strategies'][number]) => {
+    setForm({
+      id: strategy.id,
+      name: strategy.name,
+      family: strategy.family,
+      timeframe: strategy.timeframe,
+      universe: strategy.universe,
+      status: strategy.status,
+      score: String(strategy.score),
+      expectedReturnPct: String(strategy.expectedReturnPct),
+      maxDrawdownPct: String(strategy.maxDrawdownPct),
+      sharpe: String(strategy.sharpe),
+      summary: strategy.summary,
+    });
+    setSaveMessage(
+      locale === 'zh'
+        ? `已将 ${strategy.name} 填充到编辑表单。`
+        : `Loaded ${strategy.name} into the edit form.`,
+    );
+    setSaveError('');
+  };
+
+  const handlePromoteStrategy = async (strategy: NonNullable<typeof data>['strategies'][number]) => {
+    const nextStatus = getNextStrategyStage(strategy.status);
+    if (!nextStatus) return;
+
+    setPromotingId(strategy.id);
+    setSaveMessage('');
+    setSaveError('');
+    try {
+      const result = await saveStrategyCatalogItem({
+        ...strategy,
+        status: nextStatus,
+        updatedBy: session?.user.id || 'operator',
+      });
+      setSaveMessage(
+        locale === 'zh'
+          ? `策略 ${result.strategy?.name || strategy.name} 已晋级到 ${nextStatus}。`
+          : `Strategy ${result.strategy?.name || strategy.name} was promoted to ${nextStatus}.`,
+      );
+      setRefreshKey((current) => current + 1);
+    } catch (requestError) {
+      if (requestError instanceof ApiPermissionError) {
+        setSaveError(
+          locale === 'zh'
+            ? `策略晋级被拦截：当前会话缺少 ${requestError.missingPermission || 'strategy:write'} 权限。`
+            : `Strategy promotion blocked: this session is missing ${requestError.missingPermission || 'strategy:write'} permission.`,
+        );
+      } else {
+        setSaveError(
+          locale === 'zh'
+            ? `策略晋级失败：${requestError instanceof Error ? requestError.message : 'unknown error'}`
+            : `Failed to promote strategy: ${requestError instanceof Error ? requestError.message : 'unknown error'}`,
+        );
+      }
+    } finally {
+      setPromotingId('');
     }
   };
 
@@ -221,6 +292,33 @@ function StrategiesPage() {
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '预期收益' : 'Expected return'}</span>
                   <strong>{item.expectedReturnPct.toFixed(1)}%</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '动作' : 'Actions'}</span>
+                  <div className="action-group">
+                    <button
+                      type="button"
+                      className="inline-action"
+                      disabled={!canWriteStrategy || saving || promotingId === item.id}
+                      onClick={() => handleEditStrategy(item)}
+                    >
+                      {locale === 'zh' ? '编辑' : 'Edit'}
+                    </button>
+                    {getNextStrategyStage(item.status) ? (
+                      <button
+                        type="button"
+                        className="inline-action inline-action-approve"
+                        disabled={!canWriteStrategy || saving || promotingId === item.id}
+                        onClick={() => handlePromoteStrategy(item)}
+                      >
+                        {promotingId === item.id
+                          ? (locale === 'zh' ? '晋级中...' : 'Promoting...')
+                          : (locale === 'zh'
+                              ? `晋级到 ${getNextStrategyStage(item.status)}`
+                              : `Promote to ${getNextStrategyStage(item.status)}`)}
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             ))}
