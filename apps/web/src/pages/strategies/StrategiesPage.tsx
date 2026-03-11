@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
+import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
 import { saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
@@ -43,6 +44,7 @@ function StrategiesPage() {
     summary: '',
   });
   const { data, loading, error } = useResearchHub(refreshKey);
+  const { items: auditItems, loading: auditLoading } = useAuditFeed(refreshKey);
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
   const canWriteStrategy = hasPermission('strategy:write');
@@ -51,6 +53,14 @@ function StrategiesPage() {
   const archivedStrategies = data?.strategies.filter((item) => item.status === 'archived') || [];
   const visibleActiveStrategies = registryFilter === 'archived' ? [] : activeStrategies;
   const visibleArchivedStrategies = registryFilter === 'active' ? [] : archivedStrategies;
+  const visibleStrategyIds = [...visibleActiveStrategies, ...visibleArchivedStrategies].map((item) => item.id);
+  const strategyAuditItems = auditItems
+    .filter((item) => item.type === 'strategy-catalog.saved')
+    .filter((item) => {
+      const strategyId = typeof item.metadata?.strategyId === 'string' ? item.metadata.strategyId : '';
+      return registryFilter === 'all' ? true : visibleStrategyIds.includes(strategyId);
+    })
+    .slice(0, 8);
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
     setForm((current) => ({
@@ -464,6 +474,41 @@ function StrategiesPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '最近策略操作' : 'Recent Strategy Activity'}</div><div className="panel-copy">{locale === 'zh' ? '直接消费后端 audit records，查看策略注册、晋级、归档和恢复的最新留痕。' : 'Consume backend audit records directly to review recent registry saves, promotions, archives, and restores.'}</div></div><div className="panel-badge badge-warn">AUDIT</div></div>
+          <div className="focus-list focus-list-terminal">
+            {auditLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载策略操作历史...' : 'Loading strategy activity...'}</div> : null}
+            {!auditLoading && !strategyAuditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有策略操作历史。' : 'No strategy activity for the current filter.'}</div> : null}
+            {strategyAuditItems.map((item) => {
+              const strategyId = typeof item.metadata?.strategyId === 'string' ? item.metadata.strategyId : '--';
+              const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
+              return (
+                <div className="focus-row" key={item.id}>
+                  <div className="symbol-cell">
+                    <strong>{item.title}</strong>
+                    <span>{item.detail}</span>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '策略 ID' : 'Strategy ID'}</span>
+                    <strong>{strategyId}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                    <strong>{status}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '操作人' : 'Actor'}</span>
+                    <strong>{item.actor}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                    <strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </article>
       </section>

@@ -186,6 +186,23 @@ export async function fetchNotifications(): Promise<{
   });
 }
 
+export async function fetchAuditRecords(): Promise<{
+  ok: boolean;
+  records: Array<{
+    id: string;
+    type: string;
+    actor: string;
+    title: string;
+    detail: string;
+    createdAt: string;
+    metadata?: Record<string, unknown>;
+  }>;
+}> {
+  return fetchJson('/api/audit/records', {
+    headers: { Accept: 'application/json' },
+  });
+}
+
 export async function fetchRiskEvents(): Promise<{
   ok: boolean;
   events: Array<{
