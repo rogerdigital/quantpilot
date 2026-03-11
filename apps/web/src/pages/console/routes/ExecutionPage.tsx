@@ -1,41 +1,76 @@
 import { useEffect, useState } from 'react';
-import { fetchExecutionAccountSnapshots, fetchExecutionLedger, fetchExecutionRuntime } from '../../../app/api/controlPlane.ts';
+import { fetchExecutionAccountSnapshots, fetchExecutionLedger, fetchExecutionRuntime, fetchTaskWorkflows } from '../../../app/api/controlPlane.ts';
+import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { TopMeta } from '../components/ConsoleChrome.tsx';
 import { ActivityLog, ApprovalQueueTable, OrdersTable } from '../components/ConsoleTables.tsx';
 import { onShortcutKeyDown, useSettingsNavigation } from '../hooks.ts';
 import { copy, useLocale } from '../i18n.tsx';
 import { modeTone, translateEngineStatus, translateMode, translateRiskLevel, translateRuntimeText } from '../utils.ts';
-import type { BrokerAccountSnapshotRecord, ExecutionLedgerEntry, ExecutionRuntimeEvent } from '@shared-types/trading.ts';
+import type { BrokerAccountSnapshotRecord, ExecutionLedgerEntry, ExecutionRuntimeEvent, WorkflowRunRecord } from '@shared-types/trading.ts';
 
 export function ExecutionPage() {
   const { state, approveLiveIntent, rejectLiveIntent, hasPermission, actionGuardNotice } = useTradingSystem();
   const { locale } = useLocale();
   const goToSettings = useSettingsNavigation();
   const canApproveExecution = hasPermission('execution:approve');
+  const [selectedPlanId, setSelectedPlanId] = useState('');
   const [runtimeEvents, setRuntimeEvents] = useState<ExecutionRuntimeEvent[]>([]);
   const [accountSnapshots, setAccountSnapshots] = useState<BrokerAccountSnapshotRecord[]>([]);
   const [ledgerEntries, setLedgerEntries] = useState<ExecutionLedgerEntry[]>([]);
+  const [workflowRuns, setWorkflowRuns] = useState<WorkflowRunRecord[]>([]);
+  const [workflowLoading, setWorkflowLoading] = useState(true);
+  const { items: auditItems, loading: auditLoading } = useAuditFeed(state.controlPlane.lastSyncAt);
+  const selectedEntry = ledgerEntries.find((entry) => entry.plan.id === selectedPlanId) || ledgerEntries[0] || null;
+  const selectedExecutionAuditItems = selectedEntry
+    ? auditItems
+      .filter((item) => item.type === 'execution-plan')
+      .filter((item) => {
+        const strategyId = typeof item.metadata?.strategyId === 'string' ? item.metadata.strategyId : '';
+        return strategyId === selectedEntry.plan.strategyId;
+      })
+      .slice(0, 6)
+    : [];
+  const selectedWorkflow = selectedEntry?.plan.workflowRunId
+    ? workflowRuns.find((workflow) => workflow.id === selectedEntry.plan.workflowRunId) || null
+    : null;
 
   useEffect(() => {
     let active = true;
-    Promise.all([fetchExecutionRuntime(), fetchExecutionAccountSnapshots(), fetchExecutionLedger()])
-      .then(([runtimeResponse, snapshotResponse, ledgerResponse]) => {
+    setWorkflowLoading(true);
+    Promise.all([fetchExecutionRuntime(), fetchExecutionAccountSnapshots(), fetchExecutionLedger(), fetchTaskWorkflows()])
+      .then(([runtimeResponse, snapshotResponse, ledgerResponse, workflowResponse]) => {
         if (!active) return;
         setRuntimeEvents(runtimeResponse.events);
         setAccountSnapshots(snapshotResponse.snapshots);
         setLedgerEntries(ledgerResponse.entries);
+        setWorkflowRuns(Array.isArray(workflowResponse.workflows) ? workflowResponse.workflows : []);
       })
       .catch(() => {
         if (!active) return;
         setRuntimeEvents([]);
         setAccountSnapshots([]);
         setLedgerEntries([]);
+        setWorkflowRuns([]);
+      })
+      .finally(() => {
+        if (!active) return;
+        setWorkflowLoading(false);
       });
     return () => {
       active = false;
     };
   }, [state.controlPlane.lastSyncAt]);
+
+  useEffect(() => {
+    if (!ledgerEntries.length) {
+      setSelectedPlanId('');
+      return;
+    }
+    if (!selectedPlanId || !ledgerEntries.some((entry) => entry.plan.id === selectedPlanId)) {
+      setSelectedPlanId(ledgerEntries[0].plan.id);
+    }
+  }, [ledgerEntries, selectedPlanId]);
 
   return (
     <>
@@ -117,10 +152,85 @@ export function ExecutionPage() {
                 <div className="focus-metric"><span>{locale === 'zh' ? '计划状态' : 'Plan'}</span><strong>{entry.plan.status}</strong></div>
                 <div className="focus-metric"><span>{locale === 'zh' ? '工作流' : 'Workflow'}</span><strong>{entry.workflow?.status || '--'}</strong></div>
                 <div className="focus-metric"><span>{locale === 'zh' ? '最近执行' : 'Latest Runtime'}</span><strong>{entry.latestRuntime ? `${entry.latestRuntime.submittedOrderCount}/${entry.latestRuntime.openOrderCount}` : '--'}</strong></div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '详情' : 'Details'}</span>
+                  <button
+                    type="button"
+                    className="inline-action"
+                    disabled={selectedPlanId === entry.plan.id}
+                    onClick={() => setSelectedPlanId(entry.plan.id)}
+                  >
+                    {selectedPlanId === entry.plan.id
+                      ? (locale === 'zh' ? '已选中' : 'Selected')
+                      : (locale === 'zh' ? '查看' : 'Inspect')}
+                  </button>
+                </div>
               </div>
             ))}
             {!ledgerEntries.length ? <div className="status-copy">{locale === 'zh' ? '尚无 execution ledger 数据。' : 'No execution ledger data yet.'}</div> : null}
           </div>
+        </article>
+      </section>
+
+      <section className="panel-grid">
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中执行计划详情' : 'Selected Execution Detail'}</div><div className="panel-copy">{locale === 'zh' ? '聚合展示单条 execution plan 的模式、风控、订单规模和运行时结果。' : 'Aggregate one execution plan’s mode, risk state, order count, and runtime result in one place.'}</div></div><div className="panel-badge badge-info">{selectedEntry?.plan.riskStatus || '--'}</div></div>
+          {!selectedEntry ? (
+            <div className="status-copy">{locale === 'zh' ? '当前没有可查看的执行计划。' : 'No execution plan is available for inspection.'}</div>
+          ) : (
+            <div className="status-stack">
+              <div className="status-row"><span>{locale === 'zh' ? '策略' : 'Strategy'}</span><strong>{selectedEntry.plan.strategyName}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '模式' : 'Mode'}</span><strong>{selectedEntry.plan.mode}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '计划状态' : 'Plan status'}</span><strong>{selectedEntry.plan.status}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '审批状态' : 'Approval'}</span><strong>{selectedEntry.plan.approvalState}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '订单数' : 'Order count'}</span><strong>{selectedEntry.plan.orderCount}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '资金规模' : 'Capital'}</span><strong>{selectedEntry.plan.capital.toFixed(0)}</strong></div>
+              <div className="status-copy">{selectedEntry.plan.summary}</div>
+              <div className="status-copy">
+                {selectedEntry.latestRuntime
+                  ? (locale === 'zh'
+                      ? `最新执行：提交 ${selectedEntry.latestRuntime.submittedOrderCount}，未成交 ${selectedEntry.latestRuntime.openOrderCount}，权益 ${selectedEntry.latestRuntime.equity.toFixed(0)}`
+                      : `Latest runtime: submitted ${selectedEntry.latestRuntime.submittedOrderCount}, open ${selectedEntry.latestRuntime.openOrderCount}, equity ${selectedEntry.latestRuntime.equity.toFixed(0)}`)
+                  : (locale === 'zh'
+                      ? '当前计划还没有服务端执行结果。'
+                      : 'No backend execution result is attached to this plan yet.')}
+              </div>
+            </div>
+          )}
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中执行审计轨迹' : 'Selected Execution Audit'}</div><div className="panel-copy">{locale === 'zh' ? '按策略 ID 聚合当前选中 execution plan 对应的审计留痕。' : 'Aggregate audit trail for the selected execution plan by strategy id.'}</div></div><div className="panel-badge badge-warn">{selectedExecutionAuditItems.length}</div></div>
+          <div className="focus-list">
+            {auditLoading ? <div className="status-copy">{locale === 'zh' ? '正在加载执行审计...' : 'Loading execution audit...'}</div> : null}
+            {!auditLoading && !selectedEntry ? <div className="status-copy">{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</div> : null}
+            {!auditLoading && selectedEntry && !selectedExecutionAuditItems.length ? <div className="status-copy">{locale === 'zh' ? '当前执行计划暂无审计留痕。' : 'No audit records exist for the selected execution plan yet.'}</div> : null}
+            {selectedExecutionAuditItems.map((item) => (
+              <div key={item.id} className="focus-row">
+                <div className="focus-metric"><span>{locale === 'zh' ? '标题' : 'Title'}</span><strong>{item.title}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '操作人' : 'Actor'}</span><strong>{item.actor}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '类型' : 'Type'}</span><strong>{item.type}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong></div>
+              </div>
+            ))}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '选中执行工作流' : 'Selected Execution Workflow'}</div><div className="panel-copy">{locale === 'zh' ? '查看 strategy-execution workflow 的状态、尝试次数和步骤进度。' : 'Inspect strategy-execution workflow status, attempts, and step progress.'}</div></div><div className="panel-badge badge-info">{selectedWorkflow?.status || '--'}</div></div>
+          {!selectedEntry ? (
+            <div className="status-copy">{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</div>
+          ) : workflowLoading ? (
+            <div className="status-copy">{locale === 'zh' ? '正在加载执行工作流...' : 'Loading execution workflow...'}</div>
+          ) : !selectedWorkflow ? (
+            <div className="status-copy">{locale === 'zh' ? '当前执行计划还没有可见的 workflow 详情。' : 'No workflow detail is available for the selected execution plan yet.'}</div>
+          ) : (
+            <div className="status-stack">
+              <div className="status-row"><span>{locale === 'zh' ? '工作流 ID' : 'Workflow ID'}</span><strong>{selectedWorkflow.id}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{selectedWorkflow.status}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '尝试次数' : 'Attempts'}</span><strong>{selectedWorkflow.attempt}/{selectedWorkflow.maxAttempts}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '触发方式' : 'Trigger'}</span><strong>{selectedWorkflow.trigger}</strong></div>
+              <div className="status-copy">{selectedWorkflow.steps.map((step) => `${step.key}:${step.status}`).join(' | ') || '--'}</div>
+            </div>
+          )}
         </article>
       </section>
 
