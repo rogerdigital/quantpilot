@@ -5,7 +5,7 @@ import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
-import { ResearchStatusStack } from '../../modules/research/ResearchStatusStack.tsx';
+import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
 import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useBacktestRunDetail } from '../../modules/research/useBacktestRunDetail.ts';
 import { useBacktestDetailPanels } from '../../modules/research/useBacktestDetailPanels.ts';
@@ -306,36 +306,29 @@ function BacktestPage() {
           </div>
           <ChartCanvas kind="equity" />
         </article>
-        <article className="panel">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{locale === 'zh' ? '研究中心摘要' : 'Research Center Summary'}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '把策略候选、回测队列和人工复核压力压缩成一个平台级概览。'
-                  : 'Compress candidate strategies, backtest queue, and review pressure into one platform-level summary.'}
-              </div>
-            </div>
-            <div className="panel-badge badge-warn">{data?.summary.dataSource ? 'SERVICE' : 'LOCAL'}</div>
-          </div>
-          <ResearchStatusStack
-            metrics={[
-              { label: locale === 'zh' ? '候选买入' : 'Candidate buys', value: buyCount },
-              { label: locale === 'zh' ? '候选减仓' : 'Candidate trims', value: sellCount },
-              { label: locale === 'zh' ? '组合收益' : 'Portfolio return', value: fmtPct(totalPnlPct) },
-              { label: locale === 'zh' ? '研究模式' : 'Research mode', value: translateMode(locale, state.mode) },
-              { label: locale === 'zh' ? '已完成回测' : 'Completed runs', value: data?.summary.completedRuns ?? '--' },
-              { label: locale === 'zh' ? '待复核' : 'Review queue', value: data?.summary.reviewQueue ?? '--' },
-            ]}
-            messages={[
-              translateRuntimeText(locale, state.decisionCopy),
-              actionMessage || null,
-              actionError || null,
-              loading ? (locale === 'zh' ? '正在同步研究服务...' : 'Syncing research service...') : null,
-              error ? (locale === 'zh' ? `研究服务不可用：${error}` : `Research service unavailable: ${error}`) : null,
-            ]}
-          />
-        </article>
+        <ResearchStatusPanel
+          title={locale === 'zh' ? '研究中心摘要' : 'Research Center Summary'}
+          copy={locale === 'zh'
+            ? '把策略候选、回测队列和人工复核压力压缩成一个平台级概览。'
+            : 'Compress candidate strategies, backtest queue, and review pressure into one platform-level summary.'}
+          badge={data?.summary.dataSource ? 'SERVICE' : 'LOCAL'}
+          badgeClassName="panel-badge badge-warn"
+          metrics={[
+            { label: locale === 'zh' ? '候选买入' : 'Candidate buys', value: buyCount },
+            { label: locale === 'zh' ? '候选减仓' : 'Candidate trims', value: sellCount },
+            { label: locale === 'zh' ? '组合收益' : 'Portfolio return', value: fmtPct(totalPnlPct) },
+            { label: locale === 'zh' ? '研究模式' : 'Research mode', value: translateMode(locale, state.mode) },
+            { label: locale === 'zh' ? '已完成回测' : 'Completed runs', value: data?.summary.completedRuns ?? '--' },
+            { label: locale === 'zh' ? '待复核' : 'Review queue', value: data?.summary.reviewQueue ?? '--' },
+          ]}
+          messages={[
+            translateRuntimeText(locale, state.decisionCopy),
+            actionMessage || null,
+            actionError || null,
+            loading ? (locale === 'zh' ? '正在同步研究服务...' : 'Syncing research service...') : null,
+            error ? (locale === 'zh' ? `研究服务不可用：${error}` : `Research service unavailable: ${error}`) : null,
+          ]}
+        />
       </section>
 
       <section className="metrics-grid">
