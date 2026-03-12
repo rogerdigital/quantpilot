@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
+import { BacktestCandidateStrategyRow } from '../../modules/research/BacktestCandidateStrategyRow.tsx';
 import { BacktestRunQueueRow } from '../../modules/research/BacktestRunQueueRow.tsx';
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
@@ -404,37 +405,15 @@ function BacktestPage() {
           )}
         >
           {data?.strategies.map((item) => (
-            <div className="focus-row" key={item.id}>
-              <div className="symbol-cell">
-                <strong>{item.name}</strong>
-                <span>{item.summary}</span>
-              </div>
-              <div className="focus-metric">
-                <span>{locale === 'zh' ? '阶段' : 'Stage'}</span>
-                <strong>{item.status}</strong>
-              </div>
-              <div className="focus-metric">
-                <span>Sharpe</span>
-                <strong>{item.sharpe.toFixed(2)}</strong>
-              </div>
-              <div className="focus-metric">
-                <span>{locale === 'zh' ? '回撤' : 'Drawdown'}</span>
-                <strong>{fmtPct(item.maxDrawdownPct)}</strong>
-              </div>
-              <div className="focus-metric">
-                <span>{locale === 'zh' ? '动作' : 'Action'}</span>
-                <button
-                  type="button"
-                  className="inline-action inline-action-approve"
-                  disabled={!canQueueBacktest || submittingStrategyId === item.id}
-                  onClick={() => handleQueueBacktest(item.id)}
-                >
-                  {submittingStrategyId === item.id
-                    ? (locale === 'zh' ? '提交中...' : 'Queueing...')
-                    : (locale === 'zh' ? '发起回测' : 'Queue Backtest')}
-                </button>
-              </div>
-            </div>
+            <BacktestCandidateStrategyRow
+              key={item.id}
+              locale={locale}
+              item={item}
+              canQueueBacktest={canQueueBacktest}
+              submittingStrategyId={submittingStrategyId}
+              formatPercent={fmtPct}
+              onQueue={handleQueueBacktest}
+            />
           ))}
         </ResearchTerminalPanel>
         <ResearchTerminalPanel

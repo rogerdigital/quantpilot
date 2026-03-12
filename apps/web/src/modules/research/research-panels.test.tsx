@@ -1,5 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import type { StrategyCatalogItem } from '@shared-types/trading.ts';
+import { BacktestCandidateStrategyRow } from './BacktestCandidateStrategyRow.tsx';
 import type { BacktestRunItem } from '@shared-types/trading.ts';
 import { BacktestRunQueueRow } from './BacktestRunQueueRow.tsx';
 import { ResearchCollectionPanel } from './ResearchCollectionPanel.tsx';
@@ -140,5 +142,37 @@ describe('research panel primitives', () => {
     expect(html).toContain('Approve Review');
     expect(html).toContain('Inspect');
     expect(html).toContain('12.4%');
+  });
+
+  it('renders candidate strategy row queue action', () => {
+    const strategy: StrategyCatalogItem = {
+      id: 'strategy-1',
+      name: 'Momentum',
+      family: 'trend',
+      timeframe: '1d',
+      universe: 'NASDAQ 100',
+      status: 'candidate',
+      score: 81,
+      expectedReturnPct: 14.2,
+      maxDrawdownPct: 6.4,
+      sharpe: 1.9,
+      summary: 'Candidate momentum strategy',
+    };
+
+    const html = renderToStaticMarkup(
+      <BacktestCandidateStrategyRow
+        locale="en"
+        item={strategy}
+        canQueueBacktest
+        submittingStrategyId=""
+        formatPercent={(value) => `${value.toFixed(1)}%`}
+        onQueue={() => undefined}
+      />,
+    );
+
+    expect(html).toContain('Momentum');
+    expect(html).toContain('Queue Backtest');
+    expect(html).toContain('6.4%');
+    expect(html).toContain('candidate');
   });
 });
