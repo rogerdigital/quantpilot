@@ -5,6 +5,7 @@ export function ResearchTerminalPanel(props: {
   copy: string;
   badge: ReactNode;
   badgeClassName?: string;
+  prelude?: ReactNode;
   loading?: boolean;
   loadingMessage?: string | null;
   isEmpty?: boolean;
@@ -21,6 +22,7 @@ export function ResearchTerminalPanel(props: {
         </div>
         <div className={props.badgeClassName || 'panel-badge badge-muted'}>{props.badge}</div>
       </div>
+      {props.prelude}
       <div className="focus-list focus-list-terminal">
         {props.loading && props.loadingMessage ? <div className="empty-cell">{props.loadingMessage}</div> : null}
         {!props.loading && props.isEmpty && props.emptyMessage ? <div className="empty-cell">{props.emptyMessage}</div> : null}
