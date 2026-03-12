@@ -1,5 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import type { BacktestRunItem } from '@shared-types/trading.ts';
+import { BacktestRunQueueRow } from './BacktestRunQueueRow.tsx';
 import { ResearchCollectionPanel } from './ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from './ResearchDetailInspectionPanel.tsx';
 import { ResearchEventInspectionPanel } from './ResearchEventInspectionPanel.tsx';
@@ -102,5 +104,41 @@ describe('research panel primitives', () => {
     expect(html).toContain('Prelude block');
     expect(html).toContain('Row body');
     expect(html).toContain('Footer block');
+  });
+
+  it('renders queue row review action for needs-review runs', () => {
+    const run: BacktestRunItem = {
+      id: 'run-1',
+      strategyId: 'strategy-1',
+      strategyName: 'Momentum',
+      status: 'needs_review',
+      summary: 'Awaiting approval',
+      windowLabel: '30D',
+      annualizedReturnPct: 12.4,
+      maxDrawdownPct: 4.8,
+      sharpe: 1.7,
+      winRatePct: 54,
+      turnoverPct: 18.2,
+      startedAt: '2026-03-13T00:00:00.000Z',
+    };
+
+    const html = renderToStaticMarkup(
+      <BacktestRunQueueRow
+        locale="en"
+        run={run}
+        selectedRunId=""
+        canReviewBacktest
+        reviewingRunId=""
+        formatDateTime={(value) => value || '--'}
+        formatPercent={(value) => `${value.toFixed(1)}%`}
+        onReview={() => undefined}
+        onInspect={() => undefined}
+      />,
+    );
+
+    expect(html).toContain('Momentum');
+    expect(html).toContain('Approve Review');
+    expect(html).toContain('Inspect');
+    expect(html).toContain('12.4%');
   });
 });

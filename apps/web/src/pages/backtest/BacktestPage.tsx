@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
+import { BacktestRunQueueRow } from '../../modules/research/BacktestRunQueueRow.tsx';
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
 import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEventInspectionPanel.tsx';
@@ -455,44 +456,17 @@ function BacktestPage() {
           ) : null}
         >
           {filteredRuns.map((run) => (
-            <InspectionSelectableRow
+            <BacktestRunQueueRow
               key={run.id}
-              leadTitle={run.strategyName}
-              leadCopy={`${run.windowLabel} · ${run.summary}`}
-              metrics={[
-                { label: locale === 'zh' ? '状态' : 'Status', value: run.status },
-                { label: locale === 'zh' ? '收益' : 'Return', value: run.status === 'completed' || run.status === 'needs_review' ? fmtPct(run.annualizedReturnPct) : '--' },
-                { label: locale === 'zh' ? '更新时间' : 'Updated', value: fmtDateTime(run.completedAt || run.startedAt, locale) },
-                {
-                  label: locale === 'zh' ? '复核' : 'Review',
-                  value: run.status === 'needs_review'
-                    ? (
-                      <button
-                        type="button"
-                        className="inline-action"
-                        disabled={!canReviewBacktest || reviewingRunId === run.id}
-                        onClick={() => handleReviewRun(run.id)}
-                      >
-                        {reviewingRunId === run.id
-                          ? (locale === 'zh' ? '处理中...' : 'Reviewing...')
-                          : (locale === 'zh' ? '人工复核' : 'Approve Review')}
-                      </button>
-                    )
-                    : (locale === 'zh' ? '无' : 'None'),
-                },
-              ]}
-              actions={(
-                <button
-                  type="button"
-                  className="inline-action"
-                  disabled={selectedRunId === run.id}
-                  onClick={() => setSelectedRunId(run.id)}
-                >
-                  {selectedRunId === run.id
-                    ? (locale === 'zh' ? '已选中' : 'Selected')
-                    : (locale === 'zh' ? '查看' : 'Inspect')}
-                </button>
-              )}
+              locale={locale}
+              run={run}
+              selectedRunId={selectedRunId}
+              canReviewBacktest={canReviewBacktest}
+              reviewingRunId={reviewingRunId}
+              formatDateTime={fmtDateTime}
+              formatPercent={fmtPct}
+              onReview={handleReviewRun}
+              onInspect={setSelectedRunId}
             />
           ))}
         </ResearchTerminalPanel>
