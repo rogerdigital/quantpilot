@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import type { ExecutionLedgerEntry, WorkflowRunRecord } from '@shared-types/trading.ts';
-import { ApiPermissionError, fetchExecutionLedger, fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
-import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
+import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
+import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useBacktestRunDetail } from '../../modules/research/useBacktestRunDetail.ts';
 import { useBacktestDetailPanels } from '../../modules/research/useBacktestDetailPanels.ts';
@@ -44,7 +43,6 @@ function BacktestPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const researchNavigation = useResearchNavigationContext(searchParams, navigate);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [submittingStrategyId, setSubmittingStrategyId] = useState('');
   const [reviewingRunId, setReviewingRunId] = useState('');
   const [actionMessage, setActionMessage] = useState('');
@@ -52,6 +50,7 @@ function BacktestPage() {
   const [runFilter, setRunFilter] = useState<'all' | 'queued' | 'running' | 'completed' | 'needs_review'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [windowLabel, setWindowLabel] = useState('2024-01-01 -> 2026-03-01');
+  const [refreshKey, setRefreshKey] = useState(0);
   const {
     data,
     loading,
@@ -79,6 +78,14 @@ function BacktestPage() {
       || run.windowLabel.toLowerCase().includes(keyword);
   }) || [];
   const hasActiveRuns = Boolean(data?.runs.some((run) => run.status === 'queued' || run.status === 'running'));
+  const {
+    requestRefresh,
+    pollingIntervalMs,
+  } = useResearchPollingPolicy({
+    enabled: true,
+    active: hasActiveRuns,
+    onRefresh: () => setRefreshKey((current) => current + 1),
+  });
   const visibleRunIds = filteredRuns.map((run) => run.id);
   const visibleWorkflowIds = filteredRuns.map((run) => run.workflowRunId).filter(Boolean);
   const backtestAuditItems = auditItems
@@ -162,14 +169,6 @@ function BacktestPage() {
     selectedWorkflowStepKey,
   });
 
-  useEffect(() => {
-    const pollMs = hasActiveRuns ? 5000 : 15000;
-    const timer = window.setInterval(() => {
-      setRefreshKey((current) => current + 1);
-    }, pollMs);
-    return () => window.clearInterval(timer);
-  }, [hasActiveRuns]);
-
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);
     setActionMessage('');
@@ -185,7 +184,7 @@ function BacktestPage() {
           ? `已提交回测任务 ${result.run.strategyName}，窗口 ${result.run.windowLabel}，工作流 ${result.workflow.id} 已入队。`
           : `Queued backtest for ${result.run.strategyName} with window ${result.run.windowLabel}. Workflow ${result.workflow.id} is now pending.`,
       );
-      setRefreshKey((current) => current + 1);
+      requestRefresh();
     } catch (requestError) {
       if (requestError instanceof ApiPermissionError) {
         setActionError(
@@ -221,7 +220,7 @@ function BacktestPage() {
           ? `已完成 ${result.run.strategyName} 的人工复核。`
           : `Completed operator review for ${result.run.strategyName}.`,
       );
-      setRefreshKey((current) => current + 1);
+      requestRefresh();
     } catch (requestError) {
       if (requestError instanceof ApiPermissionError) {
         setActionError(
@@ -376,8 +375,8 @@ function BacktestPage() {
           </div>
           <div className="status-copy">
             {locale === 'zh'
-              ? `当前展示 ${filteredRuns.length} 条记录，轮询频率 ${hasActiveRuns ? '5 秒' : '15 秒'}。`
-              : `Showing ${filteredRuns.length} runs. Polling every ${hasActiveRuns ? '5 seconds' : '15 seconds'}.`}
+              ? `当前展示 ${filteredRuns.length} 条记录，轮询频率 ${pollingIntervalMs / 1000} 秒。`
+              : `Showing ${filteredRuns.length} runs. Polling every ${pollingIntervalMs / 1000} seconds.`}
           </div>
         </article>
       </section>

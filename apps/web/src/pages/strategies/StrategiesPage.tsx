@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import type { ExecutionLedgerEntry } from '@shared-types/trading.ts';
-import { ApiPermissionError, fetchExecutionLedger } from '../../app/api/controlPlane.ts';
-import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
+import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
+import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
 import { useStrategyDetailPanels } from '../../modules/research/useStrategyDetailPanels.ts';
 import { useStrategyDetail } from '../../modules/research/useStrategyDetail.ts';
@@ -39,12 +38,12 @@ function StrategiesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const researchNavigation = useResearchNavigationContext(searchParams, navigate);
   const goToSettings = useSettingsNavigation();
-  const [refreshKey, setRefreshKey] = useState(0);
   const [registryFilter, setRegistryFilter] = useState<'active' | 'archived' | 'all'>('active');
   const [saving, setSaving] = useState(false);
   const [promotingId, setPromotingId] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
   const [saveError, setSaveError] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
   const [form, setForm] = useState({
     id: 'new-strategy',
     name: '',
@@ -57,6 +56,11 @@ function StrategiesPage() {
     maxDrawdownPct: '8',
     sharpe: '1',
     summary: '',
+  });
+  const {
+    requestRefresh,
+  } = useResearchPollingPolicy({
+    onRefresh: () => setRefreshKey((current) => current + 1),
   });
   const {
     data,
@@ -171,7 +175,7 @@ function StrategiesPage() {
           ? `策略 ${result.strategy?.name || form.name} 已写入注册表。`
           : `Strategy ${result.strategy?.name || form.name} was saved to the registry.`,
       );
-      setRefreshKey((current) => current + 1);
+      requestRefresh();
     } catch (requestError) {
       if (requestError instanceof ApiPermissionError) {
         setSaveError(
@@ -231,7 +235,7 @@ function StrategiesPage() {
           ? `策略 ${result.strategy?.name || strategy.name} 已晋级到 ${nextStatus}。`
           : `Strategy ${result.strategy?.name || strategy.name} was promoted to ${nextStatus}.`,
       );
-      setRefreshKey((current) => current + 1);
+      requestRefresh();
     } catch (requestError) {
       if (requestError instanceof ApiPermissionError) {
         setSaveError(
@@ -272,7 +276,7 @@ function StrategiesPage() {
               ? `Strategy ${result.strategy?.name || strategy.name} was archived.`
               : `Strategy ${result.strategy?.name || strategy.name} was restored to draft.`),
       );
-      setRefreshKey((current) => current + 1);
+      requestRefresh();
     } catch (requestError) {
       if (requestError instanceof ApiPermissionError) {
         setSaveError(
