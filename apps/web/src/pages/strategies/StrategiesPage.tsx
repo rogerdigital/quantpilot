@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
+import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -710,29 +711,26 @@ function StrategiesPage() {
             </div>
           )}
         </InspectionPanel>
-        <InspectionPanel
+        <ResearchDetailInspectionPanel
           title={locale === 'zh' ? '选中策略详情' : 'Selected Strategy Detail'}
           copy={locale === 'zh' ? '聚合当前策略的阶段、收益预期、风险参数和研究摘要。' : 'Aggregate the selected strategy’s stage, expected return, risk profile, and research summary.'}
           badge={selectedStrategy?.status || '--'}
+          emptyMessage={!selectedStrategy ? (locale === 'zh' ? '当前没有可查看的策略。' : 'No strategy is available for inspection.') : null}
+          metrics={[
+            { label: locale === 'zh' ? '名称' : 'Name', value: selectedStrategySnapshot?.name || '--' },
+            { label: locale === 'zh' ? '家族' : 'Family', value: selectedStrategySnapshot?.family || '--' },
+            { label: locale === 'zh' ? '周期' : 'Timeframe', value: selectedStrategySnapshot?.timeframe || '--' },
+            { label: locale === 'zh' ? '标的池' : 'Universe', value: selectedStrategySnapshot?.universe || '--' },
+            { label: locale === 'zh' ? '预期收益' : 'Expected return', value: selectedStrategySnapshot ? `${selectedStrategySnapshot.expectedReturnPct.toFixed(1)}%` : '--' },
+            { label: locale === 'zh' ? '最大回撤' : 'Max drawdown', value: selectedStrategySnapshot ? `${selectedStrategySnapshot.maxDrawdownPct.toFixed(1)}%` : '--' },
+            { label: 'Sharpe', value: selectedStrategySnapshot ? selectedStrategySnapshot.sharpe.toFixed(2) : '--' },
+            { label: locale === 'zh' ? '最近研究' : 'Latest research', value: strategyDetail?.latestRun?.windowLabel || '--' },
+          ]}
         >
-          {!selectedStrategy ? (
-            <InspectionEmpty>{locale === 'zh' ? '当前没有可查看的策略。' : 'No strategy is available for inspection.'}</InspectionEmpty>
-          ) : (
-            <div className="status-stack">
-              <div className="status-row"><span>{locale === 'zh' ? '名称' : 'Name'}</span><strong>{selectedStrategySnapshot?.name || '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '家族' : 'Family'}</span><strong>{selectedStrategySnapshot?.family || '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '周期' : 'Timeframe'}</span><strong>{selectedStrategySnapshot?.timeframe || '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '标的池' : 'Universe'}</span><strong>{selectedStrategySnapshot?.universe || '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '预期收益' : 'Expected return'}</span><strong>{selectedStrategySnapshot ? `${selectedStrategySnapshot.expectedReturnPct.toFixed(1)}%` : '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '最大回撤' : 'Max drawdown'}</span><strong>{selectedStrategySnapshot ? `${selectedStrategySnapshot.maxDrawdownPct.toFixed(1)}%` : '--'}</strong></div>
-              <div className="status-row"><span>Sharpe</span><strong>{selectedStrategySnapshot ? selectedStrategySnapshot.sharpe.toFixed(2) : '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '最近研究' : 'Latest research'}</span><strong>{strategyDetail?.latestRun?.windowLabel || '--'}</strong></div>
-              {strategyDetailLoading ? <InspectionStatus>{locale === 'zh' ? '正在同步策略详情...' : 'Syncing strategy detail...'}</InspectionStatus> : null}
-              {strategyDetailError ? <InspectionStatus>{locale === 'zh' ? `策略详情加载失败：${strategyDetailError}` : `Failed to load strategy detail: ${strategyDetailError}`}</InspectionStatus> : null}
-              <InspectionStatus>{selectedStrategySnapshot?.summary || (locale === 'zh' ? '当前策略暂无摘要。' : 'No strategy summary is available yet.')}</InspectionStatus>
-            </div>
-          )}
-        </InspectionPanel>
+          {strategyDetailLoading ? <InspectionStatus>{locale === 'zh' ? '正在同步策略详情...' : 'Syncing strategy detail...'}</InspectionStatus> : null}
+          {strategyDetailError ? <InspectionStatus>{locale === 'zh' ? `策略详情加载失败：${strategyDetailError}` : `Failed to load strategy detail: ${strategyDetailError}`}</InspectionStatus> : null}
+          <InspectionStatus>{selectedStrategySnapshot?.summary || (locale === 'zh' ? '当前策略暂无摘要。' : 'No strategy summary is available yet.')}</InspectionStatus>
+        </ResearchDetailInspectionPanel>
         <InspectionListPanel
           title={locale === 'zh' ? '选中策略研究记录' : 'Selected Strategy Research Runs'}
           copy={locale === 'zh' ? '查看当前策略关联的最近回测运行记录。' : 'Review the most recent backtest runs associated with the selected strategy.'}

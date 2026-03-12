@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
+import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -585,62 +586,59 @@ function BacktestPage() {
       </section>
 
       <section className="panel-grid">
-        <InspectionPanel
+        <ResearchDetailInspectionPanel
           title={locale === 'zh' ? '选中回测详情' : 'Selected Backtest Detail'}
           copy={locale === 'zh'
             ? '把单条 run 的回测结果、审计留痕和 workflow 进度聚合到一个视图，减少跨面板对照。'
             : 'Aggregate one run’s result metrics, audit trail, and workflow progress into a single detail view.'}
           badge={selectedRun?.status || '--'}
+          emptyMessage={!selectedRun ? (locale === 'zh' ? '当前没有可查看的回测记录。' : 'No backtest run is available for inspection.') : null}
+          metrics={[
+            { label: locale === 'zh' ? '策略' : 'Strategy', value: selectedRunSnapshot?.strategyName || '--' },
+            { label: locale === 'zh' ? '窗口' : 'Window', value: selectedRunSnapshot?.windowLabel || '--' },
+            { label: locale === 'zh' ? '收益率' : 'Return', value: selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? fmtPct(selectedRunSnapshot.annualizedReturnPct) : '--' },
+            { label: locale === 'zh' ? '最大回撤' : 'Max Drawdown', value: selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? fmtPct(selectedRunSnapshot.maxDrawdownPct) : '--' },
+            { label: 'Sharpe', value: selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? selectedRunSnapshot.sharpe.toFixed(2) : '--' },
+            { label: locale === 'zh' ? '胜率' : 'Win Rate', value: selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? fmtPct(selectedRunSnapshot.winRatePct) : '--' },
+            { label: locale === 'zh' ? '工作流' : 'Workflow', value: selectedWorkflow?.id || selectedRunSnapshot?.workflowRunId || '--' },
+            { label: locale === 'zh' ? '策略阶段' : 'Strategy stage', value: runDetail?.strategy?.status || '--' },
+          ]}
         >
-          {!selectedRun ? (
-            <InspectionEmpty>{locale === 'zh' ? '当前没有可查看的回测记录。' : 'No backtest run is available for inspection.'}</InspectionEmpty>
-          ) : (
-            <div className="status-stack">
-              <div className="status-row"><span>{locale === 'zh' ? '策略' : 'Strategy'}</span><strong>{selectedRunSnapshot?.strategyName || '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '窗口' : 'Window'}</span><strong>{selectedRunSnapshot?.windowLabel || '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '收益率' : 'Return'}</span><strong>{selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? fmtPct(selectedRunSnapshot.annualizedReturnPct) : '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '最大回撤' : 'Max Drawdown'}</span><strong>{selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? fmtPct(selectedRunSnapshot.maxDrawdownPct) : '--'}</strong></div>
-              <div className="status-row"><span>Sharpe</span><strong>{selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? selectedRunSnapshot.sharpe.toFixed(2) : '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '胜率' : 'Win Rate'}</span><strong>{selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? fmtPct(selectedRunSnapshot.winRatePct) : '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '工作流' : 'Workflow'}</span><strong>{selectedWorkflow?.id || selectedRunSnapshot?.workflowRunId || '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '策略阶段' : 'Strategy stage'}</span><strong>{runDetail?.strategy?.status || '--'}</strong></div>
-              <div className="settings-actions">
-                <button
-                  type="button"
-                  className="inline-action inline-action-approve"
-                  onClick={() => researchNavigation.openStrategyDetail(selectedRunSnapshot?.strategyId || selectedRun?.strategyId || '')}
-                >
-                  {locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
-                </button>
-                {sourcePage === 'strategies' && requestedStrategyId ? (
-                  <button
-                    type="button"
-                    className="inline-action"
-                    onClick={() => researchNavigation.returnToStrategyTimeline()}
-                    >
-                      {locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
-                    </button>
-                ) : null}
-                {selectedRunExecutionEntries[0] ? (
-                  <button
-                    type="button"
-                    className="inline-action"
-                    onClick={() => researchNavigation.openExecutionDetail(selectedRunExecutionEntries[0].plan.id, {
-                      strategyId: selectedRunSnapshot?.strategyId || '',
-                      runId: selectedRunSnapshot?.id || '',
-                      source: 'backtest',
-                    })}
-                  >
-                    {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
-                  </button>
-                ) : null}
-              </div>
-              {runDetailLoading ? <InspectionStatus>{locale === 'zh' ? '正在同步回测详情...' : 'Syncing backtest detail...'}</InspectionStatus> : null}
-              {runDetailError ? <InspectionStatus>{locale === 'zh' ? `回测详情加载失败：${runDetailError}` : `Failed to load backtest detail: ${runDetailError}`}</InspectionStatus> : null}
-              <InspectionStatus>{selectedRunSnapshot?.summary || (locale === 'zh' ? '当前回测暂无摘要。' : 'No backtest summary is available yet.')}</InspectionStatus>
-            </div>
-          )}
-        </InspectionPanel>
+          <div className="settings-actions">
+            <button
+              type="button"
+              className="inline-action inline-action-approve"
+              onClick={() => researchNavigation.openStrategyDetail(selectedRunSnapshot?.strategyId || selectedRun?.strategyId || '')}
+            >
+              {locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
+            </button>
+            {sourcePage === 'strategies' && requestedStrategyId ? (
+              <button
+                type="button"
+                className="inline-action"
+                onClick={() => researchNavigation.returnToStrategyTimeline()}
+              >
+                {locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
+              </button>
+            ) : null}
+            {selectedRunExecutionEntries[0] ? (
+              <button
+                type="button"
+                className="inline-action"
+                onClick={() => researchNavigation.openExecutionDetail(selectedRunExecutionEntries[0].plan.id, {
+                  strategyId: selectedRunSnapshot?.strategyId || '',
+                  runId: selectedRunSnapshot?.id || '',
+                  source: 'backtest',
+                })}
+              >
+                {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
+              </button>
+            ) : null}
+          </div>
+          {runDetailLoading ? <InspectionStatus>{locale === 'zh' ? '正在同步回测详情...' : 'Syncing backtest detail...'}</InspectionStatus> : null}
+          {runDetailError ? <InspectionStatus>{locale === 'zh' ? `回测详情加载失败：${runDetailError}` : `Failed to load backtest detail: ${runDetailError}`}</InspectionStatus> : null}
+          <InspectionStatus>{selectedRunSnapshot?.summary || (locale === 'zh' ? '当前回测暂无摘要。' : 'No backtest summary is available yet.')}</InspectionStatus>
+        </ResearchDetailInspectionPanel>
         <InspectionListPanel
           title={locale === 'zh' ? '选中回测审计轨迹' : 'Selected Audit Trail'}
           copy={locale === 'zh'
