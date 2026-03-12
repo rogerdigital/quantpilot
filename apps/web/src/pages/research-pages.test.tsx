@@ -735,4 +735,117 @@ describe('research workspace pages', () => {
     expect(html).toContain('Selected Execution Workflow Step');
     expect(html).toContain('settlement_watch');
   });
+
+  it('renders execution page with strategy source context and return action', () => {
+    mockUseExecutionConsoleData.mockReturnValue({
+      runtimeEvents: [
+        {
+          id: 'runtime-1',
+          cycle: 'cycle-1',
+          submittedOrderCount: 2,
+          openOrderCount: 1,
+          positionCount: 3,
+          equity: 102400,
+        },
+      ],
+      accountSnapshots: [
+        {
+          id: 'snapshot-1',
+          provider: 'paper-broker',
+          cycle: 'cycle-1',
+          connected: true,
+          account: { cash: 54000 },
+          positions: [{ symbol: 'AAPL' }],
+          orders: [{ id: 'order-1' }],
+          message: 'Snapshot synced',
+        },
+      ],
+      ledgerEntries: [
+        {
+          plan: {
+            id: 'plan-1',
+            workflowRunId: 'wf-exec-1',
+            strategyId: 'strategy-1',
+            strategyName: 'Momentum',
+            mode: 'paper',
+            status: 'ready',
+            approvalState: 'pending',
+            riskStatus: 'approved',
+            summary: 'Paper execution plan',
+            capital: 50000,
+            orderCount: 2,
+            orders: [
+              { symbol: 'AAPL' },
+              { symbol: 'MSFT' },
+            ],
+            metadata: {},
+            createdAt: '2026-03-13T11:30:00.000Z',
+            updatedAt: '2026-03-13T11:35:00.000Z',
+          },
+          workflow: {
+            id: 'wf-exec-1',
+            status: 'running',
+          },
+          latestRuntime: {
+            id: 'runtime-1',
+            cycle: 'cycle-1',
+            submittedOrderCount: 2,
+            openOrderCount: 1,
+            equity: 102400,
+            createdAt: '2026-03-13T11:40:00.000Z',
+          },
+        },
+      ],
+      workflowRuns: [
+        {
+          id: 'wf-exec-1',
+          workflowId: 'task-orchestrator.strategy-execution',
+          status: 'running',
+          trigger: 'approved',
+          attempt: 1,
+          maxAttempts: 3,
+          steps: [
+            { key: 'broker_submit', status: 'completed' },
+            { key: 'settlement_watch', status: 'running' },
+          ],
+        },
+      ],
+      operatorActions: [],
+      loading: false,
+      error: '',
+    });
+    mockUseAuditFeed.mockReturnValue({
+      items: [
+        {
+          id: 'audit-1',
+          type: 'execution-plan',
+          actor: 'risk@desk',
+          title: 'Execution approved',
+          detail: 'Plan is ready for broker submit.',
+          createdAt: '2026-03-13T11:35:00.000Z',
+          metadata: {
+            strategyId: 'strategy-1',
+            orderCount: 2,
+            capital: 50000,
+            riskStatus: 'approved',
+            approvalState: 'pending',
+          },
+        },
+      ],
+      loading: false,
+    });
+
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/execution?plan=plan-1&strategy=strategy-1&timeline=execution-plan-1&source=strategies']}>
+        <Routes>
+          <Route path="/execution" element={<ExecutionPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain('Selected Execution Detail');
+    expect(html).toContain('Open Strategy Detail');
+    expect(html).toContain('Return to Strategy Timeline');
+    expect(html).not.toContain('Return to Backtest Detail');
+  });
 });
