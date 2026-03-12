@@ -4,6 +4,13 @@ import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
 import { useExecutionDetailPanels } from '../../../modules/console/useExecutionDetailPanels.ts';
+import {
+  getExecutionAuditEventInspectionConfig,
+  getExecutionDetailInspectionConfig,
+  getExecutionSnapshotInspectionConfig,
+  getExecutionWorkflowInspectionConfig,
+  getExecutionWorkflowStepInspectionConfig,
+} from '../../../modules/console/executionInspectionConfigs.ts';
 import { useSyncedQuerySelection } from '../../../modules/console/useSyncedQuerySelection.ts';
 import { useResearchNavigationContext } from '../../../modules/research/useResearchNavigationContext.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
@@ -100,6 +107,11 @@ export function ExecutionPage() {
     workflowRuns,
     accountSnapshots,
   });
+  const executionDetailInspection = getExecutionDetailInspectionConfig(locale, selectedEntry);
+  const executionAuditEventInspection = getExecutionAuditEventInspectionConfig(locale, selectedEntry, selectedAuditEvent);
+  const executionWorkflowInspection = getExecutionWorkflowInspectionConfig(locale, selectedEntry, selectedWorkflow, executionDataLoading);
+  const executionWorkflowStepInspection = getExecutionWorkflowStepInspectionConfig(locale, selectedEntry, selectedWorkflowStep);
+  const executionSnapshotInspection = getExecutionSnapshotInspectionConfig(locale, selectedEntry, selectedAccountSnapshot);
 
   return (
     <>
@@ -206,12 +218,12 @@ export function ExecutionPage() {
 
       <section className="panel-grid">
         <InspectionPanel
-          title={locale === 'zh' ? '选中执行计划详情' : 'Selected Execution Detail'}
-          copy={locale === 'zh' ? '聚合展示单条 execution plan 的模式、风控、订单规模和运行时结果。' : 'Aggregate one execution plan’s mode, risk state, order count, and runtime result in one place.'}
+          title={executionDetailInspection.title}
+          copy={executionDetailInspection.copy}
           badge={selectedEntry?.plan.riskStatus || '--'}
         >
           {!selectedEntry ? (
-            <InspectionStatus>{locale === 'zh' ? '当前没有可查看的执行计划。' : 'No execution plan is available for inspection.'}</InspectionStatus>
+            <InspectionStatus>{executionDetailInspection.emptyMessage}</InspectionStatus>
           ) : (
             <div className="status-stack">
               <div className="status-row"><span>{locale === 'zh' ? '策略' : 'Strategy'}</span><strong>{selectedEntry.plan.strategyName}</strong></div>
@@ -247,16 +259,8 @@ export function ExecutionPage() {
                   </button>
                 ) : null}
               </div>
-              <InspectionStatus>{selectedEntry.plan.summary}</InspectionStatus>
-              <InspectionStatus>
-                {selectedEntry.latestRuntime
-                  ? (locale === 'zh'
-                      ? `最新执行：提交 ${selectedEntry.latestRuntime.submittedOrderCount}，未成交 ${selectedEntry.latestRuntime.openOrderCount}，权益 ${selectedEntry.latestRuntime.equity.toFixed(0)}`
-                      : `Latest runtime: submitted ${selectedEntry.latestRuntime.submittedOrderCount}, open ${selectedEntry.latestRuntime.openOrderCount}, equity ${selectedEntry.latestRuntime.equity.toFixed(0)}`)
-                  : (locale === 'zh'
-                      ? '当前计划还没有服务端执行结果。'
-                      : 'No backend execution result is attached to this plan yet.')}
-              </InspectionStatus>
+              <InspectionStatus>{executionDetailInspection.summary}</InspectionStatus>
+              <InspectionStatus>{executionDetailInspection.runtimeMessage}</InspectionStatus>
             </div>
           )}
         </InspectionPanel>
@@ -294,42 +298,38 @@ export function ExecutionPage() {
             ))}
         </InspectionListPanel>
         <InspectionPanel
-          title={locale === 'zh' ? '选中执行审计事件' : 'Selected Execution Audit Event'}
-          copy={locale === 'zh' ? '钻取当前审计事件，便于对齐 execution plan、audit 和 workflow 三条线。' : 'Inspect the selected audit event so execution plan, audit, and workflow can be aligned to one node.'}
+          title={executionAuditEventInspection.title}
+          copy={executionAuditEventInspection.copy}
           badge={selectedAuditEvent?.type || '--'}
           badgeClassName="badge-warn"
         >
-          {!selectedEntry ? (
-            <InspectionStatus>{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</InspectionStatus>
-          ) : !selectedAuditEvent ? (
-            <InspectionStatus>{locale === 'zh' ? '当前执行计划还没有可钻取的审计事件。' : 'No execution audit event is available for inspection yet.'}</InspectionStatus>
+          {executionAuditEventInspection.emptyMessage ? (
+            <InspectionStatus>{executionAuditEventInspection.emptyMessage}</InspectionStatus>
           ) : (
             <div className="status-stack">
-              <div className="status-row"><span>{locale === 'zh' ? '标题' : 'Title'}</span><strong>{selectedAuditEvent.title}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '类型' : 'Type'}</span><strong>{selectedAuditEvent.type}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '操作人' : 'Actor'}</span><strong>{selectedAuditEvent.actor}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{new Date(selectedAuditEvent.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US')}</strong></div>
-              <InspectionStatus>{selectedAuditEvent.detail}</InspectionStatus>
+              {executionAuditEventInspection.metrics.map((metric) => (
+                <div key={metric.label} className="status-row"><span>{metric.label}</span><strong>{metric.value}</strong></div>
+              ))}
+              <InspectionStatus>{executionAuditEventInspection.detail}</InspectionStatus>
             </div>
           )}
         </InspectionPanel>
         <InspectionPanel
-          title={locale === 'zh' ? '选中执行工作流' : 'Selected Execution Workflow'}
-          copy={locale === 'zh' ? '查看 strategy-execution workflow 的状态、尝试次数和步骤进度。' : 'Inspect strategy-execution workflow status, attempts, and step progress.'}
+          title={executionWorkflowInspection.title}
+          copy={executionWorkflowInspection.copy}
           badge={selectedWorkflow?.status || '--'}
         >
           {!selectedEntry ? (
-            <InspectionStatus>{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</InspectionStatus>
+            <InspectionStatus>{executionWorkflowInspection.emptyMessage}</InspectionStatus>
           ) : executionDataLoading ? (
-            <InspectionStatus>{locale === 'zh' ? '正在加载执行工作流...' : 'Loading execution workflow...'}</InspectionStatus>
+            <InspectionStatus>{executionWorkflowInspection.loadingMessage}</InspectionStatus>
           ) : !selectedWorkflow ? (
-            <InspectionStatus>{locale === 'zh' ? '当前执行计划还没有可见的 workflow 详情。' : 'No workflow detail is available for the selected execution plan yet.'}</InspectionStatus>
+            <InspectionStatus>{executionWorkflowInspection.emptyMessage}</InspectionStatus>
           ) : (
             <div className="status-stack">
-              <div className="status-row"><span>{locale === 'zh' ? '工作流 ID' : 'Workflow ID'}</span><strong>{selectedWorkflow.id}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{selectedWorkflow.status}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '尝试次数' : 'Attempts'}</span><strong>{selectedWorkflow.attempt}/{selectedWorkflow.maxAttempts}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '触发方式' : 'Trigger'}</span><strong>{selectedWorkflow.trigger}</strong></div>
+              {executionWorkflowInspection.metrics.map((metric) => (
+                <div key={metric.label} className="status-row"><span>{metric.label}</span><strong>{metric.value}</strong></div>
+              ))}
               {selectedWorkflow.steps.length ? (
                 <div className="focus-list">
                   {selectedWorkflow.steps.map((step) => (
@@ -361,20 +361,19 @@ export function ExecutionPage() {
           )}
         </InspectionPanel>
         <InspectionPanel
-          title={locale === 'zh' ? '选中执行工作流步骤' : 'Selected Execution Workflow Step'}
-          copy={locale === 'zh' ? '单独展开当前 workflow 节点，便于深链定位到具体执行步骤。' : 'Expand the current workflow node so deep links can target a specific execution step.'}
+          title={executionWorkflowStepInspection.title}
+          copy={executionWorkflowStepInspection.copy}
           badge={selectedWorkflowStep?.status || '--'}
           badgeClassName="badge-info"
         >
-          {!selectedEntry ? (
-            <InspectionStatus>{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</InspectionStatus>
-          ) : !selectedWorkflowStep ? (
-            <InspectionStatus>{locale === 'zh' ? '当前执行工作流还没有可定位的步骤。' : 'No execution workflow step is available for inspection yet.'}</InspectionStatus>
+          {executionWorkflowStepInspection.emptyMessage ? (
+            <InspectionStatus>{executionWorkflowStepInspection.emptyMessage}</InspectionStatus>
           ) : (
             <div className="status-stack">
-              <div className="status-row"><span>{locale === 'zh' ? '步骤' : 'Step'}</span><strong>{selectedWorkflowStep.key}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{selectedWorkflowStep.status}</strong></div>
-              <InspectionStatus>{locale === 'zh' ? `当前深链已定位到步骤 ${selectedWorkflowStep.key}。` : `The current deep link is focused on step ${selectedWorkflowStep.key}.`}</InspectionStatus>
+              {executionWorkflowStepInspection.metrics.map((metric) => (
+                <div key={metric.label} className="status-row"><span>{metric.label}</span><strong>{metric.value}</strong></div>
+              ))}
+              <InspectionStatus>{executionWorkflowStepInspection.guidance}</InspectionStatus>
             </div>
           )}
         </InspectionPanel>
@@ -400,15 +399,13 @@ export function ExecutionPage() {
             ))}
         </InspectionListPanel>
         <InspectionPanel
-          title={locale === 'zh' ? '选中 Broker 快照' : 'Selected Broker Snapshot'}
-          copy={locale === 'zh' ? '优先关联当前 plan 最新 runtime 所在周期的 broker snapshot；若不存在则回退到最新快照。' : 'Prefer the broker snapshot from the selected plan’s latest runtime cycle, then fall back to the latest snapshot.'}
+          title={executionSnapshotInspection.title}
+          copy={executionSnapshotInspection.copy}
           badge={selectedAccountSnapshot?.provider || '--'}
           badgeClassName="badge-ok"
         >
-          {!selectedEntry ? (
-            <InspectionStatus>{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</InspectionStatus>
-          ) : !selectedAccountSnapshot ? (
-            <InspectionStatus>{locale === 'zh' ? '当前没有可用的 broker 快照。' : 'No broker snapshot is available for the selected execution plan.'}</InspectionStatus>
+          {executionSnapshotInspection.emptyMessage ? (
+            <InspectionStatus>{executionSnapshotInspection.emptyMessage}</InspectionStatus>
           ) : (
             <div className="status-stack">
               <div className="status-row"><span>{locale === 'zh' ? '提供商' : 'Provider'}</span><strong>{selectedAccountSnapshot.provider}</strong></div>
