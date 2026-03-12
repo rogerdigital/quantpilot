@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
+import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
@@ -639,7 +640,7 @@ function BacktestPage() {
           {runDetailError ? <InspectionStatus>{locale === 'zh' ? `回测详情加载失败：${runDetailError}` : `Failed to load backtest detail: ${runDetailError}`}</InspectionStatus> : null}
           <InspectionStatus>{selectedRunSnapshot?.summary || (locale === 'zh' ? '当前回测暂无摘要。' : 'No backtest summary is available yet.')}</InspectionStatus>
         </ResearchDetailInspectionPanel>
-        <InspectionListPanel
+        <ResearchCollectionPanel
           title={locale === 'zh' ? '选中回测审计轨迹' : 'Selected Audit Trail'}
           copy={locale === 'zh'
             ? '只展示当前选中 run 的队列、完成和复核记录。'
@@ -647,34 +648,36 @@ function BacktestPage() {
           badge={selectedRunAuditItems.length}
           badgeClassName="badge-warn"
           terminal
+          hasSelection={Boolean(selectedRun)}
+          selectionEmptyMessage={locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}
+          isEmpty={!selectedRunAuditItems.length}
+          emptyMessage={locale === 'zh' ? '当前 run 暂无审计轨迹。' : 'No audit trail exists for the selected run yet.'}
         >
-            {!selectedRun ? <InspectionEmpty>{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</InspectionEmpty> : null}
-            {selectedRun && !selectedRunAuditItems.length ? <InspectionEmpty>{locale === 'zh' ? '当前 run 暂无审计轨迹。' : 'No audit trail exists for the selected run yet.'}</InspectionEmpty> : null}
-            {selectedRunAuditItems.map((item) => (
-              <InspectionSelectableRow
-                key={item.id}
-                leadTitle={item.title}
-                leadCopy={item.detail}
-                metrics={[
-                  { label: locale === 'zh' ? '类型' : 'Type', value: item.type },
-                  { label: locale === 'zh' ? '操作人' : 'Actor', value: item.actor },
-                  { label: locale === 'zh' ? '时间' : 'Time', value: fmtDateTime(item.createdAt, locale) },
-                ]}
-                actions={(
-                  <button
-                    type="button"
-                    className="inline-action"
-                    disabled={selectedAuditEventId === item.id}
-                    onClick={() => setSelectedAuditEventId(item.id)}
-                  >
-                    {selectedAuditEventId === item.id
-                      ? (locale === 'zh' ? '已选中' : 'Selected')
-                      : (locale === 'zh' ? '查看' : 'Inspect')}
-                  </button>
-                )}
-              />
-            ))}
-        </InspectionListPanel>
+          {selectedRunAuditItems.map((item) => (
+            <InspectionSelectableRow
+              key={item.id}
+              leadTitle={item.title}
+              leadCopy={item.detail}
+              metrics={[
+                { label: locale === 'zh' ? '类型' : 'Type', value: item.type },
+                { label: locale === 'zh' ? '操作人' : 'Actor', value: item.actor },
+                { label: locale === 'zh' ? '时间' : 'Time', value: fmtDateTime(item.createdAt, locale) },
+              ]}
+              actions={(
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={selectedAuditEventId === item.id}
+                  onClick={() => setSelectedAuditEventId(item.id)}
+                >
+                  {selectedAuditEventId === item.id
+                    ? (locale === 'zh' ? '已选中' : 'Selected')
+                    : (locale === 'zh' ? '查看' : 'Inspect')}
+                </button>
+              )}
+            />
+          ))}
+        </ResearchCollectionPanel>
         <InspectionPanel
           title={locale === 'zh' ? '选中研究事件' : 'Selected Research Event'}
           copy={locale === 'zh'
@@ -763,7 +766,7 @@ function BacktestPage() {
             </div>
           )}
         </InspectionPanel>
-        <InspectionListPanel
+        <ResearchCollectionPanel
           title={locale === 'zh' ? '下游执行承接' : 'Downstream Execution Handoff'}
           copy={locale === 'zh'
             ? '查看当前回测所属策略在执行侧的承接情况，确认研究结果是否已经进入 execution plan。'
@@ -771,9 +774,11 @@ function BacktestPage() {
           badge={selectedRunExecutionEntries.length}
           badgeClassName="badge-info"
           terminal
+          hasSelection={Boolean(selectedRun)}
+          selectionEmptyMessage={locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}
+          isEmpty={!selectedRunExecutionEntries.length}
+          emptyMessage={locale === 'zh' ? '当前回测对应策略还没有下游执行计划。' : 'No downstream execution plans exist for this run’s strategy yet.'}
         >
-          {!selectedRun ? <InspectionEmpty>{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</InspectionEmpty> : null}
-          {selectedRun && !selectedRunExecutionEntries.length ? <InspectionEmpty>{locale === 'zh' ? '当前回测对应策略还没有下游执行计划。' : 'No downstream execution plans exist for this run’s strategy yet.'}</InspectionEmpty> : null}
           {selectedRunExecutionEntries.map((entry) => (
             <InspectionSelectableRow
               key={entry.plan.id}
@@ -800,8 +805,8 @@ function BacktestPage() {
               )}
             />
           ))}
-        </InspectionListPanel>
-        <InspectionListPanel
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
           title={locale === 'zh' ? '选中回测版本轨迹' : 'Selected Backtest Version History'}
           copy={locale === 'zh'
             ? '从 audit metadata 回放当前 run 在完成和人工复核时落下的关键绩效快照。'
@@ -809,29 +814,31 @@ function BacktestPage() {
           badge={selectedRunVersionItems.length}
           badgeClassName="badge-warn"
           terminal
+          hasSelection={Boolean(selectedRun)}
+          selectionEmptyMessage={locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}
+          isEmpty={!selectedRunVersionItems.length}
+          emptyMessage={locale === 'zh' ? '当前 run 还没有可回放的版本快照。' : 'No version snapshots are available for the selected run yet.'}
         >
-            {!selectedRun ? <InspectionEmpty>{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</InspectionEmpty> : null}
-            {selectedRun && !selectedRunVersionItems.length ? <InspectionEmpty>{locale === 'zh' ? '当前 run 还没有可回放的版本快照。' : 'No version snapshots are available for the selected run yet.'}</InspectionEmpty> : null}
-            {selectedRunVersionItems.map((item) => {
-              const annualizedReturnPct = typeof item.metadata?.annualizedReturnPct === 'number' ? item.metadata.annualizedReturnPct : null;
-              const maxDrawdownPct = typeof item.metadata?.maxDrawdownPct === 'number' ? item.metadata.maxDrawdownPct : null;
-              const sharpe = typeof item.metadata?.sharpe === 'number' ? item.metadata.sharpe : null;
-              const winRatePct = typeof item.metadata?.winRatePct === 'number' ? item.metadata.winRatePct : null;
-              return (
-                <InspectionMetricsRow
-                  key={item.id}
-                  leadTitle={fmtDateTime(item.createdAt, locale)}
-                  leadCopy={item.detail}
-                  metrics={[
-                    { label: locale === 'zh' ? '类型' : 'Type', value: item.type },
-                    { label: locale === 'zh' ? '收益/回撤' : 'Return / Drawdown', value: annualizedReturnPct !== null && maxDrawdownPct !== null ? `${annualizedReturnPct.toFixed(1)}% / ${maxDrawdownPct.toFixed(1)}%` : '--' },
-                    { label: 'Sharpe', value: sharpe !== null ? sharpe.toFixed(2) : '--' },
-                    { label: locale === 'zh' ? '胜率' : 'Win Rate', value: winRatePct !== null ? `${winRatePct.toFixed(1)}%` : '--' },
-                  ]}
-                />
-              );
-            })}
-        </InspectionListPanel>
+          {selectedRunVersionItems.map((item) => {
+            const annualizedReturnPct = typeof item.metadata?.annualizedReturnPct === 'number' ? item.metadata.annualizedReturnPct : null;
+            const maxDrawdownPct = typeof item.metadata?.maxDrawdownPct === 'number' ? item.metadata.maxDrawdownPct : null;
+            const sharpe = typeof item.metadata?.sharpe === 'number' ? item.metadata.sharpe : null;
+            const winRatePct = typeof item.metadata?.winRatePct === 'number' ? item.metadata.winRatePct : null;
+            return (
+              <InspectionMetricsRow
+                key={item.id}
+                leadTitle={fmtDateTime(item.createdAt, locale)}
+                leadCopy={item.detail}
+                metrics={[
+                  { label: locale === 'zh' ? '类型' : 'Type', value: item.type },
+                  { label: locale === 'zh' ? '收益/回撤' : 'Return / Drawdown', value: annualizedReturnPct !== null && maxDrawdownPct !== null ? `${annualizedReturnPct.toFixed(1)}% / ${maxDrawdownPct.toFixed(1)}%` : '--' },
+                  { label: 'Sharpe', value: sharpe !== null ? sharpe.toFixed(2) : '--' },
+                  { label: locale === 'zh' ? '胜率' : 'Win Rate', value: winRatePct !== null ? `${winRatePct.toFixed(1)}%` : '--' },
+                ]}
+              />
+            );
+          })}
+        </ResearchCollectionPanel>
       </section>
     </>
   );

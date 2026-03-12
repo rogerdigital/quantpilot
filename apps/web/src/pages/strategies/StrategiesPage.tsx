@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
+import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
@@ -731,50 +732,55 @@ function StrategiesPage() {
           {strategyDetailError ? <InspectionStatus>{locale === 'zh' ? `策略详情加载失败：${strategyDetailError}` : `Failed to load strategy detail: ${strategyDetailError}`}</InspectionStatus> : null}
           <InspectionStatus>{selectedStrategySnapshot?.summary || (locale === 'zh' ? '当前策略暂无摘要。' : 'No strategy summary is available yet.')}</InspectionStatus>
         </ResearchDetailInspectionPanel>
-        <InspectionListPanel
+        <ResearchCollectionPanel
           title={locale === 'zh' ? '选中策略研究记录' : 'Selected Strategy Research Runs'}
           copy={locale === 'zh' ? '查看当前策略关联的最近回测运行记录。' : 'Review the most recent backtest runs associated with the selected strategy.'}
           badge={selectedStrategyRuns.length}
           badgeClassName="badge-warn"
           terminal
+          hasSelection={Boolean(selectedStrategy)}
+          selectionEmptyMessage={locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}
+          isEmpty={!selectedStrategyRuns.length}
+          emptyMessage={locale === 'zh' ? '当前策略还没有研究运行记录。' : 'No research runs exist for the selected strategy yet.'}
         >
-            {!selectedStrategy ? <InspectionEmpty>{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</InspectionEmpty> : null}
-            {selectedStrategy && !selectedStrategyRuns.length ? <InspectionEmpty>{locale === 'zh' ? '当前策略还没有研究运行记录。' : 'No research runs exist for the selected strategy yet.'}</InspectionEmpty> : null}
-            {selectedStrategyRuns.map((run) => (
-              <div className="focus-row" key={run.id}>
-                <div className="symbol-cell">
-                  <strong>{run.windowLabel}</strong>
-                  <span>{run.summary}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                  <strong>{run.status}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '收益' : 'Return'}</span>
-                  <strong>{run.status === 'completed' || run.status === 'needs_review' ? `${run.annualizedReturnPct.toFixed(1)}%` : '--'}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>Sharpe</span>
-                  <strong>{run.status === 'completed' || run.status === 'needs_review' ? run.sharpe.toFixed(2) : '--'}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '工作流' : 'Workflow'}</span>
-                  <strong>{run.workflowRunId || '--'}</strong>
-                </div>
+          {selectedStrategyRuns.map((run) => (
+            <div className="focus-row" key={run.id}>
+              <div className="symbol-cell">
+                <strong>{run.windowLabel}</strong>
+                <span>{run.summary}</span>
               </div>
-            ))}
-        </InspectionListPanel>
-        <InspectionListPanel
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                <strong>{run.status}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '收益' : 'Return'}</span>
+                <strong>{run.status === 'completed' || run.status === 'needs_review' ? `${run.annualizedReturnPct.toFixed(1)}%` : '--'}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>Sharpe</span>
+                <strong>{run.status === 'completed' || run.status === 'needs_review' ? run.sharpe.toFixed(2) : '--'}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '工作流' : 'Workflow'}</span>
+                <strong>{run.workflowRunId || '--'}</strong>
+              </div>
+            </div>
+          ))}
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
           title={locale === 'zh' ? '选中策略执行计划' : 'Selected Strategy Execution Plans'}
           copy={locale === 'zh' ? '直接查看当前策略在执行侧的承接情况，包括计划状态、workflow 和最新 runtime。' : 'Inspect how the selected strategy is handed off downstream through execution plan status, workflow, and latest runtime.'}
           badge={selectedStrategyExecutionEntries.length}
           badgeClassName="badge-info"
           terminal
+          hasSelection={Boolean(selectedStrategy)}
+          selectionEmptyMessage={locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}
+          loading={Boolean(selectedStrategy) && workspaceLoading}
+          loadingMessage={locale === 'zh' ? '正在加载关联执行计划...' : 'Loading linked execution plans...'}
+          isEmpty={!workspaceLoading && !selectedStrategyExecutionEntries.length}
+          emptyMessage={locale === 'zh' ? '当前策略还没有进入执行侧。' : 'The selected strategy has not produced downstream execution plans yet.'}
         >
-          {!selectedStrategy ? <InspectionEmpty>{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</InspectionEmpty> : null}
-          {selectedStrategy && workspaceLoading ? <InspectionEmpty>{locale === 'zh' ? '正在加载关联执行计划...' : 'Loading linked execution plans...'}</InspectionEmpty> : null}
-          {selectedStrategy && !workspaceLoading && !selectedStrategyExecutionEntries.length ? <InspectionEmpty>{locale === 'zh' ? '当前策略还没有进入执行侧。' : 'The selected strategy has not produced downstream execution plans yet.'}</InspectionEmpty> : null}
           {selectedStrategyExecutionEntries.map((entry) => (
             <InspectionMetricsRow
               key={entry.plan.id}
@@ -788,60 +794,64 @@ function StrategiesPage() {
               ]}
             />
           ))}
-        </InspectionListPanel>
-        <InspectionListPanel
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
           title={locale === 'zh' ? '选中策略审计轨迹' : 'Selected Strategy Audit Trail'}
           copy={locale === 'zh' ? '只展示当前策略的注册、晋级、归档与恢复留痕。' : 'Show only the selected strategy’s registry, promotion, archive, and restore audit trail.'}
           badge={selectedStrategyAuditItems.length}
           terminal
+          hasSelection={Boolean(selectedStrategy)}
+          selectionEmptyMessage={locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}
+          isEmpty={!selectedStrategyAuditItems.length}
+          emptyMessage={locale === 'zh' ? '当前策略还没有审计轨迹。' : 'No audit trail exists for the selected strategy yet.'}
         >
-            {!selectedStrategy ? <InspectionEmpty>{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</InspectionEmpty> : null}
-            {selectedStrategy && !selectedStrategyAuditItems.length ? <InspectionEmpty>{locale === 'zh' ? '当前策略还没有审计轨迹。' : 'No audit trail exists for the selected strategy yet.'}</InspectionEmpty> : null}
-            {selectedStrategyAuditItems.map((item) => {
-              const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
-              return (
-                <InspectionMetricsRow
-                  key={item.id}
-                  leadTitle={item.title}
-                  leadCopy={item.detail}
-                  metrics={[
-                    { label: locale === 'zh' ? '状态' : 'Status', value: status },
-                    { label: locale === 'zh' ? '操作人' : 'Actor', value: item.actor },
-                    { label: locale === 'zh' ? '时间' : 'Time', value: formatDateTime(item.createdAt, locale) },
-                  ]}
-                />
-              );
-            })}
-        </InspectionListPanel>
-        <InspectionListPanel
+          {selectedStrategyAuditItems.map((item) => {
+            const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
+            return (
+              <InspectionMetricsRow
+                key={item.id}
+                leadTitle={item.title}
+                leadCopy={item.detail}
+                metrics={[
+                  { label: locale === 'zh' ? '状态' : 'Status', value: status },
+                  { label: locale === 'zh' ? '操作人' : 'Actor', value: item.actor },
+                  { label: locale === 'zh' ? '时间' : 'Time', value: formatDateTime(item.createdAt, locale) },
+                ]}
+              />
+            );
+          })}
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
           title={locale === 'zh' ? '选中策略版本轨迹' : 'Selected Strategy Version History'}
           copy={locale === 'zh' ? '从 audit metadata 读取最近版本的评分和风险参数，观察策略快照如何变化。' : 'Read the latest score and risk parameter snapshots from audit metadata to track how the strategy evolved.'}
           badge={selectedStrategyVersionItems.length}
           badgeClassName="badge-warn"
           terminal
+          hasSelection={Boolean(selectedStrategy)}
+          selectionEmptyMessage={locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}
+          isEmpty={!selectedStrategyVersionItems.length}
+          emptyMessage={locale === 'zh' ? '当前策略还没有可回放的版本快照。' : 'No version snapshots are available for the selected strategy yet.'}
         >
-            {!selectedStrategy ? <InspectionEmpty>{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</InspectionEmpty> : null}
-            {selectedStrategy && !selectedStrategyVersionItems.length ? <InspectionEmpty>{locale === 'zh' ? '当前策略还没有可回放的版本快照。' : 'No version snapshots are available for the selected strategy yet.'}</InspectionEmpty> : null}
-            {selectedStrategyVersionItems.map((item) => {
-              const score = typeof item.metadata?.score === 'number' ? item.metadata.score : null;
-              const expectedReturnPct = typeof item.metadata?.expectedReturnPct === 'number' ? item.metadata.expectedReturnPct : null;
-              const maxDrawdownPct = typeof item.metadata?.maxDrawdownPct === 'number' ? item.metadata.maxDrawdownPct : null;
-              const sharpe = typeof item.metadata?.sharpe === 'number' ? item.metadata.sharpe : null;
-              return (
-                <InspectionMetricsRow
-                  key={item.id}
-                  leadTitle={formatDateTime(item.createdAt, locale)}
-                  leadCopy={item.detail}
-                  metrics={[
-                    { label: locale === 'zh' ? '阶段' : 'Stage', value: typeof item.metadata?.status === 'string' ? item.metadata.status : '--' },
-                    { label: locale === 'zh' ? '评分' : 'Score', value: score ?? '--' },
-                    { label: locale === 'zh' ? '收益/回撤' : 'Return / Drawdown', value: expectedReturnPct !== null && maxDrawdownPct !== null ? `${expectedReturnPct.toFixed(1)}% / ${maxDrawdownPct.toFixed(1)}%` : '--' },
-                    { label: 'Sharpe', value: sharpe !== null ? sharpe.toFixed(2) : '--' },
-                  ]}
-                />
-              );
-            })}
-        </InspectionListPanel>
+          {selectedStrategyVersionItems.map((item) => {
+            const score = typeof item.metadata?.score === 'number' ? item.metadata.score : null;
+            const expectedReturnPct = typeof item.metadata?.expectedReturnPct === 'number' ? item.metadata.expectedReturnPct : null;
+            const maxDrawdownPct = typeof item.metadata?.maxDrawdownPct === 'number' ? item.metadata.maxDrawdownPct : null;
+            const sharpe = typeof item.metadata?.sharpe === 'number' ? item.metadata.sharpe : null;
+            return (
+              <InspectionMetricsRow
+                key={item.id}
+                leadTitle={formatDateTime(item.createdAt, locale)}
+                leadCopy={item.detail}
+                metrics={[
+                  { label: locale === 'zh' ? '阶段' : 'Stage', value: typeof item.metadata?.status === 'string' ? item.metadata.status : '--' },
+                  { label: locale === 'zh' ? '评分' : 'Score', value: score ?? '--' },
+                  { label: locale === 'zh' ? '收益/回撤' : 'Return / Drawdown', value: expectedReturnPct !== null && maxDrawdownPct !== null ? `${expectedReturnPct.toFixed(1)}% / ${maxDrawdownPct.toFixed(1)}%` : '--' },
+                  { label: 'Sharpe', value: sharpe !== null ? sharpe.toFixed(2) : '--' },
+                ]}
+              />
+            );
+          })}
+        </ResearchCollectionPanel>
       </section>
     </>
   );
