@@ -7,6 +7,7 @@ import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
+import { useStrategyDetailPanels } from '../../modules/research/useStrategyDetailPanels.ts';
 import { useStrategyDetail } from '../../modules/research/useStrategyDetail.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
@@ -93,78 +94,52 @@ function StrategiesPage() {
     || visibleArchivedStrategies[0]
     || null;
   const { data: strategyDetail, loading: strategyDetailLoading, error: strategyDetailError } = useStrategyDetail(selectedStrategy?.id || '', refreshKey);
-  const selectedStrategySnapshot = strategyDetail?.strategy || selectedStrategy;
-  const selectedStrategyRuns = strategyDetail?.recentRuns?.slice(0, 6) || data?.runs.filter((item) => item.strategyId === selectedStrategy?.id).slice(0, 6) || [];
-  const selectedStrategyAuditItems = auditItems
-    .filter((item) => item.type === 'strategy-catalog.saved')
-    .filter((item) => {
-      const strategyId = typeof item.metadata?.strategyId === 'string' ? item.metadata.strategyId : '';
-      return selectedStrategy ? strategyId === selectedStrategy.id : false;
-    })
-    .slice(0, 6);
-  const selectedStrategyVersionItems = selectedStrategyAuditItems.filter((item) => (
-    typeof item.metadata?.score === 'number'
-    || typeof item.metadata?.expectedReturnPct === 'number'
-    || typeof item.metadata?.maxDrawdownPct === 'number'
-    || typeof item.metadata?.sharpe === 'number'
-  ));
-  const selectedStrategyExecutionEntries = executionEntries
-    .filter((entry) => entry.plan.strategyId === selectedStrategy?.id)
-    .slice(0, 6);
-  const selectedStrategyTimelineItems = [
-    ...selectedStrategyAuditItems.map((item) => ({
-      id: `audit-${item.id}`,
-      eventType: 'audit',
-      lane: locale === 'zh' ? '注册表' : 'Registry',
-      title: item.title,
-      detail: item.detail,
-      at: item.createdAt,
-      reference: typeof item.metadata?.strategyId === 'string' ? item.metadata.strategyId : '--',
-      metrics: [
-        { label: locale === 'zh' ? '状态' : 'Status', value: typeof item.metadata?.status === 'string' ? item.metadata.status : '--' },
-        { label: locale === 'zh' ? '操作人' : 'Actor', value: item.actor },
-      ],
-    })),
-    ...selectedStrategyRuns.map((run) => ({
-      id: `run-${run.id}`,
-      eventType: 'run',
-      lane: locale === 'zh' ? '研究' : 'Research',
-      title: `${run.windowLabel} · ${run.status}`,
-      detail: run.summary,
-      at: run.completedAt || run.reviewedAt || run.updatedAt || run.startedAt,
-      reference: run.id,
-      metrics: [
-        { label: locale === 'zh' ? '收益' : 'Return', value: run.status === 'completed' || run.status === 'needs_review' ? `${run.annualizedReturnPct.toFixed(1)}%` : '--' },
-        { label: 'Sharpe', value: run.status === 'completed' || run.status === 'needs_review' ? run.sharpe.toFixed(2) : '--' },
-      ],
-    })),
-    ...selectedStrategyExecutionEntries.map((entry) => ({
-      id: `execution-${entry.plan.id}`,
-      eventType: 'execution',
-      lane: locale === 'zh' ? '执行' : 'Execution',
-      title: entry.plan.summary,
-      detail: entry.latestRuntime?.message || `${entry.plan.orderCount} ${locale === 'zh' ? '笔订单候选' : 'candidate orders'}`,
-      at: entry.latestRuntime?.createdAt || entry.plan.updatedAt || entry.plan.createdAt,
-      reference: entry.plan.id,
-      metrics: [
-        { label: locale === 'zh' ? '计划状态' : 'Plan', value: entry.plan.status },
-        { label: locale === 'zh' ? 'Workflow' : 'Workflow', value: entry.workflow?.status || '--' },
-      ],
-    })),
-  ]
-    .sort((left, right) => new Date(right.at).getTime() - new Date(left.at).getTime())
-    .slice(0, 10);
   const {
     selectedId: selectedTimelineId,
     setSelectedId: setSelectedTimelineId,
   } = useSyncedQuerySelection({
-    itemIds: selectedStrategyTimelineItems.map((item) => item.id),
+    itemIds: (selectedStrategy
+      ? [
+        ...auditItems
+          .filter((item) => item.type === 'strategy-catalog.saved')
+          .filter((item) => {
+            const strategyId = typeof item.metadata?.strategyId === 'string' ? item.metadata.strategyId : '';
+            return strategyId === selectedStrategy.id;
+          })
+          .slice(0, 6)
+          .map((item) => `audit-${item.id}`),
+        ...(strategyDetail?.recentRuns?.slice(0, 6)
+          || data?.runs.filter((item) => item.strategyId === selectedStrategy.id).slice(0, 6)
+          || []
+        ).map((run) => `run-${run.id}`),
+        ...executionEntries
+          .filter((entry) => entry.plan.strategyId === selectedStrategy.id)
+          .slice(0, 6)
+          .map((entry) => `execution-${entry.plan.id}`),
+      ]
+      : []),
     queryKey: 'timeline',
     requestedId: requestedTimelineId,
     searchParams,
     setSearchParams,
   });
-  const selectedTimelineItem = selectedStrategyTimelineItems.find((item) => item.id === selectedTimelineId) || selectedStrategyTimelineItems[0] || null;
+  const {
+    selectedStrategySnapshot,
+    selectedStrategyRuns,
+    selectedStrategyAuditItems,
+    selectedStrategyVersionItems,
+    selectedStrategyExecutionEntries,
+    selectedStrategyTimelineItems,
+    selectedTimelineItem,
+  } = useStrategyDetailPanels({
+    locale,
+    selectedStrategy,
+    strategyDetail,
+    auditItems,
+    executionEntries,
+    allRuns: data?.runs || [],
+    selectedTimelineId,
+  });
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
     setForm((current) => ({
