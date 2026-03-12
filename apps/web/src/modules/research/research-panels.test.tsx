@@ -11,6 +11,7 @@ import { ResearchEventInspectionPanel } from './ResearchEventInspectionPanel.tsx
 import { ResearchStatusPanel } from './ResearchStatusPanel.tsx';
 import { StrategyCatalogRow } from './StrategyCatalogRow.tsx';
 import { ResearchTerminalPanel } from './ResearchTerminalPanel.tsx';
+import { ResearchVersionSnapshotRow } from './ResearchVersionSnapshotRow.tsx';
 
 describe('research panel primitives', () => {
   it('renders status panel metrics and messages', () => {
@@ -135,6 +136,25 @@ describe('research panel primitives', () => {
     expect(html).toContain('risk@desk');
     expect(html).toContain('wf-run-1');
     expect(html).toContain('Inspect');
+  });
+
+  it('renders version snapshot row metrics', () => {
+    const html = renderToStaticMarkup(
+      <ResearchVersionSnapshotRow
+        leadTitle="03/13 08:30"
+        leadCopy="Version snapshot captured after review."
+        metrics={[
+          { label: 'Stage', value: 'candidate' },
+          { label: 'Return / Drawdown', value: '11.5% / 5.9%' },
+          { label: 'Sharpe', value: '1.50' },
+        ]}
+      />,
+    );
+
+    expect(html).toContain('03/13 08:30');
+    expect(html).toContain('Version snapshot captured after review.');
+    expect(html).toContain('candidate');
+    expect(html).toContain('11.5% / 5.9%');
   });
 
   it('renders queue row review action for needs-review runs', () => {

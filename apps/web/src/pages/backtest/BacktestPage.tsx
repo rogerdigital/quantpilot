@@ -10,6 +10,7 @@ import { ResearchCollectionPanel } from '../../modules/research/ResearchCollecti
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
 import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEventInspectionPanel.tsx';
 import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPanel.tsx';
+import { ResearchVersionSnapshotRow } from '../../modules/research/ResearchVersionSnapshotRow.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -752,7 +753,7 @@ function BacktestPage() {
             const sharpe = typeof item.metadata?.sharpe === 'number' ? item.metadata.sharpe : null;
             const winRatePct = typeof item.metadata?.winRatePct === 'number' ? item.metadata.winRatePct : null;
             return (
-              <InspectionMetricsRow
+              <ResearchVersionSnapshotRow
                 key={item.id}
                 leadTitle={fmtDateTime(item.createdAt, locale)}
                 leadCopy={item.detail}
