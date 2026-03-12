@@ -3,8 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ExecutionLedgerEntry, WorkflowRunRecord } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchExecutionLedger, fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
-import { buildDeepLink, readDeepLinkParams } from '../../modules/console/deepLinks.ts';
+import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
+import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useBacktestRunDetail } from '../../modules/research/useBacktestRunDetail.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
@@ -41,6 +42,7 @@ function BacktestPage() {
   const { totalPnlPct } = useSummary();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const researchNavigation = useResearchNavigationContext(searchParams, navigate);
   const [refreshKey, setRefreshKey] = useState(0);
   const [submittingStrategyId, setSubmittingStrategyId] = useState('');
   const [reviewingRunId, setReviewingRunId] = useState('');
@@ -620,9 +622,7 @@ function BacktestPage() {
                 <button
                   type="button"
                   className="inline-action inline-action-approve"
-                  onClick={() => navigate(buildDeepLink('/strategies', {
-                    strategy: selectedRunSnapshot?.strategyId || selectedRun?.strategyId || '',
-                  }))}
+                  onClick={() => researchNavigation.openStrategyDetail(selectedRunSnapshot?.strategyId || selectedRun?.strategyId || '')}
                 >
                   {locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
                 </button>
@@ -630,10 +630,7 @@ function BacktestPage() {
                   <button
                     type="button"
                     className="inline-action"
-                    onClick={() => navigate(buildDeepLink('/strategies', {
-                      strategy: requestedStrategyId,
-                      timeline: requestedTimelineId,
-                    }))}
+                    onClick={() => researchNavigation.returnToStrategyTimeline()}
                     >
                       {locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
                     </button>
@@ -642,12 +639,11 @@ function BacktestPage() {
                   <button
                     type="button"
                     className="inline-action"
-                    onClick={() => navigate(buildDeepLink('/execution', {
-                      plan: selectedRunExecutionEntries[0].plan.id,
-                      strategy: selectedRunSnapshot?.strategyId || '',
-                      run: selectedRunSnapshot?.id || '',
+                    onClick={() => researchNavigation.openExecutionDetail(selectedRunExecutionEntries[0].plan.id, {
+                      strategyId: selectedRunSnapshot?.strategyId || '',
+                      runId: selectedRunSnapshot?.id || '',
                       source: 'backtest',
-                    }))}
+                    })}
                   >
                     {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
                   </button>
@@ -809,12 +805,11 @@ function BacktestPage() {
                 <button
                   type="button"
                   className="inline-action"
-                  onClick={() => navigate(buildDeepLink('/execution', {
-                    plan: entry.plan.id,
-                    strategy: selectedRunSnapshot?.strategyId || '',
-                    run: selectedRunSnapshot?.id || '',
+                  onClick={() => researchNavigation.openExecutionDetail(entry.plan.id, {
+                    strategyId: selectedRunSnapshot?.strategyId || '',
+                    runId: selectedRunSnapshot?.id || '',
                     source: 'backtest',
-                  }))}
+                  })}
                 >
                   {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
                 </button>

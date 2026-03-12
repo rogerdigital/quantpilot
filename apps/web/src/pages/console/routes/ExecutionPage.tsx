@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
-import { buildDeepLink, readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
+import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
 import { useSyncedQuerySelection } from '../../../modules/console/useSyncedQuerySelection.ts';
+import { useResearchNavigationContext } from '../../../modules/research/useResearchNavigationContext.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { TopMeta } from '../components/ConsoleChrome.tsx';
 import { InspectionEmpty, InspectionListPanel, InspectionMetricsRow, InspectionPanel, InspectionSelectableRow, InspectionStatus } from '../components/InspectionPanels.tsx';
@@ -17,6 +18,7 @@ export function ExecutionPage() {
   const { locale } = useLocale();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const researchNavigation = useResearchNavigationContext(searchParams, navigate);
   const goToSettings = useSettingsNavigation();
   const canApproveExecution = hasPermission('execution:approve');
   const {
@@ -222,9 +224,7 @@ export function ExecutionPage() {
                 <button
                   type="button"
                   className="inline-action inline-action-approve"
-                  onClick={() => navigate(buildDeepLink('/strategies', {
-                    strategy: selectedEntry.plan.strategyId,
-                  }))}
+                  onClick={() => researchNavigation.openStrategyDetail(selectedEntry.plan.strategyId)}
                 >
                   {locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
                 </button>
@@ -232,10 +232,7 @@ export function ExecutionPage() {
                   <button
                     type="button"
                     className="inline-action"
-                    onClick={() => navigate(buildDeepLink('/strategies', {
-                      strategy: requestedStrategyId,
-                      timeline: requestedTimelineId,
-                    }))}
+                    onClick={() => researchNavigation.returnToStrategyTimeline()}
                   >
                     {locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
                   </button>
@@ -244,10 +241,7 @@ export function ExecutionPage() {
                   <button
                     type="button"
                     className="inline-action"
-                    onClick={() => navigate(buildDeepLink('/backtest', {
-                      run: requestedRunId,
-                      strategy: requestedStrategyId,
-                    }))}
+                    onClick={() => researchNavigation.returnToBacktestDetail()}
                   >
                     {locale === 'zh' ? '返回回测详情' : 'Return to Backtest Detail'}
                   </button>

@@ -3,8 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ExecutionLedgerEntry } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchExecutionLedger } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
-import { buildDeepLink, readDeepLinkParams } from '../../modules/console/deepLinks.ts';
+import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
+import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
 import { useStrategyDetail } from '../../modules/research/useStrategyDetail.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
@@ -35,6 +36,7 @@ function StrategiesPage() {
   const { locale } = useLocale();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const researchNavigation = useResearchNavigationContext(searchParams, navigate);
   const goToSettings = useSettingsNavigation();
   const [refreshKey, setRefreshKey] = useState(0);
   const [registryFilter, setRegistryFilter] = useState<'active' | 'archived' | 'all'>('active');
@@ -705,12 +707,11 @@ function StrategiesPage() {
                   <button
                     type="button"
                     className="inline-action inline-action-approve"
-                    onClick={() => navigate(buildDeepLink('/backtest', {
-                      run: selectedTimelineItem.reference,
-                      strategy: selectedStrategy?.id || '',
-                      timeline: selectedTimelineItem.id,
+                    onClick={() => researchNavigation.openBacktestDetail(selectedTimelineItem.reference, {
+                      strategyId: selectedStrategy?.id || '',
+                      timelineId: selectedTimelineItem.id,
                       source: 'strategies',
-                    }))}
+                    })}
                   >
                     {locale === 'zh' ? '打开回测详情' : 'Open Backtest Detail'}
                   </button>
@@ -721,12 +722,11 @@ function StrategiesPage() {
                   <button
                     type="button"
                     className="inline-action inline-action-approve"
-                    onClick={() => navigate(buildDeepLink('/execution', {
-                      plan: selectedTimelineItem.reference,
-                      strategy: selectedStrategy?.id || '',
-                      timeline: selectedTimelineItem.id,
+                    onClick={() => researchNavigation.openExecutionDetail(selectedTimelineItem.reference, {
+                      strategyId: selectedStrategy?.id || '',
+                      timelineId: selectedTimelineItem.id,
                       source: 'strategies',
-                    }))}
+                    })}
                   >
                     {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
                   </button>
