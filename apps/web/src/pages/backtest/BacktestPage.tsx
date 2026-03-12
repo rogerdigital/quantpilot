@@ -5,6 +5,7 @@ import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
+import { ResearchStatusStack } from '../../modules/research/ResearchStatusStack.tsx';
 import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useBacktestRunDetail } from '../../modules/research/useBacktestRunDetail.ts';
 import { useBacktestDetailPanels } from '../../modules/research/useBacktestDetailPanels.ts';
@@ -317,19 +318,23 @@ function BacktestPage() {
             </div>
             <div className="panel-badge badge-warn">{data?.summary.dataSource ? 'SERVICE' : 'LOCAL'}</div>
           </div>
-          <div className="status-stack">
-            <div className="status-row"><span>{locale === 'zh' ? '候选买入' : 'Candidate buys'}</span><strong>{buyCount}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '候选减仓' : 'Candidate trims'}</span><strong>{sellCount}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '组合收益' : 'Portfolio return'}</span><strong>{fmtPct(totalPnlPct)}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '研究模式' : 'Research mode'}</span><strong>{translateMode(locale, state.mode)}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '已完成回测' : 'Completed runs'}</span><strong>{data?.summary.completedRuns ?? '--'}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '待复核' : 'Review queue'}</span><strong>{data?.summary.reviewQueue ?? '--'}</strong></div>
-            <div className="status-copy">{translateRuntimeText(locale, state.decisionCopy)}</div>
-            {actionMessage ? <div className="status-copy">{actionMessage}</div> : null}
-            {actionError ? <div className="status-copy">{actionError}</div> : null}
-            {loading ? <div className="status-copy">{locale === 'zh' ? '正在同步研究服务...' : 'Syncing research service...'}</div> : null}
-            {error ? <div className="status-copy">{locale === 'zh' ? `研究服务不可用：${error}` : `Research service unavailable: ${error}`}</div> : null}
-          </div>
+          <ResearchStatusStack
+            metrics={[
+              { label: locale === 'zh' ? '候选买入' : 'Candidate buys', value: buyCount },
+              { label: locale === 'zh' ? '候选减仓' : 'Candidate trims', value: sellCount },
+              { label: locale === 'zh' ? '组合收益' : 'Portfolio return', value: fmtPct(totalPnlPct) },
+              { label: locale === 'zh' ? '研究模式' : 'Research mode', value: translateMode(locale, state.mode) },
+              { label: locale === 'zh' ? '已完成回测' : 'Completed runs', value: data?.summary.completedRuns ?? '--' },
+              { label: locale === 'zh' ? '待复核' : 'Review queue', value: data?.summary.reviewQueue ?? '--' },
+            ]}
+            messages={[
+              translateRuntimeText(locale, state.decisionCopy),
+              actionMessage || null,
+              actionError || null,
+              loading ? (locale === 'zh' ? '正在同步研究服务...' : 'Syncing research service...') : null,
+              error ? (locale === 'zh' ? `研究服务不可用：${error}` : `Research service unavailable: ${error}`) : null,
+            ]}
+          />
         </article>
       </section>
 
