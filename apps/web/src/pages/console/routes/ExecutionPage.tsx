@@ -31,6 +31,25 @@ export function ExecutionPage() {
     error: executionDataError,
   } = useExecutionConsoleData(state.controlPlane.lastSyncAt);
   const { items: auditItems, loading: auditLoading } = useAuditFeed(state.controlPlane.lastSyncAt);
+  const {
+    planId: requestedPlanId,
+    strategyId: requestedStrategyId,
+    runId: requestedRunId,
+    timelineId: requestedTimelineId,
+    sourcePage,
+    auditEventId: requestedAuditEventId,
+    workflowStepKey: requestedWorkflowStepKey,
+  } = readDeepLinkParams(searchParams);
+  const {
+    selectedId: selectedPlanId,
+    setSelectedId: setSelectedPlanId,
+  } = useSyncedQuerySelection({
+    itemIds: ledgerEntries.map((entry) => entry.plan.id),
+    queryKey: 'plan',
+    requestedId: requestedPlanId,
+    searchParams,
+    setSearchParams,
+  });
   const selectedEntry = ledgerEntries.find((entry) => entry.plan.id === selectedPlanId) || ledgerEntries[0] || null;
   const selectedSymbols = selectedEntry ? [...new Set(selectedEntry.plan.orders.map((order) => order.symbol))] : [];
   const selectedExecutionAuditItems = selectedEntry
@@ -59,25 +78,6 @@ export function ExecutionPage() {
   const selectedAccountSnapshot = selectedEntry?.latestRuntime
     ? accountSnapshots.find((snapshot) => snapshot.cycle === selectedEntry.latestRuntime?.cycle) || accountSnapshots[0] || null
     : accountSnapshots[0] || null;
-  const {
-    planId: requestedPlanId,
-    strategyId: requestedStrategyId,
-    runId: requestedRunId,
-    timelineId: requestedTimelineId,
-    sourcePage,
-    auditEventId: requestedAuditEventId,
-    workflowStepKey: requestedWorkflowStepKey,
-  } = readDeepLinkParams(searchParams);
-  const {
-    selectedId: selectedPlanId,
-    setSelectedId: setSelectedPlanId,
-  } = useSyncedQuerySelection({
-    itemIds: ledgerEntries.map((entry) => entry.plan.id),
-    queryKey: 'plan',
-    requestedId: requestedPlanId,
-    searchParams,
-    setSearchParams,
-  });
   const {
     selectedId: selectedAuditEventId,
     setSelectedId: setSelectedAuditEventId,

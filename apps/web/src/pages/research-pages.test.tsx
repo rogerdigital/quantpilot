@@ -3,10 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import StrategiesPage from './strategies/StrategiesPage.tsx';
 import BacktestPage from './backtest/BacktestPage.tsx';
+import { ExecutionPage } from './console/routes/ExecutionPage.tsx';
 
 const mockUseResearchWorkspaceData = vi.fn();
 const mockUseStrategyDetail = vi.fn();
 const mockUseBacktestRunDetail = vi.fn();
+const mockUseExecutionConsoleData = vi.fn();
+const mockUseAuditFeed = vi.fn();
 const mockUseSummary = vi.fn();
 
 vi.mock('../store/trading-system/TradingSystemProvider.tsx', () => ({
@@ -14,13 +17,28 @@ vi.mock('../store/trading-system/TradingSystemProvider.tsx', () => ({
     state: {
       marketClock: '2026-03-13 10:00',
       mode: 'hybrid',
+      riskLevel: 'moderate',
+      engineStatus: 'running',
       decisionSummary: 'BUY bias',
       decisionCopy: 'Runtime state copy',
       routeCopy: 'Execution route copy',
+      controlPlane: {
+        lastSyncAt: '2026-03-13T10:00:00.000Z',
+      },
+      integrationStatus: {
+        broker: {
+          connected: true,
+          message: 'Broker connected',
+        },
+      },
       stockStates: [
         { symbol: 'AAPL', signal: 'BUY' },
         { symbol: 'MSFT', signal: 'SELL' },
       ],
+      activityLog: [
+        { id: 'activity-1', title: 'Synced' },
+      ],
+      approvalQueue: [],
     },
     session: {
       user: {
@@ -29,6 +47,9 @@ vi.mock('../store/trading-system/TradingSystemProvider.tsx', () => ({
       },
     },
     hasPermission: (permission: string) => permission === 'strategy:write' || permission === 'risk:review',
+    approveLiveIntent: () => undefined,
+    rejectLiveIntent: () => undefined,
+    actionGuardNotice: null,
   }),
 }));
 
@@ -59,6 +80,14 @@ vi.mock('../modules/research/useStrategyDetail.ts', () => ({
 
 vi.mock('../modules/research/useBacktestRunDetail.ts', () => ({
   useBacktestRunDetail: (...args: unknown[]) => mockUseBacktestRunDetail(...args),
+}));
+
+vi.mock('../modules/console/useExecutionConsoleData.ts', () => ({
+  useExecutionConsoleData: (...args: unknown[]) => mockUseExecutionConsoleData(...args),
+}));
+
+vi.mock('../modules/audit/useAuditFeed.ts', () => ({
+  useAuditFeed: (...args: unknown[]) => mockUseAuditFeed(...args),
 }));
 
 vi.mock('../modules/research/useResearchPollingPolicy.ts', () => ({
@@ -96,6 +125,9 @@ vi.mock('./console/components/ConsoleChrome.tsx', () => ({
 
 vi.mock('./console/components/ConsoleTables.tsx', () => ({
   UniverseTable: () => <div>UniverseTable</div>,
+  ActivityLog: () => <div>ActivityLog</div>,
+  ApprovalQueueTable: () => <div>ApprovalQueueTable</div>,
+  OrdersTable: ({ accountKey }: { accountKey: string }) => <div>{accountKey} OrdersTable</div>,
 }));
 
 describe('research workspace pages', () => {
@@ -104,6 +136,8 @@ describe('research workspace pages', () => {
     mockUseResearchWorkspaceData.mockReset();
     mockUseStrategyDetail.mockReset();
     mockUseBacktestRunDetail.mockReset();
+    mockUseExecutionConsoleData.mockReset();
+    mockUseAuditFeed.mockReset();
   });
 
   it('renders strategies page with deep-linked strategy and timeline detail', () => {
@@ -455,5 +489,250 @@ describe('research workspace pages', () => {
     expect(html).toContain('Review completed');
     expect(html).toContain('Selected Workflow Step');
     expect(html).toContain('risk_review');
+  });
+
+  it('renders backtest page with strategy source context and execution handoff actions', () => {
+    mockUseResearchWorkspaceData.mockReturnValue({
+      data: {
+        strategies: [
+          {
+            id: 'strategy-1',
+            name: 'Momentum',
+            family: 'trend',
+            timeframe: '1d',
+            universe: 'NASDAQ 100',
+            status: 'candidate',
+            score: 81,
+            expectedReturnPct: 14.2,
+            maxDrawdownPct: 6.4,
+            sharpe: 1.9,
+            summary: 'Candidate momentum strategy',
+          },
+        ],
+        runs: [
+          {
+            id: 'run-1',
+            strategyId: 'strategy-1',
+            strategyName: 'Momentum',
+            status: 'completed',
+            windowLabel: '30D',
+            startedAt: '2026-03-13T10:00:00.000Z',
+            completedAt: '2026-03-13T11:00:00.000Z',
+            annualizedReturnPct: 10.5,
+            maxDrawdownPct: 4.2,
+            sharpe: 1.7,
+            winRatePct: 54,
+            turnoverPct: 18,
+            summary: 'Completed run',
+            workflowRunId: 'wf-1',
+          },
+        ],
+        summary: {
+          completedRuns: 1,
+          reviewQueue: 0,
+          dataSource: 'service',
+        },
+      },
+      loading: false,
+      error: '',
+      auditItems: [],
+      auditLoading: false,
+      executionEntries: [
+        {
+          plan: {
+            id: 'plan-1',
+            workflowRunId: 'wf-exec-1',
+            strategyId: 'strategy-1',
+            strategyName: 'Momentum',
+            mode: 'paper',
+            status: 'ready',
+            approvalState: 'pending',
+            riskStatus: 'approved',
+            summary: 'Paper plan',
+            capital: 50000,
+            orderCount: 3,
+            orders: [],
+            metadata: {},
+            createdAt: '2026-03-13T11:30:00.000Z',
+            updatedAt: '2026-03-13T11:35:00.000Z',
+          },
+          workflow: null,
+          latestRuntime: null,
+        },
+      ],
+      workflowRuns: [],
+      workspaceLoading: false,
+    });
+    mockUseBacktestRunDetail.mockReturnValue({
+      data: {
+        ok: true,
+        run: {
+          id: 'run-1',
+          strategyId: 'strategy-1',
+          strategyName: 'Momentum',
+          status: 'completed',
+          windowLabel: '30D',
+          startedAt: '2026-03-13T10:00:00.000Z',
+          completedAt: '2026-03-13T11:00:00.000Z',
+          annualizedReturnPct: 10.5,
+          maxDrawdownPct: 4.2,
+          sharpe: 1.7,
+          winRatePct: 54,
+          turnoverPct: 18,
+          summary: 'Completed run',
+          workflowRunId: 'wf-1',
+        },
+        strategy: {
+          id: 'strategy-1',
+          name: 'Momentum',
+          family: 'trend',
+          timeframe: '1d',
+          universe: 'NASDAQ 100',
+          status: 'candidate',
+          score: 81,
+          expectedReturnPct: 14.2,
+          maxDrawdownPct: 6.4,
+          sharpe: 1.9,
+          summary: 'Candidate momentum strategy',
+        },
+        workflow: null,
+      },
+      loading: false,
+      error: '',
+    });
+
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/backtest?run=run-1&strategy=strategy-1&source=strategies']}>
+        <Routes>
+          <Route path="/backtest" element={<BacktestPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain('Selected Backtest Detail');
+    expect(html).toContain('Return to Strategy Timeline');
+    expect(html).toContain('Open Execution Detail');
+  });
+
+  it('renders execution page with backtest source context and workflow step deep link', () => {
+    mockUseExecutionConsoleData.mockReturnValue({
+      runtimeEvents: [
+        {
+          id: 'runtime-1',
+          cycle: 'cycle-1',
+          submittedOrderCount: 2,
+          openOrderCount: 1,
+          positionCount: 3,
+          equity: 102400,
+        },
+      ],
+      accountSnapshots: [
+        {
+          id: 'snapshot-1',
+          provider: 'paper-broker',
+          cycle: 'cycle-1',
+          connected: true,
+          account: { cash: 54000 },
+          positions: [{ symbol: 'AAPL' }],
+          orders: [{ id: 'order-1' }],
+          message: 'Snapshot synced',
+        },
+      ],
+      ledgerEntries: [
+        {
+          plan: {
+            id: 'plan-1',
+            workflowRunId: 'wf-exec-1',
+            strategyId: 'strategy-1',
+            strategyName: 'Momentum',
+            mode: 'paper',
+            status: 'ready',
+            approvalState: 'pending',
+            riskStatus: 'approved',
+            summary: 'Paper execution plan',
+            capital: 50000,
+            orderCount: 2,
+            orders: [
+              { symbol: 'AAPL' },
+              { symbol: 'MSFT' },
+            ],
+            metadata: {},
+            createdAt: '2026-03-13T11:30:00.000Z',
+            updatedAt: '2026-03-13T11:35:00.000Z',
+          },
+          workflow: {
+            id: 'wf-exec-1',
+            status: 'running',
+          },
+          latestRuntime: {
+            id: 'runtime-1',
+            cycle: 'cycle-1',
+            submittedOrderCount: 2,
+            openOrderCount: 1,
+            equity: 102400,
+            createdAt: '2026-03-13T11:40:00.000Z',
+          },
+        },
+      ],
+      workflowRuns: [
+        {
+          id: 'wf-exec-1',
+          workflowId: 'task-orchestrator.strategy-execution',
+          status: 'running',
+          trigger: 'approved',
+          attempt: 1,
+          maxAttempts: 3,
+          steps: [
+            { key: 'broker_submit', status: 'completed' },
+            { key: 'settlement_watch', status: 'running' },
+          ],
+        },
+      ],
+      operatorActions: [
+        {
+          id: 'action-1',
+          type: 'approve-intent',
+          symbol: 'AAPL',
+          actor: 'risk@desk',
+          createdAt: '2026-03-13T11:45:00.000Z',
+        },
+      ],
+      loading: false,
+      error: '',
+    });
+    mockUseAuditFeed.mockReturnValue({
+      items: [
+        {
+          id: 'audit-1',
+          type: 'execution-plan',
+          actor: 'risk@desk',
+          title: 'Execution approved',
+          detail: 'Plan is ready for broker submit.',
+          createdAt: '2026-03-13T11:35:00.000Z',
+          metadata: {
+            strategyId: 'strategy-1',
+            orderCount: 2,
+            capital: 50000,
+            riskStatus: 'approved',
+            approvalState: 'pending',
+          },
+        },
+      ],
+      loading: false,
+    });
+
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/execution?plan=plan-1&strategy=strategy-1&run=run-1&source=backtest&step=settlement_watch']}>
+        <Routes>
+          <Route path="/execution" element={<ExecutionPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain('Selected Execution Detail');
+    expect(html).toContain('Open Strategy Detail');
+    expect(html).toContain('Return to Backtest Detail');
+    expect(html).toContain('Selected Execution Workflow Step');
+    expect(html).toContain('settlement_watch');
   });
 });
