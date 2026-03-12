@@ -6,6 +6,7 @@ import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySel
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
 import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEventInspectionPanel.tsx';
+import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPanel.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -582,41 +583,45 @@ function StrategiesPage() {
             ))}
           </div>
         </article>
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '最近策略操作' : 'Recent Strategy Activity'}</div><div className="panel-copy">{locale === 'zh' ? '直接消费后端 audit records，查看策略注册、晋级、归档和恢复的最新留痕。' : 'Consume backend audit records directly to review recent registry saves, promotions, archives, and restores.'}</div></div><div className="panel-badge badge-warn">AUDIT</div></div>
-          <div className="focus-list focus-list-terminal">
-            {auditLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载策略操作历史...' : 'Loading strategy activity...'}</div> : null}
-            {!auditLoading && !strategyAuditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有策略操作历史。' : 'No strategy activity for the current filter.'}</div> : null}
-            {strategyAuditItems.map((item) => {
-              const strategyId = typeof item.metadata?.strategyId === 'string' ? item.metadata.strategyId : '--';
-              const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
-              return (
-                <div className="focus-row" key={item.id}>
-                  <div className="symbol-cell">
-                    <strong>{item.title}</strong>
-                    <span>{item.detail}</span>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '策略 ID' : 'Strategy ID'}</span>
-                    <strong>{strategyId}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                    <strong>{status}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '操作人' : 'Actor'}</span>
-                    <strong>{item.actor}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '时间' : 'Time'}</span>
-                    <strong>{formatDateTime(item.createdAt, locale)}</strong>
-                  </div>
+        <ResearchTerminalPanel
+          title={locale === 'zh' ? '最近策略操作' : 'Recent Strategy Activity'}
+          copy={locale === 'zh' ? '直接消费后端 audit records，查看策略注册、晋级、归档和恢复的最新留痕。' : 'Consume backend audit records directly to review recent registry saves, promotions, archives, and restores.'}
+          badge="AUDIT"
+          badgeClassName="panel-badge badge-warn"
+          loading={auditLoading}
+          loadingMessage={locale === 'zh' ? '正在加载策略操作历史...' : 'Loading strategy activity...'}
+          isEmpty={!strategyAuditItems.length}
+          emptyMessage={locale === 'zh' ? '当前筛选条件下没有策略操作历史。' : 'No strategy activity for the current filter.'}
+        >
+          {strategyAuditItems.map((item) => {
+            const strategyId = typeof item.metadata?.strategyId === 'string' ? item.metadata.strategyId : '--';
+            const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
+            return (
+              <div className="focus-row" key={item.id}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
                 </div>
-              );
-            })}
-          </div>
-        </article>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '策略 ID' : 'Strategy ID'}</span>
+                  <strong>{strategyId}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                  <strong>{status}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '操作人' : 'Actor'}</span>
+                  <strong>{item.actor}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                  <strong>{formatDateTime(item.createdAt, locale)}</strong>
+                </div>
+              </div>
+            );
+          })}
+        </ResearchTerminalPanel>
       </section>
 
       <section className="panel-grid">

@@ -6,6 +6,7 @@ import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySel
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
 import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEventInspectionPanel.tsx';
+import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPanel.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -383,60 +384,58 @@ function BacktestPage() {
       </section>
 
       <section className="panel-grid">
-        <article className="panel">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{locale === 'zh' ? '候选策略注册表' : 'Candidate Strategy Registry'}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '后端返回策略目录，作为后续策略管理、参数优化和晋级流程的统一入口。'
-                  : 'The backend now returns a strategy catalog that can become the source of truth for strategy management and promotion.'}
+        <ResearchTerminalPanel
+          title={locale === 'zh' ? '候选策略注册表' : 'Candidate Strategy Registry'}
+          copy={locale === 'zh'
+            ? '后端返回策略目录，作为后续策略管理、参数优化和晋级流程的统一入口。'
+            : 'The backend now returns a strategy catalog that can become the source of truth for strategy management and promotion.'}
+          badge={data?.strategies.length ?? 0}
+          badgeClassName="panel-badge badge-info"
+          loading={loading}
+          isEmpty={!data?.strategies.length}
+          emptyMessage={locale === 'zh' ? '暂无策略目录' : 'No strategy catalog entries yet.'}
+          footer={(
+            <div className="status-copy">
+              {locale === 'zh'
+                ? `当前发起回测会复用窗口 ${windowLabel}。`
+                : `New backtests currently reuse the window ${windowLabel}.`}
+            </div>
+          )}
+        >
+          {data?.strategies.map((item) => (
+            <div className="focus-row" key={item.id}>
+              <div className="symbol-cell">
+                <strong>{item.name}</strong>
+                <span>{item.summary}</span>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '阶段' : 'Stage'}</span>
+                <strong>{item.status}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>Sharpe</span>
+                <strong>{item.sharpe.toFixed(2)}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '回撤' : 'Drawdown'}</span>
+                <strong>{fmtPct(item.maxDrawdownPct)}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '动作' : 'Action'}</span>
+                <button
+                  type="button"
+                  className="inline-action inline-action-approve"
+                  disabled={!canQueueBacktest || submittingStrategyId === item.id}
+                  onClick={() => handleQueueBacktest(item.id)}
+                >
+                  {submittingStrategyId === item.id
+                    ? (locale === 'zh' ? '提交中...' : 'Queueing...')
+                    : (locale === 'zh' ? '发起回测' : 'Queue Backtest')}
+                </button>
               </div>
             </div>
-            <div className="panel-badge badge-info">{data?.strategies.length ?? 0}</div>
-          </div>
-          <div className="focus-list focus-list-terminal">
-            {!loading && !data?.strategies.length ? <div className="empty-cell">{locale === 'zh' ? '暂无策略目录' : 'No strategy catalog entries yet.'}</div> : null}
-            {data?.strategies.map((item) => (
-              <div className="focus-row" key={item.id}>
-                <div className="symbol-cell">
-                  <strong>{item.name}</strong>
-                  <span>{item.summary}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '阶段' : 'Stage'}</span>
-                  <strong>{item.status}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>Sharpe</span>
-                  <strong>{item.sharpe.toFixed(2)}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '回撤' : 'Drawdown'}</span>
-                  <strong>{fmtPct(item.maxDrawdownPct)}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '动作' : 'Action'}</span>
-                  <button
-                    type="button"
-                    className="inline-action inline-action-approve"
-                    disabled={!canQueueBacktest || submittingStrategyId === item.id}
-                    onClick={() => handleQueueBacktest(item.id)}
-                  >
-                    {submittingStrategyId === item.id
-                      ? (locale === 'zh' ? '提交中...' : 'Queueing...')
-                      : (locale === 'zh' ? '发起回测' : 'Queue Backtest')}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="status-copy">
-            {locale === 'zh'
-              ? `当前发起回测会复用窗口 ${windowLabel}。`
-              : `New backtests currently reuse the window ${windowLabel}.`}
-          </div>
-        </article>
+          ))}
+        </ResearchTerminalPanel>
         <article className="panel">
           <div className="panel-head">
             <div>
@@ -495,96 +494,88 @@ function BacktestPage() {
           </div>
           {!canReviewBacktest ? <div className="status-copy">{locale === 'zh' ? '当前会话缺少 risk:review 权限，不能处理待复核回测。' : 'This session is missing risk:review permission, so review-queue runs stay read-only.'}</div> : null}
         </article>
-        <article className="panel">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{locale === 'zh' ? '研究操作历史' : 'Research Activity Feed'}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '把回测入队、worker 完成和人工复核的审计记录汇总到同一面板，并跟随当前筛选条件联动。'
-                  : 'Aggregate queue, worker completion, and manual review audit records into one panel that follows the current run filter.'}
-              </div>
-            </div>
-            <div className="panel-badge badge-info">AUDIT</div>
-          </div>
-          <div className="focus-list focus-list-terminal">
-            {auditLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载研究操作历史...' : 'Loading research activity...'}</div> : null}
-            {!auditLoading && !backtestAuditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有研究操作历史。' : 'No research activity for the current filter.'}</div> : null}
-            {backtestAuditItems.map((item) => {
-              const runId = typeof item.metadata?.runId === 'string' ? item.metadata.runId : '--';
-              const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
-              const workflowRunId = typeof item.metadata?.workflowRunId === 'string' ? item.metadata.workflowRunId : '--';
-              return (
-                <div className="focus-row" key={item.id}>
-                  <div className="symbol-cell">
-                    <strong>{item.title}</strong>
-                    <span>{item.detail}</span>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? 'Run ID' : 'Run ID'}</span>
-                    <strong>{runId}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                    <strong>{status}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '工作流' : 'Workflow'}</span>
-                    <strong>{workflowRunId}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '时间' : 'Time'}</span>
-                    <strong>{fmtDateTime(item.createdAt, locale)}</strong>
-                  </div>
+        <ResearchTerminalPanel
+          title={locale === 'zh' ? '研究操作历史' : 'Research Activity Feed'}
+          copy={locale === 'zh'
+            ? '把回测入队、worker 完成和人工复核的审计记录汇总到同一面板，并跟随当前筛选条件联动。'
+            : 'Aggregate queue, worker completion, and manual review audit records into one panel that follows the current run filter.'}
+          badge="AUDIT"
+          badgeClassName="panel-badge badge-info"
+          loading={auditLoading}
+          loadingMessage={locale === 'zh' ? '正在加载研究操作历史...' : 'Loading research activity...'}
+          isEmpty={!backtestAuditItems.length}
+          emptyMessage={locale === 'zh' ? '当前筛选条件下没有研究操作历史。' : 'No research activity for the current filter.'}
+        >
+          {backtestAuditItems.map((item) => {
+            const runId = typeof item.metadata?.runId === 'string' ? item.metadata.runId : '--';
+            const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
+            const workflowRunId = typeof item.metadata?.workflowRunId === 'string' ? item.metadata.workflowRunId : '--';
+            return (
+              <div className="focus-row" key={item.id}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
                 </div>
-              );
-            })}
-          </div>
-        </article>
-        <article className="panel">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{locale === 'zh' ? '研究工作流状态' : 'Research Workflow State'}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '直接读取 task orchestrator 的 workflow runs，把回测记录和编排层状态、尝试次数、步骤进度放在同一视图。'
-                  : 'Read task-orchestrator workflow runs directly so each backtest can be viewed alongside orchestration status, attempt count, and step progress.'}
-              </div>
-            </div>
-            <div className="panel-badge badge-warn">{visibleWorkflowRuns.length}</div>
-          </div>
-          <div className="focus-list focus-list-terminal">
-            {workspaceLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载研究工作流...' : 'Loading research workflows...'}</div> : null}
-            {!workspaceLoading && !visibleWorkflowRuns.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有研究工作流。' : 'No research workflows for the current filter.'}</div> : null}
-            {visibleWorkflowRuns.map((workflow) => {
-              const completedSteps = workflow.steps.filter((step) => step.status === 'completed').length;
-              return (
-                <div className="focus-row" key={workflow.id}>
-                  <div className="symbol-cell">
-                    <strong>{workflow.id}</strong>
-                    <span>{workflow.workflowId}</span>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                    <strong>{workflow.status}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '尝试' : 'Attempt'}</span>
-                    <strong>{workflow.attempt}/{workflow.maxAttempts}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '步骤' : 'Steps'}</span>
-                    <strong>{completedSteps}/{workflow.steps.length || 0}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? '更新时间' : 'Updated'}</span>
-                    <strong>{fmtDateTime(workflow.updatedAt || workflow.createdAt, locale)}</strong>
-                  </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? 'Run ID' : 'Run ID'}</span>
+                  <strong>{runId}</strong>
                 </div>
-              );
-            })}
-          </div>
-        </article>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                  <strong>{status}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '工作流' : 'Workflow'}</span>
+                  <strong>{workflowRunId}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                  <strong>{fmtDateTime(item.createdAt, locale)}</strong>
+                </div>
+              </div>
+            );
+          })}
+        </ResearchTerminalPanel>
+        <ResearchTerminalPanel
+          title={locale === 'zh' ? '研究工作流状态' : 'Research Workflow State'}
+          copy={locale === 'zh'
+            ? '直接读取 task orchestrator 的 workflow runs，把回测记录和编排层状态、尝试次数、步骤进度放在同一视图。'
+            : 'Read task-orchestrator workflow runs directly so each backtest can be viewed alongside orchestration status, attempt count, and step progress.'}
+          badge={visibleWorkflowRuns.length}
+          badgeClassName="panel-badge badge-warn"
+          loading={workspaceLoading}
+          loadingMessage={locale === 'zh' ? '正在加载研究工作流...' : 'Loading research workflows...'}
+          isEmpty={!visibleWorkflowRuns.length}
+          emptyMessage={locale === 'zh' ? '当前筛选条件下没有研究工作流。' : 'No research workflows for the current filter.'}
+        >
+          {visibleWorkflowRuns.map((workflow) => {
+            const completedSteps = workflow.steps.filter((step) => step.status === 'completed').length;
+            return (
+              <div className="focus-row" key={workflow.id}>
+                <div className="symbol-cell">
+                  <strong>{workflow.id}</strong>
+                  <span>{workflow.workflowId}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                  <strong>{workflow.status}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '尝试' : 'Attempt'}</span>
+                  <strong>{workflow.attempt}/{workflow.maxAttempts}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '步骤' : 'Steps'}</span>
+                  <strong>{completedSteps}/{workflow.steps.length || 0}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '更新时间' : 'Updated'}</span>
+                  <strong>{fmtDateTime(workflow.updatedAt || workflow.createdAt, locale)}</strong>
+                </div>
+              </div>
+            );
+          })}
+        </ResearchTerminalPanel>
       </section>
 
       <section className="panel-grid">
