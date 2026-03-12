@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
+import { useSyncedQuerySelection } from '../../../modules/console/useSyncedQuerySelection.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { TopMeta } from '../components/ConsoleChrome.tsx';
 import { InspectionEmpty, InspectionListPanel, InspectionMetricsRow, InspectionPanel, InspectionSelectableRow, InspectionStatus } from '../components/InspectionPanels.tsx';
@@ -17,9 +18,6 @@ export function ExecutionPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const goToSettings = useSettingsNavigation();
   const canApproveExecution = hasPermission('execution:approve');
-  const [selectedPlanId, setSelectedPlanId] = useState('');
-  const [selectedAuditEventId, setSelectedAuditEventId] = useState('');
-  const [selectedWorkflowStepKey, setSelectedWorkflowStepKey] = useState('');
   const {
     runtimeEvents,
     accountSnapshots,
@@ -65,78 +63,38 @@ export function ExecutionPage() {
   const sourcePage = searchParams.get('source');
   const requestedAuditEventId = searchParams.get('audit');
   const requestedWorkflowStepKey = searchParams.get('step');
+  const {
+    selectedId: selectedPlanId,
+    setSelectedId: setSelectedPlanId,
+  } = useSyncedQuerySelection({
+    itemIds: ledgerEntries.map((entry) => entry.plan.id),
+    queryKey: 'plan',
+    requestedId: requestedPlanId,
+    searchParams,
+    setSearchParams,
+  });
+  const {
+    selectedId: selectedAuditEventId,
+    setSelectedId: setSelectedAuditEventId,
+  } = useSyncedQuerySelection({
+    itemIds: selectedExecutionAuditItems.map((item) => item.id),
+    queryKey: 'audit',
+    requestedId: requestedAuditEventId,
+    searchParams,
+    setSearchParams,
+  });
+  const {
+    selectedId: selectedWorkflowStepKey,
+    setSelectedId: setSelectedWorkflowStepKey,
+  } = useSyncedQuerySelection({
+    itemIds: selectedWorkflow?.steps.map((step) => step.key) || [],
+    queryKey: 'step',
+    requestedId: requestedWorkflowStepKey,
+    searchParams,
+    setSearchParams,
+  });
   const selectedAuditEvent = selectedExecutionAuditItems.find((item) => item.id === selectedAuditEventId) || selectedExecutionAuditItems[0] || null;
   const selectedWorkflowStep = selectedWorkflow?.steps.find((step) => step.key === selectedWorkflowStepKey) || selectedWorkflow?.steps[0] || null;
-
-  useEffect(() => {
-    if (!ledgerEntries.length) {
-      setSelectedPlanId('');
-      return;
-    }
-    if (requestedPlanId && ledgerEntries.some((entry) => entry.plan.id === requestedPlanId) && selectedPlanId !== requestedPlanId) {
-      setSelectedPlanId(requestedPlanId);
-      return;
-    }
-    if (!selectedPlanId || !ledgerEntries.some((entry) => entry.plan.id === selectedPlanId)) {
-      setSelectedPlanId(requestedPlanId && ledgerEntries.some((entry) => entry.plan.id === requestedPlanId) ? requestedPlanId : ledgerEntries[0].plan.id);
-    }
-  }, [ledgerEntries, requestedPlanId, selectedPlanId]);
-
-  useEffect(() => {
-    if (!selectedPlanId) return;
-    if (searchParams.get('plan') === selectedPlanId) return;
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('plan', selectedPlanId);
-    setSearchParams(nextParams, { replace: true });
-  }, [searchParams, selectedPlanId, setSearchParams]);
-
-  useEffect(() => {
-    if (!selectedExecutionAuditItems.length) {
-      setSelectedAuditEventId('');
-      return;
-    }
-    if (requestedAuditEventId && selectedExecutionAuditItems.some((item) => item.id === requestedAuditEventId) && selectedAuditEventId !== requestedAuditEventId) {
-      setSelectedAuditEventId(requestedAuditEventId);
-      return;
-    }
-    if (!selectedAuditEventId || !selectedExecutionAuditItems.some((item) => item.id === selectedAuditEventId)) {
-      setSelectedAuditEventId(requestedAuditEventId && selectedExecutionAuditItems.some((item) => item.id === requestedAuditEventId) ? requestedAuditEventId : selectedExecutionAuditItems[0].id);
-    }
-  }, [requestedAuditEventId, selectedAuditEventId, selectedExecutionAuditItems]);
-
-  useEffect(() => {
-    if (!selectedAuditEventId) return;
-    if (searchParams.get('audit') === selectedAuditEventId) return;
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('audit', selectedAuditEventId);
-    setSearchParams(nextParams, { replace: true });
-  }, [searchParams, selectedAuditEventId, setSearchParams]);
-
-  useEffect(() => {
-    if (!selectedWorkflow?.steps.length) {
-      setSelectedWorkflowStepKey('');
-      return;
-    }
-    if (requestedWorkflowStepKey && selectedWorkflow.steps.some((step) => step.key === requestedWorkflowStepKey) && selectedWorkflowStepKey !== requestedWorkflowStepKey) {
-      setSelectedWorkflowStepKey(requestedWorkflowStepKey);
-      return;
-    }
-    if (!selectedWorkflowStepKey || !selectedWorkflow.steps.some((step) => step.key === selectedWorkflowStepKey)) {
-      setSelectedWorkflowStepKey(
-        requestedWorkflowStepKey && selectedWorkflow.steps.some((step) => step.key === requestedWorkflowStepKey)
-          ? requestedWorkflowStepKey
-          : selectedWorkflow.steps[0].key,
-      );
-    }
-  }, [requestedWorkflowStepKey, selectedWorkflow, selectedWorkflowStepKey]);
-
-  useEffect(() => {
-    if (!selectedWorkflowStepKey) return;
-    if (searchParams.get('step') === selectedWorkflowStepKey) return;
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('step', selectedWorkflowStepKey);
-    setSearchParams(nextParams, { replace: true });
-  }, [searchParams, selectedWorkflowStepKey, setSearchParams]);
 
   return (
     <>
