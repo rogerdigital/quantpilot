@@ -9,7 +9,7 @@ import { useResearchNavigationContext } from '../../modules/research/useResearch
 import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useBacktestRunDetail } from '../../modules/research/useBacktestRunDetail.ts';
 import { useBacktestDetailPanels } from '../../modules/research/useBacktestDetailPanels.ts';
-import { useResearchHub } from '../../modules/research/useResearchHub.ts';
+import { useResearchWorkspaceData } from '../../modules/research/useResearchWorkspaceData.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { InspectionEmpty, InspectionListPanel, InspectionMetricsRow, InspectionPanel, InspectionSelectableRow, InspectionStatus } from '../console/components/InspectionPanels.tsx';
@@ -52,11 +52,16 @@ function BacktestPage() {
   const [runFilter, setRunFilter] = useState<'all' | 'queued' | 'running' | 'completed' | 'needs_review'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [windowLabel, setWindowLabel] = useState('2024-01-01 -> 2026-03-01');
-  const [workflowRuns, setWorkflowRuns] = useState<WorkflowRunRecord[]>([]);
-  const [executionEntries, setExecutionEntries] = useState<ExecutionLedgerEntry[]>([]);
-  const [workflowLoading, setWorkflowLoading] = useState(true);
-  const { data, loading, error } = useResearchHub(refreshKey);
-  const { items: auditItems, loading: auditLoading } = useAuditFeed(refreshKey);
+  const {
+    data,
+    loading,
+    error,
+    auditItems,
+    auditLoading,
+    executionEntries,
+    workflowRuns,
+    workspaceLoading,
+  } = useResearchWorkspaceData({ refreshKey, includeWorkflows: true });
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
   const canQueueBacktest = hasPermission('strategy:write');
@@ -164,31 +169,6 @@ function BacktestPage() {
     }, pollMs);
     return () => window.clearInterval(timer);
   }, [hasActiveRuns]);
-
-  useEffect(() => {
-    let active = true;
-    setWorkflowLoading(true);
-
-    Promise.all([fetchTaskWorkflows(), fetchExecutionLedger()])
-      .then(([workflowPayload, ledgerPayload]) => {
-        if (!active) return;
-        setWorkflowRuns(Array.isArray(workflowPayload?.workflows) ? workflowPayload.workflows : []);
-        setExecutionEntries(Array.isArray(ledgerPayload?.entries) ? ledgerPayload.entries : []);
-      })
-      .catch(() => {
-        if (!active) return;
-        setWorkflowRuns([]);
-        setExecutionEntries([]);
-      })
-      .finally(() => {
-        if (!active) return;
-        setWorkflowLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [refreshKey]);
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);
@@ -574,8 +554,8 @@ function BacktestPage() {
             <div className="panel-badge badge-warn">{visibleWorkflowRuns.length}</div>
           </div>
           <div className="focus-list focus-list-terminal">
-            {workflowLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载研究工作流...' : 'Loading research workflows...'}</div> : null}
-            {!workflowLoading && !visibleWorkflowRuns.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有研究工作流。' : 'No research workflows for the current filter.'}</div> : null}
+            {workspaceLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载研究工作流...' : 'Loading research workflows...'}</div> : null}
+            {!workspaceLoading && !visibleWorkflowRuns.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有研究工作流。' : 'No research workflows for the current filter.'}</div> : null}
             {visibleWorkflowRuns.map((workflow) => {
               const completedSteps = workflow.steps.filter((step) => step.status === 'completed').length;
               return (

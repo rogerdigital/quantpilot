@@ -9,7 +9,7 @@ import { useResearchNavigationContext } from '../../modules/research/useResearch
 import { saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
 import { useStrategyDetailPanels } from '../../modules/research/useStrategyDetailPanels.ts';
 import { useStrategyDetail } from '../../modules/research/useStrategyDetail.ts';
-import { useResearchHub } from '../../modules/research/useResearchHub.ts';
+import { useResearchWorkspaceData } from '../../modules/research/useResearchWorkspaceData.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { InspectionEmpty, InspectionListPanel, InspectionMetricsRow, InspectionPanel, InspectionSelectableRow, InspectionStatus } from '../console/components/InspectionPanels.tsx';
@@ -41,8 +41,6 @@ function StrategiesPage() {
   const goToSettings = useSettingsNavigation();
   const [refreshKey, setRefreshKey] = useState(0);
   const [registryFilter, setRegistryFilter] = useState<'active' | 'archived' | 'all'>('active');
-  const [executionEntries, setExecutionEntries] = useState<ExecutionLedgerEntry[]>([]);
-  const [executionLoading, setExecutionLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [promotingId, setPromotingId] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
@@ -60,8 +58,15 @@ function StrategiesPage() {
     sharpe: '1',
     summary: '',
   });
-  const { data, loading, error } = useResearchHub(refreshKey);
-  const { items: auditItems, loading: auditLoading } = useAuditFeed(refreshKey);
+  const {
+    data,
+    loading,
+    error,
+    auditItems,
+    auditLoading,
+    executionEntries,
+    workspaceLoading,
+  } = useResearchWorkspaceData({ refreshKey });
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
   const canWriteStrategy = hasPermission('strategy:write');
@@ -286,28 +291,6 @@ function StrategiesPage() {
       setPromotingId('');
     }
   };
-
-  useEffect(() => {
-    let cancelled = false;
-    setExecutionLoading(true);
-    fetchExecutionLedger()
-      .then((result) => {
-        if (cancelled) return;
-        setExecutionEntries(result.entries);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setExecutionEntries([]);
-      })
-      .finally(() => {
-        if (cancelled) return;
-        setExecutionLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [refreshKey]);
 
   return (
     <>
@@ -625,7 +608,7 @@ function StrategiesPage() {
           terminal
         >
           {!selectedStrategy ? <InspectionEmpty>{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</InspectionEmpty> : null}
-          {selectedStrategy && executionLoading && auditLoading && loading ? <InspectionEmpty>{locale === 'zh' ? '正在汇总策略时间线...' : 'Assembling the strategy timeline...'}</InspectionEmpty> : null}
+          {selectedStrategy && workspaceLoading && auditLoading && loading ? <InspectionEmpty>{locale === 'zh' ? '正在汇总策略时间线...' : 'Assembling the strategy timeline...'}</InspectionEmpty> : null}
           {selectedStrategy && !selectedStrategyTimelineItems.length ? <InspectionEmpty>{locale === 'zh' ? '当前策略还没有可回放的端到端轨迹。' : 'No end-to-end activity is available for the selected strategy yet.'}</InspectionEmpty> : null}
           {selectedStrategyTimelineItems.map((item) => (
             <InspectionSelectableRow
@@ -775,8 +758,8 @@ function StrategiesPage() {
           terminal
         >
           {!selectedStrategy ? <InspectionEmpty>{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</InspectionEmpty> : null}
-          {selectedStrategy && executionLoading ? <InspectionEmpty>{locale === 'zh' ? '正在加载关联执行计划...' : 'Loading linked execution plans...'}</InspectionEmpty> : null}
-          {selectedStrategy && !executionLoading && !selectedStrategyExecutionEntries.length ? <InspectionEmpty>{locale === 'zh' ? '当前策略还没有进入执行侧。' : 'The selected strategy has not produced downstream execution plans yet.'}</InspectionEmpty> : null}
+          {selectedStrategy && workspaceLoading ? <InspectionEmpty>{locale === 'zh' ? '正在加载关联执行计划...' : 'Loading linked execution plans...'}</InspectionEmpty> : null}
+          {selectedStrategy && !workspaceLoading && !selectedStrategyExecutionEntries.length ? <InspectionEmpty>{locale === 'zh' ? '当前策略还没有进入执行侧。' : 'The selected strategy has not produced downstream execution plans yet.'}</InspectionEmpty> : null}
           {selectedStrategyExecutionEntries.map((entry) => (
             <InspectionMetricsRow
               key={entry.plan.id}
