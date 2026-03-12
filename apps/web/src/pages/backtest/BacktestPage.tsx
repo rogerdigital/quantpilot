@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import type { BacktestRunDetailSnapshot, WorkflowRunRecord } from '@shared-types/trading.ts';
+import type { WorkflowRunRecord } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
-import { fetchBacktestRunItem, queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
+import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
+import { useBacktestRunDetail } from '../../modules/research/useBacktestRunDetail.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
@@ -51,9 +52,6 @@ function BacktestPage() {
   const [selectedWorkflowStepKey, setSelectedWorkflowStepKey] = useState('');
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRunRecord[]>([]);
   const [workflowLoading, setWorkflowLoading] = useState(true);
-  const [runDetail, setRunDetail] = useState<BacktestRunDetailSnapshot | null>(null);
-  const [runDetailLoading, setRunDetailLoading] = useState(false);
-  const [runDetailError, setRunDetailError] = useState('');
   const { data, loading, error } = useResearchHub(refreshKey);
   const { items: auditItems, loading: auditLoading } = useAuditFeed(refreshKey);
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
@@ -87,6 +85,7 @@ function BacktestPage() {
     .filter((workflow) => !visibleWorkflowIds.length || visibleWorkflowIds.includes(workflow.id))
     .slice(0, 10);
   const selectedRun = filteredRuns.find((run) => run.id === selectedRunId) || filteredRuns[0] || null;
+  const { data: runDetail, loading: runDetailLoading, error: runDetailError } = useBacktestRunDetail(selectedRun?.id || '', refreshKey);
   const selectedRunSnapshot = runDetail?.run || selectedRun;
   const selectedRunAuditItems = selectedRun
     ? auditItems
@@ -212,38 +211,6 @@ function BacktestPage() {
     nextParams.set('step', selectedWorkflowStepKey);
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, selectedWorkflowStepKey, setSearchParams]);
-
-  useEffect(() => {
-    if (!selectedRun?.id) {
-      setRunDetail(null);
-      setRunDetailError('');
-      return;
-    }
-
-    let cancelled = false;
-    setRunDetailLoading(true);
-    setRunDetailError('');
-
-    fetchBacktestRunItem(selectedRun.id)
-      .then((result) => {
-        if (cancelled) return;
-        setRunDetail(result);
-        setRunDetailError('');
-      })
-      .catch((requestError) => {
-        if (cancelled) return;
-        setRunDetail(null);
-        setRunDetailError(requestError instanceof Error ? requestError.message : 'unknown error');
-      })
-      .finally(() => {
-        if (cancelled) return;
-        setRunDetailLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [refreshKey, selectedRun?.id]);
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);

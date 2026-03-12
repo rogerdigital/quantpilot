@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import type { ExecutionLedgerEntry, StrategyCatalogDetailSnapshot } from '@shared-types/trading.ts';
+import type { ExecutionLedgerEntry } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchExecutionLedger } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
-import { fetchStrategyCatalogItem, saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
+import { saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
+import { useStrategyDetail } from '../../modules/research/useStrategyDetail.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
@@ -39,9 +40,6 @@ function StrategiesPage() {
   const [selectedTimelineId, setSelectedTimelineId] = useState('');
   const [executionEntries, setExecutionEntries] = useState<ExecutionLedgerEntry[]>([]);
   const [executionLoading, setExecutionLoading] = useState(true);
-  const [strategyDetail, setStrategyDetail] = useState<StrategyCatalogDetailSnapshot | null>(null);
-  const [strategyDetailLoading, setStrategyDetailLoading] = useState(false);
-  const [strategyDetailError, setStrategyDetailError] = useState('');
   const [saving, setSaving] = useState(false);
   const [promotingId, setPromotingId] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
@@ -81,6 +79,7 @@ function StrategiesPage() {
     || visibleActiveStrategies[0]
     || visibleArchivedStrategies[0]
     || null;
+  const { data: strategyDetail, loading: strategyDetailLoading, error: strategyDetailError } = useStrategyDetail(selectedStrategy?.id || '', refreshKey);
   const selectedStrategySnapshot = strategyDetail?.strategy || selectedStrategy;
   const selectedStrategyRuns = strategyDetail?.recentRuns?.slice(0, 6) || data?.runs.filter((item) => item.strategyId === selectedStrategy?.id).slice(0, 6) || [];
   const selectedStrategyAuditItems = auditItems
@@ -358,38 +357,6 @@ function StrategiesPage() {
       cancelled = true;
     };
   }, [refreshKey]);
-
-  useEffect(() => {
-    if (!selectedStrategy?.id) {
-      setStrategyDetail(null);
-      setStrategyDetailError('');
-      return;
-    }
-
-    let cancelled = false;
-    setStrategyDetailLoading(true);
-    setStrategyDetailError('');
-
-    fetchStrategyCatalogItem(selectedStrategy.id)
-      .then((result) => {
-        if (cancelled) return;
-        setStrategyDetail(result);
-        setStrategyDetailError('');
-      })
-      .catch((requestError) => {
-        if (cancelled) return;
-        setStrategyDetail(null);
-        setStrategyDetailError(requestError instanceof Error ? requestError.message : 'unknown error');
-      })
-      .finally(() => {
-        if (cancelled) return;
-        setStrategyDetailLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [refreshKey, selectedStrategy?.id]);
 
   return (
     <>
