@@ -45,6 +45,9 @@ const workerConfig = {
   riskScanBatchSize: 10,
 };
 
+const CLAIM_NOW = '2099-01-01T00:00:00.000Z';
+const RELEASE_NOW = '2099-01-01T00:01:00.000Z';
+
 const fakeBrokerHealth = {
   adapter: 'simulated',
   connected: true,
@@ -120,7 +123,7 @@ test('queued state workflow executes end-to-end through worker and persists down
   const execution = await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-11T23:59:00.000Z',
+      now: CLAIM_NOW,
     }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
@@ -168,7 +171,7 @@ test('queued strategy execution workflow persists execution plan and downstream 
   const execution = await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-11T23:59:00.000Z',
+      now: CLAIM_NOW,
       workflowId: 'task-orchestrator.strategy-execution',
     }),
     executeWorkflow: executeQueuedWorkflow,
@@ -207,7 +210,7 @@ test('failed strategy execution workflow is scheduled for retry and re-queued by
   const execution = await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-11T23:59:00.000Z',
+      now: CLAIM_NOW,
       workflowId: 'task-orchestrator.strategy-execution',
     }),
     executeWorkflow: executeQueuedWorkflow,
@@ -221,7 +224,7 @@ test('failed strategy execution workflow is scheduled for retry and re-queued by
   const maintenance = await runWorkflowMaintenanceTask(workerConfig, {
     releaseScheduledWorkflows: (options) => runtime.releaseScheduledWorkflowRuns({
       ...options,
-      now: '2026-03-12T00:01:00.000Z',
+      now: RELEASE_NOW,
     }),
   });
 
@@ -249,7 +252,7 @@ test('queued agent action request workflow persists a review request without cha
   const execution = await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-11T23:59:00.000Z',
+      now: CLAIM_NOW,
       workflowId: 'task-orchestrator.agent-action-request',
     }),
     executeWorkflow: executeQueuedWorkflow,
@@ -280,7 +283,7 @@ test('blocked agent action request is rejected by risk gate before approval stag
   const execution = await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-11T23:59:00.000Z',
+      now: CLAIM_NOW,
       workflowId: 'task-orchestrator.agent-action-request',
     }),
     executeWorkflow: executeQueuedWorkflow,
@@ -311,7 +314,7 @@ test('approved agent action request is the only path that queues downstream stra
   await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-11T23:59:00.000Z',
+      now: CLAIM_NOW,
       workflowId: 'task-orchestrator.agent-action-request',
     }),
     executeWorkflow: executeQueuedWorkflow,
@@ -359,7 +362,7 @@ test('queued backtest workflow persists research run and summary through worker 
   const execution = await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-11T23:59:00.000Z',
+      now: CLAIM_NOW,
       workflowId: 'task-orchestrator.backtest-run',
     }),
     executeWorkflow: executeQueuedWorkflow,

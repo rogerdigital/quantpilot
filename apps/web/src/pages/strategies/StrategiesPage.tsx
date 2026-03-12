@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import type { ExecutionLedgerEntry } from '@shared-types/trading.ts';
+import type { ExecutionLedgerEntry, StrategyCatalogDetailSnapshot } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchExecutionLedger } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
-import { saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
+import { fetchStrategyCatalogItem, saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
@@ -39,6 +39,9 @@ function StrategiesPage() {
   const [selectedTimelineId, setSelectedTimelineId] = useState('');
   const [executionEntries, setExecutionEntries] = useState<ExecutionLedgerEntry[]>([]);
   const [executionLoading, setExecutionLoading] = useState(true);
+  const [strategyDetail, setStrategyDetail] = useState<StrategyCatalogDetailSnapshot | null>(null);
+  const [strategyDetailLoading, setStrategyDetailLoading] = useState(false);
+  const [strategyDetailError, setStrategyDetailError] = useState('');
   const [saving, setSaving] = useState(false);
   const [promotingId, setPromotingId] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
@@ -78,7 +81,8 @@ function StrategiesPage() {
     || visibleActiveStrategies[0]
     || visibleArchivedStrategies[0]
     || null;
-  const selectedStrategyRuns = data?.runs.filter((item) => item.strategyId === selectedStrategy?.id).slice(0, 6) || [];
+  const selectedStrategySnapshot = strategyDetail?.strategy || selectedStrategy;
+  const selectedStrategyRuns = strategyDetail?.recentRuns?.slice(0, 6) || data?.runs.filter((item) => item.strategyId === selectedStrategy?.id).slice(0, 6) || [];
   const selectedStrategyAuditItems = auditItems
     .filter((item) => item.type === 'strategy-catalog.saved')
     .filter((item) => {
@@ -354,6 +358,38 @@ function StrategiesPage() {
       cancelled = true;
     };
   }, [refreshKey]);
+
+  useEffect(() => {
+    if (!selectedStrategy?.id) {
+      setStrategyDetail(null);
+      setStrategyDetailError('');
+      return;
+    }
+
+    let cancelled = false;
+    setStrategyDetailLoading(true);
+    setStrategyDetailError('');
+
+    fetchStrategyCatalogItem(selectedStrategy.id)
+      .then((result) => {
+        if (cancelled) return;
+        setStrategyDetail(result);
+        setStrategyDetailError('');
+      })
+      .catch((requestError) => {
+        if (cancelled) return;
+        setStrategyDetail(null);
+        setStrategyDetailError(requestError instanceof Error ? requestError.message : 'unknown error');
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setStrategyDetailLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey, selectedStrategy?.id]);
 
   return (
     <>
@@ -757,14 +793,17 @@ function StrategiesPage() {
             <InspectionEmpty>{locale === 'zh' ? '当前没有可查看的策略。' : 'No strategy is available for inspection.'}</InspectionEmpty>
           ) : (
             <div className="status-stack">
-              <div className="status-row"><span>{locale === 'zh' ? '名称' : 'Name'}</span><strong>{selectedStrategy.name}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '家族' : 'Family'}</span><strong>{selectedStrategy.family}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '周期' : 'Timeframe'}</span><strong>{selectedStrategy.timeframe}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '标的池' : 'Universe'}</span><strong>{selectedStrategy.universe}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '预期收益' : 'Expected return'}</span><strong>{selectedStrategy.expectedReturnPct.toFixed(1)}%</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '最大回撤' : 'Max drawdown'}</span><strong>{selectedStrategy.maxDrawdownPct.toFixed(1)}%</strong></div>
-              <div className="status-row"><span>Sharpe</span><strong>{selectedStrategy.sharpe.toFixed(2)}</strong></div>
-              <InspectionStatus>{selectedStrategy.summary}</InspectionStatus>
+              <div className="status-row"><span>{locale === 'zh' ? '名称' : 'Name'}</span><strong>{selectedStrategySnapshot?.name || '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '家族' : 'Family'}</span><strong>{selectedStrategySnapshot?.family || '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '周期' : 'Timeframe'}</span><strong>{selectedStrategySnapshot?.timeframe || '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '标的池' : 'Universe'}</span><strong>{selectedStrategySnapshot?.universe || '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '预期收益' : 'Expected return'}</span><strong>{selectedStrategySnapshot ? `${selectedStrategySnapshot.expectedReturnPct.toFixed(1)}%` : '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '最大回撤' : 'Max drawdown'}</span><strong>{selectedStrategySnapshot ? `${selectedStrategySnapshot.maxDrawdownPct.toFixed(1)}%` : '--'}</strong></div>
+              <div className="status-row"><span>Sharpe</span><strong>{selectedStrategySnapshot ? selectedStrategySnapshot.sharpe.toFixed(2) : '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '最近研究' : 'Latest research'}</span><strong>{strategyDetail?.latestRun?.windowLabel || '--'}</strong></div>
+              {strategyDetailLoading ? <InspectionStatus>{locale === 'zh' ? '正在同步策略详情...' : 'Syncing strategy detail...'}</InspectionStatus> : null}
+              {strategyDetailError ? <InspectionStatus>{locale === 'zh' ? `策略详情加载失败：${strategyDetailError}` : `Failed to load strategy detail: ${strategyDetailError}`}</InspectionStatus> : null}
+              <InspectionStatus>{selectedStrategySnapshot?.summary || (locale === 'zh' ? '当前策略暂无摘要。' : 'No strategy summary is available yet.')}</InspectionStatus>
             </div>
           )}
         </InspectionPanel>
@@ -794,6 +833,10 @@ function StrategiesPage() {
                 <div className="focus-metric">
                   <span>Sharpe</span>
                   <strong>{run.status === 'completed' || run.status === 'needs_review' ? run.sharpe.toFixed(2) : '--'}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '工作流' : 'Workflow'}</span>
+                  <strong>{run.workflowRunId || '--'}</strong>
                 </div>
               </div>
             ))}

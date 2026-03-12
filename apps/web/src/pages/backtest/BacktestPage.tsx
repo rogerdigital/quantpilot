@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import type { WorkflowRunRecord } from '@shared-types/trading.ts';
+import type { BacktestRunDetailSnapshot, WorkflowRunRecord } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
-import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
+import { fetchBacktestRunItem, queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
@@ -51,6 +51,9 @@ function BacktestPage() {
   const [selectedWorkflowStepKey, setSelectedWorkflowStepKey] = useState('');
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRunRecord[]>([]);
   const [workflowLoading, setWorkflowLoading] = useState(true);
+  const [runDetail, setRunDetail] = useState<BacktestRunDetailSnapshot | null>(null);
+  const [runDetailLoading, setRunDetailLoading] = useState(false);
+  const [runDetailError, setRunDetailError] = useState('');
   const { data, loading, error } = useResearchHub(refreshKey);
   const { items: auditItems, loading: auditLoading } = useAuditFeed(refreshKey);
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
@@ -84,6 +87,7 @@ function BacktestPage() {
     .filter((workflow) => !visibleWorkflowIds.length || visibleWorkflowIds.includes(workflow.id))
     .slice(0, 10);
   const selectedRun = filteredRuns.find((run) => run.id === selectedRunId) || filteredRuns[0] || null;
+  const selectedRunSnapshot = runDetail?.run || selectedRun;
   const selectedRunAuditItems = selectedRun
     ? auditItems
       .filter((item) => {
@@ -95,9 +99,10 @@ function BacktestPage() {
   const selectedRunVersionItems = selectedRunAuditItems.filter((item) => (
     item.type === 'backtest-run.completed' || item.type === 'backtest-run.reviewed'
   ));
-  const selectedWorkflow = selectedRun?.workflowRunId
-    ? workflowRuns.find((workflow) => workflow.id === selectedRun.workflowRunId) || null
-    : null;
+  const selectedWorkflow = runDetail?.workflow
+    || (selectedRun?.workflowRunId
+      ? workflowRuns.find((workflow) => workflow.id === selectedRun.workflowRunId) || null
+      : null);
   const requestedRunId = searchParams.get('run');
   const requestedStrategyId = searchParams.get('strategy');
   const requestedTimelineId = searchParams.get('timeline');
@@ -207,6 +212,38 @@ function BacktestPage() {
     nextParams.set('step', selectedWorkflowStepKey);
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, selectedWorkflowStepKey, setSearchParams]);
+
+  useEffect(() => {
+    if (!selectedRun?.id) {
+      setRunDetail(null);
+      setRunDetailError('');
+      return;
+    }
+
+    let cancelled = false;
+    setRunDetailLoading(true);
+    setRunDetailError('');
+
+    fetchBacktestRunItem(selectedRun.id)
+      .then((result) => {
+        if (cancelled) return;
+        setRunDetail(result);
+        setRunDetailError('');
+      })
+      .catch((requestError) => {
+        if (cancelled) return;
+        setRunDetail(null);
+        setRunDetailError(requestError instanceof Error ? requestError.message : 'unknown error');
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setRunDetailLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey, selectedRun?.id]);
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);
@@ -637,17 +674,19 @@ function BacktestPage() {
             <InspectionEmpty>{locale === 'zh' ? '当前没有可查看的回测记录。' : 'No backtest run is available for inspection.'}</InspectionEmpty>
           ) : (
             <div className="status-stack">
-              <div className="status-row"><span>{locale === 'zh' ? '策略' : 'Strategy'}</span><strong>{selectedRun.strategyName}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '窗口' : 'Window'}</span><strong>{selectedRun.windowLabel}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '收益率' : 'Return'}</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? fmtPct(selectedRun.annualizedReturnPct) : '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '最大回撤' : 'Max Drawdown'}</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? fmtPct(selectedRun.maxDrawdownPct) : '--'}</strong></div>
-              <div className="status-row"><span>Sharpe</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? selectedRun.sharpe.toFixed(2) : '--'}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '胜率' : 'Win Rate'}</span><strong>{selectedRun.status === 'completed' || selectedRun.status === 'needs_review' ? fmtPct(selectedRun.winRatePct) : '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '策略' : 'Strategy'}</span><strong>{selectedRunSnapshot?.strategyName || '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '窗口' : 'Window'}</span><strong>{selectedRunSnapshot?.windowLabel || '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '收益率' : 'Return'}</span><strong>{selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? fmtPct(selectedRunSnapshot.annualizedReturnPct) : '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '最大回撤' : 'Max Drawdown'}</span><strong>{selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? fmtPct(selectedRunSnapshot.maxDrawdownPct) : '--'}</strong></div>
+              <div className="status-row"><span>Sharpe</span><strong>{selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? selectedRunSnapshot.sharpe.toFixed(2) : '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '胜率' : 'Win Rate'}</span><strong>{selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? fmtPct(selectedRunSnapshot.winRatePct) : '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '工作流' : 'Workflow'}</span><strong>{selectedWorkflow?.id || selectedRunSnapshot?.workflowRunId || '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '策略阶段' : 'Strategy stage'}</span><strong>{runDetail?.strategy?.status || '--'}</strong></div>
               <div className="settings-actions">
                 <button
                   type="button"
                   className="inline-action inline-action-approve"
-                  onClick={() => navigate(`/strategies?strategy=${selectedRun.strategyId}`)}
+                  onClick={() => navigate(`/strategies?strategy=${selectedRunSnapshot?.strategyId || selectedRun?.strategyId || ''}`)}
                 >
                   {locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
                 </button>
@@ -661,7 +700,9 @@ function BacktestPage() {
                   </button>
                 ) : null}
               </div>
-              <InspectionStatus>{selectedRun.summary}</InspectionStatus>
+              {runDetailLoading ? <InspectionStatus>{locale === 'zh' ? '正在同步回测详情...' : 'Syncing backtest detail...'}</InspectionStatus> : null}
+              {runDetailError ? <InspectionStatus>{locale === 'zh' ? `回测详情加载失败：${runDetailError}` : `Failed to load backtest detail: ${runDetailError}`}</InspectionStatus> : null}
+              <InspectionStatus>{selectedRunSnapshot?.summary || (locale === 'zh' ? '当前回测暂无摘要。' : 'No backtest summary is available yet.')}</InspectionStatus>
             </div>
           )}
         </InspectionPanel>
