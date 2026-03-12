@@ -7,7 +7,9 @@ import { BacktestRunQueueRow } from './BacktestRunQueueRow.tsx';
 import { ResearchAuditFeedRow } from './ResearchAuditFeedRow.tsx';
 import { ResearchCollectionPanel } from './ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from './ResearchDetailInspectionPanel.tsx';
+import { ResearchExecutionPlanRow } from './ResearchExecutionPlanRow.tsx';
 import { ResearchEventInspectionPanel } from './ResearchEventInspectionPanel.tsx';
+import { ResearchRunSummaryRow } from './ResearchRunSummaryRow.tsx';
 import { ResearchStatusPanel } from './ResearchStatusPanel.tsx';
 import { StrategyCatalogRow } from './StrategyCatalogRow.tsx';
 import { ResearchTerminalPanel } from './ResearchTerminalPanel.tsx';
@@ -155,6 +157,97 @@ describe('research panel primitives', () => {
     expect(html).toContain('Version snapshot captured after review.');
     expect(html).toContain('candidate');
     expect(html).toContain('11.5% / 5.9%');
+  });
+
+  it('renders research run summary row performance metrics', () => {
+    const run: BacktestRunItem = {
+      id: 'run-2',
+      strategyId: 'strategy-2',
+      strategyName: 'Breakout',
+      status: 'completed',
+      summary: 'Momentum breakout finished.',
+      windowLabel: '90D',
+      startedAt: '2026-03-13T09:00:00.000Z',
+      annualizedReturnPct: 18.3,
+      maxDrawdownPct: 7.2,
+      sharpe: 2.1,
+      winRatePct: 58.4,
+      turnoverPct: 24.3,
+      workflowRunId: 'wf-run-2',
+      completedAt: '2026-03-13T10:00:00.000Z',
+    };
+
+    const html = renderToStaticMarkup(
+      <ResearchRunSummaryRow
+        locale="en"
+        run={run}
+      />,
+    );
+
+    expect(html).toContain('90D');
+    expect(html).toContain('completed');
+    expect(html).toContain('18.3%');
+    expect(html).toContain('wf-run-2');
+  });
+
+  it('renders execution plan row with action', () => {
+    const html = renderToStaticMarkup(
+      <ResearchExecutionPlanRow
+        locale="en"
+        entry={{
+          plan: {
+            id: 'plan-1',
+            workflowRunId: 'wf-1',
+            strategyId: 'strategy-1',
+            strategyName: 'Momentum',
+            status: 'ready',
+            approvalState: 'pending',
+            riskStatus: 'approved',
+            mode: 'paper',
+            capital: 50000,
+            orderCount: 3,
+            orders: [],
+            summary: 'Paper orders ready',
+            metadata: {},
+            createdAt: '2026-03-13T09:00:00.000Z',
+            updatedAt: '2026-03-13T09:01:00.000Z',
+          },
+          workflow: {
+            id: 'wf-1',
+            workflowId: 'strategy-execution',
+            status: 'completed',
+            updatedAt: '2026-03-13T09:01:00.000Z',
+            completedAt: '2026-03-13T09:01:00.000Z',
+            failedAt: '',
+          },
+          latestRuntime: {
+            id: 'runtime-1',
+            cycleId: 'cycle-1',
+            cycle: 12,
+            mode: 'paper',
+            brokerAdapter: 'simulated',
+            brokerConnected: true,
+            marketConnected: true,
+            submittedOrderCount: 3,
+            rejectedOrderCount: 0,
+            openOrderCount: 1,
+            positionCount: 2,
+            cash: 100000,
+            buyingPower: 90000,
+            equity: 101200,
+            message: '3 orders staged',
+            metadata: {},
+            createdAt: '2026-03-13T09:02:00.000Z',
+          },
+        }}
+        onAction={() => undefined}
+      />,
+    );
+
+    expect(html).toContain('Paper orders ready');
+    expect(html).toContain('approved');
+    expect(html).toContain('3/1');
+    expect(html).toContain('Open Execution Detail');
   });
 
   it('renders queue row review action for needs-review runs', () => {

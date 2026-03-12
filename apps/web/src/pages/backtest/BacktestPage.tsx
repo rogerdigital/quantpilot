@@ -8,6 +8,7 @@ import { BacktestRunQueueRow } from '../../modules/research/BacktestRunQueueRow.
 import { ResearchAuditFeedRow } from '../../modules/research/ResearchAuditFeedRow.tsx';
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
+import { ResearchExecutionPlanRow } from '../../modules/research/ResearchExecutionPlanRow.tsx';
 import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEventInspectionPanel.tsx';
 import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPanel.tsx';
 import { ResearchVersionSnapshotRow } from '../../modules/research/ResearchVersionSnapshotRow.tsx';
@@ -708,29 +709,16 @@ function BacktestPage() {
           emptyMessage={locale === 'zh' ? '当前回测对应策略还没有下游执行计划。' : 'No downstream execution plans exist for this run’s strategy yet.'}
         >
           {selectedRunExecutionEntries.map((entry) => (
-            <InspectionSelectableRow
+            <ResearchExecutionPlanRow
               key={entry.plan.id}
-              leadTitle={entry.plan.summary}
-              leadCopy={entry.latestRuntime?.message || `${entry.plan.orderCount} ${locale === 'zh' ? '笔订单候选' : 'candidate orders'}`}
-              metrics={[
-                { label: locale === 'zh' ? '计划状态' : 'Plan', value: entry.plan.status },
-                { label: locale === 'zh' ? '风控' : 'Risk', value: entry.plan.riskStatus },
-                { label: locale === 'zh' ? '工作流' : 'Workflow', value: entry.workflow?.status || '--' },
-                { label: locale === 'zh' ? '运行时' : 'Runtime', value: entry.latestRuntime ? `${entry.latestRuntime.submittedOrderCount}/${entry.latestRuntime.openOrderCount}` : '--' },
-              ]}
-              actions={(
-                <button
-                  type="button"
-                  className="inline-action"
-                  onClick={() => researchNavigation.openExecutionDetail(entry.plan.id, {
-                    strategyId: selectedRunSnapshot?.strategyId || '',
-                    runId: selectedRunSnapshot?.id || '',
-                    source: 'backtest',
-                  })}
-                >
-                  {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
-                </button>
-              )}
+              locale={locale}
+              entry={entry}
+              actionLabel={locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
+              onAction={(planId) => researchNavigation.openExecutionDetail(planId, {
+                strategyId: selectedRunSnapshot?.strategyId || '',
+                runId: selectedRunSnapshot?.id || '',
+                source: 'backtest',
+              })}
             />
           ))}
         </ResearchCollectionPanel>

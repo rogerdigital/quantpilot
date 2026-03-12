@@ -6,7 +6,9 @@ import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySel
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchAuditFeedRow } from '../../modules/research/ResearchAuditFeedRow.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
+import { ResearchExecutionPlanRow } from '../../modules/research/ResearchExecutionPlanRow.tsx';
 import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEventInspectionPanel.tsx';
+import { ResearchRunSummaryRow } from '../../modules/research/ResearchRunSummaryRow.tsx';
 import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPanel.tsx';
 import { ResearchVersionSnapshotRow } from '../../modules/research/ResearchVersionSnapshotRow.tsx';
 import { StrategyCatalogRow } from '../../modules/research/StrategyCatalogRow.tsx';
@@ -668,28 +670,11 @@ function StrategiesPage() {
           emptyMessage={locale === 'zh' ? '当前策略还没有研究运行记录。' : 'No research runs exist for the selected strategy yet.'}
         >
           {selectedStrategyRuns.map((run) => (
-            <div className="focus-row" key={run.id}>
-              <div className="symbol-cell">
-                <strong>{run.windowLabel}</strong>
-                <span>{run.summary}</span>
-              </div>
-              <div className="focus-metric">
-                <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                <strong>{run.status}</strong>
-              </div>
-              <div className="focus-metric">
-                <span>{locale === 'zh' ? '收益' : 'Return'}</span>
-                <strong>{run.status === 'completed' || run.status === 'needs_review' ? `${run.annualizedReturnPct.toFixed(1)}%` : '--'}</strong>
-              </div>
-              <div className="focus-metric">
-                <span>Sharpe</span>
-                <strong>{run.status === 'completed' || run.status === 'needs_review' ? run.sharpe.toFixed(2) : '--'}</strong>
-              </div>
-              <div className="focus-metric">
-                <span>{locale === 'zh' ? '工作流' : 'Workflow'}</span>
-                <strong>{run.workflowRunId || '--'}</strong>
-              </div>
-            </div>
+            <ResearchRunSummaryRow
+              key={run.id}
+              locale={locale}
+              run={run}
+            />
           ))}
         </ResearchCollectionPanel>
         <ResearchCollectionPanel
@@ -706,16 +691,10 @@ function StrategiesPage() {
           emptyMessage={locale === 'zh' ? '当前策略还没有进入执行侧。' : 'The selected strategy has not produced downstream execution plans yet.'}
         >
           {selectedStrategyExecutionEntries.map((entry) => (
-            <InspectionMetricsRow
+            <ResearchExecutionPlanRow
               key={entry.plan.id}
-              leadTitle={entry.plan.summary}
-              leadCopy={entry.latestRuntime?.message || `${entry.plan.orderCount} ${locale === 'zh' ? '笔订单候选' : 'candidate orders'}`}
-              metrics={[
-                { label: locale === 'zh' ? '计划状态' : 'Plan status', value: entry.plan.status },
-                { label: locale === 'zh' ? '风控' : 'Risk', value: entry.plan.riskStatus },
-                { label: locale === 'zh' ? 'Workflow' : 'Workflow', value: entry.workflow?.status || '--' },
-                { label: locale === 'zh' ? '运行时' : 'Runtime', value: entry.latestRuntime ? `${entry.latestRuntime.submittedOrderCount}/${entry.latestRuntime.openOrderCount}` : '--' },
-              ]}
+              locale={locale}
+              entry={entry}
             />
           ))}
         </ResearchCollectionPanel>
