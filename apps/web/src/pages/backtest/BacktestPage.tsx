@@ -17,6 +17,7 @@ import { ResearchWorkflowStepRow } from '../../modules/research/ResearchWorkflow
 import { getBacktestCollectionConfigs } from '../../modules/research/researchCollectionConfigs.ts';
 import { getBacktestDetailInspectionConfig } from '../../modules/research/researchDetailConfigs.ts';
 import { getWorkflowInspectionConfig, getWorkflowStepInspectionConfig } from '../../modules/research/researchInspectionConfigs.ts';
+import { getBacktestTerminalConfigs } from '../../modules/research/researchTerminalConfigs.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -197,6 +198,18 @@ function BacktestPage() {
     audit: selectedRunAuditItems.length,
     execution: selectedRunExecutionEntries.length,
     versions: selectedRunVersionItems.length,
+  });
+  const backtestTerminalConfigs = getBacktestTerminalConfigs({
+    locale,
+    loading,
+    auditLoading,
+    workspaceLoading,
+    strategyCount: data?.strategies.length ?? 0,
+    filteredRunCount: filteredRuns.length,
+    auditCount: backtestAuditItems.length,
+    workflowCount: visibleWorkflowRuns.length,
+    windowLabel,
+    canReviewBacktest,
   });
 
   const handleQueueBacktest = async (strategyId: string) => {
@@ -409,24 +422,7 @@ function BacktestPage() {
       </section>
 
       <section className="panel-grid">
-        <ResearchTerminalPanel
-          title={locale === 'zh' ? '候选策略注册表' : 'Candidate Strategy Registry'}
-          copy={locale === 'zh'
-            ? '后端返回策略目录，作为后续策略管理、参数优化和晋级流程的统一入口。'
-            : 'The backend now returns a strategy catalog that can become the source of truth for strategy management and promotion.'}
-          badge={data?.strategies.length ?? 0}
-          badgeClassName="panel-badge badge-info"
-          loading={loading}
-          isEmpty={!data?.strategies.length}
-          emptyMessage={locale === 'zh' ? '暂无策略目录' : 'No strategy catalog entries yet.'}
-          footer={(
-            <div className="status-copy">
-              {locale === 'zh'
-                ? `当前发起回测会复用窗口 ${windowLabel}。`
-                : `New backtests currently reuse the window ${windowLabel}.`}
-            </div>
-          )}
-        >
+        <ResearchTerminalPanel {...backtestTerminalConfigs.catalog}>
           {data?.strategies.map((item) => (
             <BacktestCandidateStrategyRow
               key={item.id}
@@ -439,24 +435,7 @@ function BacktestPage() {
             />
           ))}
         </ResearchTerminalPanel>
-        <ResearchTerminalPanel
-          title={locale === 'zh' ? '回测运行队列' : 'Backtest Run Queue'}
-          copy={locale === 'zh'
-            ? '把 queued / running / completed / needs_review 明确拆开，为后续 worker 和审批闸门接管做准备。'
-            : 'Separate queued, running, completed, and needs_review runs now so worker ownership and review gates can plug in later.'}
-          badge={filteredRuns.length}
-          badgeClassName="panel-badge badge-warn"
-          loading={loading}
-          isEmpty={!filteredRuns.length}
-          emptyMessage={locale === 'zh' ? '当前筛选条件下没有回测记录' : 'No backtest runs match the current filter.'}
-          footer={!canReviewBacktest ? (
-            <div className="status-copy">
-              {locale === 'zh'
-                ? '当前会话缺少 risk:review 权限，不能处理待复核回测。'
-                : 'This session is missing risk:review permission, so review-queue runs stay read-only.'}
-            </div>
-          ) : null}
-        >
+        <ResearchTerminalPanel {...backtestTerminalConfigs.queue}>
           {filteredRuns.map((run) => (
             <BacktestRunQueueRow
               key={run.id}
@@ -472,18 +451,7 @@ function BacktestPage() {
             />
           ))}
         </ResearchTerminalPanel>
-        <ResearchTerminalPanel
-          title={locale === 'zh' ? '研究操作历史' : 'Research Activity Feed'}
-          copy={locale === 'zh'
-            ? '把回测入队、worker 完成和人工复核的审计记录汇总到同一面板，并跟随当前筛选条件联动。'
-            : 'Aggregate queue, worker completion, and manual review audit records into one panel that follows the current run filter.'}
-          badge="AUDIT"
-          badgeClassName="panel-badge badge-info"
-          loading={auditLoading}
-          loadingMessage={locale === 'zh' ? '正在加载研究操作历史...' : 'Loading research activity...'}
-          isEmpty={!backtestAuditItems.length}
-          emptyMessage={locale === 'zh' ? '当前筛选条件下没有研究操作历史。' : 'No research activity for the current filter.'}
-        >
+        <ResearchTerminalPanel {...backtestTerminalConfigs.activity}>
           {backtestAuditItems.map((item) => {
             const runId = typeof item.metadata?.runId === 'string' ? item.metadata.runId : '--';
             const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
@@ -503,18 +471,7 @@ function BacktestPage() {
             );
           })}
         </ResearchTerminalPanel>
-        <ResearchTerminalPanel
-          title={locale === 'zh' ? '研究工作流状态' : 'Research Workflow State'}
-          copy={locale === 'zh'
-            ? '直接读取 task orchestrator 的 workflow runs，把回测记录和编排层状态、尝试次数、步骤进度放在同一视图。'
-            : 'Read task-orchestrator workflow runs directly so each backtest can be viewed alongside orchestration status, attempt count, and step progress.'}
-          badge={visibleWorkflowRuns.length}
-          badgeClassName="panel-badge badge-warn"
-          loading={workspaceLoading}
-          loadingMessage={locale === 'zh' ? '正在加载研究工作流...' : 'Loading research workflows...'}
-          isEmpty={!visibleWorkflowRuns.length}
-          emptyMessage={locale === 'zh' ? '当前筛选条件下没有研究工作流。' : 'No research workflows for the current filter.'}
-        >
+        <ResearchTerminalPanel {...backtestTerminalConfigs.workflows}>
           {visibleWorkflowRuns.map((workflow) => {
             const completedSteps = workflow.steps.filter((step) => step.status === 'completed').length;
             return (

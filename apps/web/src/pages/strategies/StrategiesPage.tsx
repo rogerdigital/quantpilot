@@ -18,6 +18,7 @@ import { getStrategyCollectionConfigs } from '../../modules/research/researchCol
 import { getStrategyDetailInspectionConfig } from '../../modules/research/researchDetailConfigs.ts';
 import { getStrategyTimelineActionLabel, getStrategyTimelineGuidance } from '../../modules/research/researchEventInspection.tsx';
 import { getStrategyTimelineInspectionConfig } from '../../modules/research/researchInspectionConfigs.ts';
+import { getStrategyTerminalConfigs } from '../../modules/research/researchTerminalConfigs.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -183,6 +184,18 @@ function StrategiesPage() {
     execution: selectedStrategyExecutionEntries.length,
     audit: selectedStrategyAuditItems.length,
     versions: selectedStrategyVersionItems.length,
+  });
+  const strategyTerminalConfigs = getStrategyTerminalConfigs({
+    locale,
+    dataSourceBadge: data?.summary.dataSource ? 'SERVICE' : 'LOCAL',
+    loading,
+    auditLoading,
+    registryFilter,
+    activeCount: activeStrategies.length,
+    archivedCount: archivedStrategies.length,
+    visibleCount: visibleActiveStrategies.length + visibleArchivedStrategies.length,
+    activityCount: strategyAuditItems.length,
+    onFilterChange: setRegistryFilter,
   });
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
@@ -463,47 +476,7 @@ function StrategiesPage() {
             <div className="status-copy">{saveMessage || saveError || (locale === 'zh' ? '写入后会自动刷新后端策略目录。' : 'The backend strategy registry refreshes automatically after save.')}</div>
           </div>
         </article>
-        <ResearchTerminalPanel
-          title={locale === 'zh' ? '后端策略注册表' : 'Backend Strategy Registry'}
-          copy={locale === 'zh' ? '直接消费研究服务返回的策略目录，避免页面本地状态冒充注册表事实来源。' : 'Consume the backend strategy catalog directly instead of treating page-local runtime state as the registry source of truth.'}
-          badge={data?.summary.dataSource ? 'SERVICE' : 'LOCAL'}
-          badgeClassName="panel-badge badge-info"
-          loading={loading}
-          isEmpty={!visibleActiveStrategies.length && !visibleArchivedStrategies.length}
-          emptyMessage={locale === 'zh' ? '当前筛选条件下没有策略。' : 'No strategies match the current filter.'}
-          prelude={(
-            <div className="status-stack">
-              <div className="status-row"><span>{locale === 'zh' ? '活跃策略' : 'Active strategies'}</span><strong>{activeStrategies.length}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '已归档策略' : 'Archived strategies'}</span><strong>{archivedStrategies.length}</strong></div>
-              <div className="settings-actions">
-                <button
-                  type="button"
-                  className="inline-action"
-                  disabled={registryFilter === 'active'}
-                  onClick={() => setRegistryFilter('active')}
-                >
-                  {locale === 'zh' ? '仅看活跃' : 'Active only'}
-                </button>
-                <button
-                  type="button"
-                  className="inline-action"
-                  disabled={registryFilter === 'all'}
-                  onClick={() => setRegistryFilter('all')}
-                >
-                  {locale === 'zh' ? '全部策略' : 'All strategies'}
-                </button>
-                <button
-                  type="button"
-                  className="inline-action"
-                  disabled={registryFilter === 'archived'}
-                  onClick={() => setRegistryFilter('archived')}
-                >
-                  {locale === 'zh' ? '仅看归档' : 'Archived only'}
-                </button>
-              </div>
-            </div>
-          )}
-        >
+        <ResearchTerminalPanel {...strategyTerminalConfigs.registry}>
           {visibleActiveStrategies.length ? (
             <div className="status-copy">{locale === 'zh' ? '活跃策略' : 'Active strategies'}</div>
           ) : null}
@@ -543,16 +516,7 @@ function StrategiesPage() {
             />
           ))}
         </ResearchTerminalPanel>
-        <ResearchTerminalPanel
-          title={locale === 'zh' ? '最近策略操作' : 'Recent Strategy Activity'}
-          copy={locale === 'zh' ? '直接消费后端 audit records，查看策略注册、晋级、归档和恢复的最新留痕。' : 'Consume backend audit records directly to review recent registry saves, promotions, archives, and restores.'}
-          badge="AUDIT"
-          badgeClassName="panel-badge badge-warn"
-          loading={auditLoading}
-          loadingMessage={locale === 'zh' ? '正在加载策略操作历史...' : 'Loading strategy activity...'}
-          isEmpty={!strategyAuditItems.length}
-          emptyMessage={locale === 'zh' ? '当前筛选条件下没有策略操作历史。' : 'No strategy activity for the current filter.'}
-        >
+        <ResearchTerminalPanel {...strategyTerminalConfigs.activity}>
           {strategyAuditItems.map((item) => {
             const strategyId = typeof item.metadata?.strategyId === 'string' ? item.metadata.strategyId : '--';
             const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';

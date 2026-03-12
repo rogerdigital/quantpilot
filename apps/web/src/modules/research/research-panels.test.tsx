@@ -21,6 +21,7 @@ import { getBacktestCollectionConfigs, getStrategyCollectionConfigs } from './re
 import { getBacktestDetailInspectionConfig, getStrategyDetailInspectionConfig } from './researchDetailConfigs.ts';
 import { getStrategyTimelineActionLabel, getStrategyTimelineGuidance } from './researchEventInspection.tsx';
 import { getStrategyTimelineInspectionConfig, getWorkflowInspectionConfig, getWorkflowStepInspectionConfig } from './researchInspectionConfigs.ts';
+import { getBacktestTerminalConfigs, getStrategyTerminalConfigs } from './researchTerminalConfigs.tsx';
 
 describe('research panel primitives', () => {
   it('renders status panel metrics and messages', () => {
@@ -492,6 +493,41 @@ describe('research panel primitives', () => {
     expect(strategyCollections.execution.emptyMessage).toContain('downstream execution plans');
     expect(backtestCollections.audit.title).toBe('Selected Audit Trail');
     expect(backtestCollections.versions.badge).toBe(3);
+  });
+
+  it('builds shared terminal configs for strategy and backtest workspaces', () => {
+    const strategyTerminal = getStrategyTerminalConfigs({
+      locale: 'en',
+      dataSourceBadge: 'SERVICE',
+      loading: false,
+      auditLoading: true,
+      registryFilter: 'all',
+      activeCount: 4,
+      archivedCount: 2,
+      visibleCount: 6,
+      activityCount: 3,
+      onFilterChange: () => undefined,
+    });
+    const backtestTerminal = getBacktestTerminalConfigs({
+      locale: 'en',
+      loading: false,
+      auditLoading: true,
+      workspaceLoading: false,
+      strategyCount: 5,
+      filteredRunCount: 7,
+      auditCount: 3,
+      workflowCount: 2,
+      windowLabel: '2024-01-01 -> 2026-03-01',
+      canReviewBacktest: false,
+    });
+
+    const strategyPrelude = renderToStaticMarkup(<>{strategyTerminal.registry.prelude}</>);
+    const backtestFooter = renderToStaticMarkup(<>{backtestTerminal.queue.footer}</>);
+
+    expect(strategyTerminal.registry.badge).toBe('SERVICE');
+    expect(strategyPrelude).toContain('Active only');
+    expect(backtestTerminal.catalog.badge).toBe(5);
+    expect(backtestFooter).toContain('read-only');
   });
 
   it('renders workflow step row with selected state', () => {
