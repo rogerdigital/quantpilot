@@ -14,6 +14,7 @@ import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEve
 import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPanel.tsx';
 import { ResearchVersionSnapshotRow } from '../../modules/research/ResearchVersionSnapshotRow.tsx';
 import { ResearchWorkflowStepRow } from '../../modules/research/ResearchWorkflowStepRow.tsx';
+import { getWorkflowInspectionConfig, getWorkflowStepInspectionConfig } from '../../modules/research/researchInspectionConfigs.ts';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -180,6 +181,8 @@ function BacktestPage() {
     selectedAuditEventId,
     selectedWorkflowStepKey,
   });
+  const selectedWorkflowInspection = getWorkflowInspectionConfig(locale, selectedRun, selectedWorkflow, fmtDateTime);
+  const selectedWorkflowStepInspection = getWorkflowStepInspectionConfig(locale, selectedWorkflow, selectedWorkflowStep);
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);
@@ -626,22 +629,9 @@ function BacktestPage() {
             ? '查看当前 run 对应的 task orchestrator 工作流状态和步骤进度。'
             : 'Inspect the task-orchestrator workflow state and step progress for the selected run.'}
           badge={selectedWorkflow?.status || '--'}
-          emptyMessage={!selectedRun
-            ? (locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.')
-            : !selectedWorkflow
-              ? (locale === 'zh' ? '当前 run 还没有可见的 workflow 详情。' : 'No workflow detail is available for the selected run yet.')
-              : null}
-          metrics={[
-            { label: locale === 'zh' ? '工作流 ID' : 'Workflow ID', value: selectedWorkflow?.id || '--' },
-            { label: locale === 'zh' ? '状态' : 'Status', value: selectedWorkflow?.status || '--' },
-            { label: locale === 'zh' ? '尝试次数' : 'Attempts', value: selectedWorkflow ? `${selectedWorkflow.attempt}/${selectedWorkflow.maxAttempts}` : '--' },
-            { label: locale === 'zh' ? '触发方式' : 'Trigger', value: selectedWorkflow?.trigger || '--' },
-          ]}
-          guidance={selectedWorkflow
-            ? (locale === 'zh'
-                ? `最近更新时间 ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}`
-                : `Last updated ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}`)
-            : null}
+          emptyMessage={selectedWorkflowInspection.emptyMessage}
+          metrics={selectedWorkflowInspection.metrics}
+          guidance={selectedWorkflowInspection.guidance}
         >
           {selectedWorkflow?.steps.length ? (
             <div className="focus-list">
@@ -664,18 +654,9 @@ function BacktestPage() {
           copy={locale === 'zh' ? '把当前 workflow 节点单独展开，便于深链定位到具体步骤。' : 'Expand the current workflow node so deep links can target a specific step.'}
           badge={selectedWorkflowStep?.status || '--'}
           badgeClassName="badge-info"
-          emptyMessage={!selectedWorkflow
-            ? (locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.')
-            : !selectedWorkflowStep
-              ? (locale === 'zh' ? '当前工作流还没有可定位的步骤。' : 'No workflow step is available for inspection yet.')
-              : null}
-          metrics={[
-            { label: locale === 'zh' ? '步骤' : 'Step', value: selectedWorkflowStep?.key || '--' },
-            { label: locale === 'zh' ? '状态' : 'Status', value: selectedWorkflowStep?.status || '--' },
-          ]}
-          guidance={selectedWorkflowStep
-            ? (locale === 'zh' ? `当前深链已定位到步骤 ${selectedWorkflowStep.key}。` : `The current deep link is focused on step ${selectedWorkflowStep.key}.`)
-            : null}
+          emptyMessage={selectedWorkflowStepInspection.emptyMessage}
+          metrics={selectedWorkflowStepInspection.metrics}
+          guidance={selectedWorkflowStepInspection.guidance}
         />
         <ResearchCollectionPanel
           title={locale === 'zh' ? '下游执行承接' : 'Downstream Execution Handoff'}

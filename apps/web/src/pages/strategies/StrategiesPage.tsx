@@ -15,6 +15,7 @@ import { ResearchTimelineEventRow } from '../../modules/research/ResearchTimelin
 import { ResearchVersionSnapshotRow } from '../../modules/research/ResearchVersionSnapshotRow.tsx';
 import { StrategyCatalogRow } from '../../modules/research/StrategyCatalogRow.tsx';
 import { getStrategyTimelineActionLabel, getStrategyTimelineGuidance } from '../../modules/research/researchEventInspection.tsx';
+import { getStrategyTimelineInspectionConfig } from '../../modules/research/researchInspectionConfigs.ts';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -163,6 +164,12 @@ function StrategiesPage() {
     selectedTimelineId,
   });
   const selectedTimelineActionLabel = getStrategyTimelineActionLabel(locale, selectedTimelineItem?.eventType);
+  const selectedTimelineInspection = getStrategyTimelineInspectionConfig(
+    locale,
+    selectedStrategy,
+    selectedTimelineItem,
+    formatDateTime,
+  );
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
     setForm((current) => ({
@@ -584,19 +591,9 @@ function StrategiesPage() {
           copy={locale === 'zh' ? '钻取当前时间线节点，查看它属于哪条链路、对应哪条记录，以及当前应该到哪里继续排查。' : 'Inspect the selected timeline node to see which lane it belongs to, which record it references, and where to continue investigation.'}
           badge={selectedTimelineItem?.lane || '--'}
           badgeClassName="badge-warn"
-          emptyMessage={!selectedStrategy
-            ? (locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.')
-            : !selectedTimelineItem
-              ? (locale === 'zh' ? '当前还没有可钻取的时间线节点。' : 'No timeline node is available for inspection yet.')
-              : null}
-          metrics={[
-            { label: locale === 'zh' ? '事件' : 'Event', value: selectedTimelineItem?.title || '--' },
-            { label: locale === 'zh' ? '链路' : 'Lane', value: selectedTimelineItem?.lane || '--' },
-            { label: locale === 'zh' ? '时间' : 'Time', value: selectedTimelineItem ? formatDateTime(selectedTimelineItem.at, locale) : '--' },
-            { label: locale === 'zh' ? '关联记录' : 'Reference', value: selectedTimelineItem?.reference || '--' },
-            { label: locale === 'zh' ? '事件类型' : 'Event type', value: selectedTimelineItem?.eventType || '--' },
-          ]}
-          detail={selectedTimelineItem?.detail}
+          emptyMessage={selectedTimelineInspection.emptyMessage}
+          metrics={selectedTimelineInspection.metrics}
+          detail={selectedTimelineInspection.detail}
           guidance={getStrategyTimelineGuidance(locale, selectedTimelineItem?.eventType)}
           actions={selectedTimelineItem && selectedTimelineActionLabel ? (
             <ResearchActionBar>

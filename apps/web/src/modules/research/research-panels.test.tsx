@@ -18,6 +18,7 @@ import { ResearchTimelineEventRow } from './ResearchTimelineEventRow.tsx';
 import { ResearchVersionSnapshotRow } from './ResearchVersionSnapshotRow.tsx';
 import { ResearchWorkflowStepRow } from './ResearchWorkflowStepRow.tsx';
 import { getStrategyTimelineActionLabel, getStrategyTimelineGuidance } from './researchEventInspection.tsx';
+import { getStrategyTimelineInspectionConfig, getWorkflowInspectionConfig, getWorkflowStepInspectionConfig } from './researchInspectionConfigs.ts';
 
 describe('research panel primitives', () => {
   it('renders status panel metrics and messages', () => {
@@ -292,6 +293,81 @@ describe('research panel primitives', () => {
     expect(getStrategyTimelineGuidance('en', 'run')).toContain('research runs panel');
     expect(getStrategyTimelineActionLabel('en', 'execution')).toBe('Open Execution Detail');
     expect(getStrategyTimelineActionLabel('en', 'audit')).toBeNull();
+  });
+
+  it('builds shared inspection configs for timeline and workflow panels', () => {
+    const timelineConfig = getStrategyTimelineInspectionConfig(
+      'en',
+      { id: 'strategy-1' },
+      {
+        title: 'Queued run',
+        lane: 'Research',
+        at: '2026-03-13T12:00:00.000Z',
+        reference: 'run-1',
+        eventType: 'run',
+        detail: 'Backtest queued.',
+      },
+      (value) => value,
+    );
+    const workflowConfig = getWorkflowInspectionConfig(
+      'en',
+      { id: 'run-1' },
+      {
+        id: 'wf-1',
+        workflowId: 'backtest',
+        workflowType: 'backtest',
+        status: 'running',
+        actor: 'worker',
+        trigger: 'queued',
+        attempt: 1,
+        maxAttempts: 3,
+        nextRunAt: '',
+        lockedBy: '',
+        lockedAt: '',
+        createdAt: '2026-03-13T12:00:00.000Z',
+        updatedAt: '2026-03-13T12:05:00.000Z',
+        startedAt: '2026-03-13T12:00:00.000Z',
+        completedAt: '',
+        failedAt: '',
+        steps: [],
+        payload: {},
+        result: null,
+        error: null,
+        metadata: {},
+      },
+      (value) => value,
+    );
+    const stepConfig = getWorkflowStepInspectionConfig(
+      'en',
+      {
+        id: 'wf-1',
+        workflowId: 'backtest',
+        workflowType: 'backtest',
+        status: 'running',
+        actor: 'worker',
+        trigger: 'queued',
+        attempt: 1,
+        maxAttempts: 3,
+        nextRunAt: '',
+        lockedBy: '',
+        lockedAt: '',
+        createdAt: '2026-03-13T12:00:00.000Z',
+        updatedAt: '2026-03-13T12:05:00.000Z',
+        startedAt: '2026-03-13T12:00:00.000Z',
+        completedAt: '',
+        failedAt: '',
+        steps: [],
+        payload: {},
+        result: null,
+        error: null,
+        metadata: {},
+      },
+      { key: 'risk_review', status: 'completed' },
+    );
+
+    expect(timelineConfig.metrics[0]?.value).toBe('Queued run');
+    expect(workflowConfig.guidance).toContain('Last updated');
+    expect(stepConfig.guidance).toContain('risk_review');
   });
 
   it('renders workflow step row with selected state', () => {
