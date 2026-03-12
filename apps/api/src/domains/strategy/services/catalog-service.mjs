@@ -16,6 +16,26 @@ export function getStrategyCatalogItem(strategyId) {
   return controlPlaneRuntime.getStrategyCatalogItem(strategyId);
 }
 
+export function getStrategyCatalogDetail(strategyId) {
+  const strategy = controlPlaneRuntime.getStrategyCatalogItem(strategyId);
+  if (!strategy) {
+    return {
+      ok: false,
+      error: 'strategy not found',
+      message: `Unknown strategy: ${strategyId || 'missing strategyId'}`,
+    };
+  }
+
+  const recentRuns = controlPlaneRuntime.listBacktestRuns(20, { strategyId: strategy.id });
+
+  return {
+    ok: true,
+    strategy,
+    latestRun: recentRuns[0] || null,
+    recentRuns,
+  };
+}
+
 export function saveStrategyCatalogItem(payload = {}) {
   if (!payload.id || !payload.name) {
     return {

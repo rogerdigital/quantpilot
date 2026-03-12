@@ -6,7 +6,7 @@ import {
 } from '../../domains/agent/services/action-request-service.mjs';
 import { listAgentTools, executeAgentTool } from '../../domains/agent/services/tools-service.mjs';
 import { getBacktestSummary } from '../../domains/backtest/services/summary-service.mjs';
-import { createBacktestRun, listBacktestRuns, reviewBacktestRun } from '../../domains/backtest/services/runs-service.mjs';
+import { createBacktestRun, getBacktestRunDetail, listBacktestRuns, reviewBacktestRun } from '../../domains/backtest/services/runs-service.mjs';
 import { getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { describeArchitecture, listArchitectureLayers, listModules } from '../../modules/registry.mjs';
@@ -24,7 +24,7 @@ import {
   setPrimaryBrokerBinding,
   syncBrokerBindingRuntime,
 } from '../../modules/user-account/service.mjs';
-import { listStrategyCatalog, saveStrategyCatalogItem } from '../../domains/strategy/services/catalog-service.mjs';
+import { getStrategyCatalogDetail, listStrategyCatalog, saveStrategyCatalogItem } from '../../domains/strategy/services/catalog-service.mjs';
 
 export async function handlePlatformRoutes(context) {
   const { req, reqUrl, res, config, readJsonBody, writeJson } = context;
@@ -223,6 +223,13 @@ export async function handlePlatformRoutes(context) {
     return true;
   }
 
+  if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/strategy/catalog/')) {
+    const strategyId = reqUrl.pathname.split('/').at(-1);
+    const result = getStrategyCatalogDetail(strategyId);
+    writeJson(res, result.ok ? 200 : 404, result);
+    return true;
+  }
+
   if (req.method === 'POST' && reqUrl.pathname === '/api/strategy/catalog') {
     if (!hasPermission('strategy:write')) {
       writeForbidden('strategy:write');
@@ -249,6 +256,13 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/backtest/runs') {
     writeJson(res, 200, listBacktestRuns());
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/backtest/runs/')) {
+    const runId = reqUrl.pathname.split('/').at(-1);
+    const result = getBacktestRunDetail(runId);
+    writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
 

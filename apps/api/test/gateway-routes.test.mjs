@@ -133,6 +133,18 @@ test('POST /api/strategy/catalog saves strategy catalog entries', async () => {
   assert.equal(audit.metadata?.expectedReturnPct, 11.4);
 });
 
+test('GET /api/strategy/catalog/:id returns strategy detail with recent runs', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/strategy/catalog/ema-cross-us',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.strategy.id, 'ema-cross-us');
+  assert.equal(Array.isArray(response.json.recentRuns), true);
+  assert.equal(response.json.recentRuns.every((item) => item.strategyId === 'ema-cross-us'), true);
+});
+
 test('GET /api/market/provider-status returns backend market provider status', async () => {
   context.marketProviders.updateMarketProviderStatus({
     provider: 'alpaca',
@@ -173,6 +185,28 @@ test('GET /api/backtest/runs returns structured backtest runs', async () => {
   assert.equal(response.json.ok, true);
   assert.equal(Array.isArray(response.json.runs), true);
   assert.equal(response.json.runs.some((item) => item.status === 'completed'), true);
+});
+
+test('GET /api/backtest/runs/:id returns run detail with linked strategy and workflow context', async () => {
+  const created = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/backtest/runs',
+    body: {
+      strategyId: 'ema-cross-us',
+      windowLabel: '2024-01-01 -> 2024-12-31',
+      requestedBy: 'api-test',
+    },
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: `/api/backtest/runs/${created.json.run.id}`,
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.run.id, created.json.run.id);
+  assert.equal(response.json.strategy.id, 'ema-cross-us');
+  assert.equal(response.json.workflow.id, created.json.workflow.id);
 });
 
 test('POST /api/backtest/runs queues a persisted research workflow run', async () => {

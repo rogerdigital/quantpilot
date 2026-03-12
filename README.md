@@ -145,6 +145,9 @@ quantpilot/
 - 共享运行时已经拆分到 `trading-engine / control-plane-runtime / task-workflow-engine / shared-types`。
 - 控制面持久化已抽到 `control-plane-store`，当前以文件型存储为主。
 - 最小工作流链路已经打通：`API 入队 -> worker 执行 -> control-plane 持久化 -> risk 审核 -> execution plan 准备 / notification fanout`。
+- `strategy catalog` 已具备结构化注册表读写边界，并可按单条策略查看最近研究运行上下文。
+- `backtest runs` 已具备列表、入队、人工复核与单条详情读取能力，可关联 workflow 与策略目录追踪研究链路。
+- `execution plans / runtime events / account snapshots / execution ledger` 已具备独立查询接口，执行面不再只存在于页面本地状态。
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
 - 账户写操作和券商绑定变更已经进入 audit records，基础对象变更具备最小留痕能力。
 - `auth/session` 已改为由持久化账户访问策略驱动，前后端对 `strategy:write / risk:review / execution:approve / account:write` 的权限判断已经开始收敛。
@@ -155,7 +158,7 @@ quantpilot/
 - 当前仍不适合直接用于无人值守实盘。
 - 用户系统和权限边界已经开始从 demo 常量迁到持久化账户配置，但租户、多用户隔离和完整 RBAC 仍未真正落地。
 - 行情接入、历史数据、研究结果持久化仍处于简化阶段。
-- Agent 仍处于受控协作原型阶段，尚未形成真正的规划、记忆和工具编排系统。
+- Agent 仍处于受控协作原型阶段，当前以 allowlist 只读工具、动作请求和审批流为主，尚未形成真正的规划、记忆和工具编排系统。
 - 执行引擎仍是骨架，距离真实订单状态机、补偿重试和多 broker 抽象还有较大差距。
 
 ## 研发迭代原则
@@ -182,6 +185,7 @@ quantpilot/
 - 落地真实的 `auth / user-account / account settings / broker binding` 基础模块。
 - 把文件型原型存储进一步收敛为可迁移的数据访问边界，为 `PostgreSQL + Redis` 形态做准备。
 - 将市场数据、策略配置、研究结果、执行记录从页面静态/示例数据升级为服务端结构化读写。
+- 当前已完成其中一段：策略注册表、回测运行和执行记录已进入后端结构化接口，下一步是继续把更多页面消费切到这些服务边界上。
 - 继续压缩前端中的编排逻辑，让页面只做展示、触发和消费。
 
 ### 阶段 2：研究与策略闭环

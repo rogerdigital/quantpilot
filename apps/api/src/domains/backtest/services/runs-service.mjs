@@ -20,6 +20,27 @@ export function getBacktestRunItem(runId) {
   return controlPlaneRuntime.getBacktestRun(runId);
 }
 
+export function getBacktestRunDetail(runId) {
+  const run = controlPlaneRuntime.getBacktestRun(runId);
+  if (!run) {
+    return {
+      ok: false,
+      error: 'backtest run not found',
+      message: `Unknown backtest run: ${runId || 'missing runId'}`,
+    };
+  }
+
+  const strategy = run.strategyId ? getStrategyCatalogItem(run.strategyId) : null;
+  const workflow = run.workflowRunId ? controlPlaneRuntime.getWorkflowRun(run.workflowRunId) : null;
+
+  return {
+    ok: true,
+    run,
+    strategy,
+    workflow,
+  };
+}
+
 export function createBacktestRun(payload = {}) {
   const strategy = getStrategyCatalogItem(payload.strategyId);
   if (!strategy) {

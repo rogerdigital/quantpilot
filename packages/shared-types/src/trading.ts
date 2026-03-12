@@ -367,6 +367,15 @@ export type StrategyCatalogSnapshot = {
   strategies: StrategyCatalogItem[];
 };
 
+export type StrategyCatalogDetailSnapshot = {
+  ok: boolean;
+  strategy?: StrategyCatalogItem;
+  latestRun?: BacktestRunItem | null;
+  recentRuns?: BacktestRunItem[];
+  error?: string;
+  message?: string;
+};
+
 export type StrategyCatalogSaveSnapshot = {
   ok: boolean;
   strategy?: StrategyCatalogItem;
@@ -410,6 +419,15 @@ export type BacktestSummarySnapshot = {
   averageReturnPct: number;
   reviewQueue: number;
   dataSource: string;
+};
+
+export type BacktestRunDetailSnapshot = {
+  ok: boolean;
+  run?: BacktestRunItem;
+  strategy?: StrategyCatalogItem | null;
+  workflow?: WorkflowRunRecord | null;
+  error?: string;
+  message?: string;
 };
 
 export type StrategyExecutionOrder = {

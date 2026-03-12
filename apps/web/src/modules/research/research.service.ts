@@ -1,9 +1,11 @@
 import { assertOk, fetchJson, jsonHeaders } from '../../app/api/http.ts';
 import type {
+  BacktestRunDetailSnapshot,
   BacktestRunCreateSnapshot,
   BacktestRunItem,
   BacktestSummarySnapshot,
   ResearchHubSnapshot,
+  StrategyCatalogDetailSnapshot,
   StrategyCatalogSaveSnapshot,
   StrategyCatalogItem,
 } from '@shared-types/trading.ts';
@@ -36,6 +38,14 @@ export async function queueBacktestRun(payload: {
   });
   await assertOk(response);
   return response.json();
+}
+
+export async function fetchStrategyCatalogItem(strategyId: string): Promise<StrategyCatalogDetailSnapshot> {
+  return fetchJson<StrategyCatalogDetailSnapshot>(`/api/strategy/catalog/${strategyId}`);
+}
+
+export async function fetchBacktestRunItem(runId: string): Promise<BacktestRunDetailSnapshot> {
+  return fetchJson<BacktestRunDetailSnapshot>(`/api/backtest/runs/${runId}`);
 }
 
 export async function reviewBacktestRun(runId: string, payload: {
