@@ -17,6 +17,7 @@ import { ResearchTerminalPanel } from './ResearchTerminalPanel.tsx';
 import { ResearchTimelineEventRow } from './ResearchTimelineEventRow.tsx';
 import { ResearchVersionSnapshotRow } from './ResearchVersionSnapshotRow.tsx';
 import { ResearchWorkflowStepRow } from './ResearchWorkflowStepRow.tsx';
+import { getBacktestCollectionConfigs, getStrategyCollectionConfigs } from './researchCollectionConfigs.ts';
 import { getBacktestDetailInspectionConfig, getStrategyDetailInspectionConfig } from './researchDetailConfigs.ts';
 import { getStrategyTimelineActionLabel, getStrategyTimelineGuidance } from './researchEventInspection.tsx';
 import { getStrategyTimelineInspectionConfig, getWorkflowInspectionConfig, getWorkflowStepInspectionConfig } from './researchInspectionConfigs.ts';
@@ -472,6 +473,25 @@ describe('research panel primitives', () => {
     expect(strategyConfig.summary).toContain('Candidate momentum strategy');
     expect(backtestConfig.metrics[2]?.value).toBe('10.5%');
     expect(backtestConfig.summary).toContain('Latest run');
+  });
+
+  it('builds shared collection configs for strategy and backtest panels', () => {
+    const strategyCollections = getStrategyCollectionConfigs('en', true, false, {
+      runs: 2,
+      execution: 1,
+      audit: 3,
+      versions: 4,
+    });
+    const backtestCollections = getBacktestCollectionConfigs('en', true, {
+      audit: 2,
+      execution: 1,
+      versions: 3,
+    });
+
+    expect(strategyCollections.runs.badge).toBe(2);
+    expect(strategyCollections.execution.emptyMessage).toContain('downstream execution plans');
+    expect(backtestCollections.audit.title).toBe('Selected Audit Trail');
+    expect(backtestCollections.versions.badge).toBe(3);
   });
 
   it('renders workflow step row with selected state', () => {

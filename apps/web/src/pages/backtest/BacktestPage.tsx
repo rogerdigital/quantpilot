@@ -14,6 +14,7 @@ import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEve
 import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPanel.tsx';
 import { ResearchVersionSnapshotRow } from '../../modules/research/ResearchVersionSnapshotRow.tsx';
 import { ResearchWorkflowStepRow } from '../../modules/research/ResearchWorkflowStepRow.tsx';
+import { getBacktestCollectionConfigs } from '../../modules/research/researchCollectionConfigs.ts';
 import { getBacktestDetailInspectionConfig } from '../../modules/research/researchDetailConfigs.ts';
 import { getWorkflowInspectionConfig, getWorkflowStepInspectionConfig } from '../../modules/research/researchInspectionConfigs.ts';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
@@ -192,6 +193,11 @@ function BacktestPage() {
     runDetail,
     fmtPct,
   );
+  const backtestCollectionConfigs = getBacktestCollectionConfigs(locale, Boolean(selectedRun), {
+    audit: selectedRunAuditItems.length,
+    execution: selectedRunExecutionEntries.length,
+    versions: selectedRunVersionItems.length,
+  });
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);
@@ -576,19 +582,7 @@ function BacktestPage() {
           {runDetailError ? <InspectionStatus>{locale === 'zh' ? `回测详情加载失败：${runDetailError}` : `Failed to load backtest detail: ${runDetailError}`}</InspectionStatus> : null}
           <InspectionStatus>{selectedBacktestDetailInspection.summary}</InspectionStatus>
         </ResearchDetailInspectionPanel>
-        <ResearchCollectionPanel
-          title={locale === 'zh' ? '选中回测审计轨迹' : 'Selected Audit Trail'}
-          copy={locale === 'zh'
-            ? '只展示当前选中 run 的队列、完成和复核记录。'
-            : 'Show only the queue, completion, and review records for the selected run.'}
-          badge={selectedRunAuditItems.length}
-          badgeClassName="badge-warn"
-          terminal
-          hasSelection={Boolean(selectedRun)}
-          selectionEmptyMessage={locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}
-          isEmpty={!selectedRunAuditItems.length}
-          emptyMessage={locale === 'zh' ? '当前 run 暂无审计轨迹。' : 'No audit trail exists for the selected run yet.'}
-        >
+        <ResearchCollectionPanel {...backtestCollectionConfigs.audit}>
           {selectedRunAuditItems.map((item) => (
             <ResearchAuditFeedRow
               key={item.id}
@@ -658,19 +652,7 @@ function BacktestPage() {
           metrics={selectedWorkflowStepInspection.metrics}
           guidance={selectedWorkflowStepInspection.guidance}
         />
-        <ResearchCollectionPanel
-          title={locale === 'zh' ? '下游执行承接' : 'Downstream Execution Handoff'}
-          copy={locale === 'zh'
-            ? '查看当前回测所属策略在执行侧的承接情况，确认研究结果是否已经进入 execution plan。'
-            : 'Inspect how the selected run’s strategy is handed off downstream and whether it already produced execution plans.'}
-          badge={selectedRunExecutionEntries.length}
-          badgeClassName="badge-info"
-          terminal
-          hasSelection={Boolean(selectedRun)}
-          selectionEmptyMessage={locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}
-          isEmpty={!selectedRunExecutionEntries.length}
-          emptyMessage={locale === 'zh' ? '当前回测对应策略还没有下游执行计划。' : 'No downstream execution plans exist for this run’s strategy yet.'}
-        >
+        <ResearchCollectionPanel {...backtestCollectionConfigs.execution}>
           {selectedRunExecutionEntries.map((entry) => (
             <ResearchExecutionPlanRow
               key={entry.plan.id}
@@ -685,19 +667,7 @@ function BacktestPage() {
             />
           ))}
         </ResearchCollectionPanel>
-        <ResearchCollectionPanel
-          title={locale === 'zh' ? '选中回测版本轨迹' : 'Selected Backtest Version History'}
-          copy={locale === 'zh'
-            ? '从 audit metadata 回放当前 run 在完成和人工复核时落下的关键绩效快照。'
-            : 'Replay the selected run’s key performance snapshots from audit metadata when it completed or was reviewed.'}
-          badge={selectedRunVersionItems.length}
-          badgeClassName="badge-warn"
-          terminal
-          hasSelection={Boolean(selectedRun)}
-          selectionEmptyMessage={locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}
-          isEmpty={!selectedRunVersionItems.length}
-          emptyMessage={locale === 'zh' ? '当前 run 还没有可回放的版本快照。' : 'No version snapshots are available for the selected run yet.'}
-        >
+        <ResearchCollectionPanel {...backtestCollectionConfigs.versions}>
           {selectedRunVersionItems.map((item) => {
             const annualizedReturnPct = typeof item.metadata?.annualizedReturnPct === 'number' ? item.metadata.annualizedReturnPct : null;
             const maxDrawdownPct = typeof item.metadata?.maxDrawdownPct === 'number' ? item.metadata.maxDrawdownPct : null;

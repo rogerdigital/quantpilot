@@ -14,6 +14,7 @@ import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPa
 import { ResearchTimelineEventRow } from '../../modules/research/ResearchTimelineEventRow.tsx';
 import { ResearchVersionSnapshotRow } from '../../modules/research/ResearchVersionSnapshotRow.tsx';
 import { StrategyCatalogRow } from '../../modules/research/StrategyCatalogRow.tsx';
+import { getStrategyCollectionConfigs } from '../../modules/research/researchCollectionConfigs.ts';
 import { getStrategyDetailInspectionConfig } from '../../modules/research/researchDetailConfigs.ts';
 import { getStrategyTimelineActionLabel, getStrategyTimelineGuidance } from '../../modules/research/researchEventInspection.tsx';
 import { getStrategyTimelineInspectionConfig } from '../../modules/research/researchInspectionConfigs.ts';
@@ -177,6 +178,12 @@ function StrategiesPage() {
     selectedStrategySnapshot,
     strategyDetail,
   );
+  const strategyCollectionConfigs = getStrategyCollectionConfigs(locale, Boolean(selectedStrategy), workspaceLoading, {
+    runs: selectedStrategyRuns.length,
+    execution: selectedStrategyExecutionEntries.length,
+    audit: selectedStrategyAuditItems.length,
+    versions: selectedStrategyVersionItems.length,
+  });
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
     setForm((current) => ({
@@ -640,17 +647,7 @@ function StrategiesPage() {
           {strategyDetailError ? <InspectionStatus>{locale === 'zh' ? `策略详情加载失败：${strategyDetailError}` : `Failed to load strategy detail: ${strategyDetailError}`}</InspectionStatus> : null}
           <InspectionStatus>{selectedStrategyDetailInspection.summary}</InspectionStatus>
         </ResearchDetailInspectionPanel>
-        <ResearchCollectionPanel
-          title={locale === 'zh' ? '选中策略研究记录' : 'Selected Strategy Research Runs'}
-          copy={locale === 'zh' ? '查看当前策略关联的最近回测运行记录。' : 'Review the most recent backtest runs associated with the selected strategy.'}
-          badge={selectedStrategyRuns.length}
-          badgeClassName="badge-warn"
-          terminal
-          hasSelection={Boolean(selectedStrategy)}
-          selectionEmptyMessage={locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}
-          isEmpty={!selectedStrategyRuns.length}
-          emptyMessage={locale === 'zh' ? '当前策略还没有研究运行记录。' : 'No research runs exist for the selected strategy yet.'}
-        >
+        <ResearchCollectionPanel {...strategyCollectionConfigs.runs}>
           {selectedStrategyRuns.map((run) => (
             <ResearchRunSummaryRow
               key={run.id}
@@ -659,19 +656,7 @@ function StrategiesPage() {
             />
           ))}
         </ResearchCollectionPanel>
-        <ResearchCollectionPanel
-          title={locale === 'zh' ? '选中策略执行计划' : 'Selected Strategy Execution Plans'}
-          copy={locale === 'zh' ? '直接查看当前策略在执行侧的承接情况，包括计划状态、workflow 和最新 runtime。' : 'Inspect how the selected strategy is handed off downstream through execution plan status, workflow, and latest runtime.'}
-          badge={selectedStrategyExecutionEntries.length}
-          badgeClassName="badge-info"
-          terminal
-          hasSelection={Boolean(selectedStrategy)}
-          selectionEmptyMessage={locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}
-          loading={Boolean(selectedStrategy) && workspaceLoading}
-          loadingMessage={locale === 'zh' ? '正在加载关联执行计划...' : 'Loading linked execution plans...'}
-          isEmpty={!workspaceLoading && !selectedStrategyExecutionEntries.length}
-          emptyMessage={locale === 'zh' ? '当前策略还没有进入执行侧。' : 'The selected strategy has not produced downstream execution plans yet.'}
-        >
+        <ResearchCollectionPanel {...strategyCollectionConfigs.execution}>
           {selectedStrategyExecutionEntries.map((entry) => (
             <ResearchExecutionPlanRow
               key={entry.plan.id}
@@ -680,16 +665,7 @@ function StrategiesPage() {
             />
           ))}
         </ResearchCollectionPanel>
-        <ResearchCollectionPanel
-          title={locale === 'zh' ? '选中策略审计轨迹' : 'Selected Strategy Audit Trail'}
-          copy={locale === 'zh' ? '只展示当前策略的注册、晋级、归档与恢复留痕。' : 'Show only the selected strategy’s registry, promotion, archive, and restore audit trail.'}
-          badge={selectedStrategyAuditItems.length}
-          terminal
-          hasSelection={Boolean(selectedStrategy)}
-          selectionEmptyMessage={locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}
-          isEmpty={!selectedStrategyAuditItems.length}
-          emptyMessage={locale === 'zh' ? '当前策略还没有审计轨迹。' : 'No audit trail exists for the selected strategy yet.'}
-        >
+        <ResearchCollectionPanel {...strategyCollectionConfigs.audit}>
           {selectedStrategyAuditItems.map((item) => {
             const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
             return (
@@ -705,17 +681,7 @@ function StrategiesPage() {
             );
           })}
         </ResearchCollectionPanel>
-        <ResearchCollectionPanel
-          title={locale === 'zh' ? '选中策略版本轨迹' : 'Selected Strategy Version History'}
-          copy={locale === 'zh' ? '从 audit metadata 读取最近版本的评分和风险参数，观察策略快照如何变化。' : 'Read the latest score and risk parameter snapshots from audit metadata to track how the strategy evolved.'}
-          badge={selectedStrategyVersionItems.length}
-          badgeClassName="badge-warn"
-          terminal
-          hasSelection={Boolean(selectedStrategy)}
-          selectionEmptyMessage={locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}
-          isEmpty={!selectedStrategyVersionItems.length}
-          emptyMessage={locale === 'zh' ? '当前策略还没有可回放的版本快照。' : 'No version snapshots are available for the selected strategy yet.'}
-        >
+        <ResearchCollectionPanel {...strategyCollectionConfigs.versions}>
           {selectedStrategyVersionItems.map((item) => {
             const score = typeof item.metadata?.score === 'number' ? item.metadata.score : null;
             const expectedReturnPct = typeof item.metadata?.expectedReturnPct === 'number' ? item.metadata.expectedReturnPct : null;
