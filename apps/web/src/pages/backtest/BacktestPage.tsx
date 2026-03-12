@@ -436,64 +436,66 @@ function BacktestPage() {
             </div>
           ))}
         </ResearchTerminalPanel>
-        <article className="panel">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{locale === 'zh' ? '回测运行队列' : 'Backtest Run Queue'}</div>
-            <div className="panel-copy">
+        <ResearchTerminalPanel
+          title={locale === 'zh' ? '回测运行队列' : 'Backtest Run Queue'}
+          copy={locale === 'zh'
+            ? '把 queued / running / completed / needs_review 明确拆开，为后续 worker 和审批闸门接管做准备。'
+            : 'Separate queued, running, completed, and needs_review runs now so worker ownership and review gates can plug in later.'}
+          badge={filteredRuns.length}
+          badgeClassName="panel-badge badge-warn"
+          loading={loading}
+          isEmpty={!filteredRuns.length}
+          emptyMessage={locale === 'zh' ? '当前筛选条件下没有回测记录' : 'No backtest runs match the current filter.'}
+          footer={!canReviewBacktest ? (
+            <div className="status-copy">
               {locale === 'zh'
-                ? '把 queued / running / completed / needs_review 明确拆开，为后续 worker 和审批闸门接管做准备。'
-                : 'Separate queued, running, completed, and needs_review runs now so worker ownership and review gates can plug in later.'}
+                ? '当前会话缺少 risk:review 权限，不能处理待复核回测。'
+                : 'This session is missing risk:review permission, so review-queue runs stay read-only.'}
             </div>
-          </div>
-            <div className="panel-badge badge-warn">{filteredRuns.length}</div>
-          </div>
-          <div className="focus-list focus-list-terminal">
-            {!loading && !filteredRuns.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有回测记录' : 'No backtest runs match the current filter.'}</div> : null}
-            {filteredRuns.map((run) => (
-              <InspectionSelectableRow
-                key={run.id}
-                leadTitle={run.strategyName}
-                leadCopy={`${run.windowLabel} · ${run.summary}`}
-                metrics={[
-                  { label: locale === 'zh' ? '状态' : 'Status', value: run.status },
-                  { label: locale === 'zh' ? '收益' : 'Return', value: run.status === 'completed' || run.status === 'needs_review' ? fmtPct(run.annualizedReturnPct) : '--' },
-                  { label: locale === 'zh' ? '更新时间' : 'Updated', value: fmtDateTime(run.completedAt || run.startedAt, locale) },
-                  {
-                    label: locale === 'zh' ? '复核' : 'Review',
-                    value: run.status === 'needs_review'
-                      ? (
-                        <button
-                          type="button"
-                          className="inline-action"
-                          disabled={!canReviewBacktest || reviewingRunId === run.id}
-                          onClick={() => handleReviewRun(run.id)}
-                        >
-                          {reviewingRunId === run.id
-                            ? (locale === 'zh' ? '处理中...' : 'Reviewing...')
-                            : (locale === 'zh' ? '人工复核' : 'Approve Review')}
-                        </button>
-                      )
-                      : (locale === 'zh' ? '无' : 'None'),
-                  },
-                ]}
-                actions={(
-                  <button
-                    type="button"
-                    className="inline-action"
-                    disabled={selectedRunId === run.id}
-                    onClick={() => setSelectedRunId(run.id)}
-                  >
-                    {selectedRunId === run.id
-                      ? (locale === 'zh' ? '已选中' : 'Selected')
-                      : (locale === 'zh' ? '查看' : 'Inspect')}
-                  </button>
-                )}
-              />
-            ))}
-          </div>
-          {!canReviewBacktest ? <div className="status-copy">{locale === 'zh' ? '当前会话缺少 risk:review 权限，不能处理待复核回测。' : 'This session is missing risk:review permission, so review-queue runs stay read-only.'}</div> : null}
-        </article>
+          ) : null}
+        >
+          {filteredRuns.map((run) => (
+            <InspectionSelectableRow
+              key={run.id}
+              leadTitle={run.strategyName}
+              leadCopy={`${run.windowLabel} · ${run.summary}`}
+              metrics={[
+                { label: locale === 'zh' ? '状态' : 'Status', value: run.status },
+                { label: locale === 'zh' ? '收益' : 'Return', value: run.status === 'completed' || run.status === 'needs_review' ? fmtPct(run.annualizedReturnPct) : '--' },
+                { label: locale === 'zh' ? '更新时间' : 'Updated', value: fmtDateTime(run.completedAt || run.startedAt, locale) },
+                {
+                  label: locale === 'zh' ? '复核' : 'Review',
+                  value: run.status === 'needs_review'
+                    ? (
+                      <button
+                        type="button"
+                        className="inline-action"
+                        disabled={!canReviewBacktest || reviewingRunId === run.id}
+                        onClick={() => handleReviewRun(run.id)}
+                      >
+                        {reviewingRunId === run.id
+                          ? (locale === 'zh' ? '处理中...' : 'Reviewing...')
+                          : (locale === 'zh' ? '人工复核' : 'Approve Review')}
+                      </button>
+                    )
+                    : (locale === 'zh' ? '无' : 'None'),
+                },
+              ]}
+              actions={(
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={selectedRunId === run.id}
+                  onClick={() => setSelectedRunId(run.id)}
+                >
+                  {selectedRunId === run.id
+                    ? (locale === 'zh' ? '已选中' : 'Selected')
+                    : (locale === 'zh' ? '查看' : 'Inspect')}
+                </button>
+              )}
+            />
+          ))}
+        </ResearchTerminalPanel>
         <ResearchTerminalPanel
           title={locale === 'zh' ? '研究操作历史' : 'Research Activity Feed'}
           copy={locale === 'zh'
