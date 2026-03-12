@@ -17,6 +17,7 @@ import { ResearchTerminalPanel } from './ResearchTerminalPanel.tsx';
 import { ResearchTimelineEventRow } from './ResearchTimelineEventRow.tsx';
 import { ResearchVersionSnapshotRow } from './ResearchVersionSnapshotRow.tsx';
 import { ResearchWorkflowStepRow } from './ResearchWorkflowStepRow.tsx';
+import { getBacktestDetailInspectionConfig, getStrategyDetailInspectionConfig } from './researchDetailConfigs.ts';
 import { getStrategyTimelineActionLabel, getStrategyTimelineGuidance } from './researchEventInspection.tsx';
 import { getStrategyTimelineInspectionConfig, getWorkflowInspectionConfig, getWorkflowStepInspectionConfig } from './researchInspectionConfigs.ts';
 
@@ -368,6 +369,109 @@ describe('research panel primitives', () => {
     expect(timelineConfig.metrics[0]?.value).toBe('Queued run');
     expect(workflowConfig.guidance).toContain('Last updated');
     expect(stepConfig.guidance).toContain('risk_review');
+  });
+
+  it('builds shared detail inspection configs for strategy and backtest panels', () => {
+    const strategyConfig = getStrategyDetailInspectionConfig(
+      'en',
+      {
+        id: 'strategy-1',
+        name: 'Momentum',
+        family: 'trend',
+        timeframe: '1d',
+        universe: 'NASDAQ 100',
+        status: 'candidate',
+        score: 81,
+        expectedReturnPct: 14.2,
+        maxDrawdownPct: 6.4,
+        sharpe: 1.9,
+        summary: 'Candidate momentum strategy',
+      },
+      {
+        id: 'strategy-1',
+        name: 'Momentum',
+        family: 'trend',
+        timeframe: '1d',
+        universe: 'NASDAQ 100',
+        status: 'candidate',
+        score: 81,
+        expectedReturnPct: 14.2,
+        maxDrawdownPct: 6.4,
+        sharpe: 1.9,
+        summary: 'Candidate momentum strategy',
+      },
+      {
+        ok: true,
+        latestRun: {
+          id: 'run-1',
+          strategyId: 'strategy-1',
+          strategyName: 'Momentum',
+          status: 'completed',
+          windowLabel: '30D',
+          startedAt: '2026-03-13T12:00:00.000Z',
+          annualizedReturnPct: 10.5,
+          maxDrawdownPct: 4.2,
+          sharpe: 1.7,
+          winRatePct: 54,
+          turnoverPct: 18,
+          summary: 'Latest run',
+        },
+      },
+    );
+    const backtestConfig = getBacktestDetailInspectionConfig(
+      'en',
+      {
+        id: 'run-1',
+        strategyId: 'strategy-1',
+        strategyName: 'Momentum',
+        status: 'completed',
+        windowLabel: '30D',
+        startedAt: '2026-03-13T12:00:00.000Z',
+        annualizedReturnPct: 10.5,
+        maxDrawdownPct: 4.2,
+        sharpe: 1.7,
+        winRatePct: 54,
+        turnoverPct: 18,
+        summary: 'Latest run',
+      },
+      {
+        id: 'run-1',
+        strategyId: 'strategy-1',
+        strategyName: 'Momentum',
+        status: 'completed',
+        windowLabel: '30D',
+        startedAt: '2026-03-13T12:00:00.000Z',
+        annualizedReturnPct: 10.5,
+        maxDrawdownPct: 4.2,
+        sharpe: 1.7,
+        winRatePct: 54,
+        turnoverPct: 18,
+        summary: 'Latest run',
+      },
+      null,
+      {
+        ok: true,
+        strategy: {
+          id: 'strategy-1',
+          name: 'Momentum',
+          family: 'trend',
+          timeframe: '1d',
+          universe: 'NASDAQ 100',
+          status: 'candidate',
+          score: 81,
+          expectedReturnPct: 14.2,
+          maxDrawdownPct: 6.4,
+          sharpe: 1.9,
+          summary: 'Candidate momentum strategy',
+        },
+      },
+      (value) => `${value.toFixed(1)}%`,
+    );
+
+    expect(strategyConfig.metrics[0]?.value).toBe('Momentum');
+    expect(strategyConfig.summary).toContain('Candidate momentum strategy');
+    expect(backtestConfig.metrics[2]?.value).toBe('10.5%');
+    expect(backtestConfig.summary).toContain('Latest run');
   });
 
   it('renders workflow step row with selected state', () => {

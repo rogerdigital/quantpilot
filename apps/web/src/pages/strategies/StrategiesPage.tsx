@@ -14,6 +14,7 @@ import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPa
 import { ResearchTimelineEventRow } from '../../modules/research/ResearchTimelineEventRow.tsx';
 import { ResearchVersionSnapshotRow } from '../../modules/research/ResearchVersionSnapshotRow.tsx';
 import { StrategyCatalogRow } from '../../modules/research/StrategyCatalogRow.tsx';
+import { getStrategyDetailInspectionConfig } from '../../modules/research/researchDetailConfigs.ts';
 import { getStrategyTimelineActionLabel, getStrategyTimelineGuidance } from '../../modules/research/researchEventInspection.tsx';
 import { getStrategyTimelineInspectionConfig } from '../../modules/research/researchInspectionConfigs.ts';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
@@ -169,6 +170,12 @@ function StrategiesPage() {
     selectedStrategy,
     selectedTimelineItem,
     formatDateTime,
+  );
+  const selectedStrategyDetailInspection = getStrategyDetailInspectionConfig(
+    locale,
+    selectedStrategy,
+    selectedStrategySnapshot,
+    strategyDetail,
   );
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
@@ -626,21 +633,12 @@ function StrategiesPage() {
           title={locale === 'zh' ? '选中策略详情' : 'Selected Strategy Detail'}
           copy={locale === 'zh' ? '聚合当前策略的阶段、收益预期、风险参数和研究摘要。' : 'Aggregate the selected strategy’s stage, expected return, risk profile, and research summary.'}
           badge={selectedStrategy?.status || '--'}
-          emptyMessage={!selectedStrategy ? (locale === 'zh' ? '当前没有可查看的策略。' : 'No strategy is available for inspection.') : null}
-          metrics={[
-            { label: locale === 'zh' ? '名称' : 'Name', value: selectedStrategySnapshot?.name || '--' },
-            { label: locale === 'zh' ? '家族' : 'Family', value: selectedStrategySnapshot?.family || '--' },
-            { label: locale === 'zh' ? '周期' : 'Timeframe', value: selectedStrategySnapshot?.timeframe || '--' },
-            { label: locale === 'zh' ? '标的池' : 'Universe', value: selectedStrategySnapshot?.universe || '--' },
-            { label: locale === 'zh' ? '预期收益' : 'Expected return', value: selectedStrategySnapshot ? `${selectedStrategySnapshot.expectedReturnPct.toFixed(1)}%` : '--' },
-            { label: locale === 'zh' ? '最大回撤' : 'Max drawdown', value: selectedStrategySnapshot ? `${selectedStrategySnapshot.maxDrawdownPct.toFixed(1)}%` : '--' },
-            { label: 'Sharpe', value: selectedStrategySnapshot ? selectedStrategySnapshot.sharpe.toFixed(2) : '--' },
-            { label: locale === 'zh' ? '最近研究' : 'Latest research', value: strategyDetail?.latestRun?.windowLabel || '--' },
-          ]}
+          emptyMessage={selectedStrategyDetailInspection.emptyMessage}
+          metrics={selectedStrategyDetailInspection.metrics}
         >
           {strategyDetailLoading ? <InspectionStatus>{locale === 'zh' ? '正在同步策略详情...' : 'Syncing strategy detail...'}</InspectionStatus> : null}
           {strategyDetailError ? <InspectionStatus>{locale === 'zh' ? `策略详情加载失败：${strategyDetailError}` : `Failed to load strategy detail: ${strategyDetailError}`}</InspectionStatus> : null}
-          <InspectionStatus>{selectedStrategySnapshot?.summary || (locale === 'zh' ? '当前策略暂无摘要。' : 'No strategy summary is available yet.')}</InspectionStatus>
+          <InspectionStatus>{selectedStrategyDetailInspection.summary}</InspectionStatus>
         </ResearchDetailInspectionPanel>
         <ResearchCollectionPanel
           title={locale === 'zh' ? '选中策略研究记录' : 'Selected Strategy Research Runs'}

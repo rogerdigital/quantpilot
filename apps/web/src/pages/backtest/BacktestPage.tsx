@@ -14,6 +14,7 @@ import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEve
 import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPanel.tsx';
 import { ResearchVersionSnapshotRow } from '../../modules/research/ResearchVersionSnapshotRow.tsx';
 import { ResearchWorkflowStepRow } from '../../modules/research/ResearchWorkflowStepRow.tsx';
+import { getBacktestDetailInspectionConfig } from '../../modules/research/researchDetailConfigs.ts';
 import { getWorkflowInspectionConfig, getWorkflowStepInspectionConfig } from '../../modules/research/researchInspectionConfigs.ts';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
@@ -183,6 +184,14 @@ function BacktestPage() {
   });
   const selectedWorkflowInspection = getWorkflowInspectionConfig(locale, selectedRun, selectedWorkflow, fmtDateTime);
   const selectedWorkflowStepInspection = getWorkflowStepInspectionConfig(locale, selectedWorkflow, selectedWorkflowStep);
+  const selectedBacktestDetailInspection = getBacktestDetailInspectionConfig(
+    locale,
+    selectedRun,
+    selectedRunSnapshot,
+    selectedWorkflow,
+    runDetail,
+    fmtPct,
+  );
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);
@@ -537,17 +546,8 @@ function BacktestPage() {
             ? '把单条 run 的回测结果、审计留痕和 workflow 进度聚合到一个视图，减少跨面板对照。'
             : 'Aggregate one run’s result metrics, audit trail, and workflow progress into a single detail view.'}
           badge={selectedRun?.status || '--'}
-          emptyMessage={!selectedRun ? (locale === 'zh' ? '当前没有可查看的回测记录。' : 'No backtest run is available for inspection.') : null}
-          metrics={[
-            { label: locale === 'zh' ? '策略' : 'Strategy', value: selectedRunSnapshot?.strategyName || '--' },
-            { label: locale === 'zh' ? '窗口' : 'Window', value: selectedRunSnapshot?.windowLabel || '--' },
-            { label: locale === 'zh' ? '收益率' : 'Return', value: selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? fmtPct(selectedRunSnapshot.annualizedReturnPct) : '--' },
-            { label: locale === 'zh' ? '最大回撤' : 'Max Drawdown', value: selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? fmtPct(selectedRunSnapshot.maxDrawdownPct) : '--' },
-            { label: 'Sharpe', value: selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? selectedRunSnapshot.sharpe.toFixed(2) : '--' },
-            { label: locale === 'zh' ? '胜率' : 'Win Rate', value: selectedRunSnapshot && (selectedRunSnapshot.status === 'completed' || selectedRunSnapshot.status === 'needs_review') ? fmtPct(selectedRunSnapshot.winRatePct) : '--' },
-            { label: locale === 'zh' ? '工作流' : 'Workflow', value: selectedWorkflow?.id || selectedRunSnapshot?.workflowRunId || '--' },
-            { label: locale === 'zh' ? '策略阶段' : 'Strategy stage', value: runDetail?.strategy?.status || '--' },
-          ]}
+          emptyMessage={selectedBacktestDetailInspection.emptyMessage}
+          metrics={selectedBacktestDetailInspection.metrics}
         >
           <ResearchActionBar>
             <ResearchActionButton
@@ -574,7 +574,7 @@ function BacktestPage() {
           </ResearchActionBar>
           {runDetailLoading ? <InspectionStatus>{locale === 'zh' ? '正在同步回测详情...' : 'Syncing backtest detail...'}</InspectionStatus> : null}
           {runDetailError ? <InspectionStatus>{locale === 'zh' ? `回测详情加载失败：${runDetailError}` : `Failed to load backtest detail: ${runDetailError}`}</InspectionStatus> : null}
-          <InspectionStatus>{selectedRunSnapshot?.summary || (locale === 'zh' ? '当前回测暂无摘要。' : 'No backtest summary is available yet.')}</InspectionStatus>
+          <InspectionStatus>{selectedBacktestDetailInspection.summary}</InspectionStatus>
         </ResearchDetailInspectionPanel>
         <ResearchCollectionPanel
           title={locale === 'zh' ? '选中回测审计轨迹' : 'Selected Audit Trail'}
