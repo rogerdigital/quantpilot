@@ -8,6 +8,7 @@ import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySel
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useBacktestRunDetail } from '../../modules/research/useBacktestRunDetail.ts';
+import { useBacktestDetailPanels } from '../../modules/research/useBacktestDetailPanels.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
@@ -106,30 +107,19 @@ function BacktestPage() {
   });
   const selectedRun = filteredRuns.find((run) => run.id === selectedRunId) || filteredRuns[0] || null;
   const { data: runDetail, loading: runDetailLoading, error: runDetailError } = useBacktestRunDetail(selectedRun?.id || '', refreshKey);
-  const selectedRunSnapshot = runDetail?.run || selectedRun;
-  const selectedRunAuditItems = selectedRun
-    ? auditItems
-      .filter((item) => {
-        const runId = typeof item.metadata?.runId === 'string' ? item.metadata.runId : '';
-        return runId === selectedRun.id;
-      })
-      .slice(0, 6)
-    : [];
-  const selectedRunVersionItems = selectedRunAuditItems.filter((item) => (
-    item.type === 'backtest-run.completed' || item.type === 'backtest-run.reviewed'
-  ));
-  const selectedRunExecutionEntries = executionEntries
-    .filter((entry) => entry.plan.strategyId === selectedRunSnapshot?.strategyId)
-    .slice(0, 6);
-  const selectedWorkflow = runDetail?.workflow
-    || (selectedRun?.workflowRunId
-      ? workflowRuns.find((workflow) => workflow.id === selectedRun.workflowRunId) || null
-      : null);
   const {
     selectedId: selectedAuditEventId,
     setSelectedId: setSelectedAuditEventId,
   } = useSyncedQuerySelection({
-    itemIds: selectedRunAuditItems.map((item) => item.id),
+    itemIds: (selectedRun
+      ? auditItems
+        .filter((item) => {
+          const runId = typeof item.metadata?.runId === 'string' ? item.metadata.runId : '';
+          return runId === selectedRun.id;
+        })
+        .slice(0, 6)
+        .map((item) => item.id)
+      : []),
     queryKey: 'audit',
     requestedId: requestedAuditEventId,
     searchParams,
@@ -139,14 +129,33 @@ function BacktestPage() {
     selectedId: selectedWorkflowStepKey,
     setSelectedId: setSelectedWorkflowStepKey,
   } = useSyncedQuerySelection({
-    itemIds: selectedWorkflow?.steps.map((step) => step.key) || [],
+    itemIds: (runDetail?.workflow
+      || (selectedRun?.workflowRunId
+        ? workflowRuns.find((workflow) => workflow.id === selectedRun.workflowRunId) || null
+        : null)
+    )?.steps.map((step) => step.key) || [],
     queryKey: 'step',
     requestedId: requestedWorkflowStepKey,
     searchParams,
     setSearchParams,
   });
-  const selectedAuditEvent = selectedRunAuditItems.find((item) => item.id === selectedAuditEventId) || selectedRunAuditItems[0] || null;
-  const selectedWorkflowStep = selectedWorkflow?.steps.find((step) => step.key === selectedWorkflowStepKey) || selectedWorkflow?.steps[0] || null;
+  const {
+    selectedRunSnapshot,
+    selectedRunAuditItems,
+    selectedRunVersionItems,
+    selectedRunExecutionEntries,
+    selectedWorkflow,
+    selectedAuditEvent,
+    selectedWorkflowStep,
+  } = useBacktestDetailPanels({
+    selectedRun,
+    runDetail,
+    auditItems,
+    workflowRuns,
+    executionEntries,
+    selectedAuditEventId,
+    selectedWorkflowStepKey,
+  });
 
   useEffect(() => {
     const pollMs = hasActiveRuns ? 5000 : 15000;
