@@ -5,6 +5,7 @@ import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
+import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEventInspectionPanel.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -678,94 +679,95 @@ function BacktestPage() {
             />
           ))}
         </ResearchCollectionPanel>
-        <InspectionPanel
+        <ResearchEventInspectionPanel
           title={locale === 'zh' ? '选中研究事件' : 'Selected Research Event'}
           copy={locale === 'zh'
             ? '钻取当前回测审计事件，便于把 run、审计和 workflow 三条线对到同一个节点。'
             : 'Inspect the selected backtest audit event so the run, audit, and workflow can be aligned to one node.'}
           badge={selectedAuditEvent?.type || '--'}
           badgeClassName="badge-warn"
-        >
-          {!selectedRun ? (
-            <InspectionEmpty>{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</InspectionEmpty>
-          ) : !selectedAuditEvent ? (
-            <InspectionEmpty>{locale === 'zh' ? '当前 run 还没有可钻取的研究事件。' : 'No research event is available for inspection yet.'}</InspectionEmpty>
-          ) : (
-            <div className="status-stack">
-              <div className="status-row"><span>{locale === 'zh' ? '标题' : 'Title'}</span><strong>{selectedAuditEvent.title}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '类型' : 'Type'}</span><strong>{selectedAuditEvent.type}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '操作人' : 'Actor'}</span><strong>{selectedAuditEvent.actor}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{fmtDateTime(selectedAuditEvent.createdAt, locale)}</strong></div>
-              <InspectionStatus>{selectedAuditEvent.detail}</InspectionStatus>
-            </div>
-          )}
-        </InspectionPanel>
-        <InspectionPanel
+          emptyMessage={!selectedRun
+            ? (locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.')
+            : !selectedAuditEvent
+              ? (locale === 'zh' ? '当前 run 还没有可钻取的研究事件。' : 'No research event is available for inspection yet.')
+              : null}
+          metrics={[
+            { label: locale === 'zh' ? '标题' : 'Title', value: selectedAuditEvent?.title || '--' },
+            { label: locale === 'zh' ? '类型' : 'Type', value: selectedAuditEvent?.type || '--' },
+            { label: locale === 'zh' ? '操作人' : 'Actor', value: selectedAuditEvent?.actor || '--' },
+            { label: locale === 'zh' ? '时间' : 'Time', value: selectedAuditEvent ? fmtDateTime(selectedAuditEvent.createdAt, locale) : '--' },
+          ]}
+          detail={selectedAuditEvent?.detail}
+        />
+        <ResearchEventInspectionPanel
           title={locale === 'zh' ? '选中回测工作流' : 'Selected Workflow'}
           copy={locale === 'zh'
             ? '查看当前 run 对应的 task orchestrator 工作流状态和步骤进度。'
             : 'Inspect the task-orchestrator workflow state and step progress for the selected run.'}
           badge={selectedWorkflow?.status || '--'}
+          emptyMessage={!selectedRun
+            ? (locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.')
+            : !selectedWorkflow
+              ? (locale === 'zh' ? '当前 run 还没有可见的 workflow 详情。' : 'No workflow detail is available for the selected run yet.')
+              : null}
+          metrics={[
+            { label: locale === 'zh' ? '工作流 ID' : 'Workflow ID', value: selectedWorkflow?.id || '--' },
+            { label: locale === 'zh' ? '状态' : 'Status', value: selectedWorkflow?.status || '--' },
+            { label: locale === 'zh' ? '尝试次数' : 'Attempts', value: selectedWorkflow ? `${selectedWorkflow.attempt}/${selectedWorkflow.maxAttempts}` : '--' },
+            { label: locale === 'zh' ? '触发方式' : 'Trigger', value: selectedWorkflow?.trigger || '--' },
+          ]}
+          guidance={selectedWorkflow
+            ? (locale === 'zh'
+                ? `最近更新时间 ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}`
+                : `Last updated ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}`)
+            : null}
         >
-          {!selectedRun ? (
-            <InspectionEmpty>{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</InspectionEmpty>
-          ) : !selectedWorkflow ? (
-            <InspectionEmpty>{locale === 'zh' ? '当前 run 还没有可见的 workflow 详情。' : 'No workflow detail is available for the selected run yet.'}</InspectionEmpty>
-          ) : (
-            <div className="status-stack">
-              <div className="status-row"><span>{locale === 'zh' ? '工作流 ID' : 'Workflow ID'}</span><strong>{selectedWorkflow.id}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{selectedWorkflow.status}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '尝试次数' : 'Attempts'}</span><strong>{selectedWorkflow.attempt}/{selectedWorkflow.maxAttempts}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '触发方式' : 'Trigger'}</span><strong>{selectedWorkflow.trigger}</strong></div>
-              {selectedWorkflow.steps.length ? (
-                <div className="focus-list">
-                  {selectedWorkflow.steps.map((step) => (
-                    <InspectionSelectableRow
-                      key={step.key}
-                      metrics={[
-                        { label: locale === 'zh' ? '步骤' : 'Step', value: step.key },
-                        { label: locale === 'zh' ? '状态' : 'Status', value: step.status },
-                      ]}
-                      actions={(
-                        <button
-                          type="button"
-                          className="inline-action"
-                          disabled={selectedWorkflowStepKey === step.key}
-                          onClick={() => setSelectedWorkflowStepKey(step.key)}
-                        >
-                          {selectedWorkflowStepKey === step.key
-                            ? (locale === 'zh' ? '已选中' : 'Selected')
-                            : (locale === 'zh' ? '查看' : 'Inspect')}
-                        </button>
-                      )}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <InspectionStatus>{locale === 'zh' ? '尚未记录步骤进度。' : 'No workflow steps recorded yet.'}</InspectionStatus>
-              )}
-              <InspectionStatus>{locale === 'zh' ? `最近更新时间 ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}` : `Last updated ${fmtDateTime(selectedWorkflow.updatedAt || selectedWorkflow.createdAt, locale)}`}</InspectionStatus>
+          {selectedWorkflow?.steps.length ? (
+            <div className="focus-list">
+              {selectedWorkflow.steps.map((step) => (
+                <InspectionSelectableRow
+                  key={step.key}
+                  metrics={[
+                    { label: locale === 'zh' ? '步骤' : 'Step', value: step.key },
+                    { label: locale === 'zh' ? '状态' : 'Status', value: step.status },
+                  ]}
+                  actions={(
+                    <button
+                      type="button"
+                      className="inline-action"
+                      disabled={selectedWorkflowStepKey === step.key}
+                      onClick={() => setSelectedWorkflowStepKey(step.key)}
+                    >
+                      {selectedWorkflowStepKey === step.key
+                        ? (locale === 'zh' ? '已选中' : 'Selected')
+                        : (locale === 'zh' ? '查看' : 'Inspect')}
+                    </button>
+                  )}
+                />
+              ))}
             </div>
-          )}
-        </InspectionPanel>
-        <InspectionPanel
+          ) : selectedWorkflow ? (
+            <InspectionStatus>{locale === 'zh' ? '尚未记录步骤进度。' : 'No workflow steps recorded yet.'}</InspectionStatus>
+          ) : null}
+        </ResearchEventInspectionPanel>
+        <ResearchEventInspectionPanel
           title={locale === 'zh' ? '选中工作流步骤' : 'Selected Workflow Step'}
           copy={locale === 'zh' ? '把当前 workflow 节点单独展开，便于深链定位到具体步骤。' : 'Expand the current workflow node so deep links can target a specific step.'}
           badge={selectedWorkflowStep?.status || '--'}
           badgeClassName="badge-info"
-        >
-          {!selectedWorkflow ? (
-            <InspectionEmpty>{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</InspectionEmpty>
-          ) : !selectedWorkflowStep ? (
-            <InspectionEmpty>{locale === 'zh' ? '当前工作流还没有可定位的步骤。' : 'No workflow step is available for inspection yet.'}</InspectionEmpty>
-          ) : (
-            <div className="status-stack">
-              <div className="status-row"><span>{locale === 'zh' ? '步骤' : 'Step'}</span><strong>{selectedWorkflowStep.key}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{selectedWorkflowStep.status}</strong></div>
-              <InspectionStatus>{locale === 'zh' ? `当前深链已定位到步骤 ${selectedWorkflowStep.key}。` : `The current deep link is focused on step ${selectedWorkflowStep.key}.`}</InspectionStatus>
-            </div>
-          )}
-        </InspectionPanel>
+          emptyMessage={!selectedWorkflow
+            ? (locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.')
+            : !selectedWorkflowStep
+              ? (locale === 'zh' ? '当前工作流还没有可定位的步骤。' : 'No workflow step is available for inspection yet.')
+              : null}
+          metrics={[
+            { label: locale === 'zh' ? '步骤' : 'Step', value: selectedWorkflowStep?.key || '--' },
+            { label: locale === 'zh' ? '状态' : 'Status', value: selectedWorkflowStep?.status || '--' },
+          ]}
+          guidance={selectedWorkflowStep
+            ? (locale === 'zh' ? `当前深链已定位到步骤 ${selectedWorkflowStep.key}。` : `The current deep link is focused on step ${selectedWorkflowStep.key}.`)
+            : null}
+        />
         <ResearchCollectionPanel
           title={locale === 'zh' ? '下游执行承接' : 'Downstream Execution Handoff'}
           copy={locale === 'zh'

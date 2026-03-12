@@ -5,6 +5,7 @@ import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
+import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEventInspectionPanel.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -654,64 +655,61 @@ function StrategiesPage() {
             />
           ))}
         </InspectionListPanel>
-        <InspectionPanel
+        <ResearchEventInspectionPanel
           title={locale === 'zh' ? '选中时间线事件' : 'Selected Timeline Event'}
           copy={locale === 'zh' ? '钻取当前时间线节点，查看它属于哪条链路、对应哪条记录，以及当前应该到哪里继续排查。' : 'Inspect the selected timeline node to see which lane it belongs to, which record it references, and where to continue investigation.'}
           badge={selectedTimelineItem?.lane || '--'}
           badgeClassName="badge-warn"
-        >
-          {!selectedStrategy ? (
-            <InspectionEmpty>{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</InspectionEmpty>
-          ) : !selectedTimelineItem ? (
-            <InspectionEmpty>{locale === 'zh' ? '当前还没有可钻取的时间线节点。' : 'No timeline node is available for inspection yet.'}</InspectionEmpty>
-          ) : (
-            <div className="status-stack">
-              <div className="status-row"><span>{locale === 'zh' ? '事件' : 'Event'}</span><strong>{selectedTimelineItem.title}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '链路' : 'Lane'}</span><strong>{selectedTimelineItem.lane}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{formatDateTime(selectedTimelineItem.at, locale)}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '关联记录' : 'Reference'}</span><strong>{selectedTimelineItem.reference}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '事件类型' : 'Event type'}</span><strong>{selectedTimelineItem.eventType}</strong></div>
-              <InspectionStatus>{selectedTimelineItem.detail}</InspectionStatus>
-              <InspectionStatus>
-                {selectedTimelineItem.eventType === 'execution'
-                  ? (locale === 'zh' ? '继续查看下方执行计划面板，确认 plan、risk、workflow 和 runtime 是否一致。' : 'Continue with the execution plan panel below to verify plan, risk, workflow, and runtime consistency.')
-                  : selectedTimelineItem.eventType === 'run'
-                    ? (locale === 'zh' ? '继续查看下方研究记录面板，确认回测结果、窗口参数和版本快照是否匹配。' : 'Continue with the research runs panel below to verify backtest results, window parameters, and version snapshots.')
-                    : (locale === 'zh' ? '继续查看下方审计轨迹和版本轨迹，确认这次策略写入带来的状态变化。' : 'Continue with the audit trail and version history panels below to confirm the state change from this registry update.')}
-              </InspectionStatus>
-              {selectedTimelineItem.eventType === 'run' ? (
-                <div className="settings-actions">
-                  <button
-                    type="button"
-                    className="inline-action inline-action-approve"
-                    onClick={() => researchNavigation.openBacktestDetail(selectedTimelineItem.reference, {
-                      strategyId: selectedStrategy?.id || '',
-                      timelineId: selectedTimelineItem.id,
-                      source: 'strategies',
-                    })}
-                  >
-                    {locale === 'zh' ? '打开回测详情' : 'Open Backtest Detail'}
-                  </button>
-                </div>
-              ) : null}
-              {selectedTimelineItem.eventType === 'execution' ? (
-                <div className="settings-actions">
-                  <button
-                    type="button"
-                    className="inline-action inline-action-approve"
-                    onClick={() => researchNavigation.openExecutionDetail(selectedTimelineItem.reference, {
-                      strategyId: selectedStrategy?.id || '',
-                      timelineId: selectedTimelineItem.id,
-                      source: 'strategies',
-                    })}
-                  >
-                    {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
-                  </button>
-                </div>
-              ) : null}
+          emptyMessage={!selectedStrategy
+            ? (locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.')
+            : !selectedTimelineItem
+              ? (locale === 'zh' ? '当前还没有可钻取的时间线节点。' : 'No timeline node is available for inspection yet.')
+              : null}
+          metrics={[
+            { label: locale === 'zh' ? '事件' : 'Event', value: selectedTimelineItem?.title || '--' },
+            { label: locale === 'zh' ? '链路' : 'Lane', value: selectedTimelineItem?.lane || '--' },
+            { label: locale === 'zh' ? '时间' : 'Time', value: selectedTimelineItem ? formatDateTime(selectedTimelineItem.at, locale) : '--' },
+            { label: locale === 'zh' ? '关联记录' : 'Reference', value: selectedTimelineItem?.reference || '--' },
+            { label: locale === 'zh' ? '事件类型' : 'Event type', value: selectedTimelineItem?.eventType || '--' },
+          ]}
+          detail={selectedTimelineItem?.detail}
+          guidance={selectedTimelineItem
+            ? (selectedTimelineItem.eventType === 'execution'
+                ? (locale === 'zh' ? '继续查看下方执行计划面板，确认 plan、risk、workflow 和 runtime 是否一致。' : 'Continue with the execution plan panel below to verify plan, risk, workflow, and runtime consistency.')
+                : selectedTimelineItem.eventType === 'run'
+                  ? (locale === 'zh' ? '继续查看下方研究记录面板，确认回测结果、窗口参数和版本快照是否匹配。' : 'Continue with the research runs panel below to verify backtest results, window parameters, and version snapshots.')
+                  : (locale === 'zh' ? '继续查看下方审计轨迹和版本轨迹，确认这次策略写入带来的状态变化。' : 'Continue with the audit trail and version history panels below to confirm the state change from this registry update.'))
+            : null}
+          actions={selectedTimelineItem?.eventType === 'run' ? (
+            <div className="settings-actions">
+              <button
+                type="button"
+                className="inline-action inline-action-approve"
+                onClick={() => researchNavigation.openBacktestDetail(selectedTimelineItem.reference, {
+                  strategyId: selectedStrategy?.id || '',
+                  timelineId: selectedTimelineItem.id,
+                  source: 'strategies',
+                })}
+              >
+                {locale === 'zh' ? '打开回测详情' : 'Open Backtest Detail'}
+              </button>
             </div>
-          )}
-        </InspectionPanel>
+          ) : selectedTimelineItem?.eventType === 'execution' ? (
+            <div className="settings-actions">
+              <button
+                type="button"
+                className="inline-action inline-action-approve"
+                onClick={() => researchNavigation.openExecutionDetail(selectedTimelineItem.reference, {
+                  strategyId: selectedStrategy?.id || '',
+                  timelineId: selectedTimelineItem.id,
+                  source: 'strategies',
+                })}
+              >
+                {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
+              </button>
+            </div>
+          ) : null}
+        />
         <ResearchDetailInspectionPanel
           title={locale === 'zh' ? '选中策略详情' : 'Selected Strategy Detail'}
           copy={locale === 'zh' ? '聚合当前策略的阶段、收益预期、风险参数和研究摘要。' : 'Aggregate the selected strategy’s stage, expected return, risk profile, and research summary.'}
