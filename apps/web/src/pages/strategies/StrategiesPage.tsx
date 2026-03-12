@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ExecutionLedgerEntry } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchExecutionLedger } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
+import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
 import { useStrategyDetail } from '../../modules/research/useStrategyDetail.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
@@ -36,8 +37,6 @@ function StrategiesPage() {
   const goToSettings = useSettingsNavigation();
   const [refreshKey, setRefreshKey] = useState(0);
   const [registryFilter, setRegistryFilter] = useState<'active' | 'archived' | 'all'>('active');
-  const [selectedStrategyId, setSelectedStrategyId] = useState('');
-  const [selectedTimelineId, setSelectedTimelineId] = useState('');
   const [executionEntries, setExecutionEntries] = useState<ExecutionLedgerEntry[]>([]);
   const [executionLoading, setExecutionLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -75,6 +74,18 @@ function StrategiesPage() {
       return registryFilter === 'all' ? true : visibleStrategyIds.includes(strategyId);
     })
     .slice(0, 8);
+  const requestedStrategyId = searchParams.get('strategy');
+  const requestedTimelineId = searchParams.get('timeline');
+  const {
+    selectedId: selectedStrategyId,
+    setSelectedId: setSelectedStrategyId,
+  } = useSyncedQuerySelection({
+    itemIds: [...visibleActiveStrategies, ...visibleArchivedStrategies].map((item) => item.id),
+    queryKey: 'strategy',
+    requestedId: requestedStrategyId,
+    searchParams,
+    setSearchParams,
+  });
   const selectedStrategy = [...visibleActiveStrategies, ...visibleArchivedStrategies].find((item) => item.id === selectedStrategyId)
     || visibleActiveStrategies[0]
     || visibleArchivedStrategies[0]
@@ -141,9 +152,17 @@ function StrategiesPage() {
   ]
     .sort((left, right) => new Date(right.at).getTime() - new Date(left.at).getTime())
     .slice(0, 10);
+  const {
+    selectedId: selectedTimelineId,
+    setSelectedId: setSelectedTimelineId,
+  } = useSyncedQuerySelection({
+    itemIds: selectedStrategyTimelineItems.map((item) => item.id),
+    queryKey: 'timeline',
+    requestedId: requestedTimelineId,
+    searchParams,
+    setSearchParams,
+  });
   const selectedTimelineItem = selectedStrategyTimelineItems.find((item) => item.id === selectedTimelineId) || selectedStrategyTimelineItems[0] || null;
-  const requestedStrategyId = searchParams.get('strategy');
-  const requestedTimelineId = searchParams.get('timeline');
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
     setForm((current) => ({
@@ -290,51 +309,6 @@ function StrategiesPage() {
       setPromotingId('');
     }
   };
-
-  useEffect(() => {
-    const visibleStrategies = [...visibleActiveStrategies, ...visibleArchivedStrategies];
-    if (!visibleStrategies.length) {
-      setSelectedStrategyId('');
-      return;
-    }
-    if (requestedStrategyId && visibleStrategies.some((item) => item.id === requestedStrategyId) && selectedStrategyId !== requestedStrategyId) {
-      setSelectedStrategyId(requestedStrategyId);
-      return;
-    }
-    if (!selectedStrategyId || !visibleStrategies.some((item) => item.id === selectedStrategyId)) {
-      setSelectedStrategyId(requestedStrategyId && visibleStrategies.some((item) => item.id === requestedStrategyId) ? requestedStrategyId : visibleStrategies[0].id);
-    }
-  }, [requestedStrategyId, selectedStrategyId, visibleActiveStrategies, visibleArchivedStrategies]);
-
-  useEffect(() => {
-    if (!selectedStrategyId) return;
-    if (searchParams.get('strategy') === selectedStrategyId) return;
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('strategy', selectedStrategyId);
-    setSearchParams(nextParams, { replace: true });
-  }, [searchParams, selectedStrategyId, setSearchParams]);
-
-  useEffect(() => {
-    if (!selectedStrategyTimelineItems.length) {
-      setSelectedTimelineId('');
-      return;
-    }
-    if (requestedTimelineId && selectedStrategyTimelineItems.some((item) => item.id === requestedTimelineId) && selectedTimelineId !== requestedTimelineId) {
-      setSelectedTimelineId(requestedTimelineId);
-      return;
-    }
-    if (!selectedTimelineId || !selectedStrategyTimelineItems.some((item) => item.id === selectedTimelineId)) {
-      setSelectedTimelineId(requestedTimelineId && selectedStrategyTimelineItems.some((item) => item.id === requestedTimelineId) ? requestedTimelineId : selectedStrategyTimelineItems[0].id);
-    }
-  }, [requestedTimelineId, selectedTimelineId, selectedStrategyTimelineItems]);
-
-  useEffect(() => {
-    if (!selectedTimelineId) return;
-    if (searchParams.get('timeline') === selectedTimelineId) return;
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('timeline', selectedTimelineId);
-    setSearchParams(nextParams, { replace: true });
-  }, [searchParams, selectedTimelineId, setSearchParams]);
 
   useEffect(() => {
     let cancelled = false;

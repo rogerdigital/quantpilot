@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ExecutionLedgerEntry, WorkflowRunRecord } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchExecutionLedger, fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
+import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useBacktestRunDetail } from '../../modules/research/useBacktestRunDetail.ts';
 import { useResearchHub } from '../../modules/research/useResearchHub.ts';
@@ -47,9 +48,6 @@ function BacktestPage() {
   const [runFilter, setRunFilter] = useState<'all' | 'queued' | 'running' | 'completed' | 'needs_review'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [windowLabel, setWindowLabel] = useState('2024-01-01 -> 2026-03-01');
-  const [selectedRunId, setSelectedRunId] = useState('');
-  const [selectedAuditEventId, setSelectedAuditEventId] = useState('');
-  const [selectedWorkflowStepKey, setSelectedWorkflowStepKey] = useState('');
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRunRecord[]>([]);
   const [executionEntries, setExecutionEntries] = useState<ExecutionLedgerEntry[]>([]);
   const [workflowLoading, setWorkflowLoading] = useState(true);
@@ -85,6 +83,22 @@ function BacktestPage() {
     .filter((workflow) => workflow.workflowId === 'task-orchestrator.backtest-run')
     .filter((workflow) => !visibleWorkflowIds.length || visibleWorkflowIds.includes(workflow.id))
     .slice(0, 10);
+  const requestedRunId = searchParams.get('run');
+  const requestedStrategyId = searchParams.get('strategy');
+  const requestedTimelineId = searchParams.get('timeline');
+  const sourcePage = searchParams.get('source');
+  const requestedAuditEventId = searchParams.get('audit');
+  const requestedWorkflowStepKey = searchParams.get('step');
+  const {
+    selectedId: selectedRunId,
+    setSelectedId: setSelectedRunId,
+  } = useSyncedQuerySelection({
+    itemIds: filteredRuns.map((run) => run.id),
+    queryKey: 'run',
+    requestedId: requestedRunId,
+    searchParams,
+    setSearchParams,
+  });
   const selectedRun = filteredRuns.find((run) => run.id === selectedRunId) || filteredRuns[0] || null;
   const { data: runDetail, loading: runDetailLoading, error: runDetailError } = useBacktestRunDetail(selectedRun?.id || '', refreshKey);
   const selectedRunSnapshot = runDetail?.run || selectedRun;
@@ -106,12 +120,26 @@ function BacktestPage() {
     || (selectedRun?.workflowRunId
       ? workflowRuns.find((workflow) => workflow.id === selectedRun.workflowRunId) || null
       : null);
-  const requestedRunId = searchParams.get('run');
-  const requestedStrategyId = searchParams.get('strategy');
-  const requestedTimelineId = searchParams.get('timeline');
-  const sourcePage = searchParams.get('source');
-  const requestedAuditEventId = searchParams.get('audit');
-  const requestedWorkflowStepKey = searchParams.get('step');
+  const {
+    selectedId: selectedAuditEventId,
+    setSelectedId: setSelectedAuditEventId,
+  } = useSyncedQuerySelection({
+    itemIds: selectedRunAuditItems.map((item) => item.id),
+    queryKey: 'audit',
+    requestedId: requestedAuditEventId,
+    searchParams,
+    setSearchParams,
+  });
+  const {
+    selectedId: selectedWorkflowStepKey,
+    setSelectedId: setSelectedWorkflowStepKey,
+  } = useSyncedQuerySelection({
+    itemIds: selectedWorkflow?.steps.map((step) => step.key) || [],
+    queryKey: 'step',
+    requestedId: requestedWorkflowStepKey,
+    searchParams,
+    setSearchParams,
+  });
   const selectedAuditEvent = selectedRunAuditItems.find((item) => item.id === selectedAuditEventId) || selectedRunAuditItems[0] || null;
   const selectedWorkflowStep = selectedWorkflow?.steps.find((step) => step.key === selectedWorkflowStepKey) || selectedWorkflow?.steps[0] || null;
 
@@ -147,76 +175,6 @@ function BacktestPage() {
       active = false;
     };
   }, [refreshKey]);
-
-  useEffect(() => {
-    if (!filteredRuns.length) {
-      setSelectedRunId('');
-      return;
-    }
-    if (requestedRunId && filteredRuns.some((run) => run.id === requestedRunId) && selectedRunId !== requestedRunId) {
-      setSelectedRunId(requestedRunId);
-      return;
-    }
-    if (!selectedRunId || !filteredRuns.some((run) => run.id === selectedRunId)) {
-      setSelectedRunId(requestedRunId && filteredRuns.some((run) => run.id === requestedRunId) ? requestedRunId : filteredRuns[0].id);
-    }
-  }, [filteredRuns, requestedRunId, selectedRunId]);
-
-  useEffect(() => {
-    if (!selectedRunId) return;
-    if (searchParams.get('run') === selectedRunId) return;
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('run', selectedRunId);
-    setSearchParams(nextParams, { replace: true });
-  }, [searchParams, selectedRunId, setSearchParams]);
-
-  useEffect(() => {
-    if (!selectedRunAuditItems.length) {
-      setSelectedAuditEventId('');
-      return;
-    }
-    if (requestedAuditEventId && selectedRunAuditItems.some((item) => item.id === requestedAuditEventId) && selectedAuditEventId !== requestedAuditEventId) {
-      setSelectedAuditEventId(requestedAuditEventId);
-      return;
-    }
-    if (!selectedAuditEventId || !selectedRunAuditItems.some((item) => item.id === selectedAuditEventId)) {
-      setSelectedAuditEventId(requestedAuditEventId && selectedRunAuditItems.some((item) => item.id === requestedAuditEventId) ? requestedAuditEventId : selectedRunAuditItems[0].id);
-    }
-  }, [requestedAuditEventId, selectedAuditEventId, selectedRunAuditItems]);
-
-  useEffect(() => {
-    if (!selectedAuditEventId) return;
-    if (searchParams.get('audit') === selectedAuditEventId) return;
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('audit', selectedAuditEventId);
-    setSearchParams(nextParams, { replace: true });
-  }, [searchParams, selectedAuditEventId, setSearchParams]);
-
-  useEffect(() => {
-    if (!selectedWorkflow?.steps.length) {
-      setSelectedWorkflowStepKey('');
-      return;
-    }
-    if (requestedWorkflowStepKey && selectedWorkflow.steps.some((step) => step.key === requestedWorkflowStepKey) && selectedWorkflowStepKey !== requestedWorkflowStepKey) {
-      setSelectedWorkflowStepKey(requestedWorkflowStepKey);
-      return;
-    }
-    if (!selectedWorkflowStepKey || !selectedWorkflow.steps.some((step) => step.key === selectedWorkflowStepKey)) {
-      setSelectedWorkflowStepKey(
-        requestedWorkflowStepKey && selectedWorkflow.steps.some((step) => step.key === requestedWorkflowStepKey)
-          ? requestedWorkflowStepKey
-          : selectedWorkflow.steps[0].key,
-      );
-    }
-  }, [requestedWorkflowStepKey, selectedWorkflow, selectedWorkflowStepKey]);
-
-  useEffect(() => {
-    if (!selectedWorkflowStepKey) return;
-    if (searchParams.get('step') === selectedWorkflowStepKey) return;
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('step', selectedWorkflowStepKey);
-    setSearchParams(nextParams, { replace: true });
-  }, [searchParams, selectedWorkflowStepKey, setSearchParams]);
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);
