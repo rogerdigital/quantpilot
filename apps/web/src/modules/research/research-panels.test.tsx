@@ -8,6 +8,7 @@ import { ResearchCollectionPanel } from './ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from './ResearchDetailInspectionPanel.tsx';
 import { ResearchEventInspectionPanel } from './ResearchEventInspectionPanel.tsx';
 import { ResearchStatusPanel } from './ResearchStatusPanel.tsx';
+import { StrategyCatalogRow } from './StrategyCatalogRow.tsx';
 import { ResearchTerminalPanel } from './ResearchTerminalPanel.tsx';
 
 describe('research panel primitives', () => {
@@ -174,5 +175,42 @@ describe('research panel primitives', () => {
     expect(html).toContain('Queue Backtest');
     expect(html).toContain('6.4%');
     expect(html).toContain('candidate');
+  });
+
+  it('renders strategy catalog row promote and archive actions', () => {
+    const strategy: StrategyCatalogItem = {
+      id: 'strategy-2',
+      name: 'Reversion',
+      family: 'mean-reversion',
+      timeframe: '4h',
+      universe: 'SP500',
+      status: 'candidate',
+      score: 76,
+      expectedReturnPct: 11.5,
+      maxDrawdownPct: 5.9,
+      sharpe: 1.5,
+      summary: 'Promotion-ready strategy',
+    };
+
+    const html = renderToStaticMarkup(
+      <StrategyCatalogRow
+        locale="en"
+        item={strategy}
+        nextStage="paper"
+        canWriteStrategy
+        saving={false}
+        promotingId=""
+        selectedStrategyId=""
+        onEdit={() => undefined}
+        onPromote={() => undefined}
+        onArchiveToggle={() => undefined}
+        onInspect={() => undefined}
+      />,
+    );
+
+    expect(html).toContain('Reversion');
+    expect(html).toContain('Promote to paper');
+    expect(html).toContain('Archive');
+    expect(html).toContain('Inspect');
   });
 });
