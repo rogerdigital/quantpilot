@@ -8,7 +8,7 @@ import {
   fetchTaskWorkflows,
 } from '../../app/api/controlPlane.ts';
 
-type OperatorActionItem = {
+export type OperatorActionItem = {
   id: string;
   type: string;
   symbol: string;
