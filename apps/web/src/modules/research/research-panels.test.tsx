@@ -21,6 +21,7 @@ import { getBacktestCollectionConfigs, getStrategyCollectionConfigs } from './re
 import { getBacktestDetailInspectionConfig, getStrategyDetailInspectionConfig } from './researchDetailConfigs.ts';
 import { getStrategyTimelineActionLabel, getStrategyTimelineGuidance } from './researchEventInspection.tsx';
 import { getStrategyTimelineInspectionConfig, getWorkflowInspectionConfig, getWorkflowStepInspectionConfig } from './researchInspectionConfigs.ts';
+import { getBacktestStatusConfig, getStrategyStatusConfig } from './researchStatusConfigs.ts';
 import { getBacktestTerminalConfigs, getStrategyTerminalConfigs } from './researchTerminalConfigs.tsx';
 
 describe('research panel primitives', () => {
@@ -528,6 +529,40 @@ describe('research panel primitives', () => {
     expect(strategyPrelude).toContain('Active only');
     expect(backtestTerminal.catalog.badge).toBe(5);
     expect(backtestFooter).toContain('read-only');
+  });
+
+  it('builds shared status configs for strategy and backtest summaries', () => {
+    const strategyStatus = getStrategyStatusConfig({
+      locale: 'en',
+      catalogSize: 6,
+      candidateStrategies: 3,
+      promotedCount: 2,
+      executionRoute: 'Hybrid',
+      canWriteStrategy: false,
+      loading: true,
+      error: '',
+    });
+    const backtestStatus = getBacktestStatusConfig({
+      locale: 'en',
+      dataSourceBadge: 'SERVICE',
+      buyCount: 4,
+      sellCount: 1,
+      portfolioReturn: '12.4%',
+      researchMode: 'Hybrid',
+      completedRuns: 9,
+      reviewQueue: 2,
+      decisionCopy: 'Runtime copy',
+      actionMessage: '',
+      actionError: 'Needs review',
+      loading: false,
+      error: '',
+    });
+
+    expect(strategyStatus.metrics[0]?.value).toBe(6);
+    expect(strategyStatus.messages[0]).toContain('read-only');
+    expect(backtestStatus.badge).toBe('SERVICE');
+    expect(backtestStatus.metrics[2]?.value).toBe('12.4%');
+    expect(backtestStatus.messages[2]).toBe('Needs review');
   });
 
   it('renders workflow step row with selected state', () => {

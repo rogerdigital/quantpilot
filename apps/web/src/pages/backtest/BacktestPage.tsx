@@ -17,6 +17,7 @@ import { ResearchWorkflowStepRow } from '../../modules/research/ResearchWorkflow
 import { getBacktestCollectionConfigs } from '../../modules/research/researchCollectionConfigs.ts';
 import { getBacktestDetailInspectionConfig } from '../../modules/research/researchDetailConfigs.ts';
 import { getWorkflowInspectionConfig, getWorkflowStepInspectionConfig } from '../../modules/research/researchInspectionConfigs.ts';
+import { getBacktestStatusConfig } from '../../modules/research/researchStatusConfigs.ts';
 import { getBacktestTerminalConfigs } from '../../modules/research/researchTerminalConfigs.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
@@ -211,6 +212,21 @@ function BacktestPage() {
     windowLabel,
     canReviewBacktest,
   });
+  const backtestStatusConfig = getBacktestStatusConfig({
+    locale,
+    dataSourceBadge: data?.summary.dataSource ? 'SERVICE' : 'LOCAL',
+    buyCount,
+    sellCount,
+    portfolioReturn: fmtPct(totalPnlPct),
+    researchMode: translateMode(locale, state.mode),
+    completedRuns: data?.summary.completedRuns,
+    reviewQueue: data?.summary.reviewQueue,
+    decisionCopy: translateRuntimeText(locale, state.decisionCopy),
+    actionMessage,
+    actionError,
+    loading,
+    error,
+  });
 
   const handleQueueBacktest = async (strategyId: string) => {
     setSubmittingStrategyId(strategyId);
@@ -353,23 +369,10 @@ function BacktestPage() {
           copy={locale === 'zh'
             ? '把策略候选、回测队列和人工复核压力压缩成一个平台级概览。'
             : 'Compress candidate strategies, backtest queue, and review pressure into one platform-level summary.'}
-          badge={data?.summary.dataSource ? 'SERVICE' : 'LOCAL'}
+          badge={backtestStatusConfig.badge}
           badgeClassName="panel-badge badge-warn"
-          metrics={[
-            { label: locale === 'zh' ? '候选买入' : 'Candidate buys', value: buyCount },
-            { label: locale === 'zh' ? '候选减仓' : 'Candidate trims', value: sellCount },
-            { label: locale === 'zh' ? '组合收益' : 'Portfolio return', value: fmtPct(totalPnlPct) },
-            { label: locale === 'zh' ? '研究模式' : 'Research mode', value: translateMode(locale, state.mode) },
-            { label: locale === 'zh' ? '已完成回测' : 'Completed runs', value: data?.summary.completedRuns ?? '--' },
-            { label: locale === 'zh' ? '待复核' : 'Review queue', value: data?.summary.reviewQueue ?? '--' },
-          ]}
-          messages={[
-            translateRuntimeText(locale, state.decisionCopy),
-            actionMessage || null,
-            actionError || null,
-            loading ? (locale === 'zh' ? '正在同步研究服务...' : 'Syncing research service...') : null,
-            error ? (locale === 'zh' ? `研究服务不可用：${error}` : `Research service unavailable: ${error}`) : null,
-          ]}
+          metrics={backtestStatusConfig.metrics}
+          messages={backtestStatusConfig.messages}
         />
       </section>
 

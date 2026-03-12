@@ -18,6 +18,7 @@ import { getStrategyCollectionConfigs } from '../../modules/research/researchCol
 import { getStrategyDetailInspectionConfig } from '../../modules/research/researchDetailConfigs.ts';
 import { getStrategyTimelineActionLabel, getStrategyTimelineGuidance } from '../../modules/research/researchEventInspection.tsx';
 import { getStrategyTimelineInspectionConfig } from '../../modules/research/researchInspectionConfigs.ts';
+import { getStrategyStatusConfig } from '../../modules/research/researchStatusConfigs.ts';
 import { getStrategyTerminalConfigs } from '../../modules/research/researchTerminalConfigs.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
@@ -196,6 +197,16 @@ function StrategiesPage() {
     visibleCount: visibleActiveStrategies.length + visibleArchivedStrategies.length,
     activityCount: strategyAuditItems.length,
     onFilterChange: setRegistryFilter,
+  });
+  const strategyStatusConfig = getStrategyStatusConfig({
+    locale,
+    catalogSize: data?.strategies.length,
+    candidateStrategies: data?.summary.candidateStrategies,
+    promotedCount,
+    executionRoute: translateMode(locale, state.mode),
+    canWriteStrategy,
+    loading,
+    error,
   });
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
@@ -396,23 +407,8 @@ function StrategiesPage() {
             ? '回测中心已经独立成页，这里保留策略注册、候选集和参数工作区。'
             : 'The backtest center now has its own route, while the strategy layer keeps registry, candidate sets, and parameter workflow.'}
           badge="RESEARCH"
-          metrics={[
-            { label: locale === 'zh' ? '策略总数' : 'Catalog size', value: data?.strategies.length ?? '--' },
-            { label: locale === 'zh' ? '候选/晋级' : 'Candidate / promoted', value: data ? `${data.summary.candidateStrategies} / ${promotedCount}` : '-- / --' },
-            { label: copy[locale].terms.executionRoute, value: translateMode(locale, state.mode) },
-          ]}
-          messages={[
-            !canWriteStrategy
-              ? (locale === 'zh'
-                  ? '当前会话没有 strategy:write 权限，策略工作台处于只读态。'
-                  : 'This session does not have strategy:write permission. The strategy workspace is read-only.')
-              : null,
-            loading ? (locale === 'zh' ? '正在同步策略注册表...' : 'Syncing strategy registry...') : null,
-            error ? (locale === 'zh' ? `策略服务不可用：${error}` : `Strategy service unavailable: ${error}`) : null,
-            locale === 'zh'
-              ? '策略注册表已经切到后端事实源，运行时信号视图仅作为当下市场上下文。'
-              : 'The strategy registry now comes from the backend source of truth, while runtime signals stay as contextual market state.',
-          ]}
+          metrics={strategyStatusConfig.metrics}
+          messages={strategyStatusConfig.messages}
         />
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '注册新策略' : 'Register Strategy'}</div><div className="panel-copy">{locale === 'zh' ? '先提供最小策略元信息写路径，后续再补版本、参数和优化历史。' : 'Start with a minimal metadata write path, then add versioning, parameters, and optimization history later.'}</div></div><div className="panel-badge badge-warn">{canWriteStrategy ? 'WRITE' : 'READ ONLY'}</div></div>
