@@ -45,6 +45,8 @@ const workerConfig = {
   riskScanBatchSize: 10,
 };
 
+// Keep workflow claim/release clocks far in the future so these tests never
+// become date-sensitive as real time advances.
 const CLAIM_NOW = '2099-01-01T00:00:00.000Z';
 const RELEASE_NOW = '2099-01-01T00:01:00.000Z';
 

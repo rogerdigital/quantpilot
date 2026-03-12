@@ -16,6 +16,10 @@ const workerConfig = {
   workflowBatchSize: 20,
 };
 
+const TEST_CLAIM_NOW = '2099-01-01T00:10:00.000Z';
+const TEST_RELEASE_NOW = '2099-01-01T00:10:00.000Z';
+const TEST_DUE_NEXT_RUN_AT = '2099-01-01T00:00:00.000Z';
+
 test('notification dispatch task flushes queued notifications', async () => {
   const context = createControlPlaneContext(createMemoryStore());
   context.notifications.enqueueNotification({
@@ -80,13 +84,13 @@ test('workflow maintenance task re-queues scheduled workflow runs', async () => 
     id: 'workflow-maint-1',
     workflowId: 'task-orchestrator.cycle-run',
     status: 'retry_scheduled',
-    nextRunAt: '2026-03-10T09:00:00.000Z',
+    nextRunAt: TEST_DUE_NEXT_RUN_AT,
   });
 
   const result = await runWorkflowMaintenanceTask(workerConfig, {
     releaseScheduledWorkflows: (options) => runtime.releaseScheduledWorkflowRuns({
       ...options,
-      now: '2026-03-10T09:10:00.000Z',
+      now: TEST_RELEASE_NOW,
     }),
   });
 
@@ -104,13 +108,13 @@ test('workflow execution task claims and executes queued workflow runs', async (
     id: 'workflow-exec-1',
     workflowId: 'task-orchestrator.manual-review',
     status: 'queued',
-    nextRunAt: '2026-03-10T09:00:00.000Z',
+    nextRunAt: TEST_DUE_NEXT_RUN_AT,
   });
 
   const result = await runWorkflowExecutionTask(workerConfig, {
     claimQueuedWorkflows: (options) => context.workflows.claimQueuedWorkflowRuns({
       ...options,
-      now: '2026-03-10T09:10:00.000Z',
+      now: TEST_CLAIM_NOW,
     }),
     executeWorkflow: async (workflow, runtimeContext) => {
       runtimeContext.completeWorkflowRun(workflow.id, {
