@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ExecutionLedgerEntry, WorkflowRunRecord } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchExecutionLedger, fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
+import { buildDeepLink, readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useBacktestRunDetail } from '../../modules/research/useBacktestRunDetail.ts';
@@ -83,12 +84,14 @@ function BacktestPage() {
     .filter((workflow) => workflow.workflowId === 'task-orchestrator.backtest-run')
     .filter((workflow) => !visibleWorkflowIds.length || visibleWorkflowIds.includes(workflow.id))
     .slice(0, 10);
-  const requestedRunId = searchParams.get('run');
-  const requestedStrategyId = searchParams.get('strategy');
-  const requestedTimelineId = searchParams.get('timeline');
-  const sourcePage = searchParams.get('source');
-  const requestedAuditEventId = searchParams.get('audit');
-  const requestedWorkflowStepKey = searchParams.get('step');
+  const {
+    runId: requestedRunId,
+    strategyId: requestedStrategyId,
+    timelineId: requestedTimelineId,
+    sourcePage,
+    auditEventId: requestedAuditEventId,
+    workflowStepKey: requestedWorkflowStepKey,
+  } = readDeepLinkParams(searchParams);
   const {
     selectedId: selectedRunId,
     setSelectedId: setSelectedRunId,
@@ -617,7 +620,9 @@ function BacktestPage() {
                 <button
                   type="button"
                   className="inline-action inline-action-approve"
-                  onClick={() => navigate(`/strategies?strategy=${selectedRunSnapshot?.strategyId || selectedRun?.strategyId || ''}`)}
+                  onClick={() => navigate(buildDeepLink('/strategies', {
+                    strategy: selectedRunSnapshot?.strategyId || selectedRun?.strategyId || '',
+                  }))}
                 >
                   {locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
                 </button>
@@ -625,7 +630,10 @@ function BacktestPage() {
                   <button
                     type="button"
                     className="inline-action"
-                    onClick={() => navigate(`/strategies?strategy=${requestedStrategyId}${requestedTimelineId ? `&timeline=${requestedTimelineId}` : ''}`)}
+                    onClick={() => navigate(buildDeepLink('/strategies', {
+                      strategy: requestedStrategyId,
+                      timeline: requestedTimelineId,
+                    }))}
                     >
                       {locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
                     </button>
@@ -634,7 +642,12 @@ function BacktestPage() {
                   <button
                     type="button"
                     className="inline-action"
-                    onClick={() => navigate(`/execution?plan=${selectedRunExecutionEntries[0].plan.id}&strategy=${selectedRunSnapshot?.strategyId || ''}&run=${selectedRunSnapshot?.id || ''}&source=backtest`)}
+                    onClick={() => navigate(buildDeepLink('/execution', {
+                      plan: selectedRunExecutionEntries[0].plan.id,
+                      strategy: selectedRunSnapshot?.strategyId || '',
+                      run: selectedRunSnapshot?.id || '',
+                      source: 'backtest',
+                    }))}
                   >
                     {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
                   </button>
@@ -796,7 +809,12 @@ function BacktestPage() {
                 <button
                   type="button"
                   className="inline-action"
-                  onClick={() => navigate(`/execution?plan=${entry.plan.id}&strategy=${selectedRunSnapshot?.strategyId || ''}&run=${selectedRunSnapshot?.id || ''}&source=backtest`)}
+                  onClick={() => navigate(buildDeepLink('/execution', {
+                    plan: entry.plan.id,
+                    strategy: selectedRunSnapshot?.strategyId || '',
+                    run: selectedRunSnapshot?.id || '',
+                    source: 'backtest',
+                  }))}
                 >
                   {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
                 </button>

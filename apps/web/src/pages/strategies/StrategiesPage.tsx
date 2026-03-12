@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ExecutionLedgerEntry } from '@shared-types/trading.ts';
 import { ApiPermissionError, fetchExecutionLedger } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
+import { buildDeepLink, readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
 import { useStrategyDetail } from '../../modules/research/useStrategyDetail.ts';
@@ -74,8 +75,7 @@ function StrategiesPage() {
       return registryFilter === 'all' ? true : visibleStrategyIds.includes(strategyId);
     })
     .slice(0, 8);
-  const requestedStrategyId = searchParams.get('strategy');
-  const requestedTimelineId = searchParams.get('timeline');
+  const { strategyId: requestedStrategyId, timelineId: requestedTimelineId } = readDeepLinkParams(searchParams);
   const {
     selectedId: selectedStrategyId,
     setSelectedId: setSelectedStrategyId,
@@ -705,7 +705,12 @@ function StrategiesPage() {
                   <button
                     type="button"
                     className="inline-action inline-action-approve"
-                    onClick={() => navigate(`/backtest?run=${selectedTimelineItem.reference}&strategy=${selectedStrategy?.id || ''}&timeline=${selectedTimelineItem.id}&source=strategies`)}
+                    onClick={() => navigate(buildDeepLink('/backtest', {
+                      run: selectedTimelineItem.reference,
+                      strategy: selectedStrategy?.id || '',
+                      timeline: selectedTimelineItem.id,
+                      source: 'strategies',
+                    }))}
                   >
                     {locale === 'zh' ? '打开回测详情' : 'Open Backtest Detail'}
                   </button>
@@ -716,7 +721,12 @@ function StrategiesPage() {
                   <button
                     type="button"
                     className="inline-action inline-action-approve"
-                    onClick={() => navigate(`/execution?plan=${selectedTimelineItem.reference}&strategy=${selectedStrategy?.id || ''}&timeline=${selectedTimelineItem.id}&source=strategies`)}
+                    onClick={() => navigate(buildDeepLink('/execution', {
+                      plan: selectedTimelineItem.reference,
+                      strategy: selectedStrategy?.id || '',
+                      timeline: selectedTimelineItem.id,
+                      source: 'strategies',
+                    }))}
                   >
                     {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
                   </button>

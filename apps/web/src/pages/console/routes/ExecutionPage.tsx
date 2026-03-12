@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
+import { buildDeepLink, readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
 import { useSyncedQuerySelection } from '../../../modules/console/useSyncedQuerySelection.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
@@ -56,13 +57,15 @@ export function ExecutionPage() {
   const selectedAccountSnapshot = selectedEntry?.latestRuntime
     ? accountSnapshots.find((snapshot) => snapshot.cycle === selectedEntry.latestRuntime?.cycle) || accountSnapshots[0] || null
     : accountSnapshots[0] || null;
-  const requestedPlanId = searchParams.get('plan');
-  const requestedStrategyId = searchParams.get('strategy');
-  const requestedRunId = searchParams.get('run');
-  const requestedTimelineId = searchParams.get('timeline');
-  const sourcePage = searchParams.get('source');
-  const requestedAuditEventId = searchParams.get('audit');
-  const requestedWorkflowStepKey = searchParams.get('step');
+  const {
+    planId: requestedPlanId,
+    strategyId: requestedStrategyId,
+    runId: requestedRunId,
+    timelineId: requestedTimelineId,
+    sourcePage,
+    auditEventId: requestedAuditEventId,
+    workflowStepKey: requestedWorkflowStepKey,
+  } = readDeepLinkParams(searchParams);
   const {
     selectedId: selectedPlanId,
     setSelectedId: setSelectedPlanId,
@@ -219,7 +222,9 @@ export function ExecutionPage() {
                 <button
                   type="button"
                   className="inline-action inline-action-approve"
-                  onClick={() => navigate(`/strategies?strategy=${selectedEntry.plan.strategyId}`)}
+                  onClick={() => navigate(buildDeepLink('/strategies', {
+                    strategy: selectedEntry.plan.strategyId,
+                  }))}
                 >
                   {locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
                 </button>
@@ -227,7 +232,10 @@ export function ExecutionPage() {
                   <button
                     type="button"
                     className="inline-action"
-                    onClick={() => navigate(`/strategies?strategy=${requestedStrategyId}${requestedTimelineId ? `&timeline=${requestedTimelineId}` : ''}`)}
+                    onClick={() => navigate(buildDeepLink('/strategies', {
+                      strategy: requestedStrategyId,
+                      timeline: requestedTimelineId,
+                    }))}
                   >
                     {locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
                   </button>
@@ -236,7 +244,10 @@ export function ExecutionPage() {
                   <button
                     type="button"
                     className="inline-action"
-                    onClick={() => navigate(`/backtest?run=${requestedRunId}${requestedStrategyId ? `&strategy=${requestedStrategyId}` : ''}`)}
+                    onClick={() => navigate(buildDeepLink('/backtest', {
+                      run: requestedRunId,
+                      strategy: requestedStrategyId,
+                    }))}
                   >
                     {locale === 'zh' ? '返回回测详情' : 'Return to Backtest Detail'}
                   </button>
