@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import type { WorkflowRunRecord } from '@shared-types/trading.ts';
-import { ApiPermissionError, fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
+import type { ExecutionLedgerEntry, WorkflowRunRecord } from '@shared-types/trading.ts';
+import { ApiPermissionError, fetchExecutionLedger, fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../modules/audit/useAuditFeed.ts';
 import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useBacktestRunDetail } from '../../modules/research/useBacktestRunDetail.ts';
@@ -51,6 +51,7 @@ function BacktestPage() {
   const [selectedAuditEventId, setSelectedAuditEventId] = useState('');
   const [selectedWorkflowStepKey, setSelectedWorkflowStepKey] = useState('');
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRunRecord[]>([]);
+  const [executionEntries, setExecutionEntries] = useState<ExecutionLedgerEntry[]>([]);
   const [workflowLoading, setWorkflowLoading] = useState(true);
   const { data, loading, error } = useResearchHub(refreshKey);
   const { items: auditItems, loading: auditLoading } = useAuditFeed(refreshKey);
@@ -98,6 +99,9 @@ function BacktestPage() {
   const selectedRunVersionItems = selectedRunAuditItems.filter((item) => (
     item.type === 'backtest-run.completed' || item.type === 'backtest-run.reviewed'
   ));
+  const selectedRunExecutionEntries = executionEntries
+    .filter((entry) => entry.plan.strategyId === selectedRunSnapshot?.strategyId)
+    .slice(0, 6);
   const selectedWorkflow = runDetail?.workflow
     || (selectedRun?.workflowRunId
       ? workflowRuns.find((workflow) => workflow.id === selectedRun.workflowRunId) || null
@@ -123,14 +127,16 @@ function BacktestPage() {
     let active = true;
     setWorkflowLoading(true);
 
-    fetchTaskWorkflows()
-      .then((payload) => {
+    Promise.all([fetchTaskWorkflows(), fetchExecutionLedger()])
+      .then(([workflowPayload, ledgerPayload]) => {
         if (!active) return;
-        setWorkflowRuns(Array.isArray(payload?.workflows) ? payload.workflows : []);
+        setWorkflowRuns(Array.isArray(workflowPayload?.workflows) ? workflowPayload.workflows : []);
+        setExecutionEntries(Array.isArray(ledgerPayload?.entries) ? ledgerPayload.entries : []);
       })
       .catch(() => {
         if (!active) return;
         setWorkflowRuns([]);
+        setExecutionEntries([]);
       })
       .finally(() => {
         if (!active) return;
@@ -662,8 +668,17 @@ function BacktestPage() {
                     type="button"
                     className="inline-action"
                     onClick={() => navigate(`/strategies?strategy=${requestedStrategyId}${requestedTimelineId ? `&timeline=${requestedTimelineId}` : ''}`)}
+                    >
+                      {locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
+                    </button>
+                ) : null}
+                {selectedRunExecutionEntries[0] ? (
+                  <button
+                    type="button"
+                    className="inline-action"
+                    onClick={() => navigate(`/execution?plan=${selectedRunExecutionEntries[0].plan.id}&strategy=${selectedRunSnapshot?.strategyId || ''}&run=${selectedRunSnapshot?.id || ''}&source=backtest`)}
                   >
-                    {locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
+                    {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
                   </button>
                 ) : null}
               </div>
@@ -797,6 +812,40 @@ function BacktestPage() {
             </div>
           )}
         </InspectionPanel>
+        <InspectionListPanel
+          title={locale === 'zh' ? '下游执行承接' : 'Downstream Execution Handoff'}
+          copy={locale === 'zh'
+            ? '查看当前回测所属策略在执行侧的承接情况，确认研究结果是否已经进入 execution plan。'
+            : 'Inspect how the selected run’s strategy is handed off downstream and whether it already produced execution plans.'}
+          badge={selectedRunExecutionEntries.length}
+          badgeClassName="badge-info"
+          terminal
+        >
+          {!selectedRun ? <InspectionEmpty>{locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.'}</InspectionEmpty> : null}
+          {selectedRun && !selectedRunExecutionEntries.length ? <InspectionEmpty>{locale === 'zh' ? '当前回测对应策略还没有下游执行计划。' : 'No downstream execution plans exist for this run’s strategy yet.'}</InspectionEmpty> : null}
+          {selectedRunExecutionEntries.map((entry) => (
+            <InspectionSelectableRow
+              key={entry.plan.id}
+              leadTitle={entry.plan.summary}
+              leadCopy={entry.latestRuntime?.message || `${entry.plan.orderCount} ${locale === 'zh' ? '笔订单候选' : 'candidate orders'}`}
+              metrics={[
+                { label: locale === 'zh' ? '计划状态' : 'Plan', value: entry.plan.status },
+                { label: locale === 'zh' ? '风控' : 'Risk', value: entry.plan.riskStatus },
+                { label: locale === 'zh' ? '工作流' : 'Workflow', value: entry.workflow?.status || '--' },
+                { label: locale === 'zh' ? '运行时' : 'Runtime', value: entry.latestRuntime ? `${entry.latestRuntime.submittedOrderCount}/${entry.latestRuntime.openOrderCount}` : '--' },
+              ]}
+              actions={(
+                <button
+                  type="button"
+                  className="inline-action"
+                  onClick={() => navigate(`/execution?plan=${entry.plan.id}&strategy=${selectedRunSnapshot?.strategyId || ''}&run=${selectedRunSnapshot?.id || ''}&source=backtest`)}
+                >
+                  {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
+                </button>
+              )}
+            />
+          ))}
+        </InspectionListPanel>
         <InspectionListPanel
           title={locale === 'zh' ? '选中回测版本轨迹' : 'Selected Backtest Version History'}
           copy={locale === 'zh'

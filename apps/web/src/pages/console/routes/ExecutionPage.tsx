@@ -68,6 +68,7 @@ export function ExecutionPage() {
     : accountSnapshots[0] || null;
   const requestedPlanId = searchParams.get('plan');
   const requestedStrategyId = searchParams.get('strategy');
+  const requestedRunId = searchParams.get('run');
   const requestedTimelineId = searchParams.get('timeline');
   const sourcePage = searchParams.get('source');
   const requestedAuditEventId = searchParams.get('audit');
@@ -309,6 +310,15 @@ export function ExecutionPage() {
                     onClick={() => navigate(`/strategies?strategy=${requestedStrategyId}${requestedTimelineId ? `&timeline=${requestedTimelineId}` : ''}`)}
                   >
                     {locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
+                  </button>
+                ) : null}
+                {sourcePage === 'backtest' && requestedRunId ? (
+                  <button
+                    type="button"
+                    className="inline-action"
+                    onClick={() => navigate(`/backtest?run=${requestedRunId}${requestedStrategyId ? `&strategy=${requestedStrategyId}` : ''}`)}
+                  >
+                    {locale === 'zh' ? '返回回测详情' : 'Return to Backtest Detail'}
                   </button>
                 ) : null}
               </div>
