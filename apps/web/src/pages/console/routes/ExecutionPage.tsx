@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchExecutionAccountSnapshots, fetchExecutionLedger, fetchExecutionRuntime, fetchOperatorActions, fetchTaskWorkflows } from '../../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
+import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { TopMeta } from '../components/ConsoleChrome.tsx';
 import { InspectionEmpty, InspectionListPanel, InspectionMetricsRow, InspectionPanel, InspectionSelectableRow, InspectionStatus } from '../components/InspectionPanels.tsx';
@@ -9,7 +9,6 @@ import { ActivityLog, ApprovalQueueTable, OrdersTable } from '../components/Cons
 import { onShortcutKeyDown, useSettingsNavigation } from '../hooks.ts';
 import { copy, useLocale } from '../i18n.tsx';
 import { modeTone, translateEngineStatus, translateMode, translateRiskLevel, translateRuntimeText } from '../utils.ts';
-import type { BrokerAccountSnapshotRecord, ExecutionLedgerEntry, ExecutionRuntimeEvent, WorkflowRunRecord } from '@shared-types/trading.ts';
 
 export function ExecutionPage() {
   const { state, approveLiveIntent, rejectLiveIntent, hasPermission, actionGuardNotice } = useTradingSystem();
@@ -21,22 +20,15 @@ export function ExecutionPage() {
   const [selectedPlanId, setSelectedPlanId] = useState('');
   const [selectedAuditEventId, setSelectedAuditEventId] = useState('');
   const [selectedWorkflowStepKey, setSelectedWorkflowStepKey] = useState('');
-  const [runtimeEvents, setRuntimeEvents] = useState<ExecutionRuntimeEvent[]>([]);
-  const [accountSnapshots, setAccountSnapshots] = useState<BrokerAccountSnapshotRecord[]>([]);
-  const [ledgerEntries, setLedgerEntries] = useState<ExecutionLedgerEntry[]>([]);
-  const [workflowRuns, setWorkflowRuns] = useState<WorkflowRunRecord[]>([]);
-  const [workflowLoading, setWorkflowLoading] = useState(true);
-  const [operatorActions, setOperatorActions] = useState<Array<{
-    id: string;
-    type: string;
-    symbol: string;
-    detail: string;
-    actor: string;
-    title: string;
-    level: string;
-    createdAt: string;
-  }>>([]);
-  const [actionsLoading, setActionsLoading] = useState(true);
+  const {
+    runtimeEvents,
+    accountSnapshots,
+    ledgerEntries,
+    workflowRuns,
+    operatorActions,
+    loading: executionDataLoading,
+    error: executionDataError,
+  } = useExecutionConsoleData(state.controlPlane.lastSyncAt);
   const { items: auditItems, loading: auditLoading } = useAuditFeed(state.controlPlane.lastSyncAt);
   const selectedEntry = ledgerEntries.find((entry) => entry.plan.id === selectedPlanId) || ledgerEntries[0] || null;
   const selectedSymbols = selectedEntry ? [...new Set(selectedEntry.plan.orders.map((order) => order.symbol))] : [];
@@ -75,37 +67,6 @@ export function ExecutionPage() {
   const requestedWorkflowStepKey = searchParams.get('step');
   const selectedAuditEvent = selectedExecutionAuditItems.find((item) => item.id === selectedAuditEventId) || selectedExecutionAuditItems[0] || null;
   const selectedWorkflowStep = selectedWorkflow?.steps.find((step) => step.key === selectedWorkflowStepKey) || selectedWorkflow?.steps[0] || null;
-
-  useEffect(() => {
-    let active = true;
-    setWorkflowLoading(true);
-    setActionsLoading(true);
-    Promise.all([fetchExecutionRuntime(), fetchExecutionAccountSnapshots(), fetchExecutionLedger(), fetchTaskWorkflows(), fetchOperatorActions()])
-      .then(([runtimeResponse, snapshotResponse, ledgerResponse, workflowResponse, actionResponse]) => {
-        if (!active) return;
-        setRuntimeEvents(runtimeResponse.events);
-        setAccountSnapshots(snapshotResponse.snapshots);
-        setLedgerEntries(ledgerResponse.entries);
-        setWorkflowRuns(Array.isArray(workflowResponse.workflows) ? workflowResponse.workflows : []);
-        setOperatorActions(Array.isArray(actionResponse.actions) ? actionResponse.actions : []);
-      })
-      .catch(() => {
-        if (!active) return;
-        setRuntimeEvents([]);
-        setAccountSnapshots([]);
-        setLedgerEntries([]);
-        setWorkflowRuns([]);
-        setOperatorActions([]);
-      })
-      .finally(() => {
-        if (!active) return;
-        setWorkflowLoading(false);
-        setActionsLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [state.controlPlane.lastSyncAt]);
 
   useEffect(() => {
     if (!ledgerEntries.length) {
@@ -220,6 +181,7 @@ export function ExecutionPage() {
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '服务端执行记录' : 'Server Execution Runtime'}</div><div className="panel-copy">{locale === 'zh' ? '来自后端持久化的 broker 执行摘要，不依赖当前页面内存状态。' : 'Backend-persisted broker execution summaries, independent of the current page runtime state.'}</div></div><div className="panel-badge badge-info">{runtimeEvents.length}</div></div>
           <div className="focus-list">
+            {executionDataError ? <div className="status-copy">{locale === 'zh' ? `执行数据加载失败：${executionDataError}` : `Failed to load execution data: ${executionDataError}`}</div> : null}
             {runtimeEvents.slice(0, 6).map((event) => (
               <div key={event.id} className="focus-row">
                 <div className="focus-metric"><span>{locale === 'zh' ? '周期' : 'Cycle'}</span><strong>{event.cycle}</strong></div>
@@ -228,7 +190,7 @@ export function ExecutionPage() {
                 <div className="focus-metric"><span>{locale === 'zh' ? '权益' : 'Equity'}</span><strong>{event.equity.toFixed(0)}</strong></div>
               </div>
             ))}
-            {!runtimeEvents.length ? <div className="status-copy">{locale === 'zh' ? '尚无后端执行记录。执行一个周期后这里会出现服务端快照。' : 'No backend execution records yet. Run a cycle to persist server-side snapshots.'}</div> : null}
+            {!runtimeEvents.length ? <div className="status-copy">{executionDataLoading ? (locale === 'zh' ? '正在同步执行数据...' : 'Syncing execution data...') : (locale === 'zh' ? '尚无后端执行记录。执行一个周期后这里会出现服务端快照。' : 'No backend execution records yet. Run a cycle to persist server-side snapshots.')}</div> : null}
           </div>
         </article>
         <article className="panel">
@@ -242,7 +204,7 @@ export function ExecutionPage() {
                 <div className="focus-metric"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{snapshot.connected ? 'connected' : 'disconnected'}</strong></div>
               </div>
             ))}
-            {!accountSnapshots.length ? <div className="status-copy">{locale === 'zh' ? '尚无 broker 账户快照。' : 'No broker account snapshots yet.'}</div> : null}
+          {!accountSnapshots.length ? <div className="status-copy">{executionDataLoading ? (locale === 'zh' ? '正在同步 broker 快照...' : 'Syncing broker snapshots...') : (locale === 'zh' ? '尚无 broker 账户快照。' : 'No broker account snapshots yet.')}</div> : null}
           </div>
         </article>
       </section>
@@ -274,7 +236,7 @@ export function ExecutionPage() {
                 )}
               />
             ))}
-            {!ledgerEntries.length ? <div className="status-copy">{locale === 'zh' ? '尚无 execution ledger 数据。' : 'No execution ledger data yet.'}</div> : null}
+            {!ledgerEntries.length ? <div className="status-copy">{executionDataLoading ? (locale === 'zh' ? '正在同步执行账本...' : 'Syncing execution ledger...') : (locale === 'zh' ? '尚无 execution ledger 数据。' : 'No execution ledger data yet.')}</div> : null}
           </div>
         </article>
       </section>
@@ -395,7 +357,7 @@ export function ExecutionPage() {
         >
           {!selectedEntry ? (
             <InspectionStatus>{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</InspectionStatus>
-          ) : workflowLoading ? (
+          ) : executionDataLoading ? (
             <InspectionStatus>{locale === 'zh' ? '正在加载执行工作流...' : 'Loading execution workflow...'}</InspectionStatus>
           ) : !selectedWorkflow ? (
             <InspectionStatus>{locale === 'zh' ? '当前执行计划还没有可见的 workflow 详情。' : 'No workflow detail is available for the selected execution plan yet.'}</InspectionStatus>
@@ -459,9 +421,9 @@ export function ExecutionPage() {
           badge={selectedExecutionActions.length}
           badgeClassName="badge-warn"
         >
-            {actionsLoading ? <InspectionStatus>{locale === 'zh' ? '正在加载审批动作历史...' : 'Loading approval actions...'}</InspectionStatus> : null}
-            {!actionsLoading && !selectedEntry ? <InspectionStatus>{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</InspectionStatus> : null}
-            {!actionsLoading && selectedEntry && !selectedExecutionActions.length ? <InspectionStatus>{locale === 'zh' ? '当前执行计划还没有关联的审批动作。' : 'No approval actions are associated with the selected execution plan yet.'}</InspectionStatus> : null}
+            {executionDataLoading ? <InspectionStatus>{locale === 'zh' ? '正在加载审批动作历史...' : 'Loading approval actions...'}</InspectionStatus> : null}
+            {!executionDataLoading && !selectedEntry ? <InspectionStatus>{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</InspectionStatus> : null}
+            {!executionDataLoading && selectedEntry && !selectedExecutionActions.length ? <InspectionStatus>{locale === 'zh' ? '当前执行计划还没有关联的审批动作。' : 'No approval actions are associated with the selected execution plan yet.'}</InspectionStatus> : null}
             {selectedExecutionActions.map((item) => (
               <InspectionMetricsRow
                 key={item.id}
