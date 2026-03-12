@@ -10,6 +10,7 @@ import { ResearchExecutionPlanRow } from '../../modules/research/ResearchExecuti
 import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEventInspectionPanel.tsx';
 import { ResearchRunSummaryRow } from '../../modules/research/ResearchRunSummaryRow.tsx';
 import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPanel.tsx';
+import { ResearchTimelineEventRow } from '../../modules/research/ResearchTimelineEventRow.tsx';
 import { ResearchVersionSnapshotRow } from '../../modules/research/ResearchVersionSnapshotRow.tsx';
 import { StrategyCatalogRow } from '../../modules/research/StrategyCatalogRow.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
@@ -559,27 +560,19 @@ function StrategiesPage() {
           {selectedStrategy && workspaceLoading && auditLoading && loading ? <InspectionEmpty>{locale === 'zh' ? '正在汇总策略时间线...' : 'Assembling the strategy timeline...'}</InspectionEmpty> : null}
           {selectedStrategy && !selectedStrategyTimelineItems.length ? <InspectionEmpty>{locale === 'zh' ? '当前策略还没有可回放的端到端轨迹。' : 'No end-to-end activity is available for the selected strategy yet.'}</InspectionEmpty> : null}
           {selectedStrategyTimelineItems.map((item) => (
-            <InspectionSelectableRow
+            <ResearchTimelineEventRow
               key={item.id}
-              leadTitle={item.title}
-              leadCopy={item.detail}
+              locale={locale}
+              id={item.id}
+              title={item.title}
+              detail={item.detail}
+              selectedId={selectedTimelineId}
+              onInspect={setSelectedTimelineId}
               metrics={[
                 { label: locale === 'zh' ? '链路' : 'Lane', value: item.lane },
                 { label: locale === 'zh' ? '时间' : 'Time', value: formatDateTime(item.at, locale) },
                 ...item.metrics,
               ]}
-              actions={(
-                <button
-                  type="button"
-                  className="inline-action"
-                  disabled={selectedTimelineId === item.id}
-                  onClick={() => setSelectedTimelineId(item.id)}
-                >
-                  {selectedTimelineId === item.id
-                    ? (locale === 'zh' ? '已选中' : 'Selected')
-                    : (locale === 'zh' ? '查看' : 'Inspect')}
-                </button>
-              )}
             />
           ))}
         </InspectionListPanel>

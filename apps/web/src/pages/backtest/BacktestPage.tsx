@@ -12,6 +12,7 @@ import { ResearchExecutionPlanRow } from '../../modules/research/ResearchExecuti
 import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEventInspectionPanel.tsx';
 import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPanel.tsx';
 import { ResearchVersionSnapshotRow } from '../../modules/research/ResearchVersionSnapshotRow.tsx';
+import { ResearchWorkflowStepRow } from '../../modules/research/ResearchWorkflowStepRow.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -652,24 +653,12 @@ function BacktestPage() {
           {selectedWorkflow?.steps.length ? (
             <div className="focus-list">
               {selectedWorkflow.steps.map((step) => (
-                <InspectionSelectableRow
+                <ResearchWorkflowStepRow
                   key={step.key}
-                  metrics={[
-                    { label: locale === 'zh' ? '步骤' : 'Step', value: step.key },
-                    { label: locale === 'zh' ? '状态' : 'Status', value: step.status },
-                  ]}
-                  actions={(
-                    <button
-                      type="button"
-                      className="inline-action"
-                      disabled={selectedWorkflowStepKey === step.key}
-                      onClick={() => setSelectedWorkflowStepKey(step.key)}
-                    >
-                      {selectedWorkflowStepKey === step.key
-                        ? (locale === 'zh' ? '已选中' : 'Selected')
-                        : (locale === 'zh' ? '查看' : 'Inspect')}
-                    </button>
-                  )}
+                  locale={locale}
+                  step={step}
+                  selectedStepKey={selectedWorkflowStepKey}
+                  onInspect={setSelectedWorkflowStepKey}
                 />
               ))}
             </div>

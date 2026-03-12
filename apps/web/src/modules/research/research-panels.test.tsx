@@ -13,7 +13,9 @@ import { ResearchRunSummaryRow } from './ResearchRunSummaryRow.tsx';
 import { ResearchStatusPanel } from './ResearchStatusPanel.tsx';
 import { StrategyCatalogRow } from './StrategyCatalogRow.tsx';
 import { ResearchTerminalPanel } from './ResearchTerminalPanel.tsx';
+import { ResearchTimelineEventRow } from './ResearchTimelineEventRow.tsx';
 import { ResearchVersionSnapshotRow } from './ResearchVersionSnapshotRow.tsx';
+import { ResearchWorkflowStepRow } from './ResearchWorkflowStepRow.tsx';
 
 describe('research panel primitives', () => {
   it('renders status panel metrics and messages', () => {
@@ -248,6 +250,42 @@ describe('research panel primitives', () => {
     expect(html).toContain('approved');
     expect(html).toContain('3/1');
     expect(html).toContain('Open Execution Detail');
+  });
+
+  it('renders timeline event row with lane metrics and inspect state', () => {
+    const html = renderToStaticMarkup(
+      <ResearchTimelineEventRow
+        locale="en"
+        id="timeline-1"
+        title="Queued run"
+        detail="Backtest was queued for review."
+        selectedId=""
+        onInspect={() => undefined}
+        metrics={[
+          { label: 'Lane', value: 'Research' },
+          { label: 'Time', value: '2026-03-13T12:00:00.000Z' },
+        ]}
+      />,
+    );
+
+    expect(html).toContain('Queued run');
+    expect(html).toContain('Research');
+    expect(html).toContain('Inspect');
+  });
+
+  it('renders workflow step row with selected state', () => {
+    const html = renderToStaticMarkup(
+      <ResearchWorkflowStepRow
+        locale="en"
+        step={{ key: 'risk_review', status: 'completed' }}
+        selectedStepKey="risk_review"
+        onInspect={() => undefined}
+      />,
+    );
+
+    expect(html).toContain('risk_review');
+    expect(html).toContain('completed');
+    expect(html).toContain('Selected');
   });
 
   it('renders queue row review action for needs-review runs', () => {
