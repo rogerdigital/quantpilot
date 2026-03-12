@@ -5,6 +5,7 @@ import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { BacktestCandidateStrategyRow } from '../../modules/research/BacktestCandidateStrategyRow.tsx';
 import { BacktestRunQueueRow } from '../../modules/research/BacktestRunQueueRow.tsx';
+import { ResearchActionBar, ResearchActionButton } from '../../modules/research/ResearchActionBar.tsx';
 import { ResearchAuditFeedRow } from '../../modules/research/ResearchAuditFeedRow.tsx';
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
@@ -545,37 +546,29 @@ function BacktestPage() {
             { label: locale === 'zh' ? '策略阶段' : 'Strategy stage', value: runDetail?.strategy?.status || '--' },
           ]}
         >
-          <div className="settings-actions">
-            <button
-              type="button"
-              className="inline-action inline-action-approve"
+          <ResearchActionBar>
+            <ResearchActionButton
+              label={locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
+              priority="primary"
               onClick={() => researchNavigation.openStrategyDetail(selectedRunSnapshot?.strategyId || selectedRun?.strategyId || '')}
-            >
-              {locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
-            </button>
+            />
             {sourcePage === 'strategies' && requestedStrategyId ? (
-              <button
-                type="button"
-                className="inline-action"
+              <ResearchActionButton
+                label={locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
                 onClick={() => researchNavigation.returnToStrategyTimeline()}
-              >
-                {locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
-              </button>
+              />
             ) : null}
             {selectedRunExecutionEntries[0] ? (
-              <button
-                type="button"
-                className="inline-action"
+              <ResearchActionButton
+                label={locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
                 onClick={() => researchNavigation.openExecutionDetail(selectedRunExecutionEntries[0].plan.id, {
                   strategyId: selectedRunSnapshot?.strategyId || '',
                   runId: selectedRunSnapshot?.id || '',
                   source: 'backtest',
                 })}
-              >
-                {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
-              </button>
+              />
             ) : null}
-          </div>
+          </ResearchActionBar>
           {runDetailLoading ? <InspectionStatus>{locale === 'zh' ? '正在同步回测详情...' : 'Syncing backtest detail...'}</InspectionStatus> : null}
           {runDetailError ? <InspectionStatus>{locale === 'zh' ? `回测详情加载失败：${runDetailError}` : `Failed to load backtest detail: ${runDetailError}`}</InspectionStatus> : null}
           <InspectionStatus>{selectedRunSnapshot?.summary || (locale === 'zh' ? '当前回测暂无摘要。' : 'No backtest summary is available yet.')}</InspectionStatus>

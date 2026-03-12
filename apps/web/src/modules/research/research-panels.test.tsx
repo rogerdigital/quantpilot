@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { StrategyCatalogItem } from '@shared-types/trading.ts';
 import { BacktestCandidateStrategyRow } from './BacktestCandidateStrategyRow.tsx';
 import type { BacktestRunItem } from '@shared-types/trading.ts';
+import { ResearchActionBar, ResearchActionButton } from './ResearchActionBar.tsx';
 import { BacktestRunQueueRow } from './BacktestRunQueueRow.tsx';
 import { ResearchAuditFeedRow } from './ResearchAuditFeedRow.tsx';
 import { ResearchCollectionPanel } from './ResearchCollectionPanel.tsx';
@@ -16,6 +17,7 @@ import { ResearchTerminalPanel } from './ResearchTerminalPanel.tsx';
 import { ResearchTimelineEventRow } from './ResearchTimelineEventRow.tsx';
 import { ResearchVersionSnapshotRow } from './ResearchVersionSnapshotRow.tsx';
 import { ResearchWorkflowStepRow } from './ResearchWorkflowStepRow.tsx';
+import { getStrategyTimelineActionLabel, getStrategyTimelineGuidance } from './researchEventInspection.tsx';
 
 describe('research panel primitives', () => {
   it('renders status panel metrics and messages', () => {
@@ -113,6 +115,19 @@ describe('research panel primitives', () => {
     expect(html).toContain('Prelude block');
     expect(html).toContain('Row body');
     expect(html).toContain('Footer block');
+  });
+
+  it('renders shared research action bar buttons', () => {
+    const html = renderToStaticMarkup(
+      <ResearchActionBar>
+        <ResearchActionButton label="Open Strategy Detail" priority="primary" onClick={() => undefined} />
+        <ResearchActionButton label="Return to Strategy Timeline" onClick={() => undefined} />
+      </ResearchActionBar>,
+    );
+
+    expect(html).toContain('Open Strategy Detail');
+    expect(html).toContain('Return to Strategy Timeline');
+    expect(html).toContain('settings-actions');
   });
 
   it('renders audit feed row metrics and inspect action', () => {
@@ -271,6 +286,12 @@ describe('research panel primitives', () => {
     expect(html).toContain('Queued run');
     expect(html).toContain('Research');
     expect(html).toContain('Inspect');
+  });
+
+  it('returns shared strategy timeline guidance and action labels', () => {
+    expect(getStrategyTimelineGuidance('en', 'run')).toContain('research runs panel');
+    expect(getStrategyTimelineActionLabel('en', 'execution')).toBe('Open Execution Detail');
+    expect(getStrategyTimelineActionLabel('en', 'audit')).toBeNull();
   });
 
   it('renders workflow step row with selected state', () => {

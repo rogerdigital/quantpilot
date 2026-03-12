@@ -4,6 +4,7 @@ import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
+import { ResearchActionBar, ResearchActionButton } from '../../modules/research/ResearchActionBar.tsx';
 import { ResearchAuditFeedRow } from '../../modules/research/ResearchAuditFeedRow.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
 import { ResearchExecutionPlanRow } from '../../modules/research/ResearchExecutionPlanRow.tsx';
@@ -13,6 +14,7 @@ import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPa
 import { ResearchTimelineEventRow } from '../../modules/research/ResearchTimelineEventRow.tsx';
 import { ResearchVersionSnapshotRow } from '../../modules/research/ResearchVersionSnapshotRow.tsx';
 import { StrategyCatalogRow } from '../../modules/research/StrategyCatalogRow.tsx';
+import { getStrategyTimelineActionLabel, getStrategyTimelineGuidance } from '../../modules/research/researchEventInspection.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -160,6 +162,7 @@ function StrategiesPage() {
     allRuns: data?.runs || [],
     selectedTimelineId,
   });
+  const selectedTimelineActionLabel = getStrategyTimelineActionLabel(locale, selectedTimelineItem?.eventType);
 
   const handleFormChange = (key: keyof typeof form, value: string) => {
     setForm((current) => ({
@@ -594,41 +597,32 @@ function StrategiesPage() {
             { label: locale === 'zh' ? '事件类型' : 'Event type', value: selectedTimelineItem?.eventType || '--' },
           ]}
           detail={selectedTimelineItem?.detail}
-          guidance={selectedTimelineItem
-            ? (selectedTimelineItem.eventType === 'execution'
-                ? (locale === 'zh' ? '继续查看下方执行计划面板，确认 plan、risk、workflow 和 runtime 是否一致。' : 'Continue with the execution plan panel below to verify plan, risk, workflow, and runtime consistency.')
-                : selectedTimelineItem.eventType === 'run'
-                  ? (locale === 'zh' ? '继续查看下方研究记录面板，确认回测结果、窗口参数和版本快照是否匹配。' : 'Continue with the research runs panel below to verify backtest results, window parameters, and version snapshots.')
-                  : (locale === 'zh' ? '继续查看下方审计轨迹和版本轨迹，确认这次策略写入带来的状态变化。' : 'Continue with the audit trail and version history panels below to confirm the state change from this registry update.'))
-            : null}
-          actions={selectedTimelineItem?.eventType === 'run' ? (
-            <div className="settings-actions">
-              <button
-                type="button"
-                className="inline-action inline-action-approve"
-                onClick={() => researchNavigation.openBacktestDetail(selectedTimelineItem.reference, {
-                  strategyId: selectedStrategy?.id || '',
-                  timelineId: selectedTimelineItem.id,
-                  source: 'strategies',
-                })}
-              >
-                {locale === 'zh' ? '打开回测详情' : 'Open Backtest Detail'}
-              </button>
-            </div>
-          ) : selectedTimelineItem?.eventType === 'execution' ? (
-            <div className="settings-actions">
-              <button
-                type="button"
-                className="inline-action inline-action-approve"
-                onClick={() => researchNavigation.openExecutionDetail(selectedTimelineItem.reference, {
-                  strategyId: selectedStrategy?.id || '',
-                  timelineId: selectedTimelineItem.id,
-                  source: 'strategies',
-                })}
-              >
-                {locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
-              </button>
-            </div>
+          guidance={getStrategyTimelineGuidance(locale, selectedTimelineItem?.eventType)}
+          actions={selectedTimelineItem && selectedTimelineActionLabel ? (
+            <ResearchActionBar>
+              <ResearchActionButton
+                label={selectedTimelineActionLabel}
+                priority="primary"
+                onClick={() => {
+                  if (selectedTimelineItem.eventType === 'run') {
+                    researchNavigation.openBacktestDetail(selectedTimelineItem.reference, {
+                      strategyId: selectedStrategy?.id || '',
+                      timelineId: selectedTimelineItem.id,
+                      source: 'strategies',
+                    });
+                    return;
+                  }
+
+                  if (selectedTimelineItem.eventType === 'execution') {
+                    researchNavigation.openExecutionDetail(selectedTimelineItem.reference, {
+                      strategyId: selectedStrategy?.id || '',
+                      timelineId: selectedTimelineItem.id,
+                      source: 'strategies',
+                    });
+                  }
+                }}
+              />
+            </ResearchActionBar>
           ) : null}
         />
         <ResearchDetailInspectionPanel
