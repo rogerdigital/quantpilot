@@ -4,6 +4,7 @@ import type { StrategyCatalogItem } from '@shared-types/trading.ts';
 import { BacktestCandidateStrategyRow } from './BacktestCandidateStrategyRow.tsx';
 import type { BacktestRunItem } from '@shared-types/trading.ts';
 import { BacktestRunQueueRow } from './BacktestRunQueueRow.tsx';
+import { ResearchAuditFeedRow } from './ResearchAuditFeedRow.tsx';
 import { ResearchCollectionPanel } from './ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from './ResearchDetailInspectionPanel.tsx';
 import { ResearchEventInspectionPanel } from './ResearchEventInspectionPanel.tsx';
@@ -107,6 +108,33 @@ describe('research panel primitives', () => {
     expect(html).toContain('Prelude block');
     expect(html).toContain('Row body');
     expect(html).toContain('Footer block');
+  });
+
+  it('renders audit feed row metrics and inspect action', () => {
+    const html = renderToStaticMarkup(
+      <ResearchAuditFeedRow
+        locale="en"
+        item={{
+          id: 'audit-1',
+          type: 'backtest.run.reviewed',
+          actor: 'risk@desk',
+          title: 'Review completed',
+          detail: 'Manual review approved the run.',
+          createdAt: '2026-03-13T08:30:00.000Z',
+        }}
+        formatDateTime={(value) => value}
+        metrics={[
+          { label: 'Type', value: 'backtest.run.reviewed' },
+          { label: 'Workflow', value: 'wf-run-1' },
+        ]}
+        onInspect={() => undefined}
+      />,
+    );
+
+    expect(html).toContain('Review completed');
+    expect(html).toContain('risk@desk');
+    expect(html).toContain('wf-run-1');
+    expect(html).toContain('Inspect');
   });
 
   it('renders queue row review action for needs-review runs', () => {

@@ -5,6 +5,7 @@ import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { BacktestCandidateStrategyRow } from '../../modules/research/BacktestCandidateStrategyRow.tsx';
 import { BacktestRunQueueRow } from '../../modules/research/BacktestRunQueueRow.tsx';
+import { ResearchAuditFeedRow } from '../../modules/research/ResearchAuditFeedRow.tsx';
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
 import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEventInspectionPanel.tsx';
@@ -466,28 +467,17 @@ function BacktestPage() {
             const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
             const workflowRunId = typeof item.metadata?.workflowRunId === 'string' ? item.metadata.workflowRunId : '--';
             return (
-              <div className="focus-row" key={item.id}>
-                <div className="symbol-cell">
-                  <strong>{item.title}</strong>
-                  <span>{item.detail}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? 'Run ID' : 'Run ID'}</span>
-                  <strong>{runId}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                  <strong>{status}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '工作流' : 'Workflow'}</span>
-                  <strong>{workflowRunId}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '时间' : 'Time'}</span>
-                  <strong>{fmtDateTime(item.createdAt, locale)}</strong>
-                </div>
-              </div>
+              <ResearchAuditFeedRow
+                key={item.id}
+                locale={locale}
+                item={item}
+                formatDateTime={fmtDateTime}
+                metrics={[
+                  { label: 'Run ID', value: runId },
+                  { label: locale === 'zh' ? '状态' : 'Status', value: status },
+                  { label: locale === 'zh' ? '工作流' : 'Workflow', value: workflowRunId },
+                ]}
+              />
             );
           })}
         </ResearchTerminalPanel>
@@ -601,27 +591,16 @@ function BacktestPage() {
           emptyMessage={locale === 'zh' ? '当前 run 暂无审计轨迹。' : 'No audit trail exists for the selected run yet.'}
         >
           {selectedRunAuditItems.map((item) => (
-            <InspectionSelectableRow
+            <ResearchAuditFeedRow
               key={item.id}
-              leadTitle={item.title}
-              leadCopy={item.detail}
+              locale={locale}
+              item={item}
+              formatDateTime={fmtDateTime}
+              selected={selectedAuditEventId === item.id}
+              onInspect={setSelectedAuditEventId}
               metrics={[
                 { label: locale === 'zh' ? '类型' : 'Type', value: item.type },
-                { label: locale === 'zh' ? '操作人' : 'Actor', value: item.actor },
-                { label: locale === 'zh' ? '时间' : 'Time', value: fmtDateTime(item.createdAt, locale) },
               ]}
-              actions={(
-                <button
-                  type="button"
-                  className="inline-action"
-                  disabled={selectedAuditEventId === item.id}
-                  onClick={() => setSelectedAuditEventId(item.id)}
-                >
-                  {selectedAuditEventId === item.id
-                    ? (locale === 'zh' ? '已选中' : 'Selected')
-                    : (locale === 'zh' ? '查看' : 'Inspect')}
-                </button>
-              )}
             />
           ))}
         </ResearchCollectionPanel>

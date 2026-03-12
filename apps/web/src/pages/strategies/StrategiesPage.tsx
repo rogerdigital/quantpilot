@@ -4,6 +4,7 @@ import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
+import { ResearchAuditFeedRow } from '../../modules/research/ResearchAuditFeedRow.tsx';
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
 import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEventInspectionPanel.tsx';
 import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPanel.tsx';
@@ -528,28 +529,16 @@ function StrategiesPage() {
             const strategyId = typeof item.metadata?.strategyId === 'string' ? item.metadata.strategyId : '--';
             const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
             return (
-              <div className="focus-row" key={item.id}>
-                <div className="symbol-cell">
-                  <strong>{item.title}</strong>
-                  <span>{item.detail}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '策略 ID' : 'Strategy ID'}</span>
-                  <strong>{strategyId}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                  <strong>{status}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '操作人' : 'Actor'}</span>
-                  <strong>{item.actor}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '时间' : 'Time'}</span>
-                  <strong>{formatDateTime(item.createdAt, locale)}</strong>
-                </div>
-              </div>
+              <ResearchAuditFeedRow
+                key={item.id}
+                locale={locale}
+                item={item}
+                formatDateTime={formatDateTime}
+                metrics={[
+                  { label: locale === 'zh' ? '策略 ID' : 'Strategy ID', value: strategyId },
+                  { label: locale === 'zh' ? '状态' : 'Status', value: status },
+                ]}
+              />
             );
           })}
         </ResearchTerminalPanel>
@@ -742,14 +731,13 @@ function StrategiesPage() {
           {selectedStrategyAuditItems.map((item) => {
             const status = typeof item.metadata?.status === 'string' ? item.metadata.status : '--';
             return (
-              <InspectionMetricsRow
+              <ResearchAuditFeedRow
                 key={item.id}
-                leadTitle={item.title}
-                leadCopy={item.detail}
+                locale={locale}
+                item={item}
+                formatDateTime={formatDateTime}
                 metrics={[
                   { label: locale === 'zh' ? '状态' : 'Status', value: status },
-                  { label: locale === 'zh' ? '操作人' : 'Actor', value: item.actor },
-                  { label: locale === 'zh' ? '时间' : 'Time', value: formatDateTime(item.createdAt, locale) },
                 ]}
               />
             );
