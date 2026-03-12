@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
+import { getExecutionCollectionConfigs } from '../../../modules/console/executionCollectionConfigs.ts';
 import { useExecutionDetailPanels } from '../../../modules/console/useExecutionDetailPanels.ts';
 import {
   getExecutionAuditEventInspectionConfig,
@@ -112,6 +113,11 @@ export function ExecutionPage() {
   const executionWorkflowInspection = getExecutionWorkflowInspectionConfig(locale, selectedEntry, selectedWorkflow, executionDataLoading);
   const executionWorkflowStepInspection = getExecutionWorkflowStepInspectionConfig(locale, selectedEntry, selectedWorkflowStep);
   const executionSnapshotInspection = getExecutionSnapshotInspectionConfig(locale, selectedEntry, selectedAccountSnapshot);
+  const executionCollectionConfigs = getExecutionCollectionConfigs(locale, {
+    audit: selectedExecutionAuditItems.length,
+    actions: selectedExecutionActions.length,
+    versions: selectedExecutionVersionItems.length,
+  });
 
   return (
     <>
@@ -265,14 +271,14 @@ export function ExecutionPage() {
           )}
         </InspectionPanel>
         <InspectionListPanel
-          title={locale === 'zh' ? '选中执行审计轨迹' : 'Selected Execution Audit'}
-          copy={locale === 'zh' ? '按策略 ID 聚合当前选中 execution plan 对应的审计留痕。' : 'Aggregate audit trail for the selected execution plan by strategy id.'}
-          badge={selectedExecutionAuditItems.length}
-          badgeClassName="badge-warn"
+          title={executionCollectionConfigs.audit.title}
+          copy={executionCollectionConfigs.audit.copy}
+          badge={executionCollectionConfigs.audit.badge}
+          badgeClassName={executionCollectionConfigs.audit.badgeClassName}
         >
-            {auditLoading ? <InspectionStatus>{locale === 'zh' ? '正在加载执行审计...' : 'Loading execution audit...'}</InspectionStatus> : null}
-            {!auditLoading && !selectedEntry ? <InspectionStatus>{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</InspectionStatus> : null}
-            {!auditLoading && selectedEntry && !selectedExecutionAuditItems.length ? <InspectionStatus>{locale === 'zh' ? '当前执行计划暂无审计留痕。' : 'No audit records exist for the selected execution plan yet.'}</InspectionStatus> : null}
+            {auditLoading ? <InspectionStatus>{executionCollectionConfigs.audit.loadingMessage}</InspectionStatus> : null}
+            {!auditLoading && !selectedEntry ? <InspectionStatus>{executionCollectionConfigs.audit.emptySelectionMessage}</InspectionStatus> : null}
+            {!auditLoading && selectedEntry && !selectedExecutionAuditItems.length ? <InspectionStatus>{executionCollectionConfigs.audit.emptyItemsMessage}</InspectionStatus> : null}
             {selectedExecutionAuditItems.map((item) => (
               <InspectionSelectableRow
                 key={item.id}
@@ -378,14 +384,14 @@ export function ExecutionPage() {
           )}
         </InspectionPanel>
         <InspectionListPanel
-          title={locale === 'zh' ? '选中审批动作历史' : 'Selected Approval Actions'}
-          copy={locale === 'zh' ? '按当前 execution plan 的订单标的聚合 approve / reject / cancel 动作历史。' : 'Aggregate approve, reject, and cancel actions by the selected execution plan’s order symbols.'}
-          badge={selectedExecutionActions.length}
-          badgeClassName="badge-warn"
+          title={executionCollectionConfigs.actions.title}
+          copy={executionCollectionConfigs.actions.copy}
+          badge={executionCollectionConfigs.actions.badge}
+          badgeClassName={executionCollectionConfigs.actions.badgeClassName}
         >
-            {executionDataLoading ? <InspectionStatus>{locale === 'zh' ? '正在加载审批动作历史...' : 'Loading approval actions...'}</InspectionStatus> : null}
-            {!executionDataLoading && !selectedEntry ? <InspectionStatus>{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</InspectionStatus> : null}
-            {!executionDataLoading && selectedEntry && !selectedExecutionActions.length ? <InspectionStatus>{locale === 'zh' ? '当前执行计划还没有关联的审批动作。' : 'No approval actions are associated with the selected execution plan yet.'}</InspectionStatus> : null}
+            {executionDataLoading ? <InspectionStatus>{executionCollectionConfigs.actions.loadingMessage}</InspectionStatus> : null}
+            {!executionDataLoading && !selectedEntry ? <InspectionStatus>{executionCollectionConfigs.actions.emptySelectionMessage}</InspectionStatus> : null}
+            {!executionDataLoading && selectedEntry && !selectedExecutionActions.length ? <InspectionStatus>{executionCollectionConfigs.actions.emptyItemsMessage}</InspectionStatus> : null}
             {selectedExecutionActions.map((item) => (
               <InspectionMetricsRow
                 key={item.id}
@@ -419,12 +425,13 @@ export function ExecutionPage() {
           )}
         </InspectionPanel>
         <InspectionListPanel
-          title={locale === 'zh' ? '选中执行版本轨迹' : 'Selected Execution Version History'}
-          copy={locale === 'zh' ? '从 execution audit metadata 回放订单规模、风控状态和资金规模的历史快照。' : 'Replay order count, risk status, and capital snapshots from execution audit metadata.'}
-          badge={selectedExecutionVersionItems.length}
+          title={executionCollectionConfigs.versions.title}
+          copy={executionCollectionConfigs.versions.copy}
+          badge={executionCollectionConfigs.versions.badge}
+          badgeClassName={executionCollectionConfigs.versions.badgeClassName}
         >
-            {!selectedEntry ? <InspectionStatus>{locale === 'zh' ? '先从执行计划账本选择一条记录。' : 'Select an execution plan from the ledger first.'}</InspectionStatus> : null}
-            {selectedEntry && !selectedExecutionVersionItems.length ? <InspectionStatus>{locale === 'zh' ? '当前执行计划还没有可回放的版本快照。' : 'No version snapshots are available for the selected execution plan yet.'}</InspectionStatus> : null}
+            {!selectedEntry ? <InspectionStatus>{executionCollectionConfigs.versions.emptySelectionMessage}</InspectionStatus> : null}
+            {selectedEntry && !selectedExecutionVersionItems.length ? <InspectionStatus>{executionCollectionConfigs.versions.emptyItemsMessage}</InspectionStatus> : null}
             {selectedExecutionVersionItems.map((item) => {
               const orderCount = typeof item.metadata?.orderCount === 'number' ? item.metadata.orderCount : null;
               const capital = typeof item.metadata?.capital === 'number' ? item.metadata.capital : null;
