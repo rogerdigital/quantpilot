@@ -7,6 +7,7 @@ import { ResearchCollectionPanel } from '../../modules/research/ResearchCollecti
 import { ResearchDetailInspectionPanel } from '../../modules/research/ResearchDetailInspectionPanel.tsx';
 import { ResearchEventInspectionPanel } from '../../modules/research/ResearchEventInspectionPanel.tsx';
 import { ResearchTerminalPanel } from '../../modules/research/ResearchTerminalPanel.tsx';
+import { StrategyCatalogRow } from '../../modules/research/StrategyCatalogRow.tsx';
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
@@ -478,112 +479,38 @@ function StrategiesPage() {
             <div className="status-copy">{locale === 'zh' ? '活跃策略' : 'Active strategies'}</div>
           ) : null}
           {visibleActiveStrategies.map((item) => (
-            <InspectionSelectableRow
+            <StrategyCatalogRow
               key={item.id}
-              leadTitle={item.name}
-              leadCopy={item.summary}
-              metrics={[
-                { label: locale === 'zh' ? '阶段' : 'Stage', value: item.status },
-                { label: 'Sharpe', value: item.sharpe.toFixed(2) },
-                { label: locale === 'zh' ? '预期收益' : 'Expected return', value: `${item.expectedReturnPct.toFixed(1)}%` },
-              ]}
-              actions={(
-                <div className="action-group">
-                  <button
-                    type="button"
-                    className="inline-action"
-                    disabled={!canWriteStrategy || saving || promotingId === item.id}
-                    onClick={() => handleEditStrategy(item)}
-                  >
-                    {locale === 'zh' ? '编辑' : 'Edit'}
-                  </button>
-                  {getNextStrategyStage(item.status) ? (
-                    <button
-                      type="button"
-                      className="inline-action inline-action-approve"
-                      disabled={!canWriteStrategy || saving || promotingId === item.id}
-                      onClick={() => handlePromoteStrategy(item)}
-                    >
-                      {promotingId === item.id
-                        ? (locale === 'zh' ? '晋级中...' : 'Promoting...')
-                        : (locale === 'zh'
-                            ? `晋级到 ${getNextStrategyStage(item.status)}`
-                            : `Promote to ${getNextStrategyStage(item.status)}`)}
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    className={item.status === 'archived' ? 'inline-action inline-action-approve' : 'inline-action'}
-                    disabled={!canWriteStrategy || saving || promotingId === item.id}
-                    onClick={() => handleArchiveStrategy(item)}
-                  >
-                    {promotingId === item.id
-                      ? (item.status === 'archived'
-                          ? (locale === 'zh' ? '恢复中...' : 'Restoring...')
-                          : (locale === 'zh' ? '归档中...' : 'Archiving...'))
-                      : (item.status === 'archived'
-                          ? (locale === 'zh' ? '恢复到 draft' : 'Restore to draft')
-                          : (locale === 'zh' ? '归档' : 'Archive'))}
-                  </button>
-                  <button
-                    type="button"
-                    className="inline-action"
-                    disabled={selectedStrategyId === item.id}
-                    onClick={() => setSelectedStrategyId(item.id)}
-                  >
-                    {selectedStrategyId === item.id
-                      ? (locale === 'zh' ? '已选中' : 'Selected')
-                      : (locale === 'zh' ? '查看' : 'Inspect')}
-                  </button>
-                </div>
-              )}
+              locale={locale}
+              item={item}
+              nextStage={getNextStrategyStage(item.status)}
+              canWriteStrategy={canWriteStrategy}
+              saving={saving}
+              promotingId={promotingId}
+              selectedStrategyId={selectedStrategyId}
+              onEdit={handleEditStrategy}
+              onPromote={handlePromoteStrategy}
+              onArchiveToggle={handleArchiveStrategy}
+              onInspect={setSelectedStrategyId}
             />
           ))}
           {visibleArchivedStrategies.length ? (
             <div className="status-copy">{locale === 'zh' ? '已归档策略' : 'Archived strategies'}</div>
           ) : null}
           {visibleArchivedStrategies.map((item) => (
-            <InspectionSelectableRow
+            <StrategyCatalogRow
               key={item.id}
-              leadTitle={item.name}
-              leadCopy={item.summary}
-              metrics={[
-                { label: locale === 'zh' ? '阶段' : 'Stage', value: item.status },
-                { label: 'Sharpe', value: item.sharpe.toFixed(2) },
-                { label: locale === 'zh' ? '预期收益' : 'Expected return', value: `${item.expectedReturnPct.toFixed(1)}%` },
-              ]}
-              actions={(
-                <div className="action-group">
-                  <button
-                    type="button"
-                    className="inline-action"
-                    disabled={!canWriteStrategy || saving || promotingId === item.id}
-                    onClick={() => handleEditStrategy(item)}
-                  >
-                    {locale === 'zh' ? '编辑' : 'Edit'}
-                  </button>
-                  <button
-                    type="button"
-                    className="inline-action inline-action-approve"
-                    disabled={!canWriteStrategy || saving || promotingId === item.id}
-                    onClick={() => handleArchiveStrategy(item)}
-                  >
-                    {promotingId === item.id
-                      ? (locale === 'zh' ? '恢复中...' : 'Restoring...')
-                      : (locale === 'zh' ? '恢复到 draft' : 'Restore to draft')}
-                  </button>
-                  <button
-                    type="button"
-                    className="inline-action"
-                    disabled={selectedStrategyId === item.id}
-                    onClick={() => setSelectedStrategyId(item.id)}
-                  >
-                    {selectedStrategyId === item.id
-                      ? (locale === 'zh' ? '已选中' : 'Selected')
-                      : (locale === 'zh' ? '查看' : 'Inspect')}
-                  </button>
-                </div>
-              )}
+              locale={locale}
+              item={item}
+              nextStage={null}
+              canWriteStrategy={canWriteStrategy}
+              saving={saving}
+              promotingId={promotingId}
+              selectedStrategyId={selectedStrategyId}
+              onEdit={handleEditStrategy}
+              onPromote={handlePromoteStrategy}
+              onArchiveToggle={handleArchiveStrategy}
+              onInspect={setSelectedStrategyId}
             />
           ))}
         </ResearchTerminalPanel>
