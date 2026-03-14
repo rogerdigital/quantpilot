@@ -79,6 +79,20 @@ function NotificationsPage() {
   ));
   const selectedMonitoringSnapshot = monitoringSnapshotItems.find((item) => item.id === selectedMonitoringSnapshotId) || null;
 
+  function applyMonitoringFocus(options: {
+    source?: string;
+    level?: string;
+    snapshotStatus?: string;
+    timeWindow?: (typeof MONITORING_TIME_WINDOWS)[number]['key'];
+    snapshotId?: string;
+  }) {
+    setMonitoringSourceFilter(options.source || 'all');
+    setMonitoringLevelFilter(options.level || 'all');
+    setMonitoringSnapshotStatusFilter(options.snapshotStatus || 'all');
+    setMonitoringTimeWindow(options.timeWindow || '24h');
+    setSelectedMonitoringSnapshotId(options.snapshotId || '');
+  }
+
   return (
     <>
       <SectionHeader routeKey="notifications" />
@@ -118,11 +132,11 @@ function NotificationsPage() {
           </div>
           <div className="status-stack">
             <div className="status-row"><span>{locale === 'zh' ? '系统健康' : 'System health'}</span><strong>{monitoringLoading ? (locale === 'zh' ? '加载中' : 'Loading') : translateMonitoringStatus(locale, monitoringStatus?.status)}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? 'Worker 心跳' : 'Worker heartbeat'}</span><strong>{workerHeartbeatLag === null || workerHeartbeatLag === undefined ? '--' : `${workerHeartbeatLag}s`}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? 'Workflow 积压' : 'Workflow backlog'}</span><strong>{monitoringWorkflowBacklog}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '待处理队列' : 'Pending queues'}</span><strong>{monitoringQueueBacklog}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '风险阻断' : 'Risk-off events'}</span><strong>{monitoringStatus?.services.risk.riskOff || 0}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '人工复核' : 'Manual reviews'}</span><strong>{monitoringStatus?.services.queues.pendingAgentReviews || 0}</strong></div>
+            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'worker', timeWindow: '24h' })}><span>{locale === 'zh' ? 'Worker 心跳' : 'Worker heartbeat'}</span><strong>{workerHeartbeatLag === null || workerHeartbeatLag === undefined ? '--' : `${workerHeartbeatLag}s`}</strong></button>
+            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'workflow', timeWindow: '24h' })}><span>{locale === 'zh' ? 'Workflow 积压' : 'Workflow backlog'}</span><strong>{monitoringWorkflowBacklog}</strong></button>
+            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'queue', timeWindow: '24h' })}><span>{locale === 'zh' ? '待处理队列' : 'Pending queues'}</span><strong>{monitoringQueueBacklog}</strong></button>
+            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'risk', level: 'critical', timeWindow: '24h' })}><span>{locale === 'zh' ? '风险阻断' : 'Risk-off events'}</span><strong>{monitoringStatus?.services.risk.riskOff || 0}</strong></button>
+            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'queue', level: 'warn', timeWindow: '24h' })}><span>{locale === 'zh' ? '人工复核' : 'Manual reviews'}</span><strong>{monitoringStatus?.services.queues.pendingAgentReviews || 0}</strong></button>
             <div className="status-copy">{monitoringStatus?.services.worker.message || (locale === 'zh' ? '监控摘要尚未返回。' : 'Monitoring summary has not returned yet.')}</div>
             <div className="status-copy">{monitoringStatus?.generatedAt ? `${locale === 'zh' ? '摘要时间' : 'Summary time'}: ${fmtDateTime(monitoringStatus.generatedAt, locale)}` : ''}</div>
           </div>
