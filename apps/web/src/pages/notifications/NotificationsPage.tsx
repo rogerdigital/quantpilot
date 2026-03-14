@@ -1,19 +1,21 @@
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
+import { useMonitoringStatus } from '../../hooks/useMonitoringStatus.ts';
 import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
 import { useOperatorActionsFeed } from '../../modules/notifications/useOperatorActionsFeed.ts';
 import { useSchedulerTicksFeed } from '../../modules/notifications/useSchedulerTicksFeed.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { ActivityLog } from '../console/components/ConsoleTables.tsx';
 import { copy, useLocale } from '../console/i18n.tsx';
-import { connectionLabel, fmtDateTime, translateProviderLabel } from '../console/utils.ts';
+import { connectionLabel, fmtDateTime, monitoringTone, translateMonitoringStatus, translateProviderLabel } from '../console/utils.ts';
 
 function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
+  const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
   const { items, loading } = useNotificationsFeed();
   const { items: actionItems, loading: actionLoading } = useOperatorActionsFeed();
   const { items: schedulerItems, loading: schedulerLoading } = useSchedulerTicksFeed();
@@ -29,6 +31,14 @@ function NotificationsPage() {
         ? 'HTTP 行情网关'
         : (state.integrationStatus.marketData.label || state.integrationStatus.marketData.provider),
   );
+  const monitoringWorkflowBacklog = (monitoringStatus?.services.workflows.queued || 0)
+    + (monitoringStatus?.services.workflows.running || 0)
+    + (monitoringStatus?.services.workflows.retryScheduled || 0);
+  const monitoringQueueBacklog = (monitoringStatus?.services.queues.pendingNotificationJobs || 0)
+    + (monitoringStatus?.services.queues.pendingRiskScanJobs || 0)
+    + (monitoringStatus?.services.queues.pendingAgentReviews || 0);
+  const workerHeartbeatLag = monitoringStatus?.services.worker.lagSeconds;
+  const monitoringAlerts = monitoringStatus?.alerts || [];
 
   return (
     <>
@@ -54,6 +64,58 @@ function NotificationsPage() {
             <div className="panel-badge badge-info">EVENTS</div>
           </div>
           <ActivityLog />
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '运行态摘要' : 'Monitoring Summary'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把 worker、workflow、风险和队列积压收敛成一个控制面健康摘要。'
+                  : 'Collapse worker, workflow, risk, and queue backlog into one control-plane health summary.'}
+              </div>
+            </div>
+            <div className={`panel-badge tone-${monitoringTone(monitoringStatus?.status)}`}>{monitoringLoading ? '...' : translateMonitoringStatus(locale, monitoringStatus?.status)}</div>
+          </div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '系统健康' : 'System health'}</span><strong>{monitoringLoading ? (locale === 'zh' ? '加载中' : 'Loading') : translateMonitoringStatus(locale, monitoringStatus?.status)}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? 'Worker 心跳' : 'Worker heartbeat'}</span><strong>{workerHeartbeatLag === null || workerHeartbeatLag === undefined ? '--' : `${workerHeartbeatLag}s`}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? 'Workflow 积压' : 'Workflow backlog'}</span><strong>{monitoringWorkflowBacklog}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '待处理队列' : 'Pending queues'}</span><strong>{monitoringQueueBacklog}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '风险阻断' : 'Risk-off events'}</span><strong>{monitoringStatus?.services.risk.riskOff || 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '人工复核' : 'Manual reviews'}</span><strong>{monitoringStatus?.services.queues.pendingAgentReviews || 0}</strong></div>
+            <div className="status-copy">{monitoringStatus?.services.worker.message || (locale === 'zh' ? '监控摘要尚未返回。' : 'Monitoring summary has not returned yet.')}</div>
+            <div className="status-copy">{monitoringStatus?.generatedAt ? `${locale === 'zh' ? '摘要时间' : 'Summary time'}: ${fmtDateTime(monitoringStatus.generatedAt, locale)}` : ''}</div>
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '监控告警' : 'Monitoring Alerts'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '直接查看 Monitoring 模块聚合出的当前告警来源和原因。'
+                  : 'Inspect the current alert sources and reasons aggregated by the monitoring module.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-warn">{monitoringAlerts.length}</div>
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {monitoringLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载监控告警...' : 'Loading monitoring alerts...'}</div> : null}
+            {!monitoringLoading && !monitoringAlerts.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有新的监控告警' : 'No monitoring alerts right now.'}</div> : null}
+            {!monitoringLoading ? monitoringAlerts.map((item, index) => (
+              <div className="focus-row" key={`${item.source}-${index}`}>
+                <div className="symbol-cell">
+                  <strong>{item.source}</strong>
+                  <span>{item.message}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '级别' : 'Level'}</span>
+                  <strong>{translateMonitoringStatus(locale, item.level)}</strong>
+                </div>
+              </div>
+            )) : null}
+          </div>
         </article>
         <article className="panel">
           <div className="panel-head">
