@@ -5,6 +5,7 @@ import { createCycleRepository } from './repositories/cycle-repo.mjs';
 import { createExecutionPlanRepository } from './repositories/execution-plan-repo.mjs';
 import { createExecutionRuntimeRepository } from './repositories/execution-runtime-repo.mjs';
 import { createMarketProviderRepository } from './repositories/market-provider-repo.mjs';
+import { createMonitoringRepository } from './repositories/monitoring-repo.mjs';
 import { createNotificationRepository } from './repositories/notification-repo.mjs';
 import { createOperatorActionRepository } from './repositories/operator-action-repo.mjs';
 import { createResearchSummaryRepository } from './repositories/research-summary-repo.mjs';
@@ -26,6 +27,7 @@ export function createControlPlaneContext(store = controlPlaneStore) {
     executionPlans: createExecutionPlanRepository(store),
     executionRuntime: createExecutionRuntimeRepository(store),
     marketProviders: createMarketProviderRepository(store),
+    monitoring: createMonitoringRepository(store),
     notifications: createNotificationRepository(store),
     operatorActions: createOperatorActionRepository(store),
     researchSummary: createResearchSummaryRepository(store),

@@ -264,6 +264,15 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     updateMarketProviderStatus(snapshot = {}) {
       return context.marketProviders.updateMarketProviderStatus(snapshot);
     },
+    listMonitoringSnapshots(limit = 50) {
+      return context.monitoring.listMonitoringSnapshots(limit);
+    },
+    listMonitoringAlerts(limit = 100) {
+      return context.monitoring.listMonitoringAlerts(limit);
+    },
+    recordMonitoringSnapshot(payload = {}) {
+      return context.monitoring.recordMonitoringSnapshot(payload);
+    },
     listNotifications(limit = 50) {
       return context.notifications.listNotifications(limit);
     },
@@ -553,6 +562,8 @@ export const getStrategyCatalogItem = (...args) => controlPlaneRuntime.getStrate
 export const upsertStrategyCatalogItem = (...args) => controlPlaneRuntime.upsertStrategyCatalogItem(...args);
 export const getMarketProviderStatus = (...args) => controlPlaneRuntime.getMarketProviderStatus(...args);
 export const updateMarketProviderStatus = (...args) => controlPlaneRuntime.updateMarketProviderStatus(...args);
+export const listMonitoringSnapshots = (...args) => controlPlaneRuntime.listMonitoringSnapshots(...args);
+export const listMonitoringAlerts = (...args) => controlPlaneRuntime.listMonitoringAlerts(...args);
 export const listWorkerHeartbeats = (...args) => controlPlaneRuntime.listWorkerHeartbeats(...args);
 export const getLatestWorkerHeartbeat = (...args) => controlPlaneRuntime.getLatestWorkerHeartbeat(...args);
 export const listWorkflowRuns = (...args) => controlPlaneRuntime.listWorkflowRuns(...args);

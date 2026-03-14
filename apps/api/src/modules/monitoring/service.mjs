@@ -245,3 +245,37 @@ export async function getMonitoringStatus(options = {}) {
     alerts,
   };
 }
+
+export function listMonitoringSnapshots(limit = 50) {
+  return {
+    ok: true,
+    snapshots: controlPlaneRuntime.listMonitoringSnapshots(limit),
+  };
+}
+
+export function listMonitoringAlerts(limit = 100) {
+  return {
+    ok: true,
+    alerts: controlPlaneRuntime.listMonitoringAlerts(limit),
+  };
+}
+
+export async function recordMonitoringStatusSnapshot(options = {}) {
+  const summary = await getMonitoringStatus(options);
+  const recorded = controlPlaneRuntime.recordMonitoringSnapshot({
+    status: summary.status,
+    generatedAt: summary.generatedAt,
+    services: summary.services,
+    recent: summary.recent,
+    alerts: summary.alerts,
+    alertCount: summary.alerts.length,
+  });
+
+  return {
+    ok: true,
+    status: summary.status,
+    generatedAt: summary.generatedAt,
+    snapshot: recorded.snapshot,
+    alerts: recorded.alerts,
+  };
+}

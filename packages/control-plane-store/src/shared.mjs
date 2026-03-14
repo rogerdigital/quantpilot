@@ -56,6 +56,32 @@ export function createWorkerHeartbeatEntry(event) {
   };
 }
 
+export function createMonitoringSnapshotEntry(event = {}) {
+  return {
+    id: event.id || `monitoring-snapshot-${randomUUID()}`,
+    status: event.status || 'healthy',
+    generatedAt: event.generatedAt || new Date().toISOString(),
+    createdAt: event.createdAt || event.generatedAt || new Date().toISOString(),
+    services: event.services || {},
+    recent: event.recent || {},
+    alertCount: Number(event.alertCount || (Array.isArray(event.alerts) ? event.alerts.length : 0)),
+    metadata: event.metadata || {},
+  };
+}
+
+export function createMonitoringAlertEntry(event = {}) {
+  return {
+    id: event.id || `monitoring-alert-${randomUUID()}`,
+    snapshotId: event.snapshotId || '',
+    status: event.status || 'healthy',
+    level: event.level || 'info',
+    source: event.source || 'monitoring',
+    message: event.message || '',
+    createdAt: event.createdAt || new Date().toISOString(),
+    metadata: event.metadata || {},
+  };
+}
+
 export function createAuditRecordEntry(record) {
   return {
     id: record.id || `audit-${randomUUID()}`,

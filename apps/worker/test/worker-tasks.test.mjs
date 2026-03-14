@@ -4,6 +4,7 @@ import { createControlPlaneContext } from '../../../packages/control-plane-store
 import { createControlPlaneRuntime } from '../../../packages/control-plane-runtime/src/index.mjs';
 import { createMemoryStore } from '../../../packages/control-plane-store/test/helpers/memory-store.mjs';
 import { runHeartbeatTask } from '../src/tasks/heartbeat-task.mjs';
+import { runMonitoringScanTask } from '../src/tasks/monitoring-scan-task.mjs';
 import { runNotificationDispatchTask } from '../src/tasks/notification-dispatch-task.mjs';
 import { runRiskScanTask } from '../src/tasks/risk-scan-task.mjs';
 import { runSchedulerTickTask } from '../src/tasks/scheduler-tick-task.mjs';
@@ -89,6 +90,55 @@ test('heartbeat task records a persisted worker heartbeat', async () => {
   assert.equal(result.kind, 'heartbeat');
   assert.equal(context.workerHeartbeats.listWorkerHeartbeats().length, 1);
   assert.equal(context.workerHeartbeats.listWorkerHeartbeats()[0].worker, 'worker-test');
+});
+
+test('monitoring scan task records monitoring snapshots and alerts', async () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const runtime = createControlPlaneRuntime(context);
+  context.workerHeartbeats.recordWorkerHeartbeat({
+    worker: 'worker-test',
+    createdAt: new Date().toISOString(),
+    summary: 'worker heartbeat',
+  });
+  context.workflows.appendWorkflowRun({
+    id: 'workflow-monitoring',
+    workflowId: 'task-orchestrator.state-run',
+    status: 'failed',
+  });
+
+  const result = await runMonitoringScanTask(workerConfig, {
+    recordMonitoringSnapshot: async () => {
+      const generatedAt = new Date().toISOString();
+      const recorded = runtime.recordMonitoringSnapshot({
+        status: 'critical',
+        generatedAt,
+        services: {
+          worker: { status: 'healthy' },
+          workflows: { status: 'critical', failed: 1 },
+        },
+        alerts: [
+          {
+            level: 'critical',
+            source: 'workflow',
+            message: '1 workflow run is currently in a failed state.',
+          },
+        ],
+      });
+
+      return {
+        ok: true,
+        status: 'critical',
+        generatedAt,
+        snapshot: recorded.snapshot,
+        alerts: recorded.alerts,
+      };
+    },
+  });
+
+  assert.equal(result.worker, 'worker-test');
+  assert.equal(result.kind, 'monitoring-scan');
+  assert.equal(runtime.listMonitoringSnapshots().length, 1);
+  assert.equal(runtime.listMonitoringAlerts().some((item) => item.source === 'workflow'), true);
 });
 
 test('workflow maintenance task re-queues scheduled workflow runs', async () => {

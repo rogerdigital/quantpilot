@@ -1,5 +1,6 @@
 import { readWorkerConfig } from '../config.mjs';
 import { runHeartbeatTask } from '../tasks/heartbeat-task.mjs';
+import { runMonitoringScanTask } from '../tasks/monitoring-scan-task.mjs';
 import { runNotificationDispatchTask } from '../tasks/notification-dispatch-task.mjs';
 import { runRiskScanTask } from '../tasks/risk-scan-task.mjs';
 import { runSchedulerTickTask } from '../tasks/scheduler-tick-task.mjs';
@@ -12,8 +13,9 @@ async function runTick(config) {
     await runWorkflowExecutionTask(config),
     await runSchedulerTickTask(config),
     await runRiskScanTask(config),
-    await runNotificationDispatchTask(config),
     await runHeartbeatTask(config),
+    await runMonitoringScanTask(config),
+    await runNotificationDispatchTask(config),
   ];
   results.forEach((result) => {
     console.info(`[worker:${result.worker}] ${result.kind} ${result.timestamp} ${result.summary}`);

@@ -1181,6 +1181,39 @@ test('GET /api/monitoring/status returns runtime health and queue summary', asyn
   assert.equal(response.json.recent.latestSchedulerTick.id, 'scheduler-monitoring-tick');
 });
 
+test('GET /api/monitoring/snapshots and alerts return persisted monitoring history', async () => {
+  context.monitoring.recordMonitoringSnapshot({
+    id: 'monitoring-snapshot-test',
+    status: 'warn',
+    generatedAt: '2026-03-14T10:00:00.000Z',
+    services: {
+      worker: { status: 'warn' },
+    },
+    alerts: [
+      {
+        id: 'monitoring-alert-test',
+        level: 'warn',
+        source: 'worker',
+        message: 'Worker heartbeat is stale.',
+      },
+    ],
+  });
+
+  const snapshotsResponse = await invokeGatewayRoute(handler, {
+    path: '/api/monitoring/snapshots',
+  });
+  const alertsResponse = await invokeGatewayRoute(handler, {
+    path: '/api/monitoring/alerts',
+  });
+
+  assert.equal(snapshotsResponse.statusCode, 200);
+  assert.equal(snapshotsResponse.json.ok, true);
+  assert.equal(snapshotsResponse.json.snapshots[0].id, 'monitoring-snapshot-test');
+  assert.equal(alertsResponse.statusCode, 200);
+  assert.equal(alertsResponse.json.ok, true);
+  assert.equal(alertsResponse.json.alerts[0].id, 'monitoring-alert-test');
+});
+
 test('POST then GET /api/audit/records persists audit entries', async () => {
   const createResponse = await invokeGatewayRoute(handler, {
     method: 'POST',

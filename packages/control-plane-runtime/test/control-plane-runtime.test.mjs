@@ -35,6 +35,29 @@ test('control plane runtime persists worker heartbeat entries', () => {
   assert.equal(runtime.listWorkerHeartbeats()[0].worker, 'runtime-worker');
 });
 
+test('control plane runtime persists monitoring snapshots and alerts', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  const recorded = runtime.recordMonitoringSnapshot({
+    status: 'warn',
+    generatedAt: '2026-03-14T10:00:00.000Z',
+    services: {
+      worker: { status: 'warn' },
+    },
+    alerts: [
+      {
+        level: 'warn',
+        source: 'worker',
+        message: 'Worker heartbeat is getting stale.',
+      },
+    ],
+  });
+
+  assert.equal(recorded.snapshot.status, 'warn');
+  assert.equal(runtime.listMonitoringSnapshots()[0].id, recorded.snapshot.id);
+  assert.equal(runtime.listMonitoringAlerts()[0].snapshotId, recorded.snapshot.id);
+});
+
 test('control plane runtime dispatches queued jobs through injected context', () => {
   const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
 

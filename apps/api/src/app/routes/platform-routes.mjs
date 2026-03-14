@@ -9,7 +9,7 @@ import { getBacktestSummary } from '../../domains/backtest/services/summary-serv
 import { createBacktestRun, getBacktestRunDetail, listBacktestRuns, reviewBacktestRun } from '../../domains/backtest/services/runs-service.mjs';
 import { getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
-import { getMonitoringStatus } from '../../modules/monitoring/service.mjs';
+import { getMonitoringStatus, listMonitoringAlerts, listMonitoringSnapshots } from '../../modules/monitoring/service.mjs';
 import { describeArchitecture, listArchitectureLayers, listModules } from '../../modules/registry.mjs';
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
 import {
@@ -57,6 +57,16 @@ export async function handlePlatformRoutes(context) {
       getBrokerHealth: context.gatewayDependencies.getBrokerHealth,
     });
     writeJson(res, 200, summary);
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/monitoring/snapshots') {
+    writeJson(res, 200, listMonitoringSnapshots());
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/monitoring/alerts') {
+    writeJson(res, 200, listMonitoringAlerts());
     return true;
   }
 
