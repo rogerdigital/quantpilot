@@ -348,6 +348,15 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     deleteBrokerBinding(bindingId) {
       return context.userAccount.deleteBrokerBinding(bindingId);
     },
+    listWorkerHeartbeats(limit = 50) {
+      return context.workerHeartbeats.listWorkerHeartbeats(limit);
+    },
+    getLatestWorkerHeartbeat(worker = '') {
+      return context.workerHeartbeats.getLatestWorkerHeartbeat(worker);
+    },
+    recordWorkerHeartbeat(payload = {}) {
+      return context.workerHeartbeats.recordWorkerHeartbeat(payload);
+    },
     listWorkflowRuns(limit = 50) {
       return context.workflows.listWorkflowRuns(limit);
     },
@@ -544,5 +553,7 @@ export const getStrategyCatalogItem = (...args) => controlPlaneRuntime.getStrate
 export const upsertStrategyCatalogItem = (...args) => controlPlaneRuntime.upsertStrategyCatalogItem(...args);
 export const getMarketProviderStatus = (...args) => controlPlaneRuntime.getMarketProviderStatus(...args);
 export const updateMarketProviderStatus = (...args) => controlPlaneRuntime.updateMarketProviderStatus(...args);
+export const listWorkerHeartbeats = (...args) => controlPlaneRuntime.listWorkerHeartbeats(...args);
+export const getLatestWorkerHeartbeat = (...args) => controlPlaneRuntime.getLatestWorkerHeartbeat(...args);
 export const listWorkflowRuns = (...args) => controlPlaneRuntime.listWorkflowRuns(...args);
 export const getWorkflowRun = (...args) => controlPlaneRuntime.getWorkflowRun(...args);

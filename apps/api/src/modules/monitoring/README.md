@@ -6,4 +6,4 @@
 
 - `apps/api` 通过 `monitoring/service.mjs` 暴露运行态摘要
 - 当前摘要覆盖 broker、market、worker、workflow、risk 和队列积压
-- worker 健康度当前通过最新 `scheduler tick` 新鲜度近似判断
+- worker 健康度当前优先基于独立 `worker heartbeat` 记录判断，并保留 scheduler tick 作为调度参考

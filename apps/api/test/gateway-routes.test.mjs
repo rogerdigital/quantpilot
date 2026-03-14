@@ -1144,12 +1144,18 @@ test('GET /api/monitoring/status returns runtime health and queue summary', asyn
     cycle: 99,
     createdAt: nowIso,
   });
+  context.workerHeartbeats.recordWorkerHeartbeat({
+    id: 'worker-heartbeat-monitoring',
+    worker: 'quantpilot-task-worker',
+    summary: 'worker heartbeat',
+    createdAt: nowIso,
+  });
   context.store.writeCollection('scheduler-ticks.json', [{
     id: 'scheduler-monitoring-tick',
     phase: 'INTRADAY',
     status: 'steady',
     title: 'Scheduler tick',
-    message: 'worker heartbeat',
+    message: 'scheduler tick',
     worker: 'quantpilot-task-worker',
     createdAt: nowIso,
     metadata: {},
@@ -1164,12 +1170,14 @@ test('GET /api/monitoring/status returns runtime health and queue summary', asyn
   assert.equal(response.json.status, 'critical');
   assert.equal(response.json.services.market.status, 'healthy');
   assert.equal(response.json.services.worker.status, 'healthy');
+  assert.equal(response.json.services.worker.latestHeartbeat.id, 'worker-heartbeat-monitoring');
   assert.equal(response.json.services.workflows.failed >= 1, true);
   assert.equal(response.json.services.queues.pendingNotificationJobs >= 1, true);
   assert.equal(response.json.services.queues.pendingRiskScanJobs >= 1, true);
   assert.equal(response.json.services.queues.pendingAgentReviews >= 1, true);
   assert.equal(response.json.services.risk.riskOff >= 1, true);
   assert.equal(response.json.alerts.some((item) => item.source === 'workflow' && item.level === 'critical'), true);
+  assert.equal(response.json.recent.latestWorkerHeartbeat.id, 'worker-heartbeat-monitoring');
   assert.equal(response.json.recent.latestSchedulerTick.id, 'scheduler-monitoring-tick');
 });
 

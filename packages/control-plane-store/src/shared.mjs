@@ -45,6 +45,17 @@ export function createSchedulerTickEntry(event) {
   };
 }
 
+export function createWorkerHeartbeatEntry(event) {
+  return {
+    id: event.id || `worker-heartbeat-${randomUUID()}`,
+    worker: event.worker || 'quantpilot-worker',
+    kind: event.kind || 'heartbeat',
+    summary: event.summary || 'Worker heartbeat recorded.',
+    createdAt: event.createdAt || new Date().toISOString(),
+    metadata: event.metadata || {},
+  };
+}
+
 export function createAuditRecordEntry(record) {
   return {
     id: record.id || `audit-${randomUUID()}`,

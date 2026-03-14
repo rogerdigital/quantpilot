@@ -12,6 +12,7 @@ import { createRiskRepository } from './repositories/risk-repo.mjs';
 import { createSchedulerRepository } from './repositories/scheduler-repo.mjs';
 import { createStrategyRepository } from './repositories/strategy-repo.mjs';
 import { createUserAccountRepository } from './repositories/user-account-repo.mjs';
+import { createWorkerHeartbeatRepository } from './repositories/worker-heartbeat-repo.mjs';
 import { createWorkflowRepository } from './repositories/workflow-repo.mjs';
 import { controlPlaneStore } from './store.mjs';
 
@@ -32,6 +33,7 @@ export function createControlPlaneContext(store = controlPlaneStore) {
     scheduler: createSchedulerRepository(store),
     strategyCatalog: createStrategyRepository(store),
     userAccount: createUserAccountRepository(store),
+    workerHeartbeats: createWorkerHeartbeatRepository(store),
     workflows: createWorkflowRepository(store),
   };
 }

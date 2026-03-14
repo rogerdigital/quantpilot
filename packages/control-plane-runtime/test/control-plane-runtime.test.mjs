@@ -23,6 +23,18 @@ test('control plane runtime delegates notification and audit operations', () => 
   assert.equal(runtime.listAuditRecords()[0].id, audit.id);
 });
 
+test('control plane runtime persists worker heartbeat entries', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  const heartbeat = runtime.recordWorkerHeartbeat({
+    worker: 'runtime-worker',
+    summary: 'runtime heartbeat',
+  });
+
+  assert.equal(runtime.getLatestWorkerHeartbeat().id, heartbeat.id);
+  assert.equal(runtime.listWorkerHeartbeats()[0].worker, 'runtime-worker');
+});
+
 test('control plane runtime dispatches queued jobs through injected context', () => {
   const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
 

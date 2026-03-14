@@ -39,22 +39,22 @@ function buildRiskCounts(events) {
   };
 }
 
-function resolveWorkerStatus(latestTick, nowIso) {
-  if (!latestTick) {
+function resolveWorkerStatus(latestHeartbeat, nowIso) {
+  if (!latestHeartbeat) {
     return {
       status: 'warn',
-      message: 'No scheduler heartbeat has been recorded yet.',
-      latestTick: null,
+      message: 'No worker heartbeat has been recorded yet.',
+      latestHeartbeat: null,
       lagSeconds: null,
     };
   }
 
-  const lagSeconds = getAgeSeconds(latestTick.createdAt, nowIso);
+  const lagSeconds = getAgeSeconds(latestHeartbeat.createdAt, nowIso);
   if (lagSeconds === null) {
     return {
       status: 'warn',
-      message: 'Scheduler heartbeat timestamp is unavailable.',
-      latestTick,
+      message: 'Worker heartbeat timestamp is unavailable.',
+      latestHeartbeat,
       lagSeconds: null,
     };
   }
@@ -62,8 +62,8 @@ function resolveWorkerStatus(latestTick, nowIso) {
   if (lagSeconds <= 20 * 60) {
     return {
       status: 'healthy',
-      message: 'Scheduler heartbeat is within the expected freshness window.',
-      latestTick,
+      message: 'Worker heartbeat is within the expected freshness window.',
+      latestHeartbeat,
       lagSeconds,
     };
   }
@@ -71,16 +71,16 @@ function resolveWorkerStatus(latestTick, nowIso) {
   if (lagSeconds <= 45 * 60) {
     return {
       status: 'warn',
-      message: 'Scheduler heartbeat is getting stale and should be checked.',
-      latestTick,
+      message: 'Worker heartbeat is getting stale and should be checked.',
+      latestHeartbeat,
       lagSeconds,
     };
   }
 
   return {
     status: 'critical',
-    message: 'Scheduler heartbeat is stale and the worker may be offline.',
-    latestTick,
+    message: 'Worker heartbeat is stale and the worker may be offline.',
+    latestHeartbeat,
     lagSeconds,
   };
 }
@@ -104,9 +104,10 @@ export async function getMonitoringStatus(options = {}) {
   const pendingRiskScanJobs = countBy(riskScanJobs, (item) => item.status === 'pending');
   const agentActionRequests = controlPlaneRuntime.listAgentActionRequests(120);
   const pendingAgentReviews = countBy(agentActionRequests, (item) => item.status === 'pending_review');
+  const latestWorkerHeartbeat = controlPlaneRuntime.getLatestWorkerHeartbeat();
   const schedulerTicks = controlPlaneRuntime.listSchedulerTicks(10);
   const latestSchedulerTick = schedulerTicks[0] || null;
-  const worker = resolveWorkerStatus(latestSchedulerTick, nowIso);
+  const worker = resolveWorkerStatus(latestWorkerHeartbeat, nowIso);
   const market = controlPlaneRuntime.getMarketProviderStatus();
   const broker = await (options.getBrokerHealth ? options.getBrokerHealth() : Promise.resolve({
     adapter: 'unknown',
@@ -216,7 +217,7 @@ export async function getMonitoringStatus(options = {}) {
         status: worker.status,
         message: worker.message,
         lagSeconds: worker.lagSeconds,
-        latestTick: worker.latestTick,
+        latestHeartbeat: worker.latestHeartbeat,
       },
       workflows: {
         status: workflowStatus,
@@ -235,6 +236,7 @@ export async function getMonitoringStatus(options = {}) {
     },
     recent: {
       latestWorkflow,
+      latestWorkerHeartbeat,
       latestSchedulerTick,
       latestRiskEvent,
       latestNotification: notifications[0] || null,

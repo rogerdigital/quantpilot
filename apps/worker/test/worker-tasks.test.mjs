@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createControlPlaneContext } from '../../../packages/control-plane-store/src/context.mjs';
 import { createControlPlaneRuntime } from '../../../packages/control-plane-runtime/src/index.mjs';
 import { createMemoryStore } from '../../../packages/control-plane-store/test/helpers/memory-store.mjs';
+import { runHeartbeatTask } from '../src/tasks/heartbeat-task.mjs';
 import { runNotificationDispatchTask } from '../src/tasks/notification-dispatch-task.mjs';
 import { runRiskScanTask } from '../src/tasks/risk-scan-task.mjs';
 import { runSchedulerTickTask } from '../src/tasks/scheduler-tick-task.mjs';
@@ -75,6 +76,19 @@ test('scheduler tick task records a scheduler bucket event', async () => {
   assert.equal(result.kind, 'scheduler-tick');
   assert.equal(typeof result.phase, 'string');
   assert.equal(context.scheduler.listSchedulerTicks().length, 1);
+});
+
+test('heartbeat task records a persisted worker heartbeat', async () => {
+  const context = createControlPlaneContext(createMemoryStore());
+
+  const result = await runHeartbeatTask(workerConfig, {
+    recordWorkerHeartbeat: (payload) => context.workerHeartbeats.recordWorkerHeartbeat(payload),
+  });
+
+  assert.equal(result.worker, 'worker-test');
+  assert.equal(result.kind, 'heartbeat');
+  assert.equal(context.workerHeartbeats.listWorkerHeartbeats().length, 1);
+  assert.equal(context.workerHeartbeats.listWorkerHeartbeats()[0].worker, 'worker-test');
 });
 
 test('workflow maintenance task re-queues scheduled workflow runs', async () => {
