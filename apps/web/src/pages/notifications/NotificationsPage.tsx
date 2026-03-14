@@ -3,6 +3,7 @@ import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts'
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useMonitoringStatus } from '../../hooks/useMonitoringStatus.ts';
 import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
+import { useMonitoringAlertsFeed } from '../../modules/notifications/useMonitoringAlertsFeed.ts';
 import { useOperatorActionsFeed } from '../../modules/notifications/useOperatorActionsFeed.ts';
 import { useSchedulerTicksFeed } from '../../modules/notifications/useSchedulerTicksFeed.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
@@ -16,6 +17,7 @@ function NotificationsPage() {
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
+  const { items: monitoringAlertItems, loading: monitoringAlertsLoading } = useMonitoringAlertsFeed();
   const { items, loading } = useNotificationsFeed();
   const { items: actionItems, loading: actionLoading } = useOperatorActionsFeed();
   const { items: schedulerItems, loading: schedulerLoading } = useSchedulerTicksFeed();
@@ -38,7 +40,6 @@ function NotificationsPage() {
     + (monitoringStatus?.services.queues.pendingRiskScanJobs || 0)
     + (monitoringStatus?.services.queues.pendingAgentReviews || 0);
   const workerHeartbeatLag = monitoringStatus?.services.worker.lagSeconds;
-  const monitoringAlerts = monitoringStatus?.alerts || [];
 
   return (
     <>
@@ -98,13 +99,13 @@ function NotificationsPage() {
                   : 'Inspect the current alert sources and reasons aggregated by the monitoring module.'}
               </div>
             </div>
-            <div className="panel-badge badge-warn">{monitoringAlerts.length}</div>
+            <div className="panel-badge badge-warn">{monitoringAlertItems.length}</div>
           </div>
           <div className="focus-list focus-list-terminal">
-            {monitoringLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载监控告警...' : 'Loading monitoring alerts...'}</div> : null}
-            {!monitoringLoading && !monitoringAlerts.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有新的监控告警' : 'No monitoring alerts right now.'}</div> : null}
-            {!monitoringLoading ? monitoringAlerts.map((item, index) => (
-              <div className="focus-row" key={`${item.source}-${index}`}>
+            {monitoringAlertsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载监控告警...' : 'Loading monitoring alerts...'}</div> : null}
+            {!monitoringAlertsLoading && !monitoringAlertItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有新的监控告警' : 'No monitoring alerts right now.'}</div> : null}
+            {!monitoringAlertsLoading ? monitoringAlertItems.map((item) => (
+              <div className="focus-row" key={item.id}>
                 <div className="symbol-cell">
                   <strong>{item.source}</strong>
                   <span>{item.message}</span>
@@ -112,6 +113,10 @@ function NotificationsPage() {
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '级别' : 'Level'}</span>
                   <strong>{translateMonitoringStatus(locale, item.level)}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                  <strong>{fmtDateTime(item.createdAt, locale)}</strong>
                 </div>
               </div>
             )) : null}

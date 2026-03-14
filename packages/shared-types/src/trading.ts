@@ -565,6 +565,28 @@ export type WorkerHeartbeatRecord = {
   metadata?: Record<string, unknown>;
 };
 
+export type MonitoringAlertRecord = {
+  id: string;
+  snapshotId: string;
+  status: string;
+  level: string;
+  source: string;
+  message: string;
+  createdAt: string;
+  metadata?: Record<string, unknown>;
+};
+
+export type MonitoringSnapshotRecord = {
+  id: string;
+  status: string;
+  generatedAt: string;
+  createdAt: string;
+  services: Record<string, unknown>;
+  recent: Record<string, unknown>;
+  alertCount: number;
+  metadata?: Record<string, unknown>;
+};
+
 export type MonitoringStatusSnapshot = {
   ok: boolean;
   status: string;
@@ -663,6 +685,16 @@ export type MonitoringStatusSnapshot = {
     source: string;
     message: string;
   }>;
+};
+
+export type MonitoringAlertsResponse = {
+  ok: boolean;
+  alerts: MonitoringAlertRecord[];
+};
+
+export type MonitoringSnapshotsResponse = {
+  ok: boolean;
+  snapshots: MonitoringSnapshotRecord[];
 };
 
 export type BacktestRunCreateRequest = {
