@@ -35,6 +35,8 @@ function NotificationsPage() {
   const [selectedMonitoringSnapshotId, setSelectedMonitoringSnapshotId] = useState('');
   const [monitoringSnapshotStatusFilter, setMonitoringSnapshotStatusFilter] = useState('all');
   const [monitoringTimeWindow, setMonitoringTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
+  const [schedulerPhaseFilter, setSchedulerPhaseFilter] = useState('all');
+  const [schedulerTimeWindow, setSchedulerTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
@@ -63,9 +65,11 @@ function NotificationsPage() {
     + (monitoringStatus?.services.queues.pendingAgentReviews || 0);
   const workerHeartbeatLag = monitoringStatus?.services.worker.lagSeconds;
   const activeTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === monitoringTimeWindow) || MONITORING_TIME_WINDOWS[1];
+  const activeSchedulerTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === schedulerTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const monitoringSources = ['all', ...new Set(monitoringAlertItems.map((item) => item.source).filter(Boolean))];
   const monitoringLevels = ['all', ...new Set(monitoringAlertItems.map((item) => item.level).filter(Boolean))];
   const monitoringSnapshotStatuses = ['all', ...new Set(monitoringSnapshotItems.map((item) => item.status).filter(Boolean))];
+  const schedulerPhases = ['all', ...new Set(schedulerItems.map((item) => item.phase).filter(Boolean))];
   const filteredMonitoringAlerts = monitoringAlertItems.filter((item) => {
     if (!isWithinWindow(item.createdAt, activeTimeWindow.hours)) return false;
     if (selectedMonitoringSnapshotId && item.snapshotId !== selectedMonitoringSnapshotId) return false;
@@ -76,6 +80,10 @@ function NotificationsPage() {
   const filteredMonitoringSnapshots = monitoringSnapshotItems.filter((item) => (
     (monitoringSnapshotStatusFilter === 'all' || item.status === monitoringSnapshotStatusFilter)
     && isWithinWindow(item.generatedAt || item.createdAt, activeTimeWindow.hours)
+  ));
+  const filteredSchedulerItems = schedulerItems.filter((item) => (
+    (schedulerPhaseFilter === 'all' || item.phase === schedulerPhaseFilter)
+    && isWithinWindow(item.createdAt, activeSchedulerTimeWindow.hours)
   ));
   const selectedMonitoringSnapshot = monitoringSnapshotItems.find((item) => item.id === selectedMonitoringSnapshotId) || null;
 
@@ -425,12 +433,50 @@ function NotificationsPage() {
                   : 'Inspect worker-produced pre-open, intraday, and post-close scheduler ticks.'}
               </div>
             </div>
-            <div className="panel-badge badge-info">{schedulerItems.length}</div>
+            <div className="panel-badge badge-info">{filteredSchedulerItems.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            {MONITORING_TIME_WINDOWS.map((window) => {
+              const selected = schedulerTimeWindow === window.key;
+              const label = window.key === '1h'
+                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
+                : window.key === '24h'
+                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
+                  : window.key === '7d'
+                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
+                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              return (
+                <button
+                  key={window.key}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setSchedulerTimeWindow(window.key)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="settings-chip-row">
+            {schedulerPhases.map((phase) => {
+              const selected = schedulerPhaseFilter === phase;
+              const label = phase === 'all' ? (locale === 'zh' ? '全部窗口' : 'All Phases') : phase;
+              return (
+                <button
+                  key={phase}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setSchedulerPhaseFilter(phase)}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
           <div className="focus-list focus-list-terminal">
             {schedulerLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载调度节拍...' : 'Loading scheduler ticks...'}</div> : null}
-            {!schedulerLoading && !schedulerItems.length ? <div className="empty-cell">{locale === 'zh' ? '暂无调度节拍' : 'No scheduler ticks yet.'}</div> : null}
-            {!schedulerLoading ? schedulerItems.map((item) => (
+            {!schedulerLoading && !filteredSchedulerItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有调度节拍' : 'No scheduler ticks match the current filters.'}</div> : null}
+            {!schedulerLoading ? filteredSchedulerItems.map((item) => (
               <div className="focus-row" key={item.id}>
                 <div className="symbol-cell">
                   <strong>{item.title}</strong>
