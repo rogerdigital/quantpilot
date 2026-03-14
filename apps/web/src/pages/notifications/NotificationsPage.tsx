@@ -18,6 +18,7 @@ function NotificationsPage() {
   const { locale } = useLocale();
   const [monitoringSourceFilter, setMonitoringSourceFilter] = useState('all');
   const [monitoringLevelFilter, setMonitoringLevelFilter] = useState('all');
+  const [selectedMonitoringSnapshotId, setSelectedMonitoringSnapshotId] = useState('');
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
@@ -48,10 +49,12 @@ function NotificationsPage() {
   const monitoringSources = ['all', ...new Set(monitoringAlertItems.map((item) => item.source).filter(Boolean))];
   const monitoringLevels = ['all', ...new Set(monitoringAlertItems.map((item) => item.level).filter(Boolean))];
   const filteredMonitoringAlerts = monitoringAlertItems.filter((item) => {
+    if (selectedMonitoringSnapshotId && item.snapshotId !== selectedMonitoringSnapshotId) return false;
     if (monitoringSourceFilter !== 'all' && item.source !== monitoringSourceFilter) return false;
     if (monitoringLevelFilter !== 'all' && item.level !== monitoringLevelFilter) return false;
     return true;
   });
+  const selectedMonitoringSnapshot = monitoringSnapshotItems.find((item) => item.id === selectedMonitoringSnapshotId) || null;
 
   return (
     <>
@@ -107,11 +110,24 @@ function NotificationsPage() {
               <div className="panel-title">{locale === 'zh' ? '监控告警' : 'Monitoring Alerts'}</div>
               <div className="panel-copy">
                 {locale === 'zh'
-                  ? '直接查看 Monitoring 模块聚合出的当前告警来源和原因，并按来源或级别快速聚焦。'
-                  : 'Inspect monitoring alerts and quickly focus by source or severity.'}
+                  ? '直接查看 Monitoring 模块聚合出的当前告警来源和原因，并按快照、来源或级别快速聚焦。'
+                  : 'Inspect monitoring alerts and quickly focus by snapshot, source, or severity.'}
               </div>
             </div>
             <div className="panel-badge badge-warn">{filteredMonitoringAlerts.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            <button
+              type="button"
+              className={`settings-chip${selectedMonitoringSnapshotId ? ' active' : ''}`}
+              onClick={() => setSelectedMonitoringSnapshotId('')}
+            >
+              {selectedMonitoringSnapshot
+                ? (locale === 'zh'
+                  ? `快照 ${fmtDateTime(selectedMonitoringSnapshot.generatedAt || selectedMonitoringSnapshot.createdAt, locale)}`
+                  : `Snapshot ${fmtDateTime(selectedMonitoringSnapshot.generatedAt || selectedMonitoringSnapshot.createdAt, locale)}`)
+                : (locale === 'zh' ? '全部快照' : 'All Snapshots')}
+            </button>
           </div>
           <div className="settings-chip-row">
             {monitoringSources.map((source) => {
@@ -182,16 +198,25 @@ function NotificationsPage() {
             {monitoringSnapshotsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载监控快照...' : 'Loading monitoring snapshots...'}</div> : null}
             {!monitoringSnapshotsLoading && !monitoringSnapshotItems.length ? <div className="empty-cell">{locale === 'zh' ? '暂无监控快照' : 'No monitoring snapshots yet.'}</div> : null}
             {!monitoringSnapshotsLoading ? monitoringSnapshotItems.map((item) => (
-              <div className="focus-row" key={item.id}>
+              <button
+                type="button"
+                className="focus-row status-row-button"
+                key={item.id}
+                onClick={() => setSelectedMonitoringSnapshotId((current) => (current === item.id ? '' : item.id))}
+              >
                 <div className="symbol-cell">
                   <strong>{translateMonitoringStatus(locale, item.status)}</strong>
-                  <span>{locale === 'zh' ? `告警 ${item.alertCount} 条` : `${item.alertCount} alerts`}</span>
+                  <span>
+                    {selectedMonitoringSnapshotId === item.id
+                      ? (locale === 'zh' ? `已选中 · 告警 ${item.alertCount} 条` : `Selected · ${item.alertCount} alerts`)
+                      : (locale === 'zh' ? `告警 ${item.alertCount} 条` : `${item.alertCount} alerts`)}
+                  </span>
                 </div>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '采样时间' : 'Captured'}</span>
                   <strong>{fmtDateTime(item.generatedAt || item.createdAt, locale)}</strong>
                 </div>
-              </div>
+              </button>
             )) : null}
           </div>
         </article>
