@@ -19,6 +19,7 @@ function NotificationsPage() {
   const [monitoringSourceFilter, setMonitoringSourceFilter] = useState('all');
   const [monitoringLevelFilter, setMonitoringLevelFilter] = useState('all');
   const [selectedMonitoringSnapshotId, setSelectedMonitoringSnapshotId] = useState('');
+  const [monitoringSnapshotStatusFilter, setMonitoringSnapshotStatusFilter] = useState('all');
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
@@ -48,12 +49,16 @@ function NotificationsPage() {
   const workerHeartbeatLag = monitoringStatus?.services.worker.lagSeconds;
   const monitoringSources = ['all', ...new Set(monitoringAlertItems.map((item) => item.source).filter(Boolean))];
   const monitoringLevels = ['all', ...new Set(monitoringAlertItems.map((item) => item.level).filter(Boolean))];
+  const monitoringSnapshotStatuses = ['all', ...new Set(monitoringSnapshotItems.map((item) => item.status).filter(Boolean))];
   const filteredMonitoringAlerts = monitoringAlertItems.filter((item) => {
     if (selectedMonitoringSnapshotId && item.snapshotId !== selectedMonitoringSnapshotId) return false;
     if (monitoringSourceFilter !== 'all' && item.source !== monitoringSourceFilter) return false;
     if (monitoringLevelFilter !== 'all' && item.level !== monitoringLevelFilter) return false;
     return true;
   });
+  const filteredMonitoringSnapshots = monitoringSnapshotItems.filter((item) => (
+    monitoringSnapshotStatusFilter === 'all' || item.status === monitoringSnapshotStatusFilter
+  ));
   const selectedMonitoringSnapshot = monitoringSnapshotItems.find((item) => item.id === selectedMonitoringSnapshotId) || null;
 
   return (
@@ -192,12 +197,28 @@ function NotificationsPage() {
                   : 'Review recent monitoring snapshots to track status changes, alert count, and sampling time.'}
               </div>
             </div>
-            <div className="panel-badge badge-info">{monitoringSnapshotItems.length}</div>
+            <div className="panel-badge badge-info">{filteredMonitoringSnapshots.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            {monitoringSnapshotStatuses.map((status) => {
+              const selected = monitoringSnapshotStatusFilter === status;
+              const label = status === 'all' ? (locale === 'zh' ? '全部状态' : 'All Statuses') : translateMonitoringStatus(locale, status);
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setMonitoringSnapshotStatusFilter(status)}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
           <div className="focus-list focus-list-terminal">
             {monitoringSnapshotsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载监控快照...' : 'Loading monitoring snapshots...'}</div> : null}
-            {!monitoringSnapshotsLoading && !monitoringSnapshotItems.length ? <div className="empty-cell">{locale === 'zh' ? '暂无监控快照' : 'No monitoring snapshots yet.'}</div> : null}
-            {!monitoringSnapshotsLoading ? monitoringSnapshotItems.map((item) => (
+            {!monitoringSnapshotsLoading && !filteredMonitoringSnapshots.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有监控快照' : 'No monitoring snapshots match the current filters.'}</div> : null}
+            {!monitoringSnapshotsLoading ? filteredMonitoringSnapshots.map((item) => (
               <button
                 type="button"
                 className="focus-row status-row-button"
