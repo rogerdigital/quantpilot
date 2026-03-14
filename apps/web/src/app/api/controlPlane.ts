@@ -11,6 +11,7 @@ import type {
   StateCycleResult,
   TradingState,
   UserAccountProfileSnapshot,
+  MonitoringStatusSnapshot,
   UserBrokerBindingsSnapshot,
   UserBrokerBindingSaveSnapshot,
   UserBrokerBindingRuntimeSnapshot,
@@ -290,6 +291,12 @@ export async function fetchLatestBrokerAccountSnapshot(): Promise<LatestBrokerAc
 
 export async function fetchMarketProviderStatus(): Promise<{ ok: boolean; status: MarketProviderStatusSnapshot }> {
   return fetchJson('/api/market/provider-status', {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export async function fetchMonitoringStatus(): Promise<MonitoringStatusSnapshot> {
+  return fetchJson('/api/monitoring/status', {
     headers: { Accept: 'application/json' },
   });
 }

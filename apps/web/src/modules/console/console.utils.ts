@@ -111,6 +111,28 @@ export function connectionLabel(locale: AppLocale, connected: boolean, degraded 
   return copy[locale].labels.disabled;
 }
 
+export function monitoringTone(status: string | undefined) {
+  if (status === 'healthy') return 'ok';
+  if (status === 'warn') return 'warn';
+  if (status === 'critical') return 'down';
+  return 'muted';
+}
+
+export function translateMonitoringStatus(locale: AppLocale, status: string | undefined) {
+  const normalized = String(status || '').toLowerCase();
+  const zhMap: Record<string, string> = {
+    healthy: '健康',
+    warn: '告警',
+    critical: '严重',
+  };
+  const enMap: Record<string, string> = {
+    healthy: 'Healthy',
+    warn: 'Warning',
+    critical: 'Critical',
+  };
+  return (locale === 'zh' ? zhMap : enMap)[normalized] || (status || '--');
+}
+
 export function translateMode(locale: AppLocale, mode: string) {
   const map = locale === 'zh'
     ? { autopilot: '自动', hybrid: '混合', manual: '手动', AUTOPILOT: '自动', 'AUTO PILOT': '自动', HYBRID: '混合', MANUAL: '手动' }

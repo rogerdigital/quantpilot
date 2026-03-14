@@ -149,6 +149,7 @@ quantpilot/
 - `strategy catalog` 已具备结构化注册表读写边界，并可按单条策略查看最近研究运行上下文。
 - `backtest runs` 已具备列表、入队、人工复核与单条详情读取能力，可关联 workflow 与策略目录追踪研究链路。
 - `execution plans / runtime events / account snapshots / execution ledger` 已具备独立查询接口，执行面不再只存在于页面本地状态。
+- Overview 首页已开始消费后端 `monitoring status` 摘要，可直接观察 `broker / market / worker / workflow / queues` 运行态。
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
 - 账户写操作和券商绑定变更已经进入 audit records，基础对象变更具备最小留痕能力。
 - `auth/session` 已改为由持久化账户访问策略驱动，前后端对 `strategy:write / risk:review / execution:approve / account:write` 的权限判断已经开始收敛。

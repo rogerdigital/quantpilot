@@ -556,6 +556,115 @@ export type MarketProviderStatusSnapshot = {
   symbolCount: number;
 };
 
+export type WorkerHeartbeatRecord = {
+  id: string;
+  worker: string;
+  kind: string;
+  summary: string;
+  createdAt: string;
+  metadata?: Record<string, unknown>;
+};
+
+export type MonitoringStatusSnapshot = {
+  ok: boolean;
+  status: string;
+  generatedAt: string;
+  services: {
+    gateway: {
+      status: string;
+      uptimeSeconds: number;
+    };
+    broker: {
+      status: string;
+      adapter: string;
+      connected: boolean;
+      customBrokerConfigured: boolean;
+      alpacaConfigured: boolean;
+    };
+    market: MarketProviderStatusSnapshot & {
+      status: string;
+      lagSeconds: number | null;
+    };
+    worker: {
+      status: string;
+      message: string;
+      lagSeconds: number | null;
+      latestHeartbeat: WorkerHeartbeatRecord | null;
+    };
+    workflows: {
+      status: string;
+      queued: number;
+      running: number;
+      retryScheduled: number;
+      failed: number;
+      completed: number;
+      canceled: number;
+    };
+    queues: {
+      status: string;
+      pendingNotificationJobs: number;
+      pendingRiskScanJobs: number;
+      pendingAgentReviews: number;
+    };
+    risk: {
+      status: string;
+      riskOff: number;
+      approvalRequired: number;
+      connectivityDegraded: number;
+      healthy: number;
+    };
+  };
+  recent: {
+    latestWorkflow: WorkflowRunRecord | null;
+    latestWorkerHeartbeat: WorkerHeartbeatRecord | null;
+    latestSchedulerTick: {
+      id: string;
+      phase: string;
+      status: string;
+      title: string;
+      message: string;
+      worker: string;
+      createdAt: string;
+      metadata?: Record<string, unknown>;
+    } | null;
+    latestRiskEvent: {
+      id: string;
+      level: string;
+      status: string;
+      title: string;
+      message: string;
+      cycle: number;
+      riskLevel: string;
+      source: string;
+      createdAt: string;
+      metadata?: Record<string, unknown>;
+    } | null;
+    latestNotification: {
+      id: string;
+      level: string;
+      title: string;
+      message: string;
+      source: string;
+      createdAt: string;
+      metadata?: Record<string, unknown>;
+    } | null;
+    latestAuditRecord: {
+      id: string;
+      type: string;
+      actor: string;
+      title: string;
+      detail: string;
+      createdAt: string;
+      metadata?: Record<string, unknown>;
+    } | null;
+  };
+  alerts: Array<{
+    level: string;
+    source: string;
+    message: string;
+  }>;
+};
+
 export type BacktestRunCreateRequest = {
   strategyId: string;
   windowLabel?: string;

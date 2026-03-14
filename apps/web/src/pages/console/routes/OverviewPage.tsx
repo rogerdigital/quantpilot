@@ -1,6 +1,7 @@
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { useLatestBrokerSnapshot } from '../../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../../hooks/useMarketProviderStatus.ts';
+import { useMonitoringStatus } from '../../../hooks/useMonitoringStatus.ts';
 import { useSettingsNavigation, useSummary } from '../hooks.ts';
 import { copy, useLocale } from '../i18n.tsx';
 import { ChartCanvas, TopMeta } from '../components/ConsoleChrome.tsx';
@@ -15,11 +16,13 @@ import {
   topSignalLabel,
   translateEngineStatus,
   translateOrderStatus,
+  translateMonitoringStatus,
   translateRiskLevel,
   translateRuntimeText,
   translateMode,
   translateSignal,
   translateSide,
+  monitoringTone,
 } from '../utils.ts';
 
 export function OverviewPage() {
@@ -29,6 +32,7 @@ export function OverviewPage() {
   const { paper, live, totalNav, totalPnlPct, positionCount } = useSummary();
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
+  const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
   const pendingApprovals = state.approvalQueue.length;
@@ -54,6 +58,13 @@ export function OverviewPage() {
   const brokerConnected = Boolean(snapshot?.connected ?? state.integrationStatus.broker.connected);
   const marketConnected = marketStatus?.connected ?? state.integrationStatus.marketData.connected;
   const marketDegraded = marketStatus?.fallback ?? !marketConnected;
+  const monitoringWorkerLag = monitoringStatus?.services.worker.lagSeconds;
+  const monitoringWorkflowBacklog = (monitoringStatus?.services.workflows.queued || 0) + (monitoringStatus?.services.workflows.running || 0) + (monitoringStatus?.services.workflows.retryScheduled || 0);
+  const monitoringQueueBacklog = (monitoringStatus?.services.queues.pendingNotificationJobs || 0)
+    + (monitoringStatus?.services.queues.pendingRiskScanJobs || 0)
+    + (monitoringStatus?.services.queues.pendingAgentReviews || 0);
+  const monitoringAlert = monitoringStatus?.alerts[0] || null;
+  const monitoringUpdatedAt = monitoringStatus?.generatedAt || monitoringStatus?.recent.latestWorkerHeartbeat?.createdAt || '';
 
   return (
     <>
@@ -138,13 +149,19 @@ export function OverviewPage() {
         <article className="panel overview-side-panel">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.executionSummary}</div><div className="panel-copy">{locale === 'zh' ? '把模式、风控、接入与最新动作压缩成一个侧边监控面板。' : 'Compress mode, risk, connectivity, and the latest action into one desk-side monitor.'}</div></div><div className="panel-badge badge-muted">OPS</div></div>
           <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '系统健康' : 'System health'}</span><strong className={`status-chip tone-${monitoringTone(monitoringStatus?.status)}`}>{monitoringLoading ? (locale === 'zh' ? '加载中' : 'Loading') : translateMonitoringStatus(locale, monitoringStatus?.status)}</strong></div>
             <button type="button" className="status-row status-row-button" onClick={() => goToSettings('switches')}><span>{copy[locale].labels.autoTrade}</span><strong className={`status-chip tone-${toggleTone(state.toggles.autoTrade)}`}>{state.toggles.autoTrade ? copy[locale].labels.enabled : copy[locale].labels.disabled}</strong></button>
             <button type="button" className="status-row status-row-button" onClick={() => goToSettings('switches')}><span>{copy[locale].labels.allowLive}</span><strong className={`status-chip tone-${toggleTone(state.toggles.liveTrade)}`}>{state.toggles.liveTrade ? copy[locale].labels.enabled : copy[locale].labels.disabled}</strong></button>
             <button type="button" className="status-row status-row-button" onClick={() => goToSettings('switches')}><span>{copy[locale].labels.manualApproval}</span><strong className={`status-chip tone-${toggleTone(state.toggles.manualApproval)}`}>{state.toggles.manualApproval ? copy[locale].labels.enabled : copy[locale].labels.disabled}</strong></button>
             <div className="status-row"><span>{copy[locale].labels.positions}</span><strong>{positionCount}</strong></div>
             <div className="status-row"><span>{copy[locale].terms.activityToday}</span><strong>{state.activityLog.length}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? 'Worker 心跳' : 'Worker heartbeat'}</span><strong>{monitoringWorkerLag === null || monitoringWorkerLag === undefined ? '--' : `${monitoringWorkerLag}s`}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? 'Workflow 积压' : 'Workflow backlog'}</span><strong>{monitoringWorkflowBacklog}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '待处理队列' : 'Pending queues'}</span><strong>{monitoringQueueBacklog}</strong></div>
             <button type="button" className="status-row status-row-button" onClick={() => goToSettings('integrations')}><span>{copy[locale].labels.marketState}</span><strong className={`status-chip tone-${integrationTone(marketConnected, marketDegraded)}`}>{connectionLabel(locale, marketConnected, marketDegraded)}</strong></button>
             <button type="button" className="status-row status-row-button" onClick={() => goToSettings('integrations')}><span>{copy[locale].labels.brokerState}</span><strong className={`status-chip tone-${integrationTone(brokerConnected, false, true)}`}>{connectionLabel(locale, brokerConnected, false, true)}</strong></button>
+            <div className="status-copy">{monitoringAlert ? `${locale === 'zh' ? '当前告警' : 'Current alert'}: ${monitoringAlert.message}` : (locale === 'zh' ? '当前没有新的监控告警。' : 'No monitoring alerts right now.')}</div>
+            <div className="status-copy">{monitoringUpdatedAt ? `${locale === 'zh' ? '监控更新时间' : 'Monitoring updated'}: ${fmtDateTime(monitoringUpdatedAt, locale)}` : (locale === 'zh' ? '监控摘要尚未返回。' : 'Monitoring summary has not returned yet.')}</div>
             <div className="status-copy">{translateRuntimeText(locale, state.decisionCopy)}</div>
             <div className="status-copy">{state.activityLog[0] ? `${locale === 'zh' ? '最新动作' : 'Latest action'}: ${translateRuntimeText(locale, state.activityLog[0].title)}` : translateRuntimeText(locale, '当前没有新的执行记录。')}</div>
           </div>
