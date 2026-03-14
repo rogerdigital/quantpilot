@@ -13,6 +13,20 @@ import { ActivityLog } from '../console/components/ConsoleTables.tsx';
 import { copy, useLocale } from '../console/i18n.tsx';
 import { connectionLabel, fmtDateTime, monitoringTone, translateMonitoringStatus, translateProviderLabel } from '../console/utils.ts';
 
+const MONITORING_TIME_WINDOWS = [
+  { key: '1h', hours: 1 },
+  { key: '24h', hours: 24 },
+  { key: '7d', hours: 24 * 7 },
+  { key: 'all', hours: null },
+] as const;
+
+function isWithinWindow(value: string, hours: number | null) {
+  if (hours === null) return true;
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) return false;
+  return Date.now() - timestamp <= hours * 60 * 60 * 1000;
+}
+
 function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
@@ -20,6 +34,7 @@ function NotificationsPage() {
   const [monitoringLevelFilter, setMonitoringLevelFilter] = useState('all');
   const [selectedMonitoringSnapshotId, setSelectedMonitoringSnapshotId] = useState('');
   const [monitoringSnapshotStatusFilter, setMonitoringSnapshotStatusFilter] = useState('all');
+  const [monitoringTimeWindow, setMonitoringTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
@@ -47,17 +62,20 @@ function NotificationsPage() {
     + (monitoringStatus?.services.queues.pendingRiskScanJobs || 0)
     + (monitoringStatus?.services.queues.pendingAgentReviews || 0);
   const workerHeartbeatLag = monitoringStatus?.services.worker.lagSeconds;
+  const activeTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === monitoringTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const monitoringSources = ['all', ...new Set(monitoringAlertItems.map((item) => item.source).filter(Boolean))];
   const monitoringLevels = ['all', ...new Set(monitoringAlertItems.map((item) => item.level).filter(Boolean))];
   const monitoringSnapshotStatuses = ['all', ...new Set(monitoringSnapshotItems.map((item) => item.status).filter(Boolean))];
   const filteredMonitoringAlerts = monitoringAlertItems.filter((item) => {
+    if (!isWithinWindow(item.createdAt, activeTimeWindow.hours)) return false;
     if (selectedMonitoringSnapshotId && item.snapshotId !== selectedMonitoringSnapshotId) return false;
     if (monitoringSourceFilter !== 'all' && item.source !== monitoringSourceFilter) return false;
     if (monitoringLevelFilter !== 'all' && item.level !== monitoringLevelFilter) return false;
     return true;
   });
   const filteredMonitoringSnapshots = monitoringSnapshotItems.filter((item) => (
-    monitoringSnapshotStatusFilter === 'all' || item.status === monitoringSnapshotStatusFilter
+    (monitoringSnapshotStatusFilter === 'all' || item.status === monitoringSnapshotStatusFilter)
+    && isWithinWindow(item.generatedAt || item.createdAt, activeTimeWindow.hours)
   ));
   const selectedMonitoringSnapshot = monitoringSnapshotItems.find((item) => item.id === selectedMonitoringSnapshotId) || null;
 
@@ -120,6 +138,28 @@ function NotificationsPage() {
               </div>
             </div>
             <div className="panel-badge badge-warn">{filteredMonitoringAlerts.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            {MONITORING_TIME_WINDOWS.map((window) => {
+              const selected = monitoringTimeWindow === window.key;
+              const label = window.key === '1h'
+                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
+                : window.key === '24h'
+                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
+                  : window.key === '7d'
+                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
+                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              return (
+                <button
+                  key={window.key}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setMonitoringTimeWindow(window.key)}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
           <div className="settings-chip-row">
             <button
@@ -198,6 +238,28 @@ function NotificationsPage() {
               </div>
             </div>
             <div className="panel-badge badge-info">{filteredMonitoringSnapshots.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            {MONITORING_TIME_WINDOWS.map((window) => {
+              const selected = monitoringTimeWindow === window.key;
+              const label = window.key === '1h'
+                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
+                : window.key === '24h'
+                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
+                  : window.key === '7d'
+                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
+                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              return (
+                <button
+                  key={window.key}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setMonitoringTimeWindow(window.key)}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
           <div className="settings-chip-row">
             {monitoringSnapshotStatuses.map((status) => {
