@@ -1198,6 +1198,22 @@ test('GET /api/monitoring/snapshots and alerts return persisted monitoring histo
       },
     ],
   });
+  context.monitoring.recordMonitoringSnapshot({
+    id: 'monitoring-snapshot-ok',
+    status: 'healthy',
+    generatedAt: '2026-03-10T10:00:00.000Z',
+    services: {
+      worker: { status: 'healthy' },
+    },
+    alerts: [
+      {
+        id: 'monitoring-alert-ok',
+        level: 'info',
+        source: 'worker',
+        message: 'Worker heartbeat healthy.',
+      },
+    ],
+  });
 
   const snapshotsResponse = await invokeGatewayRoute(handler, {
     path: '/api/monitoring/snapshots',
@@ -1212,6 +1228,20 @@ test('GET /api/monitoring/snapshots and alerts return persisted monitoring histo
   assert.equal(alertsResponse.statusCode, 200);
   assert.equal(alertsResponse.json.ok, true);
   assert.equal(alertsResponse.json.alerts[0].id, 'monitoring-alert-test');
+
+  const filteredSnapshots = await invokeGatewayRoute(handler, {
+    path: '/api/monitoring/snapshots?status=warn&hours=48&limit=5',
+  });
+  const filteredAlerts = await invokeGatewayRoute(handler, {
+    path: '/api/monitoring/alerts?source=worker&level=warn&snapshotId=monitoring-snapshot-test&hours=48&limit=5',
+  });
+
+  assert.equal(filteredSnapshots.statusCode, 200);
+  assert.equal(filteredSnapshots.json.snapshots.length, 1);
+  assert.equal(filteredSnapshots.json.snapshots[0].id, 'monitoring-snapshot-test');
+  assert.equal(filteredAlerts.statusCode, 200);
+  assert.equal(filteredAlerts.json.alerts.length, 1);
+  assert.equal(filteredAlerts.json.alerts[0].id, 'monitoring-alert-test');
 });
 
 test('POST then GET /api/audit/records persists audit entries', async () => {

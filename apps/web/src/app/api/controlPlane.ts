@@ -303,14 +303,49 @@ export async function fetchMonitoringStatus(): Promise<MonitoringStatusSnapshot>
   });
 }
 
-export async function fetchMonitoringAlerts(): Promise<MonitoringAlertsResponse> {
-  return fetchJson('/api/monitoring/alerts', {
+type MonitoringHistoryQuery = {
+  hours?: number | null;
+  level?: string;
+  limit?: number;
+  snapshotId?: string;
+  source?: string;
+  status?: string;
+};
+
+function buildMonitoringHistoryQuery(options: MonitoringHistoryQuery = {}) {
+  const params = new URLSearchParams();
+
+  if (typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0) {
+    params.set('limit', String(options.limit));
+  }
+  if (typeof options.hours === 'number' && Number.isFinite(options.hours) && options.hours > 0) {
+    params.set('hours', String(options.hours));
+  }
+  if (options.snapshotId) {
+    params.set('snapshotId', options.snapshotId);
+  }
+  if (options.source) {
+    params.set('source', options.source);
+  }
+  if (options.level) {
+    params.set('level', options.level);
+  }
+  if (options.status) {
+    params.set('status', options.status);
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+export async function fetchMonitoringAlerts(options: MonitoringHistoryQuery = {}): Promise<MonitoringAlertsResponse> {
+  return fetchJson(`/api/monitoring/alerts${buildMonitoringHistoryQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
 
-export async function fetchMonitoringSnapshots(): Promise<MonitoringSnapshotsResponse> {
-  return fetchJson('/api/monitoring/snapshots', {
+export async function fetchMonitoringSnapshots(options: MonitoringHistoryQuery = {}): Promise<MonitoringSnapshotsResponse> {
+  return fetchJson(`/api/monitoring/snapshots${buildMonitoringHistoryQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }

@@ -264,11 +264,11 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     updateMarketProviderStatus(snapshot = {}) {
       return context.marketProviders.updateMarketProviderStatus(snapshot);
     },
-    listMonitoringSnapshots(limit = 50) {
-      return context.monitoring.listMonitoringSnapshots(limit);
+    listMonitoringSnapshots(limit = 50, filter = {}) {
+      return context.monitoring.listMonitoringSnapshots(limit, filter);
     },
-    listMonitoringAlerts(limit = 100) {
-      return context.monitoring.listMonitoringAlerts(limit);
+    listMonitoringAlerts(limit = 100, filter = {}) {
+      return context.monitoring.listMonitoringAlerts(limit, filter);
     },
     recordMonitoringSnapshot(payload = {}) {
       return context.monitoring.recordMonitoringSnapshot(payload);

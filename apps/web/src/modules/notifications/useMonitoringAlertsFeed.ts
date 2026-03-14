@@ -2,13 +2,35 @@ import { useEffect, useState } from 'react';
 import { fetchMonitoringAlerts } from '../../app/api/controlPlane.ts';
 import type { MonitoringAlertRecord } from '@shared-types/trading.ts';
 
-export function useMonitoringAlertsFeed() {
+type MonitoringAlertsFeedOptions = {
+  hours?: number | null;
+  level?: string;
+  limit?: number;
+  snapshotId?: string;
+  source?: string;
+};
+
+export function useMonitoringAlertsFeed(options: MonitoringAlertsFeedOptions = {}) {
   const [items, setItems] = useState<MonitoringAlertRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const {
+    hours = null,
+    level = '',
+    limit = 100,
+    snapshotId = '',
+    source = '',
+  } = options;
 
   useEffect(() => {
     let mounted = true;
-    fetchMonitoringAlerts()
+    setLoading(true);
+    fetchMonitoringAlerts({
+      hours,
+      level,
+      limit,
+      snapshotId,
+      source,
+    })
       .then((payload) => {
         if (mounted) {
           setItems(Array.isArray(payload?.alerts) ? payload.alerts : []);
@@ -28,7 +50,7 @@ export function useMonitoringAlertsFeed() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [hours, level, limit, snapshotId, source]);
 
   return { items, loading };
 }

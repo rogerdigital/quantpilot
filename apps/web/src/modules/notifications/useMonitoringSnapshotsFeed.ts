@@ -2,13 +2,29 @@ import { useEffect, useState } from 'react';
 import { fetchMonitoringSnapshots } from '../../app/api/controlPlane.ts';
 import type { MonitoringSnapshotRecord } from '@shared-types/trading.ts';
 
-export function useMonitoringSnapshotsFeed() {
+type MonitoringSnapshotsFeedOptions = {
+  hours?: number | null;
+  limit?: number;
+  status?: string;
+};
+
+export function useMonitoringSnapshotsFeed(options: MonitoringSnapshotsFeedOptions = {}) {
   const [items, setItems] = useState<MonitoringSnapshotRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const {
+    hours = null,
+    limit = 50,
+    status = '',
+  } = options;
 
   useEffect(() => {
     let mounted = true;
-    fetchMonitoringSnapshots()
+    setLoading(true);
+    fetchMonitoringSnapshots({
+      hours,
+      limit,
+      status,
+    })
       .then((payload) => {
         if (mounted) {
           setItems(Array.isArray(payload?.snapshots) ? payload.snapshots : []);
@@ -28,7 +44,7 @@ export function useMonitoringSnapshotsFeed() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [hours, limit, status]);
 
   return { items, loading };
 }

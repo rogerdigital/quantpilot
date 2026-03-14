@@ -91,6 +91,17 @@ function deriveOverallStatus(signals) {
   return 'healthy';
 }
 
+function parseLimit(value, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function resolveSince(hours) {
+  const parsed = Number(hours);
+  if (!Number.isFinite(parsed) || parsed <= 0) return '';
+  return new Date(Date.now() - parsed * 60 * 60 * 1000).toISOString();
+}
+
 export async function getMonitoringStatus(options = {}) {
   const nowIso = toIsoString(options.now || new Date()) || new Date().toISOString();
   const workflows = controlPlaneRuntime.listWorkflowRuns(120);
@@ -246,17 +257,29 @@ export async function getMonitoringStatus(options = {}) {
   };
 }
 
-export function listMonitoringSnapshots(limit = 50) {
+export function listMonitoringSnapshots(options = {}) {
+  const limit = parseLimit(options.limit, 50);
+  const since = resolveSince(options.hours);
   return {
     ok: true,
-    snapshots: controlPlaneRuntime.listMonitoringSnapshots(limit),
+    snapshots: controlPlaneRuntime.listMonitoringSnapshots(limit, {
+      status: options.status || '',
+      since,
+    }),
   };
 }
 
-export function listMonitoringAlerts(limit = 100) {
+export function listMonitoringAlerts(options = {}) {
+  const limit = parseLimit(options.limit, 100);
+  const since = resolveSince(options.hours);
   return {
     ok: true,
-    alerts: controlPlaneRuntime.listMonitoringAlerts(limit),
+    alerts: controlPlaneRuntime.listMonitoringAlerts(limit, {
+      snapshotId: options.snapshotId || '',
+      source: options.source || '',
+      level: options.level || '',
+      since,
+    }),
   };
 }
 

@@ -61,12 +61,22 @@ export async function handlePlatformRoutes(context) {
   }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/monitoring/snapshots') {
-    writeJson(res, 200, listMonitoringSnapshots());
+    writeJson(res, 200, listMonitoringSnapshots({
+      limit: reqUrl.searchParams.get('limit'),
+      status: reqUrl.searchParams.get('status'),
+      hours: reqUrl.searchParams.get('hours'),
+    }));
     return true;
   }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/monitoring/alerts') {
-    writeJson(res, 200, listMonitoringAlerts());
+    writeJson(res, 200, listMonitoringAlerts({
+      limit: reqUrl.searchParams.get('limit'),
+      snapshotId: reqUrl.searchParams.get('snapshotId'),
+      source: reqUrl.searchParams.get('source'),
+      level: reqUrl.searchParams.get('level'),
+      hours: reqUrl.searchParams.get('hours'),
+    }));
     return true;
   }
 

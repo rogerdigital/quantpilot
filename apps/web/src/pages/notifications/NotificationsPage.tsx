@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
@@ -20,6 +20,10 @@ const MONITORING_TIME_WINDOWS = [
   { key: 'all', hours: null },
 ] as const;
 
+const MONITORING_SOURCES = ['all', 'worker', 'workflow', 'queue', 'risk', 'broker', 'market'] as const;
+const MONITORING_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
+const MONITORING_SNAPSHOT_STATUSES = ['all', 'healthy', 'warn', 'critical'] as const;
+
 function isWithinWindow(value: string, hours: number | null) {
   if (hours === null) return true;
   const timestamp = Date.parse(value);
@@ -37,11 +41,21 @@ function NotificationsPage() {
   const [monitoringTimeWindow, setMonitoringTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const [schedulerPhaseFilter, setSchedulerPhaseFilter] = useState('all');
   const [schedulerTimeWindow, setSchedulerTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
+  const activeTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === monitoringTimeWindow) || MONITORING_TIME_WINDOWS[1];
+  const activeSchedulerTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === schedulerTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
-  const { items: monitoringAlertItems, loading: monitoringAlertsLoading } = useMonitoringAlertsFeed();
-  const { items: monitoringSnapshotItems, loading: monitoringSnapshotsLoading } = useMonitoringSnapshotsFeed();
+  const { items: monitoringAlertItems, loading: monitoringAlertsLoading } = useMonitoringAlertsFeed({
+    hours: activeTimeWindow.hours,
+    level: monitoringLevelFilter === 'all' ? '' : monitoringLevelFilter,
+    snapshotId: selectedMonitoringSnapshotId,
+    source: monitoringSourceFilter === 'all' ? '' : monitoringSourceFilter,
+  });
+  const { items: monitoringSnapshotItems, loading: monitoringSnapshotsLoading } = useMonitoringSnapshotsFeed({
+    hours: activeTimeWindow.hours,
+    status: monitoringSnapshotStatusFilter === 'all' ? '' : monitoringSnapshotStatusFilter,
+  });
   const { items, loading } = useNotificationsFeed();
   const { items: actionItems, loading: actionLoading } = useOperatorActionsFeed();
   const { items: schedulerItems, loading: schedulerLoading } = useSchedulerTicksFeed();
@@ -64,28 +78,20 @@ function NotificationsPage() {
     + (monitoringStatus?.services.queues.pendingRiskScanJobs || 0)
     + (monitoringStatus?.services.queues.pendingAgentReviews || 0);
   const workerHeartbeatLag = monitoringStatus?.services.worker.lagSeconds;
-  const activeTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === monitoringTimeWindow) || MONITORING_TIME_WINDOWS[1];
-  const activeSchedulerTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === schedulerTimeWindow) || MONITORING_TIME_WINDOWS[1];
-  const monitoringSources = ['all', ...new Set(monitoringAlertItems.map((item) => item.source).filter(Boolean))];
-  const monitoringLevels = ['all', ...new Set(monitoringAlertItems.map((item) => item.level).filter(Boolean))];
-  const monitoringSnapshotStatuses = ['all', ...new Set(monitoringSnapshotItems.map((item) => item.status).filter(Boolean))];
   const schedulerPhases = ['all', ...new Set(schedulerItems.map((item) => item.phase).filter(Boolean))];
-  const filteredMonitoringAlerts = monitoringAlertItems.filter((item) => {
-    if (!isWithinWindow(item.createdAt, activeTimeWindow.hours)) return false;
-    if (selectedMonitoringSnapshotId && item.snapshotId !== selectedMonitoringSnapshotId) return false;
-    if (monitoringSourceFilter !== 'all' && item.source !== monitoringSourceFilter) return false;
-    if (monitoringLevelFilter !== 'all' && item.level !== monitoringLevelFilter) return false;
-    return true;
-  });
-  const filteredMonitoringSnapshots = monitoringSnapshotItems.filter((item) => (
-    (monitoringSnapshotStatusFilter === 'all' || item.status === monitoringSnapshotStatusFilter)
-    && isWithinWindow(item.generatedAt || item.createdAt, activeTimeWindow.hours)
-  ));
   const filteredSchedulerItems = schedulerItems.filter((item) => (
     (schedulerPhaseFilter === 'all' || item.phase === schedulerPhaseFilter)
     && isWithinWindow(item.createdAt, activeSchedulerTimeWindow.hours)
   ));
   const selectedMonitoringSnapshot = monitoringSnapshotItems.find((item) => item.id === selectedMonitoringSnapshotId) || null;
+
+  useEffect(() => {
+    if (!selectedMonitoringSnapshotId) return;
+    const exists = monitoringSnapshotItems.some((item) => item.id === selectedMonitoringSnapshotId);
+    if (!exists) {
+      setSelectedMonitoringSnapshotId('');
+    }
+  }, [monitoringSnapshotItems, selectedMonitoringSnapshotId]);
 
   function applyMonitoringFocus(options: {
     source?: string;
@@ -159,7 +165,7 @@ function NotificationsPage() {
                   : 'Inspect monitoring alerts and quickly focus by snapshot, source, or severity.'}
               </div>
             </div>
-            <div className="panel-badge badge-warn">{filteredMonitoringAlerts.length}</div>
+            <div className="panel-badge badge-warn">{monitoringAlertItems.length}</div>
           </div>
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
@@ -197,7 +203,7 @@ function NotificationsPage() {
             </button>
           </div>
           <div className="settings-chip-row">
-            {monitoringSources.map((source) => {
+            {MONITORING_SOURCES.map((source) => {
               const selected = monitoringSourceFilter === source;
               const label = source === 'all' ? (locale === 'zh' ? '全部来源' : 'All Sources') : source;
               return (
@@ -213,7 +219,7 @@ function NotificationsPage() {
             })}
           </div>
           <div className="settings-chip-row">
-            {monitoringLevels.map((level) => {
+            {MONITORING_LEVELS.map((level) => {
               const selected = monitoringLevelFilter === level;
               const label = level === 'all' ? (locale === 'zh' ? '全部级别' : 'All Levels') : translateMonitoringStatus(locale, level);
               return (
@@ -230,8 +236,8 @@ function NotificationsPage() {
           </div>
           <div className="focus-list focus-list-terminal">
             {monitoringAlertsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载监控告警...' : 'Loading monitoring alerts...'}</div> : null}
-            {!monitoringAlertsLoading && !filteredMonitoringAlerts.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有监控告警' : 'No monitoring alerts match the current filters.'}</div> : null}
-            {!monitoringAlertsLoading ? filteredMonitoringAlerts.map((item) => (
+            {!monitoringAlertsLoading && !monitoringAlertItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有监控告警' : 'No monitoring alerts match the current filters.'}</div> : null}
+            {!monitoringAlertsLoading ? monitoringAlertItems.map((item) => (
               <div className="focus-row" key={item.id}>
                 <div className="symbol-cell">
                   <strong>{item.source}</strong>
@@ -259,7 +265,7 @@ function NotificationsPage() {
                   : 'Review recent monitoring snapshots to track status changes, alert count, and sampling time.'}
               </div>
             </div>
-            <div className="panel-badge badge-info">{filteredMonitoringSnapshots.length}</div>
+            <div className="panel-badge badge-info">{monitoringSnapshotItems.length}</div>
           </div>
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
@@ -284,7 +290,7 @@ function NotificationsPage() {
             })}
           </div>
           <div className="settings-chip-row">
-            {monitoringSnapshotStatuses.map((status) => {
+            {MONITORING_SNAPSHOT_STATUSES.map((status) => {
               const selected = monitoringSnapshotStatusFilter === status;
               const label = status === 'all' ? (locale === 'zh' ? '全部状态' : 'All Statuses') : translateMonitoringStatus(locale, status);
               return (
@@ -301,8 +307,8 @@ function NotificationsPage() {
           </div>
           <div className="focus-list focus-list-terminal">
             {monitoringSnapshotsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载监控快照...' : 'Loading monitoring snapshots...'}</div> : null}
-            {!monitoringSnapshotsLoading && !filteredMonitoringSnapshots.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有监控快照' : 'No monitoring snapshots match the current filters.'}</div> : null}
-            {!monitoringSnapshotsLoading ? filteredMonitoringSnapshots.map((item) => (
+            {!monitoringSnapshotsLoading && !monitoringSnapshotItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有监控快照' : 'No monitoring snapshots match the current filters.'}</div> : null}
+            {!monitoringSnapshotsLoading ? monitoringSnapshotItems.map((item) => (
               <button
                 type="button"
                 className="focus-row status-row-button"
