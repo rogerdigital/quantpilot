@@ -4,6 +4,7 @@ import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts'
 import { useMonitoringStatus } from '../../hooks/useMonitoringStatus.ts';
 import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
 import { useMonitoringAlertsFeed } from '../../modules/notifications/useMonitoringAlertsFeed.ts';
+import { useMonitoringSnapshotsFeed } from '../../modules/notifications/useMonitoringSnapshotsFeed.ts';
 import { useOperatorActionsFeed } from '../../modules/notifications/useOperatorActionsFeed.ts';
 import { useSchedulerTicksFeed } from '../../modules/notifications/useSchedulerTicksFeed.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
@@ -18,6 +19,7 @@ function NotificationsPage() {
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
   const { items: monitoringAlertItems, loading: monitoringAlertsLoading } = useMonitoringAlertsFeed();
+  const { items: monitoringSnapshotItems, loading: monitoringSnapshotsLoading } = useMonitoringSnapshotsFeed();
   const { items, loading } = useNotificationsFeed();
   const { items: actionItems, loading: actionLoading } = useOperatorActionsFeed();
   const { items: schedulerItems, loading: schedulerLoading } = useSchedulerTicksFeed();
@@ -117,6 +119,35 @@ function NotificationsPage() {
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '时间' : 'Time'}</span>
                   <strong>{fmtDateTime(item.createdAt, locale)}</strong>
+                </div>
+              </div>
+            )) : null}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '监控快照' : 'Monitoring Snapshots'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '查看最近几次 monitoring snapshot 的状态演进、告警数量和采样时间。'
+                  : 'Review recent monitoring snapshots to track status changes, alert count, and sampling time.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{monitoringSnapshotItems.length}</div>
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {monitoringSnapshotsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载监控快照...' : 'Loading monitoring snapshots...'}</div> : null}
+            {!monitoringSnapshotsLoading && !monitoringSnapshotItems.length ? <div className="empty-cell">{locale === 'zh' ? '暂无监控快照' : 'No monitoring snapshots yet.'}</div> : null}
+            {!monitoringSnapshotsLoading ? monitoringSnapshotItems.map((item) => (
+              <div className="focus-row" key={item.id}>
+                <div className="symbol-cell">
+                  <strong>{translateMonitoringStatus(locale, item.status)}</strong>
+                  <span>{locale === 'zh' ? `告警 ${item.alertCount} 条` : `${item.alertCount} alerts`}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '采样时间' : 'Captured'}</span>
+                  <strong>{fmtDateTime(item.generatedAt || item.createdAt, locale)}</strong>
                 </div>
               </div>
             )) : null}
