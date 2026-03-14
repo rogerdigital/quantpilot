@@ -1090,6 +1090,89 @@ test('GET /api/health exposes gateway module status', async () => {
   assert.equal(typeof response.json.modules, 'number');
 });
 
+test('GET /api/monitoring/status returns runtime health and queue summary', async () => {
+  const nowIso = new Date().toISOString();
+  context.marketProviders.updateMarketProviderStatus({
+    provider: 'alpaca',
+    connected: true,
+    fallback: false,
+    message: 'market provider synced from backend',
+    symbolCount: 12,
+    asOf: nowIso,
+  });
+  context.workflows.appendWorkflowRun({
+    id: 'workflow-monitoring-failed',
+    workflowId: 'task-orchestrator.strategy-execution',
+    status: 'failed',
+    actor: 'api-test',
+    trigger: 'api',
+    error: 'simulated workflow failure',
+    startedAt: nowIso,
+    updatedAt: nowIso,
+    createdAt: nowIso,
+  });
+  context.agentActionRequests.appendAgentActionRequest({
+    id: 'agent-review-monitoring',
+    requestType: 'execution-plan',
+    targetId: 'plan-1',
+    status: 'pending_review',
+    approvalState: 'pending',
+    riskStatus: 'pending',
+    requestedBy: 'agent',
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  });
+  context.notifications.enqueueNotification({
+    id: 'monitoring-notification-job',
+    title: 'Pending delivery',
+    message: 'waiting for worker dispatch',
+    source: 'test',
+  });
+  context.risk.enqueueRiskScan({
+    id: 'monitoring-risk-job',
+    cycle: 99,
+    pendingApprovals: 1,
+    brokerConnected: true,
+    marketConnected: true,
+  });
+  context.risk.appendRiskEvent({
+    id: 'monitoring-risk-event',
+    status: 'risk-off',
+    level: 'critical',
+    title: 'Risk off',
+    message: 'risk off triggered in test',
+    cycle: 99,
+    createdAt: nowIso,
+  });
+  context.store.writeCollection('scheduler-ticks.json', [{
+    id: 'scheduler-monitoring-tick',
+    phase: 'INTRADAY',
+    status: 'steady',
+    title: 'Scheduler tick',
+    message: 'worker heartbeat',
+    worker: 'quantpilot-task-worker',
+    createdAt: nowIso,
+    metadata: {},
+  }]);
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/monitoring/status',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.status, 'critical');
+  assert.equal(response.json.services.market.status, 'healthy');
+  assert.equal(response.json.services.worker.status, 'healthy');
+  assert.equal(response.json.services.workflows.failed >= 1, true);
+  assert.equal(response.json.services.queues.pendingNotificationJobs >= 1, true);
+  assert.equal(response.json.services.queues.pendingRiskScanJobs >= 1, true);
+  assert.equal(response.json.services.queues.pendingAgentReviews >= 1, true);
+  assert.equal(response.json.services.risk.riskOff >= 1, true);
+  assert.equal(response.json.alerts.some((item) => item.source === 'workflow' && item.level === 'critical'), true);
+  assert.equal(response.json.recent.latestSchedulerTick.id, 'scheduler-monitoring-tick');
+});
+
 test('POST then GET /api/audit/records persists audit entries', async () => {
   const createResponse = await invokeGatewayRoute(handler, {
     method: 'POST',

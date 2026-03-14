@@ -104,8 +104,8 @@ export const MODULE_REGISTRY = [
     id: 'monitoring',
     name: 'Monitoring',
     layer: 'backend',
-    status: 'planned',
-    responsibility: 'logs, metrics, and runtime health',
+    status: 'prototype',
+    responsibility: 'runtime health, queue depth, and subsystem status summaries',
   },
   {
     id: 'scheduler',

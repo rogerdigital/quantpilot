@@ -141,6 +141,7 @@ quantpilot/
 - monorepo 基础结构已经稳定，`web / api / worker / packages/*` 已拆分。
 - 前端控制台已经覆盖 `dashboard / market / strategies / backtest / risk / execution / agent / notifications / settings`。
 - 后端已具备最小控制面能力，包括 `auth / audit / notification / risk / scheduler / task-orchestrator / strategy / backtest / agent` 等模块骨架。
+- `monitoring` 模块已进入原型阶段，后端现可输出 `broker / market / worker / workflow / risk / queues` 的运行态摘要接口。
 - worker 已接管通知分发、风险扫描、调度 tick、workflow maintenance 和 workflow execution。
 - 共享运行时已经拆分到 `trading-engine / control-plane-runtime / task-workflow-engine / shared-types`。
 - 控制面持久化已抽到 `control-plane-store`，当前以文件型存储为主。
