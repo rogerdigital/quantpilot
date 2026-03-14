@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
@@ -15,6 +16,8 @@ import { connectionLabel, fmtDateTime, monitoringTone, translateMonitoringStatus
 function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
+  const [monitoringSourceFilter, setMonitoringSourceFilter] = useState('all');
+  const [monitoringLevelFilter, setMonitoringLevelFilter] = useState('all');
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
@@ -42,6 +45,13 @@ function NotificationsPage() {
     + (monitoringStatus?.services.queues.pendingRiskScanJobs || 0)
     + (monitoringStatus?.services.queues.pendingAgentReviews || 0);
   const workerHeartbeatLag = monitoringStatus?.services.worker.lagSeconds;
+  const monitoringSources = ['all', ...new Set(monitoringAlertItems.map((item) => item.source).filter(Boolean))];
+  const monitoringLevels = ['all', ...new Set(monitoringAlertItems.map((item) => item.level).filter(Boolean))];
+  const filteredMonitoringAlerts = monitoringAlertItems.filter((item) => {
+    if (monitoringSourceFilter !== 'all' && item.source !== monitoringSourceFilter) return false;
+    if (monitoringLevelFilter !== 'all' && item.level !== monitoringLevelFilter) return false;
+    return true;
+  });
 
   return (
     <>
@@ -97,16 +107,48 @@ function NotificationsPage() {
               <div className="panel-title">{locale === 'zh' ? '监控告警' : 'Monitoring Alerts'}</div>
               <div className="panel-copy">
                 {locale === 'zh'
-                  ? '直接查看 Monitoring 模块聚合出的当前告警来源和原因。'
-                  : 'Inspect the current alert sources and reasons aggregated by the monitoring module.'}
+                  ? '直接查看 Monitoring 模块聚合出的当前告警来源和原因，并按来源或级别快速聚焦。'
+                  : 'Inspect monitoring alerts and quickly focus by source or severity.'}
               </div>
             </div>
-            <div className="panel-badge badge-warn">{monitoringAlertItems.length}</div>
+            <div className="panel-badge badge-warn">{filteredMonitoringAlerts.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            {monitoringSources.map((source) => {
+              const selected = monitoringSourceFilter === source;
+              const label = source === 'all' ? (locale === 'zh' ? '全部来源' : 'All Sources') : source;
+              return (
+                <button
+                  key={source}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setMonitoringSourceFilter(source)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="settings-chip-row">
+            {monitoringLevels.map((level) => {
+              const selected = monitoringLevelFilter === level;
+              const label = level === 'all' ? (locale === 'zh' ? '全部级别' : 'All Levels') : translateMonitoringStatus(locale, level);
+              return (
+                <button
+                  key={level}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setMonitoringLevelFilter(level)}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
           <div className="focus-list focus-list-terminal">
             {monitoringAlertsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载监控告警...' : 'Loading monitoring alerts...'}</div> : null}
-            {!monitoringAlertsLoading && !monitoringAlertItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有新的监控告警' : 'No monitoring alerts right now.'}</div> : null}
-            {!monitoringAlertsLoading ? monitoringAlertItems.map((item) => (
+            {!monitoringAlertsLoading && !filteredMonitoringAlerts.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有监控告警' : 'No monitoring alerts match the current filters.'}</div> : null}
+            {!monitoringAlertsLoading ? filteredMonitoringAlerts.map((item) => (
               <div className="focus-row" key={item.id}>
                 <div className="symbol-cell">
                   <strong>{item.source}</strong>
