@@ -2,7 +2,7 @@ import { appendAuditRecord, listAuditRecords } from '../../modules/audit/service
 import { hasPermission } from '../../modules/auth/service.mjs';
 import { appendIncidentNote, createIncident, getIncidentDetail, listIncidents, updateIncident } from '../../modules/incidents/service.mjs';
 import { listNotifications } from '../../modules/notification/service.mjs';
-import { listRiskEvents } from '../../domains/risk/services/feed-service.mjs';
+import { getRiskEvent, listRiskEvents } from '../../domains/risk/services/feed-service.mjs';
 import { listSchedulerTicks } from '../../modules/scheduler/service.mjs';
 import { runCycle } from '../../control-plane/task-orchestrator/cycle-runner.mjs';
 import { runStateCycle } from '../../control-plane/task-orchestrator/state-runner.mjs';
@@ -133,6 +133,15 @@ export async function handleControlPlaneRoutes(context) {
       ok: true,
       events: listRiskEvents(),
     });
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/risk/events/')) {
+    const eventId = reqUrl.pathname.split('/').at(-1);
+    const event = getRiskEvent(eventId);
+    writeJson(res, event ? 200 : 404, event
+      ? { ok: true, event }
+      : { ok: false, message: 'risk event not found' });
     return true;
   }
 

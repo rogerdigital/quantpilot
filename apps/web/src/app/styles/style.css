@@ -1180,6 +1180,18 @@ h1 {
   text-transform: uppercase;
 }
 
+.inspection-json {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(126, 170, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(8, 15, 24, 0.7);
+  color: var(--muted);
+  font: 12px/1.55 "IBM Plex Mono", monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .panel-title {
   font: 700 18px/1.1 "Space Grotesk", sans-serif;
   letter-spacing: -0.02em;

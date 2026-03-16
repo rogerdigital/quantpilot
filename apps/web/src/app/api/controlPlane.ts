@@ -16,6 +16,8 @@ import type {
   MonitoringSnapshotsResponse,
   IncidentsResponse,
   IncidentDetailResponse,
+  ExecutionPlanDetailResponse,
+  RiskEventDetailResponse,
   UserBrokerBindingsSnapshot,
   UserBrokerBindingSaveSnapshot,
   UserBrokerBindingRuntimeSnapshot,
@@ -23,6 +25,7 @@ import type {
   UserPreferencesUpdateSnapshot,
   UserAccessUpdateSnapshot,
   UserProfileUpdateSnapshot,
+  WorkflowRunDetailResponse,
 } from '@shared-types/trading.ts';
 export { ApiPermissionError } from './http.ts';
 import { assertOk, fetchJson, jsonHeaders } from './http.ts';
@@ -278,6 +281,12 @@ export async function fetchRiskEvents(): Promise<{
   });
 }
 
+export async function fetchRiskEventDetail(eventId: string): Promise<RiskEventDetailResponse> {
+  return fetchJson(`/api/risk/events/${eventId}`, {
+    headers: { Accept: 'application/json' },
+  });
+}
+
 type SchedulerTicksQuery = {
   hours?: number | null;
   limit?: number;
@@ -365,6 +374,12 @@ export async function fetchTaskWorkflows(): Promise<WorkflowRunsSnapshot> {
   });
 }
 
+export async function fetchWorkflowRunDetail(workflowRunId: string): Promise<WorkflowRunDetailResponse> {
+  return fetchJson(`/api/task-orchestrator/workflows/${workflowRunId}`, {
+    headers: { Accept: 'application/json' },
+  });
+}
+
 export async function fetchExecutionRuntime(): Promise<{ ok: boolean; events: ExecutionRuntimeEvent[] }> {
   return fetchJson('/api/execution/runtime', {
     headers: { Accept: 'application/json' },
@@ -379,6 +394,12 @@ export async function fetchExecutionAccountSnapshots(): Promise<{ ok: boolean; s
 
 export async function fetchExecutionLedger(): Promise<{ ok: boolean; entries: ExecutionLedgerEntry[] }> {
   return fetchJson('/api/execution/ledger', {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export async function fetchExecutionPlanDetail(planId: string): Promise<ExecutionPlanDetailResponse> {
+  return fetchJson(`/api/execution/plans/${planId}`, {
     headers: { Accept: 'application/json' },
   });
 }

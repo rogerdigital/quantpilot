@@ -8,6 +8,20 @@ export function getExecutionPlan(planId) {
   return controlPlaneRuntime.getExecutionPlan(planId);
 }
 
+export function getExecutionPlanDetail(planId) {
+  const plan = controlPlaneRuntime.getExecutionPlan(planId);
+  if (!plan) return null;
+  const workflow = plan.workflowRunId ? controlPlaneRuntime.getWorkflowRun(plan.workflowRunId) : null;
+  const latestRuntime = controlPlaneRuntime.listExecutionRuntimeEvents(60)
+    .find((event) => event.mode === plan.mode && event.createdAt >= plan.createdAt) || null;
+
+  return {
+    plan,
+    workflow,
+    latestRuntime,
+  };
+}
+
 export function findExecutionPlanByWorkflowRunId(workflowRunId) {
   return controlPlaneRuntime.findExecutionPlanByWorkflowRunId(workflowRunId);
 }

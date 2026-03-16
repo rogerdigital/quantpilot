@@ -345,6 +345,13 @@ export type LatestBrokerAccountSnapshotResponse = {
   snapshot: BrokerAccountSnapshotRecord | null;
 };
 
+export type ExecutionPlanDetailResponse = {
+  ok: boolean;
+  plan: ExecutionPlanRecord | null;
+  workflow: WorkflowRunRecord | null;
+  latestRuntime: ExecutionRuntimeEvent | null;
+};
+
 export type StrategyCatalogItem = {
   id: string;
   name: string;
@@ -764,6 +771,16 @@ export type IncidentDetailResponse = {
     summary: IncidentEvidenceSummary;
     timeline: IncidentEvidenceItem[];
   };
+};
+
+export type RiskEventDetailResponse = {
+  ok: boolean;
+  event: MonitoringStatusSnapshot['recent']['latestRiskEvent'] | null;
+};
+
+export type WorkflowRunDetailResponse = {
+  ok: boolean;
+  workflow: WorkflowRunRecord | null;
 };
 
 export type BacktestRunCreateRequest = {

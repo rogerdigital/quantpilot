@@ -107,6 +107,25 @@ test('GET /api/risk/events returns seeded risk events', async () => {
   assert.equal(response.json.events[0].id, 'risk-api-test');
 });
 
+test('GET /api/risk/events/:id returns a single risk event', async () => {
+  context.risk.appendRiskEvent({
+    id: 'risk-api-detail',
+    title: 'Risk detail event',
+    message: 'single risk event',
+    cycle: 91,
+    riskLevel: 'RISK OFF',
+    status: 'risk-off',
+    level: 'critical',
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/risk/events/risk-api-detail',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.event.id, 'risk-api-detail');
+});
+
 test('GET /api/strategy/catalog returns research strategies', async () => {
   const response = await invokeGatewayRoute(handler, {
     path: '/api/strategy/catalog',
@@ -879,6 +898,62 @@ test('GET /api/execution/plans returns persisted execution plans', async () => {
   assert.equal(response.json.ok, true);
   assert.equal(Array.isArray(response.json.plans), true);
   assert.equal(response.json.plans[0].strategyId, 'ema-cross-us');
+});
+
+test('GET /api/execution/plans/:id returns a single execution plan with workflow and runtime context', async () => {
+  context.workflows.appendWorkflowRun({
+    id: 'exec-plan-workflow-detail',
+    workflowId: 'task-orchestrator.strategy-execution',
+    workflowType: 'task-orchestrator',
+    status: 'running',
+  });
+  context.executionPlans.appendExecutionPlan({
+    id: 'exec-plan-detail',
+    workflowRunId: 'exec-plan-workflow-detail',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'paper',
+    status: 'ready',
+    approvalState: 'required',
+    riskStatus: 'review',
+    summary: 'detail plan',
+    capital: 90000,
+    orderCount: 1,
+    orders: [{ symbol: 'MSFT', side: 'BUY', qty: 10, weight: 1, rationale: 'trend' }],
+  });
+  context.executionRuntime.appendExecutionRuntimeEvent({
+    cycle: 51,
+    mode: 'paper',
+    brokerAdapter: 'simulated',
+    brokerConnected: true,
+    marketConnected: true,
+    submittedOrderCount: 1,
+    rejectedOrderCount: 0,
+    openOrderCount: 1,
+    positionCount: 1,
+    cash: 50000,
+    buyingPower: 90000,
+    equity: 90500,
+    message: 'detail runtime',
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/execution/plans/exec-plan-detail',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.plan.id, 'exec-plan-detail');
+  assert.equal(response.json.workflow.id, 'exec-plan-workflow-detail');
+  assert.equal(response.json.latestRuntime.submittedOrderCount, 1);
+});
+
+test('GET /api/execution/plans/:id returns 404 for unknown plans', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/execution/plans/unknown-plan-id',
+  });
+
+  assert.equal(response.statusCode, 404);
+  assert.equal(response.json.ok, false);
 });
 
 test('GET /api/execution/runtime returns persisted execution runtime events', async () => {

@@ -3,3 +3,7 @@ import { controlPlaneRuntime } from '../../../../../../packages/control-plane-ru
 export function listRiskEvents(limit = 50) {
   return controlPlaneRuntime.listRiskEvents(limit);
 }
+
+export function getRiskEvent(eventId) {
+  return controlPlaneRuntime.listRiskEvents(200).find((item) => item.id === eventId) || null;
+}

@@ -8,6 +8,7 @@ import { useExecutionLedgerFeed } from '../../modules/notifications/useExecution
 import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
 import { useAuditRecordsFeed } from '../../modules/notifications/useAuditRecordsFeed.ts';
 import { useIncidentDetail } from '../../modules/notifications/useIncidentDetail.ts';
+import { useIncidentArtifactInspector } from '../../modules/notifications/useIncidentArtifactInspector.ts';
 import { useIncidentsFeed } from '../../modules/notifications/useIncidentsFeed.ts';
 import { useMonitoringAlertsFeed } from '../../modules/notifications/useMonitoringAlertsFeed.ts';
 import { useMonitoringSnapshotsFeed } from '../../modules/notifications/useMonitoringSnapshotsFeed.ts';
@@ -91,6 +92,32 @@ function translateEvidenceKind(locale: string, kind: 'monitoring-alert' | 'notif
   return translateTimelineKind(locale, kind === 'monitoring-alert' ? 'monitoring-alert' : kind);
 }
 
+function getMetadataEntries(metadata: Record<string, unknown> | undefined) {
+  return Object.entries(metadata || {})
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .slice(0, 10)
+    .map(([key, value]) => ({
+      key,
+      value: typeof value === 'object' ? JSON.stringify(value) : String(value),
+    }));
+}
+
+function buildArtifactDraft(locale: string, item: IncidentEvidenceItem) {
+  const lines = [
+    `${locale === 'zh' ? '证据' : 'Evidence'}: ${item.title}`,
+    `${locale === 'zh' ? '类型' : 'Kind'}: ${item.kind}`,
+    `${locale === 'zh' ? '来源' : 'Source'}: ${item.source}`,
+    `${locale === 'zh' ? '时间' : 'Time'}: ${item.timestamp}`,
+    `${locale === 'zh' ? '摘要' : 'Summary'}: ${item.detail}`,
+  ];
+
+  if (item.metadata && Object.keys(item.metadata).length) {
+    lines.push(`${locale === 'zh' ? '元数据' : 'Metadata'}: ${JSON.stringify(item.metadata)}`);
+  }
+
+  return lines.join('\n');
+}
+
 function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
@@ -114,6 +141,7 @@ function NotificationsPage() {
   const [incidentTimeWindow, setIncidentTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('7d');
   const [selectedIncidentId, setSelectedIncidentId] = useState('');
   const [incidentRefreshKey, setIncidentRefreshKey] = useState(0);
+  const [selectedArtifactKey, setSelectedArtifactKey] = useState('');
   const [incidentNoteDraft, setIncidentNoteDraft] = useState('');
   const [incidentOwnerDraft, setIncidentOwnerDraft] = useState('');
   const [incidentBusy, setIncidentBusy] = useState(false);
@@ -166,6 +194,8 @@ function NotificationsPage() {
     evidence: selectedIncidentEvidence,
     loading: incidentDetailLoading,
   } = useIncidentDetail(selectedIncidentId, incidentRefreshKey);
+  const selectedArtifact = selectedIncidentEvidence.timeline.find((item) => `${item.kind}:${item.id}` === selectedArtifactKey) || selectedIncidentEvidence.timeline[0] || null;
+  const artifactInspector = useIncidentArtifactInspector(selectedArtifact, incidentRefreshKey);
   const { items: riskEventItems, loading: riskEventsLoading } = useRiskEventsFeed({
     level: riskEventLevelFilter === 'all' ? '' : riskEventLevelFilter,
     refreshKey: incidentRefreshKey,
@@ -218,8 +248,25 @@ function NotificationsPage() {
     if (!exists) {
       setSelectedIncidentId('');
       setIncidentNoteDraft('');
+      setSelectedArtifactKey('');
     }
   }, [incidentItems, selectedIncidentId]);
+
+  useEffect(() => {
+    if (!selectedIncidentId) {
+      setSelectedArtifactKey('');
+      return;
+    }
+    if (!selectedIncidentEvidence.timeline.length) {
+      setSelectedArtifactKey('');
+      return;
+    }
+    const exists = selectedIncidentEvidence.timeline.some((item) => `${item.kind}:${item.id}` === selectedArtifactKey);
+    if (!exists) {
+      const preferred = selectedIncidentEvidence.timeline.find((item) => item.linked) || selectedIncidentEvidence.timeline[0];
+      setSelectedArtifactKey(preferred ? `${preferred.kind}:${preferred.id}` : '');
+    }
+  }, [selectedArtifactKey, selectedIncidentEvidence.timeline, selectedIncidentId]);
 
   useEffect(() => {
     if (selectedIncident?.owner) {
@@ -750,6 +797,7 @@ function NotificationsPage() {
   }
 
   function focusIncidentEvidenceItem(item: NonNullable<typeof selectedIncidentEvidence>['timeline'][number]) {
+    setSelectedArtifactKey(`${item.kind}:${item.id}`);
     if (item.kind === 'monitoring-alert') {
       applyMonitoringFocus({
         source: item.source,
@@ -798,7 +846,7 @@ function NotificationsPage() {
       return;
     }
     applySchedulerFocus({
-      phase: item.status,
+      phase: ['PRE_OPEN', 'INTRADAY', 'POST_CLOSE', 'OFF_HOURS'].includes(item.status) ? item.status : 'all',
       timeWindow: '7d',
     });
   }
@@ -1144,6 +1192,225 @@ function NotificationsPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </>
+          ) : null}
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '对象检查器' : 'Artifact Inspector'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '针对当前选中的关联证据，直接预览 workflow、execution plan、risk event 或运行态细节。'
+                  : 'Preview workflow, execution plan, risk event, or runtime detail for the currently selected evidence item.'}
+              </div>
+            </div>
+            <div className={`panel-badge ${selectedArtifact ? 'badge-info' : 'muted'}`}>{selectedArtifact ? translateEvidenceKind(locale, selectedArtifact.kind) : '--'}</div>
+          </div>
+          {!selectedArtifact ? (
+            <div className="empty-cell">{locale === 'zh' ? '先在上面的关联证据时间线里选择一条证据。' : 'Select an evidence item from the related evidence timeline above first.'}</div>
+          ) : null}
+          {selectedArtifact && artifactInspector.loading ? (
+            <div className="empty-cell">{locale === 'zh' ? '正在加载对象详情...' : 'Loading artifact detail...'}</div>
+          ) : null}
+          {selectedArtifact ? (
+            <>
+              <div className="status-stack">
+                <div className="status-row"><span>{locale === 'zh' ? '证据标题' : 'Evidence'}</span><strong>{selectedArtifact.title}</strong></div>
+                <div className="status-row"><span>{locale === 'zh' ? '类型' : 'Kind'}</span><strong>{translateEvidenceKind(locale, selectedArtifact.kind)}</strong></div>
+                <div className="status-row"><span>{locale === 'zh' ? '来源' : 'Source'}</span><strong>{selectedArtifact.source}</strong></div>
+                <div className="status-row"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{fmtDateTime(selectedArtifact.timestamp, locale)}</strong></div>
+                <div className="status-copy">{selectedArtifact.detail}</div>
+              </div>
+              {(selectedArtifact.kind === 'workflow-run' || artifactInspector.workflow) ? (
+                <>
+                  <div className="panel-subtitle">{locale === 'zh' ? '工作流详情' : 'Workflow Detail'}</div>
+                  <div className="metrics-grid metrics-grid-compact">
+                    <div className="metric-card">
+                      <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                      <strong>{artifactInspector.workflow?.status || '--'}</strong>
+                    </div>
+                    <div className="metric-card">
+                      <span>{locale === 'zh' ? '尝试次数' : 'Attempts'}</span>
+                      <strong>{artifactInspector.workflow ? `${artifactInspector.workflow.attempt}/${artifactInspector.workflow.maxAttempts}` : '--'}</strong>
+                    </div>
+                    <div className="metric-card">
+                      <span>{locale === 'zh' ? '触发' : 'Trigger'}</span>
+                      <strong>{artifactInspector.workflow?.trigger || '--'}</strong>
+                    </div>
+                    <div className="metric-card">
+                      <span>{locale === 'zh' ? '执行人' : 'Actor'}</span>
+                      <strong>{artifactInspector.workflow?.actor || '--'}</strong>
+                    </div>
+                  </div>
+                  <div className="focus-list focus-list-terminal">
+                    {artifactInspector.workflow?.steps?.map((step) => (
+                      <div className="focus-row" key={step.key}>
+                        <div className="symbol-cell">
+                          <strong>{step.key}</strong>
+                          <span>{locale === 'zh' ? '工作流步骤' : 'Workflow step'}</span>
+                        </div>
+                        <div className="focus-metric">
+                          <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                          <strong>{step.status}</strong>
+                        </div>
+                      </div>
+                    ))}
+                    {!artifactInspector.workflow?.steps?.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有步骤详情。' : 'No workflow steps are available.'}</div> : null}
+                  </div>
+                  {(artifactInspector.workflow?.payload || artifactInspector.workflow?.result || artifactInspector.workflow?.error) ? (
+                    <>
+                      <div className="panel-subtitle">{locale === 'zh' ? '工作流上下文' : 'Workflow Context'}</div>
+                      {artifactInspector.workflow?.payload ? (
+                        <>
+                          <div className="field-label">{locale === 'zh' ? '输入载荷' : 'Payload'}</div>
+                          <pre className="inspection-json">{JSON.stringify(artifactInspector.workflow.payload, null, 2)}</pre>
+                        </>
+                      ) : null}
+                      {artifactInspector.workflow?.result ? (
+                        <>
+                          <div className="field-label">{locale === 'zh' ? '执行结果' : 'Result'}</div>
+                          <pre className="inspection-json">{JSON.stringify(artifactInspector.workflow.result, null, 2)}</pre>
+                        </>
+                      ) : null}
+                      {artifactInspector.workflow?.error ? (
+                        <>
+                          <div className="field-label">{locale === 'zh' ? '错误信息' : 'Error'}</div>
+                          <pre className="inspection-json">{JSON.stringify(artifactInspector.workflow.error, null, 2)}</pre>
+                        </>
+                      ) : null}
+                    </>
+                  ) : null}
+                </>
+              ) : null}
+              {(selectedArtifact.kind === 'execution-plan' || artifactInspector.executionPlan) ? (
+                <>
+                  <div className="panel-subtitle">{locale === 'zh' ? '执行计划详情' : 'Execution Plan Detail'}</div>
+                  <div className="metrics-grid metrics-grid-compact">
+                    <div className="metric-card">
+                      <span>{locale === 'zh' ? '模式' : 'Mode'}</span>
+                      <strong>{artifactInspector.executionPlan?.mode || '--'}</strong>
+                    </div>
+                    <div className="metric-card">
+                      <span>{locale === 'zh' ? '状态' : 'Plan Status'}</span>
+                      <strong>{artifactInspector.executionPlan?.status || '--'}</strong>
+                    </div>
+                    <div className="metric-card">
+                      <span>{locale === 'zh' ? '风控' : 'Risk'}</span>
+                      <strong>{artifactInspector.executionPlan?.riskStatus || '--'}</strong>
+                    </div>
+                    <div className="metric-card">
+                      <span>{locale === 'zh' ? '订单数' : 'Orders'}</span>
+                      <strong>{artifactInspector.executionPlan?.orderCount ?? '--'}</strong>
+                    </div>
+                  </div>
+                  <div className="focus-list focus-list-terminal">
+                    {artifactInspector.executionPlan?.orders?.map((order, index) => (
+                      <div className="focus-row" key={`${order.symbol}-${index}`}>
+                        <div className="symbol-cell">
+                          <strong>{order.symbol}</strong>
+                          <span>{order.rationale}</span>
+                        </div>
+                        <div className="focus-metric">
+                          <span>{locale === 'zh' ? '方向' : 'Side'}</span>
+                          <strong>{order.side}</strong>
+                        </div>
+                        <div className="focus-metric">
+                          <span>{locale === 'zh' ? '数量' : 'Qty'}</span>
+                          <strong>{order.qty}</strong>
+                        </div>
+                        <div className="focus-metric">
+                          <span>{locale === 'zh' ? '权重' : 'Weight'}</span>
+                          <strong>{order.weight}</strong>
+                        </div>
+                      </div>
+                    ))}
+                    {!artifactInspector.executionPlan?.orders?.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有订单明细。' : 'No execution orders are available.'}</div> : null}
+                  </div>
+                  {artifactInspector.latestRuntime ? (
+                    <div className="status-copy">
+                      {locale === 'zh'
+                        ? `最近执行: cycle ${artifactInspector.latestRuntime.cycle}，submitted ${artifactInspector.latestRuntime.submittedOrderCount}，equity ${artifactInspector.latestRuntime.equity}`
+                        : `Latest runtime: cycle ${artifactInspector.latestRuntime.cycle}, submitted ${artifactInspector.latestRuntime.submittedOrderCount}, equity ${artifactInspector.latestRuntime.equity}`}
+                    </div>
+                  ) : null}
+                  {artifactInspector.executionPlan?.metadata ? (
+                    <>
+                      <div className="field-label">{locale === 'zh' ? '计划元数据' : 'Plan Metadata'}</div>
+                      <pre className="inspection-json">{JSON.stringify(artifactInspector.executionPlan.metadata, null, 2)}</pre>
+                    </>
+                  ) : null}
+                </>
+              ) : null}
+              {(selectedArtifact.kind === 'risk-event' || artifactInspector.riskEvent) ? (
+                <>
+                  <div className="panel-subtitle">{locale === 'zh' ? '风控事件详情' : 'Risk Event Detail'}</div>
+                  <div className="metrics-grid metrics-grid-compact">
+                    <div className="metric-card">
+                      <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                      <strong>{artifactInspector.riskEvent?.status || selectedArtifact.status || '--'}</strong>
+                    </div>
+                    <div className="metric-card">
+                      <span>{locale === 'zh' ? '级别' : 'Level'}</span>
+                      <strong>{artifactInspector.riskEvent?.level || selectedArtifact.level || '--'}</strong>
+                    </div>
+                    <div className="metric-card">
+                      <span>{locale === 'zh' ? '风险级别' : 'Risk Level'}</span>
+                      <strong>{artifactInspector.riskEvent?.riskLevel || String(selectedArtifact.metadata?.riskLevel || '--')}</strong>
+                    </div>
+                    <div className="metric-card">
+                      <span>{locale === 'zh' ? '周期' : 'Cycle'}</span>
+                      <strong>{String(artifactInspector.riskEvent?.cycle ?? selectedArtifact.metadata?.cycle ?? '--')}</strong>
+                    </div>
+                  </div>
+                  <div className="status-copy">{artifactInspector.riskEvent?.message || selectedArtifact.detail}</div>
+                </>
+              ) : null}
+              {getMetadataEntries(selectedArtifact.metadata).length ? (
+                <>
+                  <div className="panel-subtitle">{locale === 'zh' ? '关键元数据' : 'Key Metadata'}</div>
+                  <div className="focus-list focus-list-terminal">
+                    {getMetadataEntries(selectedArtifact.metadata).map((entry) => (
+                      <div className="focus-row" key={entry.key}>
+                        <div className="symbol-cell">
+                          <strong>{entry.key}</strong>
+                          <span>{entry.value}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : null}
+              <div className="panel-subtitle">{locale === 'zh' ? '原始元数据' : 'Raw Metadata'}</div>
+              <pre className="inspection-json">{JSON.stringify(selectedArtifact.metadata || {}, null, 2)}</pre>
+              <div className="settings-chip-row">
+                <button
+                  type="button"
+                  className="settings-chip"
+                  onClick={() => setIncidentNoteDraft((current) => {
+                    const prefix = current.trim() ? `${current.trim()}\n\n` : '';
+                    return `${prefix}${buildArtifactDraft(locale, selectedArtifact)}`;
+                  })}
+                >
+                  {locale === 'zh' ? '写入排查草稿' : 'Append To Note Draft'}
+                </button>
+                <button
+                  type="button"
+                  className="settings-chip"
+                  disabled={incidentBusy}
+                  onClick={() => updateSelectedIncident({ status: 'investigating', actor: state.controlPlane.operator })}
+                >
+                  {locale === 'zh' ? '据此开始排查' : 'Investigate From Artifact'}
+                </button>
+                <button
+                  type="button"
+                  className="settings-chip"
+                  disabled={incidentBusy}
+                  onClick={() => updateSelectedIncident({ status: selectedArtifact.level === 'critical' ? 'mitigated' : 'resolved', actor: state.controlPlane.operator })}
+                >
+                  {locale === 'zh' ? '据此推进处置' : 'Advance Resolution'}
+                </button>
               </div>
             </>
           ) : null}
