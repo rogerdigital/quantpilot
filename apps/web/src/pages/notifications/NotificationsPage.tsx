@@ -40,6 +40,20 @@ type InvestigationTimelineItem = {
   title: string;
 };
 
+function translateTimelineKind(locale: string, kind: InvestigationTimelineItem['kind']) {
+  if (locale === 'zh') {
+    if (kind === 'notification') return '通知';
+    if (kind === 'audit') return '审计';
+    if (kind === 'operator-action') return '动作';
+    return '监控';
+  }
+
+  if (kind === 'notification') return 'Notification';
+  if (kind === 'audit') return 'Audit';
+  if (kind === 'operator-action') return 'Action';
+  return 'Monitoring';
+}
+
 function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
@@ -284,6 +298,10 @@ function NotificationsPage() {
     .sort((left, right) => Date.parse(right.timestamp || '') - Date.parse(left.timestamp || ''))
     .slice(0, 18);
 
+  const investigationPathSummary = activeFocusTags.length
+    ? activeFocusTags.join(' -> ')
+    : (locale === 'zh' ? '当前处于默认总览路径，可从任一条时间线或状态卡开始钻取。' : 'You are on the default overview path. Drill in from any timeline entry or status card.');
+
   function focusTimelineItem(item: InvestigationTimelineItem) {
     if (item.kind === 'notification') {
       focusNotificationItem(item.source);
@@ -338,6 +356,7 @@ function NotificationsPage() {
               <span key={tag} className="settings-chip active">{tag}</span>
             ))}
           </div>
+          <div className="status-copy">{investigationPathSummary}</div>
         </article>
         <article className="panel">
           <div className="panel-head">
@@ -361,7 +380,15 @@ function NotificationsPage() {
                 </div>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '类型' : 'Kind'}</span>
-                  <strong>{item.kind}</strong>
+                  <strong>{translateTimelineKind(locale, item.kind)}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '级别' : 'Level'}</span>
+                  <strong>{translateMonitoringStatus(locale, item.level)}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '来源' : 'Source'}</span>
+                  <strong>{item.source}</strong>
                 </div>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '时间' : 'Time'}</span>
