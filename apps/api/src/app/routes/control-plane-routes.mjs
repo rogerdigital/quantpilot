@@ -1,6 +1,6 @@
 import { appendAuditRecord, listAuditRecords } from '../../modules/audit/service.mjs';
 import { hasPermission } from '../../modules/auth/service.mjs';
-import { appendIncidentNote, createIncident, getIncidentDetail, listIncidents, updateIncident } from '../../modules/incidents/service.mjs';
+import { appendIncidentNote, bulkUpdateIncidents, createIncident, getIncidentDetail, getIncidentSummary, listIncidents, updateIncident } from '../../modules/incidents/service.mjs';
 import { listNotifications } from '../../modules/notification/service.mjs';
 import { getRiskEvent, listRiskEvents } from '../../domains/risk/services/feed-service.mjs';
 import { listSchedulerTicks } from '../../modules/scheduler/service.mjs';
@@ -70,6 +70,21 @@ export async function handleControlPlaneRoutes(context) {
     return true;
   }
 
+  if (req.method === 'GET' && reqUrl.pathname === '/api/incidents/summary') {
+    writeJson(res, 200, {
+      ok: true,
+      summary: getIncidentSummary({
+        limit: reqUrl.searchParams.get('limit'),
+        owner: reqUrl.searchParams.get('owner'),
+        severity: reqUrl.searchParams.get('severity'),
+        source: reqUrl.searchParams.get('source'),
+        status: reqUrl.searchParams.get('status'),
+        hours: reqUrl.searchParams.get('hours'),
+      }),
+    });
+    return true;
+  }
+
   if (req.method === 'POST' && reqUrl.pathname === '/api/incidents') {
     const body = await readJsonBody(req);
     writeJson(res, 200, {
@@ -79,10 +94,21 @@ export async function handleControlPlaneRoutes(context) {
     return true;
   }
 
+  if (req.method === 'POST' && reqUrl.pathname === '/api/incidents/bulk') {
+    const body = await readJsonBody(req);
+    const result = bulkUpdateIncidents(body);
+    writeJson(res, 200, {
+      ok: true,
+      ...result,
+    });
+    return true;
+  }
+
   if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/incidents/')) {
     const parts = reqUrl.pathname.split('/').filter(Boolean);
     if (parts.length === 3) {
       const detail = getIncidentDetail(parts.at(-1), {
+        activityLimit: reqUrl.searchParams.get('activityLimit'),
         noteLimit: reqUrl.searchParams.get('noteLimit'),
       });
       writeJson(res, detail ? 200 : 404, detail

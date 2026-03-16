@@ -141,6 +141,15 @@ test('incident repository persists incidents, filters them, and stores notes', (
     updatedAt: '2026-03-16T08:00:00.000Z',
     initialNote: 'Created from monitoring alert.',
   });
+  context.incidents.appendIncident({
+    id: 'incident-unassigned',
+    title: 'Unassigned incident',
+    severity: 'info',
+    source: 'monitoring',
+    status: 'open',
+    createdAt: '2026-03-16T09:00:00.000Z',
+    updatedAt: '2026-03-16T09:00:00.000Z',
+  });
 
   const updated = context.incidents.updateIncident('incident-1', {
     status: 'investigating',
@@ -155,12 +164,16 @@ test('incident repository persists incidents, filters them, and stores notes', (
     severity: 'warn',
     source: 'monitoring',
   });
+  const unassigned = context.incidents.listIncidents(10, {
+    owner: 'unassigned',
+  });
 
   assert.equal(incident.id, 'incident-1');
   assert.equal(updated.status, 'investigating');
   assert.equal(updated.owner, 'ops-b');
   assert.equal(note.incidentId, 'incident-1');
   assert.equal(list[0].latestNotePreview, 'Worker restarted and backlog is draining.');
+  assert.equal(unassigned[0].id, 'incident-unassigned');
   assert.equal(context.incidents.listIncidentNotes('incident-1', 10).length, 2);
   const activity = context.incidents.listIncidentActivities('incident-1', 10);
   assert.equal(activity.some((item) => item.kind === 'opened'), true);

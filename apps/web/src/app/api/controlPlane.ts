@@ -14,8 +14,10 @@ import type {
   MonitoringStatusSnapshot,
   MonitoringAlertsResponse,
   MonitoringSnapshotsResponse,
+  IncidentBulkUpdateResponse,
   IncidentsResponse,
   IncidentDetailResponse,
+  IncidentSummaryResponse,
   ExecutionPlanDetailResponse,
   RiskEventDetailResponse,
   UserBrokerBindingsSnapshot,
@@ -510,6 +512,12 @@ export async function fetchIncidents(options: IncidentsQuery = {}): Promise<Inci
   });
 }
 
+export async function fetchIncidentSummary(options: IncidentsQuery = {}): Promise<IncidentSummaryResponse> {
+  return fetchJson(`/api/incidents/summary${buildIncidentsQuery(options)}`, {
+    headers: { Accept: 'application/json' },
+  });
+}
+
 export async function fetchIncidentDetail(incidentId: string, noteLimit = 100, activityLimit = 120): Promise<IncidentDetailResponse> {
   return fetchJson(`/api/incidents/${incidentId}?noteLimit=${noteLimit}&activityLimit=${activityLimit}`, {
     headers: { Accept: 'application/json' },
@@ -528,6 +536,16 @@ export async function createIncident(payload: Record<string, unknown>): Promise<
 
 export async function updateIncident(incidentId: string, payload: Record<string, unknown>): Promise<{ ok: boolean; incident: IncidentDetailResponse['incident'] }> {
   const response = await fetch(`/api/incidents/${incidentId}`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
+export async function bulkUpdateIncidentQueue(payload: Record<string, unknown>): Promise<IncidentBulkUpdateResponse> {
+  const response = await fetch('/api/incidents/bulk', {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),

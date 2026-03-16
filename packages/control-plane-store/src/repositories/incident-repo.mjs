@@ -76,7 +76,11 @@ export function createIncidentRepository(store) {
           .filter((item) => !filter.status || item.status === filter.status)
           .filter((item) => !filter.severity || item.severity === filter.severity)
           .filter((item) => !filter.source || item.source === filter.source)
-          .filter((item) => !filter.owner || item.owner === filter.owner),
+          .filter((item) => {
+            if (!filter.owner) return true;
+            if (filter.owner === 'unassigned') return !item.owner;
+            return item.owner === filter.owner;
+          }),
       ).map(hydrateIncident);
       return items.slice(0, limit);
     },

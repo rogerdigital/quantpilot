@@ -774,6 +774,45 @@ export type IncidentsResponse = {
   incidents: IncidentRecord[];
 };
 
+export type IncidentSummaryResponse = {
+  ok: boolean;
+  summary: {
+    total: number;
+    open: number;
+    investigating: number;
+    mitigated: number;
+    resolved: number;
+    critical: number;
+    warn: number;
+    info: number;
+    unassigned: number;
+    stale: number;
+    unacknowledged: number;
+    missingNotes: number;
+    bySource: Array<{
+      source: string;
+      count: number;
+    }>;
+    byOwner: Array<{
+      owner: string;
+      count: number;
+      openCount: number;
+      criticalCount: number;
+    }>;
+    ageBuckets: Array<{
+      bucket: 'lt_1h' | 'lt_6h' | 'lt_24h' | 'gte_24h';
+      count: number;
+    }>;
+  };
+};
+
+export type IncidentBulkUpdateResponse = {
+  ok: boolean;
+  updatedIds: string[];
+  incidents: IncidentRecord[];
+  notesAdded: number;
+};
+
 export type IncidentDetailResponse = {
   ok: boolean;
   incident: IncidentRecord;

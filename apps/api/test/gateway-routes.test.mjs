@@ -1500,6 +1500,9 @@ test('incident routes create, update, and return incident details', async () => 
   const listed = await invokeGatewayRoute(handler, {
     path: '/api/incidents?status=open&severity=warn&source=monitoring&hours=168&limit=5',
   });
+  const summary = await invokeGatewayRoute(handler, {
+    path: '/api/incidents/summary?hours=168&limit=20',
+  });
   const updated = await invokeGatewayRoute(handler, {
     method: 'POST',
     path: '/api/incidents/incident-api-test',
@@ -1516,6 +1519,17 @@ test('incident routes create, update, and return incident details', async () => 
       body: 'Queue was drained by worker retry.',
     },
   });
+  const bulk = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/incidents/bulk',
+    body: {
+      actor: 'api-operator',
+      incidentIds: ['incident-api-test'],
+      note: 'Bulk action note',
+      owner: 'ops-bulk',
+      status: 'mitigated',
+    },
+  });
   const detail = await invokeGatewayRoute(handler, {
     path: '/api/incidents/incident-api-test',
   });
@@ -1524,16 +1538,25 @@ test('incident routes create, update, and return incident details', async () => 
   assert.equal(created.json.incident.id, 'incident-api-test');
   assert.equal(listed.statusCode, 200);
   assert.equal(listed.json.incidents[0].id, 'incident-api-test');
+  assert.equal(summary.statusCode, 200);
+  assert.equal(summary.json.summary.total >= 1, true);
+  assert.equal(summary.json.summary.byOwner.some((item) => item.owner === 'api-operator'), true);
   assert.equal(updated.statusCode, 200);
   assert.equal(updated.json.incident.status, 'investigating');
   assert.equal(noted.statusCode, 200);
   assert.equal(noted.json.note.incidentId, 'incident-api-test');
+  assert.equal(bulk.statusCode, 200);
+  assert.equal(bulk.json.updatedIds.includes('incident-api-test'), true);
+  assert.equal(bulk.json.notesAdded, 1);
   assert.equal(detail.statusCode, 200);
   assert.equal(detail.json.incident.id, 'incident-api-test');
+  assert.equal(detail.json.incident.owner, 'ops-bulk');
+  assert.equal(detail.json.incident.status, 'mitigated');
   assert.equal(detail.json.notes.length >= 2, true);
   assert.equal(detail.json.activity.summary.total >= 4, true);
   assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'opened'), true);
   assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'status-changed'), true);
+  assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'owner-changed'), true);
   assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'note-added'), true);
   assert.equal(detail.json.evidence.summary.total >= 5, true);
   assert.equal(detail.json.evidence.summary.linked >= 5, true);

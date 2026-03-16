@@ -21,6 +21,85 @@ export function listIncidents(options = {}) {
   });
 }
 
+export function getIncidentSummary(options = {}) {
+  const incidents = controlPlaneRuntime.listIncidents(parseLimit(options.limit, 500), {
+    owner: options.owner || '',
+    severity: options.severity || '',
+    source: options.source || '',
+    status: options.status || '',
+    since: resolveSince(options.hours),
+  });
+
+  const summary = {
+    total: incidents.length,
+    open: 0,
+    investigating: 0,
+    mitigated: 0,
+    resolved: 0,
+    critical: 0,
+    warn: 0,
+    info: 0,
+    unassigned: 0,
+    stale: 0,
+    unacknowledged: 0,
+    missingNotes: 0,
+    bySource: [],
+    byOwner: [],
+    ageBuckets: [
+      { bucket: 'lt_1h', count: 0 },
+      { bucket: 'lt_6h', count: 0 },
+      { bucket: 'lt_24h', count: 0 },
+      { bucket: 'gte_24h', count: 0 },
+    ],
+  };
+
+  const sourceCounts = new Map();
+  const ownerCounts = new Map();
+
+  incidents.forEach((incident) => {
+    if (incident.status === 'open') summary.open += 1;
+    if (incident.status === 'investigating') summary.investigating += 1;
+    if (incident.status === 'mitigated') summary.mitigated += 1;
+    if (incident.status === 'resolved') summary.resolved += 1;
+    if (incident.severity === 'critical') summary.critical += 1;
+    if (incident.severity === 'warn') summary.warn += 1;
+    if (incident.severity === 'info') summary.info += 1;
+    if (!incident.owner) summary.unassigned += 1;
+    if (!incident.acknowledgedAt && incident.status !== 'resolved') summary.unacknowledged += 1;
+    if (!Number(incident.noteCount || 0)) summary.missingNotes += 1;
+
+    const updatedMs = parseTimestamp(incident.updatedAt || incident.createdAt) || Date.now();
+    const ageHours = Math.max(0, (Date.now() - updatedMs) / (60 * 60 * 1000));
+    if (incident.status !== 'resolved' && ageHours >= 24) summary.stale += 1;
+    if (ageHours < 1) summary.ageBuckets[0].count += 1;
+    else if (ageHours < 6) summary.ageBuckets[1].count += 1;
+    else if (ageHours < 24) summary.ageBuckets[2].count += 1;
+    else summary.ageBuckets[3].count += 1;
+
+    sourceCounts.set(incident.source || 'unknown', Number(sourceCounts.get(incident.source || 'unknown') || 0) + 1);
+    const ownerKey = incident.owner || 'unassigned';
+    const ownerEntry = ownerCounts.get(ownerKey) || {
+      owner: ownerKey,
+      count: 0,
+      openCount: 0,
+      criticalCount: 0,
+    };
+    ownerEntry.count += 1;
+    if (incident.status !== 'resolved') ownerEntry.openCount += 1;
+    if (incident.severity === 'critical') ownerEntry.criticalCount += 1;
+    ownerCounts.set(ownerKey, ownerEntry);
+  });
+
+  summary.bySource = [...sourceCounts.entries()]
+    .map(([source, count]) => ({ source, count }))
+    .sort((left, right) => right.count - left.count);
+  summary.byOwner = [...ownerCounts.values()]
+    .sort((left, right) => right.openCount - left.openCount || right.criticalCount - left.criticalCount || right.count - left.count)
+    .slice(0, 8);
+
+  return summary;
+}
+
 export function getIncidentDetail(incidentId, options = {}) {
   const incident = controlPlaneRuntime.getIncident(incidentId);
   if (!incident) return null;
@@ -44,6 +123,47 @@ export function updateIncident(incidentId, payload = {}) {
 
 export function appendIncidentNote(incidentId, payload = {}) {
   return controlPlaneRuntime.recordIncidentNote(incidentId, payload);
+}
+
+export function bulkUpdateIncidents(payload = {}) {
+  const incidentIds = [...new Set((Array.isArray(payload.incidentIds) ? payload.incidentIds : [])
+    .map((item) => String(item || '').trim())
+    .filter(Boolean))];
+  const patch = {};
+
+  if (typeof payload.status === 'string' && payload.status) patch.status = payload.status;
+  if (typeof payload.owner === 'string') patch.owner = payload.owner;
+  if (typeof payload.summary === 'string' && payload.summary.trim()) patch.summary = payload.summary.trim();
+  if (typeof payload.actor === 'string' && payload.actor) patch.actor = payload.actor;
+
+  const incidents = [];
+  let notesAdded = 0;
+
+  incidentIds.forEach((incidentId) => {
+    const incident = Object.keys(patch).length
+      ? controlPlaneRuntime.transitionIncident(incidentId, patch)
+      : controlPlaneRuntime.getIncident(incidentId);
+    if (!incident) return;
+    incidents.push(incident);
+    if (typeof payload.note === 'string' && payload.note.trim()) {
+      const noteResult = controlPlaneRuntime.recordIncidentNote(incidentId, {
+        author: payload.actor || payload.owner || incident.owner || 'operator',
+        body: payload.note.trim(),
+        metadata: {
+          bulkAction: true,
+        },
+      });
+      if (noteResult?.note) {
+        notesAdded += 1;
+      }
+    }
+  });
+
+  return {
+    updatedIds: incidents.map((item) => item.id),
+    incidents,
+    notesAdded,
+  };
 }
 
 function parseTimestamp(value) {

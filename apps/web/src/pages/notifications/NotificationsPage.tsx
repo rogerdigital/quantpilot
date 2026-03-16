@@ -4,13 +4,14 @@ import { useTradingSystem } from '../../store/trading-system/TradingSystemProvid
 import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useMonitoringStatus } from '../../hooks/useMonitoringStatus.ts';
-import { appendIncidentNote, createIncident, updateIncident } from '../../app/api/controlPlane.ts';
+import { appendIncidentNote, bulkUpdateIncidentQueue, createIncident, updateIncident } from '../../app/api/controlPlane.ts';
 import { useExecutionLedgerFeed } from '../../modules/notifications/useExecutionLedgerFeed.ts';
 import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
 import { useAuditRecordsFeed } from '../../modules/notifications/useAuditRecordsFeed.ts';
 import { useIncidentDetail } from '../../modules/notifications/useIncidentDetail.ts';
 import { useIncidentArtifactInspector } from '../../modules/notifications/useIncidentArtifactInspector.ts';
 import { useIncidentsFeed } from '../../modules/notifications/useIncidentsFeed.ts';
+import { useIncidentSummary } from '../../modules/notifications/useIncidentSummary.ts';
 import { useMonitoringAlertsFeed } from '../../modules/notifications/useMonitoringAlertsFeed.ts';
 import { useMonitoringSnapshotsFeed } from '../../modules/notifications/useMonitoringSnapshotsFeed.ts';
 import { useOperatorActionsFeed } from '../../modules/notifications/useOperatorActionsFeed.ts';
@@ -40,6 +41,7 @@ const AUDIT_TYPES = ['all', 'workflow', 'execution-plan', 'agent-action-request'
 const INCIDENT_STATUSES = ['all', 'open', 'investigating', 'mitigated', 'resolved'] as const;
 const INCIDENT_SEVERITIES = ['all', 'info', 'warn', 'critical'] as const;
 const INCIDENT_SOURCES = ['all', 'monitoring', 'notification', 'audit', 'operator', 'workflow', 'scheduler', 'control-plane', 'risk', 'execution'] as const;
+const INCIDENT_OWNER_FILTERS = ['all', 'unassigned', 'mine'] as const;
 const RISK_EVENT_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
 const RISK_EVENT_STATUSES = ['all', 'healthy', 'risk-off', 'approval-required', 'connectivity-degraded'] as const;
 const WORKFLOW_RUN_STATUSES = ['all', 'queued', 'running', 'retry_scheduled', 'failed', 'completed', 'canceled'] as const;
@@ -175,13 +177,17 @@ function NotificationsPage() {
   const [incidentStatusFilter, setIncidentStatusFilter] = useState('all');
   const [incidentSeverityFilter, setIncidentSeverityFilter] = useState('all');
   const [incidentSourceFilter, setIncidentSourceFilter] = useState('all');
+  const [incidentOwnerFilter, setIncidentOwnerFilter] = useState('all');
   const [incidentTimeWindow, setIncidentTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('7d');
   const [selectedIncidentId, setSelectedIncidentId] = useState('');
+  const [selectedIncidentIds, setSelectedIncidentIds] = useState<string[]>([]);
   const [incidentRefreshKey, setIncidentRefreshKey] = useState(0);
   const [selectedArtifactKey, setSelectedArtifactKey] = useState('');
   const [selectedActivityId, setSelectedActivityId] = useState('');
   const [incidentNoteDraft, setIncidentNoteDraft] = useState('');
   const [incidentOwnerDraft, setIncidentOwnerDraft] = useState('');
+  const [incidentBulkOwnerDraft, setIncidentBulkOwnerDraft] = useState('');
+  const [incidentBulkNoteDraft, setIncidentBulkNoteDraft] = useState('');
   const [incidentBusy, setIncidentBusy] = useState(false);
   const [riskEventLevelFilter, setRiskEventLevelFilter] = useState('all');
   const [riskEventStatusFilter, setRiskEventStatusFilter] = useState('all');
@@ -221,6 +227,19 @@ function NotificationsPage() {
   });
   const { items: incidentItems, loading: incidentsLoading } = useIncidentsFeed({
     hours: activeIncidentTimeWindow.hours,
+    owner: incidentOwnerFilter === 'all'
+      ? ''
+      : (incidentOwnerFilter === 'mine' ? state.controlPlane.operator : incidentOwnerFilter),
+    refreshKey: incidentRefreshKey,
+    severity: incidentSeverityFilter === 'all' ? '' : incidentSeverityFilter,
+    source: incidentSourceFilter === 'all' ? '' : incidentSourceFilter,
+    status: incidentStatusFilter === 'all' ? '' : incidentStatusFilter,
+  });
+  const { summary: incidentSummary, loading: incidentSummaryLoading } = useIncidentSummary({
+    hours: activeIncidentTimeWindow.hours,
+    owner: incidentOwnerFilter === 'all'
+      ? ''
+      : (incidentOwnerFilter === 'mine' ? state.controlPlane.operator : incidentOwnerFilter),
     refreshKey: incidentRefreshKey,
     severity: incidentSeverityFilter === 'all' ? '' : incidentSeverityFilter,
     source: incidentSourceFilter === 'all' ? '' : incidentSourceFilter,
@@ -292,6 +311,12 @@ function NotificationsPage() {
       setSelectedActivityId('');
     }
   }, [incidentItems, selectedIncidentId]);
+
+  useEffect(() => {
+    if (!selectedIncidentIds.length) return;
+    const availableIds = new Set(incidentItems.map((item) => item.id));
+    setSelectedIncidentIds((current) => current.filter((item) => availableIds.has(item)));
+  }, [incidentItems, selectedIncidentIds.length]);
 
   useEffect(() => {
     if (!selectedIncidentId) {
@@ -383,12 +408,14 @@ function NotificationsPage() {
   }
 
   function applyIncidentFocus(options: {
+    owner?: string;
     severity?: string;
     source?: string;
     status?: string;
     timeWindow?: (typeof MONITORING_TIME_WINDOWS)[number]['key'];
     incidentId?: string;
   }) {
+    setIncidentOwnerFilter(options.owner || 'all');
     setIncidentSeverityFilter(options.severity || 'all');
     setIncidentSourceFilter(options.source || 'all');
     setIncidentStatusFilter(options.status || 'all');
@@ -428,6 +455,7 @@ function NotificationsPage() {
     applyRiskFocus({});
     applyWorkflowFocus({});
     applyExecutionFocus({});
+    setSelectedIncidentIds([]);
     setSelectedActivityId('');
   }
 
@@ -596,6 +624,46 @@ function NotificationsPage() {
     }
   }
 
+  function toggleIncidentSelection(incidentId: string) {
+    setSelectedIncidentIds((current) => current.includes(incidentId)
+      ? current.filter((item) => item !== incidentId)
+      : [...current, incidentId]);
+  }
+
+  function toggleSelectVisibleIncidents() {
+    const visibleIds = incidentItems.map((item) => item.id);
+    const allSelected = visibleIds.length > 0 && visibleIds.every((item) => selectedIncidentIds.includes(item));
+    setSelectedIncidentIds(allSelected ? [] : visibleIds);
+  }
+
+  async function applyBulkIncidentUpdate(patch: {
+    owner?: string;
+    status?: string;
+    note?: string;
+  }) {
+    if (!selectedIncidentIds.length) return;
+    setIncidentBusy(true);
+    try {
+      await bulkUpdateIncidentQueue({
+        actor: state.controlPlane.operator,
+        incidentIds: selectedIncidentIds,
+        note: patch.note || '',
+        owner: patch.owner,
+        status: patch.status,
+      });
+      if (patch.owner !== undefined) {
+        setIncidentBulkOwnerDraft(patch.owner);
+      }
+      if (patch.note !== undefined) {
+        setIncidentBulkNoteDraft('');
+      }
+      setIncidentRefreshKey((value) => value + 1);
+      setSelectedIncidentIds([]);
+    } finally {
+      setIncidentBusy(false);
+    }
+  }
+
   function createMonitoringIncident(item: (typeof monitoringAlertItems)[number]) {
     return openIncident({
       title: `${item.source} ${locale === 'zh' ? '告警' : 'alert'}`,
@@ -750,8 +818,10 @@ function NotificationsPage() {
     incidentStatusFilter !== 'all' ? `incident:${incidentStatusFilter}` : '',
     incidentSeverityFilter !== 'all' ? `incident-severity:${incidentSeverityFilter}` : '',
     incidentSourceFilter !== 'all' ? `incident-source:${incidentSourceFilter}` : '',
+    incidentOwnerFilter !== 'all' ? `incident-owner:${incidentOwnerFilter}` : '',
     incidentTimeWindow !== '7d' ? `incident-window:${incidentTimeWindow}` : '',
     selectedIncidentId ? 'incident:selected' : '',
+    selectedIncidentIds.length ? `incident-bulk:${selectedIncidentIds.length}` : '',
     riskEventLevelFilter !== 'all' ? `risk-level:${riskEventLevelFilter}` : '',
     riskEventStatusFilter !== 'all' ? `risk-status:${riskEventStatusFilter}` : '',
     workflowRunStatusFilter !== 'all' ? `workflow:${workflowRunStatusFilter}` : '',
@@ -1054,6 +1124,126 @@ function NotificationsPage() {
         <article className="panel">
           <div className="panel-head">
             <div>
+              <div className="panel-title">{locale === 'zh' ? '事件总览' : 'Incident Overview'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '从负责人、来源和老化维度先看清 incident 队列，再决定要不要批量处置。'
+                  : 'Read the incident queue by owner, source, and aging before deciding how to batch triage it.'}
+              </div>
+            </div>
+            <div className={`panel-badge ${incidentSummary.total ? 'badge-warn' : 'muted'}`}>{incidentSummary.total}</div>
+          </div>
+          <div className="metrics-grid metrics-grid-compact">
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Open' : 'Open'}</span>
+              <strong>{incidentSummaryLoading ? '--' : incidentSummary.open}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Investigating' : 'Investigating'}</span>
+              <strong>{incidentSummaryLoading ? '--' : incidentSummary.investigating}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Critical' : 'Critical'}</span>
+              <strong>{incidentSummaryLoading ? '--' : incidentSummary.critical}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '超 24h 未收尾' : 'Stale 24h+'}</span>
+              <strong>{incidentSummaryLoading ? '--' : incidentSummary.stale}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '未指派' : 'Unassigned'}</span>
+              <strong>{incidentSummaryLoading ? '--' : incidentSummary.unassigned}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '缺少记录' : 'Missing Notes'}</span>
+              <strong>{incidentSummaryLoading ? '--' : incidentSummary.missingNotes}</strong>
+            </div>
+          </div>
+          <div className="panel-subtitle">{locale === 'zh' ? '负责人与负载' : 'Owner Load'}</div>
+          <div className="focus-list focus-list-terminal">
+            {!incidentSummary.byOwner.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有可显示的负责人负载' : 'No owner workload is available yet.'}</div> : null}
+            {incidentSummary.byOwner.map((item) => (
+              <button
+                type="button"
+                className="focus-row status-row-button"
+                key={item.owner}
+                onClick={() => applyIncidentFocus({
+                  owner: item.owner === 'unassigned' ? 'unassigned' : item.owner,
+                  severity: incidentSeverityFilter,
+                  source: incidentSourceFilter,
+                  status: incidentStatusFilter,
+                  timeWindow: incidentTimeWindow,
+                })}
+              >
+                <div className="symbol-cell">
+                  <strong>{item.owner === 'unassigned' ? (locale === 'zh' ? '未指派' : 'Unassigned') : item.owner}</strong>
+                  <span>{locale === 'zh' ? '点击后聚焦该负责人队列' : 'Click to focus this owner queue.'}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '总数' : 'Total'}</span>
+                  <strong>{item.count}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '未解决' : 'Open'}</span>
+                  <strong>{item.openCount}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? 'Critical' : 'Critical'}</span>
+                  <strong>{item.criticalCount}</strong>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="panel-subtitle">{locale === 'zh' ? '来源分布与老化' : 'Source Mix And Aging'}</div>
+          <div className="focus-list focus-list-terminal">
+            {incidentSummary.bySource.slice(0, 6).map((item) => (
+              <button
+                type="button"
+                className="focus-row status-row-button"
+                key={item.source}
+                onClick={() => applyIncidentFocus({
+                  owner: incidentOwnerFilter,
+                  severity: incidentSeverityFilter,
+                  source: item.source,
+                  status: incidentStatusFilter,
+                  timeWindow: incidentTimeWindow,
+                })}
+              >
+                <div className="symbol-cell">
+                  <strong>{item.source}</strong>
+                  <span>{locale === 'zh' ? '点击后聚焦这个来源' : 'Click to focus this source.'}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '数量' : 'Count'}</span>
+                  <strong>{item.count}</strong>
+                </div>
+              </button>
+            ))}
+            {incidentSummary.ageBuckets.map((item) => (
+              <div className="focus-row" key={item.bucket}>
+                <div className="symbol-cell">
+                  <strong>{
+                    item.bucket === 'lt_1h'
+                      ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
+                      : item.bucket === 'lt_6h'
+                        ? (locale === 'zh' ? '1-6 小时' : '1-6h')
+                        : item.bucket === 'lt_24h'
+                          ? (locale === 'zh' ? '6-24 小时' : '6-24h')
+                          : (locale === 'zh' ? '超过 24 小时' : '24h+')
+                  }</strong>
+                  <span>{locale === 'zh' ? '按最近更新时间分桶' : 'Bucketed by latest update time.'}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '数量' : 'Count'}</span>
+                  <strong>{item.count}</strong>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
               <div className="panel-title">{locale === 'zh' ? '事件队列' : 'Incident Queue'}</div>
               <div className="panel-copy">
                 {locale === 'zh'
@@ -1137,22 +1327,87 @@ function NotificationsPage() {
               );
             })}
           </div>
+          <div className="settings-chip-row">
+            {INCIDENT_OWNER_FILTERS.map((owner) => {
+              const selected = incidentOwnerFilter === owner;
+              const label = owner === 'all'
+                ? (locale === 'zh' ? '全部负责人' : 'All Owners')
+                : owner === 'mine'
+                  ? (locale === 'zh' ? '我的队列' : 'My Queue')
+                  : (locale === 'zh' ? '未指派' : 'Unassigned');
+              return (
+                <button
+                  key={owner}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setIncidentOwnerFilter(owner)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+            {incidentOwnerFilter !== 'all' && !INCIDENT_OWNER_FILTERS.includes(incidentOwnerFilter as (typeof INCIDENT_OWNER_FILTERS)[number]) ? (
+              <span className="settings-chip active">{incidentOwnerFilter}</span>
+            ) : null}
+          </div>
+          <div className="settings-chip-row">
+            <button type="button" className="settings-chip" disabled={!incidentItems.length} onClick={toggleSelectVisibleIncidents}>
+              {incidentItems.length > 0 && incidentItems.every((item) => selectedIncidentIds.includes(item.id))
+                ? (locale === 'zh' ? '取消全选当前列表' : 'Clear Visible Selection')
+                : (locale === 'zh' ? '全选当前列表' : 'Select Visible')}
+            </button>
+            <span className="empty-cell">
+              {locale === 'zh'
+                ? `已选 ${selectedIncidentIds.length} 条 incident`
+                : `${selectedIncidentIds.length} incidents selected`}
+            </span>
+          </div>
+          <label className="field-label" htmlFor="incident-bulk-owner-input">{locale === 'zh' ? '批量负责人' : 'Bulk Owner'}</label>
+          <div className="settings-chip-row">
+            <input
+              id="incident-bulk-owner-input"
+              className="text-input"
+              value={incidentBulkOwnerDraft}
+              onChange={(event) => setIncidentBulkOwnerDraft(event.target.value)}
+              placeholder={locale === 'zh' ? '给选中 incident 指派负责人' : 'Assign owner to selected incidents'}
+            />
+            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length} onClick={() => applyBulkIncidentUpdate({ owner: incidentBulkOwnerDraft.trim() })}>
+              {locale === 'zh' ? '批量指派' : 'Assign Selected'}
+            </button>
+            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length} onClick={() => applyBulkIncidentUpdate({ status: 'investigating' })}>
+              {locale === 'zh' ? '批量开始排查' : 'Bulk Investigate'}
+            </button>
+            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length} onClick={() => applyBulkIncidentUpdate({ status: 'mitigated' })}>
+              {locale === 'zh' ? '批量缓解' : 'Bulk Mitigate'}
+            </button>
+            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length} onClick={() => applyBulkIncidentUpdate({ status: 'resolved' })}>
+              {locale === 'zh' ? '批量解决' : 'Bulk Resolve'}
+            </button>
+          </div>
+          <label className="field-label" htmlFor="incident-bulk-note-input">{locale === 'zh' ? '批量备注' : 'Bulk Note'}</label>
+          <div className="settings-chip-row">
+            <textarea
+              id="incident-bulk-note-input"
+              className="detail-textarea"
+              rows={3}
+              value={incidentBulkNoteDraft}
+              onChange={(event) => setIncidentBulkNoteDraft(event.target.value)}
+              placeholder={locale === 'zh' ? '给当前选中的 incident 统一追加备注' : 'Append a shared note to the selected incidents'}
+            />
+          </div>
+          <div className="settings-chip-row">
+            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length || !incidentBulkNoteDraft.trim()} onClick={() => applyBulkIncidentUpdate({ note: incidentBulkNoteDraft.trim() })}>
+              {locale === 'zh' ? '批量追加备注' : 'Append Bulk Note'}
+            </button>
+            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length || !incidentBulkNoteDraft.trim()} onClick={() => applyBulkIncidentUpdate({ note: incidentBulkNoteDraft.trim(), status: 'investigating' })}>
+              {locale === 'zh' ? '备注并开始排查' : 'Note And Investigate'}
+            </button>
+          </div>
           <div className="focus-list focus-list-terminal">
             {incidentsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载事件...' : 'Loading incidents...'}</div> : null}
             {!incidentsLoading && !incidentItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前还没有升级为 incident 的事件' : 'No incidents have been opened yet.'}</div> : null}
             {!incidentsLoading ? incidentItems.map((item) => (
-              <button
-                type="button"
-                className="focus-row status-row-button"
-                key={item.id}
-                onClick={() => applyIncidentFocus({
-                  incidentId: selectedIncidentId === item.id ? '' : item.id,
-                  severity: item.severity,
-                  source: item.source,
-                  status: item.status,
-                  timeWindow: incidentTimeWindow,
-                })}
-              >
+              <div className="focus-row focus-row-wide" key={item.id}>
                 <div className="symbol-cell">
                   <strong>{item.title}</strong>
                   <span>{item.summary || item.latestNotePreview || (locale === 'zh' ? '暂无摘要' : 'No summary')}</span>
@@ -1169,7 +1424,34 @@ function NotificationsPage() {
                   <span>{locale === 'zh' ? '更新于' : 'Updated'}</span>
                   <strong>{fmtDateTime(item.updatedAt || item.createdAt, locale)}</strong>
                 </div>
-              </button>
+                <div className="settings-chip-row">
+                  <button
+                    type="button"
+                    className={`settings-chip${selectedIncidentIds.includes(item.id) ? ' active' : ''}`}
+                    onClick={() => toggleIncidentSelection(item.id)}
+                  >
+                    {selectedIncidentIds.includes(item.id)
+                      ? (locale === 'zh' ? '已选中' : 'Selected')
+                      : (locale === 'zh' ? '加入批量' : 'Select')}
+                  </button>
+                  <button
+                    type="button"
+                    className={`settings-chip${selectedIncidentId === item.id ? ' active' : ''}`}
+                    onClick={() => applyIncidentFocus({
+                      incidentId: selectedIncidentId === item.id ? '' : item.id,
+                      owner: item.owner || 'unassigned',
+                      severity: item.severity,
+                      source: item.source,
+                      status: item.status,
+                      timeWindow: incidentTimeWindow,
+                    })}
+                  >
+                    {selectedIncidentId === item.id
+                      ? (locale === 'zh' ? '取消详情' : 'Hide Detail')
+                      : (locale === 'zh' ? '查看详情' : 'Open Detail')}
+                  </button>
+                </div>
+              </div>
             )) : null}
           </div>
         </article>
