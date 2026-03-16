@@ -125,6 +125,24 @@ function NotificationsPage() {
     setSelectedMonitoringSnapshotId(options.snapshotId || '');
   }
 
+  function applyNotificationFocus(options: {
+    level?: string;
+    source?: string;
+    timeWindow?: (typeof MONITORING_TIME_WINDOWS)[number]['key'];
+  }) {
+    setNotificationLevelFilter(options.level || 'all');
+    setNotificationSourceFilter(options.source || 'all');
+    setNotificationTimeWindow(options.timeWindow || '24h');
+  }
+
+  function applyAuditFocus(options: {
+    type?: string;
+    timeWindow?: (typeof MONITORING_TIME_WINDOWS)[number]['key'];
+  }) {
+    setAuditTypeFilter(options.type || 'all');
+    setAuditTimeWindow(options.timeWindow || '24h');
+  }
+
   return (
     <>
       <SectionHeader routeKey="notifications" />
@@ -511,10 +529,21 @@ function NotificationsPage() {
             </div>
             <div className="panel-badge badge-info">{state.controlPlane.notificationCount}</div>
           </div>
+          <div className="settings-chip-row">
+            <button type="button" className="settings-chip" onClick={() => applyNotificationFocus({ timeWindow: '24h' })}>
+              {locale === 'zh' ? '查看通知' : 'Open Notifications'}
+            </button>
+            <button type="button" className="settings-chip" onClick={() => applyAuditFocus({ timeWindow: '24h' })}>
+              {locale === 'zh' ? '查看审计' : 'Open Audit Trail'}
+            </button>
+            <button type="button" className="settings-chip" onClick={() => applyAuditFocus({ type: 'workflow', timeWindow: '24h' })}>
+              {locale === 'zh' ? '工作流审计' : 'Workflow Audits'}
+            </button>
+          </div>
           <div className="status-stack">
             <div className="status-row"><span>{locale === 'zh' ? '操作员' : 'Operator'}</span><strong>{state.controlPlane.operator}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{state.controlPlane.lastStatus}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '审计记录' : 'Audit Records'}</span><strong>{state.controlPlane.auditCount}</strong></div>
+            <button type="button" className="status-row status-row-button" onClick={() => applyNotificationFocus({ source: 'control-plane', timeWindow: '24h' })}><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{state.controlPlane.lastStatus}</strong></button>
+            <button type="button" className="status-row status-row-button" onClick={() => applyAuditFocus({ timeWindow: '24h' })}><span>{locale === 'zh' ? '审计记录' : 'Audit Records'}</span><strong>{state.controlPlane.auditCount}</strong></button>
             <div className="status-copy">{state.controlPlane.routeHint}</div>
           </div>
         </article>
