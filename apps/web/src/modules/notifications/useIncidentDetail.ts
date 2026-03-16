@@ -24,6 +24,9 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
       audits: 0,
       operatorActions: 0,
       schedulerTicks: 0,
+      riskEvents: 0,
+      workflowRuns: 0,
+      executionPlans: 0,
     },
     timeline: [],
   });
@@ -42,6 +45,9 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
           audits: 0,
           operatorActions: 0,
           schedulerTicks: 0,
+          riskEvents: 0,
+          workflowRuns: 0,
+          executionPlans: 0,
         },
         timeline: [],
       });
@@ -65,6 +71,9 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
             audits: 0,
             operatorActions: 0,
             schedulerTicks: 0,
+            riskEvents: 0,
+            workflowRuns: 0,
+            executionPlans: 0,
           },
           timeline: [],
         });
@@ -82,6 +91,9 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
             audits: 0,
             operatorActions: 0,
             schedulerTicks: 0,
+            riskEvents: 0,
+            workflowRuns: 0,
+            executionPlans: 0,
           },
           timeline: [],
         });

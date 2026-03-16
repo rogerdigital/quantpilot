@@ -1343,6 +1343,51 @@ test('incident routes create, update, and return incident details', async () => 
     status: 'steady',
     createdAt: '2026-03-16T08:09:00.000Z',
   });
+  context.risk.appendRiskEvent({
+    id: 'incident-risk-event',
+    level: 'critical',
+    status: 'risk-off',
+    title: 'Risk-off engaged',
+    message: 'Risk engine disabled live trading after repeated disconnects.',
+    cycle: 188,
+    riskLevel: 'RISK OFF',
+    source: 'risk-monitor',
+    createdAt: '2026-03-16T08:10:00.000Z',
+  });
+  context.workflows.appendWorkflowRun({
+    id: 'incident-workflow-run',
+    workflowId: 'task-orchestrator.state-run',
+    workflowType: 'task-orchestrator',
+    status: 'failed',
+    actor: 'worker-test',
+    trigger: 'worker',
+    createdAt: '2026-03-16T08:11:00.000Z',
+    updatedAt: '2026-03-16T08:11:30.000Z',
+    error: 'worker lag forced a retry',
+    metadata: {
+      workflowRunId: 'incident-workflow-run',
+      summary: 'Worker lag blocked state runner.',
+    },
+  });
+  context.executionPlans.appendExecutionPlan({
+    id: 'incident-execution-plan',
+    workflowRunId: 'incident-workflow-run',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'paper',
+    status: 'blocked',
+    approvalState: 'required',
+    riskStatus: 'blocked',
+    summary: 'Execution plan blocked by risk review.',
+    capital: 100000,
+    orderCount: 2,
+    orders: [],
+    createdAt: '2026-03-16T08:12:00.000Z',
+    updatedAt: '2026-03-16T08:12:30.000Z',
+    metadata: {
+      executionPlanId: 'incident-execution-plan',
+    },
+  });
 
   const created = await invokeGatewayRoute(handler, {
     method: 'POST',
@@ -1361,6 +1406,9 @@ test('incident routes create, update, and return incident details', async () => 
         { kind: 'audit', auditId: 'incident-audit' },
         { kind: 'operator-action', actionId: 'incident-action' },
         { kind: 'scheduler-tick', tickId: 'incident-scheduler-tick' },
+        { kind: 'risk-event', riskEventId: 'incident-risk-event' },
+        { kind: 'workflow-run', workflowRunId: 'incident-workflow-run' },
+        { kind: 'execution-plan', executionPlanId: 'incident-execution-plan', workflowRunId: 'incident-workflow-run' },
       ],
       metadata: {
         monitoringAlertId: 'incident-monitoring-alert',
@@ -1368,6 +1416,9 @@ test('incident routes create, update, and return incident details', async () => 
         auditId: 'incident-audit',
         operatorActionId: 'incident-action',
         schedulerTickId: 'incident-scheduler-tick',
+        riskEventId: 'incident-risk-event',
+        workflowRunId: 'incident-workflow-run',
+        executionPlanId: 'incident-execution-plan',
       },
     },
   });
@@ -1410,6 +1461,9 @@ test('incident routes create, update, and return incident details', async () => 
   assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'monitoring-alert' && item.id === 'incident-monitoring-alert'), true);
   assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'notification' && item.id === 'incident-notification'), true);
   assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'audit' && item.id === 'incident-audit'), true);
+  assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'risk-event' && item.id === 'incident-risk-event'), true);
+  assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'workflow-run' && item.id === 'incident-workflow-run'), true);
+  assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'execution-plan' && item.id === 'incident-execution-plan'), true);
 });
 
 test('POST then GET /api/audit/records persists audit entries', async () => {

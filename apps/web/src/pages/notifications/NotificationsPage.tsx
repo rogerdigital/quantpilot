@@ -4,6 +4,7 @@ import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts'
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useMonitoringStatus } from '../../hooks/useMonitoringStatus.ts';
 import { appendIncidentNote, createIncident, updateIncident } from '../../app/api/controlPlane.ts';
+import { useExecutionLedgerFeed } from '../../modules/notifications/useExecutionLedgerFeed.ts';
 import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
 import { useAuditRecordsFeed } from '../../modules/notifications/useAuditRecordsFeed.ts';
 import { useIncidentDetail } from '../../modules/notifications/useIncidentDetail.ts';
@@ -11,7 +12,9 @@ import { useIncidentsFeed } from '../../modules/notifications/useIncidentsFeed.t
 import { useMonitoringAlertsFeed } from '../../modules/notifications/useMonitoringAlertsFeed.ts';
 import { useMonitoringSnapshotsFeed } from '../../modules/notifications/useMonitoringSnapshotsFeed.ts';
 import { useOperatorActionsFeed } from '../../modules/notifications/useOperatorActionsFeed.ts';
+import { useRiskEventsFeed } from '../../modules/notifications/useRiskEventsFeed.ts';
 import { useSchedulerTicksFeed } from '../../modules/notifications/useSchedulerTicksFeed.ts';
+import { useWorkflowRunsFeed } from '../../modules/notifications/useWorkflowRunsFeed.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { ActivityLog } from '../console/components/ConsoleTables.tsx';
 import { copy, useLocale } from '../console/i18n.tsx';
@@ -34,12 +37,16 @@ const NOTIFICATION_SOURCES = ['all', 'scheduler', 'workflow-control', 'task-orch
 const AUDIT_TYPES = ['all', 'workflow', 'execution-plan', 'agent-action-request', 'cycle', 'backtest-run.reviewed', 'strategy-catalog.saved'] as const;
 const INCIDENT_STATUSES = ['all', 'open', 'investigating', 'mitigated', 'resolved'] as const;
 const INCIDENT_SEVERITIES = ['all', 'info', 'warn', 'critical'] as const;
-const INCIDENT_SOURCES = ['all', 'monitoring', 'notification', 'audit', 'operator', 'workflow', 'scheduler', 'control-plane'] as const;
+const INCIDENT_SOURCES = ['all', 'monitoring', 'notification', 'audit', 'operator', 'workflow', 'scheduler', 'control-plane', 'risk', 'execution'] as const;
+const RISK_EVENT_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
+const RISK_EVENT_STATUSES = ['all', 'healthy', 'risk-off', 'approval-required', 'connectivity-degraded'] as const;
+const WORKFLOW_RUN_STATUSES = ['all', 'queued', 'running', 'retry_scheduled', 'failed', 'completed', 'canceled'] as const;
+const EXECUTION_PLAN_STATUSES = ['all', 'draft', 'ready', 'blocked', 'approved', 'review'] as const;
 
 type InvestigationTimelineItem = {
   id: string;
   detail: string;
-  kind: 'incident' | 'notification' | 'audit' | 'operator-action' | 'monitoring-alert';
+  kind: 'incident' | 'notification' | 'audit' | 'operator-action' | 'monitoring-alert' | 'risk-event' | 'workflow-run' | 'execution-plan';
   level: string;
   source: string;
   timestamp: string;
@@ -52,6 +59,9 @@ function translateTimelineKind(locale: string, kind: InvestigationTimelineItem['
     if (kind === 'notification') return '通知';
     if (kind === 'audit') return '审计';
     if (kind === 'operator-action') return '动作';
+    if (kind === 'risk-event') return '风控';
+    if (kind === 'workflow-run') return '工作流';
+    if (kind === 'execution-plan') return '执行计划';
     return '监控';
   }
 
@@ -59,12 +69,24 @@ function translateTimelineKind(locale: string, kind: InvestigationTimelineItem['
   if (kind === 'notification') return 'Notification';
   if (kind === 'audit') return 'Audit';
   if (kind === 'operator-action') return 'Action';
+  if (kind === 'risk-event') return 'Risk';
+  if (kind === 'workflow-run') return 'Workflow';
+  if (kind === 'execution-plan') return 'Execution';
   return 'Monitoring';
 }
 
-function translateEvidenceKind(locale: string, kind: 'monitoring-alert' | 'notification' | 'audit' | 'operator-action' | 'scheduler-tick') {
+function translateEvidenceKind(locale: string, kind: 'monitoring-alert' | 'notification' | 'audit' | 'operator-action' | 'scheduler-tick' | 'risk-event' | 'workflow-run' | 'execution-plan') {
   if (kind === 'scheduler-tick') {
     return locale === 'zh' ? '调度' : 'Scheduler';
+  }
+  if (kind === 'risk-event') {
+    return locale === 'zh' ? '风控' : 'Risk';
+  }
+  if (kind === 'workflow-run') {
+    return locale === 'zh' ? '工作流' : 'Workflow';
+  }
+  if (kind === 'execution-plan') {
+    return locale === 'zh' ? '执行计划' : 'Execution';
   }
   return translateTimelineKind(locale, kind === 'monitoring-alert' ? 'monitoring-alert' : kind);
 }
@@ -95,6 +117,10 @@ function NotificationsPage() {
   const [incidentNoteDraft, setIncidentNoteDraft] = useState('');
   const [incidentOwnerDraft, setIncidentOwnerDraft] = useState('');
   const [incidentBusy, setIncidentBusy] = useState(false);
+  const [riskEventLevelFilter, setRiskEventLevelFilter] = useState('all');
+  const [riskEventStatusFilter, setRiskEventStatusFilter] = useState('all');
+  const [workflowRunStatusFilter, setWorkflowRunStatusFilter] = useState('all');
+  const [executionPlanStatusFilter, setExecutionPlanStatusFilter] = useState('all');
   const activeTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === monitoringTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const activeSchedulerTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === schedulerTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const activeOperatorActionTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === operatorActionTimeWindow) || MONITORING_TIME_WINDOWS[1];
@@ -140,6 +166,19 @@ function NotificationsPage() {
     evidence: selectedIncidentEvidence,
     loading: incidentDetailLoading,
   } = useIncidentDetail(selectedIncidentId, incidentRefreshKey);
+  const { items: riskEventItems, loading: riskEventsLoading } = useRiskEventsFeed({
+    level: riskEventLevelFilter === 'all' ? '' : riskEventLevelFilter,
+    refreshKey: incidentRefreshKey,
+    status: riskEventStatusFilter === 'all' ? '' : riskEventStatusFilter,
+  });
+  const { items: workflowRunItems, loading: workflowRunsLoading } = useWorkflowRunsFeed({
+    refreshKey: incidentRefreshKey,
+    status: workflowRunStatusFilter === 'all' ? '' : workflowRunStatusFilter,
+  });
+  const { items: executionLedgerItems, loading: executionLedgerLoading } = useExecutionLedgerFeed({
+    refreshKey: incidentRefreshKey,
+    status: executionPlanStatusFilter === 'all' ? '' : executionPlanStatusFilter,
+  });
   const { items: schedulerItems, loading: schedulerLoading } = useSchedulerTicksFeed({
     hours: activeSchedulerTimeWindow.hours,
     phase: schedulerPhaseFilter === 'all' ? '' : schedulerPhaseFilter,
@@ -256,6 +295,26 @@ function NotificationsPage() {
     }
   }
 
+  function applyRiskFocus(options: {
+    level?: string;
+    status?: string;
+  }) {
+    setRiskEventLevelFilter(options.level || 'all');
+    setRiskEventStatusFilter(options.status || 'all');
+  }
+
+  function applyWorkflowFocus(options: {
+    status?: string;
+  }) {
+    setWorkflowRunStatusFilter(options.status || 'all');
+  }
+
+  function applyExecutionFocus(options: {
+    status?: string;
+  }) {
+    setExecutionPlanStatusFilter(options.status || 'all');
+  }
+
   function resetAllFocuses() {
     applyMonitoringFocus({});
     applyNotificationFocus({});
@@ -263,6 +322,9 @@ function NotificationsPage() {
     applySchedulerFocus({});
     applyOperatorActionFocus({});
     applyIncidentFocus({});
+    applyRiskFocus({});
+    applyWorkflowFocus({});
+    applyExecutionFocus({});
   }
 
   function focusNotificationItem(source: string) {
@@ -312,6 +374,35 @@ function NotificationsPage() {
   function focusOperatorActionItem(level: string) {
     applyOperatorActionFocus({ level, timeWindow: '24h' });
     applyAuditFocus({ timeWindow: '24h' });
+  }
+
+  function focusRiskEventItem(status: string, level: string) {
+    applyRiskFocus({
+      level: level === 'info' ? 'all' : level,
+      status,
+    });
+    applyMonitoringFocus({
+      source: 'risk',
+      level: level === 'info' ? 'all' : level,
+      timeWindow: '24h',
+    });
+  }
+
+  function focusWorkflowRunItem(status: string) {
+    applyWorkflowFocus({ status });
+    applyMonitoringFocus({
+      source: 'workflow',
+      level: status === 'failed' ? 'critical' : status === 'retry_scheduled' ? 'warn' : 'all',
+      timeWindow: '24h',
+    });
+  }
+
+  function focusExecutionPlanItem(status: string) {
+    applyExecutionFocus({ status });
+    applyAuditFocus({
+      type: 'execution-plan',
+      timeWindow: '24h',
+    });
   }
 
   async function openIncident(payload: {
@@ -455,6 +546,61 @@ function NotificationsPage() {
     });
   }
 
+  function createRiskIncident(item: (typeof riskEventItems)[number]) {
+    return openIncident({
+      title: item.title,
+      summary: item.message,
+      severity: item.level,
+      source: 'risk',
+      tags: ['risk', item.status, item.riskLevel, item.level].filter(Boolean),
+      links: [{ kind: 'risk-event', riskEventId: item.id, source: item.source }],
+      initialNote: item.message,
+      metadata: {
+        riskEventId: item.id,
+        riskStatus: item.status,
+        riskLevel: item.riskLevel,
+        cycle: item.cycle,
+      },
+    });
+  }
+
+  function createWorkflowIncident(item: (typeof workflowRunItems)[number]) {
+    return openIncident({
+      title: item.workflowId,
+      summary: String(item.error || item.metadata?.summary || item.status),
+      severity: item.status === 'failed' ? 'critical' : item.status === 'retry_scheduled' ? 'warn' : 'info',
+      source: 'workflow',
+      tags: ['workflow', item.workflowType, item.status, item.actor].filter(Boolean),
+      links: [{ kind: 'workflow-run', workflowRunId: item.id, workflowId: item.workflowId }],
+      initialNote: String(item.error || item.metadata?.summary || item.status),
+      metadata: {
+        workflowRunId: item.id,
+        workflowId: item.workflowId,
+        workflowType: item.workflowType,
+        workflowStatus: item.status,
+      },
+    });
+  }
+
+  function createExecutionPlanIncident(item: (typeof executionLedgerItems)[number]) {
+    return openIncident({
+      title: item.plan.strategyName,
+      summary: item.plan.summary,
+      severity: item.plan.riskStatus === 'blocked' ? 'critical' : item.plan.riskStatus === 'review' ? 'warn' : 'info',
+      source: 'execution',
+      tags: ['execution-plan', item.plan.status, item.plan.riskStatus, item.plan.mode].filter(Boolean),
+      links: [{ kind: 'execution-plan', executionPlanId: item.plan.id, workflowRunId: item.plan.workflowRunId }],
+      initialNote: item.plan.summary,
+      metadata: {
+        executionPlanId: item.plan.id,
+        workflowRunId: item.plan.workflowRunId,
+        strategyId: item.plan.strategyId,
+        planStatus: item.plan.status,
+        riskStatus: item.plan.riskStatus,
+      },
+    });
+  }
+
   const activeFocusTags = [
     monitoringSourceFilter !== 'all' ? `monitor:${monitoringSourceFilter}` : '',
     monitoringLevelFilter !== 'all' ? `severity:${monitoringLevelFilter}` : '',
@@ -475,6 +621,10 @@ function NotificationsPage() {
     incidentSourceFilter !== 'all' ? `incident-source:${incidentSourceFilter}` : '',
     incidentTimeWindow !== '7d' ? `incident-window:${incidentTimeWindow}` : '',
     selectedIncidentId ? 'incident:selected' : '',
+    riskEventLevelFilter !== 'all' ? `risk-level:${riskEventLevelFilter}` : '',
+    riskEventStatusFilter !== 'all' ? `risk-status:${riskEventStatusFilter}` : '',
+    workflowRunStatusFilter !== 'all' ? `workflow:${workflowRunStatusFilter}` : '',
+    executionPlanStatusFilter !== 'all' ? `execution:${executionPlanStatusFilter}` : '',
   ].filter(Boolean);
 
   const investigationTimeline = [
@@ -523,6 +673,33 @@ function NotificationsPage() {
       source: item.source,
       timestamp: item.createdAt,
     })),
+    ...riskEventItems.map<InvestigationTimelineItem>((item) => ({
+      id: `risk:${item.id}`,
+      kind: 'risk-event',
+      title: item.title,
+      detail: item.message,
+      level: item.level,
+      source: item.source,
+      timestamp: item.createdAt,
+    })),
+    ...workflowRunItems.map<InvestigationTimelineItem>((item) => ({
+      id: `workflow:${item.id}`,
+      kind: 'workflow-run',
+      title: item.workflowId,
+      detail: String(item.error || item.metadata?.summary || item.status),
+      level: item.status === 'failed' ? 'critical' : item.status === 'retry_scheduled' ? 'warn' : 'info',
+      source: item.workflowType,
+      timestamp: item.updatedAt || item.createdAt,
+    })),
+    ...executionLedgerItems.map<InvestigationTimelineItem>((item) => ({
+      id: `execution:${item.plan.id}`,
+      kind: 'execution-plan',
+      title: item.plan.strategyName,
+      detail: item.plan.summary,
+      level: item.plan.riskStatus === 'blocked' ? 'critical' : item.plan.riskStatus === 'review' ? 'warn' : 'info',
+      source: item.plan.mode,
+      timestamp: item.plan.updatedAt || item.plan.createdAt,
+    })),
   ]
     .sort((left, right) => Date.parse(right.timestamp || '') - Date.parse(left.timestamp || ''))
     .slice(0, 18);
@@ -551,6 +728,18 @@ function NotificationsPage() {
     }
     if (item.kind === 'operator-action') {
       focusOperatorActionItem(item.level);
+      return;
+    }
+    if (item.kind === 'risk-event') {
+      focusRiskEventItem(item.source === 'risk-monitor' ? 'risk-off' : 'healthy', item.level);
+      return;
+    }
+    if (item.kind === 'workflow-run') {
+      focusWorkflowRunItem(item.level === 'critical' ? 'failed' : item.level === 'warn' ? 'retry_scheduled' : 'running');
+      return;
+    }
+    if (item.kind === 'execution-plan') {
+      focusExecutionPlanItem(item.level === 'critical' ? 'blocked' : item.level === 'warn' ? 'review' : 'ready');
       return;
     }
     applyMonitoringFocus({
@@ -586,6 +775,25 @@ function NotificationsPage() {
       applyOperatorActionFocus({
         level: item.level === 'info' ? 'all' : item.level,
         timeWindow: '7d',
+      });
+      return;
+    }
+    if (item.kind === 'risk-event') {
+      applyRiskFocus({
+        level: item.level === 'info' ? 'all' : item.level,
+        status: item.status,
+      });
+      return;
+    }
+    if (item.kind === 'workflow-run') {
+      applyWorkflowFocus({
+        status: item.status,
+      });
+      return;
+    }
+    if (item.kind === 'execution-plan') {
+      applyExecutionFocus({
+        status: item.status,
       });
       return;
     }
@@ -887,6 +1095,10 @@ function NotificationsPage() {
                 <div className="metric-card">
                   <span>{locale === 'zh' ? '审计 / 动作 / 调度' : 'Audit / Action / Scheduler'}</span>
                   <strong>{selectedIncidentEvidence.summary.audits + selectedIncidentEvidence.summary.operatorActions + selectedIncidentEvidence.summary.schedulerTicks}</strong>
+                </div>
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '风控 / 工作流 / 执行' : 'Risk / Workflow / Execution'}</span>
+                  <strong>{selectedIncidentEvidence.summary.riskEvents + selectedIncidentEvidence.summary.workflowRuns + selectedIncidentEvidence.summary.executionPlans}</strong>
                 </div>
               </div>
               <div className="panel-subtitle">{locale === 'zh' ? '关联证据时间线' : 'Related Evidence Timeline'}</div>
@@ -1561,6 +1773,208 @@ function NotificationsPage() {
                     className="settings-chip"
                     disabled={incidentBusy}
                     onClick={() => void createSchedulerIncident(item)}
+                  >
+                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                  </button>
+                </div>
+              </div>
+            )) : null}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '风控事件' : 'Risk Events'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把风险扫描、审批要求和 risk-off 拦截纳入同一页排查。'
+                  : 'Bring risk scans, approval requirements, and risk-off blocks into the same investigation console.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-warn">{riskEventItems.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            {RISK_EVENT_LEVELS.map((level) => {
+              const selected = riskEventLevelFilter === level;
+              const label = level === 'all' ? (locale === 'zh' ? '全部级别' : 'All Levels') : translateMonitoringStatus(locale, level);
+              return (
+                <button
+                  key={level}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setRiskEventLevelFilter(level)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="settings-chip-row">
+            {RISK_EVENT_STATUSES.map((status) => {
+              const selected = riskEventStatusFilter === status;
+              const label = status === 'all' ? (locale === 'zh' ? '全部状态' : 'All Statuses') : status;
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setRiskEventStatusFilter(status)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {riskEventsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载风控事件...' : 'Loading risk events...'}</div> : null}
+            {!riskEventsLoading && !riskEventItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有风控事件' : 'No risk events match the current filters.'}</div> : null}
+            {!riskEventsLoading ? riskEventItems.map((item) => (
+              <div className="focus-row" key={item.id}>
+                <button type="button" className="focus-main-button" onClick={() => focusRiskEventItem(item.status, item.level)}>
+                  <div className="symbol-cell">
+                    <strong>{item.title}</strong>
+                    <span>{item.message}</span>
+                  </div>
+                </button>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                  <strong>{item.status}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '风险级别' : 'Risk Level'}</span>
+                  <strong>{item.riskLevel}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                  <button
+                    type="button"
+                    className="settings-chip"
+                    disabled={incidentBusy}
+                    onClick={() => void createRiskIncident(item)}
+                  >
+                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                  </button>
+                </div>
+              </div>
+            )) : null}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '工作流运行' : 'Workflow Runs'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把队列、重试、失败和恢复中的 workflow 放到通知中心里统一跟踪。'
+                  : 'Track queued, retrying, failed, and recovered workflows alongside the rest of the investigation view.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{workflowRunItems.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            {WORKFLOW_RUN_STATUSES.map((status) => {
+              const selected = workflowRunStatusFilter === status;
+              const label = status === 'all' ? (locale === 'zh' ? '全部状态' : 'All Statuses') : status;
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setWorkflowRunStatusFilter(status)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {workflowRunsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载工作流...' : 'Loading workflow runs...'}</div> : null}
+            {!workflowRunsLoading && !workflowRunItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有工作流记录' : 'No workflow runs match the current filters.'}</div> : null}
+            {!workflowRunsLoading ? workflowRunItems.map((item) => (
+              <div className="focus-row" key={item.id}>
+                <button type="button" className="focus-main-button" onClick={() => focusWorkflowRunItem(item.status)}>
+                  <div className="symbol-cell">
+                    <strong>{item.workflowId}</strong>
+                    <span>{String(item.error || item.metadata?.summary || item.status)}</span>
+                  </div>
+                </button>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                  <strong>{item.status}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '执行人' : 'Actor'}</span>
+                  <strong>{item.actor}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                  <button
+                    type="button"
+                    className="settings-chip"
+                    disabled={incidentBusy}
+                    onClick={() => void createWorkflowIncident(item)}
+                  >
+                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                  </button>
+                </div>
+              </div>
+            )) : null}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '执行计划' : 'Execution Plans'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把执行计划、风控审查状态和关联 workflow 放进 investigation console。'
+                  : 'Bring execution plans, risk review state, and linked workflows into the investigation console.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{executionLedgerItems.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            {EXECUTION_PLAN_STATUSES.map((status) => {
+              const selected = executionPlanStatusFilter === status;
+              const label = status === 'all' ? (locale === 'zh' ? '全部状态' : 'All Statuses') : status;
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setExecutionPlanStatusFilter(status)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {executionLedgerLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载执行计划...' : 'Loading execution plans...'}</div> : null}
+            {!executionLedgerLoading && !executionLedgerItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有执行计划' : 'No execution plans match the current filters.'}</div> : null}
+            {!executionLedgerLoading ? executionLedgerItems.map((item) => (
+              <div className="focus-row" key={item.plan.id}>
+                <button type="button" className="focus-main-button" onClick={() => focusExecutionPlanItem(item.plan.status === 'blocked' ? 'blocked' : item.plan.riskStatus)}>
+                  <div className="symbol-cell">
+                    <strong>{item.plan.strategyName}</strong>
+                    <span>{item.plan.summary}</span>
+                  </div>
+                </button>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                  <strong>{item.plan.status}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '风控' : 'Risk'}</span>
+                  <strong>{item.plan.riskStatus}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                  <button
+                    type="button"
+                    className="settings-chip"
+                    disabled={incidentBusy}
+                    onClick={() => void createExecutionPlanIncident(item)}
                   >
                     {locale === 'zh' ? '升级事件' : 'Open Incident'}
                   </button>

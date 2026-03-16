@@ -262,6 +262,103 @@ function collectIncidentEvidence(incident, options = {}) {
     });
   });
 
+  const riskEvents = controlPlaneRuntime.listRiskEvents(limit);
+  riskEvents.forEach((item) => {
+    const match = scoreEvidenceMatch(context, {
+      id: item.id,
+      refIds: [item.metadata?.riskEventId, item.metadata?.incidentId],
+      title: item.title,
+      detail: item.message,
+      source: item.source,
+      level: item.level,
+      status: item.status,
+      timestamp: item.createdAt,
+      tokens: [item.riskLevel, item.cycle, ...Object.values(item.metadata || {})],
+    });
+    if (!match.matched) return;
+    evidence.push({
+      id: item.id,
+      kind: 'risk-event',
+      title: item.title,
+      detail: item.message,
+      timestamp: item.createdAt,
+      source: item.source,
+      level: item.level,
+      status: item.status,
+      linked: match.directLink,
+      metadata: {
+        cycle: item.cycle,
+        riskLevel: item.riskLevel,
+        ...item.metadata,
+      },
+    });
+  });
+
+  const workflowRuns = controlPlaneRuntime.listWorkflowRuns(limit);
+  workflowRuns.forEach((item) => {
+    const match = scoreEvidenceMatch(context, {
+      id: item.id,
+      refIds: [item.workflowId, item.metadata?.workflowRunId, item.metadata?.incidentId],
+      title: item.workflowId,
+      detail: String(item.error || item.result?.summary || item.metadata?.summary || item.status),
+      source: item.workflowType,
+      level: item.status === 'failed' ? 'critical' : item.status === 'retry_scheduled' ? 'warn' : 'info',
+      status: item.status,
+      timestamp: item.updatedAt || item.createdAt,
+      tokens: [item.actor, item.trigger, ...Object.values(item.metadata || {})],
+    });
+    if (!match.matched) return;
+    evidence.push({
+      id: item.id,
+      kind: 'workflow-run',
+      title: item.workflowId,
+      detail: String(item.error || item.result?.summary || item.metadata?.summary || item.status),
+      timestamp: item.updatedAt || item.createdAt,
+      source: item.workflowType,
+      level: item.status === 'failed' ? 'critical' : item.status === 'retry_scheduled' ? 'warn' : 'info',
+      status: item.status,
+      linked: match.directLink,
+      metadata: {
+        workflowType: item.workflowType,
+        actor: item.actor,
+        trigger: item.trigger,
+      },
+    });
+  });
+
+  const executionPlans = controlPlaneRuntime.listExecutionPlans(limit);
+  executionPlans.forEach((item) => {
+    const match = scoreEvidenceMatch(context, {
+      id: item.id,
+      refIds: [item.workflowRunId, item.strategyId, item.metadata?.executionPlanId, item.metadata?.incidentId],
+      title: item.strategyName,
+      detail: item.summary,
+      source: item.mode,
+      level: item.riskStatus === 'blocked' ? 'critical' : item.riskStatus === 'review' ? 'warn' : 'info',
+      status: item.status,
+      timestamp: item.updatedAt || item.createdAt,
+      tokens: [item.strategyId, item.riskStatus, item.approvalState, ...Object.values(item.metadata || {})],
+    });
+    if (!match.matched) return;
+    evidence.push({
+      id: item.id,
+      kind: 'execution-plan',
+      title: item.strategyName,
+      detail: item.summary,
+      timestamp: item.updatedAt || item.createdAt,
+      source: item.mode,
+      level: item.riskStatus === 'blocked' ? 'critical' : item.riskStatus === 'review' ? 'warn' : 'info',
+      status: item.status,
+      linked: match.directLink,
+      metadata: {
+        strategyId: item.strategyId,
+        workflowRunId: item.workflowRunId,
+        riskStatus: item.riskStatus,
+        approvalState: item.approvalState,
+      },
+    });
+  });
+
   const deduped = [...new Map(evidence.map((item) => [`${item.kind}:${item.id}`, item])).values()]
     .sort((left, right) => (parseTimestamp(right.timestamp) || 0) - (parseTimestamp(left.timestamp) || 0))
     .slice(0, limit);
@@ -274,6 +371,9 @@ function collectIncidentEvidence(incident, options = {}) {
     if (item.kind === 'audit') acc.audits += 1;
     if (item.kind === 'operator-action') acc.operatorActions += 1;
     if (item.kind === 'scheduler-tick') acc.schedulerTicks += 1;
+    if (item.kind === 'risk-event') acc.riskEvents += 1;
+    if (item.kind === 'workflow-run') acc.workflowRuns += 1;
+    if (item.kind === 'execution-plan') acc.executionPlans += 1;
     return acc;
   }, {
     total: 0,
@@ -283,6 +383,9 @@ function collectIncidentEvidence(incident, options = {}) {
     audits: 0,
     operatorActions: 0,
     schedulerTicks: 0,
+    riskEvents: 0,
+    workflowRuns: 0,
+    executionPlans: 0,
   });
 
   return {

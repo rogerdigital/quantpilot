@@ -727,7 +727,7 @@ export type IncidentNoteRecord = {
 
 export type IncidentEvidenceItem = {
   id: string;
-  kind: 'monitoring-alert' | 'notification' | 'audit' | 'operator-action' | 'scheduler-tick';
+  kind: 'monitoring-alert' | 'notification' | 'audit' | 'operator-action' | 'scheduler-tick' | 'risk-event' | 'workflow-run' | 'execution-plan';
   title: string;
   detail: string;
   timestamp: string;
@@ -746,6 +746,9 @@ export type IncidentEvidenceSummary = {
   audits: number;
   operatorActions: number;
   schedulerTicks: number;
+  riskEvents: number;
+  workflowRuns: number;
+  executionPlans: number;
 };
 
 export type IncidentsResponse = {
