@@ -65,14 +65,29 @@ test('GET /api/notification/events returns seeded notifications', async () => {
     title: 'API notification',
     message: 'seeded notification',
     source: 'test',
+    level: 'info',
+    createdAt: '2026-03-16T10:00:00.000Z',
+  });
+  context.notifications.appendNotification({
+    id: 'notif-api-warn',
+    title: 'Warn notification',
+    message: 'warn notification',
+    source: 'scheduler',
+    level: 'warn',
+    createdAt: '2026-03-16T09:00:00.000Z',
   });
 
   const response = await invokeGatewayRoute(handler, {
     path: '/api/notification/events',
   });
+  const filteredResponse = await invokeGatewayRoute(handler, {
+    path: '/api/notification/events?source=scheduler&level=warn&hours=48&limit=5',
+  });
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.events[0].id, 'notif-api-test');
+  assert.equal(filteredResponse.statusCode, 200);
+  assert.equal(filteredResponse.json.events.some((item) => item.id === 'notif-api-warn'), true);
 });
 
 test('GET /api/risk/events returns seeded risk events', async () => {

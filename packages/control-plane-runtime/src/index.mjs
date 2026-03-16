@@ -273,8 +273,8 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     recordMonitoringSnapshot(payload = {}) {
       return context.monitoring.recordMonitoringSnapshot(payload);
     },
-    listNotifications(limit = 50) {
-      return context.notifications.listNotifications(limit);
+    listNotifications(limit = 50, filter = {}) {
+      return context.notifications.listNotifications(limit, filter);
     },
     appendNotification(event) {
       return context.notifications.appendNotification(event);

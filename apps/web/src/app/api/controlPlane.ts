@@ -174,7 +174,34 @@ export async function reportOperatorAction(payload: {
   return response.json();
 }
 
-export async function fetchNotifications(): Promise<{
+type NotificationsQuery = {
+  hours?: number | null;
+  level?: string;
+  limit?: number;
+  source?: string;
+};
+
+function buildNotificationsQuery(options: NotificationsQuery = {}) {
+  const params = new URLSearchParams();
+
+  if (typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0) {
+    params.set('limit', String(options.limit));
+  }
+  if (typeof options.hours === 'number' && Number.isFinite(options.hours) && options.hours > 0) {
+    params.set('hours', String(options.hours));
+  }
+  if (options.level) {
+    params.set('level', options.level);
+  }
+  if (options.source) {
+    params.set('source', options.source);
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+export async function fetchNotifications(options: NotificationsQuery = {}): Promise<{
   ok: boolean;
   events: Array<{
     id: string;
@@ -185,7 +212,7 @@ export async function fetchNotifications(): Promise<{
     createdAt: string;
   }>;
 }> {
-  return fetchJson('/api/notification/events', {
+  return fetchJson(`/api/notification/events${buildNotificationsQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }

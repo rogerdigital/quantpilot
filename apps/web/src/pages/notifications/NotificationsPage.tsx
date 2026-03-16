@@ -25,6 +25,8 @@ const MONITORING_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
 const MONITORING_SNAPSHOT_STATUSES = ['all', 'healthy', 'warn', 'critical'] as const;
 const SCHEDULER_PHASES = ['all', 'PRE_OPEN', 'INTRADAY', 'POST_CLOSE', 'OFF_HOURS'] as const;
 const OPERATOR_ACTION_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
+const NOTIFICATION_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
+const NOTIFICATION_SOURCES = ['all', 'scheduler', 'workflow-control', 'task-orchestrator', 'execution-planner', 'control-plane', 'agent-control'] as const;
 
 function NotificationsPage() {
   const { state } = useTradingSystem();
@@ -38,9 +40,13 @@ function NotificationsPage() {
   const [schedulerTimeWindow, setSchedulerTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const [operatorActionLevelFilter, setOperatorActionLevelFilter] = useState('all');
   const [operatorActionTimeWindow, setOperatorActionTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
+  const [notificationLevelFilter, setNotificationLevelFilter] = useState('all');
+  const [notificationSourceFilter, setNotificationSourceFilter] = useState('all');
+  const [notificationTimeWindow, setNotificationTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const activeTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === monitoringTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const activeSchedulerTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === schedulerTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const activeOperatorActionTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === operatorActionTimeWindow) || MONITORING_TIME_WINDOWS[1];
+  const activeNotificationTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === notificationTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
@@ -54,7 +60,11 @@ function NotificationsPage() {
     hours: activeTimeWindow.hours,
     status: monitoringSnapshotStatusFilter === 'all' ? '' : monitoringSnapshotStatusFilter,
   });
-  const { items, loading } = useNotificationsFeed();
+  const { items, loading } = useNotificationsFeed({
+    hours: activeNotificationTimeWindow.hours,
+    level: notificationLevelFilter === 'all' ? '' : notificationLevelFilter,
+    source: notificationSourceFilter === 'all' ? '' : notificationSourceFilter,
+  });
   const { items: actionItems, loading: actionLoading } = useOperatorActionsFeed({
     hours: activeOperatorActionTimeWindow.hours,
     level: operatorActionLevelFilter === 'all' ? '' : operatorActionLevelFilter,
@@ -408,6 +418,60 @@ function NotificationsPage() {
               </div>
             </div>
             <div className="panel-badge badge-warn">{items.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            {MONITORING_TIME_WINDOWS.map((window) => {
+              const selected = notificationTimeWindow === window.key;
+              const label = window.key === '1h'
+                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
+                : window.key === '24h'
+                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
+                  : window.key === '7d'
+                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
+                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              return (
+                <button
+                  key={window.key}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setNotificationTimeWindow(window.key)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="settings-chip-row">
+            {NOTIFICATION_LEVELS.map((level) => {
+              const selected = notificationLevelFilter === level;
+              const label = level === 'all' ? (locale === 'zh' ? '全部级别' : 'All Levels') : translateMonitoringStatus(locale, level);
+              return (
+                <button
+                  key={level}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setNotificationLevelFilter(level)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="settings-chip-row">
+            {NOTIFICATION_SOURCES.map((source) => {
+              const selected = notificationSourceFilter === source;
+              const label = source === 'all' ? (locale === 'zh' ? '全部来源' : 'All Sources') : source;
+              return (
+                <button
+                  key={source}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setNotificationSourceFilter(source)}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
           <div className="focus-list focus-list-terminal">
             {loading ? <div className="empty-cell">{locale === 'zh' ? '正在加载通知...' : 'Loading notifications...'}</div> : null}

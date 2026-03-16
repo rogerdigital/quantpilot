@@ -10,13 +10,32 @@ export type NotificationFeedItem = {
   createdAt: string;
 };
 
-export function useNotificationsFeed() {
+type NotificationsFeedOptions = {
+  hours?: number | null;
+  level?: string;
+  limit?: number;
+  source?: string;
+};
+
+export function useNotificationsFeed(options: NotificationsFeedOptions = {}) {
   const [items, setItems] = useState<NotificationFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const {
+    hours = null,
+    level = '',
+    limit = 50,
+    source = '',
+  } = options;
 
   useEffect(() => {
     let mounted = true;
-    fetchNotifications()
+    setLoading(true);
+    fetchNotifications({
+      hours,
+      level,
+      limit,
+      source,
+    })
       .then((payload) => {
         if (mounted) {
           setItems(Array.isArray(payload?.events) ? payload.events : []);
@@ -35,7 +54,7 @@ export function useNotificationsFeed() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [hours, level, limit, source]);
 
   return { items, loading };
 }

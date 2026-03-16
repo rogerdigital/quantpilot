@@ -4,9 +4,35 @@ const EVENTS_FILE = 'notifications.json';
 const OUTBOX_FILE = 'notification-outbox.json';
 
 export function createNotificationRepository(store) {
+  function filterByDate(items, since) {
+    if (!since) return items;
+    const sinceMs = Date.parse(since);
+    if (!Number.isFinite(sinceMs)) return items;
+    return items.filter((item) => {
+      const valueMs = Date.parse(item.createdAt || '');
+      return Number.isFinite(valueMs) && valueMs >= sinceMs;
+    });
+  }
+
+  function sortByCreatedAtDesc(items) {
+    return [...items].sort((left, right) => {
+      const leftMs = Date.parse(left.createdAt || '');
+      const rightMs = Date.parse(right.createdAt || '');
+      if (!Number.isFinite(leftMs) && !Number.isFinite(rightMs)) return 0;
+      if (!Number.isFinite(leftMs)) return 1;
+      if (!Number.isFinite(rightMs)) return -1;
+      return rightMs - leftMs;
+    });
+  }
+
   return {
-    listNotifications(limit = 50) {
-      return store.readCollection(EVENTS_FILE).slice(0, limit);
+    listNotifications(limit = 50, filter = {}) {
+      const items = sortByCreatedAtDesc(
+        filterByDate(store.readCollection(EVENTS_FILE), filter.since)
+          .filter((item) => !filter.level || item.level === filter.level)
+          .filter((item) => !filter.source || item.source === filter.source),
+      );
+      return items.slice(0, limit);
     },
     appendNotification(event) {
       const notifications = store.readCollection(EVENTS_FILE);
