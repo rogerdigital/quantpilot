@@ -309,8 +309,8 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     dispatchPendingRiskScans(options = {}) {
       return context.risk.dispatchPendingRiskScans(options);
     },
-    listSchedulerTicks(limit = 50) {
-      return context.scheduler.listSchedulerTicks(limit);
+    listSchedulerTicks(limit = 50, filter = {}) {
+      return context.scheduler.listSchedulerTicks(limit, filter);
     },
     recordSchedulerTick(options = {}) {
       return context.scheduler.recordSchedulerTick(options);

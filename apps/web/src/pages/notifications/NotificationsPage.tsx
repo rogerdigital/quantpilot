@@ -23,13 +23,7 @@ const MONITORING_TIME_WINDOWS = [
 const MONITORING_SOURCES = ['all', 'worker', 'workflow', 'queue', 'risk', 'broker', 'market'] as const;
 const MONITORING_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
 const MONITORING_SNAPSHOT_STATUSES = ['all', 'healthy', 'warn', 'critical'] as const;
-
-function isWithinWindow(value: string, hours: number | null) {
-  if (hours === null) return true;
-  const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp)) return false;
-  return Date.now() - timestamp <= hours * 60 * 60 * 1000;
-}
+const SCHEDULER_PHASES = ['all', 'PRE_OPEN', 'INTRADAY', 'POST_CLOSE', 'OFF_HOURS'] as const;
 
 function NotificationsPage() {
   const { state } = useTradingSystem();
@@ -58,7 +52,10 @@ function NotificationsPage() {
   });
   const { items, loading } = useNotificationsFeed();
   const { items: actionItems, loading: actionLoading } = useOperatorActionsFeed();
-  const { items: schedulerItems, loading: schedulerLoading } = useSchedulerTicksFeed();
+  const { items: schedulerItems, loading: schedulerLoading } = useSchedulerTicksFeed({
+    hours: activeSchedulerTimeWindow.hours,
+    phase: schedulerPhaseFilter === 'all' ? '' : schedulerPhaseFilter,
+  });
   const marketConnected = marketStatus?.connected ?? state.integrationStatus.marketData.connected;
   const marketFallback = marketStatus?.fallback ?? !marketConnected;
   const brokerConnected = Boolean(snapshot?.connected ?? state.integrationStatus.broker.connected);
@@ -78,11 +75,6 @@ function NotificationsPage() {
     + (monitoringStatus?.services.queues.pendingRiskScanJobs || 0)
     + (monitoringStatus?.services.queues.pendingAgentReviews || 0);
   const workerHeartbeatLag = monitoringStatus?.services.worker.lagSeconds;
-  const schedulerPhases = ['all', ...new Set(schedulerItems.map((item) => item.phase).filter(Boolean))];
-  const filteredSchedulerItems = schedulerItems.filter((item) => (
-    (schedulerPhaseFilter === 'all' || item.phase === schedulerPhaseFilter)
-    && isWithinWindow(item.createdAt, activeSchedulerTimeWindow.hours)
-  ));
   const selectedMonitoringSnapshot = monitoringSnapshotItems.find((item) => item.id === selectedMonitoringSnapshotId) || null;
 
   useEffect(() => {
@@ -439,7 +431,7 @@ function NotificationsPage() {
                   : 'Inspect worker-produced pre-open, intraday, and post-close scheduler ticks.'}
               </div>
             </div>
-            <div className="panel-badge badge-info">{filteredSchedulerItems.length}</div>
+            <div className="panel-badge badge-info">{schedulerItems.length}</div>
           </div>
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
@@ -464,7 +456,7 @@ function NotificationsPage() {
             })}
           </div>
           <div className="settings-chip-row">
-            {schedulerPhases.map((phase) => {
+            {SCHEDULER_PHASES.map((phase) => {
               const selected = schedulerPhaseFilter === phase;
               const label = phase === 'all' ? (locale === 'zh' ? '全部窗口' : 'All Phases') : phase;
               return (
@@ -481,8 +473,8 @@ function NotificationsPage() {
           </div>
           <div className="focus-list focus-list-terminal">
             {schedulerLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载调度节拍...' : 'Loading scheduler ticks...'}</div> : null}
-            {!schedulerLoading && !filteredSchedulerItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有调度节拍' : 'No scheduler ticks match the current filters.'}</div> : null}
-            {!schedulerLoading ? filteredSchedulerItems.map((item) => (
+            {!schedulerLoading && !schedulerItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有调度节拍' : 'No scheduler ticks match the current filters.'}</div> : null}
+            {!schedulerLoading ? schedulerItems.map((item) => (
               <div className="focus-row" key={item.id}>
                 <div className="symbol-cell">
                   <strong>{item.title}</strong>

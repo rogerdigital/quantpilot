@@ -1011,16 +1011,37 @@ test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control no
 
 test('GET /api/scheduler/ticks returns scheduler ticks from shared store', async () => {
   context.scheduler.recordSchedulerTick({
+    id: 'scheduler-tick-intraday',
     worker: 'api-test-worker',
+    phase: 'INTRADAY',
+    status: 'steady',
+    title: 'Scheduler tick intraday',
+    message: 'intraday tick',
+    createdAt: '2026-03-14T10:00:00.000Z',
+  });
+  context.scheduler.recordSchedulerTick({
+    id: 'scheduler-tick-post-close',
+    worker: 'api-test-worker',
+    phase: 'POST_CLOSE',
+    status: 'phase-change',
+    title: 'Scheduler entered post close',
+    message: 'post-close tick',
+    createdAt: '2026-03-10T16:10:00.000Z',
   });
 
   const response = await invokeGatewayRoute(handler, {
     path: '/api/scheduler/ticks',
   });
+  const filteredResponse = await invokeGatewayRoute(handler, {
+    path: '/api/scheduler/ticks?phase=INTRADAY&hours=168&limit=5',
+  });
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ticks.length >= 1, true);
-  assert.equal(typeof response.json.ticks[0].phase, 'string');
+  assert.equal(response.json.ticks[0].id, 'scheduler-tick-intraday');
+  assert.equal(filteredResponse.statusCode, 200);
+  assert.equal(filteredResponse.json.ticks.length, 1);
+  assert.equal(filteredResponse.json.ticks[0].id, 'scheduler-tick-intraday');
 });
 
 test('POST then GET /api/task-orchestrator/actions persists operator actions', async () => {
@@ -1230,10 +1251,10 @@ test('GET /api/monitoring/snapshots and alerts return persisted monitoring histo
   assert.equal(alertsResponse.json.alerts[0].id, 'monitoring-alert-test');
 
   const filteredSnapshots = await invokeGatewayRoute(handler, {
-    path: '/api/monitoring/snapshots?status=warn&hours=48&limit=5',
+    path: '/api/monitoring/snapshots?status=warn&hours=168&limit=5',
   });
   const filteredAlerts = await invokeGatewayRoute(handler, {
-    path: '/api/monitoring/alerts?source=worker&level=warn&snapshotId=monitoring-snapshot-test&hours=48&limit=5',
+    path: '/api/monitoring/alerts?source=worker&level=warn&snapshotId=monitoring-snapshot-test&hours=168&limit=5',
   });
 
   assert.equal(filteredSnapshots.statusCode, 200);

@@ -11,13 +11,29 @@ export type SchedulerTickFeedItem = {
   createdAt: string;
 };
 
-export function useSchedulerTicksFeed() {
+type SchedulerTicksFeedOptions = {
+  hours?: number | null;
+  limit?: number;
+  phase?: string;
+};
+
+export function useSchedulerTicksFeed(options: SchedulerTicksFeedOptions = {}) {
   const [items, setItems] = useState<SchedulerTickFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const {
+    hours = null,
+    limit = 50,
+    phase = '',
+  } = options;
 
   useEffect(() => {
     let mounted = true;
-    fetchSchedulerTicks()
+    setLoading(true);
+    fetchSchedulerTicks({
+      hours,
+      limit,
+      phase,
+    })
       .then((payload) => {
         if (mounted) {
           setItems(Array.isArray(payload?.ticks) ? payload.ticks : []);
@@ -37,7 +53,7 @@ export function useSchedulerTicksFeed() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [hours, limit, phase]);
 
   return { items, loading };
 }

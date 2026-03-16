@@ -12,15 +12,40 @@ const STATE_FILE = 'scheduler-state.json';
 const NOTIFICATIONS_FILE = 'notifications.json';
 
 export function createSchedulerRepository(store) {
+  function filterByDate(items, since) {
+    if (!since) return items;
+    const sinceMs = Date.parse(since);
+    if (!Number.isFinite(sinceMs)) return items;
+    return items.filter((item) => {
+      const valueMs = Date.parse(item.createdAt || '');
+      return Number.isFinite(valueMs) && valueMs >= sinceMs;
+    });
+  }
+
+  function sortByCreatedAtDesc(items) {
+    return [...items].sort((left, right) => {
+      const leftMs = Date.parse(left.createdAt || '');
+      const rightMs = Date.parse(right.createdAt || '');
+      if (!Number.isFinite(leftMs) && !Number.isFinite(rightMs)) return 0;
+      if (!Number.isFinite(leftMs)) return 1;
+      if (!Number.isFinite(rightMs)) return -1;
+      return rightMs - leftMs;
+    });
+  }
+
   return {
-    listSchedulerTicks(limit = 50) {
-      return store.readCollection(TICKS_FILE).slice(0, limit);
+    listSchedulerTicks(limit = 50, filter = {}) {
+      const items = sortByCreatedAtDesc(
+        filterByDate(store.readCollection(TICKS_FILE), filter.since)
+          .filter((item) => !filter.phase || item.phase === filter.phase),
+      );
+      return items.slice(0, limit);
     },
     recordSchedulerTick(options = {}) {
       const worker = options.worker || 'quantpilot-worker';
-      const now = new Date();
+      const now = options.createdAt ? new Date(options.createdAt) : new Date();
       const parts = getShanghaiTimeParts(now);
-      const phase = resolveSchedulerPhase(parts);
+      const phase = options.phase || resolveSchedulerPhase(parts);
       const bucket = buildSchedulerBucket(parts);
       const state = store.readObject(STATE_FILE, {
         lastPhase: '',
@@ -39,13 +64,17 @@ export function createSchedulerRepository(store) {
 
       const phaseChanged = state.lastPhase !== phase;
       const tick = createSchedulerTickEntry({
+        id: options.id,
         phase,
-        status: phaseChanged ? 'phase-change' : 'steady',
-        title: phaseChanged ? `Scheduler entered ${phase}` : `Scheduler tick ${phase}`,
-        message: phaseChanged
-          ? `Scheduler moved into ${phase} window and background jobs can be routed accordingly.`
-          : `Scheduler heartbeat recorded for the ${phase} window.`,
+        status: options.status || (phaseChanged ? 'phase-change' : 'steady'),
+        title: options.title || (phaseChanged ? `Scheduler entered ${phase}` : `Scheduler tick ${phase}`),
+        message: options.message || (
+          phaseChanged
+            ? `Scheduler moved into ${phase} window and background jobs can be routed accordingly.`
+            : `Scheduler heartbeat recorded for the ${phase} window.`
+        ),
         worker,
+        createdAt: options.createdAt,
         metadata: {
           bucket,
           previousPhase: state.lastPhase || null,

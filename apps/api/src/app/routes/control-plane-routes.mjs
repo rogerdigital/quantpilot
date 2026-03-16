@@ -69,7 +69,11 @@ export async function handleControlPlaneRoutes(context) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/scheduler/ticks') {
     writeJson(res, 200, {
       ok: true,
-      ticks: listSchedulerTicks(),
+      ticks: listSchedulerTicks({
+        limit: reqUrl.searchParams.get('limit'),
+        phase: reqUrl.searchParams.get('phase'),
+        hours: reqUrl.searchParams.get('hours'),
+      }),
     });
     return true;
   }

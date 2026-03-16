@@ -226,7 +226,30 @@ export async function fetchRiskEvents(): Promise<{
   });
 }
 
-export async function fetchSchedulerTicks(): Promise<{
+type SchedulerTicksQuery = {
+  hours?: number | null;
+  limit?: number;
+  phase?: string;
+};
+
+function buildSchedulerTicksQuery(options: SchedulerTicksQuery = {}) {
+  const params = new URLSearchParams();
+
+  if (typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0) {
+    params.set('limit', String(options.limit));
+  }
+  if (typeof options.hours === 'number' && Number.isFinite(options.hours) && options.hours > 0) {
+    params.set('hours', String(options.hours));
+  }
+  if (options.phase) {
+    params.set('phase', options.phase);
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+export async function fetchSchedulerTicks(options: SchedulerTicksQuery = {}): Promise<{
   ok: boolean;
   ticks: Array<{
     id: string;
@@ -238,7 +261,7 @@ export async function fetchSchedulerTicks(): Promise<{
     createdAt: string;
   }>;
 }> {
-  return fetchJson('/api/scheduler/ticks', {
+  return fetchJson(`/api/scheduler/ticks${buildSchedulerTicksQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
