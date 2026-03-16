@@ -15,6 +15,17 @@ export type IncidentNoteItem = {
 export function useIncidentDetail(incidentId: string, refreshKey = 0) {
   const [incident, setIncident] = useState<IncidentFeedItem | null>(null);
   const [notes, setNotes] = useState<IncidentNoteItem[]>([]);
+  const [activity, setActivity] = useState<IncidentDetailResponse['activity']>({
+    summary: {
+      total: 0,
+      notes: 0,
+      statusChanges: 0,
+      ownerChanges: 0,
+      severityChanges: 0,
+      latestAt: '',
+    },
+    timeline: [],
+  });
   const [evidence, setEvidence] = useState<IncidentDetailResponse['evidence']>({
     summary: {
       total: 0,
@@ -36,6 +47,17 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
     if (!incidentId) {
       setIncident(null);
       setNotes([]);
+      setActivity({
+        summary: {
+          total: 0,
+          notes: 0,
+          statusChanges: 0,
+          ownerChanges: 0,
+          severityChanges: 0,
+          latestAt: '',
+        },
+        timeline: [],
+      });
       setEvidence({
         summary: {
           total: 0,
@@ -62,6 +84,17 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
         if (!mounted) return;
         setIncident(payload?.incident || null);
         setNotes(Array.isArray(payload?.notes) ? payload.notes : []);
+        setActivity(payload?.activity || {
+          summary: {
+            total: 0,
+            notes: 0,
+            statusChanges: 0,
+            ownerChanges: 0,
+            severityChanges: 0,
+            latestAt: '',
+          },
+          timeline: [],
+        });
         setEvidence(payload?.evidence || {
           summary: {
             total: 0,
@@ -82,6 +115,17 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
         if (!mounted) return;
         setIncident(null);
         setNotes([]);
+        setActivity({
+          summary: {
+            total: 0,
+            notes: 0,
+            statusChanges: 0,
+            ownerChanges: 0,
+            severityChanges: 0,
+            latestAt: '',
+          },
+          timeline: [],
+        });
         setEvidence({
           summary: {
             total: 0,
@@ -109,5 +153,5 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
     };
   }, [incidentId, refreshKey]);
 
-  return { incident, notes, evidence, loading };
+  return { incident, notes, activity, evidence, loading };
 }

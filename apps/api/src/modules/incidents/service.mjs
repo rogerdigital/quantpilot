@@ -25,9 +25,11 @@ export function getIncidentDetail(incidentId, options = {}) {
   const incident = controlPlaneRuntime.getIncident(incidentId);
   if (!incident) return null;
   const evidence = collectIncidentEvidence(incident, options);
+  const activity = collectIncidentActivity(incidentId, options);
   return {
     incident,
     notes: controlPlaneRuntime.listIncidentNotes(incidentId, parseLimit(options.noteLimit, 100)),
+    activity,
     evidence,
   };
 }
@@ -391,5 +393,32 @@ function collectIncidentEvidence(incident, options = {}) {
   return {
     summary,
     timeline: deduped,
+  };
+}
+
+function collectIncidentActivity(incidentId, options = {}) {
+  const timeline = controlPlaneRuntime.listIncidentActivities(incidentId, parseLimit(options.activityLimit, 120));
+  const summary = timeline.reduce((acc, item) => {
+    acc.total += 1;
+    if (item.kind === 'note-added') acc.notes += 1;
+    if (item.kind === 'status-changed') acc.statusChanges += 1;
+    if (item.kind === 'owner-changed') acc.ownerChanges += 1;
+    if (item.kind === 'severity-changed') acc.severityChanges += 1;
+    if (!acc.latestAt || Date.parse(item.createdAt || '') > Date.parse(acc.latestAt || '')) {
+      acc.latestAt = item.createdAt;
+    }
+    return acc;
+  }, {
+    total: 0,
+    notes: 0,
+    statusChanges: 0,
+    ownerChanges: 0,
+    severityChanges: 0,
+    latestAt: '',
+  });
+
+  return {
+    summary,
+    timeline,
   };
 }

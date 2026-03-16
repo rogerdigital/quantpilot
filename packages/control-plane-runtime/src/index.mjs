@@ -279,6 +279,9 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     getIncident(incidentId) {
       return context.incidents.getIncident(incidentId);
     },
+    listIncidentActivities(incidentId, limit = 100) {
+      return context.incidents.listIncidentActivities(incidentId, limit);
+    },
     listIncidentNotes(incidentId, limit = 100) {
       return context.incidents.listIncidentNotes(incidentId, limit);
     },

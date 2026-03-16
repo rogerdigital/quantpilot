@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { IncidentEvidenceItem } from '@shared-types/trading.ts';
+import type { IncidentActivityRecord, IncidentEvidenceItem } from '@shared-types/trading.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
@@ -119,6 +119,42 @@ function buildArtifactDraft(locale: string, item: IncidentEvidenceItem) {
   return lines.join('\n');
 }
 
+function translateIncidentActivityKind(locale: string, kind: IncidentActivityRecord['kind']) {
+  if (locale === 'zh') {
+    if (kind === 'opened') return '已创建';
+    if (kind === 'status-changed') return '状态变更';
+    if (kind === 'owner-changed') return '负责人变更';
+    if (kind === 'severity-changed') return '级别变更';
+    if (kind === 'summary-updated') return '摘要更新';
+    if (kind === 'links-updated') return '关联更新';
+    return '追加记录';
+  }
+
+  if (kind === 'opened') return 'Opened';
+  if (kind === 'status-changed') return 'Status';
+  if (kind === 'owner-changed') return 'Owner';
+  if (kind === 'severity-changed') return 'Severity';
+  if (kind === 'summary-updated') return 'Summary';
+  if (kind === 'links-updated') return 'Links';
+  return 'Note';
+}
+
+function buildActivityDraft(locale: string, item: IncidentActivityRecord) {
+  const lines = [
+    `${locale === 'zh' ? '活动' : 'Activity'}: ${item.title}`,
+    `${locale === 'zh' ? '类型' : 'Kind'}: ${item.kind}`,
+    `${locale === 'zh' ? '执行人' : 'Actor'}: ${item.actor}`,
+    `${locale === 'zh' ? '时间' : 'Time'}: ${item.createdAt}`,
+    `${locale === 'zh' ? '详情' : 'Detail'}: ${item.detail}`,
+  ];
+
+  if (item.metadata && Object.keys(item.metadata).length) {
+    lines.push(`${locale === 'zh' ? '元数据' : 'Metadata'}: ${JSON.stringify(item.metadata)}`);
+  }
+
+  return lines.join('\n');
+}
+
 function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
@@ -143,6 +179,7 @@ function NotificationsPage() {
   const [selectedIncidentId, setSelectedIncidentId] = useState('');
   const [incidentRefreshKey, setIncidentRefreshKey] = useState(0);
   const [selectedArtifactKey, setSelectedArtifactKey] = useState('');
+  const [selectedActivityId, setSelectedActivityId] = useState('');
   const [incidentNoteDraft, setIncidentNoteDraft] = useState('');
   const [incidentOwnerDraft, setIncidentOwnerDraft] = useState('');
   const [incidentBusy, setIncidentBusy] = useState(false);
@@ -192,10 +229,12 @@ function NotificationsPage() {
   const {
     incident: selectedIncident,
     notes: selectedIncidentNotes,
+    activity: selectedIncidentActivity,
     evidence: selectedIncidentEvidence,
     loading: incidentDetailLoading,
   } = useIncidentDetail(selectedIncidentId, incidentRefreshKey);
   const selectedArtifact = selectedIncidentEvidence.timeline.find((item) => `${item.kind}:${item.id}` === selectedArtifactKey) || selectedIncidentEvidence.timeline[0] || null;
+  const selectedActivity = selectedIncidentActivity.timeline.find((item) => item.id === selectedActivityId) || selectedIncidentActivity.timeline[0] || null;
   const artifactInspector = useIncidentArtifactInspector(selectedArtifact, incidentRefreshKey);
   const { items: riskEventItems, loading: riskEventsLoading } = useRiskEventsFeed({
     level: riskEventLevelFilter === 'all' ? '' : riskEventLevelFilter,
@@ -250,6 +289,7 @@ function NotificationsPage() {
       setSelectedIncidentId('');
       setIncidentNoteDraft('');
       setSelectedArtifactKey('');
+      setSelectedActivityId('');
     }
   }, [incidentItems, selectedIncidentId]);
 
@@ -268,6 +308,21 @@ function NotificationsPage() {
       setSelectedArtifactKey(preferred ? `${preferred.kind}:${preferred.id}` : '');
     }
   }, [selectedArtifactKey, selectedIncidentEvidence.timeline, selectedIncidentId]);
+
+  useEffect(() => {
+    if (!selectedIncidentId) {
+      setSelectedActivityId('');
+      return;
+    }
+    if (!selectedIncidentActivity.timeline.length) {
+      setSelectedActivityId('');
+      return;
+    }
+    const exists = selectedIncidentActivity.timeline.some((item) => item.id === selectedActivityId);
+    if (!exists) {
+      setSelectedActivityId(selectedIncidentActivity.timeline[0]?.id || '');
+    }
+  }, [selectedActivityId, selectedIncidentActivity.timeline, selectedIncidentId]);
 
   useEffect(() => {
     if (selectedIncident?.owner) {
@@ -373,6 +428,7 @@ function NotificationsPage() {
     applyRiskFocus({});
     applyWorkflowFocus({});
     applyExecutionFocus({});
+    setSelectedActivityId('');
   }
 
   function focusNotificationItem(source: string) {
@@ -510,6 +566,33 @@ function NotificationsPage() {
       setIncidentRefreshKey((value) => value + 1);
     } finally {
       setIncidentBusy(false);
+    }
+  }
+
+  function focusIncidentActivityItem(item: IncidentActivityRecord) {
+    setSelectedActivityId(item.id);
+    if (item.kind === 'status-changed' && typeof item.metadata?.to === 'string') {
+      applyIncidentFocus({
+        incidentId: selectedIncidentId,
+        severity: selectedIncident?.severity || 'all',
+        source: selectedIncident?.source || 'all',
+        status: item.metadata.to,
+        timeWindow: incidentTimeWindow,
+      });
+      return;
+    }
+    if (item.kind === 'severity-changed' && typeof item.metadata?.to === 'string') {
+      applyIncidentFocus({
+        incidentId: selectedIncidentId,
+        severity: item.metadata.to,
+        source: selectedIncident?.source || 'all',
+        status: selectedIncident?.status || 'all',
+        timeWindow: incidentTimeWindow,
+      });
+      return;
+    }
+    if (item.kind === 'owner-changed' && typeof item.metadata?.to === 'string') {
+      setIncidentOwnerDraft(item.metadata.to);
     }
   }
 
@@ -755,6 +838,46 @@ function NotificationsPage() {
   const investigationPathSummary = activeFocusTags.length
     ? activeFocusTags.join(' -> ')
     : (locale === 'zh' ? '当前处于默认总览路径，可从任一条时间线或状态卡开始钻取。' : 'You are on the default overview path. Drill in from any timeline entry or status card.');
+  const incidentResponseChecklist = selectedIncident ? [
+    {
+      id: 'owner',
+      label: locale === 'zh' ? '负责人已指派' : 'Owner assigned',
+      done: Boolean(selectedIncident.owner),
+      hint: selectedIncident.owner || (locale === 'zh' ? '还没有负责人' : 'No owner assigned yet'),
+    },
+    {
+      id: 'ack',
+      label: locale === 'zh' ? '已开始排查' : 'Investigation acknowledged',
+      done: Boolean(selectedIncident.acknowledgedAt || selectedIncident.status !== 'open'),
+      hint: selectedIncident.acknowledgedAt
+        ? fmtDateTime(selectedIncident.acknowledgedAt, locale)
+        : (locale === 'zh' ? '还没有确认时间' : 'No acknowledgement timestamp'),
+    },
+    {
+      id: 'notes',
+      label: locale === 'zh' ? '已有排查记录' : 'Notes captured',
+      done: selectedIncidentNotes.length > 0,
+      hint: selectedIncidentNotes.length
+        ? `${selectedIncidentNotes.length} ${locale === 'zh' ? '条记录' : 'notes'}`
+        : (locale === 'zh' ? '还没有排查记录' : 'No notes captured yet'),
+    },
+    {
+      id: 'evidence',
+      label: locale === 'zh' ? '已有关联证据' : 'Evidence linked',
+      done: selectedIncidentEvidence.summary.total > 0,
+      hint: selectedIncidentEvidence.summary.total
+        ? `${selectedIncidentEvidence.summary.total} ${locale === 'zh' ? '条证据' : 'evidence items'}`
+        : (locale === 'zh' ? '还没有聚合证据' : 'No evidence aggregated yet'),
+    },
+    {
+      id: 'resolved',
+      label: locale === 'zh' ? '已完成收尾' : 'Resolution complete',
+      done: selectedIncident.status === 'resolved',
+      hint: selectedIncident.resolvedAt
+        ? fmtDateTime(selectedIncident.resolvedAt, locale)
+        : (locale === 'zh' ? '还未标记为 resolved' : 'Not resolved yet'),
+    },
+  ] : [];
 
   function focusTimelineItem(item: InvestigationTimelineItem) {
     if (item.kind === 'incident') {
@@ -1126,6 +1249,14 @@ function NotificationsPage() {
               </div>
               <div className="metrics-grid metrics-grid-compact">
                 <div className="metric-card">
+                  <span>{locale === 'zh' ? '活动记录' : 'Activity'}</span>
+                  <strong>{selectedIncidentActivity.summary.total}</strong>
+                </div>
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '最后活动' : 'Latest Activity'}</span>
+                  <strong>{selectedIncidentActivity.summary.latestAt ? fmtDateTime(selectedIncidentActivity.summary.latestAt, locale) : '--'}</strong>
+                </div>
+                <div className="metric-card">
                   <span>{locale === 'zh' ? '关联证据' : 'Evidence'}</span>
                   <strong>{selectedIncidentEvidence.summary.total}</strong>
                 </div>
@@ -1149,6 +1280,21 @@ function NotificationsPage() {
                   <span>{locale === 'zh' ? '风控 / 工作流 / 执行' : 'Risk / Workflow / Execution'}</span>
                   <strong>{selectedIncidentEvidence.summary.riskEvents + selectedIncidentEvidence.summary.workflowRuns + selectedIncidentEvidence.summary.executionPlans}</strong>
                 </div>
+              </div>
+              <div className="panel-subtitle">{locale === 'zh' ? '响应检查单' : 'Response Checklist'}</div>
+              <div className="focus-list focus-list-terminal">
+                {incidentResponseChecklist.map((item) => (
+                  <div className="focus-row" key={item.id}>
+                    <div className="symbol-cell">
+                      <strong>{item.label}</strong>
+                      <span>{item.hint}</span>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '状态' : 'State'}</span>
+                      <strong>{item.done ? (locale === 'zh' ? '已完成' : 'Done') : (locale === 'zh' ? '待处理' : 'Pending')}</strong>
+                    </div>
+                  </div>
+                ))}
               </div>
               <div className="panel-subtitle">{locale === 'zh' ? '关联证据时间线' : 'Related Evidence Timeline'}</div>
               <div className="focus-list focus-list-terminal">
@@ -1194,6 +1340,71 @@ function NotificationsPage() {
                   </div>
                 ))}
               </div>
+              <div className="panel-subtitle">{locale === 'zh' ? '处置活动流' : 'Response Activity'}</div>
+              <div className="metrics-grid metrics-grid-compact">
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '状态变更' : 'Status Changes'}</span>
+                  <strong>{selectedIncidentActivity.summary.statusChanges}</strong>
+                </div>
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '负责人变更' : 'Owner Changes'}</span>
+                  <strong>{selectedIncidentActivity.summary.ownerChanges}</strong>
+                </div>
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '级别变更' : 'Severity Changes'}</span>
+                  <strong>{selectedIncidentActivity.summary.severityChanges}</strong>
+                </div>
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '追加记录' : 'Note Updates'}</span>
+                  <strong>{selectedIncidentActivity.summary.notes}</strong>
+                </div>
+              </div>
+              <div className="focus-list focus-list-terminal">
+                {!selectedIncidentActivity.timeline.length ? <div className="empty-cell">{locale === 'zh' ? '这条 incident 还没有活动流记录' : 'No response activity has been recorded for this incident yet.'}</div> : null}
+                {selectedIncidentActivity.timeline.map((item) => (
+                  <button type="button" className="focus-row focus-row-wide status-row-button" key={item.id} onClick={() => focusIncidentActivityItem(item)}>
+                    <div className="symbol-cell">
+                      <strong>{item.title}</strong>
+                      <span>{item.detail}</span>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '类型' : 'Kind'}</span>
+                      <strong>{translateIncidentActivityKind(locale, item.kind)}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '执行人' : 'Actor'}</span>
+                      <strong>{item.actor}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                      <strong>{fmtDateTime(item.createdAt, locale)}</strong>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {selectedActivity ? (
+                <div className="settings-chip-row">
+                  <button
+                    type="button"
+                    className="settings-chip"
+                    disabled={incidentBusy}
+                    onClick={() => setIncidentNoteDraft((draft) => {
+                      const next = buildActivityDraft(locale, selectedActivity);
+                      return draft ? `${draft}\n\n${next}` : next;
+                    })}
+                  >
+                    {locale === 'zh' ? '引用活动到草稿' : 'Append Activity To Draft'}
+                  </button>
+                  <button
+                    type="button"
+                    className="settings-chip"
+                    disabled={incidentBusy}
+                    onClick={() => setIncidentNoteDraft(buildActivityDraft(locale, selectedActivity))}
+                  >
+                    {locale === 'zh' ? '用活动覆盖草稿' : 'Replace Draft With Activity'}
+                  </button>
+                </div>
+              ) : null}
             </>
           ) : null}
         </article>

@@ -116,6 +116,19 @@ export function createIncidentNoteEntry(payload = {}) {
   };
 }
 
+export function createIncidentActivityEntry(payload = {}) {
+  return {
+    id: payload.id || `incident-activity-${randomUUID()}`,
+    incidentId: payload.incidentId || '',
+    kind: payload.kind || 'opened',
+    title: payload.title || 'Incident activity',
+    detail: payload.detail || '',
+    actor: payload.actor || 'operator',
+    createdAt: payload.createdAt || new Date().toISOString(),
+    metadata: payload.metadata || {},
+  };
+}
+
 export function createAuditRecordEntry(record) {
   return {
     id: record.id || `audit-${randomUUID()}`,

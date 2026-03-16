@@ -732,6 +732,17 @@ export type IncidentNoteRecord = {
   metadata?: Record<string, unknown>;
 };
 
+export type IncidentActivityRecord = {
+  id: string;
+  incidentId: string;
+  kind: 'opened' | 'status-changed' | 'owner-changed' | 'severity-changed' | 'summary-updated' | 'links-updated' | 'note-added';
+  title: string;
+  detail: string;
+  actor: string;
+  createdAt: string;
+  metadata?: Record<string, unknown>;
+};
+
 export type IncidentEvidenceItem = {
   id: string;
   kind: 'monitoring-alert' | 'notification' | 'audit' | 'operator-action' | 'scheduler-tick' | 'risk-event' | 'workflow-run' | 'execution-plan';
@@ -767,6 +778,17 @@ export type IncidentDetailResponse = {
   ok: boolean;
   incident: IncidentRecord;
   notes: IncidentNoteRecord[];
+  activity: {
+    summary: {
+      total: number;
+      notes: number;
+      statusChanges: number;
+      ownerChanges: number;
+      severityChanges: number;
+      latestAt: string;
+    };
+    timeline: IncidentActivityRecord[];
+  };
   evidence: {
     summary: IncidentEvidenceSummary;
     timeline: IncidentEvidenceItem[];

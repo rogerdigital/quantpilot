@@ -84,6 +84,8 @@ test('control plane runtime records incidents with audit and notifications', () 
   assert.equal(noteResult.incident.id, 'incident-runtime-1');
   assert.equal(runtime.listIncidents()[0].id, 'incident-runtime-1');
   assert.equal(runtime.listIncidentNotes('incident-runtime-1')[0].body, 'Failover broker verified.');
+  assert.equal(runtime.listIncidentActivities('incident-runtime-1').some((item) => item.kind === 'opened'), true);
+  assert.equal(runtime.listIncidentActivities('incident-runtime-1').some((item) => item.kind === 'note-added'), true);
   assert.equal(runtime.listAuditRecords().some((item) => item.type === 'incident.note'), true);
   assert.equal(runtime.listNotificationJobs().some((job) => job.payload.title === 'Incident opened'), true);
 });

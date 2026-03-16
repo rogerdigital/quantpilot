@@ -510,8 +510,8 @@ export async function fetchIncidents(options: IncidentsQuery = {}): Promise<Inci
   });
 }
 
-export async function fetchIncidentDetail(incidentId: string, noteLimit = 100): Promise<IncidentDetailResponse> {
-  return fetchJson(`/api/incidents/${incidentId}?noteLimit=${noteLimit}`, {
+export async function fetchIncidentDetail(incidentId: string, noteLimit = 100, activityLimit = 120): Promise<IncidentDetailResponse> {
+  return fetchJson(`/api/incidents/${incidentId}?noteLimit=${noteLimit}&activityLimit=${activityLimit}`, {
     headers: { Accept: 'application/json' },
   });
 }

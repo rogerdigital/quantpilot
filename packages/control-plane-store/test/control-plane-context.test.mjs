@@ -162,6 +162,11 @@ test('incident repository persists incidents, filters them, and stores notes', (
   assert.equal(note.incidentId, 'incident-1');
   assert.equal(list[0].latestNotePreview, 'Worker restarted and backlog is draining.');
   assert.equal(context.incidents.listIncidentNotes('incident-1', 10).length, 2);
+  const activity = context.incidents.listIncidentActivities('incident-1', 10);
+  assert.equal(activity.some((item) => item.kind === 'opened'), true);
+  assert.equal(activity.some((item) => item.kind === 'status-changed' && item.metadata.to === 'investigating'), true);
+  assert.equal(activity.some((item) => item.kind === 'owner-changed' && item.metadata.to === 'ops-b'), true);
+  assert.equal(activity.some((item) => item.kind === 'note-added'), true);
 });
 
 test('workflow repository persists and updates workflow runs through the injected context', () => {

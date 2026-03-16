@@ -1531,6 +1531,10 @@ test('incident routes create, update, and return incident details', async () => 
   assert.equal(detail.statusCode, 200);
   assert.equal(detail.json.incident.id, 'incident-api-test');
   assert.equal(detail.json.notes.length >= 2, true);
+  assert.equal(detail.json.activity.summary.total >= 4, true);
+  assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'opened'), true);
+  assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'status-changed'), true);
+  assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'note-added'), true);
   assert.equal(detail.json.evidence.summary.total >= 5, true);
   assert.equal(detail.json.evidence.summary.linked >= 5, true);
   assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'monitoring-alert' && item.id === 'incident-monitoring-alert'), true);
