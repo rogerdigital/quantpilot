@@ -143,6 +143,96 @@ function NotificationsPage() {
     setAuditTimeWindow(options.timeWindow || '24h');
   }
 
+  function applySchedulerFocus(options: {
+    phase?: string;
+    timeWindow?: (typeof MONITORING_TIME_WINDOWS)[number]['key'];
+  }) {
+    setSchedulerPhaseFilter(options.phase || 'all');
+    setSchedulerTimeWindow(options.timeWindow || '24h');
+  }
+
+  function applyOperatorActionFocus(options: {
+    level?: string;
+    timeWindow?: (typeof MONITORING_TIME_WINDOWS)[number]['key'];
+  }) {
+    setOperatorActionLevelFilter(options.level || 'all');
+    setOperatorActionTimeWindow(options.timeWindow || '24h');
+  }
+
+  function resetAllFocuses() {
+    applyMonitoringFocus({});
+    applyNotificationFocus({});
+    applyAuditFocus({});
+    applySchedulerFocus({});
+    applyOperatorActionFocus({});
+  }
+
+  function focusNotificationItem(source: string) {
+    if (source === 'scheduler') {
+      applySchedulerFocus({ timeWindow: '24h' });
+      applyNotificationFocus({ source, timeWindow: '24h' });
+      return;
+    }
+    if (source === 'workflow-control') {
+      applyAuditFocus({ type: 'workflow', timeWindow: '24h' });
+      applyNotificationFocus({ source, timeWindow: '24h' });
+      return;
+    }
+    if (source === 'execution-planner') {
+      applyAuditFocus({ type: 'execution-plan', timeWindow: '24h' });
+      applyNotificationFocus({ source, timeWindow: '24h' });
+      return;
+    }
+    if (source === 'agent-control') {
+      applyAuditFocus({ type: 'agent-action-request', timeWindow: '24h' });
+      applyNotificationFocus({ source, timeWindow: '24h' });
+      return;
+    }
+    applyNotificationFocus({ source, timeWindow: '24h' });
+  }
+
+  function focusAuditItem(type: string) {
+    applyAuditFocus({ type, timeWindow: '24h' });
+    if (type === 'workflow') {
+      applyNotificationFocus({ source: 'workflow-control', timeWindow: '24h' });
+      return;
+    }
+    if (type === 'execution-plan') {
+      applyNotificationFocus({ source: 'execution-planner', timeWindow: '24h' });
+      return;
+    }
+    if (type === 'agent-action-request') {
+      applyNotificationFocus({ source: 'agent-control', timeWindow: '24h' });
+    }
+  }
+
+  function focusSchedulerItem(phase: string) {
+    applySchedulerFocus({ phase, timeWindow: '24h' });
+    applyNotificationFocus({ source: 'scheduler', timeWindow: '24h' });
+  }
+
+  function focusOperatorActionItem(level: string) {
+    applyOperatorActionFocus({ level, timeWindow: '24h' });
+    applyAuditFocus({ timeWindow: '24h' });
+  }
+
+  const activeFocusTags = [
+    monitoringSourceFilter !== 'all' ? `monitor:${monitoringSourceFilter}` : '',
+    monitoringLevelFilter !== 'all' ? `severity:${monitoringLevelFilter}` : '',
+    selectedMonitoringSnapshotId ? 'snapshot:selected' : '',
+    monitoringSnapshotStatusFilter !== 'all' ? `snapshot:${monitoringSnapshotStatusFilter}` : '',
+    monitoringTimeWindow !== '24h' ? `monitor-window:${monitoringTimeWindow}` : '',
+    schedulerPhaseFilter !== 'all' ? `scheduler:${schedulerPhaseFilter}` : '',
+    schedulerTimeWindow !== '24h' ? `scheduler-window:${schedulerTimeWindow}` : '',
+    operatorActionLevelFilter !== 'all' ? `actions:${operatorActionLevelFilter}` : '',
+    operatorActionTimeWindow !== '24h' ? `actions-window:${operatorActionTimeWindow}` : '',
+    notificationLevelFilter !== 'all' ? `notif-level:${notificationLevelFilter}` : '',
+    notificationSourceFilter !== 'all' ? `notif-source:${notificationSourceFilter}` : '',
+    notificationTimeWindow !== '24h' ? `notif-window:${notificationTimeWindow}` : '',
+    auditTypeFilter !== 'all' ? `audit:${auditTypeFilter}` : '',
+    auditTimeWindow !== '24h' ? `audit-window:${auditTimeWindow}` : '',
+  ].filter(Boolean);
+
   return (
     <>
       <SectionHeader routeKey="notifications" />
@@ -154,6 +244,30 @@ function NotificationsPage() {
       ]} />
 
       <section className="panel-grid">
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '焦点路由' : 'Focus Router'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '当前筛选焦点会汇总在这里，方便随时重置或确认你正在排查哪一条链路。'
+                  : 'Current investigation focus lives here so you can reset or confirm which path is active.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{activeFocusTags.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            <button type="button" className="settings-chip" onClick={resetAllFocuses}>
+              {locale === 'zh' ? '重置全部筛选' : 'Reset All Filters'}
+            </button>
+            {!activeFocusTags.length ? (
+              <span className="empty-cell">{locale === 'zh' ? '当前没有额外焦点筛选' : 'No extra focus filters are active.'}</span>
+            ) : null}
+            {activeFocusTags.map((tag) => (
+              <span key={tag} className="settings-chip active">{tag}</span>
+            ))}
+          </div>
+        </article>
         <article className="panel">
           <div className="panel-head">
             <div>
@@ -421,7 +535,7 @@ function NotificationsPage() {
             {actionLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载操作动作...' : 'Loading operator actions...'}</div> : null}
             {!actionLoading && !actionItems.length ? <div className="empty-cell">{locale === 'zh' ? '暂无操作动作' : 'No operator actions yet.'}</div> : null}
             {!actionLoading ? actionItems.map((item) => (
-              <div className="focus-row" key={item.id}>
+              <button type="button" className="focus-row status-row-button" key={item.id} onClick={() => focusOperatorActionItem(item.level)}>
                 <div className="symbol-cell">
                   <strong>{item.title}</strong>
                   <span>{item.detail}</span>
@@ -430,7 +544,7 @@ function NotificationsPage() {
                   <span>{locale === 'zh' ? '执行人' : 'Actor'}</span>
                   <strong>{item.actor}</strong>
                 </div>
-              </div>
+              </button>
             )) : null}
           </div>
         </article>
@@ -504,7 +618,7 @@ function NotificationsPage() {
             {loading ? <div className="empty-cell">{locale === 'zh' ? '正在加载通知...' : 'Loading notifications...'}</div> : null}
             {!loading && !items.length ? <div className="empty-cell">{locale === 'zh' ? '暂无控制面通知' : 'No control-plane notifications yet.'}</div> : null}
             {!loading ? items.map((item) => (
-              <div className="focus-row" key={item.id}>
+              <button type="button" className="focus-row status-row-button" key={item.id} onClick={() => focusNotificationItem(item.source)}>
                 <div className="symbol-cell">
                   <strong>{item.title}</strong>
                   <span>{item.message}</span>
@@ -513,7 +627,7 @@ function NotificationsPage() {
                   <span>{locale === 'zh' ? '来源' : 'Source'}</span>
                   <strong>{item.source}</strong>
                 </div>
-              </div>
+              </button>
             )) : null}
           </div>
         </article>
@@ -601,7 +715,7 @@ function NotificationsPage() {
             {auditLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载审计记录...' : 'Loading audit records...'}</div> : null}
             {!auditLoading && !auditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有审计记录' : 'No audit records match the current filters.'}</div> : null}
             {!auditLoading ? auditItems.map((item) => (
-              <div className="focus-row" key={item.id}>
+              <button type="button" className="focus-row status-row-button" key={item.id} onClick={() => focusAuditItem(item.type)}>
                 <div className="symbol-cell">
                   <strong>{item.title}</strong>
                   <span>{item.detail}</span>
@@ -614,7 +728,7 @@ function NotificationsPage() {
                   <span>{locale === 'zh' ? '操作人' : 'Actor'}</span>
                   <strong>{item.actor}</strong>
                 </div>
-              </div>
+              </button>
             )) : null}
           </div>
         </article>
@@ -704,7 +818,7 @@ function NotificationsPage() {
             {schedulerLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载调度节拍...' : 'Loading scheduler ticks...'}</div> : null}
             {!schedulerLoading && !schedulerItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有调度节拍' : 'No scheduler ticks match the current filters.'}</div> : null}
             {!schedulerLoading ? schedulerItems.map((item) => (
-              <div className="focus-row" key={item.id}>
+              <button type="button" className="focus-row status-row-button" key={item.id} onClick={() => focusSchedulerItem(item.phase)}>
                 <div className="symbol-cell">
                   <strong>{item.title}</strong>
                   <span>{item.message}</span>
@@ -713,7 +827,7 @@ function NotificationsPage() {
                   <span>{locale === 'zh' ? '窗口' : 'Phase'}</span>
                   <strong>{item.phase}</strong>
                 </div>
-              </div>
+              </button>
             )) : null}
           </div>
         </article>
