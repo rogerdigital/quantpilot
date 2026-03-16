@@ -1299,6 +1299,51 @@ test('GET /api/monitoring/snapshots and alerts return persisted monitoring histo
 });
 
 test('incident routes create, update, and return incident details', async () => {
+  context.monitoring.recordMonitoringSnapshot({
+    id: 'incident-monitoring-snapshot',
+    status: 'warn',
+    generatedAt: '2026-03-16T08:00:00.000Z',
+    alerts: [{
+      id: 'incident-monitoring-alert',
+      level: 'warn',
+      source: 'worker',
+      message: 'Worker lag exceeded threshold.',
+    }],
+  });
+  context.notifications.appendNotification({
+    id: 'incident-notification',
+    title: 'Worker degraded',
+    message: 'Worker queue is starting to backlog.',
+    source: 'task-orchestrator',
+    level: 'warn',
+    createdAt: '2026-03-16T08:05:00.000Z',
+  });
+  context.audit.appendAuditRecord({
+    id: 'incident-audit',
+    type: 'workflow',
+    actor: 'api-test',
+    title: 'Workflow paused',
+    detail: 'Workflow paused because worker lag is too high.',
+    createdAt: '2026-03-16T08:06:00.000Z',
+  });
+  context.operatorActions.appendOperatorAction({
+    id: 'incident-action',
+    type: 'restart-worker',
+    actor: 'api-operator',
+    title: 'Restart worker',
+    detail: 'Worker restarted after lag alert.',
+    level: 'warn',
+    createdAt: '2026-03-16T08:08:00.000Z',
+  });
+  context.scheduler.recordSchedulerTick({
+    id: 'incident-scheduler-tick',
+    phase: 'INTRADAY',
+    title: 'Scheduler tick INTRADAY',
+    message: 'Scheduler tick captured while worker lag was elevated.',
+    status: 'steady',
+    createdAt: '2026-03-16T08:09:00.000Z',
+  });
+
   const created = await invokeGatewayRoute(handler, {
     method: 'POST',
     path: '/api/incidents',
@@ -1310,6 +1355,20 @@ test('incident routes create, update, and return incident details', async () => 
       source: 'monitoring',
       owner: 'api-operator',
       initialNote: 'Created from API test.',
+      links: [
+        { kind: 'monitoring-alert', alertId: 'incident-monitoring-alert', snapshotId: 'incident-monitoring-snapshot' },
+        { kind: 'notification', notificationId: 'incident-notification' },
+        { kind: 'audit', auditId: 'incident-audit' },
+        { kind: 'operator-action', actionId: 'incident-action' },
+        { kind: 'scheduler-tick', tickId: 'incident-scheduler-tick' },
+      ],
+      metadata: {
+        monitoringAlertId: 'incident-monitoring-alert',
+        notificationId: 'incident-notification',
+        auditId: 'incident-audit',
+        operatorActionId: 'incident-action',
+        schedulerTickId: 'incident-scheduler-tick',
+      },
     },
   });
   const listed = await invokeGatewayRoute(handler, {
@@ -1346,6 +1405,11 @@ test('incident routes create, update, and return incident details', async () => 
   assert.equal(detail.statusCode, 200);
   assert.equal(detail.json.incident.id, 'incident-api-test');
   assert.equal(detail.json.notes.length >= 2, true);
+  assert.equal(detail.json.evidence.summary.total >= 5, true);
+  assert.equal(detail.json.evidence.summary.linked >= 5, true);
+  assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'monitoring-alert' && item.id === 'incident-monitoring-alert'), true);
+  assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'notification' && item.id === 'incident-notification'), true);
+  assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'audit' && item.id === 'incident-audit'), true);
 });
 
 test('POST then GET /api/audit/records persists audit entries', async () => {

@@ -725,6 +725,29 @@ export type IncidentNoteRecord = {
   metadata?: Record<string, unknown>;
 };
 
+export type IncidentEvidenceItem = {
+  id: string;
+  kind: 'monitoring-alert' | 'notification' | 'audit' | 'operator-action' | 'scheduler-tick';
+  title: string;
+  detail: string;
+  timestamp: string;
+  source: string;
+  level: string;
+  status: string;
+  linked: boolean;
+  metadata?: Record<string, unknown>;
+};
+
+export type IncidentEvidenceSummary = {
+  total: number;
+  linked: number;
+  monitoringAlerts: number;
+  notifications: number;
+  audits: number;
+  operatorActions: number;
+  schedulerTicks: number;
+};
+
 export type IncidentsResponse = {
   ok: boolean;
   incidents: IncidentRecord[];
@@ -734,6 +757,10 @@ export type IncidentDetailResponse = {
   ok: boolean;
   incident: IncidentRecord;
   notes: IncidentNoteRecord[];
+  evidence: {
+    summary: IncidentEvidenceSummary;
+    timeline: IncidentEvidenceItem[];
+  };
 };
 
 export type BacktestRunCreateRequest = {

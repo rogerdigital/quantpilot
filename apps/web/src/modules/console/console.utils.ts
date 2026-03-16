@@ -121,14 +121,24 @@ export function monitoringTone(status: string | undefined) {
 export function translateMonitoringStatus(locale: AppLocale, status: string | undefined) {
   const normalized = String(status || '').toLowerCase();
   const zhMap: Record<string, string> = {
+    info: '信息',
     healthy: '健康',
     warn: '告警',
     critical: '严重',
+    open: '打开',
+    investigating: '排查中',
+    mitigated: '已缓解',
+    resolved: '已解决',
   };
   const enMap: Record<string, string> = {
+    info: 'Info',
     healthy: 'Healthy',
     warn: 'Warning',
     critical: 'Critical',
+    open: 'Open',
+    investigating: 'Investigating',
+    mitigated: 'Mitigated',
+    resolved: 'Resolved',
   };
   return (locale === 'zh' ? zhMap : enMap)[normalized] || (status || '--');
 }
