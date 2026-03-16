@@ -82,6 +82,40 @@ export function createMonitoringAlertEntry(event = {}) {
   };
 }
 
+export function createIncidentEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  const noteCount = Number.isFinite(payload.noteCount) ? Number(payload.noteCount) : 0;
+  return {
+    id: payload.id || `incident-${randomUUID()}`,
+    title: payload.title || 'Untitled incident',
+    summary: payload.summary || '',
+    status: payload.status || 'open',
+    severity: payload.severity || 'warn',
+    source: payload.source || 'monitoring',
+    owner: payload.owner || '',
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+    acknowledgedAt: payload.acknowledgedAt || '',
+    resolvedAt: payload.resolvedAt || '',
+    noteCount,
+    latestNotePreview: payload.latestNotePreview || '',
+    links: Array.isArray(payload.links) ? payload.links : [],
+    tags: Array.isArray(payload.tags) ? payload.tags : [],
+    metadata: payload.metadata || {},
+  };
+}
+
+export function createIncidentNoteEntry(payload = {}) {
+  return {
+    id: payload.id || `incident-note-${randomUUID()}`,
+    incidentId: payload.incidentId || '',
+    body: payload.body || '',
+    author: payload.author || 'operator',
+    createdAt: payload.createdAt || new Date().toISOString(),
+    metadata: payload.metadata || {},
+  };
+}
+
 export function createAuditRecordEntry(record) {
   return {
     id: record.id || `audit-${randomUUID()}`,

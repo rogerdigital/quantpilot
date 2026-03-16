@@ -697,6 +697,45 @@ export type MonitoringSnapshotsResponse = {
   snapshots: MonitoringSnapshotRecord[];
 };
 
+export type IncidentRecord = {
+  id: string;
+  title: string;
+  summary: string;
+  status: string;
+  severity: string;
+  source: string;
+  owner: string;
+  createdAt: string;
+  updatedAt: string;
+  acknowledgedAt: string;
+  resolvedAt: string;
+  noteCount: number;
+  latestNotePreview: string;
+  links: Array<Record<string, unknown>>;
+  tags: string[];
+  metadata?: Record<string, unknown>;
+};
+
+export type IncidentNoteRecord = {
+  id: string;
+  incidentId: string;
+  body: string;
+  author: string;
+  createdAt: string;
+  metadata?: Record<string, unknown>;
+};
+
+export type IncidentsResponse = {
+  ok: boolean;
+  incidents: IncidentRecord[];
+};
+
+export type IncidentDetailResponse = {
+  ok: boolean;
+  incident: IncidentRecord;
+  notes: IncidentNoteRecord[];
+};
+
 export type BacktestRunCreateRequest = {
   strategyId: string;
   windowLabel?: string;

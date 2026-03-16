@@ -143,6 +143,7 @@ quantpilot/
 - 后端已具备最小控制面能力，包括 `auth / audit / notification / risk / scheduler / task-orchestrator / strategy / backtest / agent` 等模块骨架。
 - `monitoring` 模块已进入原型阶段，后端现可输出 `broker / market / worker / workflow / risk / queues` 的运行态摘要接口。
 - worker 现会周期性落库 `monitoring snapshots / alerts` 历史，通知中心和后续运维视图已具备可追踪的监控数据来源。
+- 通知中心已从单纯观察面板推进到最小 `incident / investigation` 闭环，支持把监控告警、控制面通知和审计项升级为事件并跟踪状态、负责人和排查记录。
 - worker 已接管通知分发、风险扫描、调度 tick、workflow maintenance 和 workflow execution。
 - 共享运行时已经拆分到 `trading-engine / control-plane-runtime / task-workflow-engine / shared-types`。
 - 控制面持久化已抽到 `control-plane-store`，当前以文件型存储为主。

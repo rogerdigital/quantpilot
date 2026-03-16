@@ -273,6 +273,111 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     recordMonitoringSnapshot(payload = {}) {
       return context.monitoring.recordMonitoringSnapshot(payload);
     },
+    listIncidents(limit = 50, filter = {}) {
+      return context.incidents.listIncidents(limit, filter);
+    },
+    getIncident(incidentId) {
+      return context.incidents.getIncident(incidentId);
+    },
+    listIncidentNotes(incidentId, limit = 100) {
+      return context.incidents.listIncidentNotes(incidentId, limit);
+    },
+    appendIncident(payload = {}) {
+      return context.incidents.appendIncident(payload);
+    },
+    recordIncident(payload = {}) {
+      const incident = context.incidents.appendIncident(payload);
+
+      context.audit.appendAuditRecord({
+        type: 'incident',
+        actor: payload.actor || incident.owner || 'operator',
+        title: `Incident opened: ${incident.title}`,
+        detail: incident.summary || 'Incident created from the investigation console.',
+        metadata: {
+          incidentId: incident.id,
+          severity: incident.severity,
+          status: incident.status,
+          source: incident.source,
+          owner: incident.owner,
+          links: incident.links,
+        },
+      });
+
+      context.notifications.enqueueNotification({
+        level: incident.severity === 'critical' ? 'critical' : 'warn',
+        source: 'control-plane',
+        title: 'Incident opened',
+        message: incident.title,
+        metadata: {
+          incidentId: incident.id,
+          severity: incident.severity,
+          status: incident.status,
+          source: incident.source,
+        },
+      });
+
+      return incident;
+    },
+    updateIncident(incidentId, patch = {}) {
+      return context.incidents.updateIncident(incidentId, patch);
+    },
+    transitionIncident(incidentId, patch = {}) {
+      const incident = context.incidents.updateIncident(incidentId, patch);
+      if (!incident) return null;
+
+      context.audit.appendAuditRecord({
+        type: 'incident.transition',
+        actor: patch.actor || incident.owner || 'operator',
+        title: `Incident ${incident.status}`,
+        detail: patch.summary || incident.summary || incident.title,
+        metadata: {
+          incidentId: incident.id,
+          severity: incident.severity,
+          status: incident.status,
+          owner: incident.owner,
+          source: incident.source,
+        },
+      });
+
+      context.notifications.enqueueNotification({
+        level: incident.status === 'resolved' ? 'info' : incident.severity,
+        source: 'control-plane',
+        title: `Incident ${incident.status}`,
+        message: incident.title,
+        metadata: {
+          incidentId: incident.id,
+          severity: incident.severity,
+          status: incident.status,
+          owner: incident.owner,
+        },
+      });
+
+      return incident;
+    },
+    appendIncidentNote(incidentId, payload = {}) {
+      return context.incidents.appendIncidentNote(incidentId, payload);
+    },
+    recordIncidentNote(incidentId, payload = {}) {
+      const note = context.incidents.appendIncidentNote(incidentId, payload);
+      if (!note) return null;
+      const incident = context.incidents.getIncident(incidentId);
+
+      context.audit.appendAuditRecord({
+        type: 'incident.note',
+        actor: payload.author || 'operator',
+        title: 'Incident note added',
+        detail: note.body,
+        metadata: {
+          incidentId,
+          incidentTitle: incident?.title || '',
+        },
+      });
+
+      return {
+        note,
+        incident,
+      };
+    },
     listNotifications(limit = 50, filter = {}) {
       return context.notifications.listNotifications(limit, filter);
     },
@@ -564,6 +669,15 @@ export const getMarketProviderStatus = (...args) => controlPlaneRuntime.getMarke
 export const updateMarketProviderStatus = (...args) => controlPlaneRuntime.updateMarketProviderStatus(...args);
 export const listMonitoringSnapshots = (...args) => controlPlaneRuntime.listMonitoringSnapshots(...args);
 export const listMonitoringAlerts = (...args) => controlPlaneRuntime.listMonitoringAlerts(...args);
+export const listIncidents = (...args) => controlPlaneRuntime.listIncidents(...args);
+export const getIncident = (...args) => controlPlaneRuntime.getIncident(...args);
+export const listIncidentNotes = (...args) => controlPlaneRuntime.listIncidentNotes(...args);
+export const appendIncident = (...args) => controlPlaneRuntime.appendIncident(...args);
+export const recordIncident = (...args) => controlPlaneRuntime.recordIncident(...args);
+export const updateIncident = (...args) => controlPlaneRuntime.updateIncident(...args);
+export const transitionIncident = (...args) => controlPlaneRuntime.transitionIncident(...args);
+export const appendIncidentNote = (...args) => controlPlaneRuntime.appendIncidentNote(...args);
+export const recordIncidentNote = (...args) => controlPlaneRuntime.recordIncidentNote(...args);
 export const listWorkerHeartbeats = (...args) => controlPlaneRuntime.listWorkerHeartbeats(...args);
 export const getLatestWorkerHeartbeat = (...args) => controlPlaneRuntime.getLatestWorkerHeartbeat(...args);
 export const listWorkflowRuns = (...args) => controlPlaneRuntime.listWorkflowRuns(...args);

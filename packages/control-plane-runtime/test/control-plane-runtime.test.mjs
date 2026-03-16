@@ -58,6 +58,36 @@ test('control plane runtime persists monitoring snapshots and alerts', () => {
   assert.equal(runtime.listMonitoringAlerts()[0].snapshotId, recorded.snapshot.id);
 });
 
+test('control plane runtime records incidents with audit and notifications', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  const incident = runtime.recordIncident({
+    id: 'incident-runtime-1',
+    title: 'Broker disconnect',
+    summary: 'Primary broker disconnected during intraday execution.',
+    severity: 'critical',
+    source: 'monitoring',
+    owner: 'runtime-ops',
+    initialNote: 'Escalated from broker health panel.',
+  });
+  const transitioned = runtime.transitionIncident('incident-runtime-1', {
+    status: 'investigating',
+    actor: 'runtime-ops',
+  });
+  const noteResult = runtime.recordIncidentNote('incident-runtime-1', {
+    author: 'runtime-ops',
+    body: 'Failover broker verified.',
+  });
+
+  assert.equal(incident.id, 'incident-runtime-1');
+  assert.equal(transitioned.status, 'investigating');
+  assert.equal(noteResult.incident.id, 'incident-runtime-1');
+  assert.equal(runtime.listIncidents()[0].id, 'incident-runtime-1');
+  assert.equal(runtime.listIncidentNotes('incident-runtime-1')[0].body, 'Failover broker verified.');
+  assert.equal(runtime.listAuditRecords().some((item) => item.type === 'incident.note'), true);
+  assert.equal(runtime.listNotificationJobs().some((job) => job.payload.title === 'Incident opened'), true);
+});
+
 test('control plane runtime dispatches queued jobs through injected context', () => {
   const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
 

@@ -14,6 +14,8 @@ import type {
   MonitoringStatusSnapshot,
   MonitoringAlertsResponse,
   MonitoringSnapshotsResponse,
+  IncidentsResponse,
+  IncidentDetailResponse,
   UserBrokerBindingsSnapshot,
   UserBrokerBindingSaveSnapshot,
   UserBrokerBindingRuntimeSnapshot,
@@ -444,4 +446,85 @@ export async function fetchMonitoringSnapshots(options: MonitoringHistoryQuery =
   return fetchJson(`/api/monitoring/snapshots${buildMonitoringHistoryQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
+}
+
+type IncidentsQuery = {
+  hours?: number | null;
+  limit?: number;
+  owner?: string;
+  severity?: string;
+  source?: string;
+  status?: string;
+};
+
+function buildIncidentsQuery(options: IncidentsQuery = {}) {
+  const params = new URLSearchParams();
+
+  if (typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0) {
+    params.set('limit', String(options.limit));
+  }
+  if (typeof options.hours === 'number' && Number.isFinite(options.hours) && options.hours > 0) {
+    params.set('hours', String(options.hours));
+  }
+  if (options.owner) {
+    params.set('owner', options.owner);
+  }
+  if (options.severity) {
+    params.set('severity', options.severity);
+  }
+  if (options.source) {
+    params.set('source', options.source);
+  }
+  if (options.status) {
+    params.set('status', options.status);
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+export async function fetchIncidents(options: IncidentsQuery = {}): Promise<IncidentsResponse> {
+  return fetchJson(`/api/incidents${buildIncidentsQuery(options)}`, {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export async function fetchIncidentDetail(incidentId: string, noteLimit = 100): Promise<IncidentDetailResponse> {
+  return fetchJson(`/api/incidents/${incidentId}?noteLimit=${noteLimit}`, {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export async function createIncident(payload: Record<string, unknown>): Promise<{ ok: boolean; incident: IncidentDetailResponse['incident'] }> {
+  const response = await fetch('/api/incidents', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
+export async function updateIncident(incidentId: string, payload: Record<string, unknown>): Promise<{ ok: boolean; incident: IncidentDetailResponse['incident'] }> {
+  const response = await fetch(`/api/incidents/${incidentId}`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
+export async function appendIncidentNote(incidentId: string, payload: Record<string, unknown>): Promise<{
+  ok: boolean;
+  incident: IncidentDetailResponse['incident'] | null;
+  note: IncidentDetailResponse['notes'][number];
+}> {
+  const response = await fetch(`/api/incidents/${incidentId}/notes`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
 }

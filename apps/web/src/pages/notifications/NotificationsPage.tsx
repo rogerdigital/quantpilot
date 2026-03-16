@@ -3,8 +3,11 @@ import { useTradingSystem } from '../../store/trading-system/TradingSystemProvid
 import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useMonitoringStatus } from '../../hooks/useMonitoringStatus.ts';
+import { appendIncidentNote, createIncident, updateIncident } from '../../app/api/controlPlane.ts';
 import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
 import { useAuditRecordsFeed } from '../../modules/notifications/useAuditRecordsFeed.ts';
+import { useIncidentDetail } from '../../modules/notifications/useIncidentDetail.ts';
+import { useIncidentsFeed } from '../../modules/notifications/useIncidentsFeed.ts';
 import { useMonitoringAlertsFeed } from '../../modules/notifications/useMonitoringAlertsFeed.ts';
 import { useMonitoringSnapshotsFeed } from '../../modules/notifications/useMonitoringSnapshotsFeed.ts';
 import { useOperatorActionsFeed } from '../../modules/notifications/useOperatorActionsFeed.ts';
@@ -29,11 +32,14 @@ const OPERATOR_ACTION_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
 const NOTIFICATION_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
 const NOTIFICATION_SOURCES = ['all', 'scheduler', 'workflow-control', 'task-orchestrator', 'execution-planner', 'control-plane', 'agent-control'] as const;
 const AUDIT_TYPES = ['all', 'workflow', 'execution-plan', 'agent-action-request', 'cycle', 'backtest-run.reviewed', 'strategy-catalog.saved'] as const;
+const INCIDENT_STATUSES = ['all', 'open', 'investigating', 'mitigated', 'resolved'] as const;
+const INCIDENT_SEVERITIES = ['all', 'info', 'warn', 'critical'] as const;
+const INCIDENT_SOURCES = ['all', 'monitoring', 'notification', 'audit', 'operator', 'workflow', 'scheduler', 'control-plane'] as const;
 
 type InvestigationTimelineItem = {
   id: string;
   detail: string;
-  kind: 'notification' | 'audit' | 'operator-action' | 'monitoring-alert';
+  kind: 'incident' | 'notification' | 'audit' | 'operator-action' | 'monitoring-alert';
   level: string;
   source: string;
   timestamp: string;
@@ -42,12 +48,14 @@ type InvestigationTimelineItem = {
 
 function translateTimelineKind(locale: string, kind: InvestigationTimelineItem['kind']) {
   if (locale === 'zh') {
+    if (kind === 'incident') return '事件';
     if (kind === 'notification') return '通知';
     if (kind === 'audit') return '审计';
     if (kind === 'operator-action') return '动作';
     return '监控';
   }
 
+  if (kind === 'incident') return 'Incident';
   if (kind === 'notification') return 'Notification';
   if (kind === 'audit') return 'Audit';
   if (kind === 'operator-action') return 'Action';
@@ -71,11 +79,21 @@ function NotificationsPage() {
   const [notificationTimeWindow, setNotificationTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const [auditTypeFilter, setAuditTypeFilter] = useState('all');
   const [auditTimeWindow, setAuditTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
+  const [incidentStatusFilter, setIncidentStatusFilter] = useState('all');
+  const [incidentSeverityFilter, setIncidentSeverityFilter] = useState('all');
+  const [incidentSourceFilter, setIncidentSourceFilter] = useState('all');
+  const [incidentTimeWindow, setIncidentTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('7d');
+  const [selectedIncidentId, setSelectedIncidentId] = useState('');
+  const [incidentRefreshKey, setIncidentRefreshKey] = useState(0);
+  const [incidentNoteDraft, setIncidentNoteDraft] = useState('');
+  const [incidentOwnerDraft, setIncidentOwnerDraft] = useState('');
+  const [incidentBusy, setIncidentBusy] = useState(false);
   const activeTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === monitoringTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const activeSchedulerTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === schedulerTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const activeOperatorActionTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === operatorActionTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const activeNotificationTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === notificationTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const activeAuditTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === auditTimeWindow) || MONITORING_TIME_WINDOWS[1];
+  const activeIncidentTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === incidentTimeWindow) || MONITORING_TIME_WINDOWS[2];
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
@@ -102,6 +120,14 @@ function NotificationsPage() {
     hours: activeAuditTimeWindow.hours,
     type: auditTypeFilter === 'all' ? '' : auditTypeFilter,
   });
+  const { items: incidentItems, loading: incidentsLoading } = useIncidentsFeed({
+    hours: activeIncidentTimeWindow.hours,
+    refreshKey: incidentRefreshKey,
+    severity: incidentSeverityFilter === 'all' ? '' : incidentSeverityFilter,
+    source: incidentSourceFilter === 'all' ? '' : incidentSourceFilter,
+    status: incidentStatusFilter === 'all' ? '' : incidentStatusFilter,
+  });
+  const { incident: selectedIncident, notes: selectedIncidentNotes, loading: incidentDetailLoading } = useIncidentDetail(selectedIncidentId, incidentRefreshKey);
   const { items: schedulerItems, loading: schedulerLoading } = useSchedulerTicksFeed({
     hours: activeSchedulerTimeWindow.hours,
     phase: schedulerPhaseFilter === 'all' ? '' : schedulerPhaseFilter,
@@ -134,6 +160,25 @@ function NotificationsPage() {
       setSelectedMonitoringSnapshotId('');
     }
   }, [monitoringSnapshotItems, selectedMonitoringSnapshotId]);
+
+  useEffect(() => {
+    if (!selectedIncidentId) return;
+    const exists = incidentItems.some((item) => item.id === selectedIncidentId);
+    if (!exists) {
+      setSelectedIncidentId('');
+      setIncidentNoteDraft('');
+    }
+  }, [incidentItems, selectedIncidentId]);
+
+  useEffect(() => {
+    if (selectedIncident?.owner) {
+      setIncidentOwnerDraft(selectedIncident.owner);
+      return;
+    }
+    if (!selectedIncidentId) {
+      setIncidentOwnerDraft(state.controlPlane.operator || '');
+    }
+  }, [selectedIncident?.owner, selectedIncidentId, state.controlPlane.operator]);
 
   function applyMonitoringFocus(options: {
     source?: string;
@@ -183,12 +228,29 @@ function NotificationsPage() {
     setOperatorActionTimeWindow(options.timeWindow || '24h');
   }
 
+  function applyIncidentFocus(options: {
+    severity?: string;
+    source?: string;
+    status?: string;
+    timeWindow?: (typeof MONITORING_TIME_WINDOWS)[number]['key'];
+    incidentId?: string;
+  }) {
+    setIncidentSeverityFilter(options.severity || 'all');
+    setIncidentSourceFilter(options.source || 'all');
+    setIncidentStatusFilter(options.status || 'all');
+    setIncidentTimeWindow(options.timeWindow || '7d');
+    if (options.incidentId !== undefined) {
+      setSelectedIncidentId(options.incidentId || '');
+    }
+  }
+
   function resetAllFocuses() {
     applyMonitoringFocus({});
     applyNotificationFocus({});
     applyAuditFocus({});
     applySchedulerFocus({});
     applyOperatorActionFocus({});
+    applyIncidentFocus({});
   }
 
   function focusNotificationItem(source: string) {
@@ -240,6 +302,114 @@ function NotificationsPage() {
     applyAuditFocus({ timeWindow: '24h' });
   }
 
+  async function openIncident(payload: {
+    title: string;
+    summary: string;
+    severity: string;
+    source: string;
+    owner?: string;
+    tags?: string[];
+    links?: Array<Record<string, unknown>>;
+    initialNote?: string;
+    metadata?: Record<string, unknown>;
+  }) {
+    setIncidentBusy(true);
+    try {
+      const response = await createIncident({
+        ...payload,
+        owner: payload.owner || state.controlPlane.operator,
+        status: 'open',
+      });
+      const nextId = response.incident.id;
+      setIncidentRefreshKey((value) => value + 1);
+      applyIncidentFocus({
+        incidentId: nextId,
+        severity: payload.severity,
+        source: payload.source,
+        status: 'open',
+        timeWindow: '7d',
+      });
+      setIncidentNoteDraft('');
+      return response.incident;
+    } finally {
+      setIncidentBusy(false);
+    }
+  }
+
+  async function updateSelectedIncident(patch: Record<string, unknown>) {
+    if (!selectedIncidentId) return;
+    setIncidentBusy(true);
+    try {
+      await updateIncident(selectedIncidentId, patch);
+      setIncidentRefreshKey((value) => value + 1);
+    } finally {
+      setIncidentBusy(false);
+    }
+  }
+
+  async function appendSelectedIncidentNote() {
+    if (!selectedIncidentId || !incidentNoteDraft.trim()) return;
+    setIncidentBusy(true);
+    try {
+      await appendIncidentNote(selectedIncidentId, {
+        author: state.controlPlane.operator,
+        body: incidentNoteDraft.trim(),
+      });
+      setIncidentNoteDraft('');
+      setIncidentRefreshKey((value) => value + 1);
+    } finally {
+      setIncidentBusy(false);
+    }
+  }
+
+  function createMonitoringIncident(item: (typeof monitoringAlertItems)[number]) {
+    return openIncident({
+      title: `${item.source} ${locale === 'zh' ? '告警' : 'alert'}`,
+      summary: item.message,
+      severity: item.level,
+      source: 'monitoring',
+      tags: ['monitoring', item.source, item.level].filter(Boolean),
+      links: [{ kind: 'monitoring-alert', alertId: item.id, snapshotId: item.snapshotId || '' }],
+      initialNote: `${item.message}\n\n${locale === 'zh' ? '来源' : 'Source'}: ${item.source}`,
+      metadata: {
+        monitoringAlertId: item.id,
+        snapshotId: item.snapshotId || '',
+      },
+    });
+  }
+
+  function createNotificationIncident(item: (typeof items)[number]) {
+    return openIncident({
+      title: item.title,
+      summary: item.message,
+      severity: item.level,
+      source: 'notification',
+      tags: ['notification', item.source, item.level].filter(Boolean),
+      links: [{ kind: 'notification', notificationId: item.id, source: item.source }],
+      initialNote: item.message,
+      metadata: {
+        notificationId: item.id,
+        notificationSource: item.source,
+      },
+    });
+  }
+
+  function createAuditIncident(item: (typeof auditItems)[number]) {
+    return openIncident({
+      title: item.title,
+      summary: item.detail,
+      severity: 'warn',
+      source: 'audit',
+      tags: ['audit', item.type].filter(Boolean),
+      links: [{ kind: 'audit', auditId: item.id, auditType: item.type }],
+      initialNote: item.detail,
+      metadata: {
+        auditId: item.id,
+        auditType: item.type,
+      },
+    });
+  }
+
   const activeFocusTags = [
     monitoringSourceFilter !== 'all' ? `monitor:${monitoringSourceFilter}` : '',
     monitoringLevelFilter !== 'all' ? `severity:${monitoringLevelFilter}` : '',
@@ -255,9 +425,23 @@ function NotificationsPage() {
     notificationTimeWindow !== '24h' ? `notif-window:${notificationTimeWindow}` : '',
     auditTypeFilter !== 'all' ? `audit:${auditTypeFilter}` : '',
     auditTimeWindow !== '24h' ? `audit-window:${auditTimeWindow}` : '',
+    incidentStatusFilter !== 'all' ? `incident:${incidentStatusFilter}` : '',
+    incidentSeverityFilter !== 'all' ? `incident-severity:${incidentSeverityFilter}` : '',
+    incidentSourceFilter !== 'all' ? `incident-source:${incidentSourceFilter}` : '',
+    incidentTimeWindow !== '7d' ? `incident-window:${incidentTimeWindow}` : '',
+    selectedIncidentId ? 'incident:selected' : '',
   ].filter(Boolean);
 
   const investigationTimeline = [
+    ...incidentItems.map<InvestigationTimelineItem>((item) => ({
+      id: `incident:${item.id}`,
+      kind: 'incident',
+      title: item.title,
+      detail: item.summary || item.latestNotePreview || item.status,
+      level: item.severity,
+      source: item.source,
+      timestamp: item.updatedAt || item.createdAt,
+    })),
     ...items.map<InvestigationTimelineItem>((item) => ({
       id: `notification:${item.id}`,
       kind: 'notification',
@@ -303,6 +487,15 @@ function NotificationsPage() {
     : (locale === 'zh' ? '当前处于默认总览路径，可从任一条时间线或状态卡开始钻取。' : 'You are on the default overview path. Drill in from any timeline entry or status card.');
 
   function focusTimelineItem(item: InvestigationTimelineItem) {
+    if (item.kind === 'incident') {
+      applyIncidentFocus({
+        incidentId: item.id.split(':').at(-1) || '',
+        severity: item.level,
+        source: item.source,
+        timeWindow: '7d',
+      });
+      return;
+    }
     if (item.kind === 'notification') {
       focusNotificationItem(item.source);
       return;
@@ -397,6 +590,220 @@ function NotificationsPage() {
               </button>
             ))}
           </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '事件队列' : 'Incident Queue'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把重要告警、通知或审计项升级成需要跟踪的 incident，并在这里统一查看状态。'
+                  : 'Escalate important alerts, notifications, or audits into trackable incidents and review them here.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-warn">{incidentItems.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            {MONITORING_TIME_WINDOWS.map((window) => {
+              const selected = incidentTimeWindow === window.key;
+              const label = window.key === '1h'
+                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
+                : window.key === '24h'
+                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
+                  : window.key === '7d'
+                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
+                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              return (
+                <button
+                  key={window.key}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setIncidentTimeWindow(window.key)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="settings-chip-row">
+            {INCIDENT_STATUSES.map((status) => {
+              const selected = incidentStatusFilter === status;
+              const label = status === 'all'
+                ? (locale === 'zh' ? '全部状态' : 'All Statuses')
+                : translateMonitoringStatus(locale, status);
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setIncidentStatusFilter(status)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="settings-chip-row">
+            {INCIDENT_SEVERITIES.map((severity) => {
+              const selected = incidentSeverityFilter === severity;
+              const label = severity === 'all'
+                ? (locale === 'zh' ? '全部级别' : 'All Levels')
+                : translateMonitoringStatus(locale, severity);
+              return (
+                <button
+                  key={severity}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setIncidentSeverityFilter(severity)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="settings-chip-row">
+            {INCIDENT_SOURCES.map((source) => {
+              const selected = incidentSourceFilter === source;
+              const label = source === 'all' ? (locale === 'zh' ? '全部来源' : 'All Sources') : source;
+              return (
+                <button
+                  key={source}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setIncidentSourceFilter(source)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {incidentsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载事件...' : 'Loading incidents...'}</div> : null}
+            {!incidentsLoading && !incidentItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前还没有升级为 incident 的事件' : 'No incidents have been opened yet.'}</div> : null}
+            {!incidentsLoading ? incidentItems.map((item) => (
+              <button
+                type="button"
+                className="focus-row status-row-button"
+                key={item.id}
+                onClick={() => applyIncidentFocus({
+                  incidentId: selectedIncidentId === item.id ? '' : item.id,
+                  severity: item.severity,
+                  source: item.source,
+                  status: item.status,
+                  timeWindow: incidentTimeWindow,
+                })}
+              >
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.summary || item.latestNotePreview || (locale === 'zh' ? '暂无摘要' : 'No summary')}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                  <strong>{translateMonitoringStatus(locale, item.status)}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '负责人' : 'Owner'}</span>
+                  <strong>{item.owner || (locale === 'zh' ? '未指派' : 'Unassigned')}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '更新于' : 'Updated'}</span>
+                  <strong>{fmtDateTime(item.updatedAt || item.createdAt, locale)}</strong>
+                </div>
+              </button>
+            )) : null}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '事件详情' : 'Incident Detail'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '选中 incident 后，可以在这里改状态、指派负责人、补充排查记录。'
+                  : 'Once an incident is selected, update its status, assign an owner, and add investigation notes here.'}
+              </div>
+            </div>
+            <div className={`panel-badge ${selectedIncident ? 'badge-info' : 'muted'}`}>{selectedIncident ? selectedIncident.status : '--'}</div>
+          </div>
+          {!selectedIncidentId ? (
+            <div className="empty-cell">{locale === 'zh' ? '从上方事件队列选择一条 incident，或在告警/通知/审计面板里直接升级创建。' : 'Select an incident from the queue above, or escalate one from the alert, notification, or audit panels below.'}</div>
+          ) : null}
+          {selectedIncidentId && incidentDetailLoading ? (
+            <div className="empty-cell">{locale === 'zh' ? '正在加载事件详情...' : 'Loading incident detail...'}</div>
+          ) : null}
+          {selectedIncident ? (
+            <>
+              <div className="status-stack">
+                <div className="status-row"><span>{locale === 'zh' ? '标题' : 'Title'}</span><strong>{selectedIncident.title}</strong></div>
+                <div className="status-row"><span>{locale === 'zh' ? '来源' : 'Source'}</span><strong>{selectedIncident.source}</strong></div>
+                <div className="status-row"><span>{locale === 'zh' ? '级别' : 'Severity'}</span><strong>{translateMonitoringStatus(locale, selectedIncident.severity)}</strong></div>
+                <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{translateMonitoringStatus(locale, selectedIncident.status)}</strong></div>
+                <div className="status-row"><span>{locale === 'zh' ? '创建于' : 'Created'}</span><strong>{fmtDateTime(selectedIncident.createdAt, locale)}</strong></div>
+                <div className="status-copy">{selectedIncident.summary || (locale === 'zh' ? '暂无摘要' : 'No summary')}</div>
+              </div>
+              <div className="settings-chip-row">
+                <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => updateSelectedIncident({ status: 'investigating', actor: state.controlPlane.operator })}>
+                  {locale === 'zh' ? '开始排查' : 'Start Investigating'}
+                </button>
+                <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => updateSelectedIncident({ status: 'mitigated', actor: state.controlPlane.operator })}>
+                  {locale === 'zh' ? '已缓解' : 'Mark Mitigated'}
+                </button>
+                <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => updateSelectedIncident({ status: 'resolved', actor: state.controlPlane.operator })}>
+                  {locale === 'zh' ? '已解决' : 'Resolve'}
+                </button>
+              </div>
+              <label className="field-label" htmlFor="incident-owner-input">{locale === 'zh' ? '负责人' : 'Owner'}</label>
+              <div className="settings-chip-row">
+                <input
+                  id="incident-owner-input"
+                  className="text-input"
+                  value={incidentOwnerDraft}
+                  onChange={(event) => setIncidentOwnerDraft(event.target.value)}
+                  placeholder={locale === 'zh' ? '输入负责人' : 'Assign owner'}
+                />
+                <button
+                  type="button"
+                  className="settings-chip"
+                  disabled={incidentBusy || !incidentOwnerDraft.trim()}
+                  onClick={() => updateSelectedIncident({ owner: incidentOwnerDraft.trim(), actor: state.controlPlane.operator })}
+                >
+                  {locale === 'zh' ? '保存负责人' : 'Save Owner'}
+                </button>
+              </div>
+              <label className="field-label" htmlFor="incident-note-input">{locale === 'zh' ? '排查记录' : 'Investigation Note'}</label>
+              <textarea
+                id="incident-note-input"
+                className="detail-textarea"
+                rows={4}
+                value={incidentNoteDraft}
+                onChange={(event) => setIncidentNoteDraft(event.target.value)}
+                placeholder={locale === 'zh' ? '记录当前判断、缓解动作或下一步计划' : 'Capture findings, mitigation steps, or next actions'}
+              />
+              <div className="settings-chip-row">
+                <button type="button" className="settings-chip" disabled={incidentBusy || !incidentNoteDraft.trim()} onClick={appendSelectedIncidentNote}>
+                  {locale === 'zh' ? '追加记录' : 'Append Note'}
+                </button>
+                <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => setIncidentNoteDraft('')}>
+                  {locale === 'zh' ? '清空草稿' : 'Clear Draft'}
+                </button>
+              </div>
+              <div className="focus-list focus-list-terminal">
+                {!selectedIncidentNotes.length ? <div className="empty-cell">{locale === 'zh' ? '这条 incident 还没有追加记录' : 'This incident does not have investigation notes yet.'}</div> : null}
+                {selectedIncidentNotes.map((note) => (
+                  <div className="focus-row" key={note.id}>
+                    <div className="symbol-cell">
+                      <strong>{note.author}</strong>
+                      <span>{note.body}</span>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                      <strong>{fmtDateTime(note.createdAt, locale)}</strong>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
         </article>
         <article className="panel">
           <div className="panel-head">
@@ -530,6 +937,12 @@ function NotificationsPage() {
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '时间' : 'Time'}</span>
                   <strong>{fmtDateTime(item.createdAt, locale)}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                  <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => createMonitoringIncident(item)}>
+                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                  </button>
                 </div>
               </div>
             )) : null}
@@ -748,16 +1161,33 @@ function NotificationsPage() {
             {loading ? <div className="empty-cell">{locale === 'zh' ? '正在加载通知...' : 'Loading notifications...'}</div> : null}
             {!loading && !items.length ? <div className="empty-cell">{locale === 'zh' ? '暂无控制面通知' : 'No control-plane notifications yet.'}</div> : null}
             {!loading ? items.map((item) => (
-              <button type="button" className="focus-row status-row-button" key={item.id} onClick={() => focusNotificationItem(item.source)}>
-                <div className="symbol-cell">
-                  <strong>{item.title}</strong>
-                  <span>{item.message}</span>
-                </div>
+              <div className="focus-row" key={item.id}>
+                <button type="button" className="focus-main-button" onClick={() => focusNotificationItem(item.source)}>
+                  <div className="symbol-cell">
+                    <strong>{item.title}</strong>
+                    <span>{item.message}</span>
+                  </div>
+                </button>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '来源' : 'Source'}</span>
                   <strong>{item.source}</strong>
                 </div>
-              </button>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                  <strong>{fmtDateTime(item.createdAt, locale)}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                  <button
+                    type="button"
+                    className="settings-chip"
+                    disabled={incidentBusy}
+                    onClick={() => void createNotificationIncident(item)}
+                  >
+                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                  </button>
+                </div>
+              </div>
             )) : null}
           </div>
         </article>
@@ -845,11 +1275,13 @@ function NotificationsPage() {
             {auditLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载审计记录...' : 'Loading audit records...'}</div> : null}
             {!auditLoading && !auditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有审计记录' : 'No audit records match the current filters.'}</div> : null}
             {!auditLoading ? auditItems.map((item) => (
-              <button type="button" className="focus-row status-row-button" key={item.id} onClick={() => focusAuditItem(item.type)}>
-                <div className="symbol-cell">
-                  <strong>{item.title}</strong>
-                  <span>{item.detail}</span>
-                </div>
+              <div className="focus-row" key={item.id}>
+                <button type="button" className="focus-main-button" onClick={() => focusAuditItem(item.type)}>
+                  <div className="symbol-cell">
+                    <strong>{item.title}</strong>
+                    <span>{item.detail}</span>
+                  </div>
+                </button>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '类型' : 'Type'}</span>
                   <strong>{item.type}</strong>
@@ -858,7 +1290,18 @@ function NotificationsPage() {
                   <span>{locale === 'zh' ? '操作人' : 'Actor'}</span>
                   <strong>{item.actor}</strong>
                 </div>
-              </button>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                  <button
+                    type="button"
+                    className="settings-chip"
+                    disabled={incidentBusy}
+                    onClick={() => void createAuditIncident(item)}
+                  >
+                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                  </button>
+                </div>
+              </div>
             )) : null}
           </div>
         </article>

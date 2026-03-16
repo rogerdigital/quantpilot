@@ -1298,6 +1298,56 @@ test('GET /api/monitoring/snapshots and alerts return persisted monitoring histo
   assert.equal(filteredAlerts.json.alerts[0].id, 'monitoring-alert-test');
 });
 
+test('incident routes create, update, and return incident details', async () => {
+  const created = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/incidents',
+    body: {
+      id: 'incident-api-test',
+      title: 'Queue backlog incident',
+      summary: 'Notification queue backlog exceeded threshold.',
+      severity: 'warn',
+      source: 'monitoring',
+      owner: 'api-operator',
+      initialNote: 'Created from API test.',
+    },
+  });
+  const listed = await invokeGatewayRoute(handler, {
+    path: '/api/incidents?status=open&severity=warn&source=monitoring&hours=168&limit=5',
+  });
+  const updated = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/incidents/incident-api-test',
+    body: {
+      status: 'investigating',
+      actor: 'api-operator',
+    },
+  });
+  const noted = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/incidents/incident-api-test/notes',
+    body: {
+      author: 'api-operator',
+      body: 'Queue was drained by worker retry.',
+    },
+  });
+  const detail = await invokeGatewayRoute(handler, {
+    path: '/api/incidents/incident-api-test',
+  });
+
+  assert.equal(created.statusCode, 200);
+  assert.equal(created.json.incident.id, 'incident-api-test');
+  assert.equal(listed.statusCode, 200);
+  assert.equal(listed.json.incidents[0].id, 'incident-api-test');
+  assert.equal(updated.statusCode, 200);
+  assert.equal(updated.json.incident.status, 'investigating');
+  assert.equal(noted.statusCode, 200);
+  assert.equal(noted.json.note.incidentId, 'incident-api-test');
+  assert.equal(detail.statusCode, 200);
+  assert.equal(detail.json.incident.id, 'incident-api-test');
+  assert.equal(detail.json.notes.length >= 2, true);
+});
+
 test('POST then GET /api/audit/records persists audit entries', async () => {
   const createResponse = await invokeGatewayRoute(handler, {
     method: 'POST',

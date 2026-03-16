@@ -127,6 +127,43 @@ test('execution runtime repository persists runtime events and broker snapshots'
   assert.equal(context.executionRuntime.listBrokerAccountSnapshots(5)[0].id, snapshot.id);
 });
 
+test('incident repository persists incidents, filters them, and stores notes', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const incident = context.incidents.appendIncident({
+    id: 'incident-1',
+    title: 'Worker lag warning',
+    summary: 'Heartbeat lag crossed threshold.',
+    severity: 'warn',
+    source: 'monitoring',
+    owner: 'ops-a',
+    status: 'open',
+    createdAt: '2026-03-16T08:00:00.000Z',
+    updatedAt: '2026-03-16T08:00:00.000Z',
+    initialNote: 'Created from monitoring alert.',
+  });
+
+  const updated = context.incidents.updateIncident('incident-1', {
+    status: 'investigating',
+    owner: 'ops-b',
+  });
+  const note = context.incidents.appendIncidentNote('incident-1', {
+    author: 'ops-b',
+    body: 'Worker restarted and backlog is draining.',
+    createdAt: '2026-03-16T08:30:00.000Z',
+  });
+  const list = context.incidents.listIncidents(10, {
+    severity: 'warn',
+    source: 'monitoring',
+  });
+
+  assert.equal(incident.id, 'incident-1');
+  assert.equal(updated.status, 'investigating');
+  assert.equal(updated.owner, 'ops-b');
+  assert.equal(note.incidentId, 'incident-1');
+  assert.equal(list[0].latestNotePreview, 'Worker restarted and backlog is draining.');
+  assert.equal(context.incidents.listIncidentNotes('incident-1', 10).length, 2);
+});
+
 test('workflow repository persists and updates workflow runs through the injected context', () => {
   const context = createControlPlaneContext(createMemoryStore());
   const workflow = context.workflows.appendWorkflowRun({

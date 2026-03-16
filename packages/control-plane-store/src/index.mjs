@@ -8,6 +8,7 @@ export { createBacktestRunRepository } from './repositories/backtest-run-repo.mj
 export { createCycleRepository } from './repositories/cycle-repo.mjs';
 export { createExecutionPlanRepository } from './repositories/execution-plan-repo.mjs';
 export { createExecutionRuntimeRepository } from './repositories/execution-runtime-repo.mjs';
+export { createIncidentRepository } from './repositories/incident-repo.mjs';
 export { createMarketProviderRepository } from './repositories/market-provider-repo.mjs';
 export { createOperatorActionRepository } from './repositories/operator-action-repo.mjs';
 export { createNotificationRepository } from './repositories/notification-repo.mjs';
@@ -42,6 +43,12 @@ export const listExecutionRuntimeEvents = (...args) => controlPlaneContext.execu
 export const appendExecutionRuntimeEvent = (...args) => controlPlaneContext.executionRuntime.appendExecutionRuntimeEvent(...args);
 export const listBrokerAccountSnapshots = (...args) => controlPlaneContext.executionRuntime.listBrokerAccountSnapshots(...args);
 export const appendBrokerAccountSnapshot = (...args) => controlPlaneContext.executionRuntime.appendBrokerAccountSnapshot(...args);
+export const listIncidents = (...args) => controlPlaneContext.incidents.listIncidents(...args);
+export const getIncident = (...args) => controlPlaneContext.incidents.getIncident(...args);
+export const listIncidentNotes = (...args) => controlPlaneContext.incidents.listIncidentNotes(...args);
+export const appendIncident = (...args) => controlPlaneContext.incidents.appendIncident(...args);
+export const updateIncident = (...args) => controlPlaneContext.incidents.updateIncident(...args);
+export const appendIncidentNote = (...args) => controlPlaneContext.incidents.appendIncidentNote(...args);
 export const getMarketProviderStatus = (...args) => controlPlaneContext.marketProviders.getMarketProviderStatus(...args);
 export const updateMarketProviderStatus = (...args) => controlPlaneContext.marketProviders.updateMarketProviderStatus(...args);
 export const listNotifications = (...args) => controlPlaneContext.notifications.listNotifications(...args);

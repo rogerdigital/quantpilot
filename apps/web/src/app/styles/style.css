@@ -294,6 +294,33 @@ body::before {
   grid-column: 1 / -1;
 }
 
+.field-label {
+  display: block;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.text-input,
+.detail-textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(9, 18, 29, 0.92);
+  color: var(--text);
+  padding: 11px 12px;
+  font: inherit;
+}
+
+.detail-textarea {
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.5;
+}
+
 .settings-actions {
   display: flex;
   align-items: center;
@@ -1082,6 +1109,17 @@ h1 {
 
 .focus-row:last-child {
   border-bottom: 0;
+}
+
+.focus-main-button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
 }
 
 .focus-metric {
