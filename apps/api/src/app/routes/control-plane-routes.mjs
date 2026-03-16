@@ -36,7 +36,11 @@ export async function handleControlPlaneRoutes(context) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/audit/records') {
     writeJson(res, 200, {
       ok: true,
-      records: listAuditRecords(),
+      records: listAuditRecords({
+        limit: reqUrl.searchParams.get('limit'),
+        type: reqUrl.searchParams.get('type'),
+        hours: reqUrl.searchParams.get('hours'),
+      }),
     });
     return true;
   }

@@ -217,7 +217,30 @@ export async function fetchNotifications(options: NotificationsQuery = {}): Prom
   });
 }
 
-export async function fetchAuditRecords(): Promise<{
+type AuditRecordsQuery = {
+  hours?: number | null;
+  limit?: number;
+  type?: string;
+};
+
+function buildAuditRecordsQuery(options: AuditRecordsQuery = {}) {
+  const params = new URLSearchParams();
+
+  if (typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0) {
+    params.set('limit', String(options.limit));
+  }
+  if (typeof options.hours === 'number' && Number.isFinite(options.hours) && options.hours > 0) {
+    params.set('hours', String(options.hours));
+  }
+  if (options.type) {
+    params.set('type', options.type);
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+export async function fetchAuditRecords(options: AuditRecordsQuery = {}): Promise<{
   ok: boolean;
   records: Array<{
     id: string;
@@ -229,7 +252,7 @@ export async function fetchAuditRecords(): Promise<{
     metadata?: Record<string, unknown>;
   }>;
 }> {
-  return fetchJson('/api/audit/records', {
+  return fetchJson(`/api/audit/records${buildAuditRecordsQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }

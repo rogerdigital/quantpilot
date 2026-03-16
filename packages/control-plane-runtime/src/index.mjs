@@ -84,8 +84,8 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     updateBacktestRun(runId, patch = {}) {
       return context.backtestRuns.updateBacktestRun(runId, patch);
     },
-    listAuditRecords(limit = 50) {
-      return context.audit.listAuditRecords(limit);
+    listAuditRecords(limit = 50, filter = {}) {
+      return context.audit.listAuditRecords(limit, filter);
     },
     appendAuditRecord(record) {
       return context.audit.appendAuditRecord(record);

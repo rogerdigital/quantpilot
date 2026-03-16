@@ -1317,6 +1317,22 @@ test('POST then GET /api/audit/records persists audit entries', async () => {
   assert.equal(createResponse.json.record.title, 'Audit from API test');
   assert.equal(listResponse.statusCode, 200);
   assert.equal(listResponse.json.records.some((item) => item.id === createResponse.json.record.id), true);
+
+  context.audit.appendAuditRecord({
+    id: 'audit-workflow-test',
+    type: 'workflow',
+    actor: 'worker-test',
+    title: 'Workflow audit',
+    detail: 'workflow audit test record',
+    createdAt: '2026-03-16T09:00:00.000Z',
+  });
+
+  const filteredResponse = await invokeGatewayRoute(handler, {
+    path: '/api/audit/records?type=workflow&hours=48&limit=5',
+  });
+
+  assert.equal(filteredResponse.statusCode, 200);
+  assert.equal(filteredResponse.json.records.some((item) => item.id === 'audit-workflow-test'), true);
 });
 
 test('POST then GET /api/task-orchestrator/cycles persists cycle records', async () => {

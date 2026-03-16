@@ -4,6 +4,7 @@ import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts'
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useMonitoringStatus } from '../../hooks/useMonitoringStatus.ts';
 import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
+import { useAuditRecordsFeed } from '../../modules/notifications/useAuditRecordsFeed.ts';
 import { useMonitoringAlertsFeed } from '../../modules/notifications/useMonitoringAlertsFeed.ts';
 import { useMonitoringSnapshotsFeed } from '../../modules/notifications/useMonitoringSnapshotsFeed.ts';
 import { useOperatorActionsFeed } from '../../modules/notifications/useOperatorActionsFeed.ts';
@@ -27,6 +28,7 @@ const SCHEDULER_PHASES = ['all', 'PRE_OPEN', 'INTRADAY', 'POST_CLOSE', 'OFF_HOUR
 const OPERATOR_ACTION_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
 const NOTIFICATION_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
 const NOTIFICATION_SOURCES = ['all', 'scheduler', 'workflow-control', 'task-orchestrator', 'execution-planner', 'control-plane', 'agent-control'] as const;
+const AUDIT_TYPES = ['all', 'workflow', 'execution-plan', 'agent-action-request', 'cycle', 'backtest-run.reviewed', 'strategy-catalog.saved'] as const;
 
 function NotificationsPage() {
   const { state } = useTradingSystem();
@@ -43,10 +45,13 @@ function NotificationsPage() {
   const [notificationLevelFilter, setNotificationLevelFilter] = useState('all');
   const [notificationSourceFilter, setNotificationSourceFilter] = useState('all');
   const [notificationTimeWindow, setNotificationTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
+  const [auditTypeFilter, setAuditTypeFilter] = useState('all');
+  const [auditTimeWindow, setAuditTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const activeTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === monitoringTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const activeSchedulerTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === schedulerTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const activeOperatorActionTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === operatorActionTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const activeNotificationTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === notificationTimeWindow) || MONITORING_TIME_WINDOWS[1];
+  const activeAuditTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === auditTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
@@ -68,6 +73,10 @@ function NotificationsPage() {
   const { items: actionItems, loading: actionLoading } = useOperatorActionsFeed({
     hours: activeOperatorActionTimeWindow.hours,
     level: operatorActionLevelFilter === 'all' ? '' : operatorActionLevelFilter,
+  });
+  const { items: auditItems, loading: auditLoading } = useAuditRecordsFeed({
+    hours: activeAuditTimeWindow.hours,
+    type: auditTypeFilter === 'all' ? '' : auditTypeFilter,
   });
   const { items: schedulerItems, loading: schedulerLoading } = useSchedulerTicksFeed({
     hours: activeSchedulerTimeWindow.hours,
@@ -507,6 +516,77 @@ function NotificationsPage() {
             <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{state.controlPlane.lastStatus}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '审计记录' : 'Audit Records'}</span><strong>{state.controlPlane.auditCount}</strong></div>
             <div className="status-copy">{state.controlPlane.routeHint}</div>
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '审计记录' : 'Audit Records'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '查看关键控制面操作和工作流落下的审计轨迹。'
+                  : 'Review audit trails for key control-plane actions and workflow changes.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{auditItems.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            {MONITORING_TIME_WINDOWS.map((window) => {
+              const selected = auditTimeWindow === window.key;
+              const label = window.key === '1h'
+                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
+                : window.key === '24h'
+                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
+                  : window.key === '7d'
+                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
+                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              return (
+                <button
+                  key={window.key}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setAuditTimeWindow(window.key)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="settings-chip-row">
+            {AUDIT_TYPES.map((type) => {
+              const selected = auditTypeFilter === type;
+              const label = type === 'all' ? (locale === 'zh' ? '全部类型' : 'All Types') : type;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setAuditTypeFilter(type)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {auditLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载审计记录...' : 'Loading audit records...'}</div> : null}
+            {!auditLoading && !auditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有审计记录' : 'No audit records match the current filters.'}</div> : null}
+            {!auditLoading ? auditItems.map((item) => (
+              <div className="focus-row" key={item.id}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '类型' : 'Type'}</span>
+                  <strong>{item.type}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '操作人' : 'Actor'}</span>
+                  <strong>{item.actor}</strong>
+                </div>
+              </div>
+            )) : null}
           </div>
         </article>
         <article className="panel">
