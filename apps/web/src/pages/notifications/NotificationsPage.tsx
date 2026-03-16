@@ -24,6 +24,7 @@ const MONITORING_SOURCES = ['all', 'worker', 'workflow', 'queue', 'risk', 'broke
 const MONITORING_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
 const MONITORING_SNAPSHOT_STATUSES = ['all', 'healthy', 'warn', 'critical'] as const;
 const SCHEDULER_PHASES = ['all', 'PRE_OPEN', 'INTRADAY', 'POST_CLOSE', 'OFF_HOURS'] as const;
+const OPERATOR_ACTION_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
 
 function NotificationsPage() {
   const { state } = useTradingSystem();
@@ -35,8 +36,11 @@ function NotificationsPage() {
   const [monitoringTimeWindow, setMonitoringTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const [schedulerPhaseFilter, setSchedulerPhaseFilter] = useState('all');
   const [schedulerTimeWindow, setSchedulerTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
+  const [operatorActionLevelFilter, setOperatorActionLevelFilter] = useState('all');
+  const [operatorActionTimeWindow, setOperatorActionTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const activeTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === monitoringTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const activeSchedulerTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === schedulerTimeWindow) || MONITORING_TIME_WINDOWS[1];
+  const activeOperatorActionTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === operatorActionTimeWindow) || MONITORING_TIME_WINDOWS[1];
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
@@ -51,7 +55,10 @@ function NotificationsPage() {
     status: monitoringSnapshotStatusFilter === 'all' ? '' : monitoringSnapshotStatusFilter,
   });
   const { items, loading } = useNotificationsFeed();
-  const { items: actionItems, loading: actionLoading } = useOperatorActionsFeed();
+  const { items: actionItems, loading: actionLoading } = useOperatorActionsFeed({
+    hours: activeOperatorActionTimeWindow.hours,
+    level: operatorActionLevelFilter === 'all' ? '' : operatorActionLevelFilter,
+  });
   const { items: schedulerItems, loading: schedulerLoading } = useSchedulerTicksFeed({
     hours: activeSchedulerTimeWindow.hours,
     phase: schedulerPhaseFilter === 'all' ? '' : schedulerPhaseFilter,
@@ -334,6 +341,44 @@ function NotificationsPage() {
               </div>
             </div>
             <div className="panel-badge badge-info">{actionItems.length}</div>
+          </div>
+          <div className="settings-chip-row">
+            {MONITORING_TIME_WINDOWS.map((window) => {
+              const selected = operatorActionTimeWindow === window.key;
+              const label = window.key === '1h'
+                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
+                : window.key === '24h'
+                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
+                  : window.key === '7d'
+                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
+                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              return (
+                <button
+                  key={window.key}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setOperatorActionTimeWindow(window.key)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="settings-chip-row">
+            {OPERATOR_ACTION_LEVELS.map((level) => {
+              const selected = operatorActionLevelFilter === level;
+              const label = level === 'all' ? (locale === 'zh' ? '全部级别' : 'All Levels') : translateMonitoringStatus(locale, level);
+              return (
+                <button
+                  key={level}
+                  type="button"
+                  className={`settings-chip${selected ? ' active' : ''}`}
+                  onClick={() => setOperatorActionLevelFilter(level)}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
           <div className="focus-list focus-list-terminal">
             {actionLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载操作动作...' : 'Loading operator actions...'}</div> : null}

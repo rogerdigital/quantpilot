@@ -12,13 +12,29 @@ export type OperatorActionFeedItem = {
   createdAt: string;
 };
 
-export function useOperatorActionsFeed() {
+type OperatorActionsFeedOptions = {
+  hours?: number | null;
+  level?: string;
+  limit?: number;
+};
+
+export function useOperatorActionsFeed(options: OperatorActionsFeedOptions = {}) {
   const [items, setItems] = useState<OperatorActionFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const {
+    hours = null,
+    level = '',
+    limit = 50,
+  } = options;
 
   useEffect(() => {
     let mounted = true;
-    fetchOperatorActions()
+    setLoading(true);
+    fetchOperatorActions({
+      hours,
+      level,
+      limit,
+    })
       .then((payload) => {
         if (mounted) {
           setItems(Array.isArray(payload?.actions) ? payload.actions : []);
@@ -38,7 +54,7 @@ export function useOperatorActionsFeed() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [hours, level, limit]);
 
   return { items, loading };
 }

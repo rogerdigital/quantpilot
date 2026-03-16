@@ -221,7 +221,11 @@ export async function handleControlPlaneRoutes(context) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/task-orchestrator/actions') {
     writeJson(res, 200, {
       ok: true,
-      actions: listActions(),
+      actions: listActions({
+        limit: reqUrl.searchParams.get('limit'),
+        level: reqUrl.searchParams.get('level'),
+        hours: reqUrl.searchParams.get('hours'),
+      }),
     });
     return true;
   }

@@ -1065,6 +1065,24 @@ test('POST then GET /api/task-orchestrator/actions persists operator actions', a
   assert.equal(createResponse.json.action.title, 'Approve from API test');
   assert.equal(listResponse.statusCode, 200);
   assert.equal(listResponse.json.actions.some((item) => item.id === createResponse.json.action.id), true);
+
+  context.operatorActions.appendOperatorAction({
+    id: 'operator-action-warn',
+    type: 'reject-intent',
+    actor: 'risk-operator',
+    title: 'Rejected for review',
+    detail: 'rejected due to risk controls',
+    symbol: 'TSLA',
+    level: 'warn',
+    createdAt: '2026-03-15T10:00:00.000Z',
+  });
+
+  const filteredResponse = await invokeGatewayRoute(handler, {
+    path: '/api/task-orchestrator/actions?level=warn&hours=48&limit=5',
+  });
+
+  assert.equal(filteredResponse.statusCode, 200);
+  assert.equal(filteredResponse.json.actions.some((item) => item.id === 'operator-action-warn'), true);
 });
 
 test('POST /api/task-orchestrator/actions requires execution:approve permission', async () => {

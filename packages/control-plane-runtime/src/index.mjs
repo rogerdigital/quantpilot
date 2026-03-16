@@ -138,8 +138,8 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return entry;
     },
-    listOperatorActions(limit = 50) {
-      return context.operatorActions.listOperatorActions(limit);
+    listOperatorActions(limit = 50, filter = {}) {
+      return context.operatorActions.listOperatorActions(limit, filter);
     },
     appendOperatorAction(payload) {
       return context.operatorActions.appendOperatorAction(payload);

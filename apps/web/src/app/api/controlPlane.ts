@@ -266,7 +266,30 @@ export async function fetchSchedulerTicks(options: SchedulerTicksQuery = {}): Pr
   });
 }
 
-export async function fetchOperatorActions(): Promise<{
+type OperatorActionsQuery = {
+  hours?: number | null;
+  level?: string;
+  limit?: number;
+};
+
+function buildOperatorActionsQuery(options: OperatorActionsQuery = {}) {
+  const params = new URLSearchParams();
+
+  if (typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0) {
+    params.set('limit', String(options.limit));
+  }
+  if (typeof options.hours === 'number' && Number.isFinite(options.hours) && options.hours > 0) {
+    params.set('hours', String(options.hours));
+  }
+  if (options.level) {
+    params.set('level', options.level);
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+export async function fetchOperatorActions(options: OperatorActionsQuery = {}): Promise<{
   ok: boolean;
   actions: Array<{
     id: string;
@@ -279,7 +302,7 @@ export async function fetchOperatorActions(): Promise<{
     createdAt: string;
   }>;
 }> {
-  return fetchJson('/api/task-orchestrator/actions', {
+  return fetchJson(`/api/task-orchestrator/actions${buildOperatorActionsQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
