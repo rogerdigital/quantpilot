@@ -630,11 +630,22 @@ function NotificationsPage() {
             </div>
             <div className="panel-badge badge-info">{connectedCount}/2</div>
           </div>
+          <div className="settings-chip-row">
+            <button type="button" className="settings-chip" onClick={() => applyMonitoringFocus({ source: 'market', timeWindow: '24h' })}>
+              {locale === 'zh' ? '查看行情监控' : 'Market Monitoring'}
+            </button>
+            <button type="button" className="settings-chip" onClick={() => applyMonitoringFocus({ source: 'broker', timeWindow: '24h' })}>
+              {locale === 'zh' ? '查看券商监控' : 'Broker Monitoring'}
+            </button>
+            <button type="button" className="settings-chip" onClick={() => applyNotificationFocus({ source: 'task-orchestrator', timeWindow: '24h' })}>
+              {locale === 'zh' ? '查看同步通知' : 'Sync Notifications'}
+            </button>
+          </div>
           <div className="status-stack">
-            <div className="status-row"><span>{copy[locale].labels.marketData}</span><strong>{marketProviderLabel}</strong></div>
-            <div className="status-row"><span>{copy[locale].labels.marketState}</span><strong>{connectionLabel(locale, marketConnected, marketFallback)}</strong></div>
-            <div className="status-row"><span>{copy[locale].labels.brokerState}</span><strong>{connectionLabel(locale, brokerConnected, false, true)}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '最近行情同步' : 'Last market sync'}</span><strong>{fmtDateTime(marketStatus?.asOf, locale)}</strong></div>
+            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'market', timeWindow: '24h' })}><span>{copy[locale].labels.marketData}</span><strong>{marketProviderLabel}</strong></button>
+            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'market', timeWindow: '24h' })}><span>{copy[locale].labels.marketState}</span><strong>{connectionLabel(locale, marketConnected, marketFallback)}</strong></button>
+            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'broker', timeWindow: '24h' })}><span>{copy[locale].labels.brokerState}</span><strong>{connectionLabel(locale, brokerConnected, false, true)}</strong></button>
+            <button type="button" className="status-row status-row-button" onClick={() => applyNotificationFocus({ source: 'task-orchestrator', timeWindow: '24h' })}><span>{locale === 'zh' ? '最近行情同步' : 'Last market sync'}</span><strong>{fmtDateTime(marketStatus?.asOf, locale)}</strong></button>
             <div className="status-copy">{marketStatus?.message || state.integrationStatus.marketData.message}</div>
             <div className="status-copy">{snapshot?.message || state.integrationStatus.broker.message}</div>
           </div>
