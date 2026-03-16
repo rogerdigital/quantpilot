@@ -30,6 +30,16 @@ const NOTIFICATION_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
 const NOTIFICATION_SOURCES = ['all', 'scheduler', 'workflow-control', 'task-orchestrator', 'execution-planner', 'control-plane', 'agent-control'] as const;
 const AUDIT_TYPES = ['all', 'workflow', 'execution-plan', 'agent-action-request', 'cycle', 'backtest-run.reviewed', 'strategy-catalog.saved'] as const;
 
+type InvestigationTimelineItem = {
+  id: string;
+  detail: string;
+  kind: 'notification' | 'audit' | 'operator-action' | 'monitoring-alert';
+  level: string;
+  source: string;
+  timestamp: string;
+  title: string;
+};
+
 function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
@@ -233,6 +243,67 @@ function NotificationsPage() {
     auditTimeWindow !== '24h' ? `audit-window:${auditTimeWindow}` : '',
   ].filter(Boolean);
 
+  const investigationTimeline = [
+    ...items.map<InvestigationTimelineItem>((item) => ({
+      id: `notification:${item.id}`,
+      kind: 'notification',
+      title: item.title,
+      detail: item.message,
+      level: item.level,
+      source: item.source,
+      timestamp: item.createdAt,
+    })),
+    ...auditItems.map<InvestigationTimelineItem>((item) => ({
+      id: `audit:${item.id}`,
+      kind: 'audit',
+      title: item.title,
+      detail: item.detail,
+      level: 'info',
+      source: item.type,
+      timestamp: item.createdAt,
+    })),
+    ...actionItems.map<InvestigationTimelineItem>((item) => ({
+      id: `action:${item.id}`,
+      kind: 'operator-action',
+      title: item.title,
+      detail: item.detail,
+      level: item.level,
+      source: item.actor,
+      timestamp: item.createdAt,
+    })),
+    ...monitoringAlertItems.map<InvestigationTimelineItem>((item) => ({
+      id: `monitoring:${item.id}`,
+      kind: 'monitoring-alert',
+      title: item.source,
+      detail: item.message,
+      level: item.level,
+      source: item.source,
+      timestamp: item.createdAt,
+    })),
+  ]
+    .sort((left, right) => Date.parse(right.timestamp || '') - Date.parse(left.timestamp || ''))
+    .slice(0, 18);
+
+  function focusTimelineItem(item: InvestigationTimelineItem) {
+    if (item.kind === 'notification') {
+      focusNotificationItem(item.source);
+      return;
+    }
+    if (item.kind === 'audit') {
+      focusAuditItem(item.source);
+      return;
+    }
+    if (item.kind === 'operator-action') {
+      focusOperatorActionItem(item.level);
+      return;
+    }
+    applyMonitoringFocus({
+      source: item.source,
+      level: item.level === 'info' ? 'all' : item.level,
+      timeWindow: '24h',
+    });
+  }
+
   return (
     <>
       <SectionHeader routeKey="notifications" />
@@ -265,6 +336,38 @@ function NotificationsPage() {
             ) : null}
             {activeFocusTags.map((tag) => (
               <span key={tag} className="settings-chip active">{tag}</span>
+            ))}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '排查时间线' : 'Investigation Timeline'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把通知、审计、操作动作和监控告警按时间汇总到一条主线里，方便先看最近发生了什么。'
+                  : 'Merge notifications, audits, operator actions, and monitoring alerts into one chronological investigation stream.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{investigationTimeline.length}</div>
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {!investigationTimeline.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有可用于排查的时间线事件' : 'No investigation timeline entries are available right now.'}</div> : null}
+            {investigationTimeline.map((item) => (
+              <button type="button" className="focus-row status-row-button" key={item.id} onClick={() => focusTimelineItem(item)}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '类型' : 'Kind'}</span>
+                  <strong>{item.kind}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                  <strong>{fmtDateTime(item.timestamp, locale)}</strong>
+                </div>
+              </button>
             ))}
           </div>
         </article>
