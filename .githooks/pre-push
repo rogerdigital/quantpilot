@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+ROOT_DIR=$(git rev-parse --show-toplevel)
+cd "$ROOT_DIR"
+
+echo "Running npm run verify before push..."
+npm run verify

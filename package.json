@@ -13,6 +13,7 @@
     "packages/*"
   ],
   "scripts": {
+    "prepare": "node scripts/install-git-hooks.mjs",
     "dev": "vite --config apps/web/vite.config.ts --host 0.0.0.0 --port 8080",
     "start": "vite --config apps/web/vite.config.ts --host 0.0.0.0 --port 8080",
     "build": "vite build --config apps/web/vite.config.ts",

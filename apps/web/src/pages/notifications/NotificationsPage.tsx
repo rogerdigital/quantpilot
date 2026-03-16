@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { IncidentEvidenceItem } from '@shared-types/trading.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';

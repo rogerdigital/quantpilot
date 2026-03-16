@@ -286,6 +286,8 @@ npm run test:worker
 npm run verify
 ```
 
+安装依赖后会自动把仓库的 git hooks 指到 `.githooks`。当前默认启用了 `pre-push` 校验，会在推送前执行一次 `npm run verify`，避免仅在 CI 才暴露 `typecheck` 或生产构建错误。
+
 默认端口：
 
 - Web: `http://127.0.0.1:8080`
