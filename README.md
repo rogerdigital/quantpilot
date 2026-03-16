@@ -143,7 +143,8 @@ quantpilot/
 - 后端已具备最小控制面能力，包括 `auth / audit / notification / risk / scheduler / task-orchestrator / strategy / backtest / agent` 等模块骨架。
 - `monitoring` 模块已进入原型阶段，后端现可输出 `broker / market / worker / workflow / risk / queues` 的运行态摘要接口。
 - worker 现会周期性落库 `monitoring snapshots / alerts` 历史，通知中心和后续运维视图已具备可追踪的监控数据来源。
-- 通知中心已从单纯观察面板推进到最小 `incident / investigation` 闭环，支持把监控告警、控制面通知和审计项升级为事件并跟踪状态、负责人和排查记录。
+- 通知中心已从单纯观察面板推进到可追踪的 `incident / investigation` 控制台，支持把监控告警、控制面通知、审计、风控、工作流和执行计划升级为 incident，并联动证据时间线、处置活动流、对象检查器和响应检查单。
+- incident 队列已具备 `summary / owner load / source mix / aging / bulk actions`，支持按负责人和未指派视角管理事件队列，并批量指派负责人、推进状态、追加处置备注。
 - worker 已接管通知分发、风险扫描、调度 tick、workflow maintenance 和 workflow execution。
 - 共享运行时已经拆分到 `trading-engine / control-plane-runtime / task-workflow-engine / shared-types`。
 - 控制面持久化已抽到 `control-plane-store`，当前以文件型存储为主。
@@ -335,6 +336,7 @@ npm run verify
 2. 将前后端权限判断、错误反馈和页面禁用逻辑继续收敛到统一的 account/access 模型。
 3. 将市场数据、研究数据、执行数据从原型读写升级为稳定 API 与持久化存储。
 4. 继续把研究、风控、执行相关异步动作收敛到后端任务流与 worker。
-5. 为阶段 2 的策略研究闭环预留统一任务协议、结果模型和审计链路。
+5. 在现有 monitoring / incident 控制台基础上，继续补齐独立运维工作台所需的聚合视图、批量处置和跨对象联动。
+6. 为阶段 2 的策略研究闭环预留统一任务协议、结果模型和审计链路。
 
 研发节奏保持为“设计对齐 -> 小步实现 -> 自动化验证 -> 再推进下一层能力”。
