@@ -10,6 +10,7 @@ import type {
   WorkflowRunsSnapshot,
   StateCycleResult,
   TradingState,
+  UserAccountSnapshot,
   UserAccountProfileSnapshot,
   MonitoringStatusSnapshot,
   MonitoringAlertsResponse,
@@ -40,6 +41,12 @@ export async function fetchOperatorSession(): Promise<OperatorSession> {
 
 export async function fetchUserAccountProfile(): Promise<UserAccountProfileSnapshot> {
   return fetchJson('/api/user-account/profile', {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export async function fetchUserAccount(): Promise<UserAccountSnapshot> {
+  return fetchJson('/api/user-account', {
     headers: { Accept: 'application/json' },
   });
 }

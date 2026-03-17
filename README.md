@@ -156,6 +156,8 @@ quantpilot/
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
 - 账户写操作和券商绑定变更已经进入 audit records，基础对象变更具备最小留痕能力。
 - `auth/session` 已改为由持久化账户访问策略驱动，前后端对 `strategy:write / risk:review / execution:approve / account:write` 的权限判断已经开始收敛。
+- 账户域已进一步收敛为统一 `account workspace` 快照：设置页现在消费同一份 `profile / preferences / access / broker summary / role templates / session` 结构化数据，并在保存账户、权限或默认券商绑定后自动刷新当前会话。
+- `broker bindings` 已补齐健康状态与待处理摘要，能区分 `healthy / degraded / attention / idle`，并汇总默认绑定、连接数、待处理绑定和最近同步时间。
 - Settings、Risk、Execution、Agent 等前端页面已经接入权限禁用、页面级拦截反馈和结构化 API 错误解释。
 
 ### 当前边界
@@ -188,6 +190,7 @@ quantpilot/
 这是当前所在阶段，目标是把“可演示原型”推进成“可持续研发的平台底座”。
 
 - 落地真实的 `auth / user-account / account settings / broker binding` 基础模块。
+- 当前已推进到账户统一快照、角色模板、会话权限对齐和 broker binding 健康摘要，下一步重点转向更完整的权限护栏、对象联动和多用户边界。
 - 把文件型原型存储进一步收敛为可迁移的数据访问边界，为 `PostgreSQL + Redis` 形态做准备。
 - 将市场数据、策略配置、研究结果、执行记录从页面静态/示例数据升级为服务端结构化读写。
 - 当前已完成其中一段：策略注册表、回测运行和执行记录已进入后端结构化接口，下一步是继续把更多页面消费切到这些服务边界上。

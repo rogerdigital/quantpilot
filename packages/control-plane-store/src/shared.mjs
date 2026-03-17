@@ -281,6 +281,29 @@ export function createUserPreferences(payload = {}) {
   };
 }
 
+export function listUserRoleTemplates() {
+  return [
+    {
+      id: 'admin',
+      label: 'Admin',
+      summary: 'Full control over account settings, strategy changes, risk reviews, and execution approvals.',
+      defaultPermissions: getDefaultPermissionsForRole('admin'),
+    },
+    {
+      id: 'operator',
+      label: 'Operator',
+      summary: 'Can run the platform, manage strategies, and review risk without account administration.',
+      defaultPermissions: getDefaultPermissionsForRole('operator'),
+    },
+    {
+      id: 'viewer',
+      label: 'Viewer',
+      summary: 'Read-only access to dashboards and investigation context.',
+      defaultPermissions: getDefaultPermissionsForRole('viewer'),
+    },
+  ];
+}
+
 export function getDefaultPermissionsForRole(role = 'viewer') {
   const permissionMap = {
     admin: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
@@ -302,6 +325,16 @@ export function createUserAccessPolicy(payload = {}) {
 }
 
 export function createBrokerBindingEntry(payload = {}) {
+  const rawStatus = payload.status || 'disconnected';
+  const connected = Boolean(payload.health?.connected ?? rawStatus === 'connected');
+  const mismatch = Boolean(payload.health?.mismatch ?? payload.metadata?.mismatch);
+  const lastError = payload.health?.lastError || payload.metadata?.lastError || '';
+  const requiresAttention = Boolean(
+    payload.health?.requiresAttention
+      ?? Boolean(lastError || mismatch || rawStatus === 'error' || (!connected && payload.environment === 'live')),
+  );
+  const healthStatus = payload.health?.status
+    || (requiresAttention ? (connected ? 'degraded' : 'attention') : (connected ? 'healthy' : 'idle'));
   return {
     id: payload.id || `broker-binding-${randomUUID()}`,
     provider: payload.provider || 'alpaca',
@@ -314,6 +347,14 @@ export function createBrokerBindingEntry(payload = {}) {
       : ['read'],
     lastSyncAt: payload.lastSyncAt || '',
     isDefault: Boolean(payload.isDefault),
+    health: {
+      status: healthStatus,
+      connected,
+      requiresAttention,
+      mismatch,
+      lastCheckedAt: payload.health?.lastCheckedAt || payload.lastSyncAt || '',
+      lastError,
+    },
     metadata: payload.metadata || {},
   };
 }

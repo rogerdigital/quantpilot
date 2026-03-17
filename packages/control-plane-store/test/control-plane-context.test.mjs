@@ -100,7 +100,16 @@ test('user account repository persists profile preferences and broker bindings',
   assert.equal(initial.profile.id, 'operator-demo');
   assert.equal(preferences.locale, 'en-US');
   assert.equal(binding.isDefault, true);
+  assert.equal(binding.health.connected, true);
+  assert.equal(binding.health.status, 'healthy');
   assert.equal(context.userAccount.listBrokerBindings()[0].id, 'broker-binding-live');
+  assert.equal(context.userAccount.listRoleTemplates().some((item) => item.id === 'operator'), true);
+  const accessSummary = context.userAccount.getAccessSummary(['dashboard:read']);
+  assert.equal(accessSummary.defaultPermissions.includes('execution:approve'), true);
+  assert.equal(accessSummary.sessionRemovedPermissions.includes('execution:approve'), true);
+  const brokerSummary = context.userAccount.getBrokerSummary();
+  assert.equal(brokerSummary.total >= 1, true);
+  assert.equal(brokerSummary.connected >= 1, true);
 });
 
 test('execution runtime repository persists runtime events and broker snapshots', () => {

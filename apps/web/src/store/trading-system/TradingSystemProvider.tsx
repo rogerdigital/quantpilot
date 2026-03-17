@@ -20,12 +20,23 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   const busyRef = useRef(false);
   const timerRef = useRef<number | null>(null);
 
+  const refreshSession = async () => {
+    try {
+      const next = await fetchOperatorSession();
+      setSession(next);
+      return next;
+    } catch {
+      setSession(null);
+      return null;
+    }
+  };
+
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
 
   useEffect(() => {
-    fetchOperatorSession().then(setSession).catch(() => null);
+    refreshSession().catch(() => null);
   }, []);
 
   useEffect(() => {
@@ -183,6 +194,7 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
       state,
       session,
       hasPermission,
+      refreshSession,
       actionGuardNotice,
       clearActionGuardNotice: () => setActionGuardNotice(null),
       setMode,

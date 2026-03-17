@@ -462,6 +462,15 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     getUserAccess() {
       return context.userAccount.getUserAccess();
     },
+    getUserAccessSummary(sessionPermissions = null) {
+      return context.userAccount.getAccessSummary(sessionPermissions);
+    },
+    listUserRoleTemplates() {
+      return context.userAccount.listRoleTemplates();
+    },
+    getBrokerBindingSummary() {
+      return context.userAccount.getBrokerSummary();
+    },
     updateUserPreferences(patch = {}) {
       return context.userAccount.updateUserPreferences(patch);
     },
@@ -665,6 +674,9 @@ export const getUserProfile = (...args) => controlPlaneRuntime.getUserProfile(..
 export const updateUserProfile = (...args) => controlPlaneRuntime.updateUserProfile(...args);
 export const getUserPreferences = (...args) => controlPlaneRuntime.getUserPreferences(...args);
 export const getUserAccess = (...args) => controlPlaneRuntime.getUserAccess(...args);
+export const getUserAccessSummary = (...args) => controlPlaneRuntime.getUserAccessSummary(...args);
+export const listUserRoleTemplates = (...args) => controlPlaneRuntime.listUserRoleTemplates(...args);
+export const getBrokerBindingSummary = (...args) => controlPlaneRuntime.getBrokerBindingSummary(...args);
 export const updateUserPreferences = (...args) => controlPlaneRuntime.updateUserPreferences(...args);
 export const updateUserAccess = (...args) => controlPlaneRuntime.updateUserAccess(...args);
 export const listBrokerBindings = (...args) => controlPlaneRuntime.listBrokerBindings(...args);

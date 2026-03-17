@@ -3,6 +3,8 @@ import {
   createUserAccessPolicy,
   createUserAccountProfile,
   createUserPreferences,
+  getDefaultPermissionsForRole,
+  listUserRoleTemplates,
 } from '../shared.mjs';
 
 const FILENAME = 'user-account.json';
@@ -79,6 +81,17 @@ function normalizeSnapshot(snapshot = {}) {
   };
 }
 
+function listUnique(items = []) {
+  return [...new Set(items.filter(Boolean))];
+}
+
+function diffPermissions(base = [], compare = []) {
+  return {
+    added: compare.filter((item) => !base.includes(item)),
+    removed: base.filter((item) => !compare.includes(item)),
+  };
+}
+
 export function createUserAccountRepository(store) {
   function readSnapshot() {
     return normalizeSnapshot(store.readObject(FILENAME, createDefaultAccountSnapshot()));
@@ -91,6 +104,50 @@ export function createUserAccountRepository(store) {
     };
     store.writeObject(FILENAME, next);
     return next;
+  }
+
+  function getAccessSummary(snapshot = readSnapshot(), sessionPermissions = null) {
+    const defaultPermissions = getDefaultPermissionsForRole(snapshot.access.role);
+    const effectivePermissions = snapshot.access.status === 'active'
+      ? listUnique(snapshot.access.permissions)
+      : [];
+    const accessDelta = diffPermissions(defaultPermissions, effectivePermissions);
+    const sessionList = Array.isArray(sessionPermissions) ? listUnique(sessionPermissions) : effectivePermissions;
+    const sessionDelta = diffPermissions(effectivePermissions, sessionList);
+
+    return {
+      role: snapshot.access.role,
+      status: snapshot.access.status,
+      defaultPermissions,
+      effectivePermissions,
+      addedPermissions: accessDelta.added,
+      removedPermissions: accessDelta.removed,
+      sessionPermissions: sessionList,
+      sessionAddedPermissions: sessionDelta.added,
+      sessionRemovedPermissions: sessionDelta.removed,
+      isSessionAligned: sessionDelta.added.length === 0 && sessionDelta.removed.length === 0,
+    };
+  }
+
+  function getBrokerSummary(snapshot = readSnapshot()) {
+    const bindings = snapshot.brokerBindings;
+    const defaultBinding = bindings.find((binding) => binding.isDefault) || bindings[0] || null;
+    return {
+      total: bindings.length,
+      connected: bindings.filter((binding) => binding.health?.connected).length,
+      requiresAttention: bindings.filter((binding) => binding.health?.requiresAttention).length,
+      liveBindings: bindings.filter((binding) => binding.environment === 'live').length,
+      paperBindings: bindings.filter((binding) => binding.environment !== 'live').length,
+      defaultBindingId: defaultBinding?.id || '',
+      defaultProvider: defaultBinding?.provider || '',
+      defaultStatus: defaultBinding?.status || 'disconnected',
+      defaultHealthStatus: defaultBinding?.health?.status || 'idle',
+      lastSyncAt: bindings.map((binding) => binding.lastSyncAt).filter(Boolean).sort().at(0) ? bindings
+        .map((binding) => binding.lastSyncAt)
+        .filter(Boolean)
+        .sort()
+        .at(-1) : '',
+    };
   }
 
   return {
@@ -123,6 +180,15 @@ export function createUserAccountRepository(store) {
     },
     getUserAccess() {
       return readSnapshot().access;
+    },
+    getAccessSummary(sessionPermissions = null) {
+      return getAccessSummary(readSnapshot(), sessionPermissions);
+    },
+    listRoleTemplates() {
+      return listUserRoleTemplates();
+    },
+    getBrokerSummary() {
+      return getBrokerSummary(readSnapshot());
     },
     updateUserPreferences(patch = {}) {
       const snapshot = readSnapshot();

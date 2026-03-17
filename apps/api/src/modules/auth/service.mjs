@@ -14,6 +14,7 @@ export function getSession() {
       role: account.access?.role || account.profile.role,
       organization: account.profile.organization,
       permissions,
+      accessStatus: account.access?.status || 'active',
     },
     preferences: account.preferences,
     brokerBinding: defaultBrokerBinding ? {
@@ -22,6 +23,7 @@ export function getSession() {
       label: defaultBrokerBinding.label,
       environment: defaultBrokerBinding.environment,
       status: defaultBrokerBinding.status,
+      healthStatus: defaultBrokerBinding.health?.status || 'idle',
     } : null,
     issuedAt: new Date().toISOString(),
   };

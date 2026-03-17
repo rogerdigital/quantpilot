@@ -335,6 +335,7 @@ test('GET /api/auth/session returns account-backed session data', async () => {
   assert.equal(response.json.ok, true);
   assert.equal(response.json.user.id, 'operator-demo');
   assert.equal(Array.isArray(response.json.user.permissions), true);
+  assert.equal(response.json.user.accessStatus, 'active');
   assert.equal(typeof response.json.preferences.timezone, 'string');
 });
 
@@ -347,7 +348,23 @@ test('GET /api/user-account/profile returns profile and preferences', async () =
   assert.equal(response.json.ok, true);
   assert.equal(response.json.profile.email, 'operator@quantpilot.local');
   assert.equal(Array.isArray(response.json.access.permissions), true);
+  assert.equal(Array.isArray(response.json.roleTemplates), true);
+  assert.equal(typeof response.json.accessSummary.isSessionAligned, 'boolean');
   assert.equal(typeof response.json.preferences.defaultMode, 'string');
+});
+
+test('GET /api/user-account returns consolidated account workspace data', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/user-account',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(Array.isArray(response.json.brokerBindings), true);
+  assert.equal(Array.isArray(response.json.roleTemplates), true);
+  assert.equal(typeof response.json.brokerSummary.total, 'number');
+  assert.equal(typeof response.json.accessSummary.isSessionAligned, 'boolean');
+  assert.equal(response.json.session.user.id, 'operator-demo');
 });
 
 test('POST /api/user-account/access updates persisted access policy and session permissions', async () => {
@@ -366,6 +383,8 @@ test('POST /api/user-account/access updates persisted access policy and session 
   assert.equal(response.json.access.role, 'operator');
   assert.equal(response.json.access.permissions.includes('risk:review'), true);
   assert.equal(response.json.access.permissions.includes('account:write'), false);
+  assert.equal(response.json.accessSummary.effectivePermissions.includes('risk:review'), true);
+  assert.equal(response.json.session.user.role, 'operator');
 
   const sessionResponse = await invokeGatewayRoute(handler, {
     path: '/api/auth/session',
@@ -478,6 +497,7 @@ test('POST /api/user-account/broker-bindings upserts broker bindings', async () 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(response.json.binding.id, 'binding-live');
+  assert.equal(response.json.summary.total >= 1, true);
 
   const listResponse = await invokeGatewayRoute(handler, {
     path: '/api/user-account/broker-bindings',
@@ -485,6 +505,7 @@ test('POST /api/user-account/broker-bindings upserts broker bindings', async () 
   assert.equal(listResponse.statusCode, 200);
   assert.equal(listResponse.json.ok, true);
   assert.equal(listResponse.json.bindings.some((item) => item.id === 'binding-live' && item.isDefault), true);
+  assert.equal(typeof listResponse.json.summary.requiresAttention, 'number');
 
   const auditResponse = await invokeGatewayRoute(handler, {
     path: '/api/audit/records',
@@ -598,6 +619,7 @@ test('POST /api/user-account/broker-bindings/sync updates default binding runtim
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(response.json.binding.status, 'connected');
+  assert.equal(response.json.binding.health.connected, true);
   assert.equal(typeof response.json.binding.lastSyncAt, 'string');
 
   const auditResponse = await invokeGatewayRoute(handler, {

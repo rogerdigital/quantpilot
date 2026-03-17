@@ -188,6 +188,7 @@ export type OperatorSession = {
     role: string;
     organization: string;
     permissions: string[];
+    accessStatus: string;
   };
   preferences: {
     locale: string;
@@ -203,8 +204,16 @@ export type OperatorSession = {
     label: string;
     environment: string;
     status: string;
+    healthStatus?: string;
   } | null;
   issuedAt: string;
+};
+
+export type UserRoleTemplate = {
+  id: string;
+  label: string;
+  summary: string;
+  defaultPermissions: string[];
 };
 
 export type UserBrokerBinding = {
@@ -217,6 +226,14 @@ export type UserBrokerBinding = {
   permissions: string[];
   lastSyncAt: string;
   isDefault: boolean;
+  health: {
+    status: string;
+    connected: boolean;
+    requiresAttention: boolean;
+    mismatch: boolean;
+    lastCheckedAt: string;
+    lastError: string;
+  };
   metadata: Record<string, unknown>;
 };
 
@@ -244,32 +261,74 @@ export type UserAccountProfileSnapshot = {
     riskReviewRequired: boolean;
     notificationChannels: string[];
   };
+  roleTemplates: UserRoleTemplate[];
+  accessSummary: {
+    role: string;
+    status: string;
+    defaultPermissions: string[];
+    effectivePermissions: string[];
+    addedPermissions: string[];
+    removedPermissions: string[];
+    sessionPermissions: string[];
+    sessionAddedPermissions: string[];
+    sessionRemovedPermissions: string[];
+    isSessionAligned: boolean;
+  };
+};
+
+export type UserAccountSnapshot = UserAccountProfileSnapshot & {
+  subscription: {
+    plan: string;
+    status: string;
+  };
+  brokerBindings: UserBrokerBinding[];
+  brokerSummary: {
+    total: number;
+    connected: number;
+    requiresAttention: number;
+    liveBindings: number;
+    paperBindings: number;
+    defaultBindingId: string;
+    defaultProvider: string;
+    defaultStatus: string;
+    defaultHealthStatus: string;
+    lastSyncAt: string;
+  };
+  session: OperatorSession;
+  updatedAt: string;
 };
 
 export type UserPreferencesUpdateSnapshot = {
   ok: boolean;
   preferences: UserAccountProfileSnapshot['preferences'];
+  session?: OperatorSession;
 };
 
 export type UserAccessUpdateSnapshot = {
   ok: boolean;
   access: UserAccountProfileSnapshot['access'];
+  accessSummary?: UserAccountProfileSnapshot['accessSummary'];
+  session?: OperatorSession;
 };
 
 export type UserProfileUpdateSnapshot = {
   ok: boolean;
   profile: UserAccountProfileSnapshot['profile'];
+  session?: OperatorSession;
 };
 
 export type UserBrokerBindingsSnapshot = {
   ok: boolean;
   bindings: UserBrokerBinding[];
+  summary?: UserAccountSnapshot['brokerSummary'];
+  accessSummary?: UserAccountProfileSnapshot['accessSummary'];
 };
 
 export type UserBrokerBindingSaveSnapshot = {
   ok: boolean;
   binding: UserBrokerBinding;
   bindings?: UserBrokerBinding[];
+  summary?: UserAccountSnapshot['brokerSummary'];
   error?: string;
 };
 
@@ -923,6 +982,7 @@ export type TradingSystemContextValue = {
   state: TradingState;
   session: OperatorSession | null;
   hasPermission: (permission: string) => boolean;
+  refreshSession: () => Promise<OperatorSession | null>;
   actionGuardNotice: { permission: string; action: string } | null;
   clearActionGuardNotice: () => void;
   setMode: (mode: TradingState['mode']) => void;

@@ -1,10 +1,13 @@
 import {
+  getBrokerBindingSummary,
   deleteBrokerBinding,
   getUserAccount,
   getUserAccess,
+  getUserAccessSummary,
   getUserPreferences,
   getUserProfile,
   listBrokerBindings,
+  listUserRoleTemplates,
   setDefaultBrokerBinding,
   updateUserProfile,
   updateUserAccess,
@@ -12,6 +15,7 @@ import {
   upsertBrokerBinding,
 } from '../../../../../packages/control-plane-runtime/src/index.mjs';
 import { appendAuditRecord } from '../audit/service.mjs';
+import { getSession } from '../auth/service.mjs';
 
 function recordAccountAuditEvent(type, title, detail, metadata = {}) {
   const account = getUserAccount();
@@ -26,6 +30,7 @@ function recordAccountAuditEvent(type, title, detail, metadata = {}) {
 
 export function getUserAccountSnapshot() {
   const account = getUserAccount();
+  const session = getSession();
   return {
     ok: true,
     profile: account.profile,
@@ -33,16 +38,23 @@ export function getUserAccountSnapshot() {
     preferences: account.preferences,
     subscription: account.subscription,
     brokerBindings: account.brokerBindings,
+    roleTemplates: listUserRoleTemplates(),
+    accessSummary: getUserAccessSummary(session.user.permissions),
+    brokerSummary: getBrokerBindingSummary(),
+    session,
     updatedAt: account.updatedAt,
   };
 }
 
 export function getUserProfileSnapshot() {
+  const session = getSession();
   return {
     ok: true,
     profile: getUserProfile(),
     access: getUserAccess(),
     preferences: getUserPreferences(),
+    roleTemplates: listUserRoleTemplates(),
+    accessSummary: getUserAccessSummary(session.user.permissions),
   };
 }
 
@@ -61,6 +73,7 @@ export function patchUserProfile(payload = {}) {
   return {
     ok: true,
     profile: updated,
+    session: getSession(),
   };
 }
 
@@ -80,6 +93,7 @@ export function patchUserPreferences(payload = {}) {
   return {
     ok: true,
     preferences: updated,
+    session: getSession(),
   };
 }
 
@@ -98,13 +112,18 @@ export function patchUserAccess(payload = {}) {
   return {
     ok: true,
     access: updated,
+    accessSummary: getUserAccessSummary(getSession().user.permissions),
+    session: getSession(),
   };
 }
 
 export function getBrokerBindingsSnapshot() {
+  const session = getSession();
   return {
     ok: true,
     bindings: listBrokerBindings(),
+    summary: getBrokerBindingSummary(),
+    accessSummary: getUserAccessSummary(session.user.permissions),
   };
 }
 
@@ -149,6 +168,16 @@ export async function syncBrokerBindingRuntime(getBrokerHealth) {
     ...runtimeSnapshot.binding,
     status: runtimeSnapshot.runtime.status,
     lastSyncAt: runtimeSnapshot.runtime.lastCheckedAt,
+    health: {
+      status: runtimeSnapshot.runtime.mismatch
+        ? 'attention'
+        : (runtimeSnapshot.runtime.connected ? 'healthy' : 'idle'),
+      connected: runtimeSnapshot.runtime.connected,
+      requiresAttention: runtimeSnapshot.runtime.mismatch,
+      mismatch: runtimeSnapshot.runtime.mismatch,
+      lastCheckedAt: runtimeSnapshot.runtime.lastCheckedAt,
+      lastError: runtimeSnapshot.runtime.mismatch ? 'binding provider does not match the active gateway adapter' : '',
+    },
     metadata: {
       ...(runtimeSnapshot.binding.metadata || {}),
       runtimeAdapter: runtimeSnapshot.runtime.adapter,
@@ -202,6 +231,7 @@ export function saveBrokerBinding(payload = {}) {
   return {
     ok: true,
     binding,
+    summary: getBrokerBindingSummary(),
   };
 }
 
@@ -229,6 +259,7 @@ export function setPrimaryBrokerBinding(bindingId) {
     ok: true,
     binding,
     bindings: listBrokerBindings(),
+    summary: getBrokerBindingSummary(),
   };
 }
 
@@ -253,5 +284,6 @@ export function removeBrokerBinding(bindingId) {
     ok: true,
     binding: result.binding,
     bindings: result.bindings,
+    summary: getBrokerBindingSummary(),
   };
 }
