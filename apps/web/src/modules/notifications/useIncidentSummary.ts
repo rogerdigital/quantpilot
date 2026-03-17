@@ -28,6 +28,15 @@ const EMPTY_SUMMARY: IncidentSummaryResponse['summary'] = {
   bySource: [],
   byOwner: [],
   ageBuckets: [],
+  response: {
+    acknowledged: 0,
+    ackOverdue: 0,
+    blockedTasks: 0,
+    activeTasks: 0,
+    unresolvedCritical: 0,
+    ownerHotspots: 0,
+  },
+  nextActions: [],
 };
 
 export function useIncidentSummary(options: IncidentSummaryOptions = {}) {

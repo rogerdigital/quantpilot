@@ -1,5 +1,8 @@
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
 
+const ACK_OVERDUE_HOURS = 1;
+const STALE_HOURS = 24;
+
 function parseLimit(value, fallback) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
@@ -51,12 +54,37 @@ export function getIncidentSummary(options = {}) {
       { bucket: 'lt_24h', count: 0 },
       { bucket: 'gte_24h', count: 0 },
     ],
+    response: {
+      acknowledged: 0,
+      ackOverdue: 0,
+      blockedTasks: 0,
+      activeTasks: 0,
+      unresolvedCritical: 0,
+      ownerHotspots: 0,
+    },
+    nextActions: [
+      { key: 'assign-owner', count: 0 },
+      { key: 'acknowledge', count: 0 },
+      { key: 'resolve-blocker', count: 0 },
+      { key: 'capture-evidence', count: 0 },
+      { key: 'closeout', count: 0 },
+    ],
   };
 
   const sourceCounts = new Map();
   const ownerCounts = new Map();
 
   incidents.forEach((incident) => {
+    const tasks = controlPlaneRuntime.listIncidentTasks(incident.id, 100);
+    const operations = buildIncidentOperations(incident, {
+      tasks,
+      notes: controlPlaneRuntime.listIncidentNotes(incident.id, 100),
+      activity: controlPlaneRuntime.listIncidentActivities(incident.id, 120),
+      evidenceSummary: {
+        linked: Array.isArray(incident.links) ? incident.links.length : 0,
+      },
+    });
+
     if (incident.status === 'open') summary.open += 1;
     if (incident.status === 'investigating') summary.investigating += 1;
     if (incident.status === 'mitigated') summary.mitigated += 1;
@@ -67,10 +95,17 @@ export function getIncidentSummary(options = {}) {
     if (!incident.owner) summary.unassigned += 1;
     if (!incident.acknowledgedAt && incident.status !== 'resolved') summary.unacknowledged += 1;
     if (!Number(incident.noteCount || 0)) summary.missingNotes += 1;
+    if (operations.ackState !== 'pending') summary.response.acknowledged += 1;
+    if (operations.ackState === 'overdue') summary.response.ackOverdue += 1;
+    summary.response.blockedTasks += operations.blockedTasks;
+    summary.response.activeTasks += operations.activeTasks;
+    if (incident.status !== 'resolved' && incident.severity === 'critical') summary.response.unresolvedCritical += 1;
+    const nextActionEntry = summary.nextActions.find((item) => item.key === operations.nextAction.key);
+    if (nextActionEntry) nextActionEntry.count += 1;
 
     const updatedMs = parseTimestamp(incident.updatedAt || incident.createdAt) || Date.now();
     const ageHours = Math.max(0, (Date.now() - updatedMs) / (60 * 60 * 1000));
-    if (incident.status !== 'resolved' && ageHours >= 24) summary.stale += 1;
+    if (incident.status !== 'resolved' && ageHours >= STALE_HOURS) summary.stale += 1;
     if (ageHours < 1) summary.ageBuckets[0].count += 1;
     else if (ageHours < 6) summary.ageBuckets[1].count += 1;
     else if (ageHours < 24) summary.ageBuckets[2].count += 1;
@@ -83,10 +118,16 @@ export function getIncidentSummary(options = {}) {
       count: 0,
       openCount: 0,
       criticalCount: 0,
+      blockedTaskCount: 0,
+      staleCount: 0,
+      unacknowledgedCount: 0,
     };
     ownerEntry.count += 1;
     if (incident.status !== 'resolved') ownerEntry.openCount += 1;
     if (incident.severity === 'critical') ownerEntry.criticalCount += 1;
+    ownerEntry.blockedTaskCount += operations.blockedTasks;
+    if (operations.stale) ownerEntry.staleCount += 1;
+    if (operations.ackState === 'pending' || operations.ackState === 'overdue') ownerEntry.unacknowledgedCount += 1;
     ownerCounts.set(ownerKey, ownerEntry);
   });
 
@@ -94,8 +135,13 @@ export function getIncidentSummary(options = {}) {
     .map(([source, count]) => ({ source, count }))
     .sort((left, right) => right.count - left.count);
   summary.byOwner = [...ownerCounts.values()]
-    .sort((left, right) => right.openCount - left.openCount || right.criticalCount - left.criticalCount || right.count - left.count)
+    .sort((left, right) => right.openCount - left.openCount
+      || right.criticalCount - left.criticalCount
+      || right.blockedTaskCount - left.blockedTaskCount
+      || right.staleCount - left.staleCount
+      || right.count - left.count)
     .slice(0, 8);
+  summary.response.ownerHotspots = summary.byOwner.filter((item) => item.openCount >= 3 || item.criticalCount > 0 || item.blockedTaskCount > 0 || item.staleCount > 0).length;
 
   return summary;
 }
@@ -106,12 +152,20 @@ export function getIncidentDetail(incidentId, options = {}) {
   const evidence = collectIncidentEvidence(incident, options);
   const activity = collectIncidentActivity(incidentId, options);
   const tasks = collectIncidentTasks(incidentId, options);
+  const notes = controlPlaneRuntime.listIncidentNotes(incidentId, parseLimit(options.noteLimit, 100));
+  const operations = buildIncidentOperations(incident, {
+    activity: activity.timeline,
+    evidenceSummary: evidence.summary,
+    notes,
+    tasks: tasks.items,
+  });
   return {
     incident,
-    notes: controlPlaneRuntime.listIncidentNotes(incidentId, parseLimit(options.noteLimit, 100)),
+    notes,
     tasks,
     activity,
     evidence,
+    operations,
   };
 }
 
@@ -179,6 +233,106 @@ export function bulkUpdateIncidents(payload = {}) {
 function parseTimestamp(value) {
   const parsed = Date.parse(value || '');
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function buildIncidentOperations(incident, inputs = {}) {
+  const tasks = Array.isArray(inputs.tasks) ? inputs.tasks : [];
+  const notes = Array.isArray(inputs.notes) ? inputs.notes : [];
+  const activity = Array.isArray(inputs.activity) ? inputs.activity : [];
+  const evidenceSummary = inputs.evidenceSummary || {};
+  const updatedMs = parseTimestamp(incident.updatedAt || incident.createdAt) || Date.now();
+  const ageHours = Math.max(0, (Date.now() - updatedMs) / (60 * 60 * 1000));
+  const blockedTasks = tasks.filter((item) => item.status === 'blocked').length;
+  const pendingTasks = tasks.filter((item) => item.status === 'pending').length;
+  const activeTasks = tasks.filter((item) => item.status === 'pending' || item.status === 'in_progress' || item.status === 'blocked').length;
+  const linkedEvidence = Number(evidenceSummary.linked || 0);
+  const latestActivity = [...activity]
+    .sort((left, right) => (parseTimestamp(right.createdAt) || 0) - (parseTimestamp(left.createdAt) || 0))[0] || null;
+  const stale = incident.status !== 'resolved' && ageHours >= STALE_HOURS;
+  const ackState = incident.status === 'resolved'
+    ? 'acknowledged'
+    : incident.acknowledgedAt
+      ? 'acknowledged'
+      : ageHours >= ACK_OVERDUE_HOURS
+        ? 'overdue'
+        : 'pending';
+
+  const nextAction = resolveIncidentNextAction({
+    ackState,
+    blockedTasks,
+    incident,
+    linkedEvidence,
+    notes,
+    pendingTasks,
+    tasks,
+  });
+
+  return {
+    ageHours: Number(ageHours.toFixed(1)),
+    stale,
+    ackState,
+    blockedTasks,
+    activeTasks,
+    pendingTasks,
+    linkedEvidence,
+    latestActor: latestActivity?.actor || incident.owner || '',
+    latestActivityAt: latestActivity?.createdAt || incident.updatedAt || incident.createdAt,
+    nextAction,
+    handoff: {
+      owner: incident.owner || '',
+      queue: incident.status === 'resolved' ? 'resolved' : (incident.owner ? 'owned' : 'unassigned'),
+      summary: incident.status === 'resolved'
+        ? 'Resolved incidents should leave a closeout note and track follow-up work.'
+        : incident.owner
+          ? `${incident.owner} owns the next response step for this incident.`
+          : 'Assign an owner before the incident leaves triage.',
+    },
+  };
+}
+
+function resolveIncidentNextAction({ incident, ackState, blockedTasks, linkedEvidence, pendingTasks, notes, tasks }) {
+  if (!incident.owner) {
+    return {
+      key: 'assign-owner',
+      label: 'Assign owner',
+      detail: 'Set a single operator responsible for driving the incident to closure.',
+    };
+  }
+  if (ackState === 'pending' || ackState === 'overdue') {
+    return {
+      key: 'acknowledge',
+      label: ackState === 'overdue' ? 'Acknowledge overdue response' : 'Acknowledge investigation',
+      detail: 'Move the incident into active investigation and confirm the response owner.',
+    };
+  }
+  if (blockedTasks > 0) {
+    return {
+      key: 'resolve-blocker',
+      label: 'Resolve blocked tasks',
+      detail: 'Unblock the current playbook steps before progressing mitigation or closure.',
+    };
+  }
+  if (!linkedEvidence || !notes.length) {
+    return {
+      key: 'capture-evidence',
+      label: 'Capture evidence',
+      detail: 'Attach evidence and leave investigation notes so the next operator has context.',
+    };
+  }
+  if (incident.status !== 'resolved' && (!pendingTasks || tasks.some((item) => item.status === 'done'))) {
+    return {
+      key: 'closeout',
+      label: incident.status === 'mitigated' ? 'Close out incident' : 'Advance mitigation',
+      detail: incident.status === 'mitigated'
+        ? 'Write the resolution summary and move the incident to resolved when the queue is clean.'
+        : 'Convert current findings into mitigation or closure actions.',
+    };
+  }
+  return {
+    key: 'monitor',
+    label: 'Monitor response',
+    detail: 'Keep the owner queue updated while remaining tasks and evidence continue to evolve.',
+  };
 }
 
 function intersects(left = [], right = []) {

@@ -12,6 +12,28 @@ export type IncidentNoteItem = {
   metadata?: Record<string, unknown>;
 };
 
+const EMPTY_OPERATIONS: IncidentDetailResponse['operations'] = {
+  ageHours: 0,
+  stale: false,
+  ackState: 'pending',
+  blockedTasks: 0,
+  activeTasks: 0,
+  pendingTasks: 0,
+  linkedEvidence: 0,
+  latestActor: '',
+  latestActivityAt: '',
+  nextAction: {
+    key: 'monitor',
+    label: 'Monitor response',
+    detail: 'Keep the incident moving while evidence and ownership stay current.',
+  },
+  handoff: {
+    owner: '',
+    queue: 'unassigned',
+    summary: 'Assign an owner before the incident leaves triage.',
+  },
+};
+
 export function useIncidentDetail(incidentId: string, refreshKey = 0) {
   const [incident, setIncident] = useState<IncidentFeedItem | null>(null);
   const [notes, setNotes] = useState<IncidentNoteItem[]>([]);
@@ -51,6 +73,7 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
     },
     timeline: [],
   });
+  const [operations, setOperations] = useState<IncidentDetailResponse['operations']>(EMPTY_OPERATIONS);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -93,6 +116,7 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
         },
         timeline: [],
       });
+      setOperations(EMPTY_OPERATIONS);
       setLoading(false);
       return;
     }
@@ -140,6 +164,7 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
           },
           timeline: [],
         });
+        setOperations(payload?.operations || EMPTY_OPERATIONS);
       })
       .catch(() => {
         if (!mounted) return;
@@ -181,6 +206,7 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
           },
           timeline: [],
         });
+        setOperations(EMPTY_OPERATIONS);
       })
       .finally(() => {
         if (mounted) {
@@ -193,5 +219,5 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
     };
   }, [incidentId, refreshKey]);
 
-  return { incident, notes, tasks, activity, evidence, loading };
+  return { incident, notes, tasks, activity, evidence, operations, loading };
 }

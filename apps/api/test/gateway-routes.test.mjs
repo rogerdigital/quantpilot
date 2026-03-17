@@ -1596,6 +1596,9 @@ test('incident routes create, update, and return incident details', async () => 
   assert.equal(summary.statusCode, 200);
   assert.equal(summary.json.summary.total >= 1, true);
   assert.equal(summary.json.summary.byOwner.some((item) => item.owner === 'api-operator'), true);
+  assert.equal(typeof summary.json.summary.response.ackOverdue, 'number');
+  assert.equal(typeof summary.json.summary.response.blockedTasks, 'number');
+  assert.equal(summary.json.summary.nextActions.some((item) => item.key === 'closeout'), true);
   assert.equal(updated.statusCode, 200);
   assert.equal(updated.json.incident.status, 'investigating');
   assert.equal(noted.statusCode, 200);
@@ -1628,6 +1631,10 @@ test('incident routes create, update, and return incident details', async () => 
   assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'risk-event' && item.id === 'incident-risk-event'), true);
   assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'workflow-run' && item.id === 'incident-workflow-run'), true);
   assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'execution-plan' && item.id === 'incident-execution-plan'), true);
+  assert.equal(detail.json.operations.ackState, 'acknowledged');
+  assert.equal(detail.json.operations.linkedEvidence >= 5, true);
+  assert.equal(detail.json.operations.nextAction.key, 'closeout');
+  assert.equal(detail.json.operations.handoff.owner, 'ops-bulk');
 });
 
 test('POST then GET /api/audit/records persists audit entries', async () => {

@@ -173,6 +173,36 @@ function translateIncidentTaskStatus(locale: string, status: 'pending' | 'in_pro
   return 'Blocked';
 }
 
+function translateIncidentNextAction(locale: string, key: 'assign-owner' | 'acknowledge' | 'resolve-blocker' | 'capture-evidence' | 'closeout' | 'monitor') {
+  if (locale === 'zh') {
+    if (key === 'assign-owner') return '指派负责人';
+    if (key === 'acknowledge') return '确认接管';
+    if (key === 'resolve-blocker') return '解除阻塞';
+    if (key === 'capture-evidence') return '补齐证据';
+    if (key === 'closeout') return '完成收尾';
+    return '持续跟进';
+  }
+
+  if (key === 'assign-owner') return 'Assign owner';
+  if (key === 'acknowledge') return 'Acknowledge';
+  if (key === 'resolve-blocker') return 'Resolve blocker';
+  if (key === 'capture-evidence') return 'Capture evidence';
+  if (key === 'closeout') return 'Close out';
+  return 'Monitor';
+}
+
+function translateIncidentAckState(locale: string, state: 'pending' | 'acknowledged' | 'overdue') {
+  if (locale === 'zh') {
+    if (state === 'acknowledged') return '已确认';
+    if (state === 'overdue') return '确认超时';
+    return '待确认';
+  }
+
+  if (state === 'acknowledged') return 'Acknowledged';
+  if (state === 'overdue') return 'Overdue';
+  return 'Pending';
+}
+
 function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
@@ -269,6 +299,7 @@ function NotificationsPage() {
     tasks: selectedIncidentTasks,
     activity: selectedIncidentActivity,
     evidence: selectedIncidentEvidence,
+    operations: selectedIncidentOperations,
     loading: incidentDetailLoading,
   } = useIncidentDetail(selectedIncidentId, incidentRefreshKey);
   const selectedArtifact = selectedIncidentEvidence.timeline.find((item) => `${item.kind}:${item.id}` === selectedArtifactKey) || selectedIncidentEvidence.timeline[0] || null;
@@ -1002,6 +1033,97 @@ function NotificationsPage() {
         : (locale === 'zh' ? '还未标记为 resolved' : 'Not resolved yet'),
     },
   ] : [];
+  const incidentPriorityActions = incidentSummary.nextActions
+    .filter((item) => item.count > 0)
+    .slice(0, 5);
+  const incidentOperationalLenses = [
+    {
+      id: 'ack-overdue',
+      label: locale === 'zh' ? '确认超时' : 'Ack Overdue',
+      hint: locale === 'zh' ? '聚焦超出初始响应窗口的事件。' : 'Focus incidents that missed the first response window.',
+      value: incidentSummary.response.ackOverdue,
+      onClick: () => applyIncidentFocus({
+        owner: incidentOwnerFilter,
+        severity: incidentSeverityFilter,
+        source: incidentSourceFilter,
+        status: 'open',
+        timeWindow: incidentTimeWindow,
+      }),
+    },
+    {
+      id: 'blocked-tasks',
+      label: locale === 'zh' ? '阻塞任务' : 'Blocked Tasks',
+      hint: locale === 'zh' ? '优先处理当前 playbook 里的阻塞项。' : 'Prioritize incidents that are blocked inside the playbook.',
+      value: incidentSummary.response.blockedTasks,
+      onClick: () => applyIncidentFocus({
+        owner: incidentOwnerFilter,
+        severity: incidentSeverityFilter,
+        source: incidentSourceFilter,
+        status: incidentStatusFilter,
+        timeWindow: incidentTimeWindow,
+      }),
+    },
+    {
+      id: 'owner-hotspots',
+      label: locale === 'zh' ? '热点负责人' : 'Owner Hotspots',
+      hint: locale === 'zh' ? '查看负载偏高或带 critical 的负责人队列。' : 'Surface owners carrying queue pressure or critical incidents.',
+      value: incidentSummary.response.ownerHotspots,
+      onClick: () => applyIncidentFocus({
+        owner: 'mine',
+        severity: incidentSeverityFilter,
+        source: incidentSourceFilter,
+        status: incidentStatusFilter,
+        timeWindow: incidentTimeWindow,
+      }),
+    },
+    {
+      id: 'critical-open',
+      label: locale === 'zh' ? '未收敛 Critical' : 'Open Critical',
+      hint: locale === 'zh' ? '聚焦还没有收尾的 critical incident。' : 'Focus critical incidents that still need mitigation or closure.',
+      value: incidentSummary.response.unresolvedCritical,
+      onClick: () => applyIncidentFocus({
+        owner: incidentOwnerFilter,
+        severity: 'critical',
+        source: incidentSourceFilter,
+        status: incidentStatusFilter,
+        timeWindow: incidentTimeWindow,
+      }),
+    },
+  ].filter((item) => item.value > 0);
+  const selectedIncidentResponsePosture = selectedIncident ? [
+    {
+      id: 'age',
+      label: locale === 'zh' ? '队列年龄' : 'Queue Age',
+      value: `${selectedIncidentOperations.ageHours.toFixed(1)}h`,
+      hint: selectedIncidentOperations.stale
+        ? (locale === 'zh' ? '已进入 stale 区间，需要尽快推进。' : 'This incident is stale and needs immediate movement.')
+        : (locale === 'zh' ? '仍处于活跃窗口。' : 'Still inside the active response window.'),
+    },
+    {
+      id: 'ack',
+      label: locale === 'zh' ? '响应确认' : 'Response Ack',
+      value: translateIncidentAckState(locale, selectedIncidentOperations.ackState),
+      hint: selectedIncidentOperations.nextAction.key === 'acknowledge'
+        ? selectedIncidentOperations.nextAction.detail
+        : (locale === 'zh' ? '当前响应确认状态正常。' : 'The current acknowledgement state is healthy.'),
+    },
+    {
+      id: 'tasks',
+      label: locale === 'zh' ? '活跃任务' : 'Active Tasks',
+      value: `${selectedIncidentOperations.activeTasks}`,
+      hint: selectedIncidentOperations.blockedTasks
+        ? `${selectedIncidentOperations.blockedTasks} ${locale === 'zh' ? '个任务阻塞' : 'tasks blocked'}`
+        : `${selectedIncidentOperations.pendingTasks} ${locale === 'zh' ? '个任务待处理' : 'tasks pending'}`,
+    },
+    {
+      id: 'evidence',
+      label: locale === 'zh' ? '直接证据' : 'Direct Evidence',
+      value: `${selectedIncidentOperations.linkedEvidence}`,
+      hint: selectedIncidentOperations.linkedEvidence
+        ? (locale === 'zh' ? '已有可回溯的直接对象链接。' : 'Direct evidence links are already attached.')
+        : (locale === 'zh' ? '还需要补充至少一条直接证据。' : 'Add at least one direct evidence link next.'),
+    },
+  ] : [];
 
   function focusTimelineItem(item: InvestigationTimelineItem) {
     if (item.kind === 'incident') {
@@ -1213,6 +1335,49 @@ function NotificationsPage() {
               <strong>{incidentSummaryLoading ? '--' : incidentSummary.missingNotes}</strong>
             </div>
           </div>
+          <div className="panel-subtitle">{locale === 'zh' ? '运营视角' : 'Operational Lenses'}</div>
+          <div className="focus-list focus-list-terminal">
+            {!incidentOperationalLenses.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有额外的 incident 运营热点。' : 'No additional incident hotspots are active right now.'}</div> : null}
+            {incidentOperationalLenses.map((item) => (
+              <button type="button" className="focus-row status-row-button" key={item.id} onClick={item.onClick}>
+                <div className="symbol-cell">
+                  <strong>{item.label}</strong>
+                  <span>{item.hint}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '数量' : 'Count'}</span>
+                  <strong>{item.value}</strong>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="panel-subtitle">{locale === 'zh' ? '下一步动作分布' : 'Next Action Mix'}</div>
+          <div className="focus-list focus-list-terminal">
+            {!incidentPriorityActions.length ? <div className="empty-cell">{locale === 'zh' ? '当前所有 incident 都处于可跟进状态。' : 'All visible incidents already have a usable next step.'}</div> : null}
+            {incidentPriorityActions.map((item) => (
+              <button
+                type="button"
+                className="focus-row status-row-button"
+                key={item.key}
+                onClick={() => applyIncidentFocus({
+                  owner: item.key === 'assign-owner' ? 'unassigned' : incidentOwnerFilter,
+                  severity: item.key === 'closeout' ? incidentSeverityFilter : incidentSeverityFilter,
+                  source: incidentSourceFilter,
+                  status: item.key === 'acknowledge' ? 'open' : incidentStatusFilter,
+                  timeWindow: incidentTimeWindow,
+                })}
+              >
+                <div className="symbol-cell">
+                  <strong>{translateIncidentNextAction(locale, item.key)}</strong>
+                  <span>{locale === 'zh' ? '点击后把队列切到这类优先动作。' : 'Click to pivot the queue toward this action bucket.'}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '数量' : 'Count'}</span>
+                  <strong>{item.count}</strong>
+                </div>
+              </button>
+            ))}
+          </div>
           <div className="panel-subtitle">{locale === 'zh' ? '负责人与负载' : 'Owner Load'}</div>
           <div className="focus-list focus-list-terminal">
             {!incidentSummary.byOwner.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有可显示的负责人负载' : 'No owner workload is available yet.'}</div> : null}
@@ -1244,6 +1409,14 @@ function NotificationsPage() {
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? 'Critical' : 'Critical'}</span>
                   <strong>{item.criticalCount}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '阻塞' : 'Blocked'}</span>
+                  <strong>{item.blockedTaskCount}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? 'Stale' : 'Stale'}</span>
+                  <strong>{item.staleCount}</strong>
                 </div>
               </button>
             ))}
@@ -1425,6 +1598,9 @@ function NotificationsPage() {
               onChange={(event) => setIncidentBulkOwnerDraft(event.target.value)}
               placeholder={locale === 'zh' ? '给选中 incident 指派负责人' : 'Assign owner to selected incidents'}
             />
+            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length} onClick={() => applyBulkIncidentUpdate({ owner: state.controlPlane.operator })}>
+              {locale === 'zh' ? '批量归我' : 'Assign To Me'}
+            </button>
             <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length} onClick={() => applyBulkIncidentUpdate({ owner: incidentBulkOwnerDraft.trim() })}>
               {locale === 'zh' ? '批量指派' : 'Assign Selected'}
             </button>
@@ -1456,6 +1632,9 @@ function NotificationsPage() {
             <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length || !incidentBulkNoteDraft.trim()} onClick={() => applyBulkIncidentUpdate({ note: incidentBulkNoteDraft.trim(), status: 'investigating' })}>
               {locale === 'zh' ? '备注并开始排查' : 'Note And Investigate'}
             </button>
+            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length || !incidentBulkNoteDraft.trim()} onClick={() => applyBulkIncidentUpdate({ note: incidentBulkNoteDraft.trim(), status: 'resolved' })}>
+              {locale === 'zh' ? '备注并收尾' : 'Note And Resolve'}
+            </button>
           </div>
           <div className="focus-list focus-list-terminal">
             {incidentsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载事件...' : 'Loading incidents...'}</div> : null}
@@ -1477,6 +1656,10 @@ function NotificationsPage() {
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '更新于' : 'Updated'}</span>
                   <strong>{fmtDateTime(item.updatedAt || item.createdAt, locale)}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '备注' : 'Notes'}</span>
+                  <strong>{item.noteCount}</strong>
                 </div>
                 <div className="settings-chip-row">
                   <button
@@ -1529,6 +1712,24 @@ function NotificationsPage() {
           ) : null}
           {selectedIncident ? (
             <>
+              <div className="metrics-grid metrics-grid-compact">
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '下一步' : 'Next Action'}</span>
+                  <strong>{translateIncidentNextAction(locale, selectedIncidentOperations.nextAction.key)}</strong>
+                </div>
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '确认状态' : 'Ack State'}</span>
+                  <strong>{translateIncidentAckState(locale, selectedIncidentOperations.ackState)}</strong>
+                </div>
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '队列年龄' : 'Queue Age'}</span>
+                  <strong>{selectedIncidentOperations.ageHours.toFixed(1)}h</strong>
+                </div>
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '阻塞任务' : 'Blocked Tasks'}</span>
+                  <strong>{selectedIncidentOperations.blockedTasks}</strong>
+                </div>
+              </div>
               <div className="status-stack">
                 <div className="status-row"><span>{locale === 'zh' ? '标题' : 'Title'}</span><strong>{selectedIncident.title}</strong></div>
                 <div className="status-row"><span>{locale === 'zh' ? '来源' : 'Source'}</span><strong>{selectedIncident.source}</strong></div>
@@ -1536,6 +1737,48 @@ function NotificationsPage() {
                 <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{translateMonitoringStatus(locale, selectedIncident.status)}</strong></div>
                 <div className="status-row"><span>{locale === 'zh' ? '创建于' : 'Created'}</span><strong>{fmtDateTime(selectedIncident.createdAt, locale)}</strong></div>
                 <div className="status-copy">{selectedIncident.summary || (locale === 'zh' ? '暂无摘要' : 'No summary')}</div>
+              </div>
+              <div className="panel-subtitle">{locale === 'zh' ? '响应态势' : 'Response Posture'}</div>
+              <div className="focus-list focus-list-terminal">
+                {selectedIncidentResponsePosture.map((item) => (
+                  <div className="focus-row" key={item.id}>
+                    <div className="symbol-cell">
+                      <strong>{item.label}</strong>
+                      <span>{item.hint}</span>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '当前值' : 'Value'}</span>
+                      <strong>{item.value}</strong>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="panel-subtitle">{locale === 'zh' ? '交接与下一步' : 'Handoff And Next Step'}</div>
+              <div className="focus-list focus-list-terminal">
+                <div className="focus-row">
+                  <div className="symbol-cell">
+                    <strong>{translateIncidentNextAction(locale, selectedIncidentOperations.nextAction.key)}</strong>
+                    <span>{selectedIncidentOperations.nextAction.detail}</span>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '负责人' : 'Owner'}</span>
+                    <strong>{selectedIncidentOperations.handoff.owner || (locale === 'zh' ? '未指派' : 'Unassigned')}</strong>
+                  </div>
+                </div>
+                <div className="focus-row">
+                  <div className="symbol-cell">
+                    <strong>{locale === 'zh' ? '交接摘要' : 'Handoff Summary'}</strong>
+                    <span>{selectedIncidentOperations.handoff.summary}</span>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '最近操作人' : 'Latest Actor'}</span>
+                    <strong>{selectedIncidentOperations.latestActor || '--'}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '最近活动' : 'Latest Activity'}</span>
+                    <strong>{selectedIncidentOperations.latestActivityAt ? fmtDateTime(selectedIncidentOperations.latestActivityAt, locale) : '--'}</strong>
+                  </div>
+                </div>
               </div>
               <div className="settings-chip-row">
                 <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => updateSelectedIncident({ status: 'investigating', actor: state.controlPlane.operator })}>
@@ -1546,6 +1789,9 @@ function NotificationsPage() {
                 </button>
                 <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => updateSelectedIncident({ status: 'resolved', actor: state.controlPlane.operator })}>
                   {locale === 'zh' ? '已解决' : 'Resolve'}
+                </button>
+                <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => updateSelectedIncident({ owner: state.controlPlane.operator, actor: state.controlPlane.operator })}>
+                  {locale === 'zh' ? '由我接管' : 'Take Ownership'}
                 </button>
               </div>
               <label className="field-label" htmlFor="incident-owner-input">{locale === 'zh' ? '负责人' : 'Owner'}</label>

@@ -870,9 +870,24 @@ export type IncidentSummaryResponse = {
       count: number;
       openCount: number;
       criticalCount: number;
+      blockedTaskCount: number;
+      staleCount: number;
+      unacknowledgedCount: number;
     }>;
     ageBuckets: Array<{
       bucket: 'lt_1h' | 'lt_6h' | 'lt_24h' | 'gte_24h';
+      count: number;
+    }>;
+    response: {
+      acknowledged: number;
+      ackOverdue: number;
+      blockedTasks: number;
+      activeTasks: number;
+      unresolvedCritical: number;
+      ownerHotspots: number;
+    };
+    nextActions: Array<{
+      key: 'assign-owner' | 'acknowledge' | 'resolve-blocker' | 'capture-evidence' | 'closeout';
       count: number;
     }>;
   };
@@ -913,6 +928,27 @@ export type IncidentDetailResponse = {
   evidence: {
     summary: IncidentEvidenceSummary;
     timeline: IncidentEvidenceItem[];
+  };
+  operations: {
+    ageHours: number;
+    stale: boolean;
+    ackState: 'pending' | 'acknowledged' | 'overdue';
+    blockedTasks: number;
+    activeTasks: number;
+    pendingTasks: number;
+    linkedEvidence: number;
+    latestActor: string;
+    latestActivityAt: string;
+    nextAction: {
+      key: 'assign-owner' | 'acknowledge' | 'resolve-blocker' | 'capture-evidence' | 'closeout' | 'monitor';
+      label: string;
+      detail: string;
+    };
+    handoff: {
+      owner: string;
+      queue: 'unassigned' | 'owned' | 'resolved';
+      summary: string;
+    };
   };
 };
 
