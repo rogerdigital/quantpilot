@@ -203,6 +203,13 @@ function translateIncidentAckState(locale: string, state: 'pending' | 'acknowled
   return 'Pending';
 }
 
+function getTimeWindowLabel(locale: string, key: (typeof MONITORING_TIME_WINDOWS)[number]['key']) {
+  if (key === '1h') return locale === 'zh' ? '最近 1 小时' : 'Last 1h';
+  if (key === '24h') return locale === 'zh' ? '最近 24 小时' : 'Last 24h';
+  if (key === '7d') return locale === 'zh' ? '最近 7 天' : 'Last 7d';
+  return locale === 'zh' ? '全部时间' : 'All Time';
+}
+
 function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
@@ -342,6 +349,151 @@ function NotificationsPage() {
     + (monitoringStatus?.services.queues.pendingAgentReviews || 0);
   const workerHeartbeatLag = monitoringStatus?.services.worker.lagSeconds;
   const selectedMonitoringSnapshot = monitoringSnapshotItems.find((item) => item.id === selectedMonitoringSnapshotId) || null;
+  const monitoringCriticalCount = monitoringAlertItems.filter((item) => item.level === 'critical').length;
+  const monitoringWarnCount = monitoringAlertItems.filter((item) => item.level === 'warn').length;
+  const monitoringSnapshotCriticalCount = monitoringSnapshotItems.filter((item) => item.status === 'critical').length;
+  const monitoringSnapshotWarnCount = monitoringSnapshotItems.filter((item) => item.status === 'warn').length;
+  const operatorCriticalCount = actionItems.filter((item) => item.level === 'critical').length;
+  const operatorWarnCount = actionItems.filter((item) => item.level === 'warn').length;
+  const notificationCriticalCount = items.filter((item) => item.level === 'critical').length;
+  const notificationWarnCount = items.filter((item) => item.level === 'warn').length;
+  const notificationControlPlaneCount = items.filter((item) => item.source === 'control-plane').length;
+  const auditWorkflowCount = auditItems.filter((item) => item.type === 'workflow').length;
+  const auditExecutionCount = auditItems.filter((item) => item.type === 'execution-plan').length;
+  const auditAgentCount = auditItems.filter((item) => item.type === 'agent-action-request').length;
+  const schedulerOffHoursCount = schedulerItems.filter((item) => item.phase === 'OFF_HOURS').length;
+  const schedulerIntradayCount = schedulerItems.filter((item) => item.phase === 'INTRADAY').length;
+  const schedulerAttentionCount = schedulerItems.filter((item) => item.status !== 'ok' && item.status !== 'healthy').length;
+  const controlPlaneBoards = [
+    {
+      id: 'monitoring',
+      title: locale === 'zh' ? 'Monitoring Board' : 'Monitoring Board',
+      detail: locale === 'zh' ? '看 worker、workflow、队列和风险告警的健康状态。' : 'Track worker, workflow, queue, and risk health.',
+      primaryLabel: locale === 'zh' ? 'Critical 告警' : 'Critical Alerts',
+      primaryValue: monitoringCriticalCount,
+      secondaryLabel: locale === 'zh' ? 'Workflow 积压' : 'Workflow Backlog',
+      secondaryValue: monitoringWorkflowBacklog,
+      tone: monitoringCriticalCount ? 'badge-warn' : 'badge-info',
+      onClick: () => applyMonitoringFocus({
+        level: monitoringCriticalCount ? 'critical' : monitoringLevelFilter,
+        source: monitoringCriticalCount ? 'risk' : monitoringSourceFilter,
+        timeWindow: '24h',
+      }),
+    },
+    {
+      id: 'notifications',
+      title: locale === 'zh' ? 'Notification Board' : 'Notification Board',
+      detail: locale === 'zh' ? '聚焦控制面通知里的 critical/warn 事件和来源分布。' : 'Focus critical/warn control-plane notifications and source mix.',
+      primaryLabel: locale === 'zh' ? 'Critical 通知' : 'Critical Notifications',
+      primaryValue: notificationCriticalCount,
+      secondaryLabel: locale === 'zh' ? '控制面来源' : 'Control-Plane Source',
+      secondaryValue: notificationControlPlaneCount,
+      tone: notificationCriticalCount ? 'badge-warn' : 'badge-info',
+      onClick: () => applyNotificationFocus({
+        level: notificationCriticalCount ? 'critical' : notificationLevelFilter,
+        source: notificationCriticalCount ? 'control-plane' : notificationSourceFilter,
+        timeWindow: '24h',
+      }),
+    },
+    {
+      id: 'audit',
+      title: locale === 'zh' ? 'Audit Board' : 'Audit Board',
+      detail: locale === 'zh' ? '按 workflow、execution、agent 三类看审计热点。' : 'Track workflow, execution, and agent audit hotspots.',
+      primaryLabel: locale === 'zh' ? 'Workflow 审计' : 'Workflow Audits',
+      primaryValue: auditWorkflowCount,
+      secondaryLabel: locale === 'zh' ? 'Execution 审计' : 'Execution Audits',
+      secondaryValue: auditExecutionCount,
+      tone: auditWorkflowCount || auditExecutionCount ? 'badge-info' : 'muted',
+      onClick: () => applyAuditFocus({
+        type: auditWorkflowCount >= auditExecutionCount ? 'workflow' : 'execution-plan',
+        timeWindow: '24h',
+      }),
+    },
+    {
+      id: 'operator',
+      title: locale === 'zh' ? 'Operator Board' : 'Operator Board',
+      detail: locale === 'zh' ? '查看高风险人工动作、批注和复核轨迹。' : 'Inspect high-risk manual actions and review traces.',
+      primaryLabel: locale === 'zh' ? 'Critical 动作' : 'Critical Actions',
+      primaryValue: operatorCriticalCount,
+      secondaryLabel: locale === 'zh' ? 'Warn 动作' : 'Warn Actions',
+      secondaryValue: operatorWarnCount,
+      tone: operatorCriticalCount ? 'badge-warn' : 'badge-info',
+      onClick: () => applyOperatorActionFocus({
+        level: operatorCriticalCount ? 'critical' : (operatorWarnCount ? 'warn' : operatorActionLevelFilter),
+        timeWindow: '24h',
+      }),
+    },
+    {
+      id: 'scheduler',
+      title: locale === 'zh' ? 'Scheduler Board' : 'Scheduler Board',
+      detail: locale === 'zh' ? '盘前、盘中和 off-hours 节拍都在这里统一观察。' : 'Review pre-open, intraday, and off-hours scheduler ticks in one place.',
+      primaryLabel: locale === 'zh' ? '盘中节拍' : 'Intraday Ticks',
+      primaryValue: schedulerIntradayCount,
+      secondaryLabel: locale === 'zh' ? '关注项' : 'Attention Items',
+      secondaryValue: schedulerAttentionCount,
+      tone: schedulerAttentionCount ? 'badge-warn' : 'badge-info',
+      onClick: () => applySchedulerFocus({
+        phase: schedulerAttentionCount ? 'INTRADAY' : schedulerPhaseFilter,
+        timeWindow: '24h',
+      }),
+    },
+  ];
+  const controlPlaneContextRows = [
+    {
+      id: 'monitoring-context',
+      label: locale === 'zh' ? 'Monitoring' : 'Monitoring',
+      filters: [
+        monitoringTimeWindow !== '24h' ? getTimeWindowLabel(locale, monitoringTimeWindow) : '',
+        monitoringSourceFilter !== 'all' ? `${locale === 'zh' ? '来源' : 'Source'}: ${monitoringSourceFilter}` : '',
+        monitoringLevelFilter !== 'all' ? `${locale === 'zh' ? '级别' : 'Level'}: ${translateMonitoringStatus(locale, monitoringLevelFilter)}` : '',
+        monitoringSnapshotStatusFilter !== 'all' ? `${locale === 'zh' ? '快照' : 'Snapshot'}: ${translateMonitoringStatus(locale, monitoringSnapshotStatusFilter)}` : '',
+        selectedMonitoringSnapshot ? `${locale === 'zh' ? '选中快照' : 'Selected Snapshot'}: ${fmtDateTime(selectedMonitoringSnapshot.generatedAt || selectedMonitoringSnapshot.createdAt, locale)}` : '',
+      ].filter(Boolean),
+      count: monitoringAlertItems.length + monitoringSnapshotItems.length,
+      reset: () => applyMonitoringFocus({ timeWindow: '24h' }),
+    },
+    {
+      id: 'notification-context',
+      label: locale === 'zh' ? 'Notifications' : 'Notifications',
+      filters: [
+        notificationTimeWindow !== '24h' ? getTimeWindowLabel(locale, notificationTimeWindow) : '',
+        notificationSourceFilter !== 'all' ? `${locale === 'zh' ? '来源' : 'Source'}: ${notificationSourceFilter}` : '',
+        notificationLevelFilter !== 'all' ? `${locale === 'zh' ? '级别' : 'Level'}: ${translateMonitoringStatus(locale, notificationLevelFilter)}` : '',
+      ].filter(Boolean),
+      count: items.length,
+      reset: () => applyNotificationFocus({ timeWindow: '24h' }),
+    },
+    {
+      id: 'audit-context',
+      label: locale === 'zh' ? 'Audit' : 'Audit',
+      filters: [
+        auditTimeWindow !== '24h' ? getTimeWindowLabel(locale, auditTimeWindow) : '',
+        auditTypeFilter !== 'all' ? `${locale === 'zh' ? '类型' : 'Type'}: ${auditTypeFilter}` : '',
+      ].filter(Boolean),
+      count: auditItems.length,
+      reset: () => applyAuditFocus({ timeWindow: '24h' }),
+    },
+    {
+      id: 'operator-context',
+      label: locale === 'zh' ? 'Operator' : 'Operator',
+      filters: [
+        operatorActionTimeWindow !== '24h' ? getTimeWindowLabel(locale, operatorActionTimeWindow) : '',
+        operatorActionLevelFilter !== 'all' ? `${locale === 'zh' ? '级别' : 'Level'}: ${translateMonitoringStatus(locale, operatorActionLevelFilter)}` : '',
+      ].filter(Boolean),
+      count: actionItems.length,
+      reset: () => applyOperatorActionFocus({ timeWindow: '24h' }),
+    },
+    {
+      id: 'scheduler-context',
+      label: locale === 'zh' ? 'Scheduler' : 'Scheduler',
+      filters: [
+        schedulerTimeWindow !== '24h' ? getTimeWindowLabel(locale, schedulerTimeWindow) : '',
+        schedulerPhaseFilter !== 'all' ? `${locale === 'zh' ? '窗口' : 'Phase'}: ${schedulerPhaseFilter}` : '',
+      ].filter(Boolean),
+      count: schedulerItems.length,
+      reset: () => applySchedulerFocus({ timeWindow: '24h' }),
+    },
+  ];
 
   useEffect(() => {
     if (!selectedMonitoringSnapshotId) return;
@@ -2317,6 +2469,69 @@ function NotificationsPage() {
         <article className="panel">
           <div className="panel-head">
             <div>
+              <div className="panel-title">{locale === 'zh' ? '控制面总览板' : 'Control Plane Boards'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '先看 monitoring、notifications、audit、operator 和 scheduler 五块板的热点，再往下钻明细。'
+                  : 'Read monitoring, notifications, audit, operator, and scheduler as five boards before drilling into a feed.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{controlPlaneBoards.length}</div>
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {controlPlaneBoards.map((item) => (
+              <button type="button" className="focus-row focus-row-wide status-row-button" key={item.id} onClick={item.onClick}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{item.primaryLabel}</span>
+                  <strong>{item.primaryValue}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{item.secondaryLabel}</span>
+                  <strong>{item.secondaryValue}</strong>
+                </div>
+              </button>
+            ))}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '控制面上下文' : 'Control Plane Context'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '统一展示五条控制面 feed 当前激活的筛选上下文，并允许就地重置。'
+                  : 'Show the active filter context for the five control-plane feeds and reset them in place.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{controlPlaneContextRows.filter((item) => item.filters.length).length}</div>
+          </div>
+          <div className="focus-list focus-list-terminal">
+            {controlPlaneContextRows.map((item) => (
+              <div className="focus-row focus-row-wide" key={item.id}>
+                <div className="symbol-cell">
+                  <strong>{item.label}</strong>
+                  <span>{item.filters.length ? item.filters.join(' · ') : (locale === 'zh' ? '当前是默认视图' : 'Currently on the default view.')}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '结果数' : 'Results'}</span>
+                  <strong>{item.count}</strong>
+                </div>
+                <div className="settings-chip-row">
+                  <button type="button" className="settings-chip" onClick={item.reset}>
+                    {locale === 'zh' ? '重置这一组' : 'Reset Feed'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
               <div className="panel-title">{locale === 'zh' ? '运行态摘要' : 'Monitoring Summary'}</div>
               <div className="panel-copy">
                 {locale === 'zh'
@@ -2325,6 +2540,24 @@ function NotificationsPage() {
               </div>
             </div>
             <div className={`panel-badge tone-${monitoringTone(monitoringStatus?.status)}`}>{monitoringLoading ? '...' : translateMonitoringStatus(locale, monitoringStatus?.status)}</div>
+          </div>
+          <div className="metrics-grid metrics-grid-compact">
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Critical' : 'Critical'}</span>
+              <strong>{monitoringCriticalCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Warn' : 'Warn'}</span>
+              <strong>{monitoringWarnCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Critical 快照' : 'Critical Snapshots'}</span>
+              <strong>{monitoringSnapshotCriticalCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Warn 快照' : 'Warn Snapshots'}</span>
+              <strong>{monitoringSnapshotWarnCount}</strong>
+            </div>
           </div>
           <div className="status-stack">
             <div className="status-row"><span>{locale === 'zh' ? '系统健康' : 'System health'}</span><strong>{monitoringLoading ? (locale === 'zh' ? '加载中' : 'Loading') : translateMonitoringStatus(locale, monitoringStatus?.status)}</strong></div>
@@ -2348,6 +2581,24 @@ function NotificationsPage() {
               </div>
             </div>
             <div className="panel-badge badge-warn">{monitoringAlertItems.length}</div>
+          </div>
+          <div className="metrics-grid metrics-grid-compact">
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Critical' : 'Critical'}</span>
+              <strong>{monitoringCriticalCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Warn' : 'Warn'}</span>
+              <strong>{monitoringWarnCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '选中快照' : 'Selected Snapshot'}</span>
+              <strong>{selectedMonitoringSnapshotId ? '1' : '0'}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '时间窗口' : 'Window'}</span>
+              <strong>{getTimeWindowLabel(locale, monitoringTimeWindow)}</strong>
+            </div>
           </div>
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
@@ -2455,6 +2706,24 @@ function NotificationsPage() {
             </div>
             <div className="panel-badge badge-info">{monitoringSnapshotItems.length}</div>
           </div>
+          <div className="metrics-grid metrics-grid-compact">
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Healthy' : 'Healthy'}</span>
+              <strong>{monitoringSnapshotItems.filter((item) => item.status === 'healthy').length}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Warn' : 'Warn'}</span>
+              <strong>{monitoringSnapshotWarnCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Critical' : 'Critical'}</span>
+              <strong>{monitoringSnapshotCriticalCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '选中' : 'Selected'}</span>
+              <strong>{selectedMonitoringSnapshotId ? '1' : '0'}</strong>
+            </div>
+          </div>
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
               const selected = monitoringTimeWindow === window.key;
@@ -2530,6 +2799,20 @@ function NotificationsPage() {
               </div>
             </div>
             <div className="panel-badge badge-info">{actionItems.length}</div>
+          </div>
+          <div className="metrics-grid metrics-grid-compact">
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Critical' : 'Critical'}</span>
+              <strong>{operatorCriticalCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Warn' : 'Warn'}</span>
+              <strong>{operatorWarnCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '窗口' : 'Window'}</span>
+              <strong>{getTimeWindowLabel(locale, operatorActionTimeWindow)}</strong>
+            </div>
           </div>
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
@@ -2614,6 +2897,24 @@ function NotificationsPage() {
               </div>
             </div>
             <div className="panel-badge badge-warn">{items.length}</div>
+          </div>
+          <div className="metrics-grid metrics-grid-compact">
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Critical' : 'Critical'}</span>
+              <strong>{notificationCriticalCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Warn' : 'Warn'}</span>
+              <strong>{notificationWarnCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '控制面来源' : 'Control Plane Source'}</span>
+              <strong>{notificationControlPlaneCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '窗口' : 'Window'}</span>
+              <strong>{getTimeWindowLabel(locale, notificationTimeWindow)}</strong>
+            </div>
           </div>
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
@@ -2715,6 +3016,24 @@ function NotificationsPage() {
             </div>
             <div className="panel-badge badge-info">{state.controlPlane.notificationCount}</div>
           </div>
+          <div className="metrics-grid metrics-grid-compact">
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Workflow' : 'Workflow'}</span>
+              <strong>{auditWorkflowCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Execution' : 'Execution'}</span>
+              <strong>{auditExecutionCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Agent' : 'Agent'}</span>
+              <strong>{auditAgentCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '窗口' : 'Window'}</span>
+              <strong>{getTimeWindowLabel(locale, auditTimeWindow)}</strong>
+            </div>
+          </div>
           <div className="settings-chip-row">
             <button type="button" className="settings-chip" onClick={() => applyNotificationFocus({ timeWindow: '24h' })}>
               {locale === 'zh' ? '查看通知' : 'Open Notifications'}
@@ -2744,6 +3063,24 @@ function NotificationsPage() {
               </div>
             </div>
             <div className="panel-badge badge-info">{auditItems.length}</div>
+          </div>
+          <div className="metrics-grid metrics-grid-compact">
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '盘中' : 'Intraday'}</span>
+              <strong>{schedulerIntradayCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Off Hours' : 'Off Hours'}</span>
+              <strong>{schedulerOffHoursCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '关注项' : 'Attention'}</span>
+              <strong>{schedulerAttentionCount}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '窗口' : 'Window'}</span>
+              <strong>{getTimeWindowLabel(locale, schedulerTimeWindow)}</strong>
+            </div>
           </div>
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {

@@ -146,6 +146,7 @@ quantpilot/
 - 通知中心已从单纯观察面板推进到可追踪的 `incident / investigation` 控制台，支持把监控告警、控制面通知、审计、风控、工作流和执行计划升级为 incident，并联动证据时间线、处置活动流、对象检查器和响应检查单。
 - incident 队列已具备 `summary / owner load / source mix / aging / bulk actions`，支持按负责人和未指派视角管理事件队列，并批量指派负责人、推进状态、追加处置备注。
 - incident 控制台已进一步补齐运营态能力：summary 现在会输出 `ack overdue / blocked tasks / owner hotspots / next actions`，详情页会展示 `response posture / handoff / next step`，并支持批量归我、备注并收尾等更完整的处置动作。
+- 通知中心中的 control-plane feed 已开始统一成 `boards + context + feed detail` 模式：monitoring、notifications、audit、operator actions 和 scheduler 都会先给出板块摘要和当前筛选上下文，再下钻到各自列表。
 - worker 已接管通知分发、风险扫描、调度 tick、workflow maintenance 和 workflow execution。
 - 共享运行时已经拆分到 `trading-engine / control-plane-runtime / task-workflow-engine / shared-types`。
 - 控制面持久化已抽到 `control-plane-store`，当前以文件型存储为主。
