@@ -193,6 +193,8 @@ quantpilot/
 
 这是当前所在阶段，目标是把“可演示原型”推进成“可持续研发的平台底座”。
 
+- 阶段 1 的收官定义、非目标和阶段 2 入口条件已单独整理到 [docs/architecture/stage-1-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-1-closeout.md)。
+
 - 落地真实的 `auth / user-account / account settings / broker binding` 基础模块。
 - 当前已推进到账户统一快照、角色模板、会话权限对齐和 broker binding 健康摘要，下一步重点转向更完整的权限护栏、对象联动和多用户边界。
 - 把文件型原型存储进一步收敛为可迁移的数据访问边界，为 `PostgreSQL + Redis` 形态做准备。
@@ -339,11 +341,10 @@ npm run verify
 
 当前以“阶段 1：平台底座产品化”为主，优先级如下：
 
-1. 完成用户、账户、鉴权和券商绑定等平台基础对象的真实数据模型。
-2. 将前后端权限判断、错误反馈和页面禁用逻辑继续收敛到统一的 account/access 模型。
-3. 将市场数据、研究数据、执行数据从原型读写升级为稳定 API 与持久化存储。
+1. 以 [docs/architecture/stage-1-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-1-closeout.md) 里的完成定义为准，继续收掉阶段 1 的边角不一致和验证缺口。
+2. 稳定账户、权限、incident 和 operations workbench 这几条平台底座主链路，避免阶段 2 开始后再回补基础对象。
+3. 将市场数据、研究数据、执行数据从原型读写继续升级为稳定 API 与持久化存储。
 4. 继续把研究、风控、执行相关异步动作收敛到后端任务流与 worker。
-5. 在现有 monitoring / incident 控制台基础上，继续补齐独立运维工作台所需的聚合视图、批量处置、SLA 视角和跨对象联动。
-6. 为阶段 2 的策略研究闭环预留统一任务协议、结果模型和审计链路。
+5. 为阶段 2 的策略研究闭环预留统一任务协议、结果模型和审计链路。
 
 研发节奏保持为“设计对齐 -> 小步实现 -> 自动化验证 -> 再推进下一层能力”。

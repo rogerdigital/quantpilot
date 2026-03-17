@@ -120,6 +120,8 @@ quantpilot/
 2. 把文件型控制面和前端示例数据逐步替换为稳定的数据访问契约，为数据库和缓存升级铺路。
 3. 让前端页面完全退回到 API 消费者角色，把研究、风控、执行的编排职责继续迁往后端和 worker。
 
+阶段 1 的收官标准已经单独整理为 [stage-1-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-1-closeout.md)，后续判断是否进入阶段 2 以该文档为准。
+
 ### 阶段 2 研究与策略闭环
 
 1. 把 `strategy / backtest` 从静态 research snapshot 升级为真实任务执行与结果持久化模块。
