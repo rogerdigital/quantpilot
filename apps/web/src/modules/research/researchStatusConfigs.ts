@@ -1,3 +1,5 @@
+import { formatPermissionReadOnly } from '../permissions/permissionCopy.ts';
+
 export function getStrategyStatusConfig(options: {
   locale: 'zh' | 'en';
   catalogSize?: number;
@@ -27,9 +29,7 @@ export function getStrategyStatusConfig(options: {
     ],
     messages: [
       !canWriteStrategy
-        ? (locale === 'zh'
-            ? '当前会话没有 strategy:write 权限，策略工作台处于只读态。'
-            : 'This session does not have strategy:write permission. The strategy workspace is read-only.')
+        ? formatPermissionReadOnly(locale, 'strategy:write', '策略工作台', 'the strategy workspace')
         : null,
       loading ? (locale === 'zh' ? '正在同步策略注册表...' : 'Syncing strategy registry...') : null,
       error ? (locale === 'zh' ? `策略服务不可用：${error}` : `Strategy service unavailable: ${error}`) : null,

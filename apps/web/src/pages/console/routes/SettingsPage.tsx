@@ -13,6 +13,12 @@ import {
   updateUserAccountProfile,
 } from '../../../app/api/controlPlane.ts';
 import { useMarketProviderStatus } from '../../../hooks/useMarketProviderStatus.ts';
+import {
+  formatActionGuardNotice,
+  formatPermissionDisabled,
+  formatPermissionError,
+  formatPermissionReadOnly,
+} from '../../../modules/permissions/permissionCopy.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import { SectionHeader } from '../components/ConsoleChrome.tsx';
 import { copy, useLocale } from '../i18n.tsx';
@@ -98,15 +104,6 @@ export function SettingsPage() {
   const selectedPermissions = toPermissionList(accessForm.permissions);
   const accessSummary = account?.accessSummary;
 
-  function permissionFailureCopy(error: unknown, fallbackZh: string, fallbackEn: string) {
-    if (error instanceof ApiPermissionError && error.missingPermission) {
-      return locale === 'zh'
-        ? `权限不足，缺少 ${error.missingPermission}。`
-        : `Permission denied. Missing ${error.missingPermission}.`;
-    }
-    return locale === 'zh' ? fallbackZh : fallbackEn;
-  }
-
   function syncBindingForm(binding?: UserBrokerBinding | null, bindingCount = bindings.length) {
     setBindingForm({
       id: binding?.id || '',
@@ -188,18 +185,10 @@ export function SettingsPage() {
     });
   }
 
-  const modeDisabledReason = locale === 'zh'
-    ? '缺少 strategy:write 权限，不能切换系统模式。'
-    : 'Missing strategy:write permission. Mode switching is disabled.';
-  const autoTradeDisabledReason = locale === 'zh'
-    ? '缺少 strategy:write 权限，不能修改自动交易开关。'
-    : 'Missing strategy:write permission. Auto-trade toggle is disabled.';
-  const riskGuardDisabledReason = locale === 'zh'
-    ? '缺少 risk:review 权限，不能修改风险闸门。'
-    : 'Missing risk:review permission. Risk guard toggle is disabled.';
-  const executionDisabledReason = locale === 'zh'
-    ? '缺少 execution:approve 权限，不能修改实盘相关开关。'
-    : 'Missing execution:approve permission. Live execution toggles are disabled.';
+  const modeDisabledReason = formatPermissionDisabled(locale, 'strategy:write', '切换系统模式', 'change the system mode');
+  const autoTradeDisabledReason = formatPermissionDisabled(locale, 'strategy:write', '修改自动交易开关', 'change the auto-trade toggle');
+  const riskGuardDisabledReason = formatPermissionDisabled(locale, 'risk:review', '修改风险闸门', 'change the risk-guard toggle');
+  const executionDisabledReason = formatPermissionDisabled(locale, 'execution:approve', '修改实盘相关开关', 'change live execution toggles');
   const marketProviderLabel = translateProviderLabel(
     locale,
     marketStatus?.provider === 'alpaca'
@@ -242,7 +231,7 @@ export function SettingsPage() {
       await refreshAccountWorkspace();
       setSaveState((current) => ({ ...current, profile: locale === 'zh' ? '账户档案已保存，并已刷新当前会话。' : 'Profile saved and session refreshed.' }));
     } catch (error) {
-      setSaveState((current) => ({ ...current, profile: permissionFailureCopy(error, '账户档案保存失败', 'Profile save failed') }));
+      setSaveState((current) => ({ ...current, profile: formatPermissionError(locale, error, '账户档案保存失败', 'Profile save failed', '账户档案保存', 'Profile save') }));
     }
   }
 
@@ -258,7 +247,7 @@ export function SettingsPage() {
       await refreshAccountWorkspace();
       setSaveState((current) => ({ ...current, preferences: locale === 'zh' ? '偏好设置已保存，并已刷新当前会话。' : 'Preferences saved and session refreshed.' }));
     } catch (error) {
-      setSaveState((current) => ({ ...current, preferences: permissionFailureCopy(error, '偏好设置保存失败', 'Preferences save failed') }));
+      setSaveState((current) => ({ ...current, preferences: formatPermissionError(locale, error, '偏好设置保存失败', 'Preferences save failed', '偏好设置保存', 'Preferences save') }));
     }
   }
 
@@ -274,7 +263,7 @@ export function SettingsPage() {
       await refreshAccountWorkspace();
       setSaveState((current) => ({ ...current, access: locale === 'zh' ? '访问策略已保存，权限上下文已重新对齐。' : 'Access policy saved and permission context realigned.' }));
     } catch (error) {
-      setSaveState((current) => ({ ...current, access: permissionFailureCopy(error, '访问策略保存失败', 'Access policy save failed') }));
+      setSaveState((current) => ({ ...current, access: formatPermissionError(locale, error, '访问策略保存失败', 'Access policy save failed', '访问策略保存', 'Access policy save') }));
     }
   }
 
@@ -289,7 +278,7 @@ export function SettingsPage() {
       await refreshAccountWorkspace();
       setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '券商绑定已保存，并已刷新默认会话上下文。' : 'Broker binding saved and session context refreshed.' }));
     } catch (error) {
-      setSaveState((current) => ({ ...current, binding: permissionFailureCopy(error, '券商绑定保存失败', 'Broker binding save failed') }));
+      setSaveState((current) => ({ ...current, binding: formatPermissionError(locale, error, '券商绑定保存失败', 'Broker binding save failed', '券商绑定保存', 'Broker binding save') }));
     }
   }
 
@@ -302,7 +291,7 @@ export function SettingsPage() {
       setBindingRuntime(runtimeSnapshot || refreshed.runtimeSnapshot || null);
       setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '运行状态已同步，绑定健康状态已更新。' : 'Runtime synced and broker health updated.' }));
     } catch (error) {
-      setSaveState((current) => ({ ...current, binding: permissionFailureCopy(error, '运行状态同步失败', 'Runtime sync failed') }));
+      setSaveState((current) => ({ ...current, binding: formatPermissionError(locale, error, '运行状态同步失败', 'Runtime sync failed', '运行状态同步', 'Runtime sync') }));
     }
   }
 
@@ -314,7 +303,7 @@ export function SettingsPage() {
       await refreshAccountWorkspace();
       setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '默认券商绑定已更新，并已刷新会话默认连接。' : 'Default broker binding updated and session default refreshed.' }));
     } catch (error) {
-      setSaveState((current) => ({ ...current, binding: permissionFailureCopy(error, '默认券商绑定更新失败', 'Default broker binding update failed') }));
+      setSaveState((current) => ({ ...current, binding: formatPermissionError(locale, error, '默认券商绑定更新失败', 'Default broker binding update failed', '默认券商绑定更新', 'Default broker binding update') }));
     }
   }
 
@@ -326,7 +315,7 @@ export function SettingsPage() {
       await refreshAccountWorkspace();
       setSaveState((current) => ({ ...current, binding: locale === 'zh' ? '券商绑定已删除。' : 'Broker binding deleted.' }));
     } catch (error) {
-      setSaveState((current) => ({ ...current, binding: permissionFailureCopy(error, '券商绑定删除失败', 'Broker binding delete failed') }));
+      setSaveState((current) => ({ ...current, binding: formatPermissionError(locale, error, '券商绑定删除失败', 'Broker binding delete failed', '券商绑定删除', 'Broker binding delete') }));
     }
   }
 
@@ -366,8 +355,8 @@ export function SettingsPage() {
               </button>
             ))}
           </div>
-          {!canWriteStrategy ? <div className="status-copy">{locale === 'zh' ? '当前会话没有 strategy:write 权限，系统模式切换已禁用。' : 'This session does not have strategy:write permission. Mode switching is disabled.'}</div> : null}
-          {actionGuardNotice?.action === 'set-mode' ? <div className="status-copy">{locale === 'zh' ? '模式切换未生效：当前会话缺少 strategy:write 权限。' : 'Mode change was blocked: this session is missing strategy:write permission.'}</div> : null}
+          {!canWriteStrategy ? <div className="status-copy">{formatPermissionDisabled(locale, 'strategy:write', '切换系统模式', 'change the system mode')}</div> : null}
+          {actionGuardNotice?.action === 'set-mode' ? <div className="status-copy">{formatActionGuardNotice(locale, actionGuardNotice)}</div> : null}
         </article>
         <article className="panel" id="switches">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].labels.switches}</div><div className="panel-copy">{copy[locale].terms.switchesCopy}</div></div><div className="panel-badge badge-muted">CONTROL</div></div>
@@ -381,11 +370,7 @@ export function SettingsPage() {
               : 'autoTrade requires strategy:write, riskGuard requires risk:review, and allowLive/manualApproval require execution:approve.'}
           </div>
           {actionGuardNotice?.action?.startsWith('toggle:') ? (
-            <div className="status-copy">
-              {locale === 'zh'
-                ? `开关更新未生效：当前会话缺少 ${actionGuardNotice.permission} 权限。`
-                : `Toggle change was blocked: this session is missing ${actionGuardNotice.permission} permission.`}
-            </div>
+            <div className="status-copy">{formatActionGuardNotice(locale, actionGuardNotice)}</div>
           ) : null}
         </article>
       </section>
@@ -404,7 +389,7 @@ export function SettingsPage() {
             <div className="policy-row"><span>{locale === 'zh' ? '默认模式' : 'Default Mode'}</span><strong>{account?.preferences.defaultMode || 'hybrid'}</strong></div>
             <div className="policy-row"><span>{locale === 'zh' ? '通知通道' : 'Notifications'}</span><strong>{account?.preferences.notificationChannels.join(', ') || 'inbox'}</strong></div>
           </div>
-          {!canWriteAccount ? <div className="status-copy">{locale === 'zh' ? '当前会话没有 account:write 权限，账户设置已切换为只读。' : 'This session does not have account:write permission. Account settings are read-only.'}</div> : null}
+          {!canWriteAccount ? <div className="status-copy">{formatPermissionReadOnly(locale, 'account:write', '账户设置', 'account settings')}</div> : null}
           <div className="settings-form-grid">
             <label className="settings-field">
               <span>{locale === 'zh' ? '姓名' : 'Name'}</span>

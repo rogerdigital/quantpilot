@@ -158,6 +158,7 @@ quantpilot/
 - `auth/session` 已改为由持久化账户访问策略驱动，前后端对 `strategy:write / risk:review / execution:approve / account:write` 的权限判断已经开始收敛。
 - 账户域已进一步收敛为统一 `account workspace` 快照：设置页现在消费同一份 `profile / preferences / access / broker summary / role templates / session` 结构化数据，并在保存账户、权限或默认券商绑定后自动刷新当前会话。
 - `broker bindings` 已补齐健康状态与待处理摘要，能区分 `healthy / degraded / attention / idle`，并汇总默认绑定、连接数、待处理绑定和最近同步时间。
+- 权限护栏已开始统一：后端 `403` 现会返回结构化权限说明与帮助信息，前端关键页面改为复用同一套 permission copy，设置、策略、回测、执行、风控和研究面板的缺权限提示与只读反馈已开始收口。
 - Settings、Risk、Execution、Agent 等前端页面已经接入权限禁用、页面级拦截反馈和结构化 API 错误解释。
 
 ### 当前边界

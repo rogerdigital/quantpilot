@@ -1,5 +1,6 @@
 import { appendAuditRecord, listAuditRecords } from '../../modules/audit/service.mjs';
 import { hasPermission } from '../../modules/auth/service.mjs';
+import { writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
 import { appendIncidentNote, appendIncidentTask, bulkUpdateIncidents, createIncident, getIncidentDetail, getIncidentSummary, listIncidents, updateIncident, updateIncidentTask } from '../../modules/incidents/service.mjs';
 import { listNotifications } from '../../modules/notification/service.mjs';
 import { getRiskEvent, listRiskEvents } from '../../domains/risk/services/feed-service.mjs';
@@ -18,17 +19,10 @@ import { listCycles, recordCycleRun } from '../../control-plane/task-orchestrato
 
 export async function handleControlPlaneRoutes(context) {
   const { req, reqUrl, res, readJsonBody, writeJson, gatewayDependencies } = context;
-  const writeForbidden = (permission) => {
-    writeJson(res, 403, {
-      ok: false,
-      error: 'forbidden',
-      missingPermission: permission,
-      message: `missing required permission: ${permission}`,
-    });
-  };
-  const requirePermission = (permission) => {
+  const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);
+  const requirePermission = (permission, action = '') => {
     if (!hasPermission(permission)) {
-      writeForbidden(permission);
+      writeForbidden(permission, action);
       return false;
     }
     return true;
@@ -243,7 +237,7 @@ export async function handleControlPlaneRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/resume') && reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')) {
-    if (!requirePermission('execution:approve')) return true;
+    if (!requirePermission('execution:approve', 'record operator actions')) return true;
     const workflowRunId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const workflow = resumeWorkflow(workflowRunId, body);
@@ -254,7 +248,7 @@ export async function handleControlPlaneRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/cancel') && reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')) {
-    if (!requirePermission('execution:approve')) return true;
+    if (!requirePermission('execution:approve', 'run control-plane cycles')) return true;
     const workflowRunId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const workflow = cancelWorkflow(workflowRunId, body);
@@ -317,7 +311,7 @@ export async function handleControlPlaneRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/strategy/execute') {
-    if (!requirePermission('strategy:write')) return true;
+    if (!requirePermission('strategy:write', 'queue workflows')) return true;
     const body = await readJsonBody(req);
     writeJson(res, 200, {
       ok: true,
@@ -361,7 +355,7 @@ export async function handleControlPlaneRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/actions') {
-    if (!requirePermission('execution:approve')) return true;
+    if (!requirePermission('execution:approve', 'resume or cancel workflows')) return true;
     const body = await readJsonBody(req);
     writeJson(res, 200, {
       ok: true,

@@ -9,6 +9,7 @@ import { getBacktestSummary } from '../../domains/backtest/services/summary-serv
 import { createBacktestRun, getBacktestRunDetail, listBacktestRuns, reviewBacktestRun } from '../../domains/backtest/services/runs-service.mjs';
 import { getExecutionPlanDetail, getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
+import { listPermissionDescriptors, writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
 import { getMonitoringStatus, listMonitoringAlerts, listMonitoringSnapshots } from '../../modules/monitoring/service.mjs';
 import { describeArchitecture, listArchitectureLayers, listModules } from '../../modules/registry.mjs';
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
@@ -29,14 +30,7 @@ import { getStrategyCatalogDetail, listStrategyCatalog, saveStrategyCatalogItem 
 
 export async function handlePlatformRoutes(context) {
   const { req, reqUrl, res, config, readJsonBody, writeJson } = context;
-  const writeForbidden = (permission) => {
-    writeJson(res, 403, {
-      ok: false,
-      error: 'forbidden',
-      missingPermission: permission,
-      message: `missing required permission: ${permission}`,
-    });
-  };
+  const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);
   const canWriteAccount = () => hasPermission('account:write');
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/health') {
@@ -85,6 +79,14 @@ export async function handlePlatformRoutes(context) {
     return true;
   }
 
+  if (req.method === 'GET' && reqUrl.pathname === '/api/auth/permissions') {
+    writeJson(res, 200, {
+      ok: true,
+      permissions: listPermissionDescriptors(),
+    });
+    return true;
+  }
+
   if (req.method === 'GET' && reqUrl.pathname === '/api/user-account/profile') {
     writeJson(res, 200, getUserProfileSnapshot());
     return true;
@@ -92,7 +94,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/profile') {
     if (!canWriteAccount()) {
-      writeForbidden('account:write');
+      writeForbidden('account:write', 'update the account profile');
       return true;
     }
     const body = await readJsonBody(req);
@@ -107,7 +109,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/preferences') {
     if (!canWriteAccount()) {
-      writeForbidden('account:write');
+      writeForbidden('account:write', 'update account preferences');
       return true;
     }
     const body = await readJsonBody(req);
@@ -117,7 +119,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/access') {
     if (!canWriteAccount()) {
-      writeForbidden('account:write');
+      writeForbidden('account:write', 'update the access policy');
       return true;
     }
     const body = await readJsonBody(req);
@@ -138,7 +140,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/broker-bindings') {
     if (!canWriteAccount()) {
-      writeForbidden('account:write');
+      writeForbidden('account:write', 'save broker bindings');
       return true;
     }
     const body = await readJsonBody(req);
@@ -149,7 +151,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/default') && reqUrl.pathname.startsWith('/api/user-account/broker-bindings/')) {
     if (!canWriteAccount()) {
-      writeForbidden('account:write');
+      writeForbidden('account:write', 'change the default broker binding');
       return true;
     }
     const bindingId = reqUrl.pathname.split('/').at(-2);
@@ -160,7 +162,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'DELETE' && reqUrl.pathname.startsWith('/api/user-account/broker-bindings/')) {
     if (!canWriteAccount()) {
-      writeForbidden('account:write');
+      writeForbidden('account:write', 'delete broker bindings');
       return true;
     }
     const bindingId = reqUrl.pathname.split('/').at(-1);
@@ -171,7 +173,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/broker-bindings/sync') {
     if (!canWriteAccount()) {
-      writeForbidden('account:write');
+      writeForbidden('account:write', 'sync broker runtime state');
       return true;
     }
     const result = await syncBrokerBindingRuntime(context.gatewayDependencies.getBrokerHealth);
@@ -214,7 +216,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/action-requests') {
     if (!hasPermission('strategy:write')) {
-      writeForbidden('strategy:write');
+      writeForbidden('strategy:write', 'queue agent action requests');
       return true;
     }
     const body = await readJsonBody(req);
@@ -225,7 +227,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/approve') && reqUrl.pathname.startsWith('/api/agent/action-requests/')) {
     if (!hasPermission('risk:review')) {
-      writeForbidden('risk:review');
+      writeForbidden('risk:review', 'approve agent action requests');
       return true;
     }
     const requestId = reqUrl.pathname.split('/').at(-2);
@@ -237,7 +239,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/reject') && reqUrl.pathname.startsWith('/api/agent/action-requests/')) {
     if (!hasPermission('risk:review')) {
-      writeForbidden('risk:review');
+      writeForbidden('risk:review', 'reject agent action requests');
       return true;
     }
     const requestId = reqUrl.pathname.split('/').at(-2);
@@ -261,7 +263,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/strategy/catalog') {
     if (!hasPermission('strategy:write')) {
-      writeForbidden('strategy:write');
+      writeForbidden('strategy:write', 'save strategy catalog entries');
       return true;
     }
     const body = await readJsonBody(req);
@@ -297,7 +299,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/backtest/runs') {
     if (!hasPermission('strategy:write')) {
-      writeForbidden('strategy:write');
+      writeForbidden('strategy:write', 'queue backtest runs');
       return true;
     }
     const body = await readJsonBody(req);
@@ -308,7 +310,7 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/review') && reqUrl.pathname.startsWith('/api/backtest/runs/')) {
     if (!hasPermission('risk:review')) {
-      writeForbidden('risk:review');
+      writeForbidden('risk:review', 'review backtest runs');
       return true;
     }
     const runId = reqUrl.pathname.split('/').at(-2);

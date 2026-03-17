@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ApiPermissionError } from '../../app/api/http.ts';
+import { formatMissingPermission } from '../permissions/permissionCopy.ts';
 import type { AgentToolDefinition, AgentToolExecutionResult } from '@shared-types/trading.ts';
 import { executeAgentTool, fetchAgentTools } from './agentTools.service.ts';
 
@@ -39,7 +40,7 @@ export function useAgentTools() {
         preview: null,
         loading: false,
         error: error instanceof ApiPermissionError && error.missingPermission
-          ? `Permission denied. Missing ${error.missingPermission}.`
+          ? `${formatMissingPermission('en', error.missingPermission)}.`
           : (error instanceof Error ? error.message : 'unknown error'),
       });
     });

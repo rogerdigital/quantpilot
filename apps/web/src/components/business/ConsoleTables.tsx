@@ -1,5 +1,6 @@
 import type { BrokerOrder, BrokerPositionSnapshot } from '@shared-types/trading.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
+import { formatPermissionDisabled } from '../../modules/permissions/permissionCopy.ts';
 import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
 import {
   fmtCurrency,
@@ -101,9 +102,7 @@ export function OrdersTable({ accountKey }: { accountKey: 'paper' | 'live' }) {
   const { locale } = useLocale();
   const rows: BrokerOrder[] = state.accounts[accountKey].orders.slice(0, 12);
   const canCancelLiveOrders = hasPermission('execution:approve');
-  const cancelDisabledReason = locale === 'zh'
-    ? '缺少 execution:approve 权限，不能发起实盘撤单。'
-    : 'Missing execution:approve permission. Live order cancellation is disabled.';
+  const cancelDisabledReason = formatPermissionDisabled(locale, 'execution:approve', '发起实盘撤单', 'cancel live orders');
 
   return (
     <div className="table-wrap">
@@ -129,7 +128,7 @@ export function OrdersTable({ accountKey }: { accountKey: 'paper' | 'live' }) {
           )) : <tr><td colSpan={7} className="empty-cell">{copy[locale].terms.noFills}</td></tr>}
         </tbody>
       </table>
-      {accountKey === 'live' && !canCancelLiveOrders ? <div className="status-copy">{locale === 'zh' ? '当前账户没有 execution:approve 权限，实盘撤单已禁用。' : 'This account does not have execution:approve permission. Live order cancellation is disabled.'}</div> : null}
+      {accountKey === 'live' && !canCancelLiveOrders ? <div className="status-copy">{formatPermissionDisabled(locale, 'execution:approve', '发起实盘撤单', 'cancel live orders')}</div> : null}
     </div>
   );
 }
@@ -146,9 +145,7 @@ export function ApprovalQueueTable({
   const { state } = useTradingSystem();
   const { locale } = useLocale();
   const rows: BrokerOrder[] = state.approvalQueue.slice(0, 12);
-  const reviewDisabledReason = locale === 'zh'
-    ? '缺少 execution:approve 权限，不能审批或驳回实盘动作。'
-    : 'Missing execution:approve permission. Approval and rejection are disabled.';
+  const reviewDisabledReason = formatPermissionDisabled(locale, 'execution:approve', '审批或驳回实盘动作', 'approve or reject live intents');
 
   return (
     <div className="table-wrap">
@@ -171,7 +168,7 @@ export function ApprovalQueueTable({
           )) : <tr><td colSpan={7} className="empty-cell">{locale === 'zh' ? '当前没有待审批实盘订单' : 'No live orders are waiting for approval'}</td></tr>}
         </tbody>
       </table>
-      {!canReview ? <div className="status-copy">{locale === 'zh' ? '当前账户没有 execution:approve 权限，审批动作已禁用。' : 'This account does not have execution:approve permission. Approval actions are disabled.'}</div> : null}
+      {!canReview ? <div className="status-copy">{formatPermissionDisabled(locale, 'execution:approve', '审批或驳回实盘动作', 'approve or reject live intents')}</div> : null}
     </div>
   );
 }

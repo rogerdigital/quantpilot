@@ -25,7 +25,7 @@
     "test:runtime": "node --test packages/control-plane-runtime/test/*.test.mjs",
     "test:control-plane": "node --test packages/control-plane-store/test/*.test.mjs",
     "test:worker": "node --test apps/worker/test/*.test.mjs",
-    "test:web": "vitest run apps/web/src/modules/console/execution-collection-configs.test.ts apps/web/src/modules/console/execution-inspection-configs.test.ts apps/web/src/modules/console/execution-panels.test.ts apps/web/src/modules/research/research-panels.test.tsx apps/web/src/modules/research/research-navigation.test.ts apps/web/src/pages/research-pages.test.tsx --environment node",
+    "test:web": "vitest run apps/web/src/modules/console/execution-collection-configs.test.ts apps/web/src/modules/console/execution-inspection-configs.test.ts apps/web/src/modules/console/execution-panels.test.ts apps/web/src/modules/research/research-panels.test.tsx apps/web/src/modules/research/research-navigation.test.ts apps/web/src/modules/permissions/permissionCopy.test.ts apps/web/src/pages/research-pages.test.tsx --environment node",
     "typecheck": "tsc --noEmit -p apps/web/tsconfig.json",
     "verify": "npm run check:workspaces && npm run check:lockfile && npm run test:control-plane && npm run test:runtime && npm run test:engine && npm run test:api && npm run test:worker && npm run test:web && npm run typecheck && npm run build",
     "gateway": "node apps/api/src/main.mjs",

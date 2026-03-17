@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
+import { formatPermissionError } from '../../modules/permissions/permissionCopy.ts';
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchActionBar, ResearchActionButton } from '../../modules/research/ResearchActionBar.tsx';
 import { ResearchAuditFeedRow } from '../../modules/research/ResearchAuditFeedRow.tsx';
@@ -237,11 +238,7 @@ function StrategiesPage() {
       requestRefresh();
     } catch (requestError) {
       if (requestError instanceof ApiPermissionError) {
-        setSaveError(
-          locale === 'zh'
-            ? `保存策略被拦截：当前会话缺少 ${requestError.missingPermission || 'strategy:write'} 权限。`
-            : `Strategy save blocked: this session is missing ${requestError.missingPermission || 'strategy:write'} permission.`,
-        );
+        setSaveError(formatPermissionError(locale, requestError, '保存策略失败', 'Strategy save failed', '保存策略', 'Strategy save'));
       } else {
         setSaveError(
           locale === 'zh'
@@ -297,11 +294,7 @@ function StrategiesPage() {
       requestRefresh();
     } catch (requestError) {
       if (requestError instanceof ApiPermissionError) {
-        setSaveError(
-          locale === 'zh'
-            ? `策略晋级被拦截：当前会话缺少 ${requestError.missingPermission || 'strategy:write'} 权限。`
-            : `Strategy promotion blocked: this session is missing ${requestError.missingPermission || 'strategy:write'} permission.`,
-        );
+        setSaveError(formatPermissionError(locale, requestError, '策略晋级失败', 'Strategy promotion failed', '策略晋级', 'Strategy promotion'));
       } else {
         setSaveError(
           locale === 'zh'
@@ -338,11 +331,7 @@ function StrategiesPage() {
       requestRefresh();
     } catch (requestError) {
       if (requestError instanceof ApiPermissionError) {
-        setSaveError(
-          locale === 'zh'
-            ? `策略归档被拦截：当前会话缺少 ${requestError.missingPermission || 'strategy:write'} 权限。`
-            : `Strategy archive blocked: this session is missing ${requestError.missingPermission || 'strategy:write'} permission.`,
-        );
+        setSaveError(formatPermissionError(locale, requestError, '策略状态更新失败', 'Failed to update strategy lifecycle state', '策略归档', 'Strategy archive'));
       } else {
         setSaveError(
           locale === 'zh'

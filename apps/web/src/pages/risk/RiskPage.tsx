@@ -1,6 +1,7 @@
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useRiskEventsFeed } from '../../modules/risk/useRiskEventsFeed.ts';
+import { formatActionGuardNotice } from '../../modules/permissions/permissionCopy.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { ApprovalQueueTable, BrokerSnapshotPositionsTable, PositionsTable } from '../console/components/ConsoleTables.tsx';
 import { useSummary } from '../console/hooks.ts';
@@ -41,7 +42,7 @@ function RiskPage() {
           <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.pendingApprovals}</div><div className="panel-copy">{locale === 'zh' ? '把所有需要人工确认的 live 动作集中到风险闸门。' : 'Keep all live actions that require confirmation behind one risk gate.'}</div></div><div className={`panel-badge ${state.approvalQueue.length ? 'badge-warn' : 'badge-muted'}`}>{state.approvalQueue.length}</div></div>
           <ApprovalQueueTable onApprove={approveLiveIntent} onReject={rejectLiveIntent} canReview={canApproveExecution} />
           {actionGuardNotice?.permission === 'execution:approve' ? (
-            <div className="status-copy">{locale === 'zh' ? '风险闸门动作已被拦截：当前会话缺少 execution:approve 权限。' : 'Risk-gate action blocked: this session is missing execution:approve permission.'}</div>
+            <div className="status-copy">{formatActionGuardNotice(locale, actionGuardNotice)}</div>
           ) : null}
         </article>
         <article className="panel">

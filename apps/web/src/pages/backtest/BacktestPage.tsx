@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
+import { formatPermissionDisabled, formatPermissionError } from '../../modules/permissions/permissionCopy.ts';
 import { BacktestCandidateStrategyRow } from '../../modules/research/BacktestCandidateStrategyRow.tsx';
 import { BacktestRunQueueRow } from '../../modules/research/BacktestRunQueueRow.tsx';
 import { ResearchActionBar, ResearchActionButton } from '../../modules/research/ResearchActionBar.tsx';
@@ -246,11 +247,7 @@ function BacktestPage() {
       requestRefresh();
     } catch (requestError) {
       if (requestError instanceof ApiPermissionError) {
-        setActionError(
-          locale === 'zh'
-            ? `回测操作被拦截：当前会话缺少 ${requestError.missingPermission || 'strategy:write'} 权限。`
-            : `Backtest action blocked: this session is missing ${requestError.missingPermission || 'strategy:write'} permission.`,
-        );
+        setActionError(formatPermissionError(locale, requestError, '回测提交失败', 'Backtest queue failed', '回测操作', 'Backtest action'));
       } else {
         setActionError(
           locale === 'zh'
@@ -282,11 +279,7 @@ function BacktestPage() {
       requestRefresh();
     } catch (requestError) {
       if (requestError instanceof ApiPermissionError) {
-        setActionError(
-          locale === 'zh'
-            ? `复核操作被拦截：当前会话缺少 ${requestError.missingPermission || 'risk:review'} 权限。`
-            : `Review action blocked: this session is missing ${requestError.missingPermission || 'risk:review'} permission.`,
-        );
+        setActionError(formatPermissionError(locale, requestError, '复核操作失败', 'Review action failed', '复核操作', 'Review action'));
       } else {
         setActionError(
           locale === 'zh'
@@ -345,7 +338,7 @@ function BacktestPage() {
               </button>
             ))}
           </div>
-          {!canQueueBacktest ? <div className="status-copy">{locale === 'zh' ? '当前会话缺少 strategy:write 权限，不能调整或提交回测参数。' : 'This session is missing strategy:write permission, so backtest parameters stay read-only.'}</div> : null}
+          {!canQueueBacktest ? <div className="status-copy">{formatPermissionDisabled(locale, 'strategy:write', '调整或提交回测参数', 'adjust or submit backtest parameters')}</div> : null}
         </article>
       </section>
 

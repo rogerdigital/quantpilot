@@ -339,6 +339,17 @@ test('GET /api/auth/session returns account-backed session data', async () => {
   assert.equal(typeof response.json.preferences.timezone, 'string');
 });
 
+test('GET /api/auth/permissions returns the shared permission catalog', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/auth/permissions',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(Array.isArray(response.json.permissions), true);
+  assert.equal(response.json.permissions.some((item) => item.id === 'execution:approve' && item.scope === 'execution'), true);
+});
+
 test('GET /api/user-account/profile returns profile and preferences', async () => {
   const response = await invokeGatewayRoute(handler, {
     path: '/api/user-account/profile',
@@ -469,6 +480,8 @@ test('account write routes reject requests without account:write permission', as
   assert.equal(response.statusCode, 403);
   assert.equal(response.json.ok, false);
   assert.equal(response.json.missingPermission, 'account:write');
+  assert.equal(response.json.permission.id, 'account:write');
+  assert.equal(typeof response.json.help, 'string');
   assert.equal(response.json.message, 'missing required permission: account:write');
 
   context.userAccount.updateUserAccess({

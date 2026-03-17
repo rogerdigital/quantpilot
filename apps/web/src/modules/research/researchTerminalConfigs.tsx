@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { formatPermissionReadOnly } from '../permissions/permissionCopy.ts';
 
 export function getStrategyTerminalConfigs(options: {
   locale: 'zh' | 'en';
@@ -132,9 +133,7 @@ export function getBacktestTerminalConfigs(options: {
       emptyMessage: locale === 'zh' ? '当前筛选条件下没有回测记录' : 'No backtest runs match the current filter.',
       footer: !canReviewBacktest ? (
         <div className="status-copy">
-          {locale === 'zh'
-            ? '当前会话缺少 risk:review 权限，不能处理待复核回测。'
-            : 'This session is missing risk:review permission, so review-queue runs stay read-only.'}
+          {formatPermissionReadOnly(locale, 'risk:review', '待复核回测队列', 'the review-queue backtests')}
         </div>
       ) : null,
     },
