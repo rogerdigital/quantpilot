@@ -826,6 +826,48 @@ export type OperationsWorkbenchResponse = {
   };
 };
 
+export type RiskWorkbenchResponse = {
+  ok: boolean;
+  generatedAt: string;
+  posture: {
+    status: 'healthy' | 'warn' | 'critical';
+    title: string;
+    detail: string;
+  };
+  summary: {
+    openRiskEvents: number;
+    riskOffEvents: number;
+    approvalRequired: number;
+    blockedExecutions: number;
+    reviewBacktests: number;
+    openRiskIncidents: number;
+    liveExposurePct: number;
+    liveEquity: number;
+    brokerConnected: boolean;
+  };
+  lanes: Array<{
+    key: 'risk-events' | 'execution-review' | 'backtest-review' | 'incidents' | 'broker';
+    title: string;
+    status: string;
+    detail: string;
+    primaryCount: number;
+    secondaryCount: number;
+    updatedAt: string;
+  }>;
+  reviewQueue: {
+    executionPlans: ExecutionPlanRecord[];
+    backtestRuns: BacktestRunItem[];
+    incidents: IncidentRecord[];
+  };
+  recent: {
+    riskEvents: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestRiskEvent']>>;
+    executionPlans: ExecutionPlanRecord[];
+    backtestRuns: BacktestRunItem[];
+    incidents: IncidentRecord[];
+    brokerSnapshot: BrokerAccountSnapshotRecord | null;
+  };
+};
+
 export type IncidentRecord = {
   id: string;
   title: string;

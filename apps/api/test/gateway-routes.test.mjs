@@ -107,6 +107,94 @@ test('GET /api/risk/events returns seeded risk events', async () => {
   assert.equal(response.json.events[0].id, 'risk-api-test');
 });
 
+test('GET /api/risk/workbench returns the consolidated risk workbench snapshot', async () => {
+  const nowIso = new Date().toISOString();
+  context.risk.appendRiskEvent({
+    id: 'risk-workbench-event',
+    title: 'Risk workbench event',
+    message: 'approval still required before routing live execution',
+    cycle: 109,
+    riskLevel: 'RISK OFF',
+    status: 'approval-required',
+    level: 'warn',
+    source: 'risk-monitor',
+    createdAt: nowIso,
+  });
+  context.executionPlans.appendExecutionPlan({
+    id: 'risk-workbench-plan',
+    workflowRunId: 'risk-workbench-workflow',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'live',
+    status: 'ready',
+    approvalState: 'required',
+    riskStatus: 'review',
+    summary: 'Risk requires operator approval before live routing.',
+    capital: 35000,
+    orderCount: 2,
+    orders: [],
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  });
+  context.backtestRuns.appendBacktestRun({
+    id: 'risk-workbench-run',
+    strategyId: 'rsi-revert-index',
+    strategyName: 'Index RSI Revert',
+    status: 'needs_review',
+    summary: 'Drawdown is outside the promotion fence.',
+    windowLabel: '2024-01-01 -> 2026-03-01',
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  });
+  context.incidents.appendIncident({
+    id: 'risk-workbench-incident',
+    title: 'Risk workbench incident',
+    summary: 'Escalated from the risk console',
+    severity: 'warn',
+    source: 'risk',
+    status: 'investigating',
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  });
+  context.executionRuntime.appendBrokerAccountSnapshot({
+    id: 'risk-workbench-snapshot',
+    cycleId: 'cycle-risk-workbench',
+    cycle: 109,
+    provider: 'alpaca',
+    connected: true,
+    account: {
+      cash: 64000,
+      buyingPower: 64000,
+      equity: 80000,
+    },
+    positions: [
+      {
+        symbol: 'AAPL',
+        qty: 10,
+        avgCost: 202,
+        marketValue: 2100,
+      },
+    ],
+    orders: [],
+    createdAt: nowIso,
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/risk/workbench?hours=168&limit=10',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.summary.approvalRequired >= 1, true);
+  assert.equal(response.json.summary.reviewBacktests >= 1, true);
+  assert.equal(response.json.summary.openRiskIncidents >= 1, true);
+  assert.equal(response.json.lanes.some((item) => item.key === 'execution-review'), true);
+  assert.equal(response.json.reviewQueue.executionPlans[0].id, 'risk-workbench-plan');
+  assert.equal(response.json.reviewQueue.backtestRuns[0].id, 'risk-workbench-run');
+  assert.equal(response.json.reviewQueue.incidents[0].id, 'risk-workbench-incident');
+  assert.equal(response.json.recent.riskEvents[0].id, 'risk-workbench-event');
+});
+
 test('GET /api/risk/events/:id returns a single risk event', async () => {
   context.risk.appendRiskEvent({
     id: 'risk-api-detail',

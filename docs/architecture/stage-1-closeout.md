@@ -85,14 +85,15 @@
 - 权限护栏已收敛到统一的后端 `403` 语义和前端 permission copy。
 - incident / investigation 控制台已经形成证据、活动、批量处置和运营视角闭环。
 - operations workbench 已能聚合 monitoring、incident、scheduler、connectivity 和 control-plane trail。
+- risk console 已切到统一 `risk workbench` 聚合快照，能直接消费风险事件、执行复核、研究复核、风险 incident 和 broker live 暴露。
 - 前后端验证链已经收敛到 `npm run verify` 和 `pre-push`。
 
 ## 剩余收官动作
 
-阶段 1 最后的工作重点应集中在：
+阶段 1 的收官动作已经完成，后续重点应转向：
 
-- 持续修正平台底座边角不一致，避免阶段 2 开始后再回头返工。
-- 让 README、架构说明和 closeout 文档在阶段描述上保持同步。
+- 保持平台底座主链路稳定，不在阶段 2 中回补阶段 1 的基础对象。
+- 让 README、架构说明和 closeout 文档继续随着阶段切换同步更新。
 - 用专项基线测试守住核心对象契约，降低控制面接口漂移风险。
 
 ## 验证基线

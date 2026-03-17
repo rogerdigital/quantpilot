@@ -148,6 +148,7 @@ quantpilot/
 - incident 控制台已进一步补齐运营态能力：summary 现在会输出 `ack overdue / blocked tasks / owner hotspots / next actions`，详情页会展示 `response posture / handoff / next step`，并支持批量归我、备注并收尾等更完整的处置动作。
 - 通知中心中的 control-plane feed 已开始统一成 `boards + context + feed detail` 模式：monitoring、notifications、audit、operator actions 和 scheduler 都会先给出板块摘要和当前筛选上下文，再下钻到各自列表。
 - 平台现已提供统一的 `operations workbench` 聚合快照：后端会把 monitoring、incident、scheduler、connectivity 和 control-plane trail 汇总成一份运维摘要，通知中心据此展示 runbook、运维泳道和最近运维信号。
+- Risk Console 已切到统一 `risk workbench` 聚合快照：后端现会把风险事件、执行复核、研究复核、风险 incident 和 broker live 暴露汇总成一份风险工作台摘要，风险页不再只依赖前端 runtime 拼装态。
 - worker 已接管通知分发、风险扫描、调度 tick、workflow maintenance 和 workflow execution。
 - 共享运行时已经拆分到 `trading-engine / control-plane-runtime / task-workflow-engine / shared-types`。
 - 控制面持久化已抽到 `control-plane-store`，当前以文件型存储为主。
@@ -189,18 +190,14 @@ quantpilot/
 - 最小控制面闭环已经跑通：`API 入队 -> worker 执行 -> store 持久化 -> risk / execution / notification fanout`。
 - 前端主工作台、后端模块骨架、共享 runtime 和控制面存储都已具备继续迭代的基础。
 
-### 阶段 1：平台底座产品化
+### 阶段 1：平台底座产品化（已收官）
 
-这是当前所在阶段，目标是把“可演示原型”推进成“可持续研发的平台底座”。
+这一阶段已经完成，阶段目标是把“可演示原型”推进成“可持续研发的平台底座”。
 
 - 阶段 1 的收官定义、非目标和阶段 2 入口条件已单独整理到 [docs/architecture/stage-1-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-1-closeout.md)。
 
-- 落地真实的 `auth / user-account / account settings / broker binding` 基础模块。
-- 当前已推进到账户统一快照、角色模板、会话权限对齐和 broker binding 健康摘要，下一步重点转向更完整的权限护栏、对象联动和多用户边界。
-- 把文件型原型存储进一步收敛为可迁移的数据访问边界，为 `PostgreSQL + Redis` 形态做准备。
-- 将市场数据、策略配置、研究结果、执行记录从页面静态/示例数据升级为服务端结构化读写。
-- 当前已完成其中一段：策略注册表、回测运行和执行记录已进入后端结构化接口，下一步是继续把更多页面消费切到这些服务边界上。
-- 继续压缩前端中的编排逻辑，让页面只做展示、触发和消费。
+- 阶段 1 现已完成账户与权限底座、incident / investigation 控制台、operations workbench、risk workbench 和研究/执行基础数据边界的第一轮产品化。
+- 阶段 2 将在这个底座上继续推进研究任务闭环、结果模型和统一异步执行协议。
 
 ### 阶段 2：研究与策略闭环
 
@@ -339,12 +336,12 @@ npm run verify
 
 ## 当前研发重点
 
-当前以“阶段 1：平台底座产品化”为主，优先级如下：
+当前准备进入“阶段 2：研究与策略闭环”，优先级如下：
 
-1. 以 [docs/architecture/stage-1-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-1-closeout.md) 里的完成定义为准，继续收掉阶段 1 的边角不一致和验证缺口。
-2. 稳定账户、权限、incident 和 operations workbench 这几条平台底座主链路，避免阶段 2 开始后再回补基础对象。
-3. 将市场数据、研究数据、执行数据从原型读写继续升级为稳定 API 与持久化存储。
-4. 继续把研究、风控、执行相关异步动作收敛到后端任务流与 worker。
-5. 为阶段 2 的策略研究闭环预留统一任务协议、结果模型和审计链路。
+1. 把 `strategy / backtest` 从当前结构化读写继续推进到真实任务执行、结果持久化和版本化查询。
+2. 统一研究链路中的 workflow、审计、通知和结果模型，让研究过程可回放、可追踪、可对比。
+3. 继续把研究、风控、执行相关异步动作收敛到后端任务流与 worker，减少前端拼装逻辑。
+4. 在现有 execution plan、risk workbench 和 incident 工作台基础上，为阶段 3 的执行闭环预留更稳定的对象契约。
+5. 保持阶段 1 的账户、权限、incident、operations 和 risk workbench 基线稳定，避免阶段切换时回归。
 
 研发节奏保持为“设计对齐 -> 小步实现 -> 自动化验证 -> 再推进下一层能力”。

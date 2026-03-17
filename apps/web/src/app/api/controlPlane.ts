@@ -14,6 +14,7 @@ import type {
   UserAccountProfileSnapshot,
   MonitoringStatusSnapshot,
   OperationsWorkbenchResponse,
+  RiskWorkbenchResponse,
   MonitoringAlertsResponse,
   MonitoringSnapshotsResponse,
   IncidentBulkUpdateResponse,
@@ -287,6 +288,20 @@ export async function fetchRiskEvents(): Promise<{
   }>;
 }> {
   return fetchJson('/api/risk/events', {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export async function fetchRiskWorkbench(options: { hours?: number | null; limit?: number } = {}): Promise<RiskWorkbenchResponse> {
+  const params = new URLSearchParams();
+  if (typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0) {
+    params.set('limit', String(options.limit));
+  }
+  if (typeof options.hours === 'number' && Number.isFinite(options.hours) && options.hours > 0) {
+    params.set('hours', String(options.hours));
+  }
+  const query = params.toString();
+  return fetchJson(`/api/risk/workbench${query ? `?${query}` : ''}`, {
     headers: { Accept: 'application/json' },
   });
 }
