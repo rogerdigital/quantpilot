@@ -160,6 +160,10 @@ test('incident repository persists incidents, filters them, and stores notes', (
     body: 'Worker restarted and backlog is draining.',
     createdAt: '2026-03-16T08:30:00.000Z',
   });
+  const task = context.incidents.updateIncidentTask('incident-1', context.incidents.listIncidentTasks('incident-1', 10)[0].id, {
+    owner: 'ops-b',
+    status: 'done',
+  });
   const list = context.incidents.listIncidents(10, {
     severity: 'warn',
     source: 'monitoring',
@@ -172,14 +176,17 @@ test('incident repository persists incidents, filters them, and stores notes', (
   assert.equal(updated.status, 'investigating');
   assert.equal(updated.owner, 'ops-b');
   assert.equal(note.incidentId, 'incident-1');
+  assert.equal(task.status, 'done');
   assert.equal(list[0].latestNotePreview, 'Worker restarted and backlog is draining.');
   assert.equal(unassigned[0].id, 'incident-unassigned');
   assert.equal(context.incidents.listIncidentNotes('incident-1', 10).length, 2);
+  assert.equal(context.incidents.listIncidentTasks('incident-1', 10).length >= 5, true);
   const activity = context.incidents.listIncidentActivities('incident-1', 10);
   assert.equal(activity.some((item) => item.kind === 'opened'), true);
   assert.equal(activity.some((item) => item.kind === 'status-changed' && item.metadata.to === 'investigating'), true);
   assert.equal(activity.some((item) => item.kind === 'owner-changed' && item.metadata.to === 'ops-b'), true);
   assert.equal(activity.some((item) => item.kind === 'note-added'), true);
+  assert.equal(activity.some((item) => item.kind === 'task-updated'), true);
 });
 
 test('workflow repository persists and updates workflow runs through the injected context', () => {

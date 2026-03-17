@@ -4,7 +4,7 @@ import { useTradingSystem } from '../../store/trading-system/TradingSystemProvid
 import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useMonitoringStatus } from '../../hooks/useMonitoringStatus.ts';
-import { appendIncidentNote, bulkUpdateIncidentQueue, createIncident, updateIncident } from '../../app/api/controlPlane.ts';
+import { appendIncidentNote, appendIncidentTask, bulkUpdateIncidentQueue, createIncident, updateIncident, updateIncidentTask } from '../../app/api/controlPlane.ts';
 import { useExecutionLedgerFeed } from '../../modules/notifications/useExecutionLedgerFeed.ts';
 import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
 import { useAuditRecordsFeed } from '../../modules/notifications/useAuditRecordsFeed.ts';
@@ -129,6 +129,7 @@ function translateIncidentActivityKind(locale: string, kind: IncidentActivityRec
     if (kind === 'severity-changed') return '级别变更';
     if (kind === 'summary-updated') return '摘要更新';
     if (kind === 'links-updated') return '关联更新';
+    if (kind === 'task-updated') return '任务更新';
     return '追加记录';
   }
 
@@ -138,6 +139,7 @@ function translateIncidentActivityKind(locale: string, kind: IncidentActivityRec
   if (kind === 'severity-changed') return 'Severity';
   if (kind === 'summary-updated') return 'Summary';
   if (kind === 'links-updated') return 'Links';
+  if (kind === 'task-updated') return 'Task';
   return 'Note';
 }
 
@@ -155,6 +157,20 @@ function buildActivityDraft(locale: string, item: IncidentActivityRecord) {
   }
 
   return lines.join('\n');
+}
+
+function translateIncidentTaskStatus(locale: string, status: 'pending' | 'in_progress' | 'done' | 'blocked') {
+  if (locale === 'zh') {
+    if (status === 'pending') return '待处理';
+    if (status === 'in_progress') return '处理中';
+    if (status === 'done') return '已完成';
+    return '已阻塞';
+  }
+
+  if (status === 'pending') return 'Pending';
+  if (status === 'in_progress') return 'In Progress';
+  if (status === 'done') return 'Done';
+  return 'Blocked';
 }
 
 function NotificationsPage() {
@@ -186,6 +202,8 @@ function NotificationsPage() {
   const [selectedActivityId, setSelectedActivityId] = useState('');
   const [incidentNoteDraft, setIncidentNoteDraft] = useState('');
   const [incidentOwnerDraft, setIncidentOwnerDraft] = useState('');
+  const [incidentTaskTitleDraft, setIncidentTaskTitleDraft] = useState('');
+  const [incidentTaskDetailDraft, setIncidentTaskDetailDraft] = useState('');
   const [incidentBulkOwnerDraft, setIncidentBulkOwnerDraft] = useState('');
   const [incidentBulkNoteDraft, setIncidentBulkNoteDraft] = useState('');
   const [incidentBusy, setIncidentBusy] = useState(false);
@@ -248,6 +266,7 @@ function NotificationsPage() {
   const {
     incident: selectedIncident,
     notes: selectedIncidentNotes,
+    tasks: selectedIncidentTasks,
     activity: selectedIncidentActivity,
     evidence: selectedIncidentEvidence,
     loading: incidentDetailLoading,
@@ -356,6 +375,8 @@ function NotificationsPage() {
     }
     if (!selectedIncidentId) {
       setIncidentOwnerDraft(state.controlPlane.operator || '');
+      setIncidentTaskTitleDraft('');
+      setIncidentTaskDetailDraft('');
     }
   }, [selectedIncident?.owner, selectedIncidentId, state.controlPlane.operator]);
 
@@ -591,6 +612,39 @@ function NotificationsPage() {
         body: incidentNoteDraft.trim(),
       });
       setIncidentNoteDraft('');
+      setIncidentRefreshKey((value) => value + 1);
+    } finally {
+      setIncidentBusy(false);
+    }
+  }
+
+  async function appendSelectedIncidentTask() {
+    if (!selectedIncidentId || !incidentTaskTitleDraft.trim()) return;
+    setIncidentBusy(true);
+    try {
+      await appendIncidentTask(selectedIncidentId, {
+        actor: state.controlPlane.operator,
+        detail: incidentTaskDetailDraft.trim(),
+        owner: selectedIncident?.owner || state.controlPlane.operator,
+        title: incidentTaskTitleDraft.trim(),
+      });
+      setIncidentTaskTitleDraft('');
+      setIncidentTaskDetailDraft('');
+      setIncidentRefreshKey((value) => value + 1);
+    } finally {
+      setIncidentBusy(false);
+    }
+  }
+
+  async function transitionSelectedIncidentTask(taskId: string, status: 'pending' | 'in_progress' | 'done' | 'blocked') {
+    if (!selectedIncidentId) return;
+    setIncidentBusy(true);
+    try {
+      await updateIncidentTask(selectedIncidentId, taskId, {
+        actor: state.controlPlane.operator,
+        owner: selectedIncident?.owner || state.controlPlane.operator,
+        status,
+      });
       setIncidentRefreshKey((value) => value + 1);
     } finally {
       setIncidentBusy(false);
@@ -1528,6 +1582,97 @@ function NotificationsPage() {
                 <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => setIncidentNoteDraft('')}>
                   {locale === 'zh' ? '清空草稿' : 'Clear Draft'}
                 </button>
+              </div>
+              <div className="panel-subtitle">{locale === 'zh' ? '处置 Playbook' : 'Incident Playbook'}</div>
+              <div className="metrics-grid metrics-grid-compact">
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '总任务' : 'Tasks'}</span>
+                  <strong>{selectedIncidentTasks.summary.total}</strong>
+                </div>
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '待处理' : 'Pending'}</span>
+                  <strong>{selectedIncidentTasks.summary.pending}</strong>
+                </div>
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '处理中' : 'In Progress'}</span>
+                  <strong>{selectedIncidentTasks.summary.inProgress}</strong>
+                </div>
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '已完成' : 'Done'}</span>
+                  <strong>{selectedIncidentTasks.summary.done}</strong>
+                </div>
+                <div className="metric-card">
+                  <span>{locale === 'zh' ? '已阻塞' : 'Blocked'}</span>
+                  <strong>{selectedIncidentTasks.summary.blocked}</strong>
+                </div>
+              </div>
+              <label className="field-label" htmlFor="incident-task-title-input">{locale === 'zh' ? '新增处置任务' : 'Add Playbook Task'}</label>
+              <div className="settings-chip-row">
+                <input
+                  id="incident-task-title-input"
+                  className="text-input"
+                  value={incidentTaskTitleDraft}
+                  onChange={(event) => setIncidentTaskTitleDraft(event.target.value)}
+                  placeholder={locale === 'zh' ? '任务标题，例如：确认 fallback broker 可用' : 'Task title, for example: verify fallback broker readiness'}
+                />
+              </div>
+              <textarea
+                className="detail-textarea"
+                rows={2}
+                value={incidentTaskDetailDraft}
+                onChange={(event) => setIncidentTaskDetailDraft(event.target.value)}
+                placeholder={locale === 'zh' ? '补充任务说明、判定标准或交接备注' : 'Add implementation notes, acceptance criteria, or handoff detail'}
+              />
+              <div className="settings-chip-row">
+                <button type="button" className="settings-chip" disabled={incidentBusy || !incidentTaskTitleDraft.trim()} onClick={appendSelectedIncidentTask}>
+                  {locale === 'zh' ? '追加任务' : 'Add Task'}
+                </button>
+                <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => {
+                  setIncidentTaskTitleDraft('');
+                  setIncidentTaskDetailDraft('');
+                }}>
+                  {locale === 'zh' ? '清空任务草稿' : 'Clear Task Draft'}
+                </button>
+              </div>
+              <div className="focus-list focus-list-terminal">
+                {!selectedIncidentTasks.items.length ? <div className="empty-cell">{locale === 'zh' ? '这条 incident 还没有处置任务' : 'No incident playbook tasks have been created yet.'}</div> : null}
+                {selectedIncidentTasks.items.map((task) => (
+                  <div className="focus-row focus-row-wide" key={task.id}>
+                    <div className="symbol-cell">
+                      <strong>{task.title}</strong>
+                      <span>{task.detail || (locale === 'zh' ? '暂无详细说明' : 'No task detail')}</span>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                      <strong>{translateIncidentTaskStatus(locale, task.status)}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? 'Owner' : 'Owner'}</span>
+                      <strong>{task.owner || (locale === 'zh' ? '未指派' : 'Unassigned')}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '更新于' : 'Updated'}</span>
+                      <strong>{fmtDateTime(task.updatedAt || task.createdAt, locale)}</strong>
+                    </div>
+                    <div className="settings-chip-row">
+                      <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => transitionSelectedIncidentTask(task.id, 'in_progress')}>
+                        {locale === 'zh' ? '开始处理' : 'Start'}
+                      </button>
+                      <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => transitionSelectedIncidentTask(task.id, 'done')}>
+                        {locale === 'zh' ? '标记完成' : 'Done'}
+                      </button>
+                      <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => transitionSelectedIncidentTask(task.id, 'blocked')}>
+                        {locale === 'zh' ? '标记阻塞' : 'Block'}
+                      </button>
+                      <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => setIncidentNoteDraft((draft) => {
+                        const next = `${locale === 'zh' ? '任务' : 'Task'}: ${task.title}\n${locale === 'zh' ? '状态' : 'Status'}: ${task.status}\n${locale === 'zh' ? '说明' : 'Detail'}: ${task.detail || '--'}`;
+                        return draft ? `${draft}\n\n${next}` : next;
+                      })}>
+                        {locale === 'zh' ? '引用到记录' : 'Quote To Note'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
               <div className="metrics-grid metrics-grid-compact">
                 <div className="metric-card">

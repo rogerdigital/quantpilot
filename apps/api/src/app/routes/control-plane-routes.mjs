@@ -1,6 +1,6 @@
 import { appendAuditRecord, listAuditRecords } from '../../modules/audit/service.mjs';
 import { hasPermission } from '../../modules/auth/service.mjs';
-import { appendIncidentNote, bulkUpdateIncidents, createIncident, getIncidentDetail, getIncidentSummary, listIncidents, updateIncident } from '../../modules/incidents/service.mjs';
+import { appendIncidentNote, appendIncidentTask, bulkUpdateIncidents, createIncident, getIncidentDetail, getIncidentSummary, listIncidents, updateIncident, updateIncidentTask } from '../../modules/incidents/service.mjs';
 import { listNotifications } from '../../modules/notification/service.mjs';
 import { getRiskEvent, listRiskEvents } from '../../domains/risk/services/feed-service.mjs';
 import { listSchedulerTicks } from '../../modules/scheduler/service.mjs';
@@ -110,6 +110,7 @@ export async function handleControlPlaneRoutes(context) {
       const detail = getIncidentDetail(parts.at(-1), {
         activityLimit: reqUrl.searchParams.get('activityLimit'),
         noteLimit: reqUrl.searchParams.get('noteLimit'),
+        taskLimit: reqUrl.searchParams.get('taskLimit'),
       });
       writeJson(res, detail ? 200 : 404, detail
         ? { ok: true, ...detail }
@@ -126,6 +127,30 @@ export async function handleControlPlaneRoutes(context) {
       ? { ok: true, ...result }
       : { ok: false, message: 'incident not found' });
     return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname.endsWith('/tasks') && reqUrl.pathname.startsWith('/api/incidents/')) {
+    const incidentId = reqUrl.pathname.split('/').at(-2);
+    const body = await readJsonBody(req);
+    const task = appendIncidentTask(incidentId, body);
+    writeJson(res, task ? 200 : 404, task
+      ? { ok: true, task }
+      : { ok: false, message: 'incident not found' });
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname.includes('/tasks/') && reqUrl.pathname.startsWith('/api/incidents/')) {
+    const parts = reqUrl.pathname.split('/').filter(Boolean);
+    if (parts.length === 5) {
+      const incidentId = parts[2];
+      const taskId = parts[4];
+      const body = await readJsonBody(req);
+      const task = updateIncidentTask(incidentId, taskId, body);
+      writeJson(res, task ? 200 : 404, task
+        ? { ok: true, task }
+        : { ok: false, message: 'incident task not found' });
+      return true;
+    }
   }
 
   if (req.method === 'POST' && reqUrl.pathname.startsWith('/api/incidents/')) {

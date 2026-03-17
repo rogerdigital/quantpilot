@@ -105,9 +105,11 @@ export function getIncidentDetail(incidentId, options = {}) {
   if (!incident) return null;
   const evidence = collectIncidentEvidence(incident, options);
   const activity = collectIncidentActivity(incidentId, options);
+  const tasks = collectIncidentTasks(incidentId, options);
   return {
     incident,
     notes: controlPlaneRuntime.listIncidentNotes(incidentId, parseLimit(options.noteLimit, 100)),
+    tasks,
     activity,
     evidence,
   };
@@ -123,6 +125,14 @@ export function updateIncident(incidentId, payload = {}) {
 
 export function appendIncidentNote(incidentId, payload = {}) {
   return controlPlaneRuntime.recordIncidentNote(incidentId, payload);
+}
+
+export function appendIncidentTask(incidentId, payload = {}) {
+  return controlPlaneRuntime.recordIncidentTask(incidentId, payload);
+}
+
+export function updateIncidentTask(incidentId, taskId, payload = {}) {
+  return controlPlaneRuntime.transitionIncidentTask(incidentId, taskId, payload);
 }
 
 export function bulkUpdateIncidents(payload = {}) {
@@ -540,5 +550,28 @@ function collectIncidentActivity(incidentId, options = {}) {
   return {
     summary,
     timeline,
+  };
+}
+
+function collectIncidentTasks(incidentId, options = {}) {
+  const items = controlPlaneRuntime.listIncidentTasks(incidentId, parseLimit(options.taskLimit, 100));
+  const summary = items.reduce((acc, item) => {
+    acc.total += 1;
+    if (item.status === 'pending') acc.pending += 1;
+    if (item.status === 'in_progress') acc.inProgress += 1;
+    if (item.status === 'done') acc.done += 1;
+    if (item.status === 'blocked') acc.blocked += 1;
+    return acc;
+  }, {
+    total: 0,
+    pending: 0,
+    inProgress: 0,
+    done: 0,
+    blocked: 0,
+  });
+
+  return {
+    summary,
+    items,
   };
 }

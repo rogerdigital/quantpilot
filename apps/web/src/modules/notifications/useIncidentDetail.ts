@@ -15,6 +15,16 @@ export type IncidentNoteItem = {
 export function useIncidentDetail(incidentId: string, refreshKey = 0) {
   const [incident, setIncident] = useState<IncidentFeedItem | null>(null);
   const [notes, setNotes] = useState<IncidentNoteItem[]>([]);
+  const [tasks, setTasks] = useState<IncidentDetailResponse['tasks']>({
+    summary: {
+      total: 0,
+      pending: 0,
+      inProgress: 0,
+      done: 0,
+      blocked: 0,
+    },
+    items: [],
+  });
   const [activity, setActivity] = useState<IncidentDetailResponse['activity']>({
     summary: {
       total: 0,
@@ -47,6 +57,16 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
     if (!incidentId) {
       setIncident(null);
       setNotes([]);
+      setTasks({
+        summary: {
+          total: 0,
+          pending: 0,
+          inProgress: 0,
+          done: 0,
+          blocked: 0,
+        },
+        items: [],
+      });
       setActivity({
         summary: {
           total: 0,
@@ -84,6 +104,16 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
         if (!mounted) return;
         setIncident(payload?.incident || null);
         setNotes(Array.isArray(payload?.notes) ? payload.notes : []);
+        setTasks(payload?.tasks || {
+          summary: {
+            total: 0,
+            pending: 0,
+            inProgress: 0,
+            done: 0,
+            blocked: 0,
+          },
+          items: [],
+        });
         setActivity(payload?.activity || {
           summary: {
             total: 0,
@@ -115,6 +145,16 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
         if (!mounted) return;
         setIncident(null);
         setNotes([]);
+        setTasks({
+          summary: {
+            total: 0,
+            pending: 0,
+            inProgress: 0,
+            done: 0,
+            blocked: 0,
+          },
+          items: [],
+        });
         setActivity({
           summary: {
             total: 0,
@@ -153,5 +193,5 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
     };
   }, [incidentId, refreshKey]);
 
-  return { incident, notes, activity, evidence, loading };
+  return { incident, notes, tasks, activity, evidence, loading };
 }

@@ -1135,6 +1135,7 @@ test('GET /api/scheduler/ticks returns scheduler ticks from shared store', async
 });
 
 test('POST then GET /api/task-orchestrator/actions persists operator actions', async () => {
+  const recentWarnIso = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
   const createResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
     path: '/api/task-orchestrator/actions',
@@ -1164,7 +1165,7 @@ test('POST then GET /api/task-orchestrator/actions persists operator actions', a
     detail: 'rejected due to risk controls',
     symbol: 'TSLA',
     level: 'warn',
-    createdAt: '2026-03-15T10:00:00.000Z',
+    createdAt: recentWarnIso,
   });
 
   const filteredResponse = await invokeGatewayRoute(handler, {
@@ -1530,6 +1531,25 @@ test('incident routes create, update, and return incident details', async () => 
       status: 'mitigated',
     },
   });
+  const seededTaskId = context.incidents.listIncidentTasks('incident-api-test', 10)[0].id;
+  const createdTask = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/incidents/incident-api-test/tasks',
+    body: {
+      actor: 'api-operator',
+      detail: 'Double-check fallback queue drain metrics.',
+      owner: 'api-operator',
+      title: 'Validate queue recovery',
+    },
+  });
+  const updatedTask = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/incidents/incident-api-test/tasks/${seededTaskId}`,
+    body: {
+      actor: 'api-operator',
+      status: 'done',
+    },
+  });
   const detail = await invokeGatewayRoute(handler, {
     path: '/api/incidents/incident-api-test',
   });
@@ -1548,16 +1568,23 @@ test('incident routes create, update, and return incident details', async () => 
   assert.equal(bulk.statusCode, 200);
   assert.equal(bulk.json.updatedIds.includes('incident-api-test'), true);
   assert.equal(bulk.json.notesAdded, 1);
+  assert.equal(createdTask.statusCode, 200);
+  assert.equal(createdTask.json.task.title, 'Validate queue recovery');
+  assert.equal(updatedTask.statusCode, 200);
+  assert.equal(updatedTask.json.task.status, 'done');
   assert.equal(detail.statusCode, 200);
   assert.equal(detail.json.incident.id, 'incident-api-test');
   assert.equal(detail.json.incident.owner, 'ops-bulk');
   assert.equal(detail.json.incident.status, 'mitigated');
   assert.equal(detail.json.notes.length >= 2, true);
+  assert.equal(detail.json.tasks.summary.total >= 5, true);
+  assert.equal(detail.json.tasks.items.some((item) => item.title === 'Validate queue recovery'), true);
   assert.equal(detail.json.activity.summary.total >= 4, true);
   assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'opened'), true);
   assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'status-changed'), true);
   assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'owner-changed'), true);
   assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'note-added'), true);
+  assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'task-updated'), true);
   assert.equal(detail.json.evidence.summary.total >= 5, true);
   assert.equal(detail.json.evidence.summary.linked >= 5, true);
   assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'monitoring-alert' && item.id === 'incident-monitoring-alert'), true);

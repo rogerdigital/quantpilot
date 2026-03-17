@@ -47,9 +47,12 @@ export const listIncidents = (...args) => controlPlaneContext.incidents.listInci
 export const getIncident = (...args) => controlPlaneContext.incidents.getIncident(...args);
 export const listIncidentActivities = (...args) => controlPlaneContext.incidents.listIncidentActivities(...args);
 export const listIncidentNotes = (...args) => controlPlaneContext.incidents.listIncidentNotes(...args);
+export const listIncidentTasks = (...args) => controlPlaneContext.incidents.listIncidentTasks(...args);
 export const appendIncident = (...args) => controlPlaneContext.incidents.appendIncident(...args);
 export const updateIncident = (...args) => controlPlaneContext.incidents.updateIncident(...args);
 export const appendIncidentNote = (...args) => controlPlaneContext.incidents.appendIncidentNote(...args);
+export const appendIncidentTask = (...args) => controlPlaneContext.incidents.appendIncidentTask(...args);
+export const updateIncidentTask = (...args) => controlPlaneContext.incidents.updateIncidentTask(...args);
 export const getMarketProviderStatus = (...args) => controlPlaneContext.marketProviders.getMarketProviderStatus(...args);
 export const updateMarketProviderStatus = (...args) => controlPlaneContext.marketProviders.updateMarketProviderStatus(...args);
 export const listNotifications = (...args) => controlPlaneContext.notifications.listNotifications(...args);

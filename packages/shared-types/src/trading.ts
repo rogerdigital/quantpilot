@@ -735,11 +735,24 @@ export type IncidentNoteRecord = {
 export type IncidentActivityRecord = {
   id: string;
   incidentId: string;
-  kind: 'opened' | 'status-changed' | 'owner-changed' | 'severity-changed' | 'summary-updated' | 'links-updated' | 'note-added';
+  kind: 'opened' | 'status-changed' | 'owner-changed' | 'severity-changed' | 'summary-updated' | 'links-updated' | 'note-added' | 'task-updated';
   title: string;
   detail: string;
   actor: string;
   createdAt: string;
+  metadata?: Record<string, unknown>;
+};
+
+export type IncidentTaskRecord = {
+  id: string;
+  incidentId: string;
+  title: string;
+  detail: string;
+  status: 'pending' | 'in_progress' | 'done' | 'blocked';
+  owner: string;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string;
   metadata?: Record<string, unknown>;
 };
 
@@ -817,6 +830,16 @@ export type IncidentDetailResponse = {
   ok: boolean;
   incident: IncidentRecord;
   notes: IncidentNoteRecord[];
+  tasks: {
+    summary: {
+      total: number;
+      pending: number;
+      inProgress: number;
+      done: number;
+      blocked: number;
+    };
+    items: IncidentTaskRecord[];
+  };
   activity: {
     summary: {
       total: number;

@@ -129,6 +129,22 @@ export function createIncidentActivityEntry(payload = {}) {
   };
 }
 
+export function createIncidentTaskEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `incident-task-${randomUUID()}`,
+    incidentId: payload.incidentId || '',
+    title: payload.title || 'Untitled task',
+    detail: payload.detail || '',
+    status: payload.status || 'pending',
+    owner: payload.owner || '',
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+    completedAt: payload.completedAt || '',
+    metadata: payload.metadata || {},
+  };
+}
+
 export function createAuditRecordEntry(record) {
   return {
     id: record.id || `audit-${randomUUID()}`,

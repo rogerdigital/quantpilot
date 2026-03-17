@@ -1,8 +1,9 @@
-import { createIncidentActivityEntry, createIncidentEntry, createIncidentNoteEntry, trimAndSave } from '../shared.mjs';
+import { createIncidentActivityEntry, createIncidentEntry, createIncidentNoteEntry, createIncidentTaskEntry, trimAndSave } from '../shared.mjs';
 
 const INCIDENTS_FILE = 'incidents.json';
 const NOTES_FILE = 'incident-notes.json';
 const ACTIVITIES_FILE = 'incident-activities.json';
+const TASKS_FILE = 'incident-tasks.json';
 
 export function createIncidentRepository(store) {
   function filterByDate(items, since) {
@@ -38,6 +39,10 @@ export function createIncidentRepository(store) {
     return store.readCollection(ACTIVITIES_FILE);
   }
 
+  function readTasks() {
+    return store.readCollection(TASKS_FILE);
+  }
+
   function listIncidentActivities(incidentId, limit = 100) {
     return readActivities()
       .filter((item) => item.incidentId === incidentId)
@@ -54,6 +59,143 @@ export function createIncidentRepository(store) {
     activities.unshift(entry);
     trimAndSave(store, ACTIVITIES_FILE, activities, 1200);
     return entry;
+  }
+
+  function listIncidentTasks(incidentId, limit = 100) {
+    return readTasks()
+      .filter((item) => item.incidentId === incidentId)
+      .sort((left, right) => Date.parse(right.updatedAt || right.createdAt || '') - Date.parse(left.updatedAt || left.createdAt || ''))
+      .slice(0, limit);
+  }
+
+  function saveTasks(items) {
+    trimAndSave(store, TASKS_FILE, items, 2000);
+  }
+
+  function syncTemplateTask(incidentId, templateKey, patch = {}) {
+    const tasks = readTasks();
+    const index = tasks.findIndex((item) => item.incidentId === incidentId && item.metadata?.templateKey === templateKey);
+    if (index === -1) return null;
+    const current = tasks[index];
+    const next = {
+      ...current,
+      ...patch,
+      status: patch.status ?? current.status,
+      owner: patch.owner ?? current.owner,
+      completedAt: (patch.status ?? current.status) === 'done'
+        ? (patch.completedAt || current.completedAt || new Date().toISOString())
+        : current.completedAt,
+      updatedAt: patch.updatedAt || new Date().toISOString(),
+      metadata: patch.metadata ? { ...current.metadata, ...patch.metadata } : current.metadata,
+    };
+    tasks[index] = next;
+    saveTasks(tasks);
+    return next;
+  }
+
+  function buildDefaultTasks(entry) {
+    const now = entry.createdAt;
+    return [
+      {
+        title: 'Assign incident owner',
+        detail: 'Confirm the operator responsible for driving this incident to closure.',
+        status: entry.owner ? 'done' : 'pending',
+        owner: entry.owner || '',
+        completedAt: entry.owner ? now : '',
+        metadata: { templateKey: 'assign-owner', source: entry.source },
+      },
+      {
+        title: 'Acknowledge investigation',
+        detail: 'Move the incident into active investigation and confirm the initial response window.',
+        status: entry.status !== 'open' ? 'done' : 'pending',
+        owner: entry.owner || '',
+        completedAt: entry.status !== 'open' ? (entry.acknowledgedAt || now) : '',
+        metadata: { templateKey: 'acknowledge', source: entry.source },
+      },
+      {
+        title: 'Review linked evidence',
+        detail: 'Validate the monitoring, audit, workflow, or execution artifacts linked to this incident.',
+        status: Array.isArray(entry.links) && entry.links.length ? 'done' : 'pending',
+        owner: entry.owner || '',
+        completedAt: Array.isArray(entry.links) && entry.links.length ? now : '',
+        metadata: { templateKey: 'review-evidence', source: entry.source },
+      },
+      {
+        title: 'Capture mitigation update',
+        detail: 'Record the mitigation path, workaround, or containment decision for this incident.',
+        status: entry.status === 'mitigated' || entry.status === 'resolved' ? 'done' : 'pending',
+        owner: entry.owner || '',
+        completedAt: entry.status === 'mitigated' || entry.status === 'resolved' ? (entry.updatedAt || now) : '',
+        metadata: { templateKey: 'mitigation', source: entry.source },
+      },
+      {
+        title: 'Write resolution summary',
+        detail: 'Summarize what happened, what changed, and any remaining follow-up work before closing.',
+        status: entry.status === 'resolved' ? 'done' : 'pending',
+        owner: entry.owner || '',
+        completedAt: entry.status === 'resolved' ? (entry.resolvedAt || entry.updatedAt || now) : '',
+        metadata: { templateKey: 'resolution-summary', source: entry.source },
+      },
+    ];
+  }
+
+  function appendIncidentTask(incidentId, payload = {}) {
+    const incidents = readIncidents();
+    const incident = incidents.find((item) => item.id === incidentId);
+    if (!incident) return null;
+    const tasks = readTasks();
+    const task = createIncidentTaskEntry({
+      ...payload,
+      incidentId,
+      owner: payload.owner ?? incident.owner ?? '',
+    });
+    tasks.unshift(task);
+    saveTasks(tasks);
+    appendActivity(incidentId, {
+      kind: 'task-updated',
+      actor: payload.actor || payload.owner || incident.owner || 'operator',
+      createdAt: task.createdAt,
+      title: `Task added: ${task.title}`,
+      detail: task.detail || task.status,
+      metadata: {
+        taskId: task.id,
+        status: task.status,
+      },
+    });
+    return task;
+  }
+
+  function updateIncidentTask(incidentId, taskId, patch = {}) {
+    const tasks = readTasks();
+    const index = tasks.findIndex((item) => item.incidentId === incidentId && item.id === taskId);
+    if (index === -1) return null;
+    const current = tasks[index];
+    const next = {
+      ...current,
+      ...patch,
+      status: patch.status ?? current.status,
+      owner: patch.owner ?? current.owner,
+      completedAt: (patch.status ?? current.status) === 'done'
+        ? (patch.completedAt || current.completedAt || new Date().toISOString())
+        : (patch.completedAt ?? current.completedAt),
+      updatedAt: patch.updatedAt || new Date().toISOString(),
+      metadata: patch.metadata ? { ...current.metadata, ...patch.metadata } : current.metadata,
+    };
+    tasks[index] = next;
+    saveTasks(tasks);
+    appendActivity(incidentId, {
+      kind: 'task-updated',
+      actor: patch.actor || patch.owner || next.owner || 'operator',
+      createdAt: next.updatedAt,
+      title: `Task ${next.status}: ${next.title}`,
+      detail: next.detail || next.status,
+      metadata: {
+        taskId: taskId,
+        from: current.status,
+        to: next.status,
+      },
+    });
+    return next;
   }
 
   function hydrateIncident(incident) {
@@ -89,6 +231,7 @@ export function createIncidentRepository(store) {
       return incident ? hydrateIncident(incident) : null;
     },
     listIncidentActivities,
+    listIncidentTasks,
     listIncidentNotes(incidentId, limit = 100) {
       return readNotes()
         .filter((item) => item.incidentId === incidentId)
@@ -114,6 +257,17 @@ export function createIncidentRepository(store) {
           owner: entry.owner,
         },
       });
+
+      const tasks = readTasks();
+      buildDefaultTasks(entry).forEach((item) => {
+        tasks.unshift(createIncidentTaskEntry({
+          ...item,
+          incidentId: entry.id,
+          createdAt: entry.createdAt,
+          updatedAt: entry.updatedAt,
+        }));
+      });
+      saveTasks(tasks);
 
       if (payload.initialNote) {
         const notes = readNotes();
@@ -184,6 +338,12 @@ export function createIncidentRepository(store) {
       }
 
       if ((current.owner || '') !== (next.owner || '')) {
+        syncTemplateTask(incidentId, 'assign-owner', {
+          owner: next.owner || '',
+          status: next.owner ? 'done' : 'pending',
+          completedAt: next.owner ? next.updatedAt : '',
+          updatedAt: next.updatedAt,
+        });
         appendActivity(incidentId, {
           kind: 'owner-changed',
           actor: patch.actor || next.owner || 'operator',
@@ -227,6 +387,11 @@ export function createIncidentRepository(store) {
       }
 
       if (Array.isArray(patch.links)) {
+        syncTemplateTask(incidentId, 'review-evidence', {
+          status: next.links.length ? 'done' : 'pending',
+          completedAt: next.links.length ? next.updatedAt : '',
+          updatedAt: next.updatedAt,
+        });
         appendActivity(incidentId, {
           kind: 'links-updated',
           actor: patch.actor || next.owner || 'operator',
@@ -238,6 +403,33 @@ export function createIncidentRepository(store) {
             nextCount: Array.isArray(next.links) ? next.links.length : 0,
           },
         });
+      }
+
+      if (current.status !== next.status) {
+        if (next.status === 'investigating' || next.status === 'mitigated' || next.status === 'resolved') {
+          syncTemplateTask(incidentId, 'acknowledge', {
+            status: 'done',
+            owner: next.owner || '',
+            completedAt: next.acknowledgedAt || next.updatedAt,
+            updatedAt: next.updatedAt,
+          });
+        }
+        if (next.status === 'mitigated' || next.status === 'resolved') {
+          syncTemplateTask(incidentId, 'mitigation', {
+            status: 'done',
+            owner: next.owner || '',
+            completedAt: next.updatedAt,
+            updatedAt: next.updatedAt,
+          });
+        }
+        if (next.status === 'resolved') {
+          syncTemplateTask(incidentId, 'resolution-summary', {
+            status: 'done',
+            owner: next.owner || '',
+            completedAt: next.resolvedAt || next.updatedAt,
+            updatedAt: next.updatedAt,
+          });
+        }
       }
 
       return hydrateIncident(next);
@@ -273,7 +465,15 @@ export function createIncidentRepository(store) {
       };
       trimAndSave(store, INCIDENTS_FILE, incidents, 200);
 
+      syncTemplateTask(incidentId, 'resolution-summary', {
+        status: current.status === 'resolved' ? 'done' : undefined,
+        owner: current.owner || '',
+        updatedAt: payload.updatedAt || note.createdAt,
+      });
+
       return note;
     },
+    appendIncidentTask,
+    updateIncidentTask,
   };
 }

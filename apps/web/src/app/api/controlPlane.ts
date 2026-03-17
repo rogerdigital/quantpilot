@@ -518,8 +518,8 @@ export async function fetchIncidentSummary(options: IncidentsQuery = {}): Promis
   });
 }
 
-export async function fetchIncidentDetail(incidentId: string, noteLimit = 100, activityLimit = 120): Promise<IncidentDetailResponse> {
-  return fetchJson(`/api/incidents/${incidentId}?noteLimit=${noteLimit}&activityLimit=${activityLimit}`, {
+export async function fetchIncidentDetail(incidentId: string, noteLimit = 100, activityLimit = 120, taskLimit = 100): Promise<IncidentDetailResponse> {
+  return fetchJson(`/api/incidents/${incidentId}?noteLimit=${noteLimit}&activityLimit=${activityLimit}&taskLimit=${taskLimit}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -560,6 +560,32 @@ export async function appendIncidentNote(incidentId: string, payload: Record<str
   note: IncidentDetailResponse['notes'][number];
 }> {
   const response = await fetch(`/api/incidents/${incidentId}/notes`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
+export async function appendIncidentTask(incidentId: string, payload: Record<string, unknown>): Promise<{
+  ok: boolean;
+  task: IncidentDetailResponse['tasks']['items'][number];
+}> {
+  const response = await fetch(`/api/incidents/${incidentId}/tasks`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
+export async function updateIncidentTask(incidentId: string, taskId: string, payload: Record<string, unknown>): Promise<{
+  ok: boolean;
+  task: IncidentDetailResponse['tasks']['items'][number];
+}> {
+  const response = await fetch(`/api/incidents/${incidentId}/tasks/${taskId}`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),

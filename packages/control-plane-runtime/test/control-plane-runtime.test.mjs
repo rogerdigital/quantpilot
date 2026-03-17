@@ -78,14 +78,22 @@ test('control plane runtime records incidents with audit and notifications', () 
     author: 'runtime-ops',
     body: 'Failover broker verified.',
   });
+  const seededTask = runtime.listIncidentTasks('incident-runtime-1')[0];
+  const transitionedTask = runtime.transitionIncidentTask('incident-runtime-1', seededTask.id, {
+    actor: 'runtime-ops',
+    status: 'done',
+  });
 
   assert.equal(incident.id, 'incident-runtime-1');
   assert.equal(transitioned.status, 'investigating');
   assert.equal(noteResult.incident.id, 'incident-runtime-1');
+  assert.equal(transitionedTask.status, 'done');
   assert.equal(runtime.listIncidents()[0].id, 'incident-runtime-1');
   assert.equal(runtime.listIncidentNotes('incident-runtime-1')[0].body, 'Failover broker verified.');
+  assert.equal(runtime.listIncidentTasks('incident-runtime-1').length >= 5, true);
   assert.equal(runtime.listIncidentActivities('incident-runtime-1').some((item) => item.kind === 'opened'), true);
   assert.equal(runtime.listIncidentActivities('incident-runtime-1').some((item) => item.kind === 'note-added'), true);
+  assert.equal(runtime.listIncidentActivities('incident-runtime-1').some((item) => item.kind === 'task-updated'), true);
   assert.equal(runtime.listAuditRecords().some((item) => item.type === 'incident.note'), true);
   assert.equal(runtime.listNotificationJobs().some((job) => job.payload.title === 'Incident opened'), true);
 });

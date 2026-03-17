@@ -282,6 +282,9 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     listIncidentActivities(incidentId, limit = 100) {
       return context.incidents.listIncidentActivities(incidentId, limit);
     },
+    listIncidentTasks(incidentId, limit = 100) {
+      return context.incidents.listIncidentTasks(incidentId, limit);
+    },
     listIncidentNotes(incidentId, limit = 100) {
       return context.incidents.listIncidentNotes(incidentId, limit);
     },
@@ -360,6 +363,12 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     appendIncidentNote(incidentId, payload = {}) {
       return context.incidents.appendIncidentNote(incidentId, payload);
     },
+    appendIncidentTask(incidentId, payload = {}) {
+      return context.incidents.appendIncidentTask(incidentId, payload);
+    },
+    updateIncidentTask(incidentId, taskId, payload = {}) {
+      return context.incidents.updateIncidentTask(incidentId, taskId, payload);
+    },
     recordIncidentNote(incidentId, payload = {}) {
       const note = context.incidents.appendIncidentNote(incidentId, payload);
       if (!note) return null;
@@ -380,6 +389,12 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         note,
         incident,
       };
+    },
+    recordIncidentTask(incidentId, payload = {}) {
+      return context.incidents.appendIncidentTask(incidentId, payload);
+    },
+    transitionIncidentTask(incidentId, taskId, payload = {}) {
+      return context.incidents.updateIncidentTask(incidentId, taskId, payload);
     },
     listNotifications(limit = 50, filter = {}) {
       return context.notifications.listNotifications(limit, filter);
