@@ -13,6 +13,7 @@ import type {
   UserAccountSnapshot,
   UserAccountProfileSnapshot,
   MonitoringStatusSnapshot,
+  OperationsWorkbenchResponse,
   MonitoringAlertsResponse,
   MonitoringSnapshotsResponse,
   IncidentBulkUpdateResponse,
@@ -474,6 +475,20 @@ export async function fetchMonitoringAlerts(options: MonitoringHistoryQuery = {}
 
 export async function fetchMonitoringSnapshots(options: MonitoringHistoryQuery = {}): Promise<MonitoringSnapshotsResponse> {
   return fetchJson(`/api/monitoring/snapshots${buildMonitoringHistoryQuery(options)}`, {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export async function fetchOperationsWorkbench(options: { hours?: number | null; limit?: number } = {}): Promise<OperationsWorkbenchResponse> {
+  const params = new URLSearchParams();
+  if (typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0) {
+    params.set('limit', String(options.limit));
+  }
+  if (typeof options.hours === 'number' && Number.isFinite(options.hours) && options.hours > 0) {
+    params.set('hours', String(options.hours));
+  }
+  const query = params.toString();
+  return fetchJson(`/api/operations/workbench${query ? `?${query}` : ''}`, {
     headers: { Accept: 'application/json' },
   });
 }

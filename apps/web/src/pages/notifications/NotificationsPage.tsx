@@ -14,6 +14,7 @@ import { useIncidentsFeed } from '../../modules/notifications/useIncidentsFeed.t
 import { useIncidentSummary } from '../../modules/notifications/useIncidentSummary.ts';
 import { useMonitoringAlertsFeed } from '../../modules/notifications/useMonitoringAlertsFeed.ts';
 import { useMonitoringSnapshotsFeed } from '../../modules/notifications/useMonitoringSnapshotsFeed.ts';
+import { useOperationsWorkbench } from '../../modules/notifications/useOperationsWorkbench.ts';
 import { useOperatorActionsFeed } from '../../modules/notifications/useOperatorActionsFeed.ts';
 import { useRiskEventsFeed } from '../../modules/notifications/useRiskEventsFeed.ts';
 import { useSchedulerTicksFeed } from '../../modules/notifications/useSchedulerTicksFeed.ts';
@@ -210,6 +211,42 @@ function getTimeWindowLabel(locale: string, key: (typeof MONITORING_TIME_WINDOWS
   return locale === 'zh' ? '全部时间' : 'All Time';
 }
 
+function translateOperationsLane(locale: string, key: 'monitoring' | 'incidents' | 'scheduler' | 'connectivity' | 'control-plane') {
+  if (locale === 'zh') {
+    if (key === 'monitoring') return '监控';
+    if (key === 'incidents') return '事件';
+    if (key === 'scheduler') return '调度';
+    if (key === 'connectivity') return '链路';
+    return '控制面';
+  }
+
+  if (key === 'monitoring') return 'Monitoring';
+  if (key === 'incidents') return 'Incidents';
+  if (key === 'scheduler') return 'Scheduler';
+  if (key === 'connectivity') return 'Connectivity';
+  return 'Control Plane';
+}
+
+function translateRunbookKey(locale: string, key: 'stabilize-connectivity' | 'drain-queues' | 'triage-critical-incidents' | 'assign-incident-owners' | 'clear-stale-incidents' | 'review-scheduler-attention' | 'follow-control-plane-trail') {
+  if (locale === 'zh') {
+    if (key === 'stabilize-connectivity') return '稳定链路';
+    if (key === 'drain-queues') return '清理积压';
+    if (key === 'triage-critical-incidents') return '处理 critical 事件';
+    if (key === 'assign-incident-owners') return '补齐负责人';
+    if (key === 'clear-stale-incidents') return '清理 stale 事件';
+    if (key === 'review-scheduler-attention') return '检查调度异常';
+    return '跟踪控制面轨迹';
+  }
+
+  if (key === 'stabilize-connectivity') return 'Stabilize connectivity';
+  if (key === 'drain-queues') return 'Drain queues';
+  if (key === 'triage-critical-incidents') return 'Triage critical incidents';
+  if (key === 'assign-incident-owners') return 'Assign incident owners';
+  if (key === 'clear-stale-incidents') return 'Clear stale incidents';
+  if (key === 'review-scheduler-attention') return 'Review scheduler attention';
+  return 'Follow control-plane trail';
+}
+
 function NotificationsPage() {
   const { state } = useTradingSystem();
   const { locale } = useLocale();
@@ -349,6 +386,11 @@ function NotificationsPage() {
     + (monitoringStatus?.services.queues.pendingAgentReviews || 0);
   const workerHeartbeatLag = monitoringStatus?.services.worker.lagSeconds;
   const selectedMonitoringSnapshot = monitoringSnapshotItems.find((item) => item.id === selectedMonitoringSnapshotId) || null;
+  const { workbench: operationsWorkbench, loading: operationsWorkbenchLoading } = useOperationsWorkbench({
+    hours: 24,
+    limit: 120,
+    refreshKey: incidentRefreshKey,
+  });
   const monitoringCriticalCount = monitoringAlertItems.filter((item) => item.level === 'critical').length;
   const monitoringWarnCount = monitoringAlertItems.filter((item) => item.level === 'warn').length;
   const monitoringSnapshotCriticalCount = monitoringSnapshotItems.filter((item) => item.status === 'critical').length;
@@ -494,6 +536,70 @@ function NotificationsPage() {
       reset: () => applySchedulerFocus({ timeWindow: '24h' }),
     },
   ];
+  const operationsRecentItems = [
+    operationsWorkbench.recent.incident ? {
+      id: `recent-incident:${operationsWorkbench.recent.incident.id}`,
+      kind: 'incidents' as const,
+      title: operationsWorkbench.recent.incident.title,
+      detail: operationsWorkbench.recent.incident.summary || operationsWorkbench.recent.incident.latestNotePreview || operationsWorkbench.recent.incident.status,
+      timestamp: operationsWorkbench.recent.incident.updatedAt || operationsWorkbench.recent.incident.createdAt,
+      onClick: () => applyIncidentFocus({
+        incidentId: operationsWorkbench.recent.incident?.id || '',
+        owner: operationsWorkbench.recent.incident?.owner || 'unassigned',
+        severity: operationsWorkbench.recent.incident?.severity || 'all',
+        source: operationsWorkbench.recent.incident?.source || 'all',
+        status: operationsWorkbench.recent.incident?.status || 'all',
+        timeWindow: '7d',
+      }),
+    } : null,
+    operationsWorkbench.recent.monitoringAlert ? {
+      id: `recent-monitoring:${operationsWorkbench.recent.monitoringAlert.id}`,
+      kind: 'monitoring' as const,
+      title: operationsWorkbench.recent.monitoringAlert.source,
+      detail: operationsWorkbench.recent.monitoringAlert.message,
+      timestamp: operationsWorkbench.recent.monitoringAlert.createdAt,
+      onClick: () => applyMonitoringFocus({
+        source: operationsWorkbench.recent.monitoringAlert?.source || 'all',
+        level: operationsWorkbench.recent.monitoringAlert?.level === 'info' ? 'all' : (operationsWorkbench.recent.monitoringAlert?.level || 'all'),
+        snapshotId: operationsWorkbench.recent.monitoringAlert?.snapshotId || '',
+        timeWindow: '24h',
+      }),
+    } : null,
+    operationsWorkbench.recent.notification ? {
+      id: `recent-notification:${operationsWorkbench.recent.notification.id}`,
+      kind: 'control-plane' as const,
+      title: operationsWorkbench.recent.notification.title,
+      detail: operationsWorkbench.recent.notification.message,
+      timestamp: operationsWorkbench.recent.notification.createdAt,
+      onClick: () => applyNotificationFocus({
+        source: operationsWorkbench.recent.notification?.source || 'all',
+        level: operationsWorkbench.recent.notification?.level === 'info' ? 'all' : (operationsWorkbench.recent.notification?.level || 'all'),
+        timeWindow: '24h',
+      }),
+    } : null,
+    operationsWorkbench.recent.auditRecord ? {
+      id: `recent-audit:${operationsWorkbench.recent.auditRecord.id}`,
+      kind: 'control-plane' as const,
+      title: operationsWorkbench.recent.auditRecord.title,
+      detail: operationsWorkbench.recent.auditRecord.detail,
+      timestamp: operationsWorkbench.recent.auditRecord.createdAt,
+      onClick: () => applyAuditFocus({
+        type: operationsWorkbench.recent.auditRecord?.type || 'all',
+        timeWindow: '24h',
+      }),
+    } : null,
+    operationsWorkbench.recent.schedulerTick ? {
+      id: `recent-scheduler:${operationsWorkbench.recent.schedulerTick.id}`,
+      kind: 'scheduler' as const,
+      title: operationsWorkbench.recent.schedulerTick.title,
+      detail: operationsWorkbench.recent.schedulerTick.message,
+      timestamp: operationsWorkbench.recent.schedulerTick.createdAt,
+      onClick: () => applySchedulerFocus({
+        phase: operationsWorkbench.recent.schedulerTick?.phase || 'all',
+        timeWindow: '24h',
+      }),
+    } : null,
+  ].filter(Boolean);
 
   useEffect(() => {
     if (!selectedMonitoringSnapshotId) return;
@@ -737,6 +843,73 @@ function NotificationsPage() {
     applyExecutionFocus({ status });
     applyAuditFocus({
       type: 'execution-plan',
+      timeWindow: '24h',
+    });
+  }
+
+  function focusOperationsRunbook(key: 'stabilize-connectivity' | 'drain-queues' | 'triage-critical-incidents' | 'assign-incident-owners' | 'clear-stale-incidents' | 'review-scheduler-attention' | 'follow-control-plane-trail') {
+    if (key === 'stabilize-connectivity') {
+      applyMonitoringFocus({
+        source: monitoringStatus?.services.worker.status !== 'healthy'
+          ? 'worker'
+          : (!marketConnected || marketFallback)
+            ? 'market'
+            : 'broker',
+        level: 'warn',
+        timeWindow: '24h',
+      });
+      return;
+    }
+    if (key === 'drain-queues') {
+      applyMonitoringFocus({
+        source: 'queue',
+        level: 'warn',
+        timeWindow: '24h',
+      });
+      return;
+    }
+    if (key === 'triage-critical-incidents') {
+      applyIncidentFocus({
+        severity: 'critical',
+        status: incidentStatusFilter === 'all' ? 'all' : incidentStatusFilter,
+        owner: incidentOwnerFilter,
+        source: incidentSourceFilter,
+        timeWindow: '7d',
+      });
+      return;
+    }
+    if (key === 'assign-incident-owners') {
+      applyIncidentFocus({
+        owner: 'unassigned',
+        severity: incidentSeverityFilter,
+        source: incidentSourceFilter,
+        status: incidentStatusFilter,
+        timeWindow: '7d',
+      });
+      return;
+    }
+    if (key === 'clear-stale-incidents') {
+      applyIncidentFocus({
+        owner: incidentOwnerFilter,
+        severity: incidentSeverityFilter,
+        source: incidentSourceFilter,
+        status: incidentStatusFilter === 'resolved' ? 'all' : incidentStatusFilter,
+        timeWindow: '7d',
+      });
+      return;
+    }
+    if (key === 'review-scheduler-attention') {
+      applySchedulerFocus({
+        phase: schedulerPhaseFilter === 'all' ? 'INTRADAY' : schedulerPhaseFilter,
+        timeWindow: '24h',
+      });
+      return;
+    }
+    applyNotificationFocus({
+      source: 'control-plane',
+      timeWindow: '24h',
+    });
+    applyAuditFocus({
       timeWindow: '24h',
     });
   }
@@ -2465,6 +2638,122 @@ function NotificationsPage() {
             <div className="panel-badge badge-info">EVENTS</div>
           </div>
           <ActivityLog />
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '运维工作台' : 'Operations Workbench'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把 monitoring、incidents、scheduler、connectivity 和 control-plane trail 汇成一份统一运维快照。'
+                  : 'Collapse monitoring, incidents, scheduler, connectivity, and control-plane trail into one operations snapshot.'}
+              </div>
+            </div>
+            <div className={`panel-badge tone-${monitoringTone(operationsWorkbench.status)}`}>{operationsWorkbenchLoading ? '...' : translateMonitoringStatus(locale, operationsWorkbench.status)}</div>
+          </div>
+          <div className="metrics-grid metrics-grid-compact">
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Critical 信号' : 'Critical Signals'}</span>
+              <strong>{operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.criticalSignals}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Warn 信号' : 'Warn Signals'}</span>
+              <strong>{operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.warnSignals}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '队列积压' : 'Queue Pressure'}</span>
+              <strong>{operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.queuePressure}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '未解决事件' : 'Open Incidents'}</span>
+              <strong>{operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.openIncidents}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Stale 事件' : 'Stale Incidents'}</span>
+              <strong>{operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.staleIncidents}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '未指派事件' : 'Unassigned Incidents'}</span>
+              <strong>{operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.unassignedIncidents}</strong>
+            </div>
+          </div>
+          <div className="panel-subtitle">{locale === 'zh' ? '运维泳道' : 'Operations Lanes'}</div>
+          <div className="focus-list focus-list-terminal">
+            {operationsWorkbench.lanes.map((lane) => (
+              <button
+                type="button"
+                className="focus-row focus-row-wide status-row-button"
+                key={lane.key}
+                onClick={() => {
+                  if (lane.key === 'monitoring') applyMonitoringFocus({ timeWindow: '24h' });
+                  else if (lane.key === 'incidents') applyIncidentFocus({ timeWindow: '7d' });
+                  else if (lane.key === 'scheduler') applySchedulerFocus({ timeWindow: '24h' });
+                  else if (lane.key === 'connectivity') applyMonitoringFocus({ source: 'market', timeWindow: '24h' });
+                  else {
+                    applyNotificationFocus({ source: 'control-plane', timeWindow: '24h' });
+                    applyAuditFocus({ timeWindow: '24h' });
+                  }
+                }}
+              >
+                <div className="symbol-cell">
+                  <strong>{translateOperationsLane(locale, lane.key)}</strong>
+                  <span>{lane.detail}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                  <strong>{translateMonitoringStatus(locale, lane.status)}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '主计数' : 'Primary'}</span>
+                  <strong>{lane.primaryCount}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '次计数' : 'Secondary'}</span>
+                  <strong>{lane.secondaryCount}</strong>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="panel-subtitle">{locale === 'zh' ? '运维 Runbook' : 'Operations Runbook'}</div>
+          <div className="focus-list focus-list-terminal">
+            {!operationsWorkbench.runbook.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有需要额外推进的运维动作。' : 'No extra operations actions are queued right now.'}</div> : null}
+            {operationsWorkbench.runbook.map((item) => (
+              <button type="button" className="focus-row focus-row-wide status-row-button" key={item.key} onClick={() => focusOperationsRunbook(item.key)}>
+                <div className="symbol-cell">
+                  <strong>{translateRunbookKey(locale, item.key)}</strong>
+                  <span>{item.detail}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '优先级' : 'Priority'}</span>
+                  <strong>{item.priority === 'now' ? (locale === 'zh' ? '立即' : 'Now') : (locale === 'zh' ? '下一步' : 'Next')}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '数量' : 'Count'}</span>
+                  <strong>{item.count}</strong>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="panel-subtitle">{locale === 'zh' ? '最近运维信号' : 'Recent Operations Signals'}</div>
+          <div className="focus-list focus-list-terminal">
+            {!operationsRecentItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有新的运维信号。' : 'No recent operations signals are available.'}</div> : null}
+            {operationsRecentItems.map((item) => (
+              <button type="button" className="focus-row status-row-button" key={item.id} onClick={item.onClick}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '泳道' : 'Lane'}</span>
+                  <strong>{translateOperationsLane(locale, item.kind)}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                  <strong>{fmtDateTime(item.timestamp, locale)}</strong>
+                </div>
+              </button>
+            ))}
+          </div>
         </article>
         <article className="panel">
           <div className="panel-head">

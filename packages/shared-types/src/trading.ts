@@ -763,6 +763,69 @@ export type MonitoringSnapshotsResponse = {
   snapshots: MonitoringSnapshotRecord[];
 };
 
+export type OperationsWorkbenchResponse = {
+  ok: boolean;
+  generatedAt: string;
+  status: string;
+  summary: {
+    criticalSignals: number;
+    warnSignals: number;
+    queuePressure: number;
+    openIncidents: number;
+    staleIncidents: number;
+    unassignedIncidents: number;
+    schedulerAttention: number;
+  };
+  lanes: Array<{
+    key: 'monitoring' | 'incidents' | 'scheduler' | 'connectivity' | 'control-plane';
+    title: string;
+    status: string;
+    detail: string;
+    primaryCount: number;
+    secondaryCount: number;
+    updatedAt: string;
+  }>;
+  runbook: Array<{
+    key: 'stabilize-connectivity' | 'drain-queues' | 'triage-critical-incidents' | 'assign-incident-owners' | 'clear-stale-incidents' | 'review-scheduler-attention' | 'follow-control-plane-trail';
+    priority: 'now' | 'next';
+    title: string;
+    detail: string;
+    count: number;
+  }>;
+  recent: {
+    incident: IncidentRecord | null;
+    monitoringAlert: MonitoringAlertRecord | null;
+    notification: {
+      id: string;
+      level: string;
+      title: string;
+      message: string;
+      source: string;
+      createdAt: string;
+      metadata?: Record<string, unknown>;
+    } | null;
+    auditRecord: {
+      id: string;
+      type: string;
+      actor: string;
+      title: string;
+      detail: string;
+      createdAt: string;
+      metadata?: Record<string, unknown>;
+    } | null;
+    schedulerTick: {
+      id: string;
+      phase: string;
+      status: string;
+      title: string;
+      message: string;
+      worker: string;
+      createdAt: string;
+      metadata?: Record<string, unknown>;
+    } | null;
+  };
+};
+
 export type IncidentRecord = {
   id: string;
   title: string;

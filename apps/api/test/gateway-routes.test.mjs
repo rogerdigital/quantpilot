@@ -1409,6 +1409,93 @@ test('GET /api/monitoring/snapshots and alerts return persisted monitoring histo
   assert.equal(filteredAlerts.json.alerts[0].id, 'monitoring-alert-test');
 });
 
+test('GET /api/operations/workbench returns unified operations overview', async () => {
+  const nowIso = new Date().toISOString();
+  context.marketProviders.updateMarketProviderStatus({
+    provider: 'alpaca',
+    connected: false,
+    fallback: true,
+    message: 'market provider fallback in operations workbench',
+    symbolCount: 8,
+    asOf: nowIso,
+  });
+  context.workerHeartbeats.recordWorkerHeartbeat({
+    id: 'worker-heartbeat-operations',
+    worker: 'quantpilot-task-worker',
+    summary: 'worker heartbeat',
+    createdAt: nowIso,
+  });
+  context.notifications.appendNotification({
+    id: 'operations-notification',
+    level: 'warn',
+    title: 'Control-plane warning',
+    message: 'queue pressure is increasing',
+    source: 'control-plane',
+    createdAt: nowIso,
+  });
+  context.audit.appendAuditRecord({
+    id: 'operations-audit',
+    type: 'workflow',
+    actor: 'api-test',
+    title: 'Workflow reviewed',
+    detail: 'workflow needs manual follow-up',
+    createdAt: nowIso,
+  });
+  context.scheduler.recordSchedulerTick({
+    id: 'operations-scheduler',
+    phase: 'INTRADAY',
+    status: 'warn',
+    title: 'Scheduler attention',
+    message: 'scheduler slipped from expected cadence',
+    worker: 'quantpilot-task-worker',
+    createdAt: nowIso,
+  });
+  context.monitoring.recordMonitoringSnapshot({
+    id: 'operations-snapshot',
+    status: 'critical',
+    generatedAt: nowIso,
+    services: {
+      worker: { status: 'healthy' },
+    },
+    alerts: [
+      {
+        id: 'operations-alert',
+        level: 'critical',
+        source: 'queue',
+        message: 'notification backlog is critical',
+      },
+    ],
+  });
+  context.incidents.appendIncident({
+    id: 'operations-incident',
+    title: 'Operations incident',
+    summary: 'Escalated from operations workbench',
+    severity: 'critical',
+    source: 'monitoring',
+    status: 'open',
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/operations/workbench?hours=24&limit=50',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(typeof response.json.summary.criticalSignals, 'number');
+  assert.equal(response.json.summary.openIncidents >= 1, true);
+  assert.equal(response.json.lanes.some((item) => item.key === 'monitoring'), true);
+  assert.equal(response.json.lanes.some((item) => item.key === 'incidents'), true);
+  assert.equal(response.json.runbook.some((item) => item.key === 'stabilize-connectivity'), true);
+  assert.equal(response.json.runbook.some((item) => item.key === 'triage-critical-incidents'), true);
+  assert.equal(response.json.recent.incident.id, 'operations-incident');
+  assert.equal(typeof response.json.recent.notification.title, 'string');
+  assert.equal(typeof response.json.recent.notification.source, 'string');
+  assert.equal(response.json.recent.auditRecord.id, 'operations-audit');
+  assert.equal(response.json.recent.schedulerTick.id, 'operations-scheduler');
+});
+
 test('incident routes create, update, and return incident details', async () => {
   context.monitoring.recordMonitoringSnapshot({
     id: 'incident-monitoring-snapshot',

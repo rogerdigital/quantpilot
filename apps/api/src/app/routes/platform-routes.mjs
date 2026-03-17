@@ -11,6 +11,7 @@ import { getExecutionPlanDetail, getLatestBrokerAccountSnapshot, listBrokerAccou
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { listPermissionDescriptors, writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
 import { getMonitoringStatus, listMonitoringAlerts, listMonitoringSnapshots } from '../../modules/monitoring/service.mjs';
+import { getOperationsWorkbench } from '../../modules/operations/service.mjs';
 import { describeArchitecture, listArchitectureLayers, listModules } from '../../modules/registry.mjs';
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
 import {
@@ -71,6 +72,16 @@ export async function handlePlatformRoutes(context) {
       level: reqUrl.searchParams.get('level'),
       hours: reqUrl.searchParams.get('hours'),
     }));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/operations/workbench') {
+    const summary = await getOperationsWorkbench({
+      getBrokerHealth: context.gatewayDependencies.getBrokerHealth,
+      hours: reqUrl.searchParams.get('hours'),
+      limit: reqUrl.searchParams.get('limit'),
+    });
+    writeJson(res, 200, summary);
     return true;
   }
 
