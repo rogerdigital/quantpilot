@@ -72,6 +72,21 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     listBacktestRuns(limit = 100, filter = {}) {
       return context.backtestRuns.listBacktestRuns(limit, filter);
     },
+    listBacktestResults(limit = 100, filter = {}) {
+      return context.backtestResults.listBacktestResults(limit, filter);
+    },
+    listBacktestResultsForRun(runId, limit = 20) {
+      return context.backtestResults.listBacktestResultsForRun(runId, limit);
+    },
+    getBacktestResult(resultId) {
+      return context.backtestResults.getBacktestResult(resultId);
+    },
+    getLatestBacktestResultForRun(runId) {
+      return context.backtestResults.getLatestBacktestResultForRun(runId);
+    },
+    appendBacktestResult(payload = {}) {
+      return context.backtestResults.appendBacktestResult(payload);
+    },
     getBacktestRun(runId) {
       return context.backtestRuns.getBacktestRun(runId);
     },
@@ -707,6 +722,11 @@ export const deleteBrokerBinding = (...args) => controlPlaneRuntime.deleteBroker
 export const listExecutionRuntimeEvents = (...args) => controlPlaneRuntime.listExecutionRuntimeEvents(...args);
 export const listBrokerAccountSnapshots = (...args) => controlPlaneRuntime.listBrokerAccountSnapshots(...args);
 export const listBacktestRuns = (...args) => controlPlaneRuntime.listBacktestRuns(...args);
+export const listBacktestResults = (...args) => controlPlaneRuntime.listBacktestResults(...args);
+export const listBacktestResultsForRun = (...args) => controlPlaneRuntime.listBacktestResultsForRun(...args);
+export const getBacktestResult = (...args) => controlPlaneRuntime.getBacktestResult(...args);
+export const getLatestBacktestResultForRun = (...args) => controlPlaneRuntime.getLatestBacktestResultForRun(...args);
+export const appendBacktestResult = (...args) => controlPlaneRuntime.appendBacktestResult(...args);
 export const getBacktestRun = (...args) => controlPlaneRuntime.getBacktestRun(...args);
 export const findBacktestRunByWorkflowRunId = (...args) => controlPlaneRuntime.findBacktestRunByWorkflowRunId(...args);
 export const appendBacktestRun = (...args) => controlPlaneRuntime.appendBacktestRun(...args);

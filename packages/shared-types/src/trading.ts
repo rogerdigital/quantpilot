@@ -515,6 +515,42 @@ export type ResearchTaskSummarySnapshot = {
   }>;
 };
 
+export type BacktestResultRecord = {
+  id: string;
+  runId: string;
+  workflowRunId: string;
+  strategyId: string;
+  strategyName: string;
+  windowLabel: string;
+  status: 'completed' | 'needs_review' | 'failed';
+  stage: 'generated' | 'reviewed' | 'replayed';
+  version: number;
+  generatedAt: string;
+  summary: string;
+  annualizedReturnPct: number;
+  maxDrawdownPct: number;
+  sharpe: number;
+  winRatePct: number;
+  turnoverPct: number;
+  benchmarkReturnPct: number;
+  excessReturnPct: number;
+  reviewVerdict: string;
+  createdAt: string;
+  updatedAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type BacktestResultSummarySnapshot = {
+  total: number;
+  completed: number;
+  needsReview: number;
+  failed: number;
+  averageSharpe: number;
+  averageReturnPct: number;
+  averageExcessReturnPct: number;
+  latestGeneratedAt: string;
+};
+
 export type BacktestSummarySnapshot = {
   ok: boolean;
   asOf: string;
@@ -536,6 +572,8 @@ export type BacktestRunDetailSnapshot = {
   strategy?: StrategyCatalogItem | null;
   workflow?: WorkflowRunRecord | null;
   researchTask?: ResearchTaskRecord | null;
+  latestResult?: BacktestResultRecord | null;
+  results?: BacktestResultRecord[];
   error?: string;
   message?: string;
 };
@@ -654,9 +692,11 @@ export type ResearchHubSnapshot = {
   asOf: string;
   summary: BacktestSummarySnapshot;
   taskSummary: ResearchTaskSummarySnapshot;
+  resultSummary: BacktestResultSummarySnapshot;
   strategies: StrategyCatalogItem[];
   runs: BacktestRunItem[];
   tasks: ResearchTaskRecord[];
+  results: BacktestResultRecord[];
 };
 
 export type MarketProviderStatusSnapshot = {
@@ -1124,6 +1164,7 @@ export type BacktestRunCreateSnapshot = {
   ok: boolean;
   run: BacktestRunItem;
   researchTask?: ResearchTaskRecord | null;
+  latestResult?: BacktestResultRecord | null;
   workflow: {
     id: string;
     workflowId: string;

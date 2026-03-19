@@ -278,6 +278,53 @@ test('control plane runtime persists research task backbone entries', () => {
   assert.equal(updated.status, 'running');
 });
 
+test('control plane runtime persists backtest result versions', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  const generated = runtime.appendBacktestResult({
+    id: 'backtest-result-runtime-1',
+    runId: 'run-runtime-backtest',
+    workflowRunId: 'workflow-runtime-backtest',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    windowLabel: '2024-01-01 -> 2024-12-31',
+    status: 'needs_review',
+    stage: 'generated',
+    annualizedReturnPct: 12.6,
+    maxDrawdownPct: 10.4,
+    sharpe: 0.94,
+    winRatePct: 53.1,
+    turnoverPct: 142,
+    benchmarkReturnPct: 8.1,
+    excessReturnPct: 4.5,
+    summary: 'Generated result needs review.',
+  });
+  const reviewed = runtime.appendBacktestResult({
+    runId: 'run-runtime-backtest',
+    workflowRunId: 'workflow-runtime-backtest',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    windowLabel: '2024-01-01 -> 2024-12-31',
+    status: 'completed',
+    stage: 'reviewed',
+    annualizedReturnPct: 12.6,
+    maxDrawdownPct: 10.4,
+    sharpe: 0.94,
+    winRatePct: 53.1,
+    turnoverPct: 142,
+    benchmarkReturnPct: 8.1,
+    excessReturnPct: 4.5,
+    reviewVerdict: 'approved',
+    summary: 'Reviewed result approved for promotion.',
+  });
+
+  assert.equal(generated.id, 'backtest-result-runtime-1');
+  assert.equal(runtime.getBacktestResult('backtest-result-runtime-1').stage, 'generated');
+  assert.equal(runtime.listBacktestResultsForRun('run-runtime-backtest').length, 2);
+  assert.equal(runtime.getLatestBacktestResultForRun('run-runtime-backtest').stage, 'reviewed');
+  assert.equal(reviewed.version, 2);
+});
+
 test('control plane runtime schedules retries and supports resume/cancel workflow operations', () => {
   const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
 

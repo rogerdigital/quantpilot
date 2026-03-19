@@ -280,6 +280,34 @@ export function createResearchTaskEntry(payload = {}) {
   };
 }
 
+export function createBacktestResultEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `backtest-result-${randomUUID()}`,
+    runId: payload.runId || '',
+    workflowRunId: payload.workflowRunId || '',
+    strategyId: payload.strategyId || '',
+    strategyName: payload.strategyName || 'Unknown Strategy',
+    windowLabel: payload.windowLabel || '',
+    status: payload.status || 'completed',
+    stage: payload.stage || 'generated',
+    version: Number(payload.version || 1),
+    generatedAt: payload.generatedAt || now,
+    summary: payload.summary || '',
+    annualizedReturnPct: Number(payload.annualizedReturnPct || 0),
+    maxDrawdownPct: Number(payload.maxDrawdownPct || 0),
+    sharpe: Number(payload.sharpe || 0),
+    winRatePct: Number(payload.winRatePct || 0),
+    turnoverPct: Number(payload.turnoverPct || 0),
+    benchmarkReturnPct: Number(payload.benchmarkReturnPct || 0),
+    excessReturnPct: Number(payload.excessReturnPct || 0),
+    reviewVerdict: payload.reviewVerdict || '',
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+    metadata: payload.metadata || {},
+  };
+}
+
 export function createUserAccountProfile(payload = {}) {
   const timezone = payload.timezone || 'Asia/Shanghai';
   const locale = payload.locale || 'zh-CN';

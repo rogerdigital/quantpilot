@@ -87,7 +87,7 @@ export function getBacktestCollectionConfigs(locale: 'zh' | 'en', hasSelection: 
     },
     versions: {
       title: locale === 'zh' ? '选中回测版本轨迹' : 'Selected Backtest Version History',
-      copy: locale === 'zh' ? '从 audit metadata 回放当前 run 在完成和人工复核时落下的关键绩效快照。' : 'Replay the selected run’s key performance snapshots from audit metadata when it completed or was reviewed.',
+      copy: locale === 'zh' ? '直接读取 backtest result 模型，查看当前 run 在生成与复核阶段留下的结果版本。' : 'Read the dedicated backtest result model directly to inspect the selected run’s generated and reviewed result versions.',
       badge: counts.versions,
       badgeClassName: 'badge-warn',
       terminal: true,

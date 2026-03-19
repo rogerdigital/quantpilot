@@ -6,6 +6,7 @@ import {
 } from '../../domains/agent/services/action-request-service.mjs';
 import { listAgentTools, executeAgentTool } from '../../domains/agent/services/tools-service.mjs';
 import { getBacktestSummary } from '../../domains/backtest/services/summary-service.mjs';
+import { getBacktestResultDetail, getBacktestResultSummary, listBacktestResults } from '../../domains/backtest/services/results-service.mjs';
 import { createBacktestRun, getBacktestRunDetail, listBacktestRuns, reviewBacktestRun } from '../../domains/backtest/services/runs-service.mjs';
 import { getResearchHubSnapshot, getResearchTaskDetail, getResearchTaskSummary, listResearchTasks } from '../../domains/research/services/task-service.mjs';
 import { getExecutionPlanDetail, getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
@@ -294,6 +295,37 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/backtest/summary') {
     writeJson(res, 200, getBacktestSummary());
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/backtest/results') {
+    writeJson(res, 200, listBacktestResults({
+      hours: reqUrl.searchParams.get('hours'),
+      limit: reqUrl.searchParams.get('limit'),
+      runId: reqUrl.searchParams.get('runId'),
+      strategyId: reqUrl.searchParams.get('strategyId'),
+      workflowRunId: reqUrl.searchParams.get('workflowRunId'),
+      status: reqUrl.searchParams.get('status'),
+      stage: reqUrl.searchParams.get('stage'),
+    }));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/backtest/results/summary') {
+    writeJson(res, 200, getBacktestResultSummary({
+      hours: reqUrl.searchParams.get('hours'),
+      limit: reqUrl.searchParams.get('limit'),
+      strategyId: reqUrl.searchParams.get('strategyId'),
+      status: reqUrl.searchParams.get('status'),
+      stage: reqUrl.searchParams.get('stage'),
+    }));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/backtest/results/')) {
+    const resultId = reqUrl.pathname.split('/').at(-1);
+    const result = getBacktestResultDetail(resultId);
+    writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
 

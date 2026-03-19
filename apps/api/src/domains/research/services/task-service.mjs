@@ -1,4 +1,5 @@
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
+import { getBacktestResultSummary, listBacktestResults } from '../../backtest/services/results-service.mjs';
 import { getBacktestSummary } from '../../backtest/services/summary-service.mjs';
 import { listBacktestRuns } from '../../backtest/services/runs-service.mjs';
 import { listStrategyCatalog } from '../../strategy/services/catalog-service.mjs';
@@ -110,6 +111,8 @@ export function getResearchTaskSummary(options = {}) {
 export function getResearchHubSnapshot(options = {}) {
   const tasks = listResearchTasks(options);
   const taskSummary = getResearchTaskSummary(options);
+  const results = listBacktestResults(options);
+  const resultSummary = getBacktestResultSummary(options);
   const summary = getBacktestSummary();
   const strategies = listStrategyCatalog();
   const runs = listBacktestRuns();
@@ -119,8 +122,10 @@ export function getResearchHubSnapshot(options = {}) {
     asOf: summary.asOf,
     summary,
     taskSummary: taskSummary.summary,
+    resultSummary: resultSummary.summary,
     strategies: strategies.strategies,
     runs: runs.runs,
     tasks: tasks.tasks,
+    results: results.results,
   };
 }

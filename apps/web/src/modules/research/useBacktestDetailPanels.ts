@@ -29,9 +29,7 @@ export function useBacktestDetailPanels(options: {
       })
       .slice(0, 6)
     : [];
-  const selectedRunVersionItems = selectedRunAuditItems.filter((item) => (
-    item.type === 'backtest-run.completed' || item.type === 'backtest-run.reviewed'
-  ));
+  const selectedRunVersionItems = runDetail?.results || [];
   const selectedRunExecutionEntries = executionEntries
     .filter((entry) => entry.plan.strategyId === selectedRunSnapshot?.strategyId)
     .slice(0, 6);

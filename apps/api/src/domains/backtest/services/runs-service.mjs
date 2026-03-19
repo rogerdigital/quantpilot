@@ -3,6 +3,35 @@ import { queueWorkflow } from '../../../control-plane/task-orchestrator/services
 import { getStrategyCatalogItem } from '../../strategy/services/catalog-service.mjs';
 import { refreshBacktestSummary } from './summary-service.mjs';
 
+function buildBacktestResultFromRun(run, patch = {}) {
+  if (!run || !run.completedAt) return null;
+  return controlPlaneRuntime.appendBacktestResult({
+    runId: run.id,
+    workflowRunId: run.workflowRunId || '',
+    strategyId: run.strategyId,
+    strategyName: run.strategyName,
+    windowLabel: run.windowLabel,
+    status: patch.status || run.status,
+    stage: patch.stage || 'generated',
+    generatedAt: patch.generatedAt || run.completedAt || new Date().toISOString(),
+    summary: patch.summary || run.summary,
+    annualizedReturnPct: run.annualizedReturnPct,
+    maxDrawdownPct: run.maxDrawdownPct,
+    sharpe: run.sharpe,
+    winRatePct: run.winRatePct,
+    turnoverPct: run.turnoverPct,
+    benchmarkReturnPct: Number(patch.benchmarkReturnPct ?? Math.max(run.annualizedReturnPct - 4.5, 0).toFixed(1)),
+    excessReturnPct: Number(patch.excessReturnPct ?? 0),
+    reviewVerdict: patch.reviewVerdict || '',
+    metadata: {
+      reviewedAt: run.reviewedAt || '',
+      reviewedBy: run.reviewedBy || '',
+      dataSource: run.dataSource || '',
+      ...patch.metadata,
+    },
+  });
+}
+
 function defaultWindowLabel() {
   return '2024-01-01 -> 2026-03-01';
 }
@@ -64,6 +93,7 @@ export function getBacktestRunDetail(runId) {
 
   const strategy = run.strategyId ? getStrategyCatalogItem(run.strategyId) : null;
   const workflow = run.workflowRunId ? controlPlaneRuntime.getWorkflowRun(run.workflowRunId) : null;
+  const results = controlPlaneRuntime.listBacktestResultsForRun(run.id, 20);
 
   return {
     ok: true,
@@ -71,6 +101,8 @@ export function getBacktestRunDetail(runId) {
     strategy,
     workflow,
     researchTask: controlPlaneRuntime.findResearchTaskByRunId(run.id) || null,
+    latestResult: results[0] || null,
+    results,
   };
 }
 
@@ -145,6 +177,7 @@ export function createBacktestRun(payload = {}) {
     run,
     workflow,
     researchTask,
+    latestResult: null,
   };
 }
 
@@ -157,6 +190,16 @@ export function updateBacktestRun(runId, patch = {}) {
     };
   }
   refreshBacktestSummary();
+  let latestResult = controlPlaneRuntime.getLatestBacktestResultForRun(updated.id);
+  if (!latestResult && updated.completedAt) {
+    latestResult = buildBacktestResultFromRun(updated, {
+      stage: 'generated',
+      excessReturnPct: Number((updated.annualizedReturnPct - Math.max(updated.annualizedReturnPct - 4.5, 0)).toFixed(1)),
+      metadata: {
+        source: 'backtest-runs.update',
+      },
+    });
+  }
   syncResearchTaskFromRun(updated, {
     status: updated.status,
     latestCheckpoint: updated.summary,
@@ -164,6 +207,7 @@ export function updateBacktestRun(runId, patch = {}) {
   return {
     ok: true,
     run: updated,
+    latestResult: latestResult || null,
   };
 }
 
@@ -204,6 +248,18 @@ export function reviewBacktestRun(runId, payload = {}) {
   });
 
   refreshBacktestSummary();
+  const benchmarkReturnPct = Math.max(reviewed.annualizedReturnPct - 4.5, 0);
+  const latestResult = buildBacktestResultFromRun(reviewed, {
+    stage: 'reviewed',
+    summary: payload.summary || reviewed.summary,
+    reviewVerdict: reviewed.status === 'completed' ? 'approved' : 'rejected',
+    benchmarkReturnPct,
+    excessReturnPct: Number((reviewed.annualizedReturnPct - benchmarkReturnPct).toFixed(1)),
+    metadata: {
+      source: 'backtest-runs.review',
+      reviewAction: 'manual-review',
+    },
+  });
   const researchTask = syncResearchTaskFromRun(reviewed, {
     status: reviewed.status,
     lastActor: payload.reviewedBy || 'operator',
@@ -218,5 +274,6 @@ export function reviewBacktestRun(runId, payload = {}) {
     ok: true,
     run: reviewed,
     researchTask,
+    latestResult: latestResult || null,
   };
 }

@@ -293,6 +293,57 @@ test('research task repository upserts tasks and filters them by workflow and st
   assert.equal(filtered[0].strategyName, 'Momentum');
 });
 
+test('backtest result repository stores generated and reviewed result versions per run', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const generated = context.backtestResults.appendBacktestResult({
+    id: 'backtest-result-1',
+    runId: 'run-1',
+    workflowRunId: 'workflow-1',
+    strategyId: 'strategy-1',
+    strategyName: 'Momentum',
+    windowLabel: '2024-01-01 -> 2024-12-31',
+    status: 'needs_review',
+    stage: 'generated',
+    version: 1,
+    generatedAt: '2026-03-18T08:10:00.000Z',
+    annualizedReturnPct: 12.1,
+    maxDrawdownPct: 10.8,
+    sharpe: 0.98,
+    winRatePct: 54.2,
+    turnoverPct: 138,
+    benchmarkReturnPct: 7.4,
+    excessReturnPct: 4.7,
+    summary: 'Initial run requires review.',
+  });
+  const reviewed = context.backtestResults.appendBacktestResult({
+    runId: 'run-1',
+    workflowRunId: 'workflow-1',
+    strategyId: 'strategy-1',
+    strategyName: 'Momentum',
+    windowLabel: '2024-01-01 -> 2024-12-31',
+    status: 'completed',
+    stage: 'reviewed',
+    generatedAt: '2026-03-18T08:25:00.000Z',
+    annualizedReturnPct: 12.1,
+    maxDrawdownPct: 10.8,
+    sharpe: 0.98,
+    winRatePct: 54.2,
+    turnoverPct: 138,
+    benchmarkReturnPct: 7.4,
+    excessReturnPct: 4.7,
+    reviewVerdict: 'approved',
+    summary: 'Operator approved the result with explanation.',
+  });
+
+  const history = context.backtestResults.listBacktestResultsForRun('run-1', 10);
+
+  assert.equal(generated.version, 1);
+  assert.equal(reviewed.version, 2);
+  assert.equal(context.backtestResults.getLatestBacktestResultForRun('run-1').stage, 'reviewed');
+  assert.equal(context.backtestResults.getBacktestResult('backtest-result-1').stage, 'generated');
+  assert.equal(history.length, 2);
+});
+
 test('workflow repository claims queued runs for execution', () => {
   const context = createControlPlaneContext(createMemoryStore());
   context.workflows.appendWorkflowRun({

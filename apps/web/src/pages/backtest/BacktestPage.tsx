@@ -402,6 +402,7 @@ function BacktestPage() {
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '活跃研究任务' : 'Active Research Tasks'}</div><div className="tile-value">{taskSummary.active}</div><div className="tile-sub">{locale === 'zh' ? 'queued / running / needs_review' : 'queued / running / needs_review'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '平均 Sharpe' : 'Average Sharpe'}</div><div className="tile-value">{data?.summary.averageSharpe?.toFixed(2) ?? '--'}</div><div className="tile-sub">{locale === 'zh' ? '基于已完成回测' : 'Across completed runs'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '平均收益率' : 'Average Return'}</div><div className="tile-value">{data?.summary.averageReturnPct !== undefined ? fmtPct(data.summary.averageReturnPct) : '--'}</div><div className="tile-sub">{data?.summary.asOf ? fmtDateTime(data.summary.asOf, locale) : (locale === 'zh' ? '等待同步' : 'Pending sync')}</div></article>
+        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '平均超额收益' : 'Average Excess Return'}</div><div className="tile-value">{data?.resultSummary ? fmtPct(data.resultSummary.averageExcessReturnPct) : '--'}</div><div className="tile-sub">{locale === 'zh' ? '来自结果模型' : 'Derived from result versions'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '研究任务失败' : 'Failed Research Tasks'}</div><div className="tile-value">{taskSummary.failed}</div><div className="tile-sub">{locale === 'zh' ? '阶段 2 统一失败面板入口' : 'The unified failure entrypoint for stage 2'}</div></article>
       </section>
 
@@ -707,20 +708,17 @@ function BacktestPage() {
         </ResearchCollectionPanel>
         <ResearchCollectionPanel {...backtestCollectionConfigs.versions}>
           {selectedRunVersionItems.map((item) => {
-            const annualizedReturnPct = typeof item.metadata?.annualizedReturnPct === 'number' ? item.metadata.annualizedReturnPct : null;
-            const maxDrawdownPct = typeof item.metadata?.maxDrawdownPct === 'number' ? item.metadata.maxDrawdownPct : null;
-            const sharpe = typeof item.metadata?.sharpe === 'number' ? item.metadata.sharpe : null;
-            const winRatePct = typeof item.metadata?.winRatePct === 'number' ? item.metadata.winRatePct : null;
             return (
               <ResearchVersionSnapshotRow
                 key={item.id}
-                leadTitle={fmtDateTime(item.createdAt, locale)}
-                leadCopy={item.detail}
+                leadTitle={`${fmtDateTime(item.generatedAt, locale)} · v${item.version}`}
+                leadCopy={item.summary}
                 metrics={[
-                  { label: locale === 'zh' ? '类型' : 'Type', value: item.type },
-                  { label: locale === 'zh' ? '收益/回撤' : 'Return / Drawdown', value: annualizedReturnPct !== null && maxDrawdownPct !== null ? `${annualizedReturnPct.toFixed(1)}% / ${maxDrawdownPct.toFixed(1)}%` : '--' },
-                  { label: 'Sharpe', value: sharpe !== null ? sharpe.toFixed(2) : '--' },
-                  { label: locale === 'zh' ? '胜率' : 'Win Rate', value: winRatePct !== null ? `${winRatePct.toFixed(1)}%` : '--' },
+                  { label: locale === 'zh' ? '阶段' : 'Stage', value: item.stage },
+                  { label: locale === 'zh' ? '收益/回撤' : 'Return / Drawdown', value: `${item.annualizedReturnPct.toFixed(1)}% / ${item.maxDrawdownPct.toFixed(1)}%` },
+                  { label: 'Sharpe', value: item.sharpe.toFixed(2) },
+                  { label: locale === 'zh' ? '超额收益' : 'Excess Return', value: `${item.excessReturnPct.toFixed(1)}%` },
+                  { label: locale === 'zh' ? '胜率' : 'Win Rate', value: `${item.winRatePct.toFixed(1)}%` },
                 ]}
               />
             );

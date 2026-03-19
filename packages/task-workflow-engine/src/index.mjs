@@ -93,6 +93,34 @@ function syncBacktestResearchTask(context, run, patch = {}) {
   });
 }
 
+function appendBacktestResultVersion(context, run, patch = {}) {
+  if (!run?.completedAt || typeof context.appendBacktestResult !== 'function') return null;
+  const benchmarkReturnPct = Number((Math.max(run.annualizedReturnPct - 4.5, 0)).toFixed(1));
+  return context.appendBacktestResult({
+    runId: run.id,
+    workflowRunId: run.workflowRunId || '',
+    strategyId: run.strategyId,
+    strategyName: run.strategyName,
+    windowLabel: run.windowLabel,
+    status: patch.status || run.status,
+    stage: patch.stage || 'generated',
+    generatedAt: patch.generatedAt || run.completedAt,
+    summary: patch.summary || run.summary,
+    annualizedReturnPct: run.annualizedReturnPct,
+    maxDrawdownPct: run.maxDrawdownPct,
+    sharpe: run.sharpe,
+    winRatePct: run.winRatePct,
+    turnoverPct: run.turnoverPct,
+    benchmarkReturnPct,
+    excessReturnPct: Number((run.annualizedReturnPct - benchmarkReturnPct).toFixed(1)),
+    reviewVerdict: patch.reviewVerdict || '',
+    metadata: {
+      workflowStatus: patch.workflowStatus || 'completed',
+      ...patch.metadata,
+    },
+  });
+}
+
 async function executeStrategyExecutionWorkflow(payload, context, options = {}) {
   const workflow = options.workflow || startWorkflow(context, {
     workflowId: 'task-orchestrator.strategy-execution',
@@ -308,6 +336,13 @@ async function executeBacktestRunWorkflow(payload, context, options = {}) {
       ...metrics,
       completedAt: new Date().toISOString(),
     });
+    const resultVersion = appendBacktestResultVersion(context, completedRun, {
+      stage: 'generated',
+      workflowStatus: 'completed',
+      metadata: {
+        source: 'task-workflow-engine.backtest-run',
+      },
+    });
     const task = syncBacktestResearchTask(context, completedRun, {
       status: completedRun.status,
       completedAt: completedRun.completedAt,
@@ -361,6 +396,7 @@ async function executeBacktestRunWorkflow(payload, context, options = {}) {
         ok: true,
         runId: completedRun.id,
         researchTaskId: task?.id || '',
+        backtestResultId: resultVersion?.id || '',
         status: completedRun.status,
         summaryAsOf: summary?.asOf || '',
       },

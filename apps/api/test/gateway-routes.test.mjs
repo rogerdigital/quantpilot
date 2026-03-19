@@ -374,6 +374,60 @@ test('GET /api/research/tasks returns research backbone tasks and related summar
   assert.equal(detailResponse.json.strategy.id, created.json.run.strategyId);
 });
 
+test('GET /api/backtest/results exposes versioned backtest results and detail context', async () => {
+  const created = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/backtest/runs',
+    body: {
+      strategyId: 'ema-cross-us',
+      windowLabel: '2024-01-01 -> 2024-12-31',
+      requestedBy: 'api-result-test',
+    },
+  });
+
+  context.backtestRuns.updateBacktestRun(created.json.run.id, {
+    status: 'needs_review',
+    completedAt: new Date().toISOString(),
+    annualizedReturnPct: 12.8,
+    maxDrawdownPct: 10.9,
+    sharpe: 0.97,
+    winRatePct: 54.1,
+    turnoverPct: 148,
+    summary: 'Generated run requires review.',
+  });
+
+  const reviewResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/backtest/runs/${created.json.run.id}/review`,
+    body: {
+      reviewedBy: 'risk-operator',
+      summary: 'Operator accepted the result after reviewing the drawdown explanation.',
+    },
+  });
+
+  const listResponse = await invokeGatewayRoute(handler, {
+    path: `/api/backtest/results?runId=${created.json.run.id}&limit=10`,
+  });
+  const summaryResponse = await invokeGatewayRoute(handler, {
+    path: `/api/backtest/results/summary?strategyId=ema-cross-us&limit=20`,
+  });
+  const detailResponse = await invokeGatewayRoute(handler, {
+    path: `/api/backtest/results/${reviewResponse.json.latestResult.id}`,
+  });
+
+  assert.equal(listResponse.statusCode, 200);
+  assert.equal(listResponse.json.results.length >= 1, true);
+  assert.equal(listResponse.json.results[0].runId, created.json.run.id);
+  assert.equal(summaryResponse.statusCode, 200);
+  assert.equal(summaryResponse.json.summary.total >= 1, true);
+  assert.equal(typeof summaryResponse.json.summary.averageExcessReturnPct, 'number');
+  assert.equal(detailResponse.statusCode, 200);
+  assert.equal(detailResponse.json.result.id, reviewResponse.json.latestResult.id);
+  assert.equal(detailResponse.json.run.id, created.json.run.id);
+  assert.equal(detailResponse.json.workflow.id, created.json.workflow.id);
+  assert.equal(Array.isArray(detailResponse.json.siblings), true);
+});
+
 test('POST /api/backtest/runs queues a persisted research workflow run', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',

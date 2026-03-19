@@ -374,5 +374,6 @@ test('queued backtest workflow persists research run and summary through worker 
   assert.equal(execution.claimedCount, 1);
   assert.equal(execution.executions[0].ok, true);
   assert.equal(context.backtestRuns.findBacktestRunByWorkflowRunId(queued.json.workflow.id).status !== 'queued', true);
+  assert.equal(context.backtestResults.getLatestBacktestResultForRun(queued.json.run.id) !== null, true);
   assert.equal(context.researchSummary.getResearchSummary().completedRuns >= 1, true);
 });
