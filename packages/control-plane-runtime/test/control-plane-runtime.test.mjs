@@ -250,6 +250,34 @@ test('control plane runtime persists workflow runs through start and complete tr
   assert.equal(runtime.listWorkflowRuns()[0].result.ok, true);
 });
 
+test('control plane runtime persists research task backbone entries', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  const created = runtime.upsertResearchTask({
+    id: 'research-task-runtime-1',
+    taskType: 'backtest-run',
+    status: 'queued',
+    title: 'Backtest: Runtime Test',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    workflowRunId: 'workflow-runtime-backtest',
+    runId: 'run-runtime-backtest',
+    windowLabel: '2024-01-01 -> 2024-12-31',
+    requestedBy: 'runtime-test',
+    latestCheckpoint: 'queued through runtime',
+  });
+  const updated = runtime.updateResearchTask('research-task-runtime-1', {
+    status: 'running',
+    latestCheckpoint: 'runtime worker is executing the backtest',
+  });
+
+  assert.equal(created.id, 'research-task-runtime-1');
+  assert.equal(runtime.getResearchTask('research-task-runtime-1').status, 'running');
+  assert.equal(runtime.findResearchTaskByWorkflowRunId('workflow-runtime-backtest').id, 'research-task-runtime-1');
+  assert.equal(runtime.findResearchTaskByRunId('run-runtime-backtest').latestCheckpoint, 'runtime worker is executing the backtest');
+  assert.equal(updated.status, 'running');
+});
+
 test('control plane runtime schedules retries and supports resume/cancel workflow operations', () => {
   const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
 

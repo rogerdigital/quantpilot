@@ -83,6 +83,31 @@ function BacktestPage() {
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
   const canQueueBacktest = hasPermission('strategy:write');
   const canReviewBacktest = hasPermission('risk:review');
+  const taskSummary = data?.taskSummary || {
+    total: 0,
+    queued: 0,
+    running: 0,
+    needsReview: 0,
+    completed: 0,
+    failed: 0,
+    active: 0,
+    byType: [],
+    byStrategy: [],
+  };
+  const filteredTasks = data?.tasks?.filter((task) => {
+    if (runFilter !== 'all' && task.status !== runFilter) {
+      return false;
+    }
+    if (!searchTerm.trim()) {
+      return true;
+    }
+    const keyword = searchTerm.trim().toLowerCase();
+    return task.title.toLowerCase().includes(keyword)
+      || task.strategyName.toLowerCase().includes(keyword)
+      || task.strategyId.toLowerCase().includes(keyword)
+      || task.windowLabel.toLowerCase().includes(keyword)
+      || task.workflowRunId.toLowerCase().includes(keyword);
+  }) || [];
   const filteredRuns = data?.runs.filter((run) => {
     if (runFilter !== 'all' && run.status !== runFilter) {
       return false;
@@ -208,6 +233,8 @@ function BacktestPage() {
     workspaceLoading,
     strategyCount: data?.strategies.length ?? 0,
     filteredRunCount: filteredRuns.length,
+    taskCount: filteredTasks.length,
+    activeTaskCount: taskSummary.active,
     auditCount: backtestAuditItems.length,
     workflowCount: visibleWorkflowRuns.length,
     windowLabel,
@@ -372,8 +399,10 @@ function BacktestPage() {
       <section className="metrics-grid">
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '候选策略' : 'Candidate Strategies'}</div><div className="tile-value">{data?.summary.candidateStrategies ?? '--'}</div><div className="tile-sub">{locale === 'zh' ? '进入评审与晋级漏斗' : 'Inside the promotion funnel'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '运行中回测' : 'Running Backtests'}</div><div className="tile-value">{data?.summary.runningRuns ?? '--'}</div><div className="tile-sub">{locale === 'zh' ? '由任务编排层继续接管' : 'To be owned by task orchestration'}</div></article>
+        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '活跃研究任务' : 'Active Research Tasks'}</div><div className="tile-value">{taskSummary.active}</div><div className="tile-sub">{locale === 'zh' ? 'queued / running / needs_review' : 'queued / running / needs_review'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '平均 Sharpe' : 'Average Sharpe'}</div><div className="tile-value">{data?.summary.averageSharpe?.toFixed(2) ?? '--'}</div><div className="tile-sub">{locale === 'zh' ? '基于已完成回测' : 'Across completed runs'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '平均收益率' : 'Average Return'}</div><div className="tile-value">{data?.summary.averageReturnPct !== undefined ? fmtPct(data.summary.averageReturnPct) : '--'}</div><div className="tile-sub">{data?.summary.asOf ? fmtDateTime(data.summary.asOf, locale) : (locale === 'zh' ? '等待同步' : 'Pending sync')}</div></article>
+        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '研究任务失败' : 'Failed Research Tasks'}</div><div className="tile-value">{taskSummary.failed}</div><div className="tile-sub">{locale === 'zh' ? '阶段 2 统一失败面板入口' : 'The unified failure entrypoint for stage 2'}</div></article>
       </section>
 
       <section className="panel-grid">
@@ -447,6 +476,36 @@ function BacktestPage() {
             />
           ))}
         </ResearchTerminalPanel>
+        <ResearchTerminalPanel {...backtestTerminalConfigs.tasks}>
+          {filteredTasks.map((task) => (
+            <div className="focus-row" key={task.id}>
+              <div className="symbol-cell">
+                <strong>{task.title}</strong>
+                <span>{task.id}</span>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                <strong>{task.status}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '策略' : 'Strategy'}</span>
+                <strong>{task.strategyName || '--'}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '检查点' : 'Checkpoint'}</span>
+                <strong>{task.latestCheckpoint || '--'}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '工作流' : 'Workflow'}</span>
+                <strong>{task.workflowRunId || '--'}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '更新时间' : 'Updated'}</span>
+                <strong>{fmtDateTime(task.updatedAt || task.createdAt, locale)}</strong>
+              </div>
+            </div>
+          ))}
+        </ResearchTerminalPanel>
         <ResearchTerminalPanel {...backtestTerminalConfigs.activity}>
           {backtestAuditItems.map((item) => {
             const runId = typeof item.metadata?.runId === 'string' ? item.metadata.runId : '--';
@@ -499,6 +558,32 @@ function BacktestPage() {
       </section>
 
       <section className="panel-grid">
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '研究任务分布' : 'Research Task Distribution'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把研究任务总量、活跃量和按策略分布提前拉平，后面阶段 2 的研究晋级、评估和推广都会复用这条骨架。'
+                  : 'Flatten the research task totals, active pressure, and strategy spread now so later stage-2 evaluation and promotion flows can reuse the same backbone.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-warn">{taskSummary.total}</div>
+          </div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '排队任务' : 'Queued Tasks'}</span><strong>{taskSummary.queued}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '运行中任务' : 'Running Tasks'}</span><strong>{taskSummary.running}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '待复核任务' : 'Needs Review'}</span><strong>{taskSummary.needsReview}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '已完成任务' : 'Completed Tasks'}</span><strong>{taskSummary.completed}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '失败任务' : 'Failed Tasks'}</span><strong>{taskSummary.failed}</strong></div>
+            {taskSummary.byStrategy.slice(0, 3).map((item) => (
+              <div key={item.strategyId || item.strategyName} className="status-row">
+                <span>{item.strategyName}</span>
+                <strong>{locale === 'zh' ? `${item.activeCount}/${item.count} 活跃` : `${item.activeCount}/${item.count} active`}</strong>
+              </div>
+            ))}
+          </div>
+        </article>
         <ResearchDetailInspectionPanel
           title={locale === 'zh' ? '选中回测详情' : 'Selected Backtest Detail'}
           copy={locale === 'zh'

@@ -7,6 +7,38 @@ function defaultWindowLabel() {
   return '2024-01-01 -> 2026-03-01';
 }
 
+function syncResearchTaskFromRun(run, patch = {}) {
+  if (!run) return null;
+  return controlPlaneRuntime.upsertResearchTask({
+    taskType: 'backtest-run',
+    title: `Backtest: ${run.strategyName}`,
+    status: patch.status || run.status,
+    strategyId: run.strategyId,
+    strategyName: run.strategyName,
+    workflowRunId: run.workflowRunId || '',
+    runId: run.id,
+    windowLabel: run.windowLabel,
+    requestedBy: run.requestedBy || 'operator',
+    lastActor: patch.lastActor || run.reviewedBy || run.requestedBy || 'operator',
+    resultLabel: patch.resultLabel || run.status,
+    latestCheckpoint: patch.latestCheckpoint || run.summary,
+    startedAt: patch.startedAt || run.startedAt || '',
+    completedAt: patch.completedAt ?? run.completedAt ?? '',
+    summary: patch.summary || run.summary,
+    metadata: {
+      annualizedReturnPct: run.annualizedReturnPct,
+      maxDrawdownPct: run.maxDrawdownPct,
+      sharpe: run.sharpe,
+      winRatePct: run.winRatePct,
+      turnoverPct: run.turnoverPct,
+      reviewedAt: run.reviewedAt || '',
+      reviewedBy: run.reviewedBy || '',
+      dataSource: run.dataSource || '',
+      ...patch.metadata,
+    },
+  });
+}
+
 export function listBacktestRuns() {
   const runs = controlPlaneRuntime.listBacktestRuns();
   return {
@@ -38,6 +70,7 @@ export function getBacktestRunDetail(runId) {
     run,
     strategy,
     workflow,
+    researchTask: controlPlaneRuntime.findResearchTaskByRunId(run.id) || null,
   };
 }
 
@@ -73,6 +106,13 @@ export function createBacktestRun(payload = {}) {
     requestedBy: payload.requestedBy || 'operator',
     summary: `${strategy.name} was queued for research execution.`,
   });
+  const researchTask = syncResearchTaskFromRun(run, {
+    status: 'queued',
+    latestCheckpoint: `${strategy.name} was admitted into the research task backbone.`,
+    metadata: {
+      workflowId: workflow.workflowId,
+    },
+  });
 
   controlPlaneRuntime.appendAuditRecord({
     type: 'backtest-run.created',
@@ -104,6 +144,7 @@ export function createBacktestRun(payload = {}) {
     ok: true,
     run,
     workflow,
+    researchTask,
   };
 }
 
@@ -116,6 +157,10 @@ export function updateBacktestRun(runId, patch = {}) {
     };
   }
   refreshBacktestSummary();
+  syncResearchTaskFromRun(updated, {
+    status: updated.status,
+    latestCheckpoint: updated.summary,
+  });
   return {
     ok: true,
     run: updated,
@@ -159,9 +204,19 @@ export function reviewBacktestRun(runId, payload = {}) {
   });
 
   refreshBacktestSummary();
+  const researchTask = syncResearchTaskFromRun(reviewed, {
+    status: reviewed.status,
+    lastActor: payload.reviewedBy || 'operator',
+    completedAt: reviewed.completedAt || '',
+    latestCheckpoint: payload.summary || reviewed.summary,
+    metadata: {
+      reviewAction: 'manual-review',
+    },
+  });
 
   return {
     ok: true,
     run: reviewed,
+    researchTask,
   };
 }

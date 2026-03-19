@@ -516,6 +516,8 @@ describe('research panel primitives', () => {
       workspaceLoading: false,
       strategyCount: 5,
       filteredRunCount: 7,
+      taskCount: 9,
+      activeTaskCount: 4,
       auditCount: 3,
       workflowCount: 2,
       windowLabel: '2024-01-01 -> 2026-03-01',

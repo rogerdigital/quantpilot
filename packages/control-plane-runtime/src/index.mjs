@@ -417,6 +417,27 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     updateResearchSummary(summary = {}) {
       return context.researchSummary.updateResearchSummary(summary);
     },
+    listResearchTasks(limit = 100, filter = {}) {
+      return context.researchTasks.listResearchTasks(limit, filter);
+    },
+    getResearchTask(taskId) {
+      return context.researchTasks.getResearchTask(taskId);
+    },
+    findResearchTaskByWorkflowRunId(workflowRunId) {
+      return context.researchTasks.findResearchTaskByWorkflowRunId(workflowRunId);
+    },
+    findResearchTaskByRunId(runId) {
+      return context.researchTasks.findResearchTaskByRunId(runId);
+    },
+    appendResearchTask(payload = {}) {
+      return context.researchTasks.appendResearchTask(payload);
+    },
+    updateResearchTask(taskId, patch = {}) {
+      return context.researchTasks.updateResearchTask(taskId, patch);
+    },
+    upsertResearchTask(payload = {}) {
+      return context.researchTasks.upsertResearchTask(payload);
+    },
     listRiskEvents(limit = 50) {
       return context.risk.listRiskEvents(limit);
     },
@@ -692,6 +713,13 @@ export const appendBacktestRun = (...args) => controlPlaneRuntime.appendBacktest
 export const updateBacktestRun = (...args) => controlPlaneRuntime.updateBacktestRun(...args);
 export const getResearchSummary = (...args) => controlPlaneRuntime.getResearchSummary(...args);
 export const updateResearchSummary = (...args) => controlPlaneRuntime.updateResearchSummary(...args);
+export const listResearchTasks = (...args) => controlPlaneRuntime.listResearchTasks(...args);
+export const getResearchTask = (...args) => controlPlaneRuntime.getResearchTask(...args);
+export const findResearchTaskByWorkflowRunId = (...args) => controlPlaneRuntime.findResearchTaskByWorkflowRunId(...args);
+export const findResearchTaskByRunId = (...args) => controlPlaneRuntime.findResearchTaskByRunId(...args);
+export const appendResearchTask = (...args) => controlPlaneRuntime.appendResearchTask(...args);
+export const updateResearchTask = (...args) => controlPlaneRuntime.updateResearchTask(...args);
+export const upsertResearchTask = (...args) => controlPlaneRuntime.upsertResearchTask(...args);
 export const listStrategyCatalog = (...args) => controlPlaneRuntime.listStrategyCatalog(...args);
 export const getStrategyCatalogItem = (...args) => controlPlaneRuntime.getStrategyCatalogItem(...args);
 export const upsertStrategyCatalogItem = (...args) => controlPlaneRuntime.upsertStrategyCatalogItem(...args);

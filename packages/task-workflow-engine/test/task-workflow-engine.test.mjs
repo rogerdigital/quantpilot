@@ -178,5 +178,9 @@ test('queued workflow dispatcher executes backtest workflows and refreshes resea
   assert.equal(result.ok, true);
   assert.equal(result.workflow.status, 'completed');
   assert.equal(context.listBacktestRuns().length >= 1, true);
+  assert.equal(context.listResearchTasks().length >= 1, true);
+  assert.equal(context.listResearchTasks()[0].taskType, 'backtest-run');
+  assert.equal(context.listResearchTasks()[0].status, context.listBacktestRuns()[0].status);
+  assert.equal(context.listResearchTasks()[0].workflowRunId, result.workflow.id);
   assert.equal(typeof context.getResearchSummary().averageSharpe, 'number');
 });

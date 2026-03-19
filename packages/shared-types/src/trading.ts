@@ -472,6 +472,49 @@ export type BacktestRunItem = {
   dataSource?: string;
 };
 
+export type ResearchTaskRecord = {
+  id: string;
+  taskType: 'backtest-run' | 'parameter-optimization' | 'research-report' | 'strategy-evaluation';
+  status: 'queued' | 'running' | 'completed' | 'needs_review' | 'failed' | 'canceled';
+  title: string;
+  summary: string;
+  strategyId: string;
+  strategyName: string;
+  workflowRunId: string;
+  runId: string;
+  windowLabel: string;
+  requestedBy: string;
+  lastActor: string;
+  resultLabel: string;
+  latestCheckpoint: string;
+  priority: 'normal' | 'high';
+  createdAt: string;
+  updatedAt: string;
+  startedAt: string;
+  completedAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type ResearchTaskSummarySnapshot = {
+  total: number;
+  queued: number;
+  running: number;
+  needsReview: number;
+  completed: number;
+  failed: number;
+  active: number;
+  byType: Array<{
+    taskType: string;
+    count: number;
+  }>;
+  byStrategy: Array<{
+    strategyId: string;
+    strategyName: string;
+    count: number;
+    activeCount: number;
+  }>;
+};
+
 export type BacktestSummarySnapshot = {
   ok: boolean;
   asOf: string;
@@ -492,6 +535,7 @@ export type BacktestRunDetailSnapshot = {
   run?: BacktestRunItem;
   strategy?: StrategyCatalogItem | null;
   workflow?: WorkflowRunRecord | null;
+  researchTask?: ResearchTaskRecord | null;
   error?: string;
   message?: string;
 };
@@ -609,8 +653,10 @@ export type ResearchHubSnapshot = {
   ok: boolean;
   asOf: string;
   summary: BacktestSummarySnapshot;
+  taskSummary: ResearchTaskSummarySnapshot;
   strategies: StrategyCatalogItem[];
   runs: BacktestRunItem[];
+  tasks: ResearchTaskRecord[];
 };
 
 export type MarketProviderStatusSnapshot = {
@@ -1077,6 +1123,7 @@ export type BacktestRunCreateRequest = {
 export type BacktestRunCreateSnapshot = {
   ok: boolean;
   run: BacktestRunItem;
+  researchTask?: ResearchTaskRecord | null;
   workflow: {
     id: string;
     workflowId: string;

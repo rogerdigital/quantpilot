@@ -64,6 +64,35 @@ function buildMockBacktestMetrics(strategy, runId) {
   };
 }
 
+function syncBacktestResearchTask(context, run, patch = {}) {
+  if (!run || typeof context.upsertResearchTask !== 'function') return null;
+  return context.upsertResearchTask({
+    taskType: 'backtest-run',
+    title: `Backtest: ${run.strategyName}`,
+    status: patch.status || run.status,
+    strategyId: run.strategyId,
+    strategyName: run.strategyName,
+    workflowRunId: run.workflowRunId || '',
+    runId: run.id,
+    windowLabel: run.windowLabel,
+    requestedBy: run.requestedBy || context.getOperatorName(),
+    lastActor: patch.lastActor || context.getOperatorName(),
+    resultLabel: patch.resultLabel || run.status,
+    latestCheckpoint: patch.latestCheckpoint || run.summary,
+    startedAt: patch.startedAt || run.startedAt || '',
+    completedAt: patch.completedAt ?? run.completedAt ?? '',
+    summary: patch.summary || run.summary,
+    metadata: {
+      annualizedReturnPct: run.annualizedReturnPct,
+      maxDrawdownPct: run.maxDrawdownPct,
+      sharpe: run.sharpe,
+      winRatePct: run.winRatePct,
+      turnoverPct: run.turnoverPct,
+      ...patch.metadata,
+    },
+  });
+}
+
 async function executeStrategyExecutionWorkflow(payload, context, options = {}) {
   const workflow = options.workflow || startWorkflow(context, {
     workflowId: 'task-orchestrator.strategy-execution',
@@ -255,17 +284,38 @@ async function executeBacktestRunWorkflow(payload, context, options = {}) {
       requestedBy: payload.requestedBy || context.getOperatorName(),
       summary: `${strategy.name} was reconstructed from workflow state before execution.`,
     });
+    syncBacktestResearchTask(context, run, {
+      status: 'queued',
+      latestCheckpoint: `${strategy.name} is linked to workflow ${workflow.id}.`,
+      metadata: {
+        workflowId: workflow.workflowId,
+      },
+    });
 
     const runningRun = context.updateBacktestRun(run.id, {
       status: 'running',
       startedAt: run.startedAt || new Date().toISOString(),
       summary: `${strategy.name} is running inside the research workflow executor.`,
     });
+    syncBacktestResearchTask(context, runningRun, {
+      status: 'running',
+      startedAt: runningRun.startedAt,
+      latestCheckpoint: 'Workflow worker started the research task.',
+    });
 
     const metrics = buildMockBacktestMetrics(strategy, run.id);
     const completedRun = context.updateBacktestRun(run.id, {
       ...metrics,
       completedAt: new Date().toISOString(),
+    });
+    const task = syncBacktestResearchTask(context, completedRun, {
+      status: completedRun.status,
+      completedAt: completedRun.completedAt,
+      resultLabel: completedRun.status === 'needs_review' ? 'review-required' : 'completed',
+      latestCheckpoint: completedRun.summary,
+      metadata: {
+        workflowStatus: 'completed',
+      },
     });
     const summary = context.refreshBacktestSummary?.('task-workflow-engine.backtest-run') || null;
 
@@ -310,6 +360,7 @@ async function executeBacktestRunWorkflow(payload, context, options = {}) {
       result: {
         ok: true,
         runId: completedRun.id,
+        researchTaskId: task?.id || '',
         status: completedRun.status,
         summaryAsOf: summary?.asOf || '',
       },
@@ -323,10 +374,19 @@ async function executeBacktestRunWorkflow(payload, context, options = {}) {
     };
   } catch (error) {
     if (existingRun) {
-      context.updateBacktestRun(existingRun.id, {
+      const failedRun = context.updateBacktestRun(existingRun.id, {
         status: 'failed',
         completedAt: new Date().toISOString(),
         summary: error instanceof Error ? error.message : 'unknown backtest workflow error',
+      });
+      syncBacktestResearchTask(context, failedRun, {
+        status: 'failed',
+        completedAt: failedRun.completedAt,
+        resultLabel: 'failed',
+        latestCheckpoint: failedRun.summary,
+        metadata: {
+          workflowStatus: 'failed',
+        },
       });
       context.refreshBacktestSummary?.('task-workflow-engine.backtest-run');
     }

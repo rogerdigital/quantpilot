@@ -7,6 +7,7 @@ import {
 import { listAgentTools, executeAgentTool } from '../../domains/agent/services/tools-service.mjs';
 import { getBacktestSummary } from '../../domains/backtest/services/summary-service.mjs';
 import { createBacktestRun, getBacktestRunDetail, listBacktestRuns, reviewBacktestRun } from '../../domains/backtest/services/runs-service.mjs';
+import { getResearchHubSnapshot, getResearchTaskDetail, getResearchTaskSummary, listResearchTasks } from '../../domains/research/services/task-service.mjs';
 import { getExecutionPlanDetail, getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { listPermissionDescriptors, writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
@@ -293,6 +294,44 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/backtest/summary') {
     writeJson(res, 200, getBacktestSummary());
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/research/hub') {
+    writeJson(res, 200, getResearchHubSnapshot({
+      hours: reqUrl.searchParams.get('hours'),
+      limit: reqUrl.searchParams.get('limit'),
+    }));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/research/tasks') {
+    writeJson(res, 200, listResearchTasks({
+      hours: reqUrl.searchParams.get('hours'),
+      limit: reqUrl.searchParams.get('limit'),
+      taskType: reqUrl.searchParams.get('taskType'),
+      status: reqUrl.searchParams.get('status'),
+      strategyId: reqUrl.searchParams.get('strategyId'),
+      workflowRunId: reqUrl.searchParams.get('workflowRunId'),
+      runId: reqUrl.searchParams.get('runId'),
+    }));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/research/tasks/summary') {
+    writeJson(res, 200, getResearchTaskSummary({
+      hours: reqUrl.searchParams.get('hours'),
+      limit: reqUrl.searchParams.get('limit'),
+      taskType: reqUrl.searchParams.get('taskType'),
+      strategyId: reqUrl.searchParams.get('strategyId'),
+    }));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/research/tasks/')) {
+    const taskId = reqUrl.pathname.split('/').at(-1);
+    const result = getResearchTaskDetail(taskId);
+    writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
 

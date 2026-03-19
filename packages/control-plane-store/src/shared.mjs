@@ -254,6 +254,32 @@ export function createAgentActionRequestEntry(payload) {
   };
 }
 
+export function createResearchTaskEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `research-task-${randomUUID()}`,
+    taskType: payload.taskType || 'backtest-run',
+    status: payload.status || 'queued',
+    title: payload.title || 'Research task',
+    summary: payload.summary || '',
+    strategyId: payload.strategyId || '',
+    strategyName: payload.strategyName || '',
+    workflowRunId: payload.workflowRunId || '',
+    runId: payload.runId || '',
+    windowLabel: payload.windowLabel || '',
+    requestedBy: payload.requestedBy || 'operator',
+    lastActor: payload.lastActor || payload.requestedBy || 'operator',
+    resultLabel: payload.resultLabel || '',
+    latestCheckpoint: payload.latestCheckpoint || '',
+    priority: payload.priority || 'normal',
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+    startedAt: payload.startedAt || '',
+    completedAt: payload.completedAt || '',
+    metadata: payload.metadata || {},
+  };
+}
+
 export function createUserAccountProfile(payload = {}) {
   const timezone = payload.timezone || 'Asia/Shanghai';
   const locale = payload.locale || 'zh-CN';

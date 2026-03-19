@@ -484,6 +484,7 @@ describe('research workspace pages', () => {
     );
 
     expect(html).toContain('Selected Backtest Detail');
+    expect(html).toContain('Research Task Backbone');
     expect(html).toContain('Open Strategy Detail');
     expect(html).toContain('Selected Research Event');
     expect(html).toContain('Review completed');

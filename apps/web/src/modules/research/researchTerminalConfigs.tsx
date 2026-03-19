@@ -88,6 +88,8 @@ export function getBacktestTerminalConfigs(options: {
   workspaceLoading: boolean;
   strategyCount: number;
   filteredRunCount: number;
+  taskCount: number;
+  activeTaskCount: number;
   auditCount: number;
   workflowCount: number;
   windowLabel: string;
@@ -100,6 +102,8 @@ export function getBacktestTerminalConfigs(options: {
     workspaceLoading,
     strategyCount,
     filteredRunCount,
+    taskCount,
+    activeTaskCount,
     auditCount,
     workflowCount,
     windowLabel,
@@ -136,6 +140,24 @@ export function getBacktestTerminalConfigs(options: {
           {formatPermissionReadOnly(locale, 'risk:review', '待复核回测队列', 'the review-queue backtests')}
         </div>
       ) : null,
+    },
+    tasks: {
+      title: locale === 'zh' ? '研究任务骨架' : 'Research Task Backbone',
+      copy: locale === 'zh'
+        ? '把 run、workflow 和任务状态压成统一研究对象，作为阶段 2 研究闭环的基础事实源。'
+        : 'Compress runs, workflows, and task state into one unified research object that can anchor the stage-2 research loop.',
+      badge: taskCount,
+      badgeClassName: 'panel-badge badge-info',
+      loading,
+      isEmpty: taskCount === 0,
+      emptyMessage: locale === 'zh' ? '当前还没有研究任务。' : 'No research tasks are available yet.',
+      footer: (
+        <div className="status-copy">
+          {locale === 'zh'
+            ? `当前活跃研究任务 ${activeTaskCount} 个。`
+            : `${activeTaskCount} active research tasks are currently in flight.`}
+        </div>
+      ),
     },
     activity: {
       title: locale === 'zh' ? '研究操作历史' : 'Research Activity Feed',

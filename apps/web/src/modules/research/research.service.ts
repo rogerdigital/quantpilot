@@ -2,28 +2,13 @@ import { assertOk, fetchJson, jsonHeaders } from '../../app/api/http.ts';
 import type {
   BacktestRunDetailSnapshot,
   BacktestRunCreateSnapshot,
-  BacktestRunItem,
-  BacktestSummarySnapshot,
   ResearchHubSnapshot,
   StrategyCatalogDetailSnapshot,
   StrategyCatalogSaveSnapshot,
-  StrategyCatalogItem,
 } from '@shared-types/trading.ts';
 
 export async function fetchResearchHub(): Promise<ResearchHubSnapshot> {
-  const [summary, strategyCatalog, backtestRuns] = await Promise.all([
-    fetchJson<BacktestSummarySnapshot>('/api/backtest/summary'),
-    fetchJson<{ ok: boolean; asOf: string; strategies: StrategyCatalogItem[] }>('/api/strategy/catalog'),
-    fetchJson<{ ok: boolean; asOf: string; runs: BacktestRunItem[] }>('/api/backtest/runs'),
-  ]);
-
-  return {
-    ok: true,
-    asOf: summary.asOf,
-    summary,
-    strategies: strategyCatalog.strategies,
-    runs: backtestRuns.runs,
-  };
+  return fetchJson<ResearchHubSnapshot>('/api/research/hub');
 }
 
 export async function queueBacktestRun(payload: {

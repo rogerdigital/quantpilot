@@ -60,13 +60,14 @@ test.after(() => {
 });
 
 test('GET /api/notification/events returns seeded notifications', async () => {
+  const now = Date.now();
   context.notifications.appendNotification({
     id: 'notif-api-test',
     title: 'API notification',
     message: 'seeded notification',
     source: 'test',
     level: 'info',
-    createdAt: '2026-03-16T10:00:00.000Z',
+    createdAt: new Date(now - 60 * 60 * 1000).toISOString(),
   });
   context.notifications.appendNotification({
     id: 'notif-api-warn',
@@ -74,7 +75,7 @@ test('GET /api/notification/events returns seeded notifications', async () => {
     message: 'warn notification',
     source: 'scheduler',
     level: 'warn',
-    createdAt: '2026-03-16T09:00:00.000Z',
+    createdAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
   });
 
   const response = await invokeGatewayRoute(handler, {
@@ -328,7 +329,49 @@ test('GET /api/backtest/runs/:id returns run detail with linked strategy and wor
   assert.equal(response.json.ok, true);
   assert.equal(response.json.run.id, created.json.run.id);
   assert.equal(response.json.strategy.id, 'ema-cross-us');
+  assert.equal(response.json.researchTask.runId, created.json.run.id);
+  assert.equal(response.json.researchTask.workflowRunId, created.json.workflow.id);
   assert.equal(response.json.workflow.id, created.json.workflow.id);
+});
+
+test('GET /api/research/tasks returns research backbone tasks and related summary routes', async () => {
+  const created = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/backtest/runs',
+    body: {
+      strategyId: 'ema-cross-us',
+      windowLabel: '2024-01-01 -> 2024-12-31',
+      requestedBy: 'api-research-test',
+    },
+  });
+
+  const tasksResponse = await invokeGatewayRoute(handler, {
+    path: `/api/research/tasks?strategyId=ema-cross-us&workflowRunId=${created.json.workflow.id}&limit=5`,
+  });
+  const summaryResponse = await invokeGatewayRoute(handler, {
+    path: '/api/research/tasks/summary?hours=168&limit=20',
+  });
+  const hubResponse = await invokeGatewayRoute(handler, {
+    path: '/api/research/hub?hours=168&limit=20',
+  });
+  const detailResponse = await invokeGatewayRoute(handler, {
+    path: `/api/research/tasks/${created.json.researchTask.id}`,
+  });
+
+  assert.equal(tasksResponse.statusCode, 200);
+  assert.equal(tasksResponse.json.tasks.length >= 1, true);
+  assert.equal(tasksResponse.json.tasks[0].id, created.json.researchTask.id);
+  assert.equal(summaryResponse.statusCode, 200);
+  assert.equal(summaryResponse.json.summary.total >= 1, true);
+  assert.equal(summaryResponse.json.summary.byType.some((item) => item.taskType === 'backtest-run'), true);
+  assert.equal(hubResponse.statusCode, 200);
+  assert.equal(hubResponse.json.taskSummary.total >= 1, true);
+  assert.equal(hubResponse.json.tasks.some((item) => item.id === created.json.researchTask.id), true);
+  assert.equal(detailResponse.statusCode, 200);
+  assert.equal(detailResponse.json.task.id, created.json.researchTask.id);
+  assert.equal(detailResponse.json.run.id, created.json.run.id);
+  assert.equal(detailResponse.json.workflow.id, created.json.workflow.id);
+  assert.equal(detailResponse.json.strategy.id, created.json.run.strategyId);
 });
 
 test('POST /api/backtest/runs queues a persisted research workflow run', async () => {
@@ -1813,6 +1856,7 @@ test('incident routes create, update, and return incident details', async () => 
 });
 
 test('POST then GET /api/audit/records persists audit entries', async () => {
+  const recentAuditAt = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
   const createResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
     path: '/api/audit/records',
@@ -1838,7 +1882,7 @@ test('POST then GET /api/audit/records persists audit entries', async () => {
     actor: 'worker-test',
     title: 'Workflow audit',
     detail: 'workflow audit test record',
-    createdAt: '2026-03-16T09:00:00.000Z',
+    createdAt: recentAuditAt,
   });
 
   const filteredResponse = await invokeGatewayRoute(handler, {

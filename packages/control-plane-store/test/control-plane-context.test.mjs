@@ -238,6 +238,61 @@ test('workflow repository releases due retry-scheduled runs back to queued', () 
   assert.equal(context.workflows.getWorkflowRun('workflow-retry-1').status, 'queued');
 });
 
+test('research task repository upserts tasks and filters them by workflow and strategy context', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const queued = context.researchTasks.appendResearchTask({
+    id: 'research-task-1',
+    taskType: 'backtest-run',
+    status: 'queued',
+    title: 'Backtest: Momentum',
+    strategyId: 'strategy-1',
+    strategyName: 'Momentum',
+    workflowRunId: 'workflow-1',
+    runId: 'run-1',
+    windowLabel: '2024-01-01 -> 2024-12-31',
+    requestedBy: 'researcher',
+    latestCheckpoint: 'queued for worker execution',
+    createdAt: '2026-03-18T08:00:00.000Z',
+    updatedAt: '2026-03-18T08:00:00.000Z',
+  });
+
+  const running = context.researchTasks.upsertResearchTask({
+    workflowRunId: 'workflow-1',
+    status: 'running',
+    latestCheckpoint: 'worker picked up the research task',
+    updatedAt: '2026-03-18T08:05:00.000Z',
+  });
+  context.researchTasks.appendResearchTask({
+    id: 'research-task-2',
+    taskType: 'backtest-run',
+    status: 'failed',
+    title: 'Backtest: Mean Revert',
+    strategyId: 'strategy-2',
+    strategyName: 'Mean Revert',
+    workflowRunId: 'workflow-2',
+    runId: 'run-2',
+    windowLabel: '2025-01-01 -> 2025-12-31',
+    requestedBy: 'researcher',
+    latestCheckpoint: 'backtest worker failed',
+    createdAt: '2026-03-17T08:00:00.000Z',
+    updatedAt: '2026-03-17T08:05:00.000Z',
+  });
+
+  const byWorkflow = context.researchTasks.findResearchTaskByWorkflowRunId('workflow-1');
+  const byRun = context.researchTasks.findResearchTaskByRunId('run-1');
+  const filtered = context.researchTasks.listResearchTasks(10, {
+    strategyId: 'strategy-1',
+    status: 'running',
+  });
+
+  assert.equal(queued.id, 'research-task-1');
+  assert.equal(running.id, 'research-task-1');
+  assert.equal(byWorkflow.status, 'running');
+  assert.equal(byRun.latestCheckpoint, 'worker picked up the research task');
+  assert.equal(filtered.length, 1);
+  assert.equal(filtered[0].strategyName, 'Momentum');
+});
+
 test('workflow repository claims queued runs for execution', () => {
   const context = createControlPlaneContext(createMemoryStore());
   context.workflows.appendWorkflowRun({
