@@ -15,6 +15,12 @@ export function getStrategyTimelineGuidance(locale: 'zh' | 'en', eventType?: str
       : 'Continue with the research runs panel below to verify backtest results, window parameters, and version snapshots.';
   }
 
+  if (eventType === 'result') {
+    return locale === 'zh'
+      ? '继续查看下方策略详情和结果摘要，确认最近结果版本是否已经满足晋级或执行准备条件。'
+      : 'Continue with the strategy detail and result summary panels below to confirm whether the latest result version is ready for promotion or execution prep.';
+  }
+
   return locale === 'zh'
     ? '继续查看下方审计轨迹和版本轨迹，确认这次策略写入带来的状态变化。'
     : 'Continue with the audit trail and version history panels below to confirm the state change from this registry update.';
@@ -27,6 +33,10 @@ export function getStrategyTimelineActionLabel(locale: 'zh' | 'en', eventType?: 
 
   if (eventType === 'execution') {
     return locale === 'zh' ? '打开执行详情' : 'Open Execution Detail';
+  }
+
+  if (eventType === 'result') {
+    return locale === 'zh' ? '打开回测详情' : 'Open Backtest Detail';
   }
 
   return null;

@@ -157,6 +157,7 @@ quantpilot/
 - `backtest runs` 已具备列表、入队、人工复核与单条详情读取能力，可关联 workflow 与策略目录追踪研究链路。
 - `research task backbone` 已开始落地：回测入队、worker 执行和人工复核现在会同步为统一的 `research tasks` 对象，研究中心可直接查看任务骨架、任务分布和策略维度的活跃压力。
 - `backtest result model` 已开始独立成型：回测完成和人工复核都会写入正式的 `backtest results` 版本对象，研究中心详情页不再只从 audit metadata 回放结果轨迹。
+- `research workspace integration` 已进入闭环阶段：策略页开始统一消费 `latest result / recent results / promotion readiness / execution candidate preview`，研究路径已可从 `strategy -> result -> execution prep` 串联查看。
 - `execution plans / runtime events / account snapshots / execution ledger` 已具备独立查询接口，执行面不再只存在于页面本地状态。
 - Overview 首页已开始消费后端 `monitoring status` 摘要，可直接观察 `broker / market / worker / workflow / queues` 运行态。
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
@@ -199,7 +200,7 @@ quantpilot/
 - 阶段 1 的收官定义、非目标和阶段 2 入口条件已单独整理到 [docs/architecture/stage-1-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-1-closeout.md)。
 
 - 阶段 1 现已完成账户与权限底座、incident / investigation 控制台、operations workbench、risk workbench 和研究/执行基础数据边界的第一轮产品化。
-- 阶段 2 已完成 `Research Task Backbone` 和 `Backtest Result Model` 两个起步大步，接下来会继续推进评估晋级和统一异步执行协议。
+- 阶段 2 已完成 `Research Task Backbone`、`Backtest Result Model` 和 `Research Workspace Integration` 三个起步大步，接下来会继续推进评估晋级和统一异步执行协议。
 
 ### 阶段 2：研究与策略闭环
 

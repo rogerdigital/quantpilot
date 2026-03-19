@@ -438,6 +438,24 @@ export type StrategyCatalogDetailSnapshot = {
   strategy?: StrategyCatalogItem;
   latestRun?: BacktestRunItem | null;
   recentRuns?: BacktestRunItem[];
+  latestResult?: BacktestResultRecord | null;
+  recentResults?: BacktestResultRecord[];
+  promotionReadiness?: {
+    level: 'ready' | 'review' | 'blocked';
+    headline: string;
+    recommendedAction: string;
+    reasons: string[];
+  } | null;
+  executionCandidatePreview?: {
+    mode: 'paper' | 'live';
+    capital: number;
+    orderCount: number;
+    riskStatus: 'approved' | 'review' | 'blocked';
+    approvalState: 'not_required' | 'required';
+    summary: string;
+    reasons: string[];
+    orders: StrategyExecutionOrder[];
+  } | null;
   error?: string;
   message?: string;
 };

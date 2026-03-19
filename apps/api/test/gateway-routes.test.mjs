@@ -266,6 +266,14 @@ test('GET /api/strategy/catalog/:id returns strategy detail with recent runs', a
   assert.equal(response.json.strategy.id, 'ema-cross-us');
   assert.equal(Array.isArray(response.json.recentRuns), true);
   assert.equal(response.json.recentRuns.every((item) => item.strategyId === 'ema-cross-us'), true);
+  assert.ok(response.json.latestResult);
+  assert.equal(Array.isArray(response.json.recentResults), true);
+  assert.equal(response.json.recentResults.every((item) => item.strategyId === 'ema-cross-us'), true);
+  assert.equal(typeof response.json.promotionReadiness?.level, 'string');
+  assert.equal(typeof response.json.promotionReadiness?.recommendedAction, 'string');
+  assert.equal(typeof response.json.executionCandidatePreview?.summary, 'string');
+  assert.equal(response.json.executionCandidatePreview?.strategyId, undefined);
+  assert.equal(Array.isArray(response.json.executionCandidatePreview?.orders), true);
 });
 
 test('GET /api/market/provider-status returns backend market provider status', async () => {

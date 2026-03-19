@@ -140,6 +140,7 @@ function StrategiesPage() {
           || data?.runs.filter((item) => item.strategyId === selectedStrategy.id).slice(0, 6)
           || []
         ).map((run) => `run-${run.id}`),
+        ...(strategyDetail?.recentResults?.slice(0, 6) || []).map((result) => `result-${result.id}`),
         ...executionEntries
           .filter((entry) => entry.plan.strategyId === selectedStrategy.id)
           .slice(0, 6)
@@ -159,6 +160,9 @@ function StrategiesPage() {
     selectedStrategyExecutionEntries,
     selectedStrategyTimelineItems,
     selectedTimelineItem,
+    latestResult,
+    promotionReadiness,
+    executionCandidatePreview,
   } = useStrategyDetailPanels({
     locale,
     selectedStrategy,
@@ -573,6 +577,15 @@ function StrategiesPage() {
                     return;
                   }
 
+                  if (selectedTimelineItem.eventType === 'result') {
+                    researchNavigation.openBacktestDetail(selectedTimelineItem.reference, {
+                      strategyId: selectedStrategy?.id || '',
+                      timelineId: selectedTimelineItem.id,
+                      source: 'strategies',
+                    });
+                    return;
+                  }
+
                   if (selectedTimelineItem.eventType === 'execution') {
                     researchNavigation.openExecutionDetail(selectedTimelineItem.reference, {
                       strategyId: selectedStrategy?.id || '',
@@ -596,6 +609,80 @@ function StrategiesPage() {
           {strategyDetailError ? <InspectionStatus>{locale === 'zh' ? `策略详情加载失败：${strategyDetailError}` : `Failed to load strategy detail: ${strategyDetailError}`}</InspectionStatus> : null}
           <InspectionStatus>{selectedStrategyDetailInspection.summary}</InspectionStatus>
         </ResearchDetailInspectionPanel>
+        <ResearchEventInspectionPanel
+          title={locale === 'zh' ? '最新研究结果' : 'Latest Research Result'}
+          copy={locale === 'zh'
+            ? '直接查看当前策略最近一个结果版本，把 run、result 和晋级上下文对到同一处。'
+            : 'Inspect the latest result version for the selected strategy so the run, result, and promotion context stay aligned.'}
+          badge={latestResult?.status || '--'}
+          badgeClassName="badge-info"
+          emptyMessage={!selectedStrategy
+            ? (locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.')
+            : !latestResult
+              ? (locale === 'zh' ? '当前策略还没有结果版本。' : 'No result versions are available for this strategy yet.')
+              : null}
+          metrics={[
+            { label: locale === 'zh' ? '版本' : 'Version', value: latestResult ? `v${latestResult.version}` : '--' },
+            { label: locale === 'zh' ? '阶段' : 'Stage', value: latestResult?.stage || '--' },
+            { label: locale === 'zh' ? '收益/回撤' : 'Return / Drawdown', value: latestResult ? `${latestResult.annualizedReturnPct.toFixed(1)}% / ${latestResult.maxDrawdownPct.toFixed(1)}%` : '--' },
+            { label: locale === 'zh' ? '超额收益' : 'Excess Return', value: latestResult ? `${latestResult.excessReturnPct.toFixed(1)}%` : '--' },
+          ]}
+          detail={latestResult?.summary}
+        >
+          {latestResult ? (
+            <ResearchActionBar>
+              <ResearchActionButton
+                label={locale === 'zh' ? '打开回测详情' : 'Open Backtest Detail'}
+                priority="primary"
+                onClick={() => researchNavigation.openBacktestDetail(latestResult.runId, {
+                  strategyId: selectedStrategy?.id || '',
+                  source: 'strategies',
+                })}
+              />
+            </ResearchActionBar>
+          ) : null}
+        </ResearchEventInspectionPanel>
+        <ResearchEventInspectionPanel
+          title={locale === 'zh' ? '晋级与执行准备' : 'Promotion And Execution Readiness'}
+          copy={locale === 'zh'
+            ? '把最近结果、当前策略阶段和执行候选预估整合到一个动作入口，减少在策略/回测/执行三页来回切换。'
+            : 'Combine the latest result, current lifecycle stage, and execution candidate preview into one action surface so less context is lost across strategy, backtest, and execution pages.'}
+          badge={promotionReadiness?.level || '--'}
+          badgeClassName="badge-warn"
+          emptyMessage={!selectedStrategy
+            ? (locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.')
+            : null}
+          metrics={[
+            { label: locale === 'zh' ? '准备度' : 'Readiness', value: promotionReadiness?.level || '--' },
+            { label: locale === 'zh' ? '推荐动作' : 'Recommended action', value: promotionReadiness?.recommendedAction || '--' },
+            { label: locale === 'zh' ? '候选订单数' : 'Candidate orders', value: executionCandidatePreview?.orderCount ?? '--' },
+            { label: locale === 'zh' ? '风险状态' : 'Risk', value: executionCandidatePreview?.riskStatus || '--' },
+          ]}
+          detail={promotionReadiness?.headline || executionCandidatePreview?.summary}
+          guidance={(promotionReadiness?.reasons || executionCandidatePreview?.reasons || []).join(' · ') || undefined}
+        >
+          {(selectedStrategy && executionCandidatePreview) ? (
+            <ResearchActionBar>
+              <ResearchActionButton
+                label={locale === 'zh' ? '查看回测详情' : 'Review Backtest'}
+                priority="primary"
+                onClick={() => researchNavigation.openBacktestDetail(strategyDetail?.latestRun?.id || latestResult?.runId || '', {
+                  strategyId: selectedStrategy.id,
+                  source: 'strategies',
+                })}
+              />
+              {selectedStrategyExecutionEntries[0] ? (
+                <ResearchActionButton
+                  label={locale === 'zh' ? '打开执行详情' : 'Open Execution Detail'}
+                  onClick={() => researchNavigation.openExecutionDetail(selectedStrategyExecutionEntries[0].plan.id, {
+                    strategyId: selectedStrategy.id,
+                    source: 'strategies',
+                  })}
+                />
+              ) : null}
+            </ResearchActionBar>
+          ) : null}
+        </ResearchEventInspectionPanel>
         <ResearchCollectionPanel {...strategyCollectionConfigs.runs}>
           {selectedStrategyRuns.map((run) => (
             <ResearchRunSummaryRow

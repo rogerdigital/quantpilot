@@ -67,6 +67,19 @@ export function useStrategyDetailPanels(options: {
         { label: 'Sharpe', value: run.status === 'completed' || run.status === 'needs_review' ? run.sharpe.toFixed(2) : '--' },
       ],
     })),
+    ...(strategyDetail?.recentResults || []).slice(0, 6).map((result) => ({
+      id: `result-${result.id}`,
+      eventType: 'result',
+      lane: locale === 'zh' ? '结果' : 'Result',
+      title: `v${result.version} · ${result.stage}`,
+      detail: result.summary,
+      at: result.generatedAt || result.updatedAt,
+      reference: result.runId,
+      metrics: [
+        { label: locale === 'zh' ? '状态' : 'Status', value: result.status },
+        { label: locale === 'zh' ? '超额收益' : 'Excess', value: `${result.excessReturnPct.toFixed(1)}%` },
+      ],
+    })),
     ...selectedStrategyExecutionEntries.map((entry) => ({
       id: `execution-${entry.plan.id}`,
       eventType: 'execution',
@@ -93,5 +106,8 @@ export function useStrategyDetailPanels(options: {
     selectedStrategyExecutionEntries,
     selectedStrategyTimelineItems,
     selectedTimelineItem,
+    latestResult: strategyDetail?.latestResult || null,
+    promotionReadiness: strategyDetail?.promotionReadiness || null,
+    executionCandidatePreview: strategyDetail?.executionCandidatePreview || null,
   };
 }

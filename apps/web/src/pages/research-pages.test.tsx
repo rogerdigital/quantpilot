@@ -276,6 +276,79 @@ describe('research workspace pages', () => {
             workflowRunId: 'wf-1',
           },
         ],
+        latestResult: {
+          id: 'result-1',
+          runId: 'run-1',
+          strategyId: 'strategy-1',
+          strategyName: 'Momentum',
+          version: 3,
+          stage: 'reviewed',
+          status: 'published',
+          annualizedReturnPct: 10.5,
+          maxDrawdownPct: 4.2,
+          sharpe: 1.7,
+          excessReturnPct: 3.1,
+          summary: 'Reviewed result is ready for promotion.',
+          generatedAt: '2026-03-13T11:02:00.000Z',
+          updatedAt: '2026-03-13T11:03:00.000Z',
+          metadata: {},
+        },
+        recentResults: [
+          {
+            id: 'result-1',
+            runId: 'run-1',
+            strategyId: 'strategy-1',
+            strategyName: 'Momentum',
+            version: 3,
+            stage: 'reviewed',
+            status: 'published',
+            annualizedReturnPct: 10.5,
+            maxDrawdownPct: 4.2,
+            sharpe: 1.7,
+            excessReturnPct: 3.1,
+            summary: 'Reviewed result is ready for promotion.',
+            generatedAt: '2026-03-13T11:02:00.000Z',
+            updatedAt: '2026-03-13T11:03:00.000Z',
+            metadata: {},
+          },
+        ],
+        promotionReadiness: {
+          level: 'ready',
+          headline: 'Research package is ready for execution prep.',
+          recommendedAction: 'prepare_execution',
+          reasons: ['Latest reviewed result is available.', 'Strategy is already in candidate stage.'],
+        },
+        executionCandidatePreview: {
+          mode: 'paper',
+          capital: 50000,
+          orderCount: 2,
+          riskStatus: 'approved',
+          approvalState: 'required',
+          summary: 'Candidate basket is ready for paper execution review.',
+          reasons: ['Risk assessment passed baseline checks.', 'Two candidate orders were generated.'],
+          orders: [
+            {
+              symbol: 'AAPL',
+              side: 'buy',
+              quantity: 12,
+              orderType: 'limit',
+              timeInForce: 'day',
+              broker: 'alpaca',
+              price: 180,
+              estimatedNotional: 2160,
+            },
+            {
+              symbol: 'MSFT',
+              side: 'buy',
+              quantity: 8,
+              orderType: 'limit',
+              timeInForce: 'day',
+              broker: 'alpaca',
+              price: 410,
+              estimatedNotional: 3280,
+            },
+          ],
+        },
       },
       loading: false,
       error: '',
@@ -294,6 +367,8 @@ describe('research workspace pages', () => {
     expect(html).toContain('Selected Timeline Event');
     expect(html).toContain('Open Backtest Detail');
     expect(html).toContain('Selected Strategy Research Runs');
+    expect(html).toContain('Latest Research Result');
+    expect(html).toContain('Promotion And Execution Readiness');
   });
 
   it('renders backtest page with deep-linked run, audit, and workflow step detail', () => {
