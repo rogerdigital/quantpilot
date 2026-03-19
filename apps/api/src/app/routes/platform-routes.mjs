@@ -9,6 +9,7 @@ import { getBacktestSummary } from '../../domains/backtest/services/summary-serv
 import { getBacktestResultDetail, getBacktestResultSummary, listBacktestResults } from '../../domains/backtest/services/results-service.mjs';
 import { createBacktestRun, getBacktestRunDetail, listBacktestRuns, reviewBacktestRun } from '../../domains/backtest/services/runs-service.mjs';
 import { getResearchHubSnapshot, getResearchTaskDetail, getResearchTaskSummary, listResearchTasks } from '../../domains/research/services/task-service.mjs';
+import { evaluateBacktestRun, getResearchEvaluationSummary, listResearchEvaluations, promoteStrategyFromEvaluation } from '../../domains/research/services/evaluation-service.mjs';
 import { getExecutionPlanDetail, getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { listPermissionDescriptors, writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
@@ -360,6 +361,28 @@ export async function handlePlatformRoutes(context) {
     return true;
   }
 
+  if (req.method === 'GET' && reqUrl.pathname === '/api/research/evaluations') {
+    writeJson(res, 200, listResearchEvaluations({
+      hours: reqUrl.searchParams.get('hours'),
+      limit: reqUrl.searchParams.get('limit'),
+      runId: reqUrl.searchParams.get('runId'),
+      resultId: reqUrl.searchParams.get('resultId'),
+      strategyId: reqUrl.searchParams.get('strategyId'),
+      verdict: reqUrl.searchParams.get('verdict'),
+    }));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/research/evaluations/summary') {
+    writeJson(res, 200, getResearchEvaluationSummary({
+      hours: reqUrl.searchParams.get('hours'),
+      limit: reqUrl.searchParams.get('limit'),
+      strategyId: reqUrl.searchParams.get('strategyId'),
+      verdict: reqUrl.searchParams.get('verdict'),
+    }));
+    return true;
+  }
+
   if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/research/tasks/')) {
     const taskId = reqUrl.pathname.split('/').at(-1);
     const result = getResearchTaskDetail(taskId);
@@ -390,6 +413,18 @@ export async function handlePlatformRoutes(context) {
     return true;
   }
 
+  if (req.method === 'POST' && reqUrl.pathname.endsWith('/evaluate') && reqUrl.pathname.startsWith('/api/backtest/runs/')) {
+    if (!hasPermission('risk:review')) {
+      writeForbidden('risk:review', 'evaluate research results for promotion');
+      return true;
+    }
+    const runId = reqUrl.pathname.split('/').at(-2);
+    const body = await readJsonBody(req);
+    const result = evaluateBacktestRun(runId, body);
+    writeJson(res, result.ok ? 200 : 404, result);
+    return true;
+  }
+
   if (req.method === 'POST' && reqUrl.pathname.endsWith('/review') && reqUrl.pathname.startsWith('/api/backtest/runs/')) {
     if (!hasPermission('risk:review')) {
       writeForbidden('risk:review', 'review backtest runs');
@@ -399,6 +434,18 @@ export async function handlePlatformRoutes(context) {
     const body = await readJsonBody(req);
     const result = reviewBacktestRun(runId, body);
     writeJson(res, result.ok ? 200 : 404, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname.endsWith('/promote') && reqUrl.pathname.startsWith('/api/strategy/catalog/')) {
+    if (!hasPermission('strategy:write')) {
+      writeForbidden('strategy:write', 'promote the strategy from a research evaluation');
+      return true;
+    }
+    const strategyId = reqUrl.pathname.split('/').at(-2);
+    const body = await readJsonBody(req);
+    const result = promoteStrategyFromEvaluation(strategyId, body);
+    writeJson(res, result.ok ? 200 : 409, result);
     return true;
   }
 

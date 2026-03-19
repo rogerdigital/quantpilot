@@ -308,6 +308,25 @@ export function createBacktestResultEntry(payload = {}) {
   };
 }
 
+export function createResearchEvaluationEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `research-evaluation-${randomUUID()}`,
+    runId: payload.runId || '',
+    resultId: payload.resultId || '',
+    strategyId: payload.strategyId || '',
+    strategyName: payload.strategyName || 'Unknown Strategy',
+    verdict: payload.verdict || 'rework',
+    scoreBand: payload.scoreBand || 'watch',
+    readiness: payload.readiness || 'hold',
+    recommendedAction: payload.recommendedAction || '',
+    summary: payload.summary || '',
+    actor: payload.actor || 'operator',
+    createdAt: now,
+    metadata: payload.metadata || {},
+  };
+}
+
 export function createUserAccountProfile(payload = {}) {
   const timezone = payload.timezone || 'Asia/Shanghai';
   const locale = payload.locale || 'zh-CN';

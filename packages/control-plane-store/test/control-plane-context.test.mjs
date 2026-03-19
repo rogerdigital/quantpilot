@@ -344,6 +344,45 @@ test('backtest result repository stores generated and reviewed result versions p
   assert.equal(history.length, 2);
 });
 
+test('research evaluation repository stores verdict history per run and strategy', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const first = context.researchEvaluations.appendResearchEvaluation({
+    id: 'research-eval-1',
+    runId: 'run-1',
+    resultId: 'result-1',
+    strategyId: 'strategy-1',
+    strategyName: 'Momentum',
+    verdict: 'promote',
+    scoreBand: 'strong',
+    readiness: 'paper',
+    recommendedAction: 'promote_to_paper',
+    summary: 'Ready for paper promotion.',
+    actor: 'research-lead',
+    createdAt: '2026-03-18T08:30:00.000Z',
+  });
+  const second = context.researchEvaluations.appendResearchEvaluation({
+    runId: 'run-1',
+    resultId: 'result-2',
+    strategyId: 'strategy-1',
+    strategyName: 'Momentum',
+    verdict: 'prepare_execution',
+    scoreBand: 'strong',
+    readiness: 'live',
+    recommendedAction: 'prepare_live_execution',
+    summary: 'Ready for live prep.',
+    actor: 'research-lead',
+    createdAt: '2026-03-18T09:00:00.000Z',
+  });
+
+  const history = context.researchEvaluations.listResearchEvaluations(10, { strategyId: 'strategy-1' });
+
+  assert.equal(first.id, 'research-eval-1');
+  assert.equal(second.verdict, 'prepare_execution');
+  assert.equal(history.length >= 2, true);
+  assert.equal(context.researchEvaluations.getLatestEvaluationForRun('run-1').verdict, 'prepare_execution');
+  assert.equal(context.researchEvaluations.getLatestEvaluationForStrategy('strategy-1').readiness, 'live');
+});
+
 test('workflow repository claims queued runs for execution', () => {
   const context = createControlPlaneContext(createMemoryStore());
   context.workflows.appendWorkflowRun({

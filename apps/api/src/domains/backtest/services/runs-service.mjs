@@ -94,6 +94,7 @@ export function getBacktestRunDetail(runId) {
   const strategy = run.strategyId ? getStrategyCatalogItem(run.strategyId) : null;
   const workflow = run.workflowRunId ? controlPlaneRuntime.getWorkflowRun(run.workflowRunId) : null;
   const results = controlPlaneRuntime.listBacktestResultsForRun(run.id, 20);
+  const evaluations = controlPlaneRuntime.listResearchEvaluations(20, { runId: run.id });
 
   return {
     ok: true,
@@ -103,6 +104,8 @@ export function getBacktestRunDetail(runId) {
     researchTask: controlPlaneRuntime.findResearchTaskByRunId(run.id) || null,
     latestResult: results[0] || null,
     results,
+    latestEvaluation: evaluations[0] || null,
+    evaluations,
   };
 }
 

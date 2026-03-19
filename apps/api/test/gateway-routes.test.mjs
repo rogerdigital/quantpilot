@@ -269,6 +269,7 @@ test('GET /api/strategy/catalog/:id returns strategy detail with recent runs', a
   assert.ok(response.json.latestResult);
   assert.equal(Array.isArray(response.json.recentResults), true);
   assert.equal(response.json.recentResults.every((item) => item.strategyId === 'ema-cross-us'), true);
+  assert.equal(typeof response.json.latestEvaluation?.verdict, 'string');
   assert.equal(typeof response.json.promotionReadiness?.level, 'string');
   assert.equal(typeof response.json.promotionReadiness?.recommendedAction, 'string');
   assert.equal(typeof response.json.executionCandidatePreview?.summary, 'string');
@@ -380,6 +381,88 @@ test('GET /api/research/tasks returns research backbone tasks and related summar
   assert.equal(detailResponse.json.run.id, created.json.run.id);
   assert.equal(detailResponse.json.workflow.id, created.json.workflow.id);
   assert.equal(detailResponse.json.strategy.id, created.json.run.strategyId);
+});
+
+test('POST /api/backtest/runs/:id/evaluate persists a research evaluation and exposes summary routes', async () => {
+  const created = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/backtest/runs',
+    body: {
+      strategyId: 'ema-cross-us',
+      windowLabel: '2024-01-01 -> 2024-12-31',
+      requestedBy: 'api-test',
+    },
+  });
+
+  await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/backtest/runs/${created.json.run.id}/review`,
+    body: {
+      reviewedBy: 'risk-operator',
+      summary: 'Reviewed and ready for evaluation.',
+    },
+  });
+
+  const evaluated = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/backtest/runs/${created.json.run.id}/evaluate`,
+    body: {
+      actor: 'research-lead',
+      summary: 'Research lead marked this result ready for promotion.',
+    },
+  });
+  const detail = await invokeGatewayRoute(handler, {
+    path: `/api/backtest/runs/${created.json.run.id}`,
+  });
+  const feed = await invokeGatewayRoute(handler, {
+    path: `/api/research/evaluations?runId=${created.json.run.id}`,
+  });
+  const summary = await invokeGatewayRoute(handler, {
+    path: '/api/research/evaluations/summary?strategyId=ema-cross-us',
+  });
+
+  assert.equal(evaluated.statusCode, 200);
+  assert.equal(evaluated.json.ok, true);
+  assert.equal(typeof evaluated.json.evaluation.id, 'string');
+  assert.equal(detail.json.latestEvaluation.id, evaluated.json.evaluation.id);
+  assert.equal(feed.json.evaluations.some((item) => item.id === evaluated.json.evaluation.id), true);
+  assert.equal(summary.json.summary.total >= 1, true);
+});
+
+test('POST /api/strategy/catalog/:id/promote uses the latest research evaluation as a guardrail', async () => {
+  const reviewed = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/backtest/runs/bt-ema-cross-20260310/review',
+    body: {
+      reviewedBy: 'risk-operator',
+      summary: 'Reviewed seed run for promotion guardrail.',
+    },
+  });
+
+  assert.equal(reviewed.statusCode, 200);
+
+  const evaluated = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/backtest/runs/bt-ema-cross-20260310/evaluate',
+    body: {
+      actor: 'research-lead',
+      summary: 'Seed strategy is ready for paper promotion.',
+    },
+  });
+  const promoted = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/strategy/catalog/ema-cross-us/promote',
+    body: {
+      actor: 'api-test',
+      nextStatus: 'paper',
+      evaluationId: evaluated.json.evaluation.id,
+    },
+  });
+
+  assert.equal(promoted.statusCode, 200);
+  assert.equal(promoted.json.ok, true);
+  assert.equal(promoted.json.strategy.status, 'paper');
+  assert.equal(promoted.json.evaluation.id, evaluated.json.evaluation.id);
 });
 
 test('GET /api/backtest/results exposes versioned backtest results and detail context', async () => {

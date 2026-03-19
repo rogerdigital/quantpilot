@@ -50,6 +50,7 @@ export function getBacktestDetailInspectionConfig(
       { label: locale === 'zh' ? '工作流' : 'Workflow', value: selectedWorkflow?.id || selectedRunSnapshot?.workflowRunId || '--' },
       { label: locale === 'zh' ? '策略阶段' : 'Strategy stage', value: runDetail?.strategy?.status || '--' },
       { label: locale === 'zh' ? '结果版本' : 'Result version', value: runDetail?.latestResult ? `v${runDetail.latestResult.version} / ${runDetail.latestResult.stage}` : '--' },
+      { label: locale === 'zh' ? '评估结论' : 'Evaluation verdict', value: runDetail?.latestEvaluation?.verdict || '--' },
       { label: locale === 'zh' ? '超额收益' : 'Excess return', value: runDetail?.latestResult ? formatPercent(runDetail.latestResult.excessReturnPct) : '--' },
     ],
     summary: selectedRunSnapshot?.summary || (locale === 'zh' ? '当前回测暂无摘要。' : 'No backtest summary is available yet.'),

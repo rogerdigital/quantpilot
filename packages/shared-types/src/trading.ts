@@ -440,6 +440,7 @@ export type StrategyCatalogDetailSnapshot = {
   recentRuns?: BacktestRunItem[];
   latestResult?: BacktestResultRecord | null;
   recentResults?: BacktestResultRecord[];
+  latestEvaluation?: ResearchEvaluationRecord | null;
   promotionReadiness?: {
     level: 'ready' | 'review' | 'blocked';
     headline: string;
@@ -569,6 +570,37 @@ export type BacktestResultSummarySnapshot = {
   latestGeneratedAt: string;
 };
 
+export type ResearchEvaluationRecord = {
+  id: string;
+  runId: string;
+  resultId: string;
+  strategyId: string;
+  strategyName: string;
+  verdict: 'promote' | 'prepare_execution' | 'rework' | 'blocked';
+  scoreBand: 'strong' | 'watch' | 'weak';
+  readiness: 'candidate' | 'paper' | 'live' | 'hold';
+  recommendedAction: string;
+  summary: string;
+  actor: string;
+  createdAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type ResearchEvaluationSummarySnapshot = {
+  total: number;
+  promote: number;
+  prepareExecution: number;
+  rework: number;
+  blocked: number;
+  latestCreatedAt: string;
+  byStrategy: Array<{
+    strategyId: string;
+    strategyName: string;
+    count: number;
+    latestVerdict: string;
+  }>;
+};
+
 export type BacktestSummarySnapshot = {
   ok: boolean;
   asOf: string;
@@ -592,6 +624,8 @@ export type BacktestRunDetailSnapshot = {
   researchTask?: ResearchTaskRecord | null;
   latestResult?: BacktestResultRecord | null;
   results?: BacktestResultRecord[];
+  latestEvaluation?: ResearchEvaluationRecord | null;
+  evaluations?: ResearchEvaluationRecord[];
   error?: string;
   message?: string;
 };
@@ -711,10 +745,12 @@ export type ResearchHubSnapshot = {
   summary: BacktestSummarySnapshot;
   taskSummary: ResearchTaskSummarySnapshot;
   resultSummary: BacktestResultSummarySnapshot;
+  evaluationSummary?: ResearchEvaluationSummarySnapshot;
   strategies: StrategyCatalogItem[];
   runs: BacktestRunItem[];
   tasks: ResearchTaskRecord[];
   results: BacktestResultRecord[];
+  evaluations?: ResearchEvaluationRecord[];
 };
 
 export type MarketProviderStatusSnapshot = {

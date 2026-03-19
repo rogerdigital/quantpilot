@@ -24,7 +24,7 @@ import { getStrategyTerminalConfigs } from '../../modules/research/researchTermi
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
-import { saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
+import { promoteStrategyCatalogItem, saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
 import { useStrategyDetailPanels } from '../../modules/research/useStrategyDetailPanels.ts';
 import { useStrategyDetail } from '../../modules/research/useStrategyDetail.ts';
 import { useResearchWorkspaceData } from '../../modules/research/useResearchWorkspaceData.ts';
@@ -285,10 +285,12 @@ function StrategiesPage() {
     setSaveMessage('');
     setSaveError('');
     try {
-      const result = await saveStrategyCatalogItem({
-        ...strategy,
-        status: nextStatus,
-        updatedBy: session?.user.id || 'operator',
+      const result = await promoteStrategyCatalogItem(strategy.id, {
+        actor: session?.user.id || 'operator',
+        nextStatus,
+        summary: locale === 'zh'
+          ? `操作员依据最新研究评估将策略晋级到 ${nextStatus}。`
+          : `Operator promoted the strategy to ${nextStatus} based on the latest research evaluation.`,
       });
       setSaveMessage(
         locale === 'zh'
@@ -655,6 +657,7 @@ function StrategiesPage() {
           metrics={[
             { label: locale === 'zh' ? '准备度' : 'Readiness', value: promotionReadiness?.level || '--' },
             { label: locale === 'zh' ? '推荐动作' : 'Recommended action', value: promotionReadiness?.recommendedAction || '--' },
+            { label: locale === 'zh' ? '最新评估' : 'Latest evaluation', value: strategyDetail?.latestEvaluation?.verdict || '--' },
             { label: locale === 'zh' ? '候选订单数' : 'Candidate orders', value: executionCandidatePreview?.orderCount ?? '--' },
             { label: locale === 'zh' ? '风险状态' : 'Risk', value: executionCandidatePreview?.riskStatus || '--' },
           ]}

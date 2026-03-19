@@ -312,6 +312,21 @@ describe('research workspace pages', () => {
             metadata: {},
           },
         ],
+        latestEvaluation: {
+          id: 'evaluation-1',
+          runId: 'run-1',
+          resultId: 'result-1',
+          strategyId: 'strategy-1',
+          strategyName: 'Momentum',
+          verdict: 'promote',
+          scoreBand: 'strong',
+          readiness: 'paper',
+          recommendedAction: 'promote_to_paper',
+          summary: 'The reviewed result is ready for paper promotion.',
+          actor: 'research-lead',
+          createdAt: '2026-03-13T11:04:00.000Z',
+          metadata: {},
+        },
         promotionReadiness: {
           level: 'ready',
           headline: 'Research package is ready for execution prep.',
@@ -545,6 +560,38 @@ describe('research workspace pages', () => {
           error: null,
           metadata: {},
         },
+        latestEvaluation: {
+          id: 'evaluation-1',
+          runId: 'run-1',
+          resultId: 'result-1',
+          strategyId: 'strategy-1',
+          strategyName: 'Momentum',
+          verdict: 'promote',
+          scoreBand: 'strong',
+          readiness: 'paper',
+          recommendedAction: 'promote_to_paper',
+          summary: 'The reviewed result is ready for paper promotion.',
+          actor: 'research-lead',
+          createdAt: '2026-03-13T11:06:00.000Z',
+          metadata: {},
+        },
+        evaluations: [
+          {
+            id: 'evaluation-1',
+            runId: 'run-1',
+            resultId: 'result-1',
+            strategyId: 'strategy-1',
+            strategyName: 'Momentum',
+            verdict: 'promote',
+            scoreBand: 'strong',
+            readiness: 'paper',
+            recommendedAction: 'promote_to_paper',
+            summary: 'The reviewed result is ready for paper promotion.',
+            actor: 'research-lead',
+            createdAt: '2026-03-13T11:06:00.000Z',
+            metadata: {},
+          },
+        ],
       },
       loading: false,
       error: '',
@@ -565,6 +612,8 @@ describe('research workspace pages', () => {
     expect(html).toContain('Review completed');
     expect(html).toContain('Selected Workflow Step');
     expect(html).toContain('risk_review');
+    expect(html).toContain('Evaluation And Promotion Guidance');
+    expect(html).toContain('Research Evaluations');
   });
 
   it('renders backtest page with strategy source context and execution handoff actions', () => {

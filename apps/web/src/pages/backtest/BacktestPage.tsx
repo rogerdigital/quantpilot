@@ -23,7 +23,7 @@ import { getBacktestTerminalConfigs } from '../../modules/research/researchTermi
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
-import { queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
+import { evaluateBacktestRunItem, queueBacktestRun, reviewBacktestRun } from '../../modules/research/research.service.ts';
 import { useBacktestRunDetail } from '../../modules/research/useBacktestRunDetail.ts';
 import { useBacktestDetailPanels } from '../../modules/research/useBacktestDetailPanels.ts';
 import { useResearchWorkspaceData } from '../../modules/research/useResearchWorkspaceData.ts';
@@ -63,6 +63,7 @@ function BacktestPage() {
   const researchNavigation = useResearchNavigationContext(searchParams, navigate);
   const [submittingStrategyId, setSubmittingStrategyId] = useState('');
   const [reviewingRunId, setReviewingRunId] = useState('');
+  const [evaluatingRunId, setEvaluatingRunId] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [actionError, setActionError] = useState('');
   const [runFilter, setRunFilter] = useState<'all' | 'queued' | 'running' | 'completed' | 'needs_review'>('all');
@@ -202,6 +203,8 @@ function BacktestPage() {
     selectedWorkflow,
     selectedAuditEvent,
     selectedWorkflowStep,
+    latestEvaluation,
+    evaluations,
   } = useBacktestDetailPanels({
     selectedRun,
     runDetail,
@@ -319,6 +322,38 @@ function BacktestPage() {
     }
   };
 
+  const handleEvaluateRun = async (runId: string) => {
+    setEvaluatingRunId(runId);
+    setActionMessage('');
+    setActionError('');
+    try {
+      const result = await evaluateBacktestRunItem(runId, {
+        actor: session?.user.id || 'research-operator',
+        summary: locale === 'zh'
+          ? '研究负责人已完成结果评估，并同步给后续晋级与执行准备流程。'
+          : 'Research lead completed the evaluation and synced it into promotion and execution preparation.',
+      });
+      setActionMessage(
+        locale === 'zh'
+          ? `已完成研究评估，当前结论：${result.evaluation.verdict}。`
+          : `Completed research evaluation with verdict ${result.evaluation.verdict}.`,
+      );
+      requestRefresh();
+    } catch (requestError) {
+      if (requestError instanceof ApiPermissionError) {
+        setActionError(formatPermissionError(locale, requestError, '评估操作失败', 'Evaluation action failed', '研究评估', 'Research evaluation'));
+      } else {
+        setActionError(
+          locale === 'zh'
+            ? `研究评估失败：${requestError instanceof Error ? requestError.message : 'unknown error'}`
+            : `Failed to evaluate research run: ${requestError instanceof Error ? requestError.message : 'unknown error'}`,
+        );
+      }
+    } finally {
+      setEvaluatingRunId('');
+    }
+  };
+
   return (
     <>
       <SectionHeader routeKey="backtest" />
@@ -403,6 +438,7 @@ function BacktestPage() {
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '平均 Sharpe' : 'Average Sharpe'}</div><div className="tile-value">{data?.summary.averageSharpe?.toFixed(2) ?? '--'}</div><div className="tile-sub">{locale === 'zh' ? '基于已完成回测' : 'Across completed runs'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '平均收益率' : 'Average Return'}</div><div className="tile-value">{data?.summary.averageReturnPct !== undefined ? fmtPct(data.summary.averageReturnPct) : '--'}</div><div className="tile-sub">{data?.summary.asOf ? fmtDateTime(data.summary.asOf, locale) : (locale === 'zh' ? '等待同步' : 'Pending sync')}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '平均超额收益' : 'Average Excess Return'}</div><div className="tile-value">{data?.resultSummary ? fmtPct(data.resultSummary.averageExcessReturnPct) : '--'}</div><div className="tile-sub">{locale === 'zh' ? '来自结果模型' : 'Derived from result versions'}</div></article>
+        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '研究评估结论' : 'Research Evaluations'}</div><div className="tile-value">{data?.evaluationSummary?.total ?? '--'}</div><div className="tile-sub">{locale === 'zh' ? '连接晋级与执行准备' : 'Bridges promotion and execution prep'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '研究任务失败' : 'Failed Research Tasks'}</div><div className="tile-value">{taskSummary.failed}</div><div className="tile-sub">{locale === 'zh' ? '阶段 2 统一失败面板入口' : 'The unified failure entrypoint for stage 2'}</div></article>
       </section>
 
@@ -600,6 +636,17 @@ function BacktestPage() {
               priority="primary"
               onClick={() => researchNavigation.openStrategyDetail(selectedRunSnapshot?.strategyId || selectedRun?.strategyId || '')}
             />
+            {selectedRunSnapshot ? (
+              <ResearchActionButton
+                label={evaluatingRunId === selectedRunSnapshot.id
+                  ? (locale === 'zh' ? '正在评估...' : 'Evaluating...')
+                  : (locale === 'zh' ? '评估晋级结论' : 'Evaluate Promotion')}
+                onClick={() => {
+                  if (!canReviewBacktest || evaluatingRunId === selectedRunSnapshot.id) return;
+                  void handleEvaluateRun(selectedRunSnapshot.id);
+                }}
+              />
+            ) : null}
             {sourcePage === 'strategies' && requestedStrategyId ? (
               <ResearchActionButton
                 label={locale === 'zh' ? '返回策略时间线' : 'Return to Strategy Timeline'}
@@ -621,6 +668,29 @@ function BacktestPage() {
           {runDetailError ? <InspectionStatus>{locale === 'zh' ? `回测详情加载失败：${runDetailError}` : `Failed to load backtest detail: ${runDetailError}`}</InspectionStatus> : null}
           <InspectionStatus>{selectedBacktestDetailInspection.summary}</InspectionStatus>
         </ResearchDetailInspectionPanel>
+        <ResearchEventInspectionPanel
+          title={locale === 'zh' ? '评估与晋级建议' : 'Evaluation And Promotion Guidance'}
+          copy={locale === 'zh'
+            ? '把回测结果评估结论沉淀成正式对象，再驱动策略晋级和执行准备。'
+            : 'Turn the reviewed backtest result into a formal evaluation object that can drive promotion and execution preparation.'}
+          badge={latestEvaluation?.verdict || '--'}
+          badgeClassName="badge-info"
+          emptyMessage={!selectedRun
+            ? (locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.')
+            : !latestEvaluation
+              ? (locale === 'zh' ? '当前 run 还没有评估结论，先发起评估。' : 'No evaluation exists for this run yet. Start an evaluation first.')
+              : null}
+          metrics={[
+            { label: locale === 'zh' ? '结论' : 'Verdict', value: latestEvaluation?.verdict || '--' },
+            { label: locale === 'zh' ? '准备度' : 'Readiness', value: latestEvaluation?.readiness || '--' },
+            { label: locale === 'zh' ? '评分带' : 'Score band', value: latestEvaluation?.scoreBand || '--' },
+            { label: locale === 'zh' ? '推荐动作' : 'Recommended action', value: latestEvaluation?.recommendedAction || '--' },
+          ]}
+          detail={latestEvaluation?.summary}
+          guidance={locale === 'zh'
+            ? '评估完成后，策略页会直接复用这条正式结论来决定是否允许晋级。'
+            : 'Once completed, the strategy workspace reuses this evaluation record to decide whether promotion is allowed.'}
+        />
         <ResearchCollectionPanel {...backtestCollectionConfigs.audit}>
           {selectedRunAuditItems.map((item) => (
             <ResearchAuditFeedRow
@@ -723,6 +793,30 @@ function BacktestPage() {
               />
             );
           })}
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
+          title={locale === 'zh' ? '研究评估记录' : 'Research Evaluations'}
+          copy={locale === 'zh'
+            ? '显示当前 run 已完成的评估记录，作为晋级和执行准备的正式依据。'
+            : 'Show the completed evaluation records for the selected run as the formal basis for promotion and execution prep.'}
+          badge={evaluations.length}
+          emptyMessage={!selectedRun
+            ? (locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.')
+            : null}
+        >
+          {evaluations.map((item) => (
+            <ResearchVersionSnapshotRow
+              key={item.id}
+              leadTitle={`${fmtDateTime(item.createdAt, locale)} · ${item.verdict}`}
+              leadCopy={item.summary}
+              metrics={[
+                { label: locale === 'zh' ? '准备度' : 'Readiness', value: item.readiness },
+                { label: locale === 'zh' ? '评分带' : 'Score band', value: item.scoreBand },
+                { label: locale === 'zh' ? '推荐动作' : 'Recommended action', value: item.recommendedAction },
+                { label: locale === 'zh' ? '评估人' : 'Actor', value: item.actor },
+              ]}
+            />
+          ))}
         </ResearchCollectionPanel>
       </section>
     </>

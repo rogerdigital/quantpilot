@@ -11,6 +11,7 @@ import { createMonitoringRepository } from './repositories/monitoring-repo.mjs';
 import { createNotificationRepository } from './repositories/notification-repo.mjs';
 import { createOperatorActionRepository } from './repositories/operator-action-repo.mjs';
 import { createResearchSummaryRepository } from './repositories/research-summary-repo.mjs';
+import { createResearchEvaluationRepository } from './repositories/research-evaluation-repo.mjs';
 import { createResearchTaskRepository } from './repositories/research-task-repo.mjs';
 import { createRiskRepository } from './repositories/risk-repo.mjs';
 import { createSchedulerRepository } from './repositories/scheduler-repo.mjs';
@@ -35,6 +36,7 @@ export function createControlPlaneContext(store = controlPlaneStore) {
     monitoring: createMonitoringRepository(store),
     notifications: createNotificationRepository(store),
     operatorActions: createOperatorActionRepository(store),
+    researchEvaluations: createResearchEvaluationRepository(store),
     researchSummary: createResearchSummaryRepository(store),
     researchTasks: createResearchTaskRepository(store),
     risk: createRiskRepository(store),
