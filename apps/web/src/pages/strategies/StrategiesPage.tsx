@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { readDeepLinkParams } from '../../modules/console/deepLinks.ts';
 import { useSyncedQuerySelection } from '../../modules/console/useSyncedQuerySelection.ts';
-import { formatPermissionError } from '../../modules/permissions/permissionCopy.ts';
+import { formatPermissionDisabled, formatPermissionError } from '../../modules/permissions/permissionCopy.ts';
 import { ResearchCollectionPanel } from '../../modules/research/ResearchCollectionPanel.tsx';
 import { ResearchActionBar, ResearchActionButton } from '../../modules/research/ResearchActionBar.tsx';
 import { ResearchAuditFeedRow } from '../../modules/research/ResearchAuditFeedRow.tsx';
@@ -24,7 +24,7 @@ import { getStrategyTerminalConfigs } from '../../modules/research/researchTermi
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
-import { promoteStrategyCatalogItem, saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
+import { promoteStrategyCatalogItem, runResearchGovernanceAction, saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
 import { useStrategyDetailPanels } from '../../modules/research/useStrategyDetailPanels.ts';
 import { useStrategyDetail } from '../../modules/research/useStrategyDetail.ts';
 import { useResearchWorkspaceData } from '../../modules/research/useResearchWorkspaceData.ts';
@@ -62,6 +62,9 @@ function StrategiesPage() {
   const [promotingId, setPromotingId] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
   const [saveError, setSaveError] = useState('');
+  const [governanceBusy, setGovernanceBusy] = useState('');
+  const [selectedGovernanceStrategyIds, setSelectedGovernanceStrategyIds] = useState<string[]>([]);
+  const [governanceWindowLabel, setGovernanceWindowLabel] = useState('2024-01-01 -> 2026-03-01');
   const [refreshKey, setRefreshKey] = useState(0);
   const [form, setForm] = useState({
     id: 'new-strategy',
@@ -93,6 +96,7 @@ function StrategiesPage() {
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
   const canWriteStrategy = hasPermission('strategy:write');
+  const canEvaluateResearch = hasPermission('risk:review');
   const promotedCount = data?.strategies.filter((item) => item.status === 'paper' || item.status === 'live').length || 0;
   const workbenchSummary = data?.workbench?.summary || {
     totalStrategies: 0,
@@ -108,6 +112,7 @@ function StrategiesPage() {
   const promotionQueue = data?.workbench?.promotionQueue || [];
   const comparisonRows = data?.workbench?.comparisons || [];
   const coverageRows = data?.workbench?.coverage || [];
+  const recentGovernanceActions = data?.workbench?.recentActions || [];
   const activeStrategies = data?.strategies.filter((item) => item.status !== 'archived') || [];
   const archivedStrategies = data?.strategies.filter((item) => item.status === 'archived') || [];
   const visibleActiveStrategies = registryFilter === 'archived' ? [] : activeStrategies;
@@ -365,6 +370,52 @@ function StrategiesPage() {
     }
   };
 
+  const selectedGovernanceEntries = promotionQueue.filter((item) => selectedGovernanceStrategyIds.includes(item.strategyId));
+  const selectedGovernanceRunIds = selectedGovernanceEntries.map((item) => item.latestRunId).filter(Boolean);
+
+  const toggleGovernanceSelection = (strategyId: string) => {
+    setSelectedGovernanceStrategyIds((current) => (
+      current.includes(strategyId)
+        ? current.filter((item) => item !== strategyId)
+        : [...current, strategyId]
+    ));
+  };
+
+  const handleGovernanceAction = async (action: 'promote_strategies' | 'queue_backtests' | 'evaluate_runs') => {
+    setGovernanceBusy(action);
+    setSaveMessage('');
+    setSaveError('');
+    try {
+      const result = await runResearchGovernanceAction({
+        action,
+        actor: session?.user.id || 'research-operator',
+        strategyIds: selectedGovernanceStrategyIds,
+        runIds: action === 'evaluate_runs' ? selectedGovernanceRunIds : [],
+        windowLabel: action === 'queue_backtests' ? governanceWindowLabel : '',
+      });
+      const successCount = result.successes.length;
+      const failureCount = result.failures.length;
+      setSaveMessage(
+        locale === 'zh'
+          ? `研究治理动作已完成：成功 ${successCount} 条，失败 ${failureCount} 条。`
+          : `Research governance action completed: ${successCount} succeeded, ${failureCount} failed.`,
+      );
+      requestRefresh();
+    } catch (requestError) {
+      if (requestError instanceof ApiPermissionError) {
+        setSaveError(formatPermissionError(locale, requestError, '研究治理动作失败', 'Research governance action failed', '研究治理', 'Research governance'));
+      } else {
+        setSaveError(
+          locale === 'zh'
+            ? `研究治理动作失败：${requestError instanceof Error ? requestError.message : 'unknown error'}`
+            : `Research governance action failed: ${requestError instanceof Error ? requestError.message : 'unknown error'}`,
+        );
+      }
+    } finally {
+      setGovernanceBusy('');
+    }
+  };
+
   return (
     <>
       <header className="topbar">
@@ -581,6 +632,10 @@ function StrategiesPage() {
                 <span>{item.strategyStatus} · {item.latestRunLabel || item.strategyId}</span>
               </div>
               <div className="focus-metric">
+                <span>{locale === 'zh' ? '选择' : 'Select'}</span>
+                <strong>{selectedGovernanceStrategyIds.includes(item.strategyId) ? (locale === 'zh' ? '已选' : 'Selected') : '--'}</strong>
+              </div>
+              <div className="focus-metric">
                 <span>{locale === 'zh' ? '评估' : 'Evaluation'}</span>
                 <strong>{item.evaluationVerdict}</strong>
               </div>
@@ -593,6 +648,15 @@ function StrategiesPage() {
                 <strong>{item.recommendedAction}</strong>
               </div>
               <div className="action-group">
+                <button
+                  type="button"
+                  className="inline-action"
+                  onClick={() => toggleGovernanceSelection(item.strategyId)}
+                >
+                  {selectedGovernanceStrategyIds.includes(item.strategyId)
+                    ? (locale === 'zh' ? '取消选择' : 'Deselect')
+                    : (locale === 'zh' ? '加入批量' : 'Select')}
+                </button>
                 <button
                   type="button"
                   className="inline-action"
@@ -616,6 +680,71 @@ function StrategiesPage() {
             </div>
           ))}
         </ResearchCollectionPanel>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '研究治理动作台' : 'Research Governance Actions'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '从治理队列中批量推进策略晋级、补跑回测或补做评估，并把动作沉淀到 operator action 历史。'
+                  : 'Batch promote strategies, refresh backtests, or evaluate runs directly from the governance queue and persist every action into the operator-action trail.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-warn">{selectedGovernanceStrategyIds.length}</div>
+          </div>
+          <div className="settings-form-grid">
+            <label className="settings-field settings-field-wide">
+              <span>{locale === 'zh' ? '回测窗口' : 'Backtest Window'}</span>
+              <input
+                value={governanceWindowLabel}
+                onChange={(event) => setGovernanceWindowLabel(event.target.value)}
+                placeholder="2024-01-01 -> 2026-03-01"
+                disabled={Boolean(governanceBusy)}
+              />
+            </label>
+          </div>
+          <div className="settings-actions">
+            <button
+              type="button"
+              className="settings-button"
+              disabled={!canWriteStrategy || !selectedGovernanceStrategyIds.length || Boolean(governanceBusy)}
+              onClick={() => void handleGovernanceAction('promote_strategies')}
+            >
+              {governanceBusy === 'promote_strategies'
+                ? (locale === 'zh' ? '晋级中...' : 'Promoting...')
+                : (locale === 'zh' ? '批量推进策略晋级' : 'Promote Selected Strategies')}
+            </button>
+            <button
+              type="button"
+              className="settings-button settings-button-secondary"
+              disabled={!canWriteStrategy || !selectedGovernanceStrategyIds.length || Boolean(governanceBusy)}
+              onClick={() => void handleGovernanceAction('queue_backtests')}
+            >
+              {governanceBusy === 'queue_backtests'
+                ? (locale === 'zh' ? '排队中...' : 'Queueing...')
+                : (locale === 'zh' ? '批量补跑回测' : 'Queue Refresh Backtests')}
+            </button>
+            <button
+              type="button"
+              className="settings-button settings-button-secondary"
+              disabled={!canEvaluateResearch || !selectedGovernanceRunIds.length || Boolean(governanceBusy)}
+              onClick={() => void handleGovernanceAction('evaluate_runs')}
+            >
+              {governanceBusy === 'evaluate_runs'
+                ? (locale === 'zh' ? '评估中...' : 'Evaluating...')
+                : (locale === 'zh' ? '批量补做评估' : 'Evaluate Selected Runs')}
+            </button>
+          </div>
+          <div className="status-copy">
+            {saveMessage || saveError || (
+              locale === 'zh'
+                ? `当前已选 ${selectedGovernanceStrategyIds.length} 条策略，关联 ${selectedGovernanceRunIds.length} 条 run。`
+                : `${selectedGovernanceStrategyIds.length} strategies and ${selectedGovernanceRunIds.length} runs are currently selected.`
+            )}
+          </div>
+          {!canWriteStrategy ? <div className="status-copy">{formatPermissionDisabled(locale, 'strategy:write', '批量推进研究治理动作', 'run bulk research governance actions')}</div> : null}
+          {!canEvaluateResearch ? <div className="status-copy">{formatPermissionDisabled(locale, 'risk:review', '批量补做研究评估', 'evaluate selected research runs')}</div> : null}
+        </article>
         <ResearchCollectionPanel
           title={locale === 'zh' ? '策略横向对比' : 'Strategy Comparison Board'}
           copy={locale === 'zh'
@@ -636,6 +765,29 @@ function StrategiesPage() {
                 { label: 'Sharpe', value: item.sharpe !== null ? item.sharpe.toFixed(2) : '--' },
                 { label: locale === 'zh' ? '超额收益' : 'Excess', value: item.excessReturnPct !== null ? `${item.excessReturnPct.toFixed(1)}%` : '--' },
                 { label: locale === 'zh' ? '评估/报告' : 'Evaluation / Report', value: `${item.evaluationVerdict} / ${item.reportVerdict}` },
+              ]}
+            />
+          ))}
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
+          title={locale === 'zh' ? '最近治理动作' : 'Recent Governance Actions'}
+          copy={locale === 'zh'
+            ? '展示最近的研究治理批量动作，便于追踪谁在什么时候推进了哪些策略。'
+            : 'Review the latest governance actions so it is clear who advanced which strategies and when.'}
+          badge={recentGovernanceActions.length}
+          terminal
+          isEmpty={recentGovernanceActions.length === 0}
+          emptyMessage={locale === 'zh' ? '当前还没有治理动作历史。' : 'No governance actions have been recorded yet.'}
+        >
+          {recentGovernanceActions.map((item) => (
+            <ResearchVersionSnapshotRow
+              key={item.id}
+              leadTitle={`${item.title} · ${item.actor}`}
+              leadCopy={item.detail}
+              metrics={[
+                { label: locale === 'zh' ? '级别' : 'Level', value: item.level },
+                { label: locale === 'zh' ? '时间' : 'Created', value: formatDateTime(item.createdAt, locale) },
+                { label: locale === 'zh' ? '成功/失败' : 'Success / Failure', value: `${String(item.metadata?.successCount ?? '--')} / ${String(item.metadata?.failuresCount ?? '--')}` },
               ]}
             />
           ))}

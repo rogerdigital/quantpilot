@@ -220,6 +220,28 @@ describe('research workspace pages', () => {
           ],
           comparisons: [],
           coverage: [],
+          actionSummary: {
+            total: 1,
+            promote: 1,
+            refreshBacktests: 0,
+            evaluate: 0,
+            latestCreatedAt: '2026-03-13T11:20:00.000Z',
+          },
+          recentActions: [
+            {
+              id: 'governance-1',
+              type: 'research-governance.promote-strategies',
+              title: 'Research governance: promote-strategies',
+              detail: 'Promoted 1 strategies from the governance workbench.',
+              actor: 'operator-1',
+              level: 'info',
+              createdAt: '2026-03-13T11:20:00.000Z',
+              metadata: {
+                successCount: 1,
+                failuresCount: 0,
+              },
+            },
+          ],
         },
       },
       loading: false,
@@ -427,6 +449,8 @@ describe('research workspace pages', () => {
     expect(html).toContain('Promotion And Execution Readiness');
     expect(html).toContain('Research Governance Overview');
     expect(html).toContain('Strategy Promotion Queue');
+    expect(html).toContain('Research Governance Actions');
+    expect(html).toContain('Recent Governance Actions');
   });
 
   it('renders backtest page with deep-linked run, audit, and workflow step detail', () => {
@@ -518,6 +542,14 @@ describe('research workspace pages', () => {
           ],
           comparisons: [],
           coverage: [],
+          actionSummary: {
+            total: 1,
+            promote: 1,
+            refreshBacktests: 0,
+            evaluate: 0,
+            latestCreatedAt: '2026-03-13T11:20:00.000Z',
+          },
+          recentActions: [],
         },
       },
       loading: false,

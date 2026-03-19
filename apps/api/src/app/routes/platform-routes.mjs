@@ -11,7 +11,7 @@ import { createBacktestRun, getBacktestRunDetail, listBacktestRuns, reviewBackte
 import { getResearchHubSnapshot, getResearchTaskDetail, getResearchTaskSummary, listResearchTasks } from '../../domains/research/services/task-service.mjs';
 import { evaluateBacktestRun, getResearchEvaluationSummary, listResearchEvaluations, promoteStrategyFromEvaluation } from '../../domains/research/services/evaluation-service.mjs';
 import { getResearchReportSummary, listResearchReports } from '../../domains/research/services/report-service.mjs';
-import { getResearchWorkbenchSnapshot } from '../../domains/research/services/workbench-service.mjs';
+import { getResearchWorkbenchSnapshot, listResearchGovernanceActions, runResearchGovernanceAction } from '../../domains/research/services/workbench-service.mjs';
 import { getExecutionPlanDetail, getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { listPermissionDescriptors, writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
@@ -348,6 +348,14 @@ export async function handlePlatformRoutes(context) {
     return true;
   }
 
+  if (req.method === 'GET' && reqUrl.pathname === '/api/research/governance/actions') {
+    writeJson(res, 200, listResearchGovernanceActions({
+      hours: reqUrl.searchParams.get('hours'),
+      limit: reqUrl.searchParams.get('limit'),
+    }));
+    return true;
+  }
+
   if (req.method === 'GET' && reqUrl.pathname === '/api/research/tasks') {
     writeJson(res, 200, listResearchTasks({
       hours: reqUrl.searchParams.get('hours'),
@@ -443,6 +451,23 @@ export async function handlePlatformRoutes(context) {
     }
     const body = await readJsonBody(req);
     const result = createBacktestRun(body);
+    writeJson(res, result.ok ? 200 : 400, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/research/governance/actions') {
+    const body = await readJsonBody(req);
+    if (body.action === 'promote_strategies' || body.action === 'queue_backtests') {
+      if (!hasPermission('strategy:write')) {
+        writeForbidden('strategy:write', 'run research governance strategy actions');
+        return true;
+      }
+    }
+    if (body.action === 'evaluate_runs' && !hasPermission('risk:review')) {
+      writeForbidden('risk:review', 'run research governance evaluation actions');
+      return true;
+    }
+    const result = runResearchGovernanceAction(body);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }

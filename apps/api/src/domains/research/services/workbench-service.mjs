@@ -1,5 +1,7 @@
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
 import { listStrategyCatalog } from '../../strategy/services/catalog-service.mjs';
+import { createBacktestRun } from '../../backtest/services/runs-service.mjs';
+import { evaluateBacktestRun, promoteStrategyFromEvaluation } from './evaluation-service.mjs';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);
@@ -61,6 +63,160 @@ function buildLaneHeadline(key, count) {
   if (key === 'await-report') return `${count} strategies are waiting for report asset generation.`;
   if (key === 'await-evaluation') return `${count} strategies still need a fresh evaluation.`;
   return `${count} strategies remain blocked or in research rework.`;
+}
+
+export function listResearchGovernanceActions(options = {}) {
+  const limit = parseLimit(options.limit, 30);
+  const since = resolveSince(options.hours);
+  const actions = controlPlaneRuntime.listOperatorActions(limit * 3, { since })
+    .filter((item) => item.type?.startsWith('research-governance.'))
+    .slice(0, limit);
+
+  return {
+    ok: true,
+    asOf: actions[0]?.createdAt || new Date().toISOString(),
+    actions,
+  };
+}
+
+export function getResearchGovernanceActionSummary(options = {}) {
+  const actions = listResearchGovernanceActions({
+    hours: options.hours,
+    limit: parseLimit(options.limit, 60),
+  }).actions;
+
+  const summary = {
+    total: actions.length,
+    promote: 0,
+    refreshBacktests: 0,
+    evaluate: 0,
+    latestCreatedAt: actions[0]?.createdAt || '',
+  };
+
+  actions.forEach((item) => {
+    if (item.type === 'research-governance.promote-strategies') summary.promote += 1;
+    if (item.type === 'research-governance.queue-backtests') summary.refreshBacktests += 1;
+    if (item.type === 'research-governance.evaluate-runs') summary.evaluate += 1;
+  });
+
+  return {
+    ok: true,
+    asOf: summary.latestCreatedAt || new Date().toISOString(),
+    summary,
+  };
+}
+
+function recordGovernanceAction(type, actor, detail, metadata = {}) {
+  return controlPlaneRuntime.recordOperatorAction({
+    type: `research-governance.${type}`,
+    actor,
+    title: `Research governance: ${type}`,
+    detail,
+    symbol: metadata.primaryId || '',
+    level: metadata.failures > 0 ? 'warn' : 'info',
+    metadata,
+  });
+}
+
+export function runResearchGovernanceAction(payload = {}) {
+  const action = payload.action || '';
+  const actor = payload.actor || 'research-operator';
+  const strategyIds = Array.isArray(payload.strategyIds) ? payload.strategyIds.filter(Boolean) : [];
+  const runIds = Array.isArray(payload.runIds) ? payload.runIds.filter(Boolean) : [];
+
+  if (!action) {
+    return {
+      ok: false,
+      error: 'missing action',
+      message: 'A governance action is required.',
+    };
+  }
+
+  const successes = [];
+  const failures = [];
+
+  if (action === 'promote_strategies') {
+    strategyIds.forEach((strategyId) => {
+      const result = promoteStrategyFromEvaluation(strategyId, {
+        actor,
+        summary: payload.summary || `Governance workbench promoted ${strategyId}.`,
+      });
+      if (result.ok) successes.push({ strategyId, status: result.strategy?.status || '' });
+      else failures.push({ strategyId, error: result.message || result.error || 'unknown error' });
+    });
+    const actionRecord = recordGovernanceAction(
+      'promote-strategies',
+      actor,
+      `Promoted ${successes.length} strategies from the governance workbench.`,
+      {
+        primaryId: strategyIds[0] || '',
+        action,
+        successes,
+        failures,
+        successCount: successes.length,
+        failuresCount: failures.length,
+      },
+    );
+    return { ok: true, action: actionRecord, successes, failures };
+  }
+
+  if (action === 'queue_backtests') {
+    strategyIds.forEach((strategyId) => {
+      const result = createBacktestRun({
+        strategyId,
+        windowLabel: payload.windowLabel || '',
+        requestedBy: actor,
+      });
+      if (result.ok) successes.push({ strategyId, runId: result.run?.id || '', workflowRunId: result.workflow?.id || '' });
+      else failures.push({ strategyId, error: result.message || result.error || 'unknown error' });
+    });
+    const actionRecord = recordGovernanceAction(
+      'queue-backtests',
+      actor,
+      `Queued ${successes.length} backtests from the governance workbench.`,
+      {
+        primaryId: strategyIds[0] || '',
+        action,
+        windowLabel: payload.windowLabel || '',
+        successes,
+        failures,
+        successCount: successes.length,
+        failuresCount: failures.length,
+      },
+    );
+    return { ok: true, action: actionRecord, successes, failures };
+  }
+
+  if (action === 'evaluate_runs') {
+    runIds.forEach((runId) => {
+      const result = evaluateBacktestRun(runId, {
+        actor,
+        summary: payload.summary || `Governance workbench evaluated ${runId}.`,
+      });
+      if (result.ok) successes.push({ runId, strategyId: result.run?.strategyId || '', verdict: result.evaluation?.verdict || '' });
+      else failures.push({ runId, error: result.message || result.error || 'unknown error' });
+    });
+    const actionRecord = recordGovernanceAction(
+      'evaluate-runs',
+      actor,
+      `Evaluated ${successes.length} research runs from the governance workbench.`,
+      {
+        primaryId: runIds[0] || '',
+        action,
+        successes,
+        failures,
+        successCount: successes.length,
+        failuresCount: failures.length,
+      },
+    );
+    return { ok: true, action: actionRecord, successes, failures };
+  }
+
+  return {
+    ok: false,
+    error: 'unsupported action',
+    message: `Unsupported governance action: ${action}`,
+  };
 }
 
 export function getResearchWorkbenchSnapshot(options = {}) {
@@ -208,12 +364,16 @@ export function getResearchWorkbenchSnapshot(options = {}) {
     headline: buildLaneHeadline(lane.key, laneBuckets.get(lane.key).length),
     strategyIds: laneBuckets.get(lane.key),
   }));
+  const recentActions = listResearchGovernanceActions(options).actions;
+  const actionSummary = getResearchGovernanceActionSummary(options).summary;
 
   return {
     ok: true,
     asOf: queue[0]?.updatedAt || new Date().toISOString(),
     summary,
     lanes,
+    actionSummary,
+    recentActions,
     promotionQueue: queue
       .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime())
       .slice(0, limit),

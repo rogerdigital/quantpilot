@@ -698,6 +698,17 @@ export type ResearchWorkbenchCoverageEntry = {
   updatedAt: string;
 };
 
+export type ResearchGovernanceActionRecord = {
+  id: string;
+  type: string;
+  title: string;
+  detail: string;
+  actor: string;
+  level: string;
+  createdAt: string;
+  metadata: Record<string, unknown>;
+};
+
 export type ResearchWorkbenchSnapshot = {
   ok: boolean;
   asOf: string;
@@ -713,6 +724,14 @@ export type ResearchWorkbenchSnapshot = {
     staleStrategies: number;
   };
   lanes: ResearchWorkbenchLaneSnapshot[];
+  actionSummary: {
+    total: number;
+    promote: number;
+    refreshBacktests: number;
+    evaluate: number;
+    latestCreatedAt: string;
+  };
+  recentActions: ResearchGovernanceActionRecord[];
   promotionQueue: ResearchWorkbenchQueueEntry[];
   comparisons: ResearchWorkbenchComparisonEntry[];
   coverage: ResearchWorkbenchCoverageEntry[];

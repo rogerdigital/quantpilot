@@ -437,6 +437,58 @@ test('POST /api/backtest/runs/:id/evaluate persists a research evaluation and ex
   assert.equal(summary.json.summary.total >= 1, true);
 });
 
+test('POST /api/research/governance/actions runs batch governance actions and exposes them through the workbench', async () => {
+  const created = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/backtest/runs',
+    body: {
+      strategyId: 'ema-cross-us',
+      windowLabel: '2024-01-01 -> 2024-12-31',
+      requestedBy: 'governance-test',
+    },
+  });
+
+  await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/backtest/runs/${created.json.run.id}/review`,
+    body: {
+      reviewedBy: 'risk-operator',
+      summary: 'Reviewed for governance evaluation.',
+    },
+  });
+
+  const evaluateResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/research/governance/actions',
+    body: {
+      action: 'evaluate_runs',
+      actor: 'research-governance',
+      runIds: [created.json.run.id],
+    },
+  });
+  const refreshResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/research/governance/actions',
+    body: {
+      action: 'queue_backtests',
+      actor: 'research-governance',
+      strategyIds: ['ema-cross-us'],
+      windowLabel: '2025-01-01 -> 2026-03-01',
+    },
+  });
+  const workbenchResponse = await invokeGatewayRoute(handler, {
+    path: '/api/research/workbench?hours=168&limit=20',
+  });
+
+  assert.equal(evaluateResponse.statusCode, 200);
+  assert.equal(evaluateResponse.json.successes.length >= 1, true);
+  assert.equal(refreshResponse.statusCode, 200);
+  assert.equal(refreshResponse.json.successes.length >= 1, true);
+  assert.equal(workbenchResponse.statusCode, 200);
+  assert.equal(workbenchResponse.json.recentActions.length >= 2, true);
+  assert.equal(workbenchResponse.json.actionSummary.total >= 2, true);
+});
+
 test('GET /api/research/reports and summary return report assets generated for research operations', async () => {
   const response = await invokeGatewayRoute(handler, {
     path: '/api/research/reports?strategyId=ema-cross-us&limit=10',
