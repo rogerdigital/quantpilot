@@ -423,6 +423,10 @@ export type StrategyCatalogItem = {
   maxDrawdownPct: number;
   sharpe: number;
   summary: string;
+  baseline?: boolean;
+  champion?: boolean;
+  baselineUpdatedAt?: string;
+  championUpdatedAt?: string;
   updatedAt?: string;
   dataSource?: string;
 };
@@ -672,6 +676,8 @@ export type ResearchWorkbenchComparisonEntry = {
   strategyId: string;
   strategyName: string;
   strategyStatus: string;
+  baseline: boolean;
+  champion: boolean;
   latestRunId: string;
   latestRunLabel: string;
   resultVersion: number | null;
@@ -692,6 +698,8 @@ export type ResearchWorkbenchCoverageEntry = {
   strategyId: string;
   strategyName: string;
   strategyStatus: string;
+  baseline: boolean;
+  champion: boolean;
   coverage: 'full' | 'report_pending' | 'evaluation_pending' | 'result_pending';
   note: string;
   latestRunId: string;
@@ -722,6 +730,8 @@ export type ResearchWorkbenchSnapshot = {
     needsEvaluation: number;
     blocked: number;
     staleStrategies: number;
+    baselines: number;
+    champions: number;
   };
   lanes: ResearchWorkbenchLaneSnapshot[];
   actionSummary: {

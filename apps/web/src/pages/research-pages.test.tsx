@@ -193,6 +193,8 @@ describe('research workspace pages', () => {
             needsEvaluation: 0,
             blocked: 0,
             staleStrategies: 0,
+            baselines: 1,
+            champions: 1,
           },
           lanes: [],
           promotionQueue: [
@@ -200,6 +202,8 @@ describe('research workspace pages', () => {
               strategyId: 'strategy-1',
               strategyName: 'Momentum',
               strategyStatus: 'candidate',
+              baseline: true,
+              champion: true,
               latestRunId: 'run-1',
               latestRunLabel: '30D',
               latestResultId: 'result-1',
@@ -451,6 +455,8 @@ describe('research workspace pages', () => {
     expect(html).toContain('Strategy Promotion Queue');
     expect(html).toContain('Research Governance Actions');
     expect(html).toContain('Recent Governance Actions');
+    expect(html).toContain('Set Baseline');
+    expect(html).toContain('Set Champion');
   });
 
   it('renders backtest page with deep-linked run, audit, and workflow step detail', () => {
@@ -507,6 +513,8 @@ describe('research workspace pages', () => {
             needsEvaluation: 0,
             blocked: 0,
             staleStrategies: 0,
+            baselines: 1,
+            champions: 1,
           },
           lanes: [
             {
@@ -522,6 +530,8 @@ describe('research workspace pages', () => {
               strategyId: 'strategy-1',
               strategyName: 'Momentum',
               strategyStatus: 'candidate',
+              baseline: true,
+              champion: true,
               latestRunId: 'run-1',
               latestRunLabel: '30D',
               latestResultId: 'result-1',

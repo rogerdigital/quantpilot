@@ -108,6 +108,8 @@ function StrategiesPage() {
     needsEvaluation: 0,
     blocked: 0,
     staleStrategies: 0,
+    baselines: 0,
+    champions: 0,
   };
   const promotionQueue = data?.workbench?.promotionQueue || [];
   const comparisonRows = data?.workbench?.comparisons || [];
@@ -381,7 +383,7 @@ function StrategiesPage() {
     ));
   };
 
-  const handleGovernanceAction = async (action: 'promote_strategies' | 'queue_backtests' | 'evaluate_runs') => {
+  const handleGovernanceAction = async (action: 'promote_strategies' | 'queue_backtests' | 'evaluate_runs' | 'set_baseline' | 'set_champion') => {
     setGovernanceBusy(action);
     setSaveMessage('');
     setSaveError('');
@@ -613,6 +615,8 @@ function StrategiesPage() {
             <div className="status-row"><span>{locale === 'zh' ? '待报告' : 'Awaiting Reports'}</span><strong>{workbenchSummary.waitingForReport}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '阻塞/返工' : 'Blocked / Rework'}</span><strong>{workbenchSummary.blocked}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '陈旧策略' : 'Stale Strategies'}</span><strong>{workbenchSummary.staleStrategies}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '基线策略' : 'Baselines'}</span><strong>{workbenchSummary.baselines}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '冠军策略' : 'Champions'}</span><strong>{workbenchSummary.champions}</strong></div>
           </div>
         </article>
         <ResearchCollectionPanel
@@ -734,6 +738,26 @@ function StrategiesPage() {
                 ? (locale === 'zh' ? '评估中...' : 'Evaluating...')
                 : (locale === 'zh' ? '批量补做评估' : 'Evaluate Selected Runs')}
             </button>
+            <button
+              type="button"
+              className="settings-button settings-button-secondary"
+              disabled={!canWriteStrategy || selectedGovernanceStrategyIds.length !== 1 || Boolean(governanceBusy)}
+              onClick={() => void handleGovernanceAction('set_baseline')}
+            >
+              {governanceBusy === 'set_baseline'
+                ? (locale === 'zh' ? '设置中...' : 'Setting...')
+                : (locale === 'zh' ? '设为基线' : 'Set Baseline')}
+            </button>
+            <button
+              type="button"
+              className="settings-button settings-button-secondary"
+              disabled={!canWriteStrategy || selectedGovernanceStrategyIds.length !== 1 || Boolean(governanceBusy)}
+              onClick={() => void handleGovernanceAction('set_champion')}
+            >
+              {governanceBusy === 'set_champion'
+                ? (locale === 'zh' ? '设置中...' : 'Setting...')
+                : (locale === 'zh' ? '设为冠军' : 'Set Champion')}
+            </button>
           </div>
           <div className="status-copy">
             {saveMessage || saveError || (
@@ -761,6 +785,7 @@ function StrategiesPage() {
               leadTitle={`${item.strategyName} · ${item.strategyStatus}`}
               leadCopy={`${item.recommendedAction} · ${item.latestRunLabel || item.latestRunId || '--'}`}
               metrics={[
+                { label: locale === 'zh' ? '基线/冠军' : 'Baseline / Champion', value: `${item.baseline ? 'baseline' : '--'} / ${item.champion ? 'champion' : '--'}` },
                 { label: locale === 'zh' ? '收益/回撤' : 'Return / Drawdown', value: item.annualizedReturnPct !== null && item.maxDrawdownPct !== null ? `${item.annualizedReturnPct.toFixed(1)}% / ${item.maxDrawdownPct.toFixed(1)}%` : '--' },
                 { label: 'Sharpe', value: item.sharpe !== null ? item.sharpe.toFixed(2) : '--' },
                 { label: locale === 'zh' ? '超额收益' : 'Excess', value: item.excessReturnPct !== null ? `${item.excessReturnPct.toFixed(1)}%` : '--' },
@@ -808,6 +833,7 @@ function StrategiesPage() {
               leadTitle={`${item.strategyName} · ${item.coverage}`}
               leadCopy={item.note}
               metrics={[
+                { label: locale === 'zh' ? '基线/冠军' : 'Baseline / Champion', value: `${item.baseline ? 'baseline' : '--'} / ${item.champion ? 'champion' : '--'}` },
                 { label: locale === 'zh' ? '阶段' : 'Stage', value: item.strategyStatus },
                 { label: locale === 'zh' ? '最近 run' : 'Latest run', value: item.latestRunId || '--' },
                 { label: locale === 'zh' ? '更新时间' : 'Updated', value: formatDateTime(item.updatedAt, locale) },

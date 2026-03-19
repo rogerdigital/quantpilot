@@ -91,7 +91,7 @@ export async function promoteStrategyCatalogItem(strategyId: string, payload: {
 }
 
 export async function runResearchGovernanceAction(payload: {
-  action: 'promote_strategies' | 'queue_backtests' | 'evaluate_runs';
+  action: 'promote_strategies' | 'queue_backtests' | 'evaluate_runs' | 'set_baseline' | 'set_champion';
   actor?: string;
   strategyIds?: string[];
   runIds?: string[];

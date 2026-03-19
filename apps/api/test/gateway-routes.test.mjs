@@ -476,6 +476,24 @@ test('POST /api/research/governance/actions runs batch governance actions and ex
       windowLabel: '2025-01-01 -> 2026-03-01',
     },
   });
+  const baselineResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/research/governance/actions',
+    body: {
+      action: 'set_baseline',
+      actor: 'research-governance',
+      strategyIds: ['ema-cross-us'],
+    },
+  });
+  const championResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/research/governance/actions',
+    body: {
+      action: 'set_champion',
+      actor: 'research-governance',
+      strategyIds: ['ema-cross-us'],
+    },
+  });
   const workbenchResponse = await invokeGatewayRoute(handler, {
     path: '/api/research/workbench?hours=168&limit=20',
   });
@@ -484,9 +502,15 @@ test('POST /api/research/governance/actions runs batch governance actions and ex
   assert.equal(evaluateResponse.json.successes.length >= 1, true);
   assert.equal(refreshResponse.statusCode, 200);
   assert.equal(refreshResponse.json.successes.length >= 1, true);
+  assert.equal(baselineResponse.statusCode, 200);
+  assert.equal(baselineResponse.json.successes[0].baseline, true);
+  assert.equal(championResponse.statusCode, 200);
+  assert.equal(championResponse.json.successes[0].champion, true);
   assert.equal(workbenchResponse.statusCode, 200);
-  assert.equal(workbenchResponse.json.recentActions.length >= 2, true);
-  assert.equal(workbenchResponse.json.actionSummary.total >= 2, true);
+  assert.equal(workbenchResponse.json.summary.baselines >= 1, true);
+  assert.equal(workbenchResponse.json.summary.champions >= 1, true);
+  assert.equal(workbenchResponse.json.recentActions.length >= 4, true);
+  assert.equal(workbenchResponse.json.actionSummary.total >= 4, true);
 });
 
 test('GET /api/research/reports and summary return report assets generated for research operations', async () => {

@@ -24,6 +24,7 @@ export function StrategyCatalogRow(props: {
       leadCopy={item.summary}
       metrics={[
         { label: locale === 'zh' ? '阶段' : 'Stage', value: item.status },
+        { label: locale === 'zh' ? '基线/冠军' : 'Baseline / Champion', value: `${item.baseline ? 'baseline' : '--'} / ${item.champion ? 'champion' : '--'}` },
         { label: 'Sharpe', value: item.sharpe.toFixed(2) },
         { label: locale === 'zh' ? '预期收益' : 'Expected return', value: `${item.expectedReturnPct.toFixed(1)}%` },
       ]}

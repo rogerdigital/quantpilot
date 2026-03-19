@@ -212,6 +212,69 @@ export function runResearchGovernanceAction(payload = {}) {
     return { ok: true, action: actionRecord, successes, failures };
   }
 
+  if (action === 'set_baseline' || action === 'set_champion') {
+    strategyIds.forEach((strategyId) => {
+      const strategy = controlPlaneRuntime.getStrategyCatalogItem(strategyId);
+      if (!strategy) {
+        failures.push({ strategyId, error: 'strategy not found' });
+        return;
+      }
+
+      if (action === 'set_baseline') {
+        controlPlaneRuntime.listStrategyCatalog(200).forEach((item) => {
+          if (item.baseline && item.id !== strategyId) {
+            controlPlaneRuntime.upsertStrategyCatalogItem({
+              ...item,
+              baseline: false,
+              baselineUpdatedAt: new Date().toISOString(),
+            });
+          }
+        });
+      }
+
+      if (action === 'set_champion') {
+        controlPlaneRuntime.listStrategyCatalog(200).forEach((item) => {
+          if (item.champion && item.id !== strategyId) {
+            controlPlaneRuntime.upsertStrategyCatalogItem({
+              ...item,
+              champion: false,
+              championUpdatedAt: new Date().toISOString(),
+            });
+          }
+        });
+      }
+
+      const updated = controlPlaneRuntime.upsertStrategyCatalogItem({
+        ...strategy,
+        baseline: action === 'set_baseline' ? true : strategy.baseline,
+        champion: action === 'set_champion' ? true : strategy.champion,
+        baselineUpdatedAt: action === 'set_baseline' ? new Date().toISOString() : strategy.baselineUpdatedAt,
+        championUpdatedAt: action === 'set_champion' ? new Date().toISOString() : strategy.championUpdatedAt,
+        updatedBy: actor,
+      });
+      successes.push({
+        strategyId,
+        baseline: Boolean(updated.baseline),
+        champion: Boolean(updated.champion),
+      });
+    });
+
+    const actionRecord = recordGovernanceAction(
+      action === 'set_baseline' ? 'set-baseline' : 'set-champion',
+      actor,
+      `${action === 'set_baseline' ? 'Updated baseline' : 'Updated champion'} for ${successes.length} strategies from the governance workbench.`,
+      {
+        primaryId: strategyIds[0] || '',
+        action,
+        successes,
+        failures,
+        successCount: successes.length,
+        failuresCount: failures.length,
+      },
+    );
+    return { ok: true, action: actionRecord, successes, failures };
+  }
+
   return {
     ok: false,
     error: 'unsupported action',
@@ -262,6 +325,8 @@ export function getResearchWorkbenchSnapshot(options = {}) {
     needsEvaluation: 0,
     blocked: 0,
     staleStrategies: 0,
+    baselines: 0,
+    champions: 0,
   };
 
   const laneBuckets = new Map([
@@ -298,6 +363,8 @@ export function getResearchWorkbenchSnapshot(options = {}) {
     if (laneKey === 'await-evaluation') summary.needsEvaluation += 1;
     if (laneKey === 'blocked') summary.blocked += 1;
     if (new Date(latestTimestamp).getTime() < staleThreshold) summary.staleStrategies += 1;
+    if (strategy.baseline) summary.baselines += 1;
+    if (strategy.champion) summary.champions += 1;
 
     queue.push({
       strategyId: strategy.id,
@@ -325,6 +392,8 @@ export function getResearchWorkbenchSnapshot(options = {}) {
       strategyId: strategy.id,
       strategyName: strategy.name,
       strategyStatus: strategy.status,
+      baseline: Boolean(strategy.baseline),
+      champion: Boolean(strategy.champion),
       latestRunId: latestResult?.runId || '',
       latestRunLabel: latestResult?.windowLabel || '',
       resultVersion: latestResult?.version ?? null,
@@ -345,6 +414,8 @@ export function getResearchWorkbenchSnapshot(options = {}) {
       strategyId: strategy.id,
       strategyName: strategy.name,
       strategyStatus: strategy.status,
+      baseline: Boolean(strategy.baseline),
+      champion: Boolean(strategy.champion),
       coverage: currentCoverage.coverage,
       note: currentCoverage.note,
       latestRunId: latestResult?.runId || latestEvaluation?.runId || latestReport?.runId || '',
