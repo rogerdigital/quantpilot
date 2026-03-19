@@ -11,6 +11,7 @@ import { createBacktestRun, getBacktestRunDetail, listBacktestRuns, reviewBackte
 import { getResearchHubSnapshot, getResearchTaskDetail, getResearchTaskSummary, listResearchTasks } from '../../domains/research/services/task-service.mjs';
 import { evaluateBacktestRun, getResearchEvaluationSummary, listResearchEvaluations, promoteStrategyFromEvaluation } from '../../domains/research/services/evaluation-service.mjs';
 import { getResearchReportSummary, listResearchReports } from '../../domains/research/services/report-service.mjs';
+import { getResearchWorkbenchSnapshot } from '../../domains/research/services/workbench-service.mjs';
 import { getExecutionPlanDetail, getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { listPermissionDescriptors, writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
@@ -333,6 +334,14 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/research/hub') {
     writeJson(res, 200, getResearchHubSnapshot({
+      hours: reqUrl.searchParams.get('hours'),
+      limit: reqUrl.searchParams.get('limit'),
+    }));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/research/workbench') {
+    writeJson(res, 200, getResearchWorkbenchSnapshot({
       hours: reqUrl.searchParams.get('hours'),
       limit: reqUrl.searchParams.get('limit'),
     }));

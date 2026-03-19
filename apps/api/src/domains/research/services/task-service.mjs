@@ -5,6 +5,7 @@ import { listBacktestRuns } from '../../backtest/services/runs-service.mjs';
 import { listStrategyCatalog } from '../../strategy/services/catalog-service.mjs';
 import { getResearchEvaluationSummary, listResearchEvaluations } from './evaluation-service.mjs';
 import { getResearchReportSummary, listResearchReports } from './report-service.mjs';
+import { getResearchWorkbenchSnapshot } from './workbench-service.mjs';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);
@@ -119,6 +120,7 @@ export function getResearchHubSnapshot(options = {}) {
   const evaluationSummary = getResearchEvaluationSummary(options);
   const reports = listResearchReports(options);
   const reportSummary = getResearchReportSummary(options);
+  const workbench = getResearchWorkbenchSnapshot(options);
   const summary = getBacktestSummary();
   const strategies = listStrategyCatalog();
   const runs = listBacktestRuns();
@@ -131,6 +133,7 @@ export function getResearchHubSnapshot(options = {}) {
     resultSummary: resultSummary.summary,
     evaluationSummary: evaluationSummary.summary,
     reportSummary: reportSummary.summary,
+    workbench,
     strategies: strategies.strategies,
     runs: runs.runs,
     tasks: tasks.tasks,

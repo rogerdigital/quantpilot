@@ -363,6 +363,9 @@ test('GET /api/research/tasks returns research backbone tasks and related summar
   const hubResponse = await invokeGatewayRoute(handler, {
     path: '/api/research/hub?hours=168&limit=20',
   });
+  const workbenchResponse = await invokeGatewayRoute(handler, {
+    path: '/api/research/workbench?hours=168&limit=20',
+  });
   const detailResponse = await invokeGatewayRoute(handler, {
     path: `/api/research/tasks/${created.json.researchTask.id}`,
   });
@@ -375,7 +378,11 @@ test('GET /api/research/tasks returns research backbone tasks and related summar
   assert.equal(summaryResponse.json.summary.byType.some((item) => item.taskType === 'backtest-run'), true);
   assert.equal(hubResponse.statusCode, 200);
   assert.equal(hubResponse.json.taskSummary.total >= 1, true);
+  assert.equal(hubResponse.json.workbench.ok, true);
   assert.equal(hubResponse.json.tasks.some((item) => item.id === created.json.researchTask.id), true);
+  assert.equal(workbenchResponse.statusCode, 200);
+  assert.equal(workbenchResponse.json.ok, true);
+  assert.equal(Array.isArray(workbenchResponse.json.promotionQueue), true);
   assert.equal(detailResponse.statusCode, 200);
   assert.equal(detailResponse.json.task.id, created.json.researchTask.id);
   assert.equal(detailResponse.json.run.id, created.json.run.id);

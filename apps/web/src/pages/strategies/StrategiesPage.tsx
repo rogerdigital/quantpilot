@@ -94,6 +94,20 @@ function StrategiesPage() {
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
   const canWriteStrategy = hasPermission('strategy:write');
   const promotedCount = data?.strategies.filter((item) => item.status === 'paper' || item.status === 'live').length || 0;
+  const workbenchSummary = data?.workbench?.summary || {
+    totalStrategies: 0,
+    activeStrategies: 0,
+    candidateStrategies: 0,
+    readyToPromote: 0,
+    readyForExecution: 0,
+    waitingForReport: 0,
+    needsEvaluation: 0,
+    blocked: 0,
+    staleStrategies: 0,
+  };
+  const promotionQueue = data?.workbench?.promotionQueue || [];
+  const comparisonRows = data?.workbench?.comparisons || [];
+  const coverageRows = data?.workbench?.coverage || [];
   const activeStrategies = data?.strategies.filter((item) => item.status !== 'archived') || [];
   const archivedStrategies = data?.strategies.filter((item) => item.status === 'archived') || [];
   const visibleActiveStrategies = registryFilter === 'archived' ? [] : activeStrategies;
@@ -526,6 +540,129 @@ function StrategiesPage() {
             );
           })}
         </ResearchTerminalPanel>
+      </section>
+
+      <section className="panel-grid">
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '研究治理总览' : 'Research Governance Overview'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把策略注册表和研究资产治理连接起来，优先暴露哪些策略可以晋级、哪些仍卡在评估或报告层。'
+                  : 'Connect the strategy registry to research asset governance so promotion-ready, pending, and blocked strategies are visible from one overview.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{data?.workbench?.asOf ? formatDateTime(data.workbench.asOf, locale) : 'GOVERNANCE'}</div>
+          </div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '可晋级' : 'Ready To Promote'}</span><strong>{workbenchSummary.readyToPromote}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '可进入执行准备' : 'Ready For Execution Prep'}</span><strong>{workbenchSummary.readyForExecution}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '待评估' : 'Awaiting Evaluation'}</span><strong>{workbenchSummary.needsEvaluation}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '待报告' : 'Awaiting Reports'}</span><strong>{workbenchSummary.waitingForReport}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '阻塞/返工' : 'Blocked / Rework'}</span><strong>{workbenchSummary.blocked}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '陈旧策略' : 'Stale Strategies'}</span><strong>{workbenchSummary.staleStrategies}</strong></div>
+          </div>
+        </article>
+        <ResearchCollectionPanel
+          title={locale === 'zh' ? '策略晋级队列' : 'Strategy Promotion Queue'}
+          copy={locale === 'zh'
+            ? '按研究治理状态查看策略，直接跳到注册表详情或回测详情继续推进。'
+            : 'Review strategies by governance state and jump straight into registry detail or backtest detail for the next action.'}
+          badge={promotionQueue.length}
+          terminal
+          isEmpty={promotionQueue.length === 0}
+          emptyMessage={locale === 'zh' ? '当前没有策略晋级队列。' : 'No strategy promotion queue is available yet.'}
+        >
+          {promotionQueue.map((item) => (
+            <div className="focus-row" key={item.strategyId}>
+              <div className="symbol-cell">
+                <strong>{item.strategyName}</strong>
+                <span>{item.strategyStatus} · {item.latestRunLabel || item.strategyId}</span>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '评估' : 'Evaluation'}</span>
+                <strong>{item.evaluationVerdict}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '报告任务' : 'Report task'}</span>
+                <strong>{item.reportTaskStatus}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '动作' : 'Action'}</span>
+                <strong>{item.recommendedAction}</strong>
+              </div>
+              <div className="action-group">
+                <button
+                  type="button"
+                  className="inline-action"
+                  onClick={() => setSelectedStrategyId(item.strategyId)}
+                >
+                  {locale === 'zh' ? '查看策略' : 'Inspect Strategy'}
+                </button>
+                {item.latestRunId ? (
+                  <button
+                    type="button"
+                    className="inline-action"
+                    onClick={() => researchNavigation.openBacktestDetail(item.latestRunId, {
+                      strategyId: item.strategyId,
+                      source: 'strategies',
+                    })}
+                  >
+                    {locale === 'zh' ? '打开回测' : 'Open Backtest'}
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
+          title={locale === 'zh' ? '策略横向对比' : 'Strategy Comparison Board'}
+          copy={locale === 'zh'
+            ? '把最新结果、评估和报告结论汇总成横向对比板，帮助决定下一批应该优先推进哪些策略。'
+            : 'Aggregate the latest result, evaluation, and report verdicts into a comparison board to decide which strategies should move next.'}
+          badge={comparisonRows.length}
+          terminal
+          isEmpty={comparisonRows.length === 0}
+          emptyMessage={locale === 'zh' ? '当前没有可对比的策略研究资产。' : 'No comparable strategy research assets are available yet.'}
+        >
+          {comparisonRows.map((item) => (
+            <ResearchVersionSnapshotRow
+              key={item.strategyId}
+              leadTitle={`${item.strategyName} · ${item.strategyStatus}`}
+              leadCopy={`${item.recommendedAction} · ${item.latestRunLabel || item.latestRunId || '--'}`}
+              metrics={[
+                { label: locale === 'zh' ? '收益/回撤' : 'Return / Drawdown', value: item.annualizedReturnPct !== null && item.maxDrawdownPct !== null ? `${item.annualizedReturnPct.toFixed(1)}% / ${item.maxDrawdownPct.toFixed(1)}%` : '--' },
+                { label: 'Sharpe', value: item.sharpe !== null ? item.sharpe.toFixed(2) : '--' },
+                { label: locale === 'zh' ? '超额收益' : 'Excess', value: item.excessReturnPct !== null ? `${item.excessReturnPct.toFixed(1)}%` : '--' },
+                { label: locale === 'zh' ? '评估/报告' : 'Evaluation / Report', value: `${item.evaluationVerdict} / ${item.reportVerdict}` },
+              ]}
+            />
+          ))}
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
+          title={locale === 'zh' ? '研究资产覆盖缺口' : 'Research Asset Coverage Gaps'}
+          copy={locale === 'zh'
+            ? '直接识别每条策略现在缺失哪一层研究资产，用于安排补评估、补报告或补结果。'
+            : 'Identify which research asset layer is missing per strategy so operators can quickly schedule missing results, evaluations, or reports.'}
+          badge={coverageRows.length}
+          terminal
+          isEmpty={coverageRows.length === 0}
+          emptyMessage={locale === 'zh' ? '当前没有研究资产覆盖缺口。' : 'No research asset coverage gaps are currently recorded.'}
+        >
+          {coverageRows.map((item) => (
+            <ResearchVersionSnapshotRow
+              key={item.strategyId}
+              leadTitle={`${item.strategyName} · ${item.coverage}`}
+              leadCopy={item.note}
+              metrics={[
+                { label: locale === 'zh' ? '阶段' : 'Stage', value: item.strategyStatus },
+                { label: locale === 'zh' ? '最近 run' : 'Latest run', value: item.latestRunId || '--' },
+                { label: locale === 'zh' ? '更新时间' : 'Updated', value: formatDateTime(item.updatedAt, locale) },
+              ]}
+            />
+          ))}
+        </ResearchCollectionPanel>
       </section>
 
       <section className="panel-grid">

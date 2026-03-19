@@ -48,6 +48,21 @@ function fmtDateTime(value: string, locale: 'zh' | 'en') {
     });
 }
 
+function getWorkbenchLaneLabel(locale: 'zh' | 'en', key: string) {
+  if (locale === 'zh') {
+    if (key === 'ready-promote') return '可晋级';
+    if (key === 'ready-execution') return '可进入执行准备';
+    if (key === 'await-report') return '待生成报告';
+    if (key === 'await-evaluation') return '待生成评估';
+    return '阻塞或返工';
+  }
+  if (key === 'ready-promote') return 'Ready For Promotion';
+  if (key === 'ready-execution') return 'Ready For Execution Prep';
+  if (key === 'await-report') return 'Awaiting Reports';
+  if (key === 'await-evaluation') return 'Awaiting Evaluation';
+  return 'Blocked Or Rework';
+}
+
 const WINDOW_PRESETS = [
   '2024-01-01 -> 2026-03-01',
   '2023-01-01 -> 2024-12-31',
@@ -95,6 +110,21 @@ function BacktestPage() {
     byType: [],
     byStrategy: [],
   };
+  const workbenchSummary = data?.workbench?.summary || {
+    totalStrategies: 0,
+    activeStrategies: 0,
+    candidateStrategies: 0,
+    readyToPromote: 0,
+    readyForExecution: 0,
+    waitingForReport: 0,
+    needsEvaluation: 0,
+    blocked: 0,
+    staleStrategies: 0,
+  };
+  const workbenchLanes = data?.workbench?.lanes || [];
+  const promotionQueue = data?.workbench?.promotionQueue || [];
+  const comparisonRows = data?.workbench?.comparisons || [];
+  const coverageRows = data?.workbench?.coverage || [];
   const filteredTasks = data?.tasks?.filter((task) => {
     if (runFilter !== 'all' && task.status !== runFilter) {
       return false;
@@ -442,7 +472,151 @@ function BacktestPage() {
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '平均超额收益' : 'Average Excess Return'}</div><div className="tile-value">{data?.resultSummary ? fmtPct(data.resultSummary.averageExcessReturnPct) : '--'}</div><div className="tile-sub">{locale === 'zh' ? '来自结果模型' : 'Derived from result versions'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '研究评估结论' : 'Research Evaluations'}</div><div className="tile-value">{data?.evaluationSummary?.total ?? '--'}</div><div className="tile-sub">{locale === 'zh' ? '连接晋级与执行准备' : 'Bridges promotion and execution prep'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '研究报告资产' : 'Research Reports'}</div><div className="tile-value">{data?.reportSummary?.total ?? '--'}</div><div className="tile-sub">{locale === 'zh' ? '异步沉淀后的研究交付物' : 'Asynchronous research deliverables'}</div></article>
+        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '待评估策略' : 'Awaiting Evaluation'}</div><div className="tile-value">{workbenchSummary.needsEvaluation}</div><div className="tile-sub">{locale === 'zh' ? '结果已出但治理链路未完成' : 'Results exist but governance is not complete'}</div></article>
+        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '待出报告策略' : 'Awaiting Reports'}</div><div className="tile-value">{workbenchSummary.waitingForReport}</div><div className="tile-sub">{locale === 'zh' ? '评估已完成，等待异步资产沉淀' : 'Evaluations are done, waiting on async assets'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '研究任务失败' : 'Failed Research Tasks'}</div><div className="tile-value">{taskSummary.failed}</div><div className="tile-sub">{locale === 'zh' ? '阶段 2 统一失败面板入口' : 'The unified failure entrypoint for stage 2'}</div></article>
+      </section>
+
+      <section className="panel-grid">
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '研究运营台' : 'Research Operations Workbench'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把结果、评估、报告和晋级治理统一收成一份服务端快照，避免在页面里手动拼接研究运营状态。'
+                  : 'Collapse results, evaluations, reports, and promotion governance into one backend snapshot instead of reconstructing research operations in the page.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{data?.workbench?.asOf ? fmtDateTime(data.workbench.asOf, locale) : 'WORKBENCH'}</div>
+          </div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '可晋级策略' : 'Ready To Promote'}</span><strong>{workbenchSummary.readyToPromote}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '可进入执行准备' : 'Ready For Execution Prep'}</span><strong>{workbenchSummary.readyForExecution}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '待评估' : 'Awaiting Evaluation'}</span><strong>{workbenchSummary.needsEvaluation}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '待出报告' : 'Awaiting Reports'}</span><strong>{workbenchSummary.waitingForReport}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '阻塞或返工' : 'Blocked Or Rework'}</span><strong>{workbenchSummary.blocked}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '陈旧策略' : 'Stale Strategies'}</span><strong>{workbenchSummary.staleStrategies}</strong></div>
+          </div>
+          {workbenchLanes.length ? (
+            <div className="focus-list">
+              {workbenchLanes.map((lane) => (
+                <div className="focus-row" key={lane.key}>
+                  <div className="symbol-cell">
+                    <strong>{getWorkbenchLaneLabel(locale, lane.key)}</strong>
+                    <span>{lane.headline}</span>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '数量' : 'Count'}</span>
+                    <strong>{lane.count}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? '策略' : 'Strategies'}</span>
+                    <strong>{lane.strategyIds.slice(0, 3).join(', ') || '--'}</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="status-copy">{locale === 'zh' ? '当前还没有研究运营快照。' : 'No research workbench snapshot is available yet.'}</div>
+          )}
+        </article>
+        <ResearchCollectionPanel
+          title={locale === 'zh' ? '晋级治理队列' : 'Promotion Governance Queue'}
+          copy={locale === 'zh'
+            ? '把 ready / pending / blocked 的研究资产统一排进一个动作队列，直接跳到策略或回测详情继续处理。'
+            : 'Place ready, pending, and blocked research assets into one action queue so the next review step is obvious.'}
+          badge={promotionQueue.length}
+          terminal
+          isEmpty={promotionQueue.length === 0}
+          emptyMessage={locale === 'zh' ? '当前还没有研究治理队列。' : 'No governance queue is available yet.'}
+        >
+          {promotionQueue.map((item) => (
+            <div className="focus-row" key={item.strategyId}>
+              <div className="symbol-cell">
+                <strong>{item.strategyName}</strong>
+                <span>{item.strategyStatus} · {item.latestRunLabel || item.strategyId}</span>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '评估' : 'Evaluation'}</span>
+                <strong>{item.evaluationVerdict}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '报告' : 'Report'}</span>
+                <strong>{item.reportStatus === 'ready' ? item.reportVerdict : item.reportStatus}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>Sharpe</span>
+                <strong>{item.sharpe !== null ? item.sharpe.toFixed(2) : '--'}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '超额收益' : 'Excess'}</span>
+                <strong>{item.excessReturnPct !== null ? fmtPct(item.excessReturnPct) : '--'}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '动作' : 'Action'}</span>
+                <strong>{item.recommendedAction}</strong>
+              </div>
+              <div className="action-group">
+                <button type="button" className="inline-action" onClick={() => researchNavigation.openStrategyDetail(item.strategyId)}>
+                  {locale === 'zh' ? '打开策略' : 'Open Strategy'}
+                </button>
+                {item.latestRunId ? (
+                  <button type="button" className="inline-action" onClick={() => setSelectedRunId(item.latestRunId)}>
+                    {locale === 'zh' ? '查看回测' : 'Inspect Run'}
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
+          title={locale === 'zh' ? '结果对比榜' : 'Research Comparison Board'}
+          copy={locale === 'zh'
+            ? '按超额收益和 Sharpe 对当前策略进行横向比较，让研究工作台具备真正的结果治理视角。'
+            : 'Compare strategies by excess return and Sharpe so the research workspace can operate as a governance board, not just a list of runs.'}
+          badge={comparisonRows.length}
+          terminal
+          isEmpty={comparisonRows.length === 0}
+          emptyMessage={locale === 'zh' ? '当前还没有可对比的研究结果。' : 'No comparable research results are available yet.'}
+        >
+          {comparisonRows.map((item) => (
+            <ResearchVersionSnapshotRow
+              key={item.strategyId}
+              leadTitle={`${item.strategyName} · ${item.strategyStatus}`}
+              leadCopy={`${item.recommendedAction} · ${item.latestRunLabel || item.latestRunId || '--'}`}
+              metrics={[
+                { label: locale === 'zh' ? '超额收益' : 'Excess Return', value: item.excessReturnPct !== null ? fmtPct(item.excessReturnPct) : '--' },
+                { label: locale === 'zh' ? '收益/回撤' : 'Return / Drawdown', value: item.annualizedReturnPct !== null && item.maxDrawdownPct !== null ? `${fmtPct(item.annualizedReturnPct)} / ${fmtPct(item.maxDrawdownPct)}` : '--' },
+                { label: 'Sharpe', value: item.sharpe !== null ? item.sharpe.toFixed(2) : '--' },
+                { label: locale === 'zh' ? '评估/报告' : 'Evaluation / Report', value: `${item.evaluationVerdict} / ${item.reportVerdict}` },
+              ]}
+            />
+          ))}
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
+          title={locale === 'zh' ? '研究资产覆盖度' : 'Research Asset Coverage'}
+          copy={locale === 'zh'
+            ? '直接查看每个策略当前缺哪一层研究资产，方便快速判断是缺 result、evaluation 还是 report。'
+            : 'See which research asset layer is missing per strategy so operators know whether result, evaluation, or report coverage is incomplete.'}
+          badge={coverageRows.length}
+          terminal
+          isEmpty={coverageRows.length === 0}
+          emptyMessage={locale === 'zh' ? '当前没有研究资产覆盖信息。' : 'No research asset coverage data is available yet.'}
+        >
+          {coverageRows.map((item) => (
+            <ResearchVersionSnapshotRow
+              key={item.strategyId}
+              leadTitle={`${item.strategyName} · ${item.coverage}`}
+              leadCopy={item.note}
+              metrics={[
+                { label: locale === 'zh' ? '阶段' : 'Stage', value: item.strategyStatus },
+                { label: locale === 'zh' ? '最近 run' : 'Latest run', value: item.latestRunId || '--' },
+                { label: locale === 'zh' ? '更新时间' : 'Updated', value: fmtDateTime(item.updatedAt, locale) },
+              ]}
+            />
+          ))}
+        </ResearchCollectionPanel>
       </section>
 
       <section className="panel-grid">

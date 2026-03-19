@@ -180,6 +180,47 @@ describe('research workspace pages', () => {
           candidateStrategies: 1,
           dataSource: 'service',
         },
+        workbench: {
+          ok: true,
+          asOf: '2026-03-13T11:10:00.000Z',
+          summary: {
+            totalStrategies: 1,
+            activeStrategies: 1,
+            candidateStrategies: 1,
+            readyToPromote: 1,
+            readyForExecution: 0,
+            waitingForReport: 0,
+            needsEvaluation: 0,
+            blocked: 0,
+            staleStrategies: 0,
+          },
+          lanes: [],
+          promotionQueue: [
+            {
+              strategyId: 'strategy-1',
+              strategyName: 'Momentum',
+              strategyStatus: 'candidate',
+              latestRunId: 'run-1',
+              latestRunLabel: '30D',
+              latestResultId: 'result-1',
+              latestResultStage: 'reviewed',
+              latestResultStatus: 'completed',
+              evaluationVerdict: 'promote',
+              reportVerdict: 'promote',
+              readiness: 'paper',
+              recommendedAction: 'promote_to_paper',
+              reportStatus: 'ready',
+              reportTaskStatus: 'completed',
+              annualizedReturnPct: 10.5,
+              maxDrawdownPct: 4.2,
+              sharpe: 1.7,
+              excessReturnPct: 4.4,
+              updatedAt: '2026-03-13T11:10:00.000Z',
+            },
+          ],
+          comparisons: [],
+          coverage: [],
+        },
       },
       loading: false,
       error: '',
@@ -384,6 +425,8 @@ describe('research workspace pages', () => {
     expect(html).toContain('Selected Strategy Research Runs');
     expect(html).toContain('Latest Research Result');
     expect(html).toContain('Promotion And Execution Readiness');
+    expect(html).toContain('Research Governance Overview');
+    expect(html).toContain('Strategy Promotion Queue');
   });
 
   it('renders backtest page with deep-linked run, audit, and workflow step detail', () => {
@@ -426,6 +469,55 @@ describe('research workspace pages', () => {
           completedRuns: 1,
           reviewQueue: 1,
           dataSource: 'service',
+        },
+        workbench: {
+          ok: true,
+          asOf: '2026-03-13T11:10:00.000Z',
+          summary: {
+            totalStrategies: 1,
+            activeStrategies: 1,
+            candidateStrategies: 1,
+            readyToPromote: 1,
+            readyForExecution: 0,
+            waitingForReport: 0,
+            needsEvaluation: 0,
+            blocked: 0,
+            staleStrategies: 0,
+          },
+          lanes: [
+            {
+              key: 'ready-promote',
+              label: 'Ready For Promotion',
+              count: 1,
+              headline: '1 strategies are ready for lifecycle promotion.',
+              strategyIds: ['strategy-1'],
+            },
+          ],
+          promotionQueue: [
+            {
+              strategyId: 'strategy-1',
+              strategyName: 'Momentum',
+              strategyStatus: 'candidate',
+              latestRunId: 'run-1',
+              latestRunLabel: '30D',
+              latestResultId: 'result-1',
+              latestResultStage: 'reviewed',
+              latestResultStatus: 'completed',
+              evaluationVerdict: 'promote',
+              reportVerdict: 'promote',
+              readiness: 'paper',
+              recommendedAction: 'promote_to_paper',
+              reportStatus: 'ready',
+              reportTaskStatus: 'completed',
+              annualizedReturnPct: 10.5,
+              maxDrawdownPct: 4.2,
+              sharpe: 1.7,
+              excessReturnPct: 4.4,
+              updatedAt: '2026-03-13T11:10:00.000Z',
+            },
+          ],
+          comparisons: [],
+          coverage: [],
         },
       },
       loading: false,
@@ -614,6 +706,8 @@ describe('research workspace pages', () => {
     expect(html).toContain('risk_review');
     expect(html).toContain('Evaluation And Promotion Guidance');
     expect(html).toContain('Research Evaluations');
+    expect(html).toContain('Research Operations Workbench');
+    expect(html).toContain('Promotion Governance Queue');
   });
 
   it('renders backtest page with strategy source context and execution handoff actions', () => {

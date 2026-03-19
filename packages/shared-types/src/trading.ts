@@ -638,6 +638,86 @@ export type ResearchReportSummarySnapshot = {
   }>;
 };
 
+export type ResearchWorkbenchLaneSnapshot = {
+  key: 'ready-promote' | 'ready-execution' | 'await-report' | 'await-evaluation' | 'blocked';
+  label: string;
+  count: number;
+  headline: string;
+  strategyIds: string[];
+};
+
+export type ResearchWorkbenchQueueEntry = {
+  strategyId: string;
+  strategyName: string;
+  strategyStatus: string;
+  latestRunId: string;
+  latestRunLabel: string;
+  latestResultId: string;
+  latestResultStage: string;
+  latestResultStatus: string;
+  evaluationVerdict: string;
+  reportVerdict: string;
+  readiness: string;
+  recommendedAction: string;
+  reportStatus: 'ready' | 'pending' | 'missing';
+  reportTaskStatus: string;
+  annualizedReturnPct: number | null;
+  maxDrawdownPct: number | null;
+  sharpe: number | null;
+  excessReturnPct: number | null;
+  updatedAt: string;
+};
+
+export type ResearchWorkbenchComparisonEntry = {
+  strategyId: string;
+  strategyName: string;
+  strategyStatus: string;
+  latestRunId: string;
+  latestRunLabel: string;
+  resultVersion: number | null;
+  resultStage: string;
+  resultStatus: string;
+  annualizedReturnPct: number | null;
+  maxDrawdownPct: number | null;
+  sharpe: number | null;
+  excessReturnPct: number | null;
+  evaluationVerdict: string;
+  reportVerdict: string;
+  promotionReadiness: string;
+  recommendedAction: string;
+  updatedAt: string;
+};
+
+export type ResearchWorkbenchCoverageEntry = {
+  strategyId: string;
+  strategyName: string;
+  strategyStatus: string;
+  coverage: 'full' | 'report_pending' | 'evaluation_pending' | 'result_pending';
+  note: string;
+  latestRunId: string;
+  updatedAt: string;
+};
+
+export type ResearchWorkbenchSnapshot = {
+  ok: boolean;
+  asOf: string;
+  summary: {
+    totalStrategies: number;
+    activeStrategies: number;
+    candidateStrategies: number;
+    readyToPromote: number;
+    readyForExecution: number;
+    waitingForReport: number;
+    needsEvaluation: number;
+    blocked: number;
+    staleStrategies: number;
+  };
+  lanes: ResearchWorkbenchLaneSnapshot[];
+  promotionQueue: ResearchWorkbenchQueueEntry[];
+  comparisons: ResearchWorkbenchComparisonEntry[];
+  coverage: ResearchWorkbenchCoverageEntry[];
+};
+
 export type BacktestSummarySnapshot = {
   ok: boolean;
   asOf: string;
@@ -786,6 +866,7 @@ export type ResearchHubSnapshot = {
   resultSummary: BacktestResultSummarySnapshot;
   evaluationSummary?: ResearchEvaluationSummarySnapshot;
   reportSummary?: ResearchReportSummarySnapshot;
+  workbench?: ResearchWorkbenchSnapshot;
   strategies: StrategyCatalogItem[];
   runs: BacktestRunItem[];
   tasks: ResearchTaskRecord[];
