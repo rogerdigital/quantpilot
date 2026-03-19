@@ -50,5 +50,7 @@ export function useBacktestDetailPanels(options: {
     selectedWorkflowStep,
     latestEvaluation: runDetail?.latestEvaluation || null,
     evaluations: runDetail?.evaluations || [],
+    latestReport: runDetail?.latestReport || null,
+    reports: runDetail?.reports || [],
   };
 }

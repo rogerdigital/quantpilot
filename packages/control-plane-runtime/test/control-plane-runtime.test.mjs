@@ -348,6 +348,32 @@ test('control plane runtime persists research evaluations for run and strategy l
   assert.equal(runtime.getLatestEvaluationForStrategy('ema-cross-us').recommendedAction, 'promote_to_paper');
 });
 
+test('control plane runtime persists research reports for run and strategy lookups', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  const report = runtime.appendResearchReport({
+    id: 'research-report-runtime-1',
+    evaluationId: 'research-eval-runtime-1',
+    workflowRunId: 'workflow-runtime-report',
+    runId: 'run-runtime-backtest',
+    resultId: 'backtest-result-runtime-1',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    title: 'Runtime memo',
+    verdict: 'promote',
+    readiness: 'paper',
+    executiveSummary: 'Runtime report approved paper promotion.',
+    promotionCall: 'Promote to paper.',
+    executionPreparation: 'Paper execution prep is ready.',
+    riskNotes: 'Risk metrics are healthy.',
+  });
+
+  assert.equal(report.id, 'research-report-runtime-1');
+  assert.equal(runtime.getResearchReport('research-report-runtime-1').verdict, 'promote');
+  assert.equal(runtime.getLatestResearchReportForRun('run-runtime-backtest').title, 'Runtime memo');
+  assert.equal(runtime.getLatestResearchReportForStrategy('ema-cross-us').readiness, 'paper');
+});
+
 test('control plane runtime schedules retries and supports resume/cancel workflow operations', () => {
   const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
 

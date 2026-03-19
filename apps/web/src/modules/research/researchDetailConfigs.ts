@@ -20,6 +20,7 @@ export function getStrategyDetailInspectionConfig(
       { label: 'Sharpe', value: selectedStrategySnapshot ? selectedStrategySnapshot.sharpe.toFixed(2) : '--' },
       { label: locale === 'zh' ? '最近研究' : 'Latest research', value: strategyDetail?.latestRun?.windowLabel || '--' },
       { label: locale === 'zh' ? '最近结果' : 'Latest result', value: strategyDetail?.latestResult ? `v${strategyDetail.latestResult.version} / ${strategyDetail.latestResult.stage}` : '--' },
+      { label: locale === 'zh' ? '最新报告' : 'Latest report', value: strategyDetail?.latestReport?.verdict || '--' },
       { label: locale === 'zh' ? '晋级准备度' : 'Promotion readiness', value: strategyDetail?.promotionReadiness?.level || '--' },
     ],
     summary: selectedStrategySnapshot?.summary || (locale === 'zh' ? '当前策略暂无摘要。' : 'No strategy summary is available yet.'),

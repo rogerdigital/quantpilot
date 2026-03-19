@@ -327,6 +327,29 @@ export function createResearchEvaluationEntry(payload = {}) {
   };
 }
 
+export function createResearchReportEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `research-report-${randomUUID()}`,
+    evaluationId: payload.evaluationId || '',
+    workflowRunId: payload.workflowRunId || '',
+    runId: payload.runId || '',
+    resultId: payload.resultId || '',
+    strategyId: payload.strategyId || '',
+    strategyName: payload.strategyName || 'Unknown Strategy',
+    title: payload.title || 'Research report',
+    verdict: payload.verdict || 'rework',
+    readiness: payload.readiness || 'hold',
+    executiveSummary: payload.executiveSummary || '',
+    promotionCall: payload.promotionCall || '',
+    executionPreparation: payload.executionPreparation || '',
+    riskNotes: payload.riskNotes || '',
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+    metadata: payload.metadata || {},
+  };
+}
+
 export function createUserAccountProfile(payload = {}) {
   const timezone = payload.timezone || 'Asia/Shanghai';
   const locale = payload.locale || 'zh-CN';

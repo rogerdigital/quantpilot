@@ -82,6 +82,8 @@ export function getStrategyCatalogDetail(strategyId) {
   const recentResults = controlPlaneRuntime.listBacktestResults(20, { strategyId: strategy.id });
   const latestResult = recentResults[0] || null;
   const latestEvaluation = controlPlaneRuntime.getLatestEvaluationForStrategy(strategy.id);
+  const recentReports = controlPlaneRuntime.listResearchReports(20, { strategyId: strategy.id });
+  const latestReport = recentReports[0] || null;
   let executionCandidatePreview = null;
   try {
     const candidate = buildStrategyExecutionCandidate({
@@ -113,6 +115,8 @@ export function getStrategyCatalogDetail(strategyId) {
     latestResult,
     recentResults,
     latestEvaluation,
+    latestReport,
+    recentReports,
     promotionReadiness: buildPromotionReadiness(strategy, latestResult),
     executionCandidatePreview,
   };

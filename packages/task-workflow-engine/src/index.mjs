@@ -121,6 +121,205 @@ function appendBacktestResultVersion(context, run, patch = {}) {
   });
 }
 
+function syncResearchReportTask(context, payload = {}) {
+  if (typeof context.upsertResearchTask !== 'function') return null;
+  return context.upsertResearchTask({
+    taskType: 'research-report',
+    title: payload.title || `Report: ${payload.strategyName || 'Research'}`,
+    status: payload.status || 'queued',
+    strategyId: payload.strategyId || '',
+    strategyName: payload.strategyName || '',
+    workflowRunId: payload.workflowRunId || '',
+    runId: payload.runId || '',
+    windowLabel: payload.windowLabel || '',
+    requestedBy: payload.requestedBy || context.getOperatorName(),
+    lastActor: payload.lastActor || context.getOperatorName(),
+    resultLabel: payload.resultLabel || '',
+    latestCheckpoint: payload.latestCheckpoint || '',
+    startedAt: payload.startedAt || '',
+    completedAt: payload.completedAt || '',
+    summary: payload.summary || '',
+    priority: payload.priority || 'normal',
+    metadata: payload.metadata || {},
+  });
+}
+
+async function executeResearchReportWorkflow(payload, context, options = {}) {
+  const workflow = options.workflow || startWorkflow(context, {
+    workflowId: 'task-orchestrator.research-report',
+    workflowType: 'task-orchestrator',
+    actor: payload.requestedBy || context.getOperatorName(),
+    trigger: options.trigger || 'api',
+    payload,
+    maxAttempts: Number(payload.maxAttempts || 2),
+    steps: [
+      { key: 'load-evaluation-context', status: 'running' },
+      { key: 'generate-research-report', status: 'pending' },
+      { key: 'persist-report-asset', status: 'pending' },
+      { key: 'refresh-research-task', status: 'pending' },
+    ],
+  });
+
+  try {
+    const evaluation = context.getResearchEvaluation?.(payload.evaluationId);
+    if (!evaluation) {
+      throw new Error(`Unknown research evaluation: ${payload.evaluationId}`);
+    }
+    const run = context.getBacktestRun?.(payload.runId || evaluation.runId);
+    const result = context.getBacktestResult?.(payload.resultId || evaluation.resultId);
+    const strategy = context.getStrategyCatalogItem?.(payload.strategyId || evaluation.strategyId);
+    if (!run || !result || !strategy) {
+      throw new Error('Research report workflow could not resolve run, result, or strategy context');
+    }
+
+    syncResearchReportTask(context, {
+      status: 'running',
+      title: `Report: ${strategy.name}`,
+      strategyId: strategy.id,
+      strategyName: strategy.name,
+      workflowRunId: workflow.id,
+      runId: run.id,
+      windowLabel: run.windowLabel,
+      requestedBy: payload.requestedBy || context.getOperatorName(),
+      lastActor: context.getOperatorName(),
+      latestCheckpoint: 'Workflow worker is drafting the research report.',
+      summary: evaluation.summary,
+      priority: evaluation.verdict === 'blocked' ? 'high' : 'normal',
+      startedAt: new Date().toISOString(),
+      metadata: {
+        evaluationId: evaluation.id,
+        resultId: result.id,
+      },
+    });
+
+    const report = context.appendResearchReport?.({
+      evaluationId: evaluation.id,
+      workflowRunId: workflow.id,
+      runId: run.id,
+      resultId: result.id,
+      strategyId: strategy.id,
+      strategyName: strategy.name,
+      title: `${strategy.name} research memo`,
+      verdict: evaluation.verdict,
+      readiness: evaluation.readiness,
+      executiveSummary: evaluation.summary,
+      promotionCall: evaluation.recommendedAction.startsWith('promote')
+        ? `Promote ${strategy.name} with target readiness ${evaluation.readiness}.`
+        : `Do not promote immediately; follow ${evaluation.recommendedAction}.`,
+      executionPreparation: evaluation.verdict === 'prepare_execution'
+        ? `Execution preparation can continue from ${strategy.status} using the latest reviewed result.`
+        : 'Execution preparation should wait until the promotion and review path is completed.',
+      riskNotes: `Sharpe ${result.sharpe.toFixed(2)}, max drawdown ${result.maxDrawdownPct.toFixed(1)}%, excess return ${result.excessReturnPct.toFixed(1)}%.`,
+      metadata: {
+        evaluationId: evaluation.id,
+        resultVersion: result.version,
+        resultStage: result.stage,
+        strategyStatus: strategy.status,
+      },
+    });
+
+    const task = syncResearchReportTask(context, {
+      status: 'completed',
+      title: `Report: ${strategy.name}`,
+      strategyId: strategy.id,
+      strategyName: strategy.name,
+      workflowRunId: workflow.id,
+      runId: run.id,
+      windowLabel: run.windowLabel,
+      requestedBy: payload.requestedBy || context.getOperatorName(),
+      lastActor: context.getOperatorName(),
+      resultLabel: evaluation.verdict,
+      latestCheckpoint: 'Research report generated and stored as a reusable asset.',
+      summary: report.executiveSummary,
+      priority: evaluation.verdict === 'blocked' ? 'high' : 'normal',
+      completedAt: new Date().toISOString(),
+      metadata: {
+        evaluationId: evaluation.id,
+        reportId: report.id,
+      },
+    });
+
+    context.appendAuditRecord?.({
+      type: 'research-report.generated',
+      actor: payload.requestedBy || context.getOperatorName(),
+      title: `Research report generated for ${strategy.name}`,
+      detail: report.executiveSummary,
+      metadata: {
+        reportId: report.id,
+        evaluationId: evaluation.id,
+        runId: run.id,
+        strategyId: strategy.id,
+        verdict: report.verdict,
+      },
+    });
+
+    context.enqueueNotification?.({
+      level: report.verdict === 'blocked' ? 'warn' : 'info',
+      source: 'research-report',
+      title: 'Research report ready',
+      message: report.executiveSummary,
+      metadata: {
+        reportId: report.id,
+        evaluationId: evaluation.id,
+        runId: run.id,
+        strategyId: strategy.id,
+      },
+    });
+
+    const persistedWorkflow = completeWorkflow(context, workflow.id, {
+      steps: [
+        { key: 'load-evaluation-context', status: 'completed', evaluationId: evaluation.id },
+        { key: 'generate-research-report', status: 'completed', verdict: evaluation.verdict },
+        { key: 'persist-report-asset', status: 'completed', reportId: report.id },
+        { key: 'refresh-research-task', status: 'completed', researchTaskId: task?.id || '' },
+      ],
+      result: {
+        ok: true,
+        reportId: report.id,
+        evaluationId: evaluation.id,
+        verdict: report.verdict,
+      },
+    });
+
+    return {
+      ok: true,
+      report,
+      workflow: persistedWorkflow,
+    };
+  } catch (error) {
+    syncResearchReportTask(context, {
+      status: 'failed',
+      title: 'Report: Unknown',
+      strategyId: payload.strategyId || '',
+      strategyName: payload.strategyName || '',
+      workflowRunId: workflow.id,
+      runId: payload.runId || '',
+      windowLabel: '',
+      requestedBy: payload.requestedBy || context.getOperatorName(),
+      lastActor: context.getOperatorName(),
+      resultLabel: 'failed',
+      latestCheckpoint: error instanceof Error ? error.message : 'unknown report workflow error',
+      summary: error instanceof Error ? error.message : 'unknown report workflow error',
+      completedAt: new Date().toISOString(),
+      priority: 'high',
+      metadata: {
+        evaluationId: payload.evaluationId || '',
+      },
+    });
+    const failedWorkflow = failWorkflow(context, workflow.id, error instanceof Error ? error.message : 'unknown research report workflow error', {
+      steps: [
+        { key: 'load-evaluation-context', status: 'failed' },
+        { key: 'generate-research-report', status: 'skipped' },
+        { key: 'persist-report-asset', status: 'skipped' },
+        { key: 'refresh-research-task', status: 'skipped' },
+      ],
+    });
+    throw Object.assign(error instanceof Error ? error : new Error('research report workflow failed'), {
+      workflowId: failedWorkflow?.id,
+    });
+  }
+}
+
 async function executeStrategyExecutionWorkflow(payload, context, options = {}) {
   const workflow = options.workflow || startWorkflow(context, {
     workflowId: 'task-orchestrator.strategy-execution',
@@ -654,6 +853,12 @@ export async function executeStateWorkflow(previousState, context, options = {})
 export async function executeQueuedWorkflow(workflowRun, context) {
   if (workflowRun.workflowId === 'task-orchestrator.backtest-run') {
     return executeBacktestRunWorkflow(workflowRun.payload, context, {
+      workflow: workflowRun,
+      trigger: 'worker',
+    });
+  }
+  if (workflowRun.workflowId === 'task-orchestrator.research-report') {
+    return executeResearchReportWorkflow(workflowRun.payload, context, {
       workflow: workflowRun,
       trigger: 'worker',
     });

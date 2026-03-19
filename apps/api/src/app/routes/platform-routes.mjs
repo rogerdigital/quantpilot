@@ -10,6 +10,7 @@ import { getBacktestResultDetail, getBacktestResultSummary, listBacktestResults 
 import { createBacktestRun, getBacktestRunDetail, listBacktestRuns, reviewBacktestRun } from '../../domains/backtest/services/runs-service.mjs';
 import { getResearchHubSnapshot, getResearchTaskDetail, getResearchTaskSummary, listResearchTasks } from '../../domains/research/services/task-service.mjs';
 import { evaluateBacktestRun, getResearchEvaluationSummary, listResearchEvaluations, promoteStrategyFromEvaluation } from '../../domains/research/services/evaluation-service.mjs';
+import { getResearchReportSummary, listResearchReports } from '../../domains/research/services/report-service.mjs';
 import { getExecutionPlanDetail, getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { listPermissionDescriptors, writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
@@ -375,6 +376,30 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/research/evaluations/summary') {
     writeJson(res, 200, getResearchEvaluationSummary({
+      hours: reqUrl.searchParams.get('hours'),
+      limit: reqUrl.searchParams.get('limit'),
+      strategyId: reqUrl.searchParams.get('strategyId'),
+      verdict: reqUrl.searchParams.get('verdict'),
+    }));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/research/reports') {
+    writeJson(res, 200, listResearchReports({
+      hours: reqUrl.searchParams.get('hours'),
+      limit: reqUrl.searchParams.get('limit'),
+      evaluationId: reqUrl.searchParams.get('evaluationId'),
+      workflowRunId: reqUrl.searchParams.get('workflowRunId'),
+      runId: reqUrl.searchParams.get('runId'),
+      resultId: reqUrl.searchParams.get('resultId'),
+      strategyId: reqUrl.searchParams.get('strategyId'),
+      verdict: reqUrl.searchParams.get('verdict'),
+    }));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/research/reports/summary') {
+    writeJson(res, 200, getResearchReportSummary({
       hours: reqUrl.searchParams.get('hours'),
       limit: reqUrl.searchParams.get('limit'),
       strategyId: reqUrl.searchParams.get('strategyId'),

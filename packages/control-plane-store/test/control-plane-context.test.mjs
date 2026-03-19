@@ -383,6 +383,51 @@ test('research evaluation repository stores verdict history per run and strategy
   assert.equal(context.researchEvaluations.getLatestEvaluationForStrategy('strategy-1').readiness, 'live');
 });
 
+test('research report repository stores generated research assets per run and strategy', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const first = context.researchReports.appendResearchReport({
+    id: 'research-report-1',
+    evaluationId: 'evaluation-1',
+    workflowRunId: 'workflow-report-1',
+    runId: 'run-1',
+    resultId: 'result-1',
+    strategyId: 'strategy-1',
+    strategyName: 'Momentum',
+    title: 'Momentum memo',
+    verdict: 'promote',
+    readiness: 'paper',
+    executiveSummary: 'Ready for paper promotion.',
+    promotionCall: 'Promote to paper.',
+    executionPreparation: 'Paper execution is ready.',
+    riskNotes: 'Risk metrics remain healthy.',
+    createdAt: '2026-03-18T09:30:00.000Z',
+  });
+  const second = context.researchReports.appendResearchReport({
+    evaluationId: 'evaluation-2',
+    workflowRunId: 'workflow-report-2',
+    runId: 'run-1',
+    resultId: 'result-2',
+    strategyId: 'strategy-1',
+    strategyName: 'Momentum',
+    title: 'Momentum live memo',
+    verdict: 'prepare_execution',
+    readiness: 'live',
+    executiveSummary: 'Ready for live preparation.',
+    promotionCall: 'Hold paper promotion and prepare live checklist.',
+    executionPreparation: 'Live execution checklist can be opened.',
+    riskNotes: 'Operator approval remains required.',
+    createdAt: '2026-03-18T10:00:00.000Z',
+  });
+
+  const history = context.researchReports.listResearchReports(10, { strategyId: 'strategy-1' });
+
+  assert.equal(first.id, 'research-report-1');
+  assert.equal(second.verdict, 'prepare_execution');
+  assert.equal(history.length >= 2, true);
+  assert.equal(context.researchReports.getLatestResearchReportForRun('run-1').verdict, 'prepare_execution');
+  assert.equal(context.researchReports.getLatestResearchReportForStrategy('strategy-1').readiness, 'live');
+});
+
 test('workflow repository claims queued runs for execution', () => {
   const context = createControlPlaneContext(createMemoryStore());
   context.workflows.appendWorkflowRun({

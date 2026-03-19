@@ -159,6 +159,7 @@ quantpilot/
 - `backtest result model` 已开始独立成型：回测完成和人工复核都会写入正式的 `backtest results` 版本对象，研究中心详情页不再只从 audit metadata 回放结果轨迹。
 - `research workspace integration` 已进入闭环阶段：策略页开始统一消费 `latest result / recent results / promotion readiness / execution candidate preview`，研究路径已可从 `strategy -> result -> execution prep` 串联查看。
 - `evaluation and promotion flow` 已开始正式成型：回测页现在会把 reviewed result 落成 `research evaluations`，策略晋级则改为受最新评估结论约束，研究链路已形成 `review -> evaluation -> promote -> execution prep` 的显式闭环。
+- `research report workflow` 已接入统一异步执行模型：研究评估完成后会自动排队 `research-report` workflow，由 worker 异步生成正式 `research reports` 资产，并把报告、通知、审计和研究任务同步到统一控制面。
 - `execution plans / runtime events / account snapshots / execution ledger` 已具备独立查询接口，执行面不再只存在于页面本地状态。
 - Overview 首页已开始消费后端 `monitoring status` 摘要，可直接观察 `broker / market / worker / workflow / queues` 运行态。
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
@@ -201,7 +202,7 @@ quantpilot/
 - 阶段 1 的收官定义、非目标和阶段 2 入口条件已单独整理到 [docs/architecture/stage-1-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-1-closeout.md)。
 
 - 阶段 1 现已完成账户与权限底座、incident / investigation 控制台、operations workbench、risk workbench 和研究/执行基础数据边界的第一轮产品化。
-- 阶段 2 已完成 `Research Task Backbone`、`Backtest Result Model`、`Research Workspace Integration` 和 `Evaluation And Promotion Flow` 四个起步大步，接下来会继续推进统一异步执行协议和研究资产运营能力。
+- 阶段 2 已完成 `Research Task Backbone`、`Backtest Result Model`、`Research Workspace Integration`、`Evaluation And Promotion Flow` 和 `Research Report Workflow` 五个起步大步，研究链路已开始形成 `task -> result -> evaluation -> report -> promote` 的统一异步骨架。
 
 ### 阶段 2：研究与策略闭环
 
@@ -342,8 +343,8 @@ npm run verify
 
 当前已进入“阶段 2：研究与策略闭环”，优先级如下：
 
-1. 在已落地的 `research task backbone + backtest result model` 之上补齐结果对比、评估和晋级动作，让研究资产真正可运营。
-2. 统一研究链路中的 workflow、审计、通知、任务和结果模型，让研究过程可回放、可追踪、可对比。
+1. 在已落地的 `task -> result -> evaluation -> report` 骨架之上补齐结果对比、研究资产运营和晋级治理，让研究链路真正可运营。
+2. 统一研究链路中的 workflow、审计、通知、任务、结果和报告模型，让研究过程可回放、可追踪、可对比。
 3. 继续把研究、风控、执行相关异步动作收敛到后端任务流与 worker，减少前端拼装逻辑。
 4. 在现有 execution plan、risk workbench 和 incident 工作台基础上，为阶段 3 的执行闭环预留更稳定的对象契约。
 5. 保持阶段 1 的账户、权限、incident、operations 和 risk workbench 基线稳定，避免阶段切换时回归。

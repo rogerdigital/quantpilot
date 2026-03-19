@@ -424,8 +424,24 @@ test('POST /api/backtest/runs/:id/evaluate persists a research evaluation and ex
   assert.equal(evaluated.statusCode, 200);
   assert.equal(evaluated.json.ok, true);
   assert.equal(typeof evaluated.json.evaluation.id, 'string');
+  assert.equal(evaluated.json.reportWorkflow.workflowId, 'task-orchestrator.research-report');
   assert.equal(detail.json.latestEvaluation.id, evaluated.json.evaluation.id);
   assert.equal(feed.json.evaluations.some((item) => item.id === evaluated.json.evaluation.id), true);
+  assert.equal(summary.json.summary.total >= 1, true);
+});
+
+test('GET /api/research/reports and summary return report assets generated for research operations', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/research/reports?strategyId=ema-cross-us&limit=10',
+  });
+  const summary = await invokeGatewayRoute(handler, {
+    path: '/api/research/reports/summary?strategyId=ema-cross-us&limit=20',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(Array.isArray(response.json.reports), true);
+  assert.equal(summary.statusCode, 200);
   assert.equal(summary.json.summary.total >= 1, true);
 });
 

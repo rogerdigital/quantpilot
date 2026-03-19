@@ -3,6 +3,7 @@ import { refreshBacktestSummary } from '../../backtest/services/summary-service.
 import { buildStrategyExecutionCandidate } from '../../strategy/services/execution-candidate-service.mjs';
 import { getStrategyCatalogDetail, getStrategyCatalogItem } from '../../strategy/services/catalog-service.mjs';
 import { assessExecutionCandidate } from '../../risk/services/assessment-service.mjs';
+import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.mjs';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);
@@ -286,6 +287,41 @@ export function evaluateBacktestRun(runId, payload = {}) {
   });
 
   const task = syncEvaluationTask(run, evaluation, actor);
+  const reportWorkflow = queueWorkflow({
+    workflowId: 'task-orchestrator.research-report',
+    workflowType: 'task-orchestrator',
+    actor,
+    trigger: 'api',
+    payload: {
+      evaluationId: evaluation.id,
+      runId: run.id,
+      resultId: result.id,
+      strategyId: strategy.id,
+      requestedBy: actor,
+    },
+    maxAttempts: 2,
+  });
+  controlPlaneRuntime.upsertResearchTask({
+    taskType: 'research-report',
+    status: 'queued',
+    title: `Report: ${run.strategyName}`,
+    summary: `Research report queued after evaluation verdict ${evaluation.verdict}.`,
+    strategyId: run.strategyId,
+    strategyName: run.strategyName,
+    workflowRunId: reportWorkflow.id,
+    runId: run.id,
+    windowLabel: run.windowLabel,
+    requestedBy: actor,
+    lastActor: actor,
+    resultLabel: 'queued',
+    latestCheckpoint: 'Queued for asynchronous report generation.',
+    priority: evaluation.verdict === 'blocked' ? 'high' : 'normal',
+    metadata: {
+      evaluationId: evaluation.id,
+      verdict: evaluation.verdict,
+      recommendedAction: evaluation.recommendedAction,
+    },
+  });
 
   controlPlaneRuntime.appendAuditRecord({
     type: 'research-evaluation.completed',
@@ -321,6 +357,7 @@ export function evaluateBacktestRun(runId, payload = {}) {
     ok: true,
     evaluation,
     task,
+    reportWorkflow,
     run,
     result,
     strategy,

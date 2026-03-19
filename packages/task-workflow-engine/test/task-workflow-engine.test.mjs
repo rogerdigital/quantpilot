@@ -186,3 +186,41 @@ test('queued workflow dispatcher executes backtest workflows and refreshes resea
   assert.equal(result.workflow.result.backtestResultId, context.listBacktestResultsForRun(context.listBacktestRuns()[0].id)[0].id);
   assert.equal(typeof context.getResearchSummary().averageSharpe, 'number');
 });
+
+test('queued workflow dispatcher executes research report workflows and persists report assets', async () => {
+  const context = createEngineContext();
+  const evaluation = context.appendResearchEvaluation({
+    id: 'research-eval-engine-1',
+    runId: 'bt-ema-cross-20260310',
+    resultId: 'backtest-result-ema-cross-v1',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    verdict: 'promote',
+    scoreBand: 'strong',
+    readiness: 'paper',
+    recommendedAction: 'promote_to_paper',
+    summary: 'Reviewed result is ready for paper promotion.',
+    actor: 'engine-test',
+  });
+  context.enqueueWorkflowRun({
+    workflowId: 'task-orchestrator.research-report',
+    status: 'queued',
+    payload: {
+      evaluationId: evaluation.id,
+      runId: evaluation.runId,
+      resultId: evaluation.resultId,
+      strategyId: evaluation.strategyId,
+      requestedBy: 'engine-test',
+    },
+  });
+  const claimed = context.claimQueuedWorkflowRuns({ worker: 'engine-worker' });
+
+  const reportWorkflow = claimed.workflows.find((item) => item.workflowId === 'task-orchestrator.research-report');
+  const result = await executeQueuedWorkflow(reportWorkflow, context);
+
+  assert.equal(result.ok, true);
+  assert.equal(result.workflow.status, 'completed');
+  assert.equal(context.listResearchReports().length >= 1, true);
+  assert.equal(context.listResearchReports()[0].evaluationId, evaluation.id);
+  assert.equal(context.listResearchTasks().some((item) => item.taskType === 'research-report' && item.status === 'completed'), true);
+});

@@ -205,6 +205,8 @@ function BacktestPage() {
     selectedWorkflowStep,
     latestEvaluation,
     evaluations,
+    latestReport,
+    reports,
   } = useBacktestDetailPanels({
     selectedRun,
     runDetail,
@@ -439,6 +441,7 @@ function BacktestPage() {
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '平均收益率' : 'Average Return'}</div><div className="tile-value">{data?.summary.averageReturnPct !== undefined ? fmtPct(data.summary.averageReturnPct) : '--'}</div><div className="tile-sub">{data?.summary.asOf ? fmtDateTime(data.summary.asOf, locale) : (locale === 'zh' ? '等待同步' : 'Pending sync')}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '平均超额收益' : 'Average Excess Return'}</div><div className="tile-value">{data?.resultSummary ? fmtPct(data.resultSummary.averageExcessReturnPct) : '--'}</div><div className="tile-sub">{locale === 'zh' ? '来自结果模型' : 'Derived from result versions'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '研究评估结论' : 'Research Evaluations'}</div><div className="tile-value">{data?.evaluationSummary?.total ?? '--'}</div><div className="tile-sub">{locale === 'zh' ? '连接晋级与执行准备' : 'Bridges promotion and execution prep'}</div></article>
+        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '研究报告资产' : 'Research Reports'}</div><div className="tile-value">{data?.reportSummary?.total ?? '--'}</div><div className="tile-sub">{locale === 'zh' ? '异步沉淀后的研究交付物' : 'Asynchronous research deliverables'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '研究任务失败' : 'Failed Research Tasks'}</div><div className="tile-value">{taskSummary.failed}</div><div className="tile-sub">{locale === 'zh' ? '阶段 2 统一失败面板入口' : 'The unified failure entrypoint for stage 2'}</div></article>
       </section>
 
@@ -691,6 +694,26 @@ function BacktestPage() {
             ? '评估完成后，策略页会直接复用这条正式结论来决定是否允许晋级。'
             : 'Once completed, the strategy workspace reuses this evaluation record to decide whether promotion is allowed.'}
         />
+        <ResearchEventInspectionPanel
+          title={locale === 'zh' ? '最新研究报告' : 'Latest Research Report'}
+          copy={locale === 'zh'
+            ? '评估完成后，研究报告会转成异步任务并沉淀成可复用资产。'
+            : 'After evaluation, the research report is generated through an asynchronous task and stored as a reusable asset.'}
+          badge={latestReport?.verdict || '--'}
+          badgeClassName="badge-warn"
+          emptyMessage={!selectedRun
+            ? (locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.')
+            : !latestReport
+              ? (locale === 'zh' ? '当前 run 还没有生成研究报告，等待 report workflow 完成。' : 'No research report exists for this run yet. Wait for the report workflow to complete.')
+              : null}
+          metrics={[
+            { label: locale === 'zh' ? '结论' : 'Verdict', value: latestReport?.verdict || '--' },
+            { label: locale === 'zh' ? '准备度' : 'Readiness', value: latestReport?.readiness || '--' },
+            { label: locale === 'zh' ? '创建时间' : 'Created', value: latestReport ? fmtDateTime(latestReport.createdAt, locale) : '--' },
+          ]}
+          detail={latestReport?.executiveSummary}
+          guidance={latestReport?.promotionCall || undefined}
+        />
         <ResearchCollectionPanel {...backtestCollectionConfigs.audit}>
           {selectedRunAuditItems.map((item) => (
             <ResearchAuditFeedRow
@@ -814,6 +837,30 @@ function BacktestPage() {
                 { label: locale === 'zh' ? '评分带' : 'Score band', value: item.scoreBand },
                 { label: locale === 'zh' ? '推荐动作' : 'Recommended action', value: item.recommendedAction },
                 { label: locale === 'zh' ? '评估人' : 'Actor', value: item.actor },
+              ]}
+            />
+          ))}
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
+          title={locale === 'zh' ? '研究报告资产' : 'Research Report Assets'}
+          copy={locale === 'zh'
+            ? '查看异步生成的研究报告，作为后续晋级、执行准备和沟通同步的统一交付物。'
+            : 'Review asynchronously generated research reports as the shared deliverable for promotion, execution preparation, and operator handoff.'}
+          badge={reports.length}
+          emptyMessage={!selectedRun
+            ? (locale === 'zh' ? '先从回测队列选择一条记录。' : 'Select a run from the queue first.')
+            : null}
+        >
+          {reports.map((item) => (
+            <ResearchVersionSnapshotRow
+              key={item.id}
+              leadTitle={`${fmtDateTime(item.createdAt, locale)} · ${item.title}`}
+              leadCopy={item.executiveSummary}
+              metrics={[
+                { label: locale === 'zh' ? '结论' : 'Verdict', value: item.verdict },
+                { label: locale === 'zh' ? '准备度' : 'Readiness', value: item.readiness },
+                { label: locale === 'zh' ? '晋级建议' : 'Promotion call', value: item.promotionCall },
+                { label: locale === 'zh' ? '执行准备' : 'Execution prep', value: item.executionPreparation },
               ]}
             />
           ))}

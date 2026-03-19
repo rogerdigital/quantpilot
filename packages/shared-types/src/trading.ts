@@ -441,6 +441,8 @@ export type StrategyCatalogDetailSnapshot = {
   latestResult?: BacktestResultRecord | null;
   recentResults?: BacktestResultRecord[];
   latestEvaluation?: ResearchEvaluationRecord | null;
+  latestReport?: ResearchReportRecord | null;
+  recentReports?: ResearchReportRecord[];
   promotionReadiness?: {
     level: 'ready' | 'review' | 'blocked';
     headline: string;
@@ -601,6 +603,41 @@ export type ResearchEvaluationSummarySnapshot = {
   }>;
 };
 
+export type ResearchReportRecord = {
+  id: string;
+  evaluationId: string;
+  workflowRunId: string;
+  runId: string;
+  resultId: string;
+  strategyId: string;
+  strategyName: string;
+  title: string;
+  verdict: 'promote' | 'prepare_execution' | 'rework' | 'blocked';
+  readiness: 'candidate' | 'paper' | 'live' | 'hold';
+  executiveSummary: string;
+  promotionCall: string;
+  executionPreparation: string;
+  riskNotes: string;
+  createdAt: string;
+  updatedAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type ResearchReportSummarySnapshot = {
+  total: number;
+  promote: number;
+  prepareExecution: number;
+  rework: number;
+  blocked: number;
+  latestCreatedAt: string;
+  byStrategy: Array<{
+    strategyId: string;
+    strategyName: string;
+    count: number;
+    latestVerdict: string;
+  }>;
+};
+
 export type BacktestSummarySnapshot = {
   ok: boolean;
   asOf: string;
@@ -626,6 +663,8 @@ export type BacktestRunDetailSnapshot = {
   results?: BacktestResultRecord[];
   latestEvaluation?: ResearchEvaluationRecord | null;
   evaluations?: ResearchEvaluationRecord[];
+  latestReport?: ResearchReportRecord | null;
+  reports?: ResearchReportRecord[];
   error?: string;
   message?: string;
 };
@@ -746,11 +785,13 @@ export type ResearchHubSnapshot = {
   taskSummary: ResearchTaskSummarySnapshot;
   resultSummary: BacktestResultSummarySnapshot;
   evaluationSummary?: ResearchEvaluationSummarySnapshot;
+  reportSummary?: ResearchReportSummarySnapshot;
   strategies: StrategyCatalogItem[];
   runs: BacktestRunItem[];
   tasks: ResearchTaskRecord[];
   results: BacktestResultRecord[];
   evaluations?: ResearchEvaluationRecord[];
+  reports?: ResearchReportRecord[];
 };
 
 export type MarketProviderStatusSnapshot = {

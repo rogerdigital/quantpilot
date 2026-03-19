@@ -269,6 +269,46 @@ test('queued agent action request workflow persists a review request without cha
   assert.equal(context.notifications.listNotificationJobs().some((item) => item.payload.source === 'agent-control'), true);
 });
 
+test('research evaluation queues a report workflow and worker execution persists a research report asset', async () => {
+  const reviewed = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/backtest/runs/bt-ema-cross-20260310/review',
+    body: {
+      reviewedBy: 'risk-operator',
+      summary: 'Reviewed for downstream report generation.',
+    },
+  });
+
+  assert.equal(reviewed.statusCode, 200);
+
+  const evaluated = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/backtest/runs/bt-ema-cross-20260310/evaluate',
+    body: {
+      actor: 'research-lead',
+      summary: 'Queue the asynchronous research memo.',
+    },
+  });
+
+  assert.equal(evaluated.statusCode, 200);
+  assert.equal(evaluated.json.reportWorkflow.workflowId, 'task-orchestrator.research-report');
+
+  const execution = await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
+      ...options,
+      now: CLAIM_NOW,
+      workflowId: 'task-orchestrator.research-report',
+    }),
+    executeWorkflow: executeQueuedWorkflow,
+    context: createWorkerContext(),
+  });
+
+  assert.equal(execution.claimedCount >= 1, true);
+  assert.equal(execution.executions[0].ok, true);
+  assert.equal(context.researchReports.listResearchReports().some((item) => item.evaluationId === evaluated.json.evaluation.id), true);
+  assert.equal(context.researchTasks.listResearchTasks(20, { taskType: 'research-report' }).some((item) => item.status === 'completed'), true);
+});
+
 test('blocked agent action request is rejected by risk gate before approval stage', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',

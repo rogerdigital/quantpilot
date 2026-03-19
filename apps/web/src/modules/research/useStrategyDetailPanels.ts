@@ -107,6 +107,7 @@ export function useStrategyDetailPanels(options: {
     selectedStrategyTimelineItems,
     selectedTimelineItem,
     latestResult: strategyDetail?.latestResult || null,
+    latestReport: strategyDetail?.latestReport || null,
     promotionReadiness: strategyDetail?.promotionReadiness || null,
     executionCandidatePreview: strategyDetail?.executionCandidatePreview || null,
   };
