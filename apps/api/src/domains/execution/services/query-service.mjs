@@ -80,8 +80,10 @@ export function getExecutionWorkbench(limit = 40) {
     awaitingApproval: 0,
     routing: 0,
     submitted: 0,
+    acknowledged: 0,
     filled: 0,
     blocked: 0,
+    cancelled: 0,
     failed: 0,
   };
 
@@ -90,9 +92,11 @@ export function getExecutionWorkbench(limit = 40) {
     if (lifecycle === 'awaiting_approval') summary.awaitingApproval += 1;
     if (lifecycle === 'routing') summary.routing += 1;
     if (lifecycle === 'submitted' || lifecycle === 'partial_fill') summary.submitted += 1;
+    if (lifecycle === 'acknowledged') summary.acknowledged += 1;
     if (lifecycle === 'filled') summary.filled += 1;
     if (lifecycle === 'blocked' || entry.plan.riskStatus === 'blocked') summary.blocked += 1;
-    if (lifecycle === 'failed' || lifecycle === 'cancelled') summary.failed += 1;
+    if (lifecycle === 'cancelled') summary.cancelled += 1;
+    if (lifecycle === 'failed') summary.failed += 1;
   });
 
   return {

@@ -418,7 +418,7 @@ export type ExecutionRunRecord = {
   strategyId: string;
   strategyName: string;
   mode: 'paper' | 'live';
-  lifecycleStatus: 'planned' | 'awaiting_approval' | 'routing' | 'submitted' | 'partial_fill' | 'filled' | 'blocked' | 'cancelled' | 'failed';
+  lifecycleStatus: 'planned' | 'awaiting_approval' | 'routing' | 'submitted' | 'acknowledged' | 'partial_fill' | 'filled' | 'blocked' | 'cancelled' | 'failed';
   summary: string;
   owner: string;
   orderCount: number;
@@ -959,7 +959,7 @@ export type ExecutionPlanRecord = {
   strategyName: string;
   mode: 'paper' | 'live';
   status: 'draft' | 'ready' | 'blocked';
-  lifecycleStatus: 'planned' | 'awaiting_approval' | 'routing' | 'submitted' | 'partial_fill' | 'filled' | 'blocked' | 'cancelled' | 'failed';
+  lifecycleStatus: 'planned' | 'awaiting_approval' | 'routing' | 'submitted' | 'acknowledged' | 'partial_fill' | 'filled' | 'blocked' | 'cancelled' | 'failed';
   approvalState: 'pending' | 'not_required' | 'required';
   riskStatus: 'approved' | 'review' | 'blocked';
   summary: string;

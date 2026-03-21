@@ -167,6 +167,7 @@ quantpilot/
 - `research timeline and replay` 已开始形成：策略详情现会聚合 `audit / task / workflow / run / result / evaluation / report / governance` 为统一回放时间线和摘要，研究链路已经可以按单条策略回看从注册、研究、评估到治理推进的完整轨迹。
 - `execution plans / runtime events / account snapshots / execution ledger` 已具备独立查询接口，执行面不再只存在于页面本地状态。
 - `execution lifecycle backbone` 已开始落地：执行层现在会把 `execution candidate handoff -> execution workflow -> execution plan -> execution run -> order lifecycle` 串成统一对象流，支持 `awaiting approval / submitted / partial fill / filled / blocked / failed` 等生命周期状态，以及审批、成交结算和 execution workbench 聚合摘要。
+- `execution order state machine` 已开始形成：执行层现支持 `broker acknowledged / partial fill / cancel` 等更细的 lifecycle 推进，执行台可以直接触发 broker sync、部分成交模拟和取消动作，plan / run / order state / runtime snapshot 会自动聚合成一致状态。
 - Overview 首页已开始消费后端 `monitoring status` 摘要，可直接观察 `broker / market / worker / workflow / queues` 运行态。
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
 - 账户写操作和券商绑定变更已经进入 audit records，基础对象变更具备最小留痕能力。
@@ -350,8 +351,8 @@ npm run verify
 
 当前已完成“阶段 2：研究与策略闭环”，并开始转向“阶段 3：执行闭环与交易中台”，优先级如下：
 
-1. 在已落地的 `execution candidate handoff -> execution workflow -> execution plan -> execution run -> order lifecycle` 骨架之上，继续做实真实订单状态机与 broker 承接。
-2. 把执行审批、成交结算、失败转移、取消和补偿动作进一步收敛到统一 lifecycle service 与 worker 任务流，而不是散落在页面逻辑里。
+1. 在已落地的 `execution candidate handoff -> execution workflow -> execution plan -> execution run -> order lifecycle` 骨架之上，继续做实真实 broker 承接、订单同步和账户/持仓对账。
+2. 把执行审批、broker sync、成交结算、失败转移、取消和补偿动作进一步收敛到统一 lifecycle service 与 worker 任务流，而不是散落在页面逻辑里。
 3. 在现有 research replay、governance 和 handoff 契约之上，让执行、风险和调度侧围绕统一交接对象扩展，而不是重新拼装研究上下文。
 4. 保持阶段 1 和阶段 2 的账户、incident、operations、risk workbench、research hub 和 execution handoff 基线稳定，避免阶段切换时回归。
 5. 在进入真实 broker 多连接和补偿重试之前，优先把 execution workbench、订单生命周期和账户/持仓同步契约做稳。

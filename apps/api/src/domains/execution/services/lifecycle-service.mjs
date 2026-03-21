@@ -1,27 +1,155 @@
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
 import { getExecutionPlanDetail } from './query-service.mjs';
 
-function buildBrokerOrders(orderStates = [], status = 'submitted') {
+const ACTIVE_ORDER_LIFECYCLES = new Set(['submitted', 'acknowledged']);
+const ACTIVE_PLAN_LIFECYCLES = new Set(['submitted', 'acknowledged', 'partial_fill']);
+
+function summarizeLifecycle(strategyName, lifecycleStatus) {
+  if (lifecycleStatus === 'submitted') return `Submitted execution orders for ${strategyName}.`;
+  if (lifecycleStatus === 'acknowledged') return `Broker acknowledged execution orders for ${strategyName}.`;
+  if (lifecycleStatus === 'partial_fill') return `Execution for ${strategyName} is partially filled.`;
+  if (lifecycleStatus === 'filled') return `Execution for ${strategyName} is fully filled.`;
+  if (lifecycleStatus === 'cancelled') return `Execution for ${strategyName} was cancelled before completion.`;
+  if (lifecycleStatus === 'failed') return `Execution for ${strategyName} failed during routing.`;
+  if (lifecycleStatus === 'blocked') return `Execution for ${strategyName} was blocked by guardrails.`;
+  return `Execution lifecycle updated for ${strategyName}.`;
+}
+
+function buildBrokerOrders(orderStates = []) {
   return orderStates.map((item) => ({
     id: item.brokerOrderId || item.id,
     symbol: item.symbol,
     side: item.side,
     qty: item.qty,
+    filledQty: item.filledQty,
+    filledAvgPrice: item.avgFillPrice || undefined,
     type: 'market',
-    status,
+    status: item.lifecycleStatus,
+    submittedAt: item.submittedAt || undefined,
+    updatedAt: item.updatedAt || undefined,
+    cancelable: ACTIVE_ORDER_LIFECYCLES.has(item.lifecycleStatus),
+    source: 'execution-lifecycle',
   }));
 }
 
-function summarizeLifecycle(strategyName, lifecycleStatus) {
-  if (lifecycleStatus === 'submitted') return `Submitted execution orders for ${strategyName}.`;
-  if (lifecycleStatus === 'partial_fill') return `Execution for ${strategyName} is partially filled.`;
-  if (lifecycleStatus === 'filled') return `Execution for ${strategyName} is fully filled.`;
-  if (lifecycleStatus === 'cancelled') return `Execution for ${strategyName} was cancelled.`;
-  if (lifecycleStatus === 'failed') return `Execution for ${strategyName} failed during routing.`;
-  return `Execution lifecycle updated for ${strategyName}.`;
+function buildBrokerPositions(orderStates = []) {
+  return orderStates
+    .filter((item) => item.filledQty > 0)
+    .map((item) => ({
+      symbol: item.symbol,
+      qty: item.side === 'BUY' ? item.filledQty : -item.filledQty,
+      avgEntryPrice: Number(item.avgFillPrice || 0),
+      marketValue: Number(((item.avgFillPrice || 0) * item.filledQty).toFixed(2)),
+      unrealizedPnl: 0,
+      side: item.side === 'BUY' ? 'LONG' : 'SHORT',
+    }));
 }
 
-export function approveExecutionPlan(planId, payload = {}) {
+function summarizeOrderBook(orderStates = []) {
+  return orderStates.reduce((acc, item) => {
+    if (item.lifecycleStatus === 'planned') acc.planned += 1;
+    if (item.lifecycleStatus === 'submitted') acc.submitted += 1;
+    if (item.lifecycleStatus === 'acknowledged') acc.acknowledged += 1;
+    if (item.lifecycleStatus === 'filled') acc.filled += 1;
+    if (item.lifecycleStatus === 'rejected') acc.rejected += 1;
+    if (item.lifecycleStatus === 'cancelled') acc.cancelled += 1;
+    return acc;
+  }, {
+    planned: 0,
+    submitted: 0,
+    acknowledged: 0,
+    filled: 0,
+    rejected: 0,
+    cancelled: 0,
+  });
+}
+
+function deriveLifecycleFromOrders(orderStates = [], fallback = 'submitted') {
+  if (!orderStates.length) return fallback;
+  const counts = summarizeOrderBook(orderStates);
+  if (counts.filled === orderStates.length) return 'filled';
+  if (counts.filled > 0 && (counts.submitted > 0 || counts.acknowledged > 0)) return 'partial_fill';
+  if (counts.acknowledged > 0 && counts.submitted === 0 && counts.filled === 0) return 'acknowledged';
+  if (counts.acknowledged > 0 && counts.submitted > 0) return 'acknowledged';
+  if (counts.submitted > 0) return 'submitted';
+  if (counts.cancelled === orderStates.length) return 'cancelled';
+  if (counts.rejected === orderStates.length) return 'failed';
+  if (counts.planned === orderStates.length) return 'awaiting_approval';
+  return fallback;
+}
+
+function buildRuntimeSnapshot(plan, executionRun, orderStates, actor, message, now) {
+  const counts = summarizeOrderBook(orderStates);
+  const positions = buildBrokerPositions(orderStates);
+  const deployedCapital = orderStates.reduce((sum, item) => {
+    if (item.filledQty <= 0) return sum;
+    return sum + Number((item.avgFillPrice || 0) * item.filledQty);
+  }, 0);
+  const residualCapital = Math.max(0, Number(plan.capital || 0) - deployedCapital);
+
+  return controlPlaneRuntime.recordExecutionRuntime({
+    cycleId: plan.workflowRunId || plan.id,
+    cycle: 0,
+    executionPlanId: plan.id,
+    executionRunId: executionRun?.id || '',
+    mode: plan.mode,
+    brokerAdapter: plan.metadata?.brokerAdapter || 'simulated',
+    brokerConnected: true,
+    marketConnected: true,
+    submittedOrderCount: counts.submitted + counts.acknowledged + counts.filled,
+    rejectedOrderCount: counts.rejected,
+    openOrderCount: counts.submitted + counts.acknowledged,
+    positionCount: positions.length,
+    cash: residualCapital,
+    buyingPower: residualCapital,
+    equity: Number(plan.capital || 0),
+    message,
+    orders: buildBrokerOrders(orderStates),
+    positions,
+    actor,
+    createdAt: now,
+  });
+}
+
+function refreshExecutionAggregate(plan, executionRun, orderStates, payload = {}) {
+  const now = payload.now || new Date().toISOString();
+  const actor = payload.actor || 'execution-desk';
+  const nextLifecycle = deriveLifecycleFromOrders(orderStates, plan.lifecycleStatus);
+  const counts = summarizeOrderBook(orderStates);
+  const summary = payload.summary || summarizeLifecycle(plan.strategyName, nextLifecycle);
+  const completedAt = ['filled', 'cancelled', 'failed'].includes(nextLifecycle) ? now : '';
+  const nextRun = executionRun
+    ? controlPlaneRuntime.updateExecutionRun(executionRun.id, {
+      lifecycleStatus: nextLifecycle,
+      submittedOrderCount: counts.submitted + counts.acknowledged + counts.filled,
+      filledOrderCount: counts.filled,
+      rejectedOrderCount: counts.rejected,
+      summary,
+      completedAt,
+      metadata: payload.metadata || {},
+      updatedAt: now,
+    })
+    : null;
+  const nextPlan = controlPlaneRuntime.updateExecutionPlan(plan.id, {
+    lifecycleStatus: nextLifecycle,
+    approvalState: nextLifecycle === 'awaiting_approval' ? plan.approvalState : 'not_required',
+    executionRunId: nextRun?.id || plan.executionRunId,
+    summary,
+    metadata: payload.metadata ? { ...(plan.metadata || {}), ...payload.metadata } : plan.metadata,
+    updatedAt: now,
+  });
+  const runtime = buildRuntimeSnapshot(nextPlan || plan, nextRun || executionRun, orderStates, actor, summary, now);
+
+  return {
+    plan: nextPlan,
+    executionRun: nextRun,
+    orderStates,
+    runtime,
+    lifecycleStatus: nextLifecycle,
+  };
+}
+
+function loadMutableExecutionPlan(planId, errorMessage) {
   const detail = getExecutionPlanDetail(planId);
   if (!detail?.plan) {
     return {
@@ -30,8 +158,24 @@ export function approveExecutionPlan(planId, payload = {}) {
       message: `Unknown execution plan: ${planId || 'missing planId'}`,
     };
   }
+  if (!detail.executionRun) {
+    return {
+      ok: false,
+      error: 'execution run not found',
+      message: errorMessage || `Execution plan ${detail.plan.id} does not have an execution run yet.`,
+    };
+  }
+  return {
+    ok: true,
+    detail,
+  };
+}
 
-  const { plan, executionRun, orderStates } = detail;
+export function approveExecutionPlan(planId, payload = {}) {
+  const loaded = loadMutableExecutionPlan(planId);
+  if (!loaded.ok) return loaded;
+
+  const { plan, executionRun, orderStates } = loaded.detail;
   if (plan.lifecycleStatus !== 'awaiting_approval') {
     return {
       ok: false,
@@ -41,63 +185,36 @@ export function approveExecutionPlan(planId, payload = {}) {
   }
 
   const now = new Date().toISOString();
-  const updatedOrders = orderStates.map((item, index) => controlPlaneRuntime.updateExecutionOrderState(item.id, {
-    lifecycleStatus: 'submitted',
-    brokerOrderId: item.brokerOrderId || `broker-${plan.id}-${index + 1}`,
-    submittedAt: now,
-    summary: `Submitted ${item.side} ${item.symbol} after operator approval.`,
-  })).filter(Boolean);
-  const nextRun = executionRun
-    ? controlPlaneRuntime.updateExecutionRun(executionRun.id, {
+  const updatedOrders = orderStates
+    .map((item, index) => controlPlaneRuntime.updateExecutionOrderState(item.id, {
       lifecycleStatus: 'submitted',
-      submittedOrderCount: updatedOrders.length,
-      summary: summarizeLifecycle(plan.strategyName, 'submitted'),
-      metadata: {
-        approvedBy: payload.actor || 'execution-desk',
-      },
-    })
-    : null;
-  const nextPlan = controlPlaneRuntime.updateExecutionPlan(plan.id, {
-    lifecycleStatus: 'submitted',
-    approvalState: 'not_required',
-    executionRunId: nextRun?.id || plan.executionRunId,
-    summary: summarizeLifecycle(plan.strategyName, 'submitted'),
-    updatedAt: now,
-  });
+      brokerOrderId: item.brokerOrderId || `broker-${plan.id}-${index + 1}`,
+      summary: `Submitted ${item.side} ${item.symbol} after operator approval.`,
+      submittedAt: now,
+      updatedAt: now,
+    }))
+    .filter(Boolean);
 
-  const runtime = controlPlaneRuntime.recordExecutionRuntime({
-    cycleId: plan.workflowRunId || plan.id,
-    cycle: 0,
-    executionPlanId: plan.id,
-    executionRunId: nextRun?.id || '',
-    mode: plan.mode,
-    brokerAdapter: 'simulated',
-    brokerConnected: true,
-    marketConnected: true,
-    submittedOrderCount: updatedOrders.length,
-    rejectedOrderCount: 0,
-    openOrderCount: updatedOrders.length,
-    positionCount: 0,
-    cash: Number(plan.capital || 0),
-    buyingPower: Number(plan.capital || 0),
-    equity: Number(plan.capital || 0),
-    message: summarizeLifecycle(plan.strategyName, 'submitted'),
-    orders: buildBrokerOrders(updatedOrders, 'submitted'),
-    positions: [],
-    actor: payload.actor || 'execution-desk',
-    createdAt: now,
+  const result = refreshExecutionAggregate(plan, executionRun, updatedOrders, {
+    actor: payload.actor,
+    now,
+    summary: summarizeLifecycle(plan.strategyName, 'submitted'),
+    metadata: {
+      approvedBy: payload.actor || 'execution-desk',
+      transition: 'approve',
+    },
   });
 
   controlPlaneRuntime.recordOperatorAction({
     type: 'execution.approve-plan',
     actor: payload.actor || 'execution-desk',
     title: `Approved execution plan for ${plan.strategyName}`,
-    detail: summarizeLifecycle(plan.strategyName, 'submitted'),
+    detail: result.plan?.summary || summarizeLifecycle(plan.strategyName, 'submitted'),
     symbol: plan.strategyId,
     level: 'info',
     metadata: {
       executionPlanId: plan.id,
-      executionRunId: nextRun?.id || '',
+      executionRunId: result.executionRun?.id || executionRun.id,
     },
   });
 
@@ -107,32 +224,23 @@ export function approveExecutionPlan(planId, payload = {}) {
       updatedAt: now,
       metadata: {
         executionPlanId: plan.id,
-        executionRunId: nextRun?.id || '',
+        executionRunId: result.executionRun?.id || executionRun.id,
       },
     });
   }
 
   return {
     ok: true,
-    plan: nextPlan,
-    executionRun: nextRun,
-    orderStates: controlPlaneRuntime.listExecutionOrderStates(80, { executionPlanId: plan.id }),
-    runtime,
+    ...result,
   };
 }
 
-export function settleExecutionPlan(planId, payload = {}) {
-  const detail = getExecutionPlanDetail(planId);
-  if (!detail?.plan) {
-    return {
-      ok: false,
-      error: 'execution plan not found',
-      message: `Unknown execution plan: ${planId || 'missing planId'}`,
-    };
-  }
+export function syncExecutionPlan(planId, payload = {}) {
+  const loaded = loadMutableExecutionPlan(planId);
+  if (!loaded.ok) return loaded;
 
-  const { plan, executionRun, orderStates } = detail;
-  if (!['submitted', 'partial_fill'].includes(plan.lifecycleStatus)) {
+  const { plan, executionRun, orderStates } = loaded.detail;
+  if (!ACTIVE_PLAN_LIFECYCLES.has(plan.lifecycleStatus)) {
     return {
       ok: false,
       error: 'execution plan not active',
@@ -140,102 +248,145 @@ export function settleExecutionPlan(planId, payload = {}) {
     };
   }
 
-  const outcome = payload.outcome || 'filled';
+  const scenario = payload.scenario || 'acknowledge';
   const now = new Date().toISOString();
-  let lifecycleStatus = 'filled';
-  if (outcome === 'partial_fill') lifecycleStatus = 'partial_fill';
-  if (outcome === 'cancelled') lifecycleStatus = 'cancelled';
-  if (outcome === 'failed') lifecycleStatus = 'failed';
-
-  const updatedOrders = orderStates.map((item, index) => {
-    const partiallyFilledQty = Math.max(1, Math.floor(item.qty / 2));
-    const filledQty = lifecycleStatus === 'filled' ? item.qty : (lifecycleStatus === 'partial_fill' ? partiallyFilledQty : 0);
-    const orderLifecycle = lifecycleStatus === 'filled'
-      ? 'filled'
-      : (lifecycleStatus === 'partial_fill' ? (index % 2 === 0 ? 'filled' : 'submitted') : (lifecycleStatus === 'cancelled' ? 'cancelled' : 'rejected'));
-    return controlPlaneRuntime.updateExecutionOrderState(item.id, {
-      lifecycleStatus: orderLifecycle,
-      filledQty,
-      avgFillPrice: orderLifecycle === 'filled' ? Number((100 + index * 2.15).toFixed(2)) : null,
-      acknowledgedAt: now,
-      filledAt: orderLifecycle === 'filled' ? now : '',
-      summary: `${item.symbol} moved to ${orderLifecycle}.`,
-      updatedAt: now,
-    });
-  }).filter(Boolean);
-
-  const filledOrderCount = updatedOrders.filter((item) => item.lifecycleStatus === 'filled').length;
-  const rejectedOrderCount = updatedOrders.filter((item) => item.lifecycleStatus === 'rejected').length;
-  const nextRun = executionRun
-    ? controlPlaneRuntime.updateExecutionRun(executionRun.id, {
-      lifecycleStatus,
-      filledOrderCount,
-      rejectedOrderCount,
-      completedAt: ['filled', 'cancelled', 'failed'].includes(lifecycleStatus) ? now : '',
-      summary: summarizeLifecycle(plan.strategyName, lifecycleStatus),
-      metadata: {
-        settledBy: payload.actor || 'execution-desk',
-        outcome,
-      },
+  const updatedOrders = orderStates
+    .map((item, index) => {
+      if (scenario === 'acknowledge' && item.lifecycleStatus === 'submitted') {
+        return controlPlaneRuntime.updateExecutionOrderState(item.id, {
+          lifecycleStatus: 'acknowledged',
+          summary: `Broker acknowledged ${item.side} ${item.symbol}.`,
+          acknowledgedAt: now,
+          updatedAt: now,
+        });
+      }
+      if (scenario === 'partial_fill' && ACTIVE_ORDER_LIFECYCLES.has(item.lifecycleStatus)) {
+        const shouldFill = index % 2 === 0;
+        return controlPlaneRuntime.updateExecutionOrderState(item.id, {
+          lifecycleStatus: shouldFill ? 'filled' : 'acknowledged',
+          acknowledgedAt: now,
+          filledQty: shouldFill ? item.qty : Math.max(item.filledQty, Math.floor(item.qty / 2)),
+          avgFillPrice: shouldFill || item.avgFillPrice ? Number((100 + index * 3.1).toFixed(2)) : item.avgFillPrice,
+          filledAt: shouldFill ? now : item.filledAt,
+          summary: shouldFill
+            ? `${item.symbol} fully filled after broker sync.`
+            : `${item.symbol} partially filled and remains open.`,
+          updatedAt: now,
+        });
+      }
+      if (scenario === 'filled' && ACTIVE_ORDER_LIFECYCLES.has(item.lifecycleStatus)) {
+        return controlPlaneRuntime.updateExecutionOrderState(item.id, {
+          lifecycleStatus: 'filled',
+          acknowledgedAt: item.acknowledgedAt || now,
+          filledQty: item.qty,
+          avgFillPrice: Number((100 + index * 3.1).toFixed(2)),
+          filledAt: now,
+          summary: `${item.symbol} fully filled after broker sync.`,
+          updatedAt: now,
+        });
+      }
+      if (scenario === 'failed' && ACTIVE_ORDER_LIFECYCLES.has(item.lifecycleStatus)) {
+        return controlPlaneRuntime.updateExecutionOrderState(item.id, {
+          lifecycleStatus: 'rejected',
+          summary: `${item.symbol} was rejected by the broker.`,
+          acknowledgedAt: item.acknowledgedAt || now,
+          updatedAt: now,
+        });
+      }
+      return item;
     })
-    : null;
-  const nextPlan = controlPlaneRuntime.updateExecutionPlan(plan.id, {
-    lifecycleStatus,
-    summary: summarizeLifecycle(plan.strategyName, lifecycleStatus),
-    updatedAt: now,
-  });
+    .filter(Boolean);
 
-  const runtime = controlPlaneRuntime.recordExecutionRuntime({
-    cycleId: plan.workflowRunId || plan.id,
-    cycle: 0,
-    executionPlanId: plan.id,
-    executionRunId: nextRun?.id || '',
-    mode: plan.mode,
-    brokerAdapter: 'simulated',
-    brokerConnected: true,
-    marketConnected: true,
-    submittedOrderCount: updatedOrders.filter((item) => item.lifecycleStatus === 'submitted').length,
-    rejectedOrderCount,
-    openOrderCount: updatedOrders.filter((item) => item.lifecycleStatus === 'submitted').length,
-    positionCount: filledOrderCount,
-    cash: Math.max(0, Number(plan.capital || 0) - filledOrderCount * 1000),
-    buyingPower: Math.max(0, Number(plan.capital || 0) - filledOrderCount * 1000),
-    equity: Number(plan.capital || 0),
-    message: summarizeLifecycle(plan.strategyName, lifecycleStatus),
-    orders: buildBrokerOrders(updatedOrders, lifecycleStatus === 'filled' ? 'filled' : (lifecycleStatus === 'partial_fill' ? 'submitted' : lifecycleStatus)),
-    positions: updatedOrders
-      .filter((item) => item.lifecycleStatus === 'filled')
-      .map((item) => ({
-        symbol: item.symbol,
-        qty: item.filledQty,
-        side: item.side === 'BUY' ? 'LONG' : 'SHORT',
-        avgEntryPrice: Number(item.avgFillPrice || 0),
-        marketValue: Number(((item.avgFillPrice || 0) * item.filledQty).toFixed(2)),
-        unrealizedPnl: 0,
-      })),
-    actor: payload.actor || 'execution-desk',
-    createdAt: now,
+  const result = refreshExecutionAggregate(plan, executionRun, updatedOrders, {
+    actor: payload.actor,
+    now,
+    summary: summarizeLifecycle(plan.strategyName, deriveLifecycleFromOrders(updatedOrders, plan.lifecycleStatus)),
+    metadata: {
+      syncedBy: payload.actor || 'execution-desk',
+      scenario,
+    },
   });
 
   controlPlaneRuntime.recordOperatorAction({
-    type: 'execution.settle-plan',
+    type: 'execution.sync-plan',
     actor: payload.actor || 'execution-desk',
-    title: `Settled execution plan for ${plan.strategyName}`,
-    detail: summarizeLifecycle(plan.strategyName, lifecycleStatus),
+    title: `Synced execution plan for ${plan.strategyName}`,
+    detail: result.plan?.summary || summarizeLifecycle(plan.strategyName, result.lifecycleStatus),
     symbol: plan.strategyId,
-    level: lifecycleStatus === 'failed' ? 'warn' : 'info',
+    level: result.lifecycleStatus === 'failed' ? 'warn' : 'info',
     metadata: {
       executionPlanId: plan.id,
-      executionRunId: nextRun?.id || '',
-      outcome,
+      executionRunId: result.executionRun?.id || executionRun.id,
+      scenario,
     },
   });
 
   return {
     ok: true,
-    plan: nextPlan,
-    executionRun: nextRun,
-    orderStates: controlPlaneRuntime.listExecutionOrderStates(80, { executionPlanId: plan.id }),
-    runtime,
+    ...result,
   };
+}
+
+export function cancelExecutionPlan(planId, payload = {}) {
+  const loaded = loadMutableExecutionPlan(planId);
+  if (!loaded.ok) return loaded;
+
+  const { plan, executionRun, orderStates } = loaded.detail;
+  if (!['awaiting_approval', 'submitted', 'acknowledged'].includes(plan.lifecycleStatus)) {
+    return {
+      ok: false,
+      error: 'execution plan cannot be cancelled',
+      message: `Execution plan ${plan.id} is currently ${plan.lifecycleStatus}.`,
+    };
+  }
+
+  const now = new Date().toISOString();
+  const updatedOrders = orderStates
+    .map((item) => controlPlaneRuntime.updateExecutionOrderState(item.id, {
+      lifecycleStatus: 'cancelled',
+      summary: `Cancelled ${item.side} ${item.symbol} before completion.`,
+      updatedAt: now,
+    }))
+    .filter(Boolean);
+
+  const result = refreshExecutionAggregate(plan, executionRun, updatedOrders, {
+    actor: payload.actor,
+    now,
+    summary: summarizeLifecycle(plan.strategyName, 'cancelled'),
+    metadata: {
+      cancelledBy: payload.actor || 'execution-desk',
+      reason: payload.reason || 'operator_cancelled',
+    },
+  });
+
+  controlPlaneRuntime.recordOperatorAction({
+    type: 'execution.cancel-plan',
+    actor: payload.actor || 'execution-desk',
+    title: `Cancelled execution plan for ${plan.strategyName}`,
+    detail: result.plan?.summary || summarizeLifecycle(plan.strategyName, 'cancelled'),
+    symbol: plan.strategyId,
+    level: 'warn',
+    metadata: {
+      executionPlanId: plan.id,
+      executionRunId: result.executionRun?.id || executionRun.id,
+      reason: payload.reason || 'operator_cancelled',
+    },
+  });
+
+  return {
+    ok: true,
+    ...result,
+  };
+}
+
+export function settleExecutionPlan(planId, payload = {}) {
+  if (payload.outcome === 'cancelled') {
+    return cancelExecutionPlan(planId, payload);
+  }
+  return syncExecutionPlan(planId, {
+    ...payload,
+    scenario: payload.outcome === 'partial_fill'
+      ? 'partial_fill'
+      : (payload.outcome === 'failed' ? 'failed' : 'filled'),
+  });
 }

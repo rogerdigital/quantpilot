@@ -1464,6 +1464,9 @@ describe('research workspace pages', () => {
     expect(html).toContain('Execution Lifecycle Summary');
     expect(html).toContain('Open Strategy Detail');
     expect(html).toContain('Approve Routing');
+    expect(html).toContain('Broker Sync');
+    expect(html).toContain('Simulate Partial Fill');
+    expect(html).toContain('Cancel Plan');
     expect(html).toContain('Order Lifecycle');
     expect(html).toContain('Return to Backtest Detail');
     expect(html).toContain('Selected Execution Workflow Step');
@@ -1638,6 +1641,8 @@ describe('research workspace pages', () => {
     expect(html).toContain('Selected Execution Detail');
     expect(html).toContain('Research Execution Handoffs');
     expect(html).toContain('Open Strategy Detail');
+    expect(html).toContain('Broker Sync');
+    expect(html).toContain('Cancel Plan');
     expect(html).toContain('Return to Strategy Timeline');
     expect(html).not.toContain('Return to Backtest Detail');
   });

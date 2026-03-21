@@ -1564,6 +1564,8 @@ test('GET /api/execution/workbench returns lifecycle summary and execution ledge
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(typeof response.json.summary.awaitingApproval, 'number');
+  assert.equal(typeof response.json.summary.acknowledged, 'number');
+  assert.equal(typeof response.json.summary.cancelled, 'number');
   assert.equal(Array.isArray(response.json.entries), true);
   assert.equal(response.json.entries.some((entry) => entry.plan.id === 'exec-workbench-plan'), true);
 });
@@ -1694,6 +1696,125 @@ test('POST /api/execution/plans/:id/settle moves submitted plans into filled lif
   assert.equal(response.json.plan.lifecycleStatus, 'filled');
   assert.equal(response.json.executionRun.lifecycleStatus, 'filled');
   assert.equal(response.json.orderStates[0].lifecycleStatus, 'filled');
+});
+
+test('POST /api/execution/plans/:id/sync advances submitted plans into broker acknowledged lifecycle', async () => {
+  context.executionPlans.appendExecutionPlan({
+    id: 'exec-sync-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'paper',
+    status: 'ready',
+    lifecycleStatus: 'submitted',
+    approvalState: 'not_required',
+    riskStatus: 'approved',
+    summary: 'Submitted into broker route.',
+    capital: 100000,
+    orderCount: 1,
+    orders: [{ symbol: 'META', side: 'BUY', qty: 6, weight: 1, rationale: 'trend' }],
+  });
+  context.executionRuns.appendExecutionRun({
+    id: 'exec-sync-run',
+    executionPlanId: 'exec-sync-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'paper',
+    lifecycleStatus: 'submitted',
+    summary: 'Submitted into broker route.',
+    owner: 'execution-desk',
+    orderCount: 1,
+    submittedOrderCount: 1,
+  });
+  context.executionRuns.appendExecutionOrderStates([
+    {
+      id: 'exec-sync-order-1',
+      executionPlanId: 'exec-sync-plan',
+      executionRunId: 'exec-sync-run',
+      symbol: 'META',
+      side: 'BUY',
+      qty: 6,
+      weight: 1,
+      lifecycleStatus: 'submitted',
+      brokerOrderId: 'broker-exec-sync-1',
+      summary: 'submitted',
+      submittedAt: '2026-03-21T08:00:00.000Z',
+    },
+  ]);
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/execution/plans/exec-sync-plan/sync',
+    body: {
+      actor: 'execution-desk',
+      scenario: 'acknowledge',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.plan.lifecycleStatus, 'acknowledged');
+  assert.equal(response.json.executionRun.lifecycleStatus, 'acknowledged');
+  assert.equal(response.json.orderStates[0].lifecycleStatus, 'acknowledged');
+});
+
+test('POST /api/execution/plans/:id/cancel cancels active plans before settlement', async () => {
+  context.executionPlans.appendExecutionPlan({
+    id: 'exec-cancel-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'live',
+    status: 'ready',
+    lifecycleStatus: 'acknowledged',
+    approvalState: 'not_required',
+    riskStatus: 'approved',
+    summary: 'Broker acknowledged the route.',
+    capital: 100000,
+    orderCount: 1,
+    orders: [{ symbol: 'AMZN', side: 'SELL', qty: 4, weight: 1, rationale: 'rebalance' }],
+  });
+  context.executionRuns.appendExecutionRun({
+    id: 'exec-cancel-run',
+    executionPlanId: 'exec-cancel-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'live',
+    lifecycleStatus: 'acknowledged',
+    summary: 'Broker acknowledged the route.',
+    owner: 'execution-desk',
+    orderCount: 1,
+    submittedOrderCount: 1,
+  });
+  context.executionRuns.appendExecutionOrderStates([
+    {
+      id: 'exec-cancel-order-1',
+      executionPlanId: 'exec-cancel-plan',
+      executionRunId: 'exec-cancel-run',
+      symbol: 'AMZN',
+      side: 'SELL',
+      qty: 4,
+      weight: 1,
+      lifecycleStatus: 'acknowledged',
+      brokerOrderId: 'broker-exec-cancel-1',
+      summary: 'acknowledged',
+      submittedAt: '2026-03-21T08:00:00.000Z',
+      acknowledgedAt: '2026-03-21T08:01:00.000Z',
+    },
+  ]);
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/execution/plans/exec-cancel-plan/cancel',
+    body: {
+      actor: 'execution-desk',
+      reason: 'operator_cancelled',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.plan.lifecycleStatus, 'cancelled');
+  assert.equal(response.json.executionRun.lifecycleStatus, 'cancelled');
+  assert.equal(response.json.orderStates[0].lifecycleStatus, 'cancelled');
 });
 
 test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control notification for recovery', async () => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { approveExecutionPlan, queueExecutionCandidateHandoff, settleExecutionPlan } from '../../../app/api/controlPlane.ts';
+import { approveExecutionPlan, cancelExecutionPlan, queueExecutionCandidateHandoff, settleExecutionPlan, syncExecutionPlan } from '../../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
@@ -127,24 +127,29 @@ export function ExecutionPage() {
     versions: selectedExecutionVersionItems.length,
   });
   const selectedLifecycleStatus = selectedEntry?.executionRun?.lifecycleStatus || selectedEntry?.plan.lifecycleStatus || '--';
-  const selectedSubmittedCount = selectedEntry?.executionRun?.submittedOrderCount || 0;
-  const selectedFilledCount = selectedEntry?.executionRun?.filledOrderCount || 0;
   const selectedOrderStates = selectedEntry?.orderStates || [];
+  const selectedSubmittedCount = selectedEntry?.executionRun?.submittedOrderCount || 0;
+  const selectedAcknowledgedCount = selectedOrderStates.filter((item) => item.lifecycleStatus === 'acknowledged').length;
+  const selectedFilledCount = selectedEntry?.executionRun?.filledOrderCount || 0;
   const planSummary = ledgerEntries.reduce((acc, entry) => {
     const lifecycle = entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus;
     if (lifecycle === 'awaiting_approval') acc.awaitingApproval += 1;
     if (lifecycle === 'routing') acc.routing += 1;
     if (lifecycle === 'submitted' || lifecycle === 'partial_fill') acc.submitted += 1;
+    if (lifecycle === 'acknowledged') acc.acknowledged += 1;
     if (lifecycle === 'filled') acc.filled += 1;
     if (lifecycle === 'blocked') acc.blocked += 1;
-    if (lifecycle === 'failed' || lifecycle === 'cancelled') acc.failed += 1;
+    if (lifecycle === 'cancelled') acc.cancelled += 1;
+    if (lifecycle === 'failed') acc.failed += 1;
     return acc;
   }, {
     awaitingApproval: 0,
     routing: 0,
     submitted: 0,
+    acknowledged: 0,
     filled: 0,
     blocked: 0,
+    cancelled: 0,
     failed: 0,
   });
 
@@ -194,7 +199,9 @@ export function ExecutionPage() {
             <div className="status-row"><span>{locale === 'zh' ? '待审批' : 'Awaiting Approval'}</span><strong>{planSummary.awaitingApproval}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '路由中' : 'Routing'}</span><strong>{planSummary.routing}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '已提交' : 'Submitted'}</span><strong>{planSummary.submitted}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '已受理' : 'Acknowledged'}</span><strong>{planSummary.acknowledged}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '已成交' : 'Filled'}</span><strong>{planSummary.filled}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '已取消' : 'Cancelled'}</span><strong>{planSummary.cancelled}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '阻塞 / 失败' : 'Blocked / Failed'}</span><strong>{planSummary.blocked + planSummary.failed}</strong></div>
           </div>
         </article>
@@ -338,7 +345,7 @@ export function ExecutionPage() {
               <div className="status-row"><span>{locale === 'zh' ? '执行阶段' : 'Lifecycle'}</span><strong>{selectedLifecycleStatus}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '审批状态' : 'Approval'}</span><strong>{selectedEntry.plan.approvalState}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '订单数' : 'Order count'}</span><strong>{selectedEntry.plan.orderCount}</strong></div>
-              <div className="status-row"><span>{locale === 'zh' ? '已提交 / 已成交' : 'Submitted / Filled'}</span><strong>{selectedSubmittedCount} / {selectedFilledCount}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '已提交 / 已受理 / 已成交' : 'Submitted / Acknowledged / Filled'}</span><strong>{selectedSubmittedCount} / {selectedAcknowledgedCount} / {selectedFilledCount}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '资金规模' : 'Capital'}</span><strong>{selectedEntry.plan.capital.toFixed(0)}</strong></div>
               <div className="settings-actions">
                 <button
@@ -351,7 +358,7 @@ export function ExecutionPage() {
                 <button
                   type="button"
                   className="inline-action inline-action-approve"
-                  disabled={!canApproveExecution || selectedEntry.plan.lifecycleStatus !== 'awaiting_approval' || planBusyAction === 'approve'}
+                  disabled={!canApproveExecution || selectedLifecycleStatus !== 'awaiting_approval' || planBusyAction === 'approve'}
                   onClick={async () => {
                     setPlanBusyAction('approve');
                     setPlanMessage('');
@@ -371,7 +378,58 @@ export function ExecutionPage() {
                 <button
                   type="button"
                   className="inline-action"
-                  disabled={!canApproveExecution || !['submitted', 'partial_fill'].includes(selectedEntry.plan.lifecycleStatus) || planBusyAction === 'settle'}
+                  disabled={!canApproveExecution || !['submitted', 'acknowledged', 'partial_fill'].includes(selectedLifecycleStatus) || planBusyAction === 'sync'}
+                  onClick={async () => {
+                    setPlanBusyAction('sync');
+                    setPlanMessage('');
+                    try {
+                      await syncExecutionPlan(selectedEntry.plan.id, {
+                        actor: 'execution-desk',
+                        scenario: selectedLifecycleStatus === 'submitted' ? 'acknowledge' : 'filled',
+                      });
+                      setPlanMessage(
+                        selectedLifecycleStatus === 'submitted'
+                          ? (locale === 'zh' ? '已同步 broker 受理状态。' : 'Synced broker acknowledgement state.')
+                          : (locale === 'zh' ? '已同步 broker 成交状态。' : 'Synced broker fill state.'),
+                      );
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setPlanBusyAction('');
+                    }
+                  }}
+                >
+                  {planBusyAction === 'sync'
+                    ? (locale === 'zh' ? '同步中...' : 'Syncing...')
+                    : (selectedLifecycleStatus === 'submitted' || selectedLifecycleStatus === 'awaiting_approval'
+                      ? (locale === 'zh' ? '同步受理' : 'Broker Sync')
+                      : (locale === 'zh' ? '同步成交' : 'Sync Fill'))}
+                </button>
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={!canApproveExecution || !['submitted', 'acknowledged'].includes(selectedLifecycleStatus) || planBusyAction === 'partial-fill'}
+                  onClick={async () => {
+                    setPlanBusyAction('partial-fill');
+                    setPlanMessage('');
+                    try {
+                      await syncExecutionPlan(selectedEntry.plan.id, { actor: 'execution-desk', scenario: 'partial_fill' });
+                      setPlanMessage(locale === 'zh' ? '已模拟部分成交并保留未完成订单。' : 'Simulated a partial fill while keeping open orders active.');
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setPlanBusyAction('');
+                    }
+                  }}
+                >
+                  {planBusyAction === 'partial-fill' ? (locale === 'zh' ? '处理中...' : 'Processing...') : (locale === 'zh' ? '模拟部分成交' : 'Simulate Partial Fill')}
+                </button>
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={!canApproveExecution || !['submitted', 'acknowledged', 'partial_fill'].includes(selectedLifecycleStatus) || planBusyAction === 'settle'}
                   onClick={async () => {
                     setPlanBusyAction('settle');
                     setPlanMessage('');
@@ -387,6 +445,26 @@ export function ExecutionPage() {
                   }}
                 >
                   {planBusyAction === 'settle' ? (locale === 'zh' ? '结算中...' : 'Settling...') : (locale === 'zh' ? '标记成交' : 'Mark Filled')}
+                </button>
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={!canApproveExecution || !['awaiting_approval', 'submitted', 'acknowledged'].includes(selectedLifecycleStatus) || planBusyAction === 'cancel'}
+                  onClick={async () => {
+                    setPlanBusyAction('cancel');
+                    setPlanMessage('');
+                    try {
+                      await cancelExecutionPlan(selectedEntry.plan.id, { actor: 'execution-desk', reason: 'operator_cancelled' });
+                      setPlanMessage(locale === 'zh' ? '已取消当前执行计划。' : 'Cancelled the current execution plan.');
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setPlanBusyAction('');
+                    }
+                  }}
+                >
+                  {planBusyAction === 'cancel' ? (locale === 'zh' ? '取消中...' : 'Cancelling...') : (locale === 'zh' ? '取消计划' : 'Cancel Plan')}
                 </button>
                 {sourcePage === 'strategies' && requestedStrategyId ? (
                   <button
@@ -429,6 +507,7 @@ export function ExecutionPage() {
                   { label: locale === 'zh' ? '状态' : 'Status', value: item.lifecycleStatus },
                   { label: locale === 'zh' ? '数量' : 'Qty', value: item.qty },
                   { label: locale === 'zh' ? '已成交' : 'Filled', value: item.filledQty },
+                  { label: locale === 'zh' ? '均价' : 'Avg Fill', value: item.avgFillPrice ?? '--' },
                   { label: locale === 'zh' ? 'Broker ID' : 'Broker ID', value: item.brokerOrderId || '--' },
                 ]}
               />
