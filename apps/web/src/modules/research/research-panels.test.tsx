@@ -295,6 +295,8 @@ describe('research panel primitives', () => {
 
   it('returns shared strategy timeline guidance and action labels', () => {
     expect(getStrategyTimelineGuidance('en', 'run')).toContain('research runs panel');
+    expect(getStrategyTimelineGuidance('en', 'evaluation')).toContain('evaluation context');
+    expect(getStrategyTimelineActionLabel('en', 'workflow')).toBe('Open Research Detail');
     expect(getStrategyTimelineActionLabel('en', 'execution')).toBe('Open Execution Detail');
     expect(getStrategyTimelineActionLabel('en', 'audit')).toBeNull();
   });

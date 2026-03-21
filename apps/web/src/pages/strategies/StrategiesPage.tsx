@@ -194,6 +194,7 @@ function StrategiesPage() {
     selectedStrategyExecutionEntries,
     selectedStrategyTimelineItems,
     selectedTimelineItem,
+    replaySummary,
     latestResult,
     latestReport,
     promotionReadiness,
@@ -911,6 +912,37 @@ function StrategiesPage() {
       </section>
 
       <section className="panel-grid">
+        <InspectionPanel
+          title={locale === 'zh' ? '研究回放摘要' : 'Research Replay Summary'}
+          copy={locale === 'zh'
+            ? '把任务、workflow、run、result、evaluation、report 和治理动作压缩成一份研究回放摘要，先看全局再钻取时间线。'
+            : 'Compress tasks, workflows, runs, results, evaluations, reports, and governance actions into one replay summary before drilling into the timeline below.'}
+          badge={replaySummary?.latestAt ? formatDateTime(replaySummary.latestAt, locale) : '--'}
+          badgeClassName="badge-info"
+        >
+          {!selectedStrategy ? <InspectionEmpty>{locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.'}</InspectionEmpty> : null}
+          {selectedStrategy ? (
+            <>
+              <InspectionMetricsRow
+                metrics={[
+                  { label: locale === 'zh' ? '事件总数' : 'Events', value: replaySummary ? String(replaySummary.totalEvents) : '--' },
+                  { label: locale === 'zh' ? '注册表' : 'Registry', value: replaySummary ? String(replaySummary.registryEvents) : '--' },
+                  { label: locale === 'zh' ? '研究链路' : 'Research', value: replaySummary ? String(replaySummary.researchEvents) : '--' },
+                  { label: locale === 'zh' ? '评估/报告' : 'Review', value: replaySummary ? String(replaySummary.reviewEvents) : '--' },
+                  { label: locale === 'zh' ? '治理动作' : 'Governance', value: replaySummary ? String(replaySummary.governanceEvents) : '--' },
+                  { label: locale === 'zh' ? '执行承接' : 'Execution', value: replaySummary ? String(replaySummary.executionEvents) : '--' },
+                ]}
+              />
+              <InspectionStatus>
+                {replaySummary
+                  ? (locale === 'zh'
+                      ? `最近 run：${replaySummary.latestRunId || '--'}；最近 result：${replaySummary.latestResultId || '--'}；最近 evaluation：${replaySummary.latestEvaluationId || '--'}；最近 report：${replaySummary.latestReportId || '--'}。`
+                      : `Latest run: ${replaySummary.latestRunId || '--'}; latest result: ${replaySummary.latestResultId || '--'}; latest evaluation: ${replaySummary.latestEvaluationId || '--'}; latest report: ${replaySummary.latestReportId || '--'}.`)
+                  : (locale === 'zh' ? '当前还没有可汇总的研究回放节点。' : 'No research replay nodes are available yet.')}
+              </InspectionStatus>
+            </>
+          ) : null}
+        </InspectionPanel>
         <InspectionListPanel
           title={locale === 'zh' ? '选中策略端到端时间线' : 'Selected Strategy End-to-End Timeline'}
           copy={locale === 'zh' ? '把策略注册、研究运行和执行承接按时间收敛到一条线，直接查看从研究到执行的推进轨迹。' : 'Collapse registry updates, research runs, and execution handoff into one chronological track for the selected strategy.'}
@@ -953,17 +985,19 @@ function StrategiesPage() {
                 label={selectedTimelineActionLabel}
                 priority="primary"
                 onClick={() => {
-                  if (selectedTimelineItem.eventType === 'run') {
-                    researchNavigation.openBacktestDetail(selectedTimelineItem.reference, {
-                      strategyId: selectedStrategy?.id || '',
-                      timelineId: selectedTimelineItem.id,
-                      source: 'strategies',
-                    });
-                    return;
-                  }
-
-                  if (selectedTimelineItem.eventType === 'result') {
-                    researchNavigation.openBacktestDetail(selectedTimelineItem.reference, {
+                  if (
+                    selectedTimelineItem.eventType === 'run'
+                    || selectedTimelineItem.eventType === 'result'
+                    || selectedTimelineItem.eventType === 'evaluation'
+                    || selectedTimelineItem.eventType === 'report'
+                    || selectedTimelineItem.eventType === 'task'
+                    || selectedTimelineItem.eventType === 'workflow'
+                  ) {
+                    const runId = selectedTimelineItem.eventType === 'run'
+                      ? selectedTimelineItem.reference
+                      : (selectedTimelineItem.linkedRunId || selectedTimelineItem.reference);
+                    if (!runId) return;
+                    researchNavigation.openBacktestDetail(runId, {
                       strategyId: selectedStrategy?.id || '',
                       timelineId: selectedTimelineItem.id,
                       source: 'strategies',

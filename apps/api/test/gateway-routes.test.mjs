@@ -270,6 +270,9 @@ test('GET /api/strategy/catalog/:id returns strategy detail with recent runs', a
   assert.equal(Array.isArray(response.json.recentResults), true);
   assert.equal(response.json.recentResults.every((item) => item.strategyId === 'ema-cross-us'), true);
   assert.equal(typeof response.json.latestEvaluation?.verdict, 'string');
+  assert.equal(Array.isArray(response.json.recentEvaluations), true);
+  assert.equal(Array.isArray(response.json.replayTimeline), true);
+  assert.equal(response.json.replaySummary.totalEvents >= 1, true);
   assert.equal(typeof response.json.promotionReadiness?.level, 'string');
   assert.equal(typeof response.json.promotionReadiness?.recommendedAction, 'string');
   assert.equal(typeof response.json.executionCandidatePreview?.summary, 'string');

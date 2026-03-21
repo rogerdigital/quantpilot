@@ -21,6 +21,30 @@ export function getStrategyTimelineGuidance(locale: 'zh' | 'en', eventType?: str
       : 'Continue with the strategy detail and result summary panels below to confirm whether the latest result version is ready for promotion or execution prep.';
   }
 
+  if (eventType === 'evaluation') {
+    return locale === 'zh'
+      ? '继续查看回测详情与评估摘要，确认 verdict、readiness 和 recommended action 是否还能支撑当前晋级路径。'
+      : 'Continue with backtest detail and evaluation context to verify whether the verdict, readiness, and recommended action still support the current promotion path.';
+  }
+
+  if (eventType === 'report') {
+    return locale === 'zh'
+      ? '继续查看研究报告与工作流节点，确认报告资产、执行准备建议和风控说明是否一致。'
+      : 'Continue with the report asset and workflow nodes to confirm that the report, execution-prep guidance, and risk notes remain aligned.';
+  }
+
+  if (eventType === 'task' || eventType === 'workflow') {
+    return locale === 'zh'
+      ? '继续查看任务骨架和 workflow 详情，确认研究链路是否卡在重试、排队或人工复核节点。'
+      : 'Continue with the task backbone and workflow detail to verify whether the research chain is blocked on retries, queueing, or manual review.';
+  }
+
+  if (eventType === 'governance') {
+    return locale === 'zh'
+      ? '继续查看上方治理动作台和最近动作历史，确认这次治理动作有没有把策略推进到正确的下一步。'
+      : 'Continue with the governance action console and recent action history above to confirm whether this governance move advanced the strategy into the right next step.';
+  }
+
   return locale === 'zh'
     ? '继续查看下方审计轨迹和版本轨迹，确认这次策略写入带来的状态变化。'
     : 'Continue with the audit trail and version history panels below to confirm the state change from this registry update.';
@@ -37,6 +61,10 @@ export function getStrategyTimelineActionLabel(locale: 'zh' | 'en', eventType?: 
 
   if (eventType === 'result') {
     return locale === 'zh' ? '打开回测详情' : 'Open Backtest Detail';
+  }
+
+  if (eventType === 'evaluation' || eventType === 'report' || eventType === 'task' || eventType === 'workflow') {
+    return locale === 'zh' ? '打开研究详情' : 'Open Research Detail';
   }
 
   return null;

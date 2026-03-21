@@ -564,8 +564,8 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     recordWorkerHeartbeat(payload = {}) {
       return context.workerHeartbeats.recordWorkerHeartbeat(payload);
     },
-    listWorkflowRuns(limit = 50) {
-      return context.workflows.listWorkflowRuns(limit);
+    listWorkflowRuns(limit = 50, filter = {}) {
+      return context.workflows.listWorkflowRuns(limit, filter);
     },
     getWorkflowRun(workflowRunId) {
       return context.workflows.getWorkflowRun(workflowRunId);

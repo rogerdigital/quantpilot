@@ -445,8 +445,41 @@ export type StrategyCatalogDetailSnapshot = {
   latestResult?: BacktestResultRecord | null;
   recentResults?: BacktestResultRecord[];
   latestEvaluation?: ResearchEvaluationRecord | null;
+  recentEvaluations?: ResearchEvaluationRecord[];
   latestReport?: ResearchReportRecord | null;
   recentReports?: ResearchReportRecord[];
+  researchTasks?: ResearchTaskRecord[];
+  workflows?: WorkflowRunRecord[];
+  governanceActions?: ResearchGovernanceActionRecord[];
+  replaySummary?: {
+    totalEvents: number;
+    registryEvents: number;
+    researchEvents: number;
+    reviewEvents: number;
+    governanceEvents: number;
+    executionEvents: number;
+    latestAt: string;
+    latestRunId: string;
+    latestResultId: string;
+    latestEvaluationId: string;
+    latestReportId: string;
+  };
+  replayTimeline?: Array<{
+    id: string;
+    eventType: 'audit' | 'task' | 'workflow' | 'run' | 'result' | 'evaluation' | 'report' | 'governance' | 'execution';
+    lane: string;
+    title: string;
+    detail: string;
+    at: string;
+    reference: string;
+    linkedRunId?: string;
+    linkedWorkflowRunId?: string;
+    linkedResultId?: string;
+    metrics: Array<{
+      label: string;
+      value: string;
+    }>;
+  }>;
   promotionReadiness?: {
     level: 'ready' | 'review' | 'blocked';
     headline: string;

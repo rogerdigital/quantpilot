@@ -1,6 +1,8 @@
 import type { BacktestRunItem, ExecutionLedgerEntry, StrategyCatalogDetailSnapshot, StrategyCatalogItem } from '@shared-types/trading.ts';
 import type { AuditFeedItem } from '../audit/useAuditFeed.ts';
 
+type StrategyReplayTimelineItem = NonNullable<StrategyCatalogDetailSnapshot['replayTimeline']>[number];
+
 export function useStrategyDetailPanels(options: {
   locale: 'zh' | 'en';
   selectedStrategy: StrategyCatalogItem | null;
@@ -40,10 +42,10 @@ export function useStrategyDetailPanels(options: {
   const selectedStrategyExecutionEntries = executionEntries
     .filter((entry) => entry.plan.strategyId === selectedStrategy?.id)
     .slice(0, 6);
-  const selectedStrategyTimelineItems = [
+  const fallbackTimelineItems: StrategyReplayTimelineItem[] = [
     ...selectedStrategyAuditItems.map((item) => ({
       id: `audit-${item.id}`,
-      eventType: 'audit',
+      eventType: 'audit' as const,
       lane: locale === 'zh' ? '注册表' : 'Registry',
       title: item.title,
       detail: item.detail,
@@ -56,12 +58,14 @@ export function useStrategyDetailPanels(options: {
     })),
     ...selectedStrategyRuns.map((run) => ({
       id: `run-${run.id}`,
-      eventType: 'run',
+      eventType: 'run' as const,
       lane: locale === 'zh' ? '研究' : 'Research',
       title: `${run.windowLabel} · ${run.status}`,
       detail: run.summary,
       at: run.completedAt || run.reviewedAt || run.updatedAt || run.startedAt,
       reference: run.id,
+      linkedRunId: run.id,
+      linkedWorkflowRunId: run.workflowRunId || '',
       metrics: [
         { label: locale === 'zh' ? '收益' : 'Return', value: run.status === 'completed' || run.status === 'needs_review' ? `${run.annualizedReturnPct.toFixed(1)}%` : '--' },
         { label: 'Sharpe', value: run.status === 'completed' || run.status === 'needs_review' ? run.sharpe.toFixed(2) : '--' },
@@ -69,12 +73,15 @@ export function useStrategyDetailPanels(options: {
     })),
     ...(strategyDetail?.recentResults || []).slice(0, 6).map((result) => ({
       id: `result-${result.id}`,
-      eventType: 'result',
+      eventType: 'result' as const,
       lane: locale === 'zh' ? '结果' : 'Result',
       title: `v${result.version} · ${result.stage}`,
       detail: result.summary,
       at: result.generatedAt || result.updatedAt,
       reference: result.runId,
+      linkedRunId: result.runId,
+      linkedWorkflowRunId: result.workflowRunId || '',
+      linkedResultId: result.id,
       metrics: [
         { label: locale === 'zh' ? '状态' : 'Status', value: result.status },
         { label: locale === 'zh' ? '超额收益' : 'Excess', value: `${result.excessReturnPct.toFixed(1)}%` },
@@ -82,7 +89,7 @@ export function useStrategyDetailPanels(options: {
     })),
     ...selectedStrategyExecutionEntries.map((entry) => ({
       id: `execution-${entry.plan.id}`,
-      eventType: 'execution',
+      eventType: 'execution' as const,
       lane: locale === 'zh' ? '执行' : 'Execution',
       title: entry.plan.summary,
       detail: entry.latestRuntime?.message || `${entry.plan.orderCount} ${locale === 'zh' ? '笔订单候选' : 'candidate orders'}`,
@@ -96,6 +103,10 @@ export function useStrategyDetailPanels(options: {
   ]
     .sort((left, right) => new Date(right.at).getTime() - new Date(left.at).getTime())
     .slice(0, 10);
+  const selectedStrategyTimelineItems = (strategyDetail?.replayTimeline?.length
+    ? strategyDetail.replayTimeline
+    : fallbackTimelineItems)
+    .slice(0, 24);
   const selectedTimelineItem = selectedStrategyTimelineItems.find((item) => item.id === selectedTimelineId) || selectedStrategyTimelineItems[0] || null;
 
   return {
@@ -106,6 +117,7 @@ export function useStrategyDetailPanels(options: {
     selectedStrategyExecutionEntries,
     selectedStrategyTimelineItems,
     selectedTimelineItem,
+    replaySummary: strategyDetail?.replaySummary || null,
     latestResult: strategyDetail?.latestResult || null,
     latestReport: strategyDetail?.latestReport || null,
     promotionReadiness: strategyDetail?.promotionReadiness || null,
