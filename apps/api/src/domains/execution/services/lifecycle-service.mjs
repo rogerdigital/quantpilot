@@ -379,6 +379,79 @@ export function cancelExecutionPlan(planId, payload = {}) {
   };
 }
 
+export function reconcileExecutionPlan(planId, payload = {}) {
+  const detail = getExecutionPlanDetail(planId);
+  if (!detail?.plan) {
+    return {
+      ok: false,
+      error: 'execution plan not found',
+      message: `Unknown execution plan: ${planId || 'missing planId'}`,
+    };
+  }
+
+  const now = new Date().toISOString();
+  const reconciliation = detail.reconciliation || {
+    status: 'missing_snapshot',
+    issueCount: 1,
+    latestSnapshotAt: '',
+    orderCountDelta: detail.orderStates.length,
+    filledQtyDelta: 0,
+    positionDelta: 0,
+    issues: [],
+  };
+  const level = reconciliation.status === 'drift'
+    ? 'warn'
+    : (reconciliation.status === 'attention' || reconciliation.status === 'missing_snapshot' ? 'warn' : 'info');
+  const title = reconciliation.status === 'aligned'
+    ? `Execution reconciliation aligned for ${detail.plan.strategyName}`
+    : `Execution reconciliation flagged ${detail.plan.strategyName}`;
+  const detailMessage = reconciliation.status === 'aligned'
+    ? 'Broker snapshot, order lifecycle, and position totals are aligned.'
+    : `Found ${reconciliation.issueCount} reconciliation issue(s) across broker snapshot, order lifecycle, or positions.`;
+
+  controlPlaneRuntime.recordOperatorAction({
+    type: 'execution.reconcile-plan',
+    actor: payload.actor || 'execution-desk',
+    title,
+    detail: detailMessage,
+    symbol: detail.plan.strategyId,
+    level,
+    metadata: {
+      executionPlanId: detail.plan.id,
+      executionRunId: detail.executionRun?.id || '',
+      reconciliationStatus: reconciliation.status,
+      issueCount: reconciliation.issueCount,
+    },
+  });
+
+  controlPlaneRuntime.appendAuditRecord({
+    type: 'execution-reconciliation',
+    actor: payload.actor || 'execution-desk',
+    title,
+    detail: detailMessage,
+    metadata: {
+      executionPlanId: detail.plan.id,
+      executionRunId: detail.executionRun?.id || '',
+      reconciliationStatus: reconciliation.status,
+      issueCount: reconciliation.issueCount,
+      orderCountDelta: reconciliation.orderCountDelta,
+      filledQtyDelta: reconciliation.filledQtyDelta,
+      positionDelta: reconciliation.positionDelta,
+      issues: reconciliation.issues,
+    },
+    createdAt: now,
+  });
+
+  return {
+    ok: true,
+    plan: detail.plan,
+    executionRun: detail.executionRun,
+    reconciliation,
+    latestSnapshot: detail.latestSnapshot || null,
+    reviewedAt: now,
+  };
+}
+
 export function settleExecutionPlan(planId, payload = {}) {
   if (payload.outcome === 'cancelled') {
     return cancelExecutionPlan(planId, payload);

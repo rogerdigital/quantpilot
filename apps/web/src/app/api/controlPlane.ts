@@ -6,6 +6,7 @@ import type {
   BrokerAccountSnapshotRecord,
   ExecutionCandidateHandoffSnapshot,
   ExecutionLedgerEntry,
+  ExecutionWorkbenchResponse,
   LatestBrokerAccountSnapshotResponse,
   MarketProviderStatusSnapshot,
   WorkflowRunsSnapshot,
@@ -424,6 +425,12 @@ export async function fetchExecutionLedger(): Promise<{ ok: boolean; entries: Ex
   });
 }
 
+export async function fetchExecutionWorkbench(): Promise<ExecutionWorkbenchResponse> {
+  return fetchJson('/api/execution/workbench', {
+    headers: { Accept: 'application/json' },
+  });
+}
+
 export async function fetchExecutionCandidateHandoffs(): Promise<ExecutionCandidateHandoffSnapshot> {
   return fetchJson('/api/research/execution-candidates', {
     headers: { Accept: 'application/json' },
@@ -492,6 +499,18 @@ export async function cancelExecutionPlan(planId: string, payload: {
   reason?: string;
 } = {}) {
   const response = await fetch(`/api/execution/plans/${planId}/cancel`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
+export async function reconcileExecutionPlan(planId: string, payload: {
+  actor?: string;
+} = {}) {
+  const response = await fetch(`/api/execution/plans/${planId}/reconcile`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),

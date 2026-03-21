@@ -13,7 +13,7 @@ import { evaluateBacktestRun, getResearchEvaluationSummary, listResearchEvaluati
 import { getResearchReportSummary, listResearchReports } from '../../domains/research/services/report-service.mjs';
 import { getResearchWorkbenchSnapshot, listResearchGovernanceActions, runResearchGovernanceAction } from '../../domains/research/services/workbench-service.mjs';
 import { getExecutionPlanDetail, getExecutionWorkbench, getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
-import { approveExecutionPlan, cancelExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../domains/execution/services/lifecycle-service.mjs';
+import { approveExecutionPlan, cancelExecutionPlan, reconcileExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../domains/execution/services/lifecycle-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { listPermissionDescriptors, writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
 import { getMonitoringStatus, listMonitoringAlerts, listMonitoringSnapshots } from '../../modules/monitoring/service.mjs';
@@ -641,6 +641,18 @@ export async function handlePlatformRoutes(context) {
     const planId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = cancelExecutionPlan(planId, body);
+    writeJson(res, result.ok ? 200 : 409, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname.endsWith('/reconcile') && reqUrl.pathname.startsWith('/api/execution/plans/')) {
+    if (!hasPermission('execution:approve')) {
+      writeForbidden('execution:approve', 'reconcile execution plans');
+      return true;
+    }
+    const planId = reqUrl.pathname.split('/').at(-2);
+    const body = await readJsonBody(req);
+    const result = reconcileExecutionPlan(planId, body);
     writeJson(res, result.ok ? 200 : 409, result);
     return true;
   }

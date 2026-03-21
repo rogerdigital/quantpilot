@@ -1322,6 +1322,28 @@ describe('research workspace pages', () => {
           metadata: {},
         },
       ],
+      workbench: {
+        ok: true,
+        asOf: '2026-03-13T11:40:00.000Z',
+        summary: {
+          totalPlans: 1,
+          awaitingApproval: 1,
+          routing: 0,
+          submitted: 0,
+          acknowledged: 0,
+          filled: 0,
+          blocked: 0,
+          cancelled: 0,
+          failed: 0,
+          aligned: 0,
+          attention: 0,
+          drift: 0,
+          missingSnapshot: 1,
+          totalOpenOrders: 0,
+          syncedPositions: 1,
+        },
+        entries: [],
+      },
       ledgerEntries: [
         {
           plan: {
@@ -1402,6 +1424,35 @@ describe('research workspace pages', () => {
             equity: 102400,
             createdAt: '2026-03-13T11:40:00.000Z',
           },
+          latestSnapshot: {
+            id: 'snapshot-1',
+            provider: 'paper-broker',
+            cycle: 'cycle-1',
+            executionPlanId: 'plan-1',
+            executionRunId: 'exec-run-1',
+            connected: true,
+            account: { cash: 54000 },
+            positions: [{ symbol: 'AAPL', qty: 10 }],
+            orders: [{ id: 'order-1', filledQty: 0 }],
+            message: 'Snapshot synced',
+          },
+          reconciliation: {
+            status: 'missing_snapshot',
+            issueCount: 1,
+            latestSnapshotAt: '',
+            orderCountDelta: 1,
+            filledQtyDelta: 0,
+            positionDelta: 0,
+            issues: [{
+              id: 'missing-snapshot',
+              kind: 'snapshot',
+              severity: 'warn',
+              title: 'Broker snapshot missing',
+              detail: 'No broker account snapshot has been recorded for this execution plan yet.',
+              expected: 'A broker account snapshot linked to the plan',
+              actual: 'No linked snapshot found',
+            }],
+          },
         },
       ],
       workflowRuns: [
@@ -1467,6 +1518,8 @@ describe('research workspace pages', () => {
     expect(html).toContain('Broker Sync');
     expect(html).toContain('Simulate Partial Fill');
     expect(html).toContain('Cancel Plan');
+    expect(html).toContain('Execution Reconciliation');
+    expect(html).toContain('Run Reconciliation');
     expect(html).toContain('Order Lifecycle');
     expect(html).toContain('Return to Backtest Detail');
     expect(html).toContain('Selected Execution Workflow Step');
@@ -1530,6 +1583,28 @@ describe('research workspace pages', () => {
           metadata: {},
         },
       ],
+      workbench: {
+        ok: true,
+        asOf: '2026-03-13T11:40:00.000Z',
+        summary: {
+          totalPlans: 1,
+          awaitingApproval: 0,
+          routing: 0,
+          submitted: 1,
+          acknowledged: 0,
+          filled: 0,
+          blocked: 0,
+          cancelled: 0,
+          failed: 0,
+          aligned: 1,
+          attention: 0,
+          drift: 0,
+          missingSnapshot: 0,
+          totalOpenOrders: 1,
+          syncedPositions: 1,
+        },
+        entries: [],
+      },
       ledgerEntries: [
         {
           plan: {
@@ -1589,6 +1664,27 @@ describe('research workspace pages', () => {
             equity: 102400,
             createdAt: '2026-03-13T11:40:00.000Z',
           },
+          latestSnapshot: {
+            id: 'snapshot-1',
+            provider: 'paper-broker',
+            cycle: 'cycle-1',
+            executionPlanId: 'plan-1',
+            executionRunId: 'exec-run-1',
+            connected: true,
+            account: { cash: 54000 },
+            positions: [{ symbol: 'AAPL', qty: 10 }],
+            orders: [{ id: 'order-1', filledQty: 2 }],
+            message: 'Snapshot synced',
+          },
+          reconciliation: {
+            status: 'aligned',
+            issueCount: 0,
+            latestSnapshotAt: '2026-03-13T11:40:00.000Z',
+            orderCountDelta: 0,
+            filledQtyDelta: 0,
+            positionDelta: 0,
+            issues: [],
+          },
         },
       ],
       workflowRuns: [
@@ -1643,6 +1739,7 @@ describe('research workspace pages', () => {
     expect(html).toContain('Open Strategy Detail');
     expect(html).toContain('Broker Sync');
     expect(html).toContain('Cancel Plan');
+    expect(html).toContain('Execution Reconciliation');
     expect(html).toContain('Return to Strategy Timeline');
     expect(html).not.toContain('Return to Backtest Detail');
   });

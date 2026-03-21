@@ -1528,6 +1528,7 @@ test('GET /api/execution/ledger returns plans joined with workflow and runtime s
   assert.equal(response.json.entries[0].plan.id, 'plan-ledger-1');
   assert.equal(response.json.entries[0].workflow.status, 'completed');
   assert.equal(response.json.entries[0].latestRuntime.submittedOrderCount, 2);
+  assert.equal(typeof response.json.entries[0].reconciliation?.status, 'string');
 });
 
 test('GET /api/execution/workbench returns lifecycle summary and execution ledger entries', async () => {
@@ -1566,6 +1567,7 @@ test('GET /api/execution/workbench returns lifecycle summary and execution ledge
   assert.equal(typeof response.json.summary.awaitingApproval, 'number');
   assert.equal(typeof response.json.summary.acknowledged, 'number');
   assert.equal(typeof response.json.summary.cancelled, 'number');
+  assert.equal(typeof response.json.summary.totalOpenOrders, 'number');
   assert.equal(Array.isArray(response.json.entries), true);
   assert.equal(response.json.entries.some((entry) => entry.plan.id === 'exec-workbench-plan'), true);
 });
@@ -1815,6 +1817,82 @@ test('POST /api/execution/plans/:id/cancel cancels active plans before settlemen
   assert.equal(response.json.plan.lifecycleStatus, 'cancelled');
   assert.equal(response.json.executionRun.lifecycleStatus, 'cancelled');
   assert.equal(response.json.orderStates[0].lifecycleStatus, 'cancelled');
+});
+
+test('POST /api/execution/plans/:id/reconcile records structured reconciliation output', async () => {
+  context.executionPlans.appendExecutionPlan({
+    id: 'exec-reconcile-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'paper',
+    status: 'ready',
+    lifecycleStatus: 'filled',
+    approvalState: 'not_required',
+    riskStatus: 'approved',
+    summary: 'Execution completed.',
+    capital: 100000,
+    orderCount: 1,
+    orders: [{ symbol: 'AAPL', side: 'BUY', qty: 5, weight: 1, rationale: 'trend' }],
+  });
+  context.executionRuns.appendExecutionRun({
+    id: 'exec-reconcile-run',
+    executionPlanId: 'exec-reconcile-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'paper',
+    lifecycleStatus: 'filled',
+    summary: 'Execution completed.',
+    owner: 'execution-desk',
+    orderCount: 1,
+    submittedOrderCount: 1,
+    filledOrderCount: 1,
+  });
+  context.executionRuns.appendExecutionOrderStates([
+    {
+      id: 'exec-reconcile-order-1',
+      executionPlanId: 'exec-reconcile-plan',
+      executionRunId: 'exec-reconcile-run',
+      symbol: 'AAPL',
+      side: 'BUY',
+      qty: 5,
+      weight: 1,
+      lifecycleStatus: 'filled',
+      brokerOrderId: 'broker-exec-reconcile-1',
+      filledQty: 5,
+      avgFillPrice: 181.5,
+      summary: 'filled',
+      submittedAt: '2026-03-21T08:00:00.000Z',
+      acknowledgedAt: '2026-03-21T08:01:00.000Z',
+      filledAt: '2026-03-21T08:02:00.000Z',
+    },
+  ]);
+  context.executionRuntime.appendBrokerAccountSnapshot({
+    id: 'exec-reconcile-snapshot',
+    cycleId: 'cycle-1',
+    cycle: 1,
+    executionPlanId: 'exec-reconcile-plan',
+    executionRunId: 'exec-reconcile-run',
+    provider: 'simulated',
+    connected: true,
+    account: { cash: 90000, buyingPower: 90000, equity: 100000 },
+    positions: [{ symbol: 'AAPL', qty: 3, avgCost: 181.5 }],
+    orders: [{ id: 'broker-exec-reconcile-1', symbol: 'AAPL', side: 'BUY', qty: 5, filledQty: 5, status: 'filled' }],
+    message: 'snapshot synced',
+    createdAt: '2026-03-21T08:03:00.000Z',
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/execution/plans/exec-reconcile-plan/reconcile',
+    body: {
+      actor: 'execution-desk',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.reconciliation.status, 'attention');
+  assert.equal(response.json.reconciliation.issueCount > 0, true);
 });
 
 test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control notification for recovery', async () => {

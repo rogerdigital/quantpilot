@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { approveExecutionPlan, cancelExecutionPlan, queueExecutionCandidateHandoff, settleExecutionPlan, syncExecutionPlan } from '../../../app/api/controlPlane.ts';
+import { approveExecutionPlan, cancelExecutionPlan, queueExecutionCandidateHandoff, reconcileExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
@@ -42,6 +42,7 @@ export function ExecutionPage() {
     accountSnapshots,
     handoffs,
     ledgerEntries,
+    workbench,
     workflowRuns,
     operatorActions,
     loading: executionDataLoading,
@@ -131,6 +132,8 @@ export function ExecutionPage() {
   const selectedSubmittedCount = selectedEntry?.executionRun?.submittedOrderCount || 0;
   const selectedAcknowledgedCount = selectedOrderStates.filter((item) => item.lifecycleStatus === 'acknowledged').length;
   const selectedFilledCount = selectedEntry?.executionRun?.filledOrderCount || 0;
+  const selectedReconciliation = selectedEntry?.reconciliation;
+  const workbenchSummary = workbench?.summary;
   const planSummary = ledgerEntries.reduce((acc, entry) => {
     const lifecycle = entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus;
     if (lifecycle === 'awaiting_approval') acc.awaitingApproval += 1;
@@ -194,15 +197,26 @@ export function ExecutionPage() {
 
       <section className="panel-grid">
         <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '执行生命周期总览' : 'Execution Lifecycle Summary'}</div><div className="panel-copy">{locale === 'zh' ? '把待审批、已提交、已成交和阻塞的执行计划压缩成一块执行中台总览。' : 'Compress awaiting approval, submitted, filled, and blocked plans into one execution-lifecycle overview.'}</div></div><div className="panel-badge badge-info">{ledgerEntries.length}</div></div>
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '执行生命周期总览' : 'Execution Lifecycle Summary'}</div><div className="panel-copy">{locale === 'zh' ? '把待审批、已提交、已成交和阻塞的执行计划压缩成一块执行中台总览。' : 'Compress awaiting approval, submitted, filled, and blocked plans into one execution-lifecycle overview.'}</div></div><div className="panel-badge badge-info">{workbenchSummary?.totalPlans ?? ledgerEntries.length}</div></div>
           <div className="status-stack">
-            <div className="status-row"><span>{locale === 'zh' ? '待审批' : 'Awaiting Approval'}</span><strong>{planSummary.awaitingApproval}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '路由中' : 'Routing'}</span><strong>{planSummary.routing}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '已提交' : 'Submitted'}</span><strong>{planSummary.submitted}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '已受理' : 'Acknowledged'}</span><strong>{planSummary.acknowledged}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '已成交' : 'Filled'}</span><strong>{planSummary.filled}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '已取消' : 'Cancelled'}</span><strong>{planSummary.cancelled}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '阻塞 / 失败' : 'Blocked / Failed'}</span><strong>{planSummary.blocked + planSummary.failed}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '待审批' : 'Awaiting Approval'}</span><strong>{workbenchSummary?.awaitingApproval ?? planSummary.awaitingApproval}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '路由中' : 'Routing'}</span><strong>{workbenchSummary?.routing ?? planSummary.routing}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '已提交' : 'Submitted'}</span><strong>{workbenchSummary?.submitted ?? planSummary.submitted}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '已受理' : 'Acknowledged'}</span><strong>{workbenchSummary?.acknowledged ?? planSummary.acknowledged}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '已成交' : 'Filled'}</span><strong>{workbenchSummary?.filled ?? planSummary.filled}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '已取消' : 'Cancelled'}</span><strong>{workbenchSummary?.cancelled ?? planSummary.cancelled}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '阻塞 / 失败' : 'Blocked / Failed'}</span><strong>{(workbenchSummary?.blocked ?? planSummary.blocked) + (workbenchSummary?.failed ?? planSummary.failed)}</strong></div>
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '账户与持仓对账' : 'Account And Position Reconciliation'}</div><div className="panel-copy">{locale === 'zh' ? '比较 execution order state、broker snapshot 和持仓数量，快速识别 drift。' : 'Compare execution order states, broker snapshots, and positions to quickly spot drift.'}</div></div><div className="panel-badge badge-info">{workbenchSummary ? workbenchSummary.aligned + workbenchSummary.attention + workbenchSummary.drift + workbenchSummary.missingSnapshot : ledgerEntries.length}</div></div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '对齐' : 'Aligned'}</span><strong>{workbenchSummary?.aligned ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '需关注' : 'Attention'}</span><strong>{workbenchSummary?.attention ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '已漂移' : 'Drift'}</span><strong>{workbenchSummary?.drift ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '缺少快照' : 'Missing Snapshot'}</span><strong>{workbenchSummary?.missingSnapshot ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '未完成订单' : 'Open Orders'}</span><strong>{workbenchSummary?.totalOpenOrders ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '已同步持仓' : 'Synced Positions'}</span><strong>{workbenchSummary?.syncedPositions ?? 0}</strong></div>
           </div>
         </article>
         <article className="panel">
@@ -466,6 +480,26 @@ export function ExecutionPage() {
                 >
                   {planBusyAction === 'cancel' ? (locale === 'zh' ? '取消中...' : 'Cancelling...') : (locale === 'zh' ? '取消计划' : 'Cancel Plan')}
                 </button>
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={!canApproveExecution || !selectedEntry || planBusyAction === 'reconcile'}
+                  onClick={async () => {
+                    setPlanBusyAction('reconcile');
+                    setPlanMessage('');
+                    try {
+                      await reconcileExecutionPlan(selectedEntry.plan.id, { actor: 'execution-desk' });
+                      setPlanMessage(locale === 'zh' ? '已记录最新执行对账结果。' : 'Captured the latest execution reconciliation result.');
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setPlanBusyAction('');
+                    }
+                  }}
+                >
+                  {planBusyAction === 'reconcile' ? (locale === 'zh' ? '对账中...' : 'Reconciling...') : (locale === 'zh' ? '执行对账' : 'Run Reconciliation')}
+                </button>
                 {sourcePage === 'strategies' && requestedStrategyId ? (
                   <button
                     type="button"
@@ -488,6 +522,30 @@ export function ExecutionPage() {
               {planMessage ? <InspectionStatus>{planMessage}</InspectionStatus> : null}
               <InspectionStatus>{executionDetailInspection.summary}</InspectionStatus>
               <InspectionStatus>{executionDetailInspection.runtimeMessage}</InspectionStatus>
+            </div>
+          )}
+        </InspectionPanel>
+        <InspectionPanel
+          title={locale === 'zh' ? '执行对账结果' : 'Execution Reconciliation'}
+          copy={locale === 'zh' ? '把订单生命周期、成交数量和 broker 快照的持仓数量对到一起。' : 'Align order lifecycle, fill quantity, and broker snapshot positions in one reconciliation view.'}
+          badge={selectedReconciliation?.status || '--'}
+        >
+          {!selectedEntry ? (
+            <InspectionStatus>{locale === 'zh' ? '先从账本中选择一个 execution plan。' : 'Select an execution plan from the ledger first.'}</InspectionStatus>
+          ) : !selectedReconciliation ? (
+            <InspectionStatus>{locale === 'zh' ? '当前还没有对账摘要。' : 'No reconciliation summary is available yet.'}</InspectionStatus>
+          ) : (
+            <div className="status-stack">
+              <div className="status-row"><span>{locale === 'zh' ? '对账状态' : 'Status'}</span><strong>{selectedReconciliation.status}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '问题数' : 'Issues'}</span><strong>{selectedReconciliation.issueCount}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '订单偏差' : 'Order Delta'}</span><strong>{selectedReconciliation.orderCountDelta}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '成交偏差' : 'Fill Delta'}</span><strong>{selectedReconciliation.filledQtyDelta}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '持仓偏差' : 'Position Delta'}</span><strong>{selectedReconciliation.positionDelta}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '最新快照' : 'Snapshot'}</span><strong>{selectedReconciliation.latestSnapshotAt || '--'}</strong></div>
+              {!selectedReconciliation.issues.length ? <InspectionStatus>{locale === 'zh' ? '当前 execution lifecycle 与 broker snapshot 已对齐。' : 'The current execution lifecycle is aligned with the linked broker snapshot.'}</InspectionStatus> : null}
+              {selectedReconciliation.issues.map((item) => (
+                <InspectionStatus key={item.id}>{`${item.title}: ${item.detail} (${item.expected} / ${item.actual})`}</InspectionStatus>
+              ))}
             </div>
           )}
         </InspectionPanel>

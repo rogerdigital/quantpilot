@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import type { BrokerAccountSnapshotRecord, ExecutionCandidateHandoffRecord, ExecutionLedgerEntry, ExecutionRuntimeEvent, WorkflowRunRecord } from '@shared-types/trading.ts';
+import type { BrokerAccountSnapshotRecord, ExecutionCandidateHandoffRecord, ExecutionLedgerEntry, ExecutionRuntimeEvent, ExecutionWorkbenchResponse, WorkflowRunRecord } from '@shared-types/trading.ts';
 import {
   fetchExecutionAccountSnapshots,
   fetchExecutionCandidateHandoffs,
   fetchExecutionLedger,
   fetchExecutionRuntime,
+  fetchExecutionWorkbench,
   fetchOperatorActions,
   fetchTaskWorkflows,
 } from '../../app/api/controlPlane.ts';
@@ -25,6 +26,7 @@ type ExecutionConsoleDataState = {
   accountSnapshots: BrokerAccountSnapshotRecord[];
   handoffs: ExecutionCandidateHandoffRecord[];
   ledgerEntries: ExecutionLedgerEntry[];
+  workbench: ExecutionWorkbenchResponse | null;
   workflowRuns: WorkflowRunRecord[];
   operatorActions: OperatorActionItem[];
   loading: boolean;
@@ -37,6 +39,7 @@ export function useExecutionConsoleData(refreshKey?: string | number) {
     accountSnapshots: [],
     handoffs: [],
     ledgerEntries: [],
+    workbench: null,
     workflowRuns: [],
     operatorActions: [],
     loading: true,
@@ -56,16 +59,20 @@ export function useExecutionConsoleData(refreshKey?: string | number) {
       fetchExecutionAccountSnapshots(),
       fetchExecutionCandidateHandoffs(),
       fetchExecutionLedger(),
+      fetchExecutionWorkbench(),
       fetchTaskWorkflows(),
       fetchOperatorActions(),
     ])
-      .then(([runtimeResponse, snapshotResponse, handoffResponse, ledgerResponse, workflowResponse, actionResponse]) => {
+      .then(([runtimeResponse, snapshotResponse, handoffResponse, ledgerResponse, workbenchResponse, workflowResponse, actionResponse]) => {
         if (!active) return;
         setState({
           runtimeEvents: Array.isArray(runtimeResponse?.events) ? runtimeResponse.events : [],
           accountSnapshots: Array.isArray(snapshotResponse?.snapshots) ? snapshotResponse.snapshots : [],
           handoffs: Array.isArray(handoffResponse?.handoffs) ? handoffResponse.handoffs : [],
-          ledgerEntries: Array.isArray(ledgerResponse?.entries) ? ledgerResponse.entries : [],
+          ledgerEntries: Array.isArray(workbenchResponse?.entries)
+            ? workbenchResponse.entries
+            : (Array.isArray(ledgerResponse?.entries) ? ledgerResponse.entries : []),
+          workbench: workbenchResponse?.ok ? workbenchResponse : null,
           workflowRuns: Array.isArray(workflowResponse?.workflows) ? workflowResponse.workflows : [],
           operatorActions: Array.isArray(actionResponse?.actions) ? actionResponse.actions : [],
           loading: false,
@@ -79,6 +86,7 @@ export function useExecutionConsoleData(refreshKey?: string | number) {
           accountSnapshots: [],
           handoffs: [],
           ledgerEntries: [],
+          workbench: null,
           workflowRuns: [],
           operatorActions: [],
           loading: false,

@@ -431,6 +431,26 @@ export type ExecutionRunRecord = {
   metadata: Record<string, unknown>;
 };
 
+export type ExecutionReconciliationIssue = {
+  id: string;
+  kind: 'snapshot' | 'orders' | 'fills' | 'positions';
+  severity: 'info' | 'warn' | 'critical';
+  title: string;
+  detail: string;
+  expected: string;
+  actual: string;
+};
+
+export type ExecutionReconciliationRecord = {
+  status: 'aligned' | 'attention' | 'drift' | 'missing_snapshot';
+  issueCount: number;
+  latestSnapshotAt: string;
+  orderCountDelta: number;
+  filledQtyDelta: number;
+  positionDelta: number;
+  issues: ExecutionReconciliationIssue[];
+};
+
 export type ExecutionLedgerEntry = {
   plan: ExecutionPlanRecord;
   executionRun: ExecutionRunRecord | null;
@@ -444,6 +464,8 @@ export type ExecutionLedgerEntry = {
     failedAt: string;
   } | null;
   latestRuntime: ExecutionRuntimeEvent | null;
+  latestSnapshot?: BrokerAccountSnapshotRecord | null;
+  reconciliation?: ExecutionReconciliationRecord | null;
 };
 
 export type LatestBrokerAccountSnapshotResponse = {
@@ -458,6 +480,31 @@ export type ExecutionPlanDetailResponse = {
   orderStates: ExecutionOrderStateRecord[];
   workflow: WorkflowRunRecord | null;
   latestRuntime: ExecutionRuntimeEvent | null;
+  latestSnapshot?: BrokerAccountSnapshotRecord | null;
+  reconciliation?: ExecutionReconciliationRecord | null;
+};
+
+export type ExecutionWorkbenchResponse = {
+  ok: boolean;
+  asOf: string;
+  summary: {
+    totalPlans: number;
+    awaitingApproval: number;
+    routing: number;
+    submitted: number;
+    acknowledged: number;
+    filled: number;
+    blocked: number;
+    cancelled: number;
+    failed: number;
+    aligned: number;
+    attention: number;
+    drift: number;
+    missingSnapshot: number;
+    totalOpenOrders: number;
+    syncedPositions: number;
+  };
+  entries: ExecutionLedgerEntry[];
 };
 
 export type StrategyCatalogItem = {
