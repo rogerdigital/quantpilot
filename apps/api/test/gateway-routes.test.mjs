@@ -1557,6 +1557,32 @@ test('GET /api/execution/workbench returns lifecycle summary and execution ledge
     owner: 'execution-desk',
     orderCount: 1,
   });
+  context.executionPlans.appendExecutionPlan({
+    id: 'exec-workbench-recovery-plan',
+    strategyId: 'mean-revert-basket',
+    strategyName: 'Mean Revert Basket',
+    mode: 'live',
+    status: 'ready',
+    lifecycleStatus: 'cancelled',
+    approvalState: 'not_required',
+    riskStatus: 'approved',
+    summary: 'Cancelled route awaiting recovery.',
+    capital: 42000,
+    orderCount: 1,
+    orders: [{ symbol: 'IWM', side: 'BUY', qty: 9, weight: 1, rationale: 're-enter' }],
+  });
+  context.executionRuns.appendExecutionRun({
+    id: 'exec-workbench-recovery-run',
+    executionPlanId: 'exec-workbench-recovery-plan',
+    strategyId: 'mean-revert-basket',
+    strategyName: 'Mean Revert Basket',
+    mode: 'live',
+    lifecycleStatus: 'cancelled',
+    summary: 'Cancelled route awaiting recovery.',
+    owner: 'execution-desk',
+    orderCount: 1,
+    submittedOrderCount: 1,
+  });
 
   const response = await invokeGatewayRoute(handler, {
     path: '/api/execution/workbench',
@@ -1568,8 +1594,13 @@ test('GET /api/execution/workbench returns lifecycle summary and execution ledge
   assert.equal(typeof response.json.summary.acknowledged, 'number');
   assert.equal(typeof response.json.summary.cancelled, 'number');
   assert.equal(typeof response.json.summary.totalOpenOrders, 'number');
+  assert.equal(typeof response.json.summary.recoverablePlans, 'number');
+  assert.equal(typeof response.json.summary.retryScheduledWorkflows, 'number');
+  assert.equal(typeof response.json.summary.interventionNeeded, 'number');
+  assert.equal(response.json.summary.recoverablePlans >= 1, true);
   assert.equal(Array.isArray(response.json.entries), true);
   assert.equal(response.json.entries.some((entry) => entry.plan.id === 'exec-workbench-plan'), true);
+  assert.equal(response.json.entries.some((entry) => entry.recovery?.recommendedAction === 'reroute_orders'), true);
 });
 
 test('POST /api/execution/plans/:id/approve transitions awaiting plans into submitted lifecycle', async () => {
@@ -1895,6 +1926,69 @@ test('POST /api/execution/plans/:id/reconcile records structured reconciliation 
   assert.equal(response.json.reconciliation.issueCount > 0, true);
 });
 
+test('POST /api/execution/plans/:id/recover reroutes cancelled plans back into execution flow', async () => {
+  context.executionPlans.appendExecutionPlan({
+    id: 'exec-recover-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'live',
+    status: 'ready',
+    lifecycleStatus: 'cancelled',
+    approvalState: 'not_required',
+    riskStatus: 'approved',
+    summary: 'Cancelled after broker reject.',
+    capital: 100000,
+    orderCount: 1,
+    orders: [{ symbol: 'AAPL', side: 'BUY', qty: 5, weight: 1, rationale: 'recover route' }],
+  });
+  context.executionRuns.appendExecutionRun({
+    id: 'exec-recover-run',
+    executionPlanId: 'exec-recover-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'live',
+    lifecycleStatus: 'cancelled',
+    summary: 'Cancelled after broker reject.',
+    owner: 'execution-desk',
+    orderCount: 1,
+    submittedOrderCount: 1,
+    rejectedOrderCount: 1,
+  });
+  context.executionRuns.appendExecutionOrderStates([
+    {
+      id: 'exec-recover-order-1',
+      executionPlanId: 'exec-recover-plan',
+      executionRunId: 'exec-recover-run',
+      symbol: 'AAPL',
+      side: 'BUY',
+      qty: 5,
+      weight: 1,
+      lifecycleStatus: 'cancelled',
+      brokerOrderId: 'broker-exec-recover-1',
+      filledQty: 0,
+      summary: 'cancelled by broker',
+      submittedAt: '2026-03-21T09:00:00.000Z',
+      acknowledgedAt: '2026-03-21T09:01:00.000Z',
+    },
+  ]);
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/execution/plans/exec-recover-plan/recover',
+    body: {
+      actor: 'execution-desk',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.recoveryAction, 'reroute_orders');
+  assert.equal(response.json.plan.lifecycleStatus, 'submitted');
+  assert.equal(response.json.executionRun.lifecycleStatus, 'submitted');
+  assert.equal(response.json.orderStates[0].lifecycleStatus, 'submitted');
+  assert.equal(response.json.orderStates[0].filledQty, 0);
+});
+
 test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control notification for recovery', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
@@ -1924,6 +2018,8 @@ test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control no
 });
 
 test('GET /api/scheduler/ticks returns scheduler ticks from shared store', async () => {
+  const recentIntradayIso = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+  const olderPostCloseIso = new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString();
   context.scheduler.recordSchedulerTick({
     id: 'scheduler-tick-intraday',
     worker: 'api-test-worker',
@@ -1931,7 +2027,7 @@ test('GET /api/scheduler/ticks returns scheduler ticks from shared store', async
     status: 'steady',
     title: 'Scheduler tick intraday',
     message: 'intraday tick',
-    createdAt: '2026-03-14T10:00:00.000Z',
+    createdAt: recentIntradayIso,
   });
   context.scheduler.recordSchedulerTick({
     id: 'scheduler-tick-post-close',
@@ -1940,7 +2036,7 @@ test('GET /api/scheduler/ticks returns scheduler ticks from shared store', async
     status: 'phase-change',
     title: 'Scheduler entered post close',
     message: 'post-close tick',
-    createdAt: '2026-03-10T16:10:00.000Z',
+    createdAt: olderPostCloseIso,
   });
 
   const response = await invokeGatewayRoute(handler, {
@@ -2136,10 +2232,12 @@ test('GET /api/monitoring/status returns runtime health and queue summary', asyn
 });
 
 test('GET /api/monitoring/snapshots and alerts return persisted monitoring history', async () => {
+  const recentSnapshotIso = new Date(Date.now() - 90 * 60 * 1000).toISOString();
+  const olderSnapshotIso = new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString();
   context.monitoring.recordMonitoringSnapshot({
     id: 'monitoring-snapshot-test',
     status: 'warn',
-    generatedAt: '2026-03-14T10:00:00.000Z',
+    generatedAt: recentSnapshotIso,
     services: {
       worker: { status: 'warn' },
     },
@@ -2155,7 +2253,7 @@ test('GET /api/monitoring/snapshots and alerts return persisted monitoring histo
   context.monitoring.recordMonitoringSnapshot({
     id: 'monitoring-snapshot-ok',
     status: 'healthy',
-    generatedAt: '2026-03-10T10:00:00.000Z',
+    generatedAt: olderSnapshotIso,
     services: {
       worker: { status: 'healthy' },
     },

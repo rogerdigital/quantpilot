@@ -452,6 +452,116 @@ export function reconcileExecutionPlan(planId, payload = {}) {
   };
 }
 
+export function recoverExecutionPlan(planId, payload = {}) {
+  const detail = getExecutionPlanDetail(planId);
+  if (!detail?.plan) {
+    return {
+      ok: false,
+      error: 'execution plan not found',
+      message: `Unknown execution plan: ${planId || 'missing planId'}`,
+    };
+  }
+
+  const now = new Date().toISOString();
+  const actor = payload.actor || 'execution-desk';
+  const recovery = detail.recovery || {
+    status: 'blocked',
+    recommendedAction: 'none',
+    headline: 'No recovery action is available.',
+    reasons: [],
+  };
+
+  if (recovery.recommendedAction === 'resume_workflow' && detail.workflow?.id) {
+    const workflow = controlPlaneRuntime.resumeWorkflowRun(detail.workflow.id, {
+      actor,
+      trigger: 'execution-recovery',
+      updatedAt: now,
+    });
+    controlPlaneRuntime.recordOperatorAction({
+      type: 'execution.recover-plan',
+      actor,
+      title: `Recovered workflow for ${detail.plan.strategyName}`,
+      detail: 'Execution workflow was resumed from the execution recovery console.',
+      symbol: detail.plan.strategyId,
+      level: 'info',
+      metadata: {
+        executionPlanId: detail.plan.id,
+        workflowRunId: detail.workflow.id,
+        recoveryAction: 'resume_workflow',
+      },
+    });
+    return {
+      ok: true,
+      workflow,
+      recoveryAction: 'resume_workflow',
+      detail: getExecutionPlanDetail(planId),
+    };
+  }
+
+  if (recovery.recommendedAction === 'reroute_orders' && detail.executionRun) {
+    const reopenedLifecycle = detail.plan.approvalState === 'required' ? 'planned' : 'submitted';
+    const updatedOrders = detail.orderStates.map((item, index) => controlPlaneRuntime.updateExecutionOrderState(item.id, {
+      lifecycleStatus: reopenedLifecycle,
+      brokerOrderId: reopenedLifecycle === 'submitted' ? (item.brokerOrderId || `broker-${detail.plan.id}-retry-${index + 1}`) : '',
+      filledQty: 0,
+      avgFillPrice: null,
+      filledAt: '',
+      acknowledgedAt: '',
+      submittedAt: reopenedLifecycle === 'submitted' ? now : '',
+      summary: reopenedLifecycle === 'submitted'
+        ? `Re-routed ${item.side} ${item.symbol} after execution recovery.`
+        : `Returned ${item.side} ${item.symbol} to approval review after recovery.`,
+      updatedAt: now,
+    })).filter(Boolean);
+
+    const result = refreshExecutionAggregate(detail.plan, detail.executionRun, updatedOrders, {
+      actor,
+      now,
+      summary: reopenedLifecycle === 'submitted'
+        ? `Recovered ${detail.plan.strategyName} and re-routed orders back to broker sync.`
+        : `Recovered ${detail.plan.strategyName} and returned orders to approval review.`,
+      metadata: {
+        recoveredBy: actor,
+        recoveryAction: 'reroute_orders',
+      },
+    });
+
+    controlPlaneRuntime.recordOperatorAction({
+      type: 'execution.recover-plan',
+      actor,
+      title: `Recovered orders for ${detail.plan.strategyName}`,
+      detail: result.plan?.summary || 'Execution recovery rerouted the order set.',
+      symbol: detail.plan.strategyId,
+      level: 'info',
+      metadata: {
+        executionPlanId: detail.plan.id,
+        executionRunId: detail.executionRun.id,
+        recoveryAction: 'reroute_orders',
+      },
+    });
+
+    return {
+      ok: true,
+      recoveryAction: 'reroute_orders',
+      ...result,
+    };
+  }
+
+  if (recovery.recommendedAction === 'reconcile') {
+    const reconcileResult = reconcileExecutionPlan(planId, payload);
+    return {
+      ...reconcileResult,
+      recoveryAction: 'reconcile',
+    };
+  }
+
+  return {
+    ok: false,
+    error: 'execution recovery not available',
+    message: `Execution plan ${detail.plan.id} does not currently expose a recovery path.`,
+  };
+}
+
 export function settleExecutionPlan(planId, payload = {}) {
   if (payload.outcome === 'cancelled') {
     return cancelExecutionPlan(planId, payload);

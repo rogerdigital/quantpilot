@@ -451,6 +451,13 @@ export type ExecutionReconciliationRecord = {
   issues: ExecutionReconciliationIssue[];
 };
 
+export type ExecutionRecoveryRecord = {
+  status: 'ready' | 'monitor' | 'blocked';
+  recommendedAction: 'resume_workflow' | 'reroute_orders' | 'reconcile' | 'none';
+  headline: string;
+  reasons: string[];
+};
+
 export type ExecutionLedgerEntry = {
   plan: ExecutionPlanRecord;
   executionRun: ExecutionRunRecord | null;
@@ -466,6 +473,7 @@ export type ExecutionLedgerEntry = {
   latestRuntime: ExecutionRuntimeEvent | null;
   latestSnapshot?: BrokerAccountSnapshotRecord | null;
   reconciliation?: ExecutionReconciliationRecord | null;
+  recovery?: ExecutionRecoveryRecord | null;
 };
 
 export type LatestBrokerAccountSnapshotResponse = {
@@ -482,6 +490,7 @@ export type ExecutionPlanDetailResponse = {
   latestRuntime: ExecutionRuntimeEvent | null;
   latestSnapshot?: BrokerAccountSnapshotRecord | null;
   reconciliation?: ExecutionReconciliationRecord | null;
+  recovery?: ExecutionRecoveryRecord | null;
 };
 
 export type ExecutionWorkbenchResponse = {
@@ -503,6 +512,9 @@ export type ExecutionWorkbenchResponse = {
     missingSnapshot: number;
     totalOpenOrders: number;
     syncedPositions: number;
+    recoverablePlans: number;
+    retryScheduledWorkflows: number;
+    interventionNeeded: number;
   };
   entries: ExecutionLedgerEntry[];
 };

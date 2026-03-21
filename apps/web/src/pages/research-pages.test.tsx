@@ -1453,6 +1453,12 @@ describe('research workspace pages', () => {
               actual: 'No linked snapshot found',
             }],
           },
+          recovery: {
+            status: 'monitor',
+            recommendedAction: 'reconcile',
+            headline: 'Execution needs reconciliation review.',
+            reasons: ['Reconciliation status is missing_snapshot.'],
+          },
         },
       ],
       workflowRuns: [
@@ -1513,6 +1519,7 @@ describe('research workspace pages', () => {
     expect(html).toContain('Selected Execution Detail');
     expect(html).toContain('Research Execution Handoffs');
     expect(html).toContain('Execution Lifecycle Summary');
+    expect(html).toContain('Execution Recovery Workbench');
     expect(html).toContain('Open Strategy Detail');
     expect(html).toContain('Approve Routing');
     expect(html).toContain('Broker Sync');
@@ -1520,6 +1527,7 @@ describe('research workspace pages', () => {
     expect(html).toContain('Cancel Plan');
     expect(html).toContain('Execution Reconciliation');
     expect(html).toContain('Run Reconciliation');
+    expect(html).toContain('Recover Plan');
     expect(html).toContain('Order Lifecycle');
     expect(html).toContain('Return to Backtest Detail');
     expect(html).toContain('Selected Execution Workflow Step');
@@ -1602,6 +1610,9 @@ describe('research workspace pages', () => {
           missingSnapshot: 0,
           totalOpenOrders: 1,
           syncedPositions: 1,
+          recoverablePlans: 0,
+          retryScheduledWorkflows: 0,
+          interventionNeeded: 0,
         },
         entries: [],
       },
@@ -1684,6 +1695,12 @@ describe('research workspace pages', () => {
             filledQtyDelta: 0,
             positionDelta: 0,
             issues: [],
+          },
+          recovery: {
+            status: 'monitor',
+            recommendedAction: 'none',
+            headline: 'Execution is inside the current recovery guardrails.',
+            reasons: [],
           },
         },
       ],

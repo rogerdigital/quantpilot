@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { approveExecutionPlan, cancelExecutionPlan, queueExecutionCandidateHandoff, reconcileExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../../app/api/controlPlane.ts';
+import { approveExecutionPlan, cancelExecutionPlan, queueExecutionCandidateHandoff, reconcileExecutionPlan, recoverExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
@@ -133,6 +133,7 @@ export function ExecutionPage() {
   const selectedAcknowledgedCount = selectedOrderStates.filter((item) => item.lifecycleStatus === 'acknowledged').length;
   const selectedFilledCount = selectedEntry?.executionRun?.filledOrderCount || 0;
   const selectedReconciliation = selectedEntry?.reconciliation;
+  const selectedRecovery = selectedEntry?.recovery;
   const workbenchSummary = workbench?.summary;
   const planSummary = ledgerEntries.reduce((acc, entry) => {
     const lifecycle = entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus;
@@ -217,6 +218,19 @@ export function ExecutionPage() {
             <div className="status-row"><span>{locale === 'zh' ? '缺少快照' : 'Missing Snapshot'}</span><strong>{workbenchSummary?.missingSnapshot ?? 0}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '未完成订单' : 'Open Orders'}</span><strong>{workbenchSummary?.totalOpenOrders ?? 0}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '已同步持仓' : 'Synced Positions'}</span><strong>{workbenchSummary?.syncedPositions ?? 0}</strong></div>
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '执行恢复工作台' : 'Execution Recovery Workbench'}</div><div className="panel-copy">{locale === 'zh' ? '把 retry、失败、取消和对账异常压缩成统一恢复姿态，便于执行台做补偿与恢复。' : 'Compress retry, failed, cancelled, and reconciliation drift into one recovery posture for compensation and recovery actions.'}</div></div><div className="panel-badge badge-warn">{workbenchSummary?.recoverablePlans ?? 0}</div></div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '可恢复计划' : 'Recoverable Plans'}</span><strong>{workbenchSummary?.recoverablePlans ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '待释放重试' : 'Retry Scheduled'}</span><strong>{workbenchSummary?.retryScheduledWorkflows ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '需要人工介入' : 'Needs Intervention'}</span><strong>{workbenchSummary?.interventionNeeded ?? 0}</strong></div>
+            <div className="status-copy">
+              {locale === 'zh'
+                ? '当 workflow 失败、plan 取消或 reconciliation 发生 drift 时，这里会直接给出恢复姿态。'
+                : 'When a workflow fails, a plan is cancelled, or reconciliation drifts, this surface exposes the next recovery posture.'}
+            </div>
           </div>
         </article>
         <article className="panel">
@@ -361,6 +375,12 @@ export function ExecutionPage() {
               <div className="status-row"><span>{locale === 'zh' ? '订单数' : 'Order count'}</span><strong>{selectedEntry.plan.orderCount}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '已提交 / 已受理 / 已成交' : 'Submitted / Acknowledged / Filled'}</span><strong>{selectedSubmittedCount} / {selectedAcknowledgedCount} / {selectedFilledCount}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '资金规模' : 'Capital'}</span><strong>{selectedEntry.plan.capital.toFixed(0)}</strong></div>
+              {selectedRecovery ? (
+                <>
+                  <div className="status-row"><span>{locale === 'zh' ? '恢复姿态' : 'Recovery Posture'}</span><strong>{selectedRecovery.status}</strong></div>
+                  <div className="status-row"><span>{locale === 'zh' ? '推荐动作' : 'Recommended Action'}</span><strong>{selectedRecovery.recommendedAction}</strong></div>
+                </>
+              ) : null}
               <div className="settings-actions">
                 <button
                   type="button"
@@ -500,6 +520,32 @@ export function ExecutionPage() {
                 >
                   {planBusyAction === 'reconcile' ? (locale === 'zh' ? '对账中...' : 'Reconciling...') : (locale === 'zh' ? '执行对账' : 'Run Reconciliation')}
                 </button>
+                <button
+                  type="button"
+                  className="inline-action inline-action-approve"
+                  disabled={!canApproveExecution || !selectedEntry || !selectedRecovery || selectedRecovery.recommendedAction === 'none' || planBusyAction === 'recover'}
+                  onClick={async () => {
+                    setPlanBusyAction('recover');
+                    setPlanMessage('');
+                    try {
+                      const result = await recoverExecutionPlan(selectedEntry.plan.id, { actor: 'execution-desk' });
+                      setPlanMessage(
+                        locale === 'zh'
+                          ? `已执行恢复动作：${result.recoveryAction || selectedRecovery.recommendedAction}。`
+                          : `Executed recovery action: ${result.recoveryAction || selectedRecovery.recommendedAction}.`,
+                      );
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setPlanBusyAction('');
+                    }
+                  }}
+                >
+                  {planBusyAction === 'recover'
+                    ? (locale === 'zh' ? '恢复中...' : 'Recovering...')
+                    : (locale === 'zh' ? '恢复计划' : 'Recover Plan')}
+                </button>
                 {sourcePage === 'strategies' && requestedStrategyId ? (
                   <button
                     type="button"
@@ -520,6 +566,10 @@ export function ExecutionPage() {
                 ) : null}
               </div>
               {planMessage ? <InspectionStatus>{planMessage}</InspectionStatus> : null}
+              {selectedRecovery ? <InspectionStatus>{selectedRecovery.headline}</InspectionStatus> : null}
+              {selectedRecovery?.reasons?.map((reason) => (
+                <InspectionStatus key={reason}>{reason}</InspectionStatus>
+              ))}
               <InspectionStatus>{executionDetailInspection.summary}</InspectionStatus>
               <InspectionStatus>{executionDetailInspection.runtimeMessage}</InspectionStatus>
             </div>

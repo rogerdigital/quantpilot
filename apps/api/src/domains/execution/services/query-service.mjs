@@ -116,6 +116,7 @@ function buildExecutionLedgerEntry(plan, runtimeEvents = [], snapshots = []) {
   const executionRun = controlPlaneRuntime.getExecutionRunByPlanId(plan.id);
   const orderStates = controlPlaneRuntime.listExecutionOrderStates(80, { executionPlanId: plan.id });
   const reconciliation = buildExecutionReconciliation(orderStates, latestSnapshot);
+  const recovery = buildExecutionRecovery(plan, workflow, reconciliation);
 
   return {
     plan,
@@ -132,6 +133,58 @@ function buildExecutionLedgerEntry(plan, runtimeEvents = [], snapshots = []) {
     latestRuntime,
     latestSnapshot,
     reconciliation,
+    recovery,
+  };
+}
+
+function buildExecutionRecovery(plan, workflow, reconciliation) {
+  const reasons = [];
+
+  if (workflow?.status === 'retry_scheduled') {
+    reasons.push('The linked workflow is waiting for retry release.');
+    return {
+      status: 'ready',
+      recommendedAction: 'resume_workflow',
+      headline: 'Workflow retry is waiting for operator recovery.',
+      reasons,
+    };
+  }
+
+  if (workflow?.status === 'failed' || workflow?.status === 'canceled') {
+    reasons.push(`Workflow is ${workflow.status} and needs to be resumed before execution can continue.`);
+    return {
+      status: 'ready',
+      recommendedAction: 'resume_workflow',
+      headline: 'Failed execution workflow can be resumed.',
+      reasons,
+    };
+  }
+
+  if (plan.lifecycleStatus === 'failed' || plan.lifecycleStatus === 'cancelled') {
+    reasons.push(`Plan lifecycle is ${plan.lifecycleStatus} and orders can be rerouted from the execution desk.`);
+    return {
+      status: 'ready',
+      recommendedAction: 'reroute_orders',
+      headline: 'Execution orders can be rerouted.',
+      reasons,
+    };
+  }
+
+  if (reconciliation?.status && reconciliation.status !== 'aligned') {
+    reasons.push(`Reconciliation status is ${reconciliation.status}.`);
+    return {
+      status: reconciliation.status === 'drift' ? 'ready' : 'monitor',
+      recommendedAction: 'reconcile',
+      headline: 'Execution needs reconciliation review.',
+      reasons,
+    };
+  }
+
+  return {
+    status: 'monitor',
+    recommendedAction: 'none',
+    headline: 'Execution is inside the current recovery guardrails.',
+    reasons,
   };
 }
 
@@ -199,6 +252,9 @@ export function getExecutionWorkbench(limit = 40) {
     missingSnapshot: 0,
     totalOpenOrders: 0,
     syncedPositions: 0,
+    recoverablePlans: 0,
+    retryScheduledWorkflows: 0,
+    interventionNeeded: 0,
   };
 
   ledger.forEach((entry) => {
@@ -218,6 +274,9 @@ export function getExecutionWorkbench(limit = 40) {
     if (reconciliation === 'missing_snapshot') summary.missingSnapshot += 1;
     summary.totalOpenOrders += entry.orderStates.filter((item) => ['submitted', 'acknowledged'].includes(item.lifecycleStatus)).length;
     summary.syncedPositions += Array.isArray(entry.latestSnapshot?.positions) ? entry.latestSnapshot.positions.length : 0;
+    if (entry.workflow?.status === 'retry_scheduled') summary.retryScheduledWorkflows += 1;
+    if (entry.recovery?.status === 'ready') summary.recoverablePlans += 1;
+    if (entry.recovery?.recommendedAction !== 'none') summary.interventionNeeded += 1;
   });
 
   return {

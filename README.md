@@ -169,6 +169,7 @@ quantpilot/
 - `execution lifecycle backbone` 已开始落地：执行层现在会把 `execution candidate handoff -> execution workflow -> execution plan -> execution run -> order lifecycle` 串成统一对象流，支持 `awaiting approval / submitted / partial fill / filled / blocked / failed` 等生命周期状态，以及审批、成交结算和 execution workbench 聚合摘要。
 - `execution order state machine` 已开始形成：执行层现支持 `broker acknowledged / partial fill / cancel` 等更细的 lifecycle 推进，执行台可以直接触发 broker sync、部分成交模拟和取消动作，plan / run / order state / runtime snapshot 会自动聚合成一致状态。
 - `execution reconciliation` 已开始形成：后端现会把 execution order states、broker snapshots 和持仓数量做结构化对账，输出 `aligned / attention / drift / missing snapshot` 摘要；执行台也能直接查看对账问题并把当前结果落到 audit / operator action 留痕。
+- `execution recovery workbench` 已开始形成：执行层现会根据 workflow retry/failed、plan cancelled/failed 和 reconciliation drift 自动产出 `recovery posture`，并支持从执行台直接执行 `resume workflow / reroute orders / reconcile` 等恢复动作，把异常补偿和人工恢复真正接入执行闭环。
 - Overview 首页已开始消费后端 `monitoring status` 摘要，可直接观察 `broker / market / worker / workflow / queues` 运行态。
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
 - 账户写操作和券商绑定变更已经进入 audit records，基础对象变更具备最小留痕能力。
@@ -184,7 +185,7 @@ quantpilot/
 - 用户系统和权限边界已经开始从 demo 常量迁到持久化账户配置，但租户、多用户隔离和完整 RBAC 仍未真正落地。
 - 行情接入、历史数据、研究结果持久化仍处于简化阶段。
 - Agent 仍处于受控协作原型阶段，当前以 allowlist 只读工具、动作请求和审批流为主，尚未形成真正的规划、记忆和工具编排系统。
-- 执行引擎仍是骨架，距离真实订单状态机、补偿重试和多 broker 抽象还有较大差距。
+- 执行引擎仍在阶段 3 早中期，虽然已具备订单状态机、结构化对账和基础恢复姿态，但距离真实 broker 回报承接、自动补偿策略和多 broker 抽象还有较大差距。
 
 ## 研发迭代原则
 

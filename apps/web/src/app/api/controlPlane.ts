@@ -519,6 +519,18 @@ export async function reconcileExecutionPlan(planId: string, payload: {
   return response.json();
 }
 
+export async function recoverExecutionPlan(planId: string, payload: {
+  actor?: string;
+} = {}) {
+  const response = await fetch(`/api/execution/plans/${planId}/recover`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
 export async function fetchLatestBrokerAccountSnapshot(): Promise<LatestBrokerAccountSnapshotResponse> {
   return fetchJson('/api/execution/account-snapshots/latest', {
     headers: { Accept: 'application/json' },
