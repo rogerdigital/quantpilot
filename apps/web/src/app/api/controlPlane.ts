@@ -494,6 +494,27 @@ export async function syncExecutionPlan(planId: string, payload: {
   return response.json();
 }
 
+export async function ingestBrokerExecutionEvent(planId: string, payload: {
+  actor?: string;
+  source?: string;
+  symbol?: string;
+  brokerOrderId?: string;
+  eventType: 'acknowledged' | 'partial_fill' | 'filled' | 'rejected' | 'cancelled';
+  filledQty?: number;
+  avgFillPrice?: number;
+  message?: string;
+  externalEventId?: string;
+  reason?: string;
+}) {
+  const response = await fetch(`/api/execution/plans/${planId}/broker-events`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
 export async function cancelExecutionPlan(planId: string, payload: {
   actor?: string;
   reason?: string;

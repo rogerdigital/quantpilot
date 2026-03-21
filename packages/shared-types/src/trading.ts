@@ -390,6 +390,24 @@ export type BrokerAccountSnapshotRecord = {
   createdAt: string;
 };
 
+export type BrokerExecutionEventRecord = {
+  id: string;
+  executionPlanId: string;
+  executionRunId: string;
+  brokerOrderId: string;
+  symbol: string;
+  eventType: 'acknowledged' | 'partial_fill' | 'filled' | 'rejected' | 'cancelled';
+  status: string;
+  filledQty: number;
+  avgFillPrice: number | null;
+  source: string;
+  actor: string;
+  headline: string;
+  message: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+};
+
 export type ExecutionOrderStateRecord = {
   id: string;
   executionPlanId: string;
@@ -472,6 +490,7 @@ export type ExecutionLedgerEntry = {
   } | null;
   latestRuntime: ExecutionRuntimeEvent | null;
   latestSnapshot?: BrokerAccountSnapshotRecord | null;
+  brokerEvents?: BrokerExecutionEventRecord[];
   reconciliation?: ExecutionReconciliationRecord | null;
   recovery?: ExecutionRecoveryRecord | null;
 };
@@ -489,6 +508,7 @@ export type ExecutionPlanDetailResponse = {
   workflow: WorkflowRunRecord | null;
   latestRuntime: ExecutionRuntimeEvent | null;
   latestSnapshot?: BrokerAccountSnapshotRecord | null;
+  brokerEvents?: BrokerExecutionEventRecord[];
   reconciliation?: ExecutionReconciliationRecord | null;
   recovery?: ExecutionRecoveryRecord | null;
 };
@@ -515,6 +535,9 @@ export type ExecutionWorkbenchResponse = {
     recoverablePlans: number;
     retryScheduledWorkflows: number;
     interventionNeeded: number;
+    brokerEvents: number;
+    rejectedBrokerEvents: number;
+    fillEvents: number;
   };
   entries: ExecutionLedgerEntry[];
 };

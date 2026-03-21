@@ -170,6 +170,7 @@ quantpilot/
 - `execution order state machine` 已开始形成：执行层现支持 `broker acknowledged / partial fill / cancel` 等更细的 lifecycle 推进，执行台可以直接触发 broker sync、部分成交模拟和取消动作，plan / run / order state / runtime snapshot 会自动聚合成一致状态。
 - `execution reconciliation` 已开始形成：后端现会把 execution order states、broker snapshots 和持仓数量做结构化对账，输出 `aligned / attention / drift / missing snapshot` 摘要；执行台也能直接查看对账问题并把当前结果落到 audit / operator action 留痕。
 - `execution recovery workbench` 已开始形成：执行层现会根据 workflow retry/failed、plan cancelled/failed 和 reconciliation drift 自动产出 `recovery posture`，并支持从执行台直接执行 `resume workflow / reroute orders / reconcile` 等恢复动作，把异常补偿和人工恢复真正接入执行闭环。
+- `broker event ingestion` 已开始形成：执行层现会把 broker `acknowledged / partial fill / filled / rejected / cancelled` 回报落成结构化 `broker execution events`，并用这些事件驱动 order state、runtime 摘要与执行台时间线，执行闭环已开始从“平台主动推进状态”转向“接住 broker 回报再聚合状态”。
 - Overview 首页已开始消费后端 `monitoring status` 摘要，可直接观察 `broker / market / worker / workflow / queues` 运行态。
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
 - 账户写操作和券商绑定变更已经进入 audit records，基础对象变更具备最小留痕能力。

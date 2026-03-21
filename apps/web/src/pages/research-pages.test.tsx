@@ -1459,6 +1459,25 @@ describe('research workspace pages', () => {
             headline: 'Execution needs reconciliation review.',
             reasons: ['Reconciliation status is missing_snapshot.'],
           },
+          brokerEvents: [
+            {
+              id: 'broker-event-1',
+              executionPlanId: 'plan-1',
+              executionRunId: 'exec-run-1',
+              brokerOrderId: 'broker-order-1',
+              symbol: 'AAPL',
+              eventType: 'acknowledged',
+              status: 'acknowledged',
+              filledQty: 0,
+              avgFillPrice: null,
+              source: 'broker-webhook',
+              actor: 'broker-webhook',
+              headline: 'Broker acknowledged AAPL.',
+              message: 'Broker acknowledged AAPL.',
+              metadata: {},
+              createdAt: '2026-03-13T11:42:00.000Z',
+            },
+          ],
         },
       ],
       workflowRuns: [
@@ -1520,14 +1539,19 @@ describe('research workspace pages', () => {
     expect(html).toContain('Research Execution Handoffs');
     expect(html).toContain('Execution Lifecycle Summary');
     expect(html).toContain('Execution Recovery Workbench');
+    expect(html).toContain('Broker Event Ingestion');
     expect(html).toContain('Open Strategy Detail');
     expect(html).toContain('Approve Routing');
     expect(html).toContain('Broker Sync');
+    expect(html).toContain('Ingest Ack');
+    expect(html).toContain('Ingest Fill');
     expect(html).toContain('Simulate Partial Fill');
     expect(html).toContain('Cancel Plan');
+    expect(html).toContain('Ingest Reject');
     expect(html).toContain('Execution Reconciliation');
     expect(html).toContain('Run Reconciliation');
     expect(html).toContain('Recover Plan');
+    expect(html).toContain('Broker Event Timeline');
     expect(html).toContain('Order Lifecycle');
     expect(html).toContain('Return to Backtest Detail');
     expect(html).toContain('Selected Execution Workflow Step');
@@ -1613,6 +1637,9 @@ describe('research workspace pages', () => {
           recoverablePlans: 0,
           retryScheduledWorkflows: 0,
           interventionNeeded: 0,
+          brokerEvents: 1,
+          rejectedBrokerEvents: 0,
+          fillEvents: 0,
         },
         entries: [],
       },
@@ -1702,6 +1729,25 @@ describe('research workspace pages', () => {
             headline: 'Execution is inside the current recovery guardrails.',
             reasons: [],
           },
+          brokerEvents: [
+            {
+              id: 'broker-event-2',
+              executionPlanId: 'plan-1',
+              executionRunId: 'exec-run-1',
+              brokerOrderId: 'broker-order-2',
+              symbol: 'AAPL',
+              eventType: 'filled',
+              status: 'filled',
+              filledQty: 2,
+              avgFillPrice: 181.5,
+              source: 'broker-webhook',
+              actor: 'broker-webhook',
+              headline: 'Broker reported a full fill for AAPL.',
+              message: 'filled event',
+              metadata: {},
+              createdAt: '2026-03-13T11:42:00.000Z',
+            },
+          ],
         },
       ],
       workflowRuns: [

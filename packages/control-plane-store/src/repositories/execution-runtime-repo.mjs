@@ -1,7 +1,8 @@
-import { createExecutionRuntimeEntry, trimAndSave } from '../shared.mjs';
+import { createBrokerExecutionEventEntry, createExecutionRuntimeEntry, trimAndSave } from '../shared.mjs';
 
 const EVENTS_FILE = 'execution-runtime-events.json';
 const SNAPSHOTS_FILE = 'broker-account-snapshots.json';
+const BROKER_EVENTS_FILE = 'broker-execution-events.json';
 
 export function createExecutionRuntimeRepository(store) {
   return {
@@ -36,6 +37,24 @@ export function createExecutionRuntimeRepository(store) {
       };
       snapshots.unshift(entry);
       trimAndSave(store, SNAPSHOTS_FILE, snapshots, 120);
+      return entry;
+    },
+    listBrokerExecutionEvents(limit = 50, filter = {}) {
+      return store.readCollection(BROKER_EVENTS_FILE)
+        .filter((item) => {
+          if (filter.executionPlanId && item.executionPlanId !== filter.executionPlanId) return false;
+          if (filter.executionRunId && item.executionRunId !== filter.executionRunId) return false;
+          if (filter.symbol && item.symbol !== filter.symbol) return false;
+          if (filter.eventType && item.eventType !== filter.eventType) return false;
+          return true;
+        })
+        .slice(0, limit);
+    },
+    appendBrokerExecutionEvent(payload = {}) {
+      const events = store.readCollection(BROKER_EVENTS_FILE);
+      const entry = createBrokerExecutionEventEntry(payload);
+      events.unshift(entry);
+      trimAndSave(store, BROKER_EVENTS_FILE, events, 200);
       return entry;
     },
   };

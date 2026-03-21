@@ -330,6 +330,12 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     appendBrokerAccountSnapshot(payload) {
       return context.executionRuntime.appendBrokerAccountSnapshot(payload);
     },
+    listBrokerExecutionEvents(limit = 50, filter = {}) {
+      return context.executionRuntime.listBrokerExecutionEvents(limit, filter);
+    },
+    appendBrokerExecutionEvent(payload) {
+      return context.executionRuntime.appendBrokerExecutionEvent(payload);
+    },
     recordExecutionRuntime(payload) {
       const runtimeEvent = context.executionRuntime.appendExecutionRuntimeEvent(payload);
       const brokerSnapshot = context.executionRuntime.appendBrokerAccountSnapshot({
@@ -812,6 +818,7 @@ export const setDefaultBrokerBinding = (...args) => controlPlaneRuntime.setDefau
 export const deleteBrokerBinding = (...args) => controlPlaneRuntime.deleteBrokerBinding(...args);
 export const listExecutionRuntimeEvents = (...args) => controlPlaneRuntime.listExecutionRuntimeEvents(...args);
 export const listBrokerAccountSnapshots = (...args) => controlPlaneRuntime.listBrokerAccountSnapshots(...args);
+export const listBrokerExecutionEvents = (...args) => controlPlaneRuntime.listBrokerExecutionEvents(...args);
 export const listExecutionRuns = (...args) => controlPlaneRuntime.listExecutionRuns(...args);
 export const getExecutionRun = (...args) => controlPlaneRuntime.getExecutionRun(...args);
 export const getExecutionRunByPlanId = (...args) => controlPlaneRuntime.getExecutionRunByPlanId(...args);
@@ -825,6 +832,7 @@ export const recordExecutionRun = (...args) => controlPlaneRuntime.recordExecuti
 export const updateExecutionRun = (...args) => controlPlaneRuntime.updateExecutionRun(...args);
 export const updateExecutionOrderState = (...args) => controlPlaneRuntime.updateExecutionOrderState(...args);
 export const updateExecutionPlan = (...args) => controlPlaneRuntime.updateExecutionPlan(...args);
+export const appendBrokerExecutionEvent = (...args) => controlPlaneRuntime.appendBrokerExecutionEvent(...args);
 export const listBacktestRuns = (...args) => controlPlaneRuntime.listBacktestRuns(...args);
 export const listBacktestResults = (...args) => controlPlaneRuntime.listBacktestResults(...args);
 export const listBacktestResultsForRun = (...args) => controlPlaneRuntime.listBacktestResultsForRun(...args);

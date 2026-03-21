@@ -561,6 +561,27 @@ export function createExecutionRuntimeEntry(payload = {}) {
   };
 }
 
+export function createBrokerExecutionEventEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `broker-execution-event-${randomUUID()}`,
+    executionPlanId: payload.executionPlanId || '',
+    executionRunId: payload.executionRunId || '',
+    brokerOrderId: payload.brokerOrderId || '',
+    symbol: payload.symbol || '',
+    eventType: payload.eventType || 'acknowledged',
+    status: payload.status || payload.eventType || 'acknowledged',
+    filledQty: Number(payload.filledQty || 0),
+    avgFillPrice: Number.isFinite(payload.avgFillPrice) ? Number(payload.avgFillPrice) : null,
+    source: payload.source || 'execution-desk',
+    actor: payload.actor || 'execution-desk',
+    headline: payload.headline || '',
+    message: payload.message || '',
+    metadata: payload.metadata || {},
+    createdAt: now,
+  };
+}
+
 export function getShanghaiTimeParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('zh-CN', {
     timeZone: 'Asia/Shanghai',

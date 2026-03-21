@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { approveExecutionPlan, cancelExecutionPlan, queueExecutionCandidateHandoff, reconcileExecutionPlan, recoverExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../../app/api/controlPlane.ts';
+import { approveExecutionPlan, cancelExecutionPlan, ingestBrokerExecutionEvent, queueExecutionCandidateHandoff, reconcileExecutionPlan, recoverExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
@@ -134,6 +134,7 @@ export function ExecutionPage() {
   const selectedFilledCount = selectedEntry?.executionRun?.filledOrderCount || 0;
   const selectedReconciliation = selectedEntry?.reconciliation;
   const selectedRecovery = selectedEntry?.recovery;
+  const selectedBrokerEvents = selectedEntry?.brokerEvents || [];
   const workbenchSummary = workbench?.summary;
   const planSummary = ledgerEntries.reduce((acc, entry) => {
     const lifecycle = entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus;
@@ -230,6 +231,19 @@ export function ExecutionPage() {
               {locale === 'zh'
                 ? '当 workflow 失败、plan 取消或 reconciliation 发生 drift 时，这里会直接给出恢复姿态。'
                 : 'When a workflow fails, a plan is cancelled, or reconciliation drifts, this surface exposes the next recovery posture.'}
+            </div>
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Broker 回报承接' : 'Broker Event Ingestion'}</div><div className="panel-copy">{locale === 'zh' ? '把 broker ack、fill、reject 和 cancel 回报接成结构化事件，并驱动执行状态聚合。' : 'Turn broker ack, fill, reject, and cancel reports into structured events that drive execution state aggregation.'}</div></div><div className="panel-badge badge-info">{workbenchSummary?.brokerEvents ?? 0}</div></div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '已记录回报' : 'Recorded Events'}</span><strong>{workbenchSummary?.brokerEvents ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '成交回报' : 'Fill Events'}</span><strong>{workbenchSummary?.fillEvents ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '拒单回报' : 'Rejected Events'}</span><strong>{workbenchSummary?.rejectedBrokerEvents ?? 0}</strong></div>
+            <div className="status-copy">
+              {locale === 'zh'
+                ? '这层事件历史会成为后续 retry policy、异常补偿和 execution incident 联动的稳定输入。'
+                : 'This event trail becomes the stable input for later retry policies, exception compensation, and execution incident linkage.'}
             </div>
           </div>
         </article>
@@ -443,6 +457,33 @@ export function ExecutionPage() {
                 <button
                   type="button"
                   className="inline-action"
+                  disabled={!canApproveExecution || !selectedEntry || planBusyAction === 'broker-ack'}
+                  onClick={async () => {
+                    setPlanBusyAction('broker-ack');
+                    setPlanMessage('');
+                    try {
+                      await ingestBrokerExecutionEvent(selectedEntry.plan.id, {
+                        actor: 'execution-desk',
+                        source: 'broker-webhook',
+                        eventType: 'acknowledged',
+                        symbol: selectedEntry.orderStates[0]?.symbol,
+                        brokerOrderId: selectedEntry.orderStates[0]?.brokerOrderId,
+                        message: locale === 'zh' ? '已接收 broker acknowledged 回报。' : 'Ingested broker acknowledged event.',
+                      });
+                      setPlanMessage(locale === 'zh' ? '已记录 broker 受理回报。' : 'Recorded broker acknowledgement event.');
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setPlanBusyAction('');
+                    }
+                  }}
+                >
+                  {planBusyAction === 'broker-ack' ? (locale === 'zh' ? '承接中...' : 'Ingesting...') : (locale === 'zh' ? '接收 Ack 回报' : 'Ingest Ack')}
+                </button>
+                <button
+                  type="button"
+                  className="inline-action"
                   disabled={!canApproveExecution || !['submitted', 'acknowledged'].includes(selectedLifecycleStatus) || planBusyAction === 'partial-fill'}
                   onClick={async () => {
                     setPlanBusyAction('partial-fill');
@@ -459,6 +500,36 @@ export function ExecutionPage() {
                   }}
                 >
                   {planBusyAction === 'partial-fill' ? (locale === 'zh' ? '处理中...' : 'Processing...') : (locale === 'zh' ? '模拟部分成交' : 'Simulate Partial Fill')}
+                </button>
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={!canApproveExecution || !selectedEntry || planBusyAction === 'broker-fill'}
+                  onClick={async () => {
+                    setPlanBusyAction('broker-fill');
+                    setPlanMessage('');
+                    try {
+                      const targetOrder = selectedEntry.orderStates[0];
+                      await ingestBrokerExecutionEvent(selectedEntry.plan.id, {
+                        actor: 'execution-desk',
+                        source: 'broker-webhook',
+                        eventType: 'filled',
+                        symbol: targetOrder?.symbol,
+                        brokerOrderId: targetOrder?.brokerOrderId,
+                        filledQty: targetOrder?.qty,
+                        avgFillPrice: targetOrder?.avgFillPrice || 101.25,
+                        message: locale === 'zh' ? '已接收 broker fill 回报。' : 'Ingested broker fill event.',
+                      });
+                      setPlanMessage(locale === 'zh' ? '已记录 broker 成交回报。' : 'Recorded broker fill event.');
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setPlanBusyAction('');
+                    }
+                  }}
+                >
+                  {planBusyAction === 'broker-fill' ? (locale === 'zh' ? '承接中...' : 'Ingesting...') : (locale === 'zh' ? '接收 Fill 回报' : 'Ingest Fill')}
                 </button>
                 <button
                   type="button"
@@ -499,6 +570,35 @@ export function ExecutionPage() {
                   }}
                 >
                   {planBusyAction === 'cancel' ? (locale === 'zh' ? '取消中...' : 'Cancelling...') : (locale === 'zh' ? '取消计划' : 'Cancel Plan')}
+                </button>
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={!canApproveExecution || !selectedEntry || planBusyAction === 'broker-reject'}
+                  onClick={async () => {
+                    setPlanBusyAction('broker-reject');
+                    setPlanMessage('');
+                    try {
+                      const targetOrder = selectedEntry.orderStates[0];
+                      await ingestBrokerExecutionEvent(selectedEntry.plan.id, {
+                        actor: 'execution-desk',
+                        source: 'broker-webhook',
+                        eventType: 'rejected',
+                        symbol: targetOrder?.symbol,
+                        brokerOrderId: targetOrder?.brokerOrderId,
+                        reason: 'broker_reported_rejection',
+                        message: locale === 'zh' ? '已接收 broker reject 回报。' : 'Ingested broker reject event.',
+                      });
+                      setPlanMessage(locale === 'zh' ? '已记录 broker 拒单回报。' : 'Recorded broker reject event.');
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setPlanBusyAction('');
+                    }
+                  }}
+                >
+                  {planBusyAction === 'broker-reject' ? (locale === 'zh' ? '承接中...' : 'Ingesting...') : (locale === 'zh' ? '接收 Reject 回报' : 'Ingest Reject')}
                 </button>
                 <button
                   type="button"
@@ -599,6 +699,27 @@ export function ExecutionPage() {
             </div>
           )}
         </InspectionPanel>
+        <InspectionListPanel
+          title={locale === 'zh' ? 'Broker 回报时间线' : 'Broker Event Timeline'}
+          copy={locale === 'zh' ? '查看 broker 侧 ack、fill、reject 和 cancel 回报是如何驱动 order state 聚合的。' : 'Review how broker ack, fill, reject, and cancel reports drive order-state aggregation.'}
+          badge={String(selectedBrokerEvents.length)}
+        >
+          {!selectedEntry ? <InspectionStatus>{locale === 'zh' ? '先从账本中选择一个 execution plan。' : 'Select an execution plan from the ledger first.'}</InspectionStatus> : null}
+          {selectedEntry && !selectedBrokerEvents.length ? <InspectionStatus>{locale === 'zh' ? '当前 plan 还没有 broker 回报事件。' : 'No broker execution events have been recorded for this plan yet.'}</InspectionStatus> : null}
+          {selectedBrokerEvents.map((item) => (
+            <InspectionMetricsRow
+              key={item.id}
+              metrics={[
+                { label: locale === 'zh' ? '事件' : 'Event', value: item.eventType },
+                { label: locale === 'zh' ? '标的' : 'Symbol', value: item.symbol || '--' },
+                { label: locale === 'zh' ? '状态' : 'Status', value: item.status },
+                { label: locale === 'zh' ? '成交数量' : 'Filled Qty', value: item.filledQty || '--' },
+                { label: locale === 'zh' ? '来源' : 'Source', value: item.source },
+                { label: locale === 'zh' ? '时间' : 'Time', value: new Date(item.createdAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US') },
+              ]}
+            />
+          ))}
+        </InspectionListPanel>
         <InspectionListPanel
           title={locale === 'zh' ? '订单生命周期' : 'Order Lifecycle'}
           copy={locale === 'zh' ? '查看当前执行计划下每笔订单的 lifecycle 变化。' : 'Inspect lifecycle changes for every order under the selected execution plan.'}

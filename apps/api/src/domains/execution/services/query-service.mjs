@@ -113,6 +113,7 @@ function buildExecutionLedgerEntry(plan, runtimeEvents = [], snapshots = []) {
   const workflow = plan.workflowRunId ? controlPlaneRuntime.getWorkflowRun(plan.workflowRunId) : null;
   const latestRuntime = runtimeEvents.find((event) => event.executionPlanId === plan.id) || null;
   const latestSnapshot = snapshots.find((item) => item.executionPlanId === plan.id) || null;
+  const brokerEvents = controlPlaneRuntime.listBrokerExecutionEvents(8, { executionPlanId: plan.id });
   const executionRun = controlPlaneRuntime.getExecutionRunByPlanId(plan.id);
   const orderStates = controlPlaneRuntime.listExecutionOrderStates(80, { executionPlanId: plan.id });
   const reconciliation = buildExecutionReconciliation(orderStates, latestSnapshot);
@@ -132,6 +133,7 @@ function buildExecutionLedgerEntry(plan, runtimeEvents = [], snapshots = []) {
     } : null,
     latestRuntime,
     latestSnapshot,
+    brokerEvents,
     reconciliation,
     recovery,
   };
@@ -222,6 +224,10 @@ export function listBrokerAccountSnapshots(limit = 50) {
   return controlPlaneRuntime.listBrokerAccountSnapshots(limit);
 }
 
+export function listBrokerExecutionEvents(limit = 50, filter = {}) {
+  return controlPlaneRuntime.listBrokerExecutionEvents(limit, filter);
+}
+
 export function getLatestBrokerAccountSnapshot() {
   return controlPlaneRuntime.listBrokerAccountSnapshots(1)[0] || null;
 }
@@ -255,6 +261,9 @@ export function getExecutionWorkbench(limit = 40) {
     recoverablePlans: 0,
     retryScheduledWorkflows: 0,
     interventionNeeded: 0,
+    brokerEvents: 0,
+    rejectedBrokerEvents: 0,
+    fillEvents: 0,
   };
 
   ledger.forEach((entry) => {
@@ -277,6 +286,13 @@ export function getExecutionWorkbench(limit = 40) {
     if (entry.workflow?.status === 'retry_scheduled') summary.retryScheduledWorkflows += 1;
     if (entry.recovery?.status === 'ready') summary.recoverablePlans += 1;
     if (entry.recovery?.recommendedAction !== 'none') summary.interventionNeeded += 1;
+    summary.brokerEvents += Array.isArray(entry.brokerEvents) ? entry.brokerEvents.length : 0;
+    summary.rejectedBrokerEvents += Array.isArray(entry.brokerEvents)
+      ? entry.brokerEvents.filter((item) => item.eventType === 'rejected').length
+      : 0;
+    summary.fillEvents += Array.isArray(entry.brokerEvents)
+      ? entry.brokerEvents.filter((item) => item.eventType === 'partial_fill' || item.eventType === 'filled').length
+      : 0;
   });
 
   return {

@@ -12,8 +12,8 @@ import { getResearchHubSnapshot, getResearchTaskDetail, getResearchTaskSummary, 
 import { evaluateBacktestRun, getResearchEvaluationSummary, listResearchEvaluations, promoteStrategyFromEvaluation } from '../../domains/research/services/evaluation-service.mjs';
 import { getResearchReportSummary, listResearchReports } from '../../domains/research/services/report-service.mjs';
 import { getResearchWorkbenchSnapshot, listResearchGovernanceActions, runResearchGovernanceAction } from '../../domains/research/services/workbench-service.mjs';
-import { getExecutionPlanDetail, getExecutionWorkbench, getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
-import { approveExecutionPlan, cancelExecutionPlan, reconcileExecutionPlan, recoverExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../domains/execution/services/lifecycle-service.mjs';
+import { getExecutionPlanDetail, getExecutionWorkbench, getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listBrokerExecutionEvents, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
+import { approveExecutionPlan, cancelExecutionPlan, ingestBrokerExecutionEvent, reconcileExecutionPlan, recoverExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../domains/execution/services/lifecycle-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { listPermissionDescriptors, writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
 import { getMonitoringStatus, listMonitoringAlerts, listMonitoringSnapshots } from '../../modules/monitoring/service.mjs';
@@ -589,6 +589,22 @@ export async function handlePlatformRoutes(context) {
     return true;
   }
 
+  if (req.method === 'GET' && reqUrl.pathname === '/api/execution/broker-events') {
+    writeJson(res, 200, {
+      ok: true,
+      events: listBrokerExecutionEvents(
+        Number(reqUrl.searchParams.get('limit') || 40),
+        {
+          executionPlanId: reqUrl.searchParams.get('executionPlanId') || '',
+          executionRunId: reqUrl.searchParams.get('executionRunId') || '',
+          symbol: reqUrl.searchParams.get('symbol') || '',
+          eventType: reqUrl.searchParams.get('eventType') || '',
+        },
+      ),
+    });
+    return true;
+  }
+
   if (req.method === 'GET' && reqUrl.pathname === '/api/execution/ledger') {
     writeJson(res, 200, {
       ok: true,
@@ -629,6 +645,18 @@ export async function handlePlatformRoutes(context) {
     const planId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = syncExecutionPlan(planId, body);
+    writeJson(res, result.ok ? 200 : 409, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname.endsWith('/broker-events') && reqUrl.pathname.startsWith('/api/execution/plans/')) {
+    if (!hasPermission('execution:approve')) {
+      writeForbidden('execution:approve', 'ingest broker execution events');
+      return true;
+    }
+    const planId = reqUrl.pathname.split('/').at(-2);
+    const body = await readJsonBody(req);
+    const result = ingestBrokerExecutionEvent(planId, body);
     writeJson(res, result.ok ? 200 : 409, result);
     return true;
   }

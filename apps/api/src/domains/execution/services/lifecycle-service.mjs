@@ -149,6 +149,123 @@ function refreshExecutionAggregate(plan, executionRun, orderStates, payload = {}
   };
 }
 
+function buildBrokerEventHeadline(strategyName, eventType, symbol) {
+  const symbolLabel = symbol ? ` ${symbol}` : '';
+  if (eventType === 'acknowledged') return `Broker acknowledged${symbolLabel} for ${strategyName}.`;
+  if (eventType === 'partial_fill') return `Broker reported a partial fill${symbolLabel} for ${strategyName}.`;
+  if (eventType === 'filled') return `Broker reported a full fill${symbolLabel} for ${strategyName}.`;
+  if (eventType === 'rejected') return `Broker rejected${symbolLabel} for ${strategyName}.`;
+  if (eventType === 'cancelled') return `Broker cancelled${symbolLabel} for ${strategyName}.`;
+  return `Broker event recorded for ${strategyName}.`;
+}
+
+function getBrokerEventTargets(orderStates = [], payload = {}) {
+  const brokerOrderId = payload.brokerOrderId || '';
+  const symbol = payload.symbol || '';
+  const filtered = orderStates.filter((item) => {
+    if (brokerOrderId && item.brokerOrderId === brokerOrderId) return true;
+    if (!brokerOrderId && symbol && item.symbol === symbol) return true;
+    return false;
+  });
+
+  if (filtered.length) return filtered;
+  if (brokerOrderId || symbol) return [];
+
+  return orderStates.filter((item) => ['submitted', 'acknowledged', 'planned'].includes(item.lifecycleStatus));
+}
+
+function applyBrokerEventToOrder(item, payload, now) {
+  const eventType = payload.eventType || 'acknowledged';
+  if (eventType === 'acknowledged') {
+    return controlPlaneRuntime.updateExecutionOrderState(item.id, {
+      lifecycleStatus: 'acknowledged',
+      brokerOrderId: item.brokerOrderId || payload.brokerOrderId || item.id,
+      summary: payload.message || `Broker acknowledged ${item.side} ${item.symbol}.`,
+      acknowledgedAt: item.acknowledgedAt || now,
+      updatedAt: now,
+      metadata: {
+        ...(item.metadata || {}),
+        brokerEventType: eventType,
+        externalEventId: payload.externalEventId || '',
+      },
+    });
+  }
+
+  if (eventType === 'partial_fill') {
+    const nextFilledQty = Math.min(
+      item.qty,
+      Math.max(Number(payload.filledQty || 0), Math.max(item.filledQty || 0, Math.ceil(item.qty / 2))),
+    );
+    return controlPlaneRuntime.updateExecutionOrderState(item.id, {
+      lifecycleStatus: nextFilledQty >= item.qty ? 'filled' : 'acknowledged',
+      brokerOrderId: item.brokerOrderId || payload.brokerOrderId || item.id,
+      summary: payload.message || `Broker reported a partial fill for ${item.side} ${item.symbol}.`,
+      acknowledgedAt: item.acknowledgedAt || now,
+      filledQty: nextFilledQty,
+      avgFillPrice: Number.isFinite(payload.avgFillPrice) ? Number(payload.avgFillPrice) : item.avgFillPrice,
+      filledAt: nextFilledQty > 0 ? now : item.filledAt,
+      updatedAt: now,
+      metadata: {
+        ...(item.metadata || {}),
+        brokerEventType: eventType,
+        externalEventId: payload.externalEventId || '',
+      },
+    });
+  }
+
+  if (eventType === 'filled') {
+    return controlPlaneRuntime.updateExecutionOrderState(item.id, {
+      lifecycleStatus: 'filled',
+      brokerOrderId: item.brokerOrderId || payload.brokerOrderId || item.id,
+      summary: payload.message || `Broker reported a full fill for ${item.side} ${item.symbol}.`,
+      acknowledgedAt: item.acknowledgedAt || now,
+      filledQty: Number(payload.filledQty || item.qty),
+      avgFillPrice: Number.isFinite(payload.avgFillPrice) ? Number(payload.avgFillPrice) : item.avgFillPrice,
+      filledAt: now,
+      updatedAt: now,
+      metadata: {
+        ...(item.metadata || {}),
+        brokerEventType: eventType,
+        externalEventId: payload.externalEventId || '',
+      },
+    });
+  }
+
+  if (eventType === 'rejected') {
+    return controlPlaneRuntime.updateExecutionOrderState(item.id, {
+      lifecycleStatus: 'rejected',
+      brokerOrderId: item.brokerOrderId || payload.brokerOrderId || item.id,
+      summary: payload.message || `${item.symbol} was rejected by the broker.`,
+      acknowledgedAt: item.acknowledgedAt || now,
+      updatedAt: now,
+      metadata: {
+        ...(item.metadata || {}),
+        brokerEventType: eventType,
+        externalEventId: payload.externalEventId || '',
+        rejectReason: payload.reason || 'broker_reported_rejection',
+      },
+    });
+  }
+
+  if (eventType === 'cancelled') {
+    return controlPlaneRuntime.updateExecutionOrderState(item.id, {
+      lifecycleStatus: 'cancelled',
+      brokerOrderId: item.brokerOrderId || payload.brokerOrderId || item.id,
+      summary: payload.message || `${item.symbol} was cancelled by the broker.`,
+      acknowledgedAt: item.acknowledgedAt || now,
+      updatedAt: now,
+      metadata: {
+        ...(item.metadata || {}),
+        brokerEventType: eventType,
+        externalEventId: payload.externalEventId || '',
+        cancelReason: payload.reason || 'broker_reported_cancel',
+      },
+    });
+  }
+
+  return item;
+}
+
 function loadMutableExecutionPlan(planId, errorMessage) {
   const detail = getExecutionPlanDetail(planId);
   if (!detail?.plan) {
@@ -323,6 +440,83 @@ export function syncExecutionPlan(planId, payload = {}) {
 
   return {
     ok: true,
+    ...result,
+  };
+}
+
+export function ingestBrokerExecutionEvent(planId, payload = {}) {
+  const loaded = loadMutableExecutionPlan(planId, `Execution plan ${planId} does not have an execution run for broker event ingestion.`);
+  if (!loaded.ok) return loaded;
+
+  const { plan, executionRun, orderStates } = loaded.detail;
+  const targets = getBrokerEventTargets(orderStates, payload);
+  if (!targets.length) {
+    return {
+      ok: false,
+      error: 'broker event target not found',
+      message: `No execution orders matched broker event routing for plan ${plan.id}.`,
+    };
+  }
+
+  const now = new Date().toISOString();
+  const actor = payload.actor || 'broker-ingestion';
+  const updatedOrders = orderStates.map((item) => {
+    if (!targets.some((target) => target.id === item.id)) return item;
+    return applyBrokerEventToOrder(item, payload, now);
+  });
+
+  const headline = buildBrokerEventHeadline(plan.strategyName, payload.eventType, payload.symbol || targets[0]?.symbol || '');
+  const result = refreshExecutionAggregate(plan, executionRun, updatedOrders, {
+    actor,
+    now,
+    summary: payload.message || headline,
+    metadata: {
+      ingestedBrokerEvent: payload.eventType,
+      externalEventId: payload.externalEventId || '',
+      affectedOrders: targets.map((item) => item.id),
+    },
+  });
+
+  const event = controlPlaneRuntime.appendBrokerExecutionEvent({
+    executionPlanId: plan.id,
+    executionRunId: executionRun.id,
+    brokerOrderId: payload.brokerOrderId || targets[0]?.brokerOrderId || '',
+    symbol: payload.symbol || targets[0]?.symbol || '',
+    eventType: payload.eventType,
+    status: result.lifecycleStatus,
+    filledQty: Number(payload.filledQty || 0),
+    avgFillPrice: Number.isFinite(payload.avgFillPrice) ? Number(payload.avgFillPrice) : null,
+    source: payload.source || 'broker-webhook',
+    actor,
+    headline,
+    message: payload.message || headline,
+    metadata: {
+      externalEventId: payload.externalEventId || '',
+      affectedOrderIds: targets.map((item) => item.id),
+      lifecycleStatus: result.lifecycleStatus,
+    },
+    createdAt: now,
+  });
+
+  controlPlaneRuntime.recordOperatorAction({
+    type: 'execution.ingest-broker-event',
+    actor,
+    title: `Recorded broker ${payload.eventType} event for ${plan.strategyName}`,
+    detail: payload.message || headline,
+    symbol: payload.symbol || plan.strategyId,
+    level: payload.eventType === 'rejected' ? 'warn' : 'info',
+    metadata: {
+      executionPlanId: plan.id,
+      executionRunId: executionRun.id,
+      brokerEventId: event.id,
+      brokerEventType: payload.eventType,
+      externalEventId: payload.externalEventId || '',
+    },
+  });
+
+  return {
+    ok: true,
+    brokerEvent: event,
     ...result,
   };
 }

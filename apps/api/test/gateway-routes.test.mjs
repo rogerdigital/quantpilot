@@ -1485,6 +1485,33 @@ test('GET /api/execution/account-snapshots/latest returns the latest broker snap
   assert.equal(response.json.snapshot.id, 'snapshot-new');
 });
 
+test('GET /api/execution/broker-events returns persisted broker execution events', async () => {
+  const recentEventIso = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+  context.executionRuntime.appendBrokerExecutionEvent({
+    id: 'broker-event-ack-1',
+    executionPlanId: 'broker-event-plan',
+    executionRunId: 'broker-event-run',
+    brokerOrderId: 'broker-order-ack-1',
+    symbol: 'AAPL',
+    eventType: 'acknowledged',
+    status: 'acknowledged',
+    source: 'broker-webhook',
+    actor: 'broker-webhook',
+    headline: 'Broker acknowledged AAPL.',
+    message: 'acknowledged event',
+    createdAt: recentEventIso,
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/execution/broker-events?executionPlanId=broker-event-plan&eventType=acknowledged&limit=5',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.events.length, 1);
+  assert.equal(response.json.events[0].id, 'broker-event-ack-1');
+});
+
 test('GET /api/execution/ledger returns plans joined with workflow and runtime state', async () => {
   const workflow = context.workflows.appendWorkflowRun({
     id: 'workflow-ledger-1',
@@ -1987,6 +2014,75 @@ test('POST /api/execution/plans/:id/recover reroutes cancelled plans back into e
   assert.equal(response.json.executionRun.lifecycleStatus, 'submitted');
   assert.equal(response.json.orderStates[0].lifecycleStatus, 'submitted');
   assert.equal(response.json.orderStates[0].filledQty, 0);
+});
+
+test('POST /api/execution/plans/:id/broker-events ingests a broker fill event into execution state', async () => {
+  context.executionPlans.appendExecutionPlan({
+    id: 'exec-broker-event-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'live',
+    status: 'ready',
+    lifecycleStatus: 'submitted',
+    approvalState: 'not_required',
+    riskStatus: 'approved',
+    summary: 'Submitted into broker route.',
+    capital: 100000,
+    orderCount: 1,
+    orders: [{ symbol: 'AAPL', side: 'BUY', qty: 7, weight: 1, rationale: 'trend' }],
+  });
+  context.executionRuns.appendExecutionRun({
+    id: 'exec-broker-event-run',
+    executionPlanId: 'exec-broker-event-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'live',
+    lifecycleStatus: 'submitted',
+    summary: 'Submitted into broker route.',
+    owner: 'execution-desk',
+    orderCount: 1,
+    submittedOrderCount: 1,
+  });
+  context.executionRuns.appendExecutionOrderStates([
+    {
+      id: 'exec-broker-event-order-1',
+      executionPlanId: 'exec-broker-event-plan',
+      executionRunId: 'exec-broker-event-run',
+      symbol: 'AAPL',
+      side: 'BUY',
+      qty: 7,
+      weight: 1,
+      lifecycleStatus: 'submitted',
+      brokerOrderId: 'broker-exec-event-1',
+      summary: 'submitted',
+      submittedAt: '2026-03-21T09:00:00.000Z',
+    },
+  ]);
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/execution/plans/exec-broker-event-plan/broker-events',
+    body: {
+      actor: 'broker-webhook',
+      source: 'broker-webhook',
+      eventType: 'filled',
+      brokerOrderId: 'broker-exec-event-1',
+      symbol: 'AAPL',
+      filledQty: 7,
+      avgFillPrice: 182.35,
+      externalEventId: 'evt-001',
+      message: 'Broker reported the order as filled.',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.plan.lifecycleStatus, 'filled');
+  assert.equal(response.json.executionRun.lifecycleStatus, 'filled');
+  assert.equal(response.json.orderStates[0].lifecycleStatus, 'filled');
+  assert.equal(response.json.orderStates[0].filledQty, 7);
+  assert.equal(response.json.brokerEvent.eventType, 'filled');
+  assert.equal(response.json.brokerEvent.metadata.externalEventId, 'evt-001');
 });
 
 test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control notification for recovery', async () => {
