@@ -509,6 +509,10 @@ test('POST /api/research/governance/actions runs batch governance actions and ex
   assert.equal(workbenchResponse.statusCode, 200);
   assert.equal(workbenchResponse.json.summary.baselines >= 1, true);
   assert.equal(workbenchResponse.json.summary.champions >= 1, true);
+  assert.equal(typeof workbenchResponse.json.comparisonSummary.baselineStrategyId, 'string');
+  assert.equal(typeof workbenchResponse.json.comparisonSummary.championStrategyId, 'string');
+  assert.equal(Array.isArray(workbenchResponse.json.comparisonInsights), true);
+  assert.equal(typeof workbenchResponse.json.comparisons[0].comparisonBand, 'string');
   assert.equal(workbenchResponse.json.recentActions.length >= 4, true);
   assert.equal(workbenchResponse.json.actionSummary.total >= 4, true);
 });

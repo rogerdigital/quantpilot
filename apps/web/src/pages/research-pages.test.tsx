@@ -196,6 +196,18 @@ describe('research workspace pages', () => {
             baselines: 1,
             champions: 1,
           },
+          comparisonSummary: {
+            baselineStrategyId: 'strategy-1',
+            baselineStrategyName: 'Momentum',
+            championStrategyId: 'strategy-1',
+            championStrategyName: 'Momentum',
+            baselineUpdatedAt: '2026-03-13T11:08:00.000Z',
+            championUpdatedAt: '2026-03-13T11:09:00.000Z',
+            comparedStrategies: 1,
+            outperformingBaseline: 0,
+            nearChampion: 0,
+            trailingBaseline: 0,
+          },
           lanes: [],
           promotionQueue: [
             {
@@ -222,7 +234,51 @@ describe('research workspace pages', () => {
               updatedAt: '2026-03-13T11:10:00.000Z',
             },
           ],
-          comparisons: [],
+          comparisons: [
+            {
+              strategyId: 'strategy-1',
+              strategyName: 'Momentum',
+              strategyStatus: 'candidate',
+              baseline: true,
+              champion: true,
+              latestRunId: 'run-1',
+              latestRunLabel: '30D',
+              resultVersion: 3,
+              resultStage: 'reviewed',
+              resultStatus: 'completed',
+              annualizedReturnPct: 10.5,
+              maxDrawdownPct: 4.2,
+              sharpe: 1.7,
+              excessReturnPct: 4.4,
+              baselineReturnGapPct: 0,
+              baselineSharpeGap: 0,
+              baselineDrawdownGapPct: 0,
+              championReturnGapPct: 0,
+              championSharpeGap: 0,
+              championDrawdownGapPct: 0,
+              comparisonBand: 'champion',
+              evaluationVerdict: 'promote',
+              reportVerdict: 'promote',
+              promotionReadiness: 'ready-promote',
+              recommendedAction: 'promote_to_paper',
+              updatedAt: '2026-03-13T11:10:00.000Z',
+            },
+          ],
+          comparisonInsights: [
+            {
+              strategyId: 'strategy-1',
+              strategyName: 'Momentum',
+              strategyStatus: 'candidate',
+              comparisonBand: 'champion',
+              headline: 'Momentum is the current champion.',
+              detail: 'Use this strategy as the current promotion ceiling.',
+              baselineReturnGapPct: 0,
+              championReturnGapPct: 0,
+              baselineSharpeGap: 0,
+              championSharpeGap: 0,
+              updatedAt: '2026-03-13T11:10:00.000Z',
+            },
+          ],
           coverage: [],
           actionSummary: {
             total: 1,
@@ -452,8 +508,11 @@ describe('research workspace pages', () => {
     expect(html).toContain('Latest Research Result');
     expect(html).toContain('Promotion And Execution Readiness');
     expect(html).toContain('Research Governance Overview');
+    expect(html).toContain('Baseline And Champion Analysis');
     expect(html).toContain('Strategy Promotion Queue');
     expect(html).toContain('Research Governance Actions');
+    expect(html).toContain('Strategy Comparison Board');
+    expect(html).toContain('Comparison Insights');
     expect(html).toContain('Recent Governance Actions');
     expect(html).toContain('Set Baseline');
     expect(html).toContain('Set Champion');
@@ -516,6 +575,18 @@ describe('research workspace pages', () => {
             baselines: 1,
             champions: 1,
           },
+          comparisonSummary: {
+            baselineStrategyId: 'strategy-1',
+            baselineStrategyName: 'Momentum',
+            championStrategyId: 'strategy-1',
+            championStrategyName: 'Momentum',
+            baselineUpdatedAt: '2026-03-13T11:08:00.000Z',
+            championUpdatedAt: '2026-03-13T11:09:00.000Z',
+            comparedStrategies: 1,
+            outperformingBaseline: 0,
+            nearChampion: 0,
+            trailingBaseline: 0,
+          },
           lanes: [
             {
               key: 'ready-promote',
@@ -550,7 +621,51 @@ describe('research workspace pages', () => {
               updatedAt: '2026-03-13T11:10:00.000Z',
             },
           ],
-          comparisons: [],
+          comparisons: [
+            {
+              strategyId: 'strategy-1',
+              strategyName: 'Momentum',
+              strategyStatus: 'candidate',
+              baseline: true,
+              champion: true,
+              latestRunId: 'run-1',
+              latestRunLabel: '30D',
+              resultVersion: 3,
+              resultStage: 'reviewed',
+              resultStatus: 'completed',
+              annualizedReturnPct: 10.5,
+              maxDrawdownPct: 4.2,
+              sharpe: 1.7,
+              excessReturnPct: 4.4,
+              baselineReturnGapPct: 0,
+              baselineSharpeGap: 0,
+              baselineDrawdownGapPct: 0,
+              championReturnGapPct: 0,
+              championSharpeGap: 0,
+              championDrawdownGapPct: 0,
+              comparisonBand: 'champion',
+              evaluationVerdict: 'promote',
+              reportVerdict: 'promote',
+              promotionReadiness: 'ready-promote',
+              recommendedAction: 'promote_to_paper',
+              updatedAt: '2026-03-13T11:10:00.000Z',
+            },
+          ],
+          comparisonInsights: [
+            {
+              strategyId: 'strategy-1',
+              strategyName: 'Momentum',
+              strategyStatus: 'candidate',
+              comparisonBand: 'champion',
+              headline: 'Momentum is the current champion.',
+              detail: 'Use this strategy as the current promotion ceiling.',
+              baselineReturnGapPct: 0,
+              championReturnGapPct: 0,
+              baselineSharpeGap: 0,
+              championSharpeGap: 0,
+              updatedAt: '2026-03-13T11:10:00.000Z',
+            },
+          ],
           coverage: [],
           actionSummary: {
             total: 1,

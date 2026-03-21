@@ -113,6 +113,19 @@ function StrategiesPage() {
   };
   const promotionQueue = data?.workbench?.promotionQueue || [];
   const comparisonRows = data?.workbench?.comparisons || [];
+  const comparisonInsights = data?.workbench?.comparisonInsights || [];
+  const comparisonSummary = data?.workbench?.comparisonSummary || {
+    baselineStrategyId: '',
+    baselineStrategyName: '',
+    championStrategyId: '',
+    championStrategyName: '',
+    baselineUpdatedAt: '',
+    championUpdatedAt: '',
+    comparedStrategies: 0,
+    outperformingBaseline: 0,
+    nearChampion: 0,
+    trailingBaseline: 0,
+  };
   const coverageRows = data?.workbench?.coverage || [];
   const recentGovernanceActions = data?.workbench?.recentActions || [];
   const activeStrategies = data?.strategies.filter((item) => item.status !== 'archived') || [];
@@ -619,6 +632,32 @@ function StrategiesPage() {
             <div className="status-row"><span>{locale === 'zh' ? '冠军策略' : 'Champions'}</span><strong>{workbenchSummary.champions}</strong></div>
           </div>
         </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '基线与冠军分析' : 'Baseline And Champion Analysis'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把研究工作台里的 baseline / champion 标记变成正式对比参照，快速识别谁领先、谁接近冠军、谁已经落后于基线。'
+                  : 'Turn the baseline and champion markers into formal comparison anchors so operators can see who is leading, who is closing in, and who is now trailing the baseline envelope.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{comparisonSummary.comparedStrategies}</div>
+          </div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '当前基线' : 'Current Baseline'}</span><strong>{comparisonSummary.baselineStrategyName || '--'}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '当前冠军' : 'Current Champion'}</span><strong>{comparisonSummary.championStrategyName || '--'}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '可比较策略' : 'Compared Strategies'}</span><strong>{comparisonSummary.comparedStrategies}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '领先基线' : 'Outperforming Baseline'}</span><strong>{comparisonSummary.outperformingBaseline}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '接近冠军' : 'Near Champion'}</span><strong>{comparisonSummary.nearChampion}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '落后基线' : 'Trailing Baseline'}</span><strong>{comparisonSummary.trailingBaseline}</strong></div>
+          </div>
+          <div className="status-copy">
+            {locale === 'zh'
+              ? `基线更新时间：${comparisonSummary.baselineUpdatedAt ? formatDateTime(comparisonSummary.baselineUpdatedAt, locale) : '--'}；冠军更新时间：${comparisonSummary.championUpdatedAt ? formatDateTime(comparisonSummary.championUpdatedAt, locale) : '--'}。`
+              : `Baseline updated ${comparisonSummary.baselineUpdatedAt ? formatDateTime(comparisonSummary.baselineUpdatedAt, locale) : '--'}; champion updated ${comparisonSummary.championUpdatedAt ? formatDateTime(comparisonSummary.championUpdatedAt, locale) : '--'}.`}
+          </div>
+        </article>
         <ResearchCollectionPanel
           title={locale === 'zh' ? '策略晋级队列' : 'Strategy Promotion Queue'}
           copy={locale === 'zh'
@@ -786,10 +825,38 @@ function StrategiesPage() {
               leadCopy={`${item.recommendedAction} · ${item.latestRunLabel || item.latestRunId || '--'}`}
               metrics={[
                 { label: locale === 'zh' ? '基线/冠军' : 'Baseline / Champion', value: `${item.baseline ? 'baseline' : '--'} / ${item.champion ? 'champion' : '--'}` },
+                { label: locale === 'zh' ? '对比带' : 'Comparison Band', value: item.comparisonBand },
                 { label: locale === 'zh' ? '收益/回撤' : 'Return / Drawdown', value: item.annualizedReturnPct !== null && item.maxDrawdownPct !== null ? `${item.annualizedReturnPct.toFixed(1)}% / ${item.maxDrawdownPct.toFixed(1)}%` : '--' },
                 { label: 'Sharpe', value: item.sharpe !== null ? item.sharpe.toFixed(2) : '--' },
                 { label: locale === 'zh' ? '超额收益' : 'Excess', value: item.excessReturnPct !== null ? `${item.excessReturnPct.toFixed(1)}%` : '--' },
+                { label: locale === 'zh' ? '相对基线' : 'Vs Baseline', value: item.baselineReturnGapPct !== null && item.baselineSharpeGap !== null ? `${item.baselineReturnGapPct >= 0 ? '+' : ''}${item.baselineReturnGapPct.toFixed(1)}% / ${item.baselineSharpeGap >= 0 ? '+' : ''}${item.baselineSharpeGap.toFixed(2)}` : '--' },
+                { label: locale === 'zh' ? '相对冠军' : 'Vs Champion', value: item.championReturnGapPct !== null && item.championSharpeGap !== null ? `${item.championReturnGapPct >= 0 ? '+' : ''}${item.championReturnGapPct.toFixed(1)}% / ${item.championSharpeGap >= 0 ? '+' : ''}${item.championSharpeGap.toFixed(2)}` : '--' },
                 { label: locale === 'zh' ? '评估/报告' : 'Evaluation / Report', value: `${item.evaluationVerdict} / ${item.reportVerdict}` },
+              ]}
+            />
+          ))}
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
+          title={locale === 'zh' ? '对比洞察' : 'Comparison Insights'}
+          copy={locale === 'zh'
+            ? '把横向对比结果转成治理优先级，直接标出哪些策略在挑战冠军、哪些需要回到基线以下做返工。'
+            : 'Turn comparison output into governance priorities by highlighting which strategies are challenging the champion and which now need rework below the baseline envelope.'}
+          badge={comparisonInsights.length}
+          terminal
+          isEmpty={comparisonInsights.length === 0}
+          emptyMessage={locale === 'zh' ? '当前还没有可生成的对比洞察。' : 'No comparison insights are available yet.'}
+        >
+          {comparisonInsights.map((item) => (
+            <ResearchVersionSnapshotRow
+              key={item.strategyId}
+              leadTitle={`${item.strategyName} · ${item.comparisonBand}`}
+              leadCopy={item.headline}
+              metrics={[
+                { label: locale === 'zh' ? '状态' : 'Status', value: item.strategyStatus },
+                { label: locale === 'zh' ? '相对基线收益' : 'Baseline Return Gap', value: item.baselineReturnGapPct !== null ? `${item.baselineReturnGapPct >= 0 ? '+' : ''}${item.baselineReturnGapPct.toFixed(1)}%` : '--' },
+                { label: locale === 'zh' ? '相对冠军收益' : 'Champion Return Gap', value: item.championReturnGapPct !== null ? `${item.championReturnGapPct >= 0 ? '+' : ''}${item.championReturnGapPct.toFixed(1)}%` : '--' },
+                { label: locale === 'zh' ? 'Sharpe 差值' : 'Sharpe Gap', value: item.baselineSharpeGap !== null ? `${item.baselineSharpeGap >= 0 ? '+' : ''}${item.baselineSharpeGap.toFixed(2)}` : '--' },
+                { label: locale === 'zh' ? '更新时间' : 'Updated', value: formatDateTime(item.updatedAt, locale) },
               ]}
             />
           ))}

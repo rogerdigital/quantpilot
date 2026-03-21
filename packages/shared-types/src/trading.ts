@@ -687,6 +687,13 @@ export type ResearchWorkbenchComparisonEntry = {
   maxDrawdownPct: number | null;
   sharpe: number | null;
   excessReturnPct: number | null;
+  baselineReturnGapPct: number | null;
+  baselineSharpeGap: number | null;
+  baselineDrawdownGapPct: number | null;
+  championReturnGapPct: number | null;
+  championSharpeGap: number | null;
+  championDrawdownGapPct: number | null;
+  comparisonBand: 'baseline' | 'champion' | 'outperforming_baseline' | 'challenger' | 'trailing' | 'forming';
   evaluationVerdict: string;
   reportVerdict: string;
   promotionReadiness: string;
@@ -733,6 +740,18 @@ export type ResearchWorkbenchSnapshot = {
     baselines: number;
     champions: number;
   };
+  comparisonSummary: {
+    baselineStrategyId: string;
+    baselineStrategyName: string;
+    championStrategyId: string;
+    championStrategyName: string;
+    baselineUpdatedAt: string;
+    championUpdatedAt: string;
+    comparedStrategies: number;
+    outperformingBaseline: number;
+    nearChampion: number;
+    trailingBaseline: number;
+  };
   lanes: ResearchWorkbenchLaneSnapshot[];
   actionSummary: {
     total: number;
@@ -744,6 +763,19 @@ export type ResearchWorkbenchSnapshot = {
   recentActions: ResearchGovernanceActionRecord[];
   promotionQueue: ResearchWorkbenchQueueEntry[];
   comparisons: ResearchWorkbenchComparisonEntry[];
+  comparisonInsights: Array<{
+    strategyId: string;
+    strategyName: string;
+    strategyStatus: string;
+    comparisonBand: 'baseline' | 'champion' | 'outperforming_baseline' | 'challenger' | 'trailing' | 'forming';
+    headline: string;
+    detail: string;
+    baselineReturnGapPct: number | null;
+    championReturnGapPct: number | null;
+    baselineSharpeGap: number | null;
+    championSharpeGap: number | null;
+    updatedAt: string;
+  }>;
   coverage: ResearchWorkbenchCoverageEntry[];
 };
 

@@ -65,6 +65,158 @@ function buildLaneHeadline(key, count) {
   return `${count} strategies remain blocked or in research rework.`;
 }
 
+function roundMetric(value) {
+  if (!Number.isFinite(value)) return null;
+  return Math.round(value * 100) / 100;
+}
+
+function subtractMetric(current, reference) {
+  if (!Number.isFinite(current) || !Number.isFinite(reference)) return null;
+  return roundMetric(current - reference);
+}
+
+function invertGap(current, reference) {
+  if (!Number.isFinite(current) || !Number.isFinite(reference)) return null;
+  return roundMetric(reference - current);
+}
+
+function resolveComparisonBand(item) {
+  if (item.champion) return 'champion';
+  if (item.baseline) return 'baseline';
+
+  const baselineReturnGap = item.baselineReturnGapPct;
+  const baselineSharpeGap = item.baselineSharpeGap;
+  const baselineDrawdownGap = item.baselineDrawdownGapPct;
+  const championReturnGap = item.championReturnGapPct;
+  const championSharpeGap = item.championSharpeGap;
+
+  if (
+    Number.isFinite(baselineReturnGap)
+    && Number.isFinite(baselineSharpeGap)
+    && Number.isFinite(baselineDrawdownGap)
+    && baselineReturnGap >= 0
+    && baselineSharpeGap >= 0
+    && baselineDrawdownGap >= -1.5
+  ) {
+    return 'outperforming_baseline';
+  }
+
+  if (
+    Number.isFinite(championReturnGap)
+    && Number.isFinite(championSharpeGap)
+    && championReturnGap >= -2.5
+    && championSharpeGap >= -0.2
+  ) {
+    return 'challenger';
+  }
+
+  if (
+    Number.isFinite(baselineReturnGap)
+    && Number.isFinite(baselineSharpeGap)
+    && (baselineReturnGap <= -3 || baselineSharpeGap <= -0.25)
+  ) {
+    return 'trailing';
+  }
+
+  return 'forming';
+}
+
+function buildComparisonInsight(item) {
+  if (item.comparisonBand === 'champion') {
+    return {
+      strategyId: item.strategyId,
+      strategyName: item.strategyName,
+      strategyStatus: item.strategyStatus,
+      comparisonBand: item.comparisonBand,
+      headline: `${item.strategyName} is the current champion.`,
+      detail: 'Use this strategy as the current promotion ceiling and execution-prep reference.',
+      baselineReturnGapPct: item.baselineReturnGapPct,
+      championReturnGapPct: item.championReturnGapPct,
+      baselineSharpeGap: item.baselineSharpeGap,
+      championSharpeGap: item.championSharpeGap,
+      updatedAt: item.updatedAt,
+    };
+  }
+
+  if (item.comparisonBand === 'baseline') {
+    return {
+      strategyId: item.strategyId,
+      strategyName: item.strategyName,
+      strategyStatus: item.strategyStatus,
+      comparisonBand: item.comparisonBand,
+      headline: `${item.strategyName} anchors the baseline envelope.`,
+      detail: 'Use this strategy as the minimum acceptable research package for refreshes and challenger review.',
+      baselineReturnGapPct: item.baselineReturnGapPct,
+      championReturnGapPct: item.championReturnGapPct,
+      baselineSharpeGap: item.baselineSharpeGap,
+      championSharpeGap: item.championSharpeGap,
+      updatedAt: item.updatedAt,
+    };
+  }
+
+  if (item.comparisonBand === 'outperforming_baseline') {
+    return {
+      strategyId: item.strategyId,
+      strategyName: item.strategyName,
+      strategyStatus: item.strategyStatus,
+      comparisonBand: item.comparisonBand,
+      headline: `${item.strategyName} is outperforming the baseline pack.`,
+      detail: 'Return, Sharpe, and drawdown are all within the current promotion envelope versus the baseline.',
+      baselineReturnGapPct: item.baselineReturnGapPct,
+      championReturnGapPct: item.championReturnGapPct,
+      baselineSharpeGap: item.baselineSharpeGap,
+      championSharpeGap: item.championSharpeGap,
+      updatedAt: item.updatedAt,
+    };
+  }
+
+  if (item.comparisonBand === 'challenger') {
+    return {
+      strategyId: item.strategyId,
+      strategyName: item.strategyName,
+      strategyStatus: item.strategyStatus,
+      comparisonBand: item.comparisonBand,
+      headline: `${item.strategyName} is closing in on the champion.`,
+      detail: 'Performance is near the current champion and should stay in the next comparison and promotion review cycle.',
+      baselineReturnGapPct: item.baselineReturnGapPct,
+      championReturnGapPct: item.championReturnGapPct,
+      baselineSharpeGap: item.baselineSharpeGap,
+      championSharpeGap: item.championSharpeGap,
+      updatedAt: item.updatedAt,
+    };
+  }
+
+  if (item.comparisonBand === 'trailing') {
+    return {
+      strategyId: item.strategyId,
+      strategyName: item.strategyName,
+      strategyStatus: item.strategyStatus,
+      comparisonBand: item.comparisonBand,
+      headline: `${item.strategyName} is trailing the baseline envelope.`,
+      detail: 'This strategy needs a refresh result, rework, or a narrower evaluation scope before promotion governance.',
+      baselineReturnGapPct: item.baselineReturnGapPct,
+      championReturnGapPct: item.championReturnGapPct,
+      baselineSharpeGap: item.baselineSharpeGap,
+      championSharpeGap: item.championSharpeGap,
+      updatedAt: item.updatedAt,
+    };
+  }
+
+  return {
+    strategyId: item.strategyId,
+    strategyName: item.strategyName,
+    strategyStatus: item.strategyStatus,
+    comparisonBand: item.comparisonBand,
+    headline: `${item.strategyName} is still forming its comparison package.`,
+    detail: 'The latest result set is incomplete or too fresh to classify against the baseline and champion ladder.',
+    baselineReturnGapPct: item.baselineReturnGapPct,
+    championReturnGapPct: item.championReturnGapPct,
+    baselineSharpeGap: item.baselineSharpeGap,
+    championSharpeGap: item.championSharpeGap,
+    updatedAt: item.updatedAt,
+  };
+}
+
 export function listResearchGovernanceActions(options = {}) {
   const limit = parseLimit(options.limit, 30);
   const since = resolveSince(options.hours);
@@ -403,6 +555,13 @@ export function getResearchWorkbenchSnapshot(options = {}) {
       maxDrawdownPct: latestResult?.maxDrawdownPct ?? null,
       sharpe: latestResult?.sharpe ?? null,
       excessReturnPct: latestResult?.excessReturnPct ?? null,
+      baselineReturnGapPct: null,
+      baselineSharpeGap: null,
+      baselineDrawdownGapPct: null,
+      championReturnGapPct: null,
+      championSharpeGap: null,
+      championDrawdownGapPct: null,
+      comparisonBand: 'forming',
       evaluationVerdict: latestEvaluation?.verdict || '--',
       reportVerdict: latestReport?.verdict || '--',
       promotionReadiness: laneKey,
@@ -437,20 +596,67 @@ export function getResearchWorkbenchSnapshot(options = {}) {
   }));
   const recentActions = listResearchGovernanceActions(options).actions;
   const actionSummary = getResearchGovernanceActionSummary(options).summary;
+  const baselineEntry = comparisons.find((item) => item.baseline) || null;
+  const championEntry = comparisons.find((item) => item.champion) || null;
+
+  const enrichedComparisons = comparisons.map((item) => {
+    const baselineReturnGapPct = baselineEntry ? subtractMetric(item.annualizedReturnPct, baselineEntry.annualizedReturnPct) : null;
+    const baselineSharpeGap = baselineEntry ? subtractMetric(item.sharpe, baselineEntry.sharpe) : null;
+    const baselineDrawdownGapPct = baselineEntry ? invertGap(item.maxDrawdownPct, baselineEntry.maxDrawdownPct) : null;
+    const championReturnGapPct = championEntry ? subtractMetric(item.annualizedReturnPct, championEntry.annualizedReturnPct) : null;
+    const championSharpeGap = championEntry ? subtractMetric(item.sharpe, championEntry.sharpe) : null;
+    const championDrawdownGapPct = championEntry ? invertGap(item.maxDrawdownPct, championEntry.maxDrawdownPct) : null;
+    const enriched = {
+      ...item,
+      baselineReturnGapPct,
+      baselineSharpeGap,
+      baselineDrawdownGapPct,
+      championReturnGapPct,
+      championSharpeGap,
+      championDrawdownGapPct,
+    };
+    return {
+      ...enriched,
+      comparisonBand: resolveComparisonBand(enriched),
+    };
+  });
+
+  const comparisonSummary = {
+    baselineStrategyId: baselineEntry?.strategyId || '',
+    baselineStrategyName: baselineEntry?.strategyName || '',
+    championStrategyId: championEntry?.strategyId || '',
+    championStrategyName: championEntry?.strategyName || '',
+    baselineUpdatedAt: baselineEntry?.updatedAt || '',
+    championUpdatedAt: championEntry?.updatedAt || '',
+    comparedStrategies: enrichedComparisons.filter((item) => item.resultVersion !== null).length,
+    outperformingBaseline: enrichedComparisons.filter((item) => item.comparisonBand === 'outperforming_baseline').length,
+    nearChampion: enrichedComparisons.filter((item) => item.comparisonBand === 'challenger').length,
+    trailingBaseline: enrichedComparisons.filter((item) => item.comparisonBand === 'trailing').length,
+  };
+
+  const comparisonInsights = enrichedComparisons
+    .map((item) => buildComparisonInsight(item))
+    .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime())
+    .slice(0, limit);
 
   return {
     ok: true,
     asOf: queue[0]?.updatedAt || new Date().toISOString(),
     summary,
+    comparisonSummary,
     lanes,
     actionSummary,
     recentActions,
     promotionQueue: queue
       .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime())
       .slice(0, limit),
-    comparisons: comparisons
-      .sort((left, right) => (right.excessReturnPct ?? -999) - (left.excessReturnPct ?? -999) || (right.sharpe ?? -999) - (left.sharpe ?? -999))
+    comparisons: enrichedComparisons
+      .sort((left, right) => Number(right.champion) - Number(left.champion)
+        || Number(right.baseline) - Number(left.baseline)
+        || (right.excessReturnPct ?? -999) - (left.excessReturnPct ?? -999)
+        || (right.sharpe ?? -999) - (left.sharpe ?? -999))
       .slice(0, limit),
+    comparisonInsights,
     coverage: coverage
       .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime())
       .slice(0, limit),

@@ -163,6 +163,7 @@ quantpilot/
 - `research workbench` 已开始形成：后端会把结果、评估、报告和晋级治理统一聚合成 `research workbench` 快照，策略页和回测页现可直接查看晋级队列、横向结果对比和研究资产覆盖缺口。
 - `research governance actions` 已接入研究工作台：策略页现在可以直接批量推进策略晋级、补跑回测和补做评估，所有治理动作都会沉淀到统一的 operator action / audit / notification 历史中。
 - `research baselines and champions` 已开始进入正式治理：研究工作台现支持把单条策略设为 `baseline / champion`，并将这些正式标签带入横向结果对比、资产覆盖缺口和治理动作摘要中。
+- `research comparison and baseline analysis` 已开始形成：研究工作台现会把 baseline / champion 变成正式对比锚点，产出相对基线/冠军的收益与 Sharpe 差值、对比带分类和治理洞察，帮助识别谁在挑战冠军、谁已落后于基线。
 - `execution plans / runtime events / account snapshots / execution ledger` 已具备独立查询接口，执行面不再只存在于页面本地状态。
 - Overview 首页已开始消费后端 `monitoring status` 摘要，可直接观察 `broker / market / worker / workflow / queues` 运行态。
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
@@ -205,7 +206,7 @@ quantpilot/
 - 阶段 1 的收官定义、非目标和阶段 2 入口条件已单独整理到 [docs/architecture/stage-1-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-1-closeout.md)。
 
 - 阶段 1 现已完成账户与权限底座、incident / investigation 控制台、operations workbench、risk workbench 和研究/执行基础数据边界的第一轮产品化。
-- 阶段 2 已完成 `Research Task Backbone`、`Backtest Result Model`、`Research Workspace Integration`、`Evaluation And Promotion Flow`、`Research Report Workflow`、`Research Workbench`、`Research Governance Actions` 和 `Research Baselines And Champions` 八个起步大步，研究链路已开始形成 `task -> result -> evaluation -> report -> govern -> compare -> act -> promote` 的统一异步骨架。
+- 阶段 2 已完成 `Research Task Backbone`、`Backtest Result Model`、`Research Workspace Integration`、`Evaluation And Promotion Flow`、`Research Report Workflow`、`Research Workbench`、`Research Governance Actions`、`Research Baselines And Champions` 和 `Research Comparison And Baseline Analysis` 九个起步大步，研究链路已开始形成 `task -> result -> evaluation -> report -> compare -> govern -> act -> promote` 的统一异步骨架。
 
 ### 阶段 2：研究与策略闭环
 
