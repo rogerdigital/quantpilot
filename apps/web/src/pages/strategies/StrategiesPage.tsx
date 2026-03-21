@@ -24,7 +24,7 @@ import { getStrategyTerminalConfigs } from '../../modules/research/researchTermi
 import { useResearchNavigationContext } from '../../modules/research/useResearchNavigationContext.ts';
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { ResearchStatusPanel } from '../../modules/research/ResearchStatusPanel.tsx';
-import { promoteStrategyCatalogItem, runResearchGovernanceAction, saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
+import { createExecutionCandidateHandoff, promoteStrategyCatalogItem, runResearchGovernanceAction, saveStrategyCatalogItem } from '../../modules/research/research.service.ts';
 import { useStrategyDetailPanels } from '../../modules/research/useStrategyDetailPanels.ts';
 import { useStrategyDetail } from '../../modules/research/useStrategyDetail.ts';
 import { useResearchWorkspaceData } from '../../modules/research/useResearchWorkspaceData.ts';
@@ -197,6 +197,7 @@ function StrategiesPage() {
     replaySummary,
     latestResult,
     latestReport,
+    latestExecutionHandoff,
     promotionReadiness,
     executionCandidatePreview,
   } = useStrategyDetailPanels({
@@ -1100,6 +1101,62 @@ function StrategiesPage() {
                   })}
                 />
               ) : null}
+              <ResearchActionButton
+                label={locale === 'zh' ? '移交执行台' : 'Send To Execution Desk'}
+                onClick={async () => {
+                  if (!selectedStrategy) return;
+                  setSaveMessage('');
+                  setSaveError('');
+                  try {
+                    const result = await createExecutionCandidateHandoff({
+                      strategyId: selectedStrategy.id,
+                      actor: session?.user.id || 'operator',
+                      mode: executionCandidatePreview.mode,
+                      capital: executionCandidatePreview.capital,
+                    });
+                    setSaveMessage(
+                      locale === 'zh'
+                        ? `已为 ${selectedStrategy.name} 创建执行交接对象 ${result.handoff?.id || ''}。`
+                        : `Created execution handoff ${result.handoff?.id || ''} for ${selectedStrategy.name}.`,
+                    );
+                    requestRefresh();
+                  } catch (error) {
+                    setSaveError(error instanceof Error ? error.message : 'unknown error');
+                  }
+                }}
+              />
+            </ResearchActionBar>
+          ) : null}
+        </ResearchEventInspectionPanel>
+        <ResearchEventInspectionPanel
+          title={locale === 'zh' ? '最新执行交接' : 'Latest Execution Handoff'}
+          copy={locale === 'zh'
+            ? '把研究链路正式交给执行工作台，明确当前 handoff 的状态、风险判定和候选订单规模。'
+            : 'Hand the research package into the execution desk with a formal handoff record, including status, risk posture, and candidate order scale.'}
+          badge={latestExecutionHandoff?.handoffStatus || '--'}
+          badgeClassName="badge-info"
+          emptyMessage={!selectedStrategy
+            ? (locale === 'zh' ? '先从策略注册表选择一条记录。' : 'Select a strategy from the registry first.')
+            : !latestExecutionHandoff
+              ? (locale === 'zh' ? '当前还没有正式的执行交接对象。' : 'No formal execution handoff has been created for this strategy yet.')
+              : null}
+          metrics={[
+            { label: locale === 'zh' ? '模式' : 'Mode', value: latestExecutionHandoff?.mode || '--' },
+            { label: locale === 'zh' ? '风险状态' : 'Risk', value: latestExecutionHandoff?.riskStatus || '--' },
+            { label: locale === 'zh' ? '审批' : 'Approval', value: latestExecutionHandoff?.approvalState || '--' },
+            { label: locale === 'zh' ? '结论' : 'Verdict', value: latestExecutionHandoff?.verdict || '--' },
+            { label: locale === 'zh' ? '候选订单' : 'Orders', value: latestExecutionHandoff?.orderCount ?? '--' },
+          ]}
+          detail={latestExecutionHandoff?.summary}
+          guidance={(latestExecutionHandoff?.reasons || []).join(' · ') || undefined}
+        >
+          {(selectedStrategy && latestExecutionHandoff) ? (
+            <ResearchActionBar>
+              <ResearchActionButton
+                label={locale === 'zh' ? '打开执行页面' : 'Open Execution Desk'}
+                priority="primary"
+                onClick={() => navigate(`/execution?strategy=${selectedStrategy.id}&source=strategies`)}
+              />
             </ResearchActionBar>
           ) : null}
         </ResearchEventInspectionPanel>

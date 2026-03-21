@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { queueExecutionCandidateHandoff } from '../../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
@@ -28,18 +29,22 @@ export function ExecutionPage() {
   const { locale } = useLocale();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [handoffBusyId, setHandoffBusyId] = useState('');
+  const [handoffMessage, setHandoffMessage] = useState('');
   const researchNavigation = useResearchNavigationContext(searchParams, navigate);
   const goToSettings = useSettingsNavigation();
   const canApproveExecution = hasPermission('execution:approve');
   const {
     runtimeEvents,
     accountSnapshots,
+    handoffs,
     ledgerEntries,
     workflowRuns,
     operatorActions,
     loading: executionDataLoading,
     error: executionDataError,
-  } = useExecutionConsoleData(state.controlPlane.lastSyncAt);
+  } = useExecutionConsoleData(`${state.controlPlane.lastSyncAt}-${refreshKey}`);
   const { items: auditItems, loading: auditLoading } = useAuditFeed(state.controlPlane.lastSyncAt);
   const {
     planId: requestedPlanId,
@@ -192,6 +197,67 @@ export function ExecutionPage() {
       </section>
 
       <section className="panel-grid">
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '研究执行交接台' : 'Research Execution Handoffs'}</div><div className="panel-copy">{locale === 'zh' ? '查看研究侧正式移交过来的执行候选对象，并从这里把它们排队进入 execution workflow。' : 'Review formal handoff objects coming from research and queue them into execution workflows from one place.'}</div></div><div className="panel-badge badge-info">{handoffs.length}</div></div>
+          <div className="focus-list">
+            {handoffMessage ? <div className="status-copy">{handoffMessage}</div> : null}
+            {handoffs.slice(0, 6).map((handoff) => (
+              <InspectionSelectableRow
+                key={handoff.id}
+                leadTitle={`${handoff.strategyName} · ${handoff.mode}`}
+                leadCopy={handoff.summary}
+                metrics={[
+                  { label: locale === 'zh' ? '交接状态' : 'Handoff', value: handoff.handoffStatus },
+                  { label: locale === 'zh' ? '风险' : 'Risk', value: handoff.riskStatus },
+                  { label: locale === 'zh' ? '审批' : 'Approval', value: handoff.approvalState },
+                  { label: locale === 'zh' ? '订单数' : 'Orders', value: handoff.orderCount },
+                ]}
+                actions={(
+                  <div className="action-group">
+                    <button
+                      type="button"
+                      className="inline-action"
+                      onClick={() => researchNavigation.openStrategyDetail(handoff.strategyId)}
+                    >
+                      {locale === 'zh' ? '打开策略' : 'Open Strategy'}
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-action inline-action-approve"
+                      disabled={!canApproveExecution || handoff.handoffStatus !== 'ready' || handoffBusyId === handoff.id}
+                      onClick={async () => {
+                        setHandoffBusyId(handoff.id);
+                        setHandoffMessage('');
+                        try {
+                          const result = await queueExecutionCandidateHandoff(handoff.id, {
+                            actor: 'execution-desk',
+                            owner: 'execution-desk',
+                          });
+                          setHandoffMessage(
+                            locale === 'zh'
+                              ? `已将 ${handoff.strategyName} 的交接对象排队到 workflow ${result.workflow?.id || ''}。`
+                              : `Queued ${handoff.strategyName} handoff into workflow ${result.workflow?.id || ''}.`,
+                          );
+                          setRefreshKey((current) => current + 1);
+                        } catch (error) {
+                          setHandoffMessage(error instanceof Error ? error.message : 'unknown error');
+                        } finally {
+                          setHandoffBusyId('');
+                        }
+                      }}
+                    >
+                      {handoffBusyId === handoff.id
+                        ? (locale === 'zh' ? '排队中...' : 'Queueing...')
+                        : (locale === 'zh' ? '排队执行' : 'Queue Execution')}
+                    </button>
+                  </div>
+                )}
+              />
+            ))}
+            {!handoffs.length ? <div className="status-copy">{executionDataLoading ? (locale === 'zh' ? '正在同步交接对象...' : 'Syncing handoffs...') : (locale === 'zh' ? '当前还没有研究侧移交过来的执行候选对象。' : 'No research execution handoffs are available yet.')}</div> : null}
+            {!canApproveExecution ? <div className="status-copy">{locale === 'zh' ? '当前没有 execution:approve 权限，无法将交接对象排队到执行 workflow。' : 'You do not have execution:approve permission to queue handoffs into execution workflows.'}</div> : null}
+          </div>
+        </article>
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '执行计划账本' : 'Execution Plan Ledger'}</div><div className="panel-copy">{locale === 'zh' ? '把 execution plan、workflow 状态和最新服务端执行结果放到同一视图。' : 'A single view for execution plans, workflow status, and the latest backend execution result.'}</div></div><div className="panel-badge badge-info">{ledgerEntries.length}</div></div>
           <div className="focus-list">

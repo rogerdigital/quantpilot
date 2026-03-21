@@ -33,6 +33,7 @@ import {
   syncBrokerBindingRuntime,
 } from '../../modules/user-account/service.mjs';
 import { getStrategyCatalogDetail, listStrategyCatalog, saveStrategyCatalogItem } from '../../domains/strategy/services/catalog-service.mjs';
+import { createExecutionCandidateHandoff, listExecutionCandidateHandoffs, queueExecutionCandidateHandoff } from '../../domains/strategy/services/execution-handoff-service.mjs';
 
 export async function handlePlatformRoutes(context) {
   const { req, reqUrl, res, config, readJsonBody, writeJson } = context;
@@ -293,6 +294,39 @@ export async function handlePlatformRoutes(context) {
       ok: true,
       status: controlPlaneRuntime.getMarketProviderStatus(),
     });
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/research/execution-candidates') {
+    writeJson(res, 200, listExecutionCandidateHandoffs({
+      limit: reqUrl.searchParams.get('limit'),
+      hours: reqUrl.searchParams.get('hours'),
+      handoffStatus: reqUrl.searchParams.get('handoffStatus'),
+      mode: reqUrl.searchParams.get('mode'),
+    }));
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/research/execution-candidates') {
+    if (!hasPermission('strategy:write')) {
+      writeForbidden('strategy:write', 'create execution handoffs');
+      return true;
+    }
+    const body = await readJsonBody(req);
+    const result = createExecutionCandidateHandoff(body.strategyId, body);
+    writeJson(res, result.ok ? 200 : 400, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname.startsWith('/api/research/execution-candidates/') && reqUrl.pathname.endsWith('/queue')) {
+    if (!hasPermission('execution:approve')) {
+      writeForbidden('execution:approve', 'queue execution handoffs');
+      return true;
+    }
+    const handoffId = reqUrl.pathname.split('/').at(-2);
+    const body = await readJsonBody(req);
+    const result = queueExecutionCandidateHandoff(handoffId, body);
+    writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
 

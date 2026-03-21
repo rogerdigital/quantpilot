@@ -273,6 +273,7 @@ export function getStrategyCatalogDetail(strategyId) {
     .filter((item) => item.type === 'strategy-catalog.saved')
     .filter((item) => item.metadata?.strategyId === strategy.id)
     .slice(0, 20);
+  const latestExecutionHandoff = controlPlaneRuntime.getLatestExecutionCandidateHandoffForStrategy(strategy.id);
   const replayTimeline = buildReplayTimeline(strategy, {
     auditItems: strategyAuditItems,
     runs: recentRuns,
@@ -325,6 +326,7 @@ export function getStrategyCatalogDetail(strategyId) {
     replayTimeline,
     promotionReadiness: buildPromotionReadiness(strategy, latestResult),
     executionCandidatePreview,
+    latestExecutionHandoff,
   };
 }
 

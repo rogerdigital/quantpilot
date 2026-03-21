@@ -4,6 +4,7 @@ import type {
   OperatorSession,
   ExecutionRuntimeEvent,
   BrokerAccountSnapshotRecord,
+  ExecutionCandidateHandoffSnapshot,
   ExecutionLedgerEntry,
   LatestBrokerAccountSnapshotResponse,
   MarketProviderStatusSnapshot,
@@ -421,6 +422,25 @@ export async function fetchExecutionLedger(): Promise<{ ok: boolean; entries: Ex
   return fetchJson('/api/execution/ledger', {
     headers: { Accept: 'application/json' },
   });
+}
+
+export async function fetchExecutionCandidateHandoffs(): Promise<ExecutionCandidateHandoffSnapshot> {
+  return fetchJson('/api/research/execution-candidates', {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export async function queueExecutionCandidateHandoff(handoffId: string, payload: {
+  actor?: string;
+  owner?: string;
+} = {}) {
+  const response = await fetch(`/api/research/execution-candidates/${handoffId}/queue`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
 }
 
 export async function fetchExecutionPlanDetail(planId: string): Promise<ExecutionPlanDetailResponse> {

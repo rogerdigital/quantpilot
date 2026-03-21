@@ -675,6 +675,33 @@ describe('research workspace pages', () => {
             },
           ],
         },
+        latestExecutionHandoff: {
+          id: 'handoff-1',
+          strategyId: 'strategy-1',
+          strategyName: 'Momentum',
+          strategyStatus: 'candidate',
+          runId: 'run-1',
+          resultId: 'result-1',
+          evaluationId: 'evaluation-1',
+          reportId: 'report-1',
+          mode: 'paper',
+          capital: 50000,
+          orderCount: 2,
+          baseline: true,
+          champion: false,
+          readiness: 'paper',
+          verdict: 'prepare_execution',
+          riskStatus: 'approved',
+          approvalState: 'not_required',
+          handoffStatus: 'ready',
+          owner: 'execution-desk',
+          summary: 'Execution desk handoff is ready.',
+          reasons: ['Latest evaluation supports execution prep.'],
+          orders: [],
+          createdAt: '2026-03-13T11:07:00.000Z',
+          updatedAt: '2026-03-13T11:08:00.000Z',
+          metadata: {},
+        },
       },
       loading: false,
       error: '',
@@ -696,6 +723,7 @@ describe('research workspace pages', () => {
     expect(html).toContain('Selected Strategy Research Runs');
     expect(html).toContain('Latest Research Result');
     expect(html).toContain('Promotion And Execution Readiness');
+    expect(html).toContain('Latest Execution Handoff');
     expect(html).toContain('Research Governance Overview');
     expect(html).toContain('Baseline And Champion Analysis');
     expect(html).toContain('Strategy Promotion Queue');
@@ -1203,6 +1231,35 @@ describe('research workspace pages', () => {
           message: 'Snapshot synced',
         },
       ],
+      handoffs: [
+        {
+          id: 'handoff-1',
+          strategyId: 'strategy-1',
+          strategyName: 'Momentum',
+          strategyStatus: 'candidate',
+          runId: 'run-1',
+          resultId: 'result-1',
+          evaluationId: 'evaluation-1',
+          reportId: 'report-1',
+          mode: 'paper',
+          capital: 50000,
+          orderCount: 2,
+          baseline: true,
+          champion: false,
+          readiness: 'paper',
+          verdict: 'prepare_execution',
+          riskStatus: 'approved',
+          approvalState: 'not_required',
+          handoffStatus: 'ready',
+          owner: 'execution-desk',
+          summary: 'Execution desk handoff is ready.',
+          reasons: ['Latest evaluation supports execution prep.'],
+          orders: [],
+          createdAt: '2026-03-13T11:08:00.000Z',
+          updatedAt: '2026-03-13T11:08:00.000Z',
+          metadata: {},
+        },
+      ],
       ledgerEntries: [
         {
           plan: {
@@ -1295,6 +1352,7 @@ describe('research workspace pages', () => {
     );
 
     expect(html).toContain('Selected Execution Detail');
+    expect(html).toContain('Research Execution Handoffs');
     expect(html).toContain('Open Strategy Detail');
     expect(html).toContain('Return to Backtest Detail');
     expect(html).toContain('Selected Execution Workflow Step');
@@ -1323,6 +1381,35 @@ describe('research workspace pages', () => {
           positions: [{ symbol: 'AAPL' }],
           orders: [{ id: 'order-1' }],
           message: 'Snapshot synced',
+        },
+      ],
+      handoffs: [
+        {
+          id: 'handoff-1',
+          strategyId: 'strategy-1',
+          strategyName: 'Momentum',
+          strategyStatus: 'candidate',
+          runId: 'run-1',
+          resultId: 'result-1',
+          evaluationId: 'evaluation-1',
+          reportId: 'report-1',
+          mode: 'paper',
+          capital: 50000,
+          orderCount: 2,
+          baseline: true,
+          champion: false,
+          readiness: 'paper',
+          verdict: 'prepare_execution',
+          riskStatus: 'approved',
+          approvalState: 'not_required',
+          handoffStatus: 'ready',
+          owner: 'execution-desk',
+          summary: 'Execution desk handoff is ready.',
+          reasons: ['Latest evaluation supports execution prep.'],
+          orders: [],
+          createdAt: '2026-03-13T11:08:00.000Z',
+          updatedAt: '2026-03-13T11:08:00.000Z',
+          metadata: {},
         },
       ],
       ledgerEntries: [
@@ -1409,6 +1496,7 @@ describe('research workspace pages', () => {
     );
 
     expect(html).toContain('Selected Execution Detail');
+    expect(html).toContain('Research Execution Handoffs');
     expect(html).toContain('Open Strategy Detail');
     expect(html).toContain('Return to Strategy Timeline');
     expect(html).not.toContain('Return to Backtest Detail');

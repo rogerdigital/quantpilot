@@ -496,6 +496,7 @@ export type StrategyCatalogDetailSnapshot = {
     reasons: string[];
     orders: StrategyExecutionOrder[];
   } | null;
+  latestExecutionHandoff?: ExecutionCandidateHandoffRecord | null;
   error?: string;
   message?: string;
 };
@@ -856,6 +857,48 @@ export type StrategyExecutionRequest = {
   mode: 'paper' | 'live';
   capital: number;
   requestedBy?: string;
+};
+
+export type ExecutionCandidateHandoffRecord = {
+  id: string;
+  strategyId: string;
+  strategyName: string;
+  strategyStatus: string;
+  runId: string;
+  resultId: string;
+  evaluationId: string;
+  reportId: string;
+  mode: 'paper' | 'live';
+  capital: number;
+  orderCount: number;
+  baseline: boolean;
+  champion: boolean;
+  readiness: 'candidate' | 'paper' | 'live' | 'hold';
+  verdict: 'promote' | 'prepare_execution' | 'rework' | 'blocked' | '';
+  riskStatus: 'approved' | 'review' | 'blocked';
+  approvalState: 'not_required' | 'required';
+  handoffStatus: 'ready' | 'queued' | 'converted' | 'blocked';
+  owner: string;
+  summary: string;
+  reasons: string[];
+  orders: StrategyExecutionOrder[];
+  createdAt: string;
+  updatedAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type ExecutionCandidateHandoffSnapshot = {
+  ok: boolean;
+  asOf: string;
+  summary: {
+    total: number;
+    ready: number;
+    queued: number;
+    blocked: number;
+    paper: number;
+    live: number;
+  };
+  handoffs: ExecutionCandidateHandoffRecord[];
 };
 
 export type ExecutionPlanRecord = {

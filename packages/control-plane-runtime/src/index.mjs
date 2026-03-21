@@ -213,6 +213,21 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     listExecutionPlans(limit = 50, filter = {}) {
       return context.executionPlans.listExecutionPlans(limit, filter);
     },
+    listExecutionCandidateHandoffs(limit = 50, filter = {}) {
+      return context.executionCandidateHandoffs.listExecutionCandidateHandoffs(limit, filter);
+    },
+    getExecutionCandidateHandoff(handoffId) {
+      return context.executionCandidateHandoffs.getExecutionCandidateHandoff(handoffId);
+    },
+    getLatestExecutionCandidateHandoffForStrategy(strategyId) {
+      return context.executionCandidateHandoffs.getLatestExecutionCandidateHandoffForStrategy(strategyId);
+    },
+    appendExecutionCandidateHandoff(payload) {
+      return context.executionCandidateHandoffs.appendExecutionCandidateHandoff(payload);
+    },
+    updateExecutionCandidateHandoff(handoffId, patch = {}) {
+      return context.executionCandidateHandoffs.updateExecutionCandidateHandoff(handoffId, patch);
+    },
     getExecutionPlan(planId) {
       return context.executionPlans.getExecutionPlan(planId);
     },
@@ -751,6 +766,11 @@ export const setDefaultBrokerBinding = (...args) => controlPlaneRuntime.setDefau
 export const deleteBrokerBinding = (...args) => controlPlaneRuntime.deleteBrokerBinding(...args);
 export const listExecutionRuntimeEvents = (...args) => controlPlaneRuntime.listExecutionRuntimeEvents(...args);
 export const listBrokerAccountSnapshots = (...args) => controlPlaneRuntime.listBrokerAccountSnapshots(...args);
+export const listExecutionCandidateHandoffs = (...args) => controlPlaneRuntime.listExecutionCandidateHandoffs(...args);
+export const getExecutionCandidateHandoff = (...args) => controlPlaneRuntime.getExecutionCandidateHandoff(...args);
+export const getLatestExecutionCandidateHandoffForStrategy = (...args) => controlPlaneRuntime.getLatestExecutionCandidateHandoffForStrategy(...args);
+export const appendExecutionCandidateHandoff = (...args) => controlPlaneRuntime.appendExecutionCandidateHandoff(...args);
+export const updateExecutionCandidateHandoff = (...args) => controlPlaneRuntime.updateExecutionCandidateHandoff(...args);
 export const listBacktestRuns = (...args) => controlPlaneRuntime.listBacktestRuns(...args);
 export const listBacktestResults = (...args) => controlPlaneRuntime.listBacktestResults(...args);
 export const listBacktestResultsForRun = (...args) => controlPlaneRuntime.listBacktestResultsForRun(...args);

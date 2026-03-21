@@ -2,6 +2,7 @@ import { assertOk, fetchJson, jsonHeaders } from '../../app/api/http.ts';
 import type {
   BacktestRunDetailSnapshot,
   BacktestRunCreateSnapshot,
+  ExecutionCandidateHandoffSnapshot,
   ResearchEvaluationRecord,
   ResearchGovernanceActionRecord,
   ResearchWorkbenchSnapshot,
@@ -104,6 +105,26 @@ export async function runResearchGovernanceAction(payload: {
   failures: Array<Record<string, unknown>>;
 }> {
   const response = await fetch('/api/research/governance/actions', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
+export async function createExecutionCandidateHandoff(payload: {
+  strategyId: string;
+  actor?: string;
+  owner?: string;
+  mode?: 'paper' | 'live';
+  capital?: number;
+  summary?: string;
+}): Promise<{
+  ok: boolean;
+  handoff?: ExecutionCandidateHandoffSnapshot['handoffs'][number];
+}> {
+  const response = await fetch('/api/research/execution-candidates', {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),

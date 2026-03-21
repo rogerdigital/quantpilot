@@ -235,6 +235,37 @@ export function createExecutionPlanEntry(payload) {
   };
 }
 
+export function createExecutionCandidateHandoffEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `execution-handoff-${randomUUID()}`,
+    strategyId: payload.strategyId || '',
+    strategyName: payload.strategyName || 'Unknown Strategy',
+    strategyStatus: payload.strategyStatus || 'draft',
+    runId: payload.runId || '',
+    resultId: payload.resultId || '',
+    evaluationId: payload.evaluationId || '',
+    reportId: payload.reportId || '',
+    mode: payload.mode || 'paper',
+    capital: Number(payload.capital || 0),
+    orderCount: Number(payload.orderCount || 0),
+    baseline: Boolean(payload.baseline),
+    champion: Boolean(payload.champion),
+    readiness: payload.readiness || 'hold',
+    verdict: payload.verdict || '',
+    riskStatus: payload.riskStatus || 'review',
+    approvalState: payload.approvalState || 'required',
+    handoffStatus: payload.handoffStatus || 'ready',
+    owner: payload.owner || '',
+    summary: payload.summary || '',
+    reasons: Array.isArray(payload.reasons) ? payload.reasons : [],
+    orders: Array.isArray(payload.orders) ? payload.orders : [],
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+    metadata: payload.metadata || {},
+  };
+}
+
 export function createAgentActionRequestEntry(payload) {
   const now = payload.createdAt || new Date().toISOString();
   return {

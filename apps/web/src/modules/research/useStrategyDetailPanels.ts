@@ -120,6 +120,7 @@ export function useStrategyDetailPanels(options: {
     replaySummary: strategyDetail?.replaySummary || null,
     latestResult: strategyDetail?.latestResult || null,
     latestReport: strategyDetail?.latestReport || null,
+    latestExecutionHandoff: strategyDetail?.latestExecutionHandoff || null,
     promotionReadiness: strategyDetail?.promotionReadiness || null,
     executionCandidatePreview: strategyDetail?.executionCandidatePreview || null,
   };

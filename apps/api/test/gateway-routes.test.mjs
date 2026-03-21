@@ -520,6 +520,40 @@ test('POST /api/research/governance/actions runs batch governance actions and ex
   assert.equal(workbenchResponse.json.actionSummary.total >= 4, true);
 });
 
+test('POST /api/research/execution-candidates creates a persisted handoff and queues execution workflow from it', async () => {
+  const created = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/research/execution-candidates',
+    body: {
+      strategyId: 'ema-cross-us',
+      actor: 'research-lead',
+      mode: 'paper',
+      capital: 60000,
+    },
+  });
+  const listed = await invokeGatewayRoute(handler, {
+    path: '/api/research/execution-candidates?limit=10',
+  });
+  const queued = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/research/execution-candidates/${created.json.handoff.id}/queue`,
+    body: {
+      actor: 'execution-desk',
+      owner: 'execution-desk',
+    },
+  });
+
+  assert.equal(created.statusCode, 200);
+  assert.equal(created.json.ok, true);
+  assert.equal(created.json.handoff.strategyId, 'ema-cross-us');
+  assert.equal(listed.statusCode, 200);
+  assert.equal(listed.json.summary.total >= 1, true);
+  assert.equal(listed.json.handoffs.some((item) => item.id === created.json.handoff.id), true);
+  assert.equal(queued.statusCode, 200);
+  assert.equal(queued.json.handoff.handoffStatus, 'queued');
+  assert.equal(queued.json.workflow.workflowId, 'task-orchestrator.strategy-execution');
+});
+
 test('GET /api/research/reports and summary return report assets generated for research operations', async () => {
   const response = await invokeGatewayRoute(handler, {
     path: '/api/research/reports?strategyId=ema-cross-us&limit=10',

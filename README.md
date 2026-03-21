@@ -207,7 +207,7 @@ quantpilot/
 - 阶段 1 的收官定义、非目标和阶段 2 入口条件已单独整理到 [docs/architecture/stage-1-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-1-closeout.md)。
 
 - 阶段 1 现已完成账户与权限底座、incident / investigation 控制台、operations workbench、risk workbench 和研究/执行基础数据边界的第一轮产品化。
-- 阶段 2 已完成 `Research Task Backbone`、`Backtest Result Model`、`Research Workspace Integration`、`Evaluation And Promotion Flow`、`Research Report Workflow`、`Research Workbench`、`Research Governance Actions`、`Research Baselines And Champions`、`Research Comparison And Baseline Analysis` 和 `Research Timeline And Replay` 十个起步大步，研究链路已开始形成 `task -> workflow -> result -> evaluation -> report -> compare -> replay -> govern -> act -> promote` 的统一异步骨架。
+- 阶段 2 已完成 `Research Task Backbone`、`Backtest Result Model`、`Research Workspace Integration`、`Evaluation And Promotion Flow`、`Research Report Workflow`、`Research Workbench`、`Research Governance Actions`、`Research Baselines And Champions`、`Research Comparison And Baseline Analysis`、`Research Timeline And Replay` 和 `Execution Candidate Handoff` 十一个起步大步，研究链路已开始形成 `task -> workflow -> result -> evaluation -> report -> compare -> replay -> govern -> handoff -> act -> promote` 的统一异步骨架。
 
 ### 阶段 2：研究与策略闭环
 
@@ -348,9 +348,9 @@ npm run verify
 
 当前已进入“阶段 2：研究与策略闭环”，优先级如下：
 
-1. 在已落地的 `task -> result -> evaluation -> report -> workbench -> governance actions` 骨架之上继续补齐研究资产运营和晋级治理，让研究链路真正可运营。
-2. 统一研究链路中的 workflow、审计、通知、任务、结果、报告、运营快照和治理动作模型，让研究过程可回放、可追踪、可对比、可处置。
-3. 继续把研究、风控、执行相关异步动作收敛到后端任务流与 worker，减少前端拼装逻辑。
+1. 在已落地的 `task -> result -> evaluation -> report -> workbench -> governance actions -> handoff` 骨架之上继续补齐研究资产运营和晋级治理，让研究链路真正可运营。
+2. 统一研究链路中的 workflow、审计、通知、任务、结果、报告、运营快照、治理动作和 execution handoff 模型，让研究过程可回放、可追踪、可对比、可处置、可交接。
+3. 继续把研究、风控、执行相关异步动作收敛到后端任务流与 worker，减少前端拼装逻辑，并让 execution desk 直接消费研究侧 handoff 对象。
 4. 在现有 execution plan、risk workbench 和 incident 工作台基础上，为阶段 3 的执行闭环预留更稳定的对象契约。
 5. 保持阶段 1 的账户、权限、incident、operations 和 risk workbench 基线稳定，避免阶段切换时回归。
 
