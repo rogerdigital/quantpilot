@@ -1333,6 +1333,7 @@ test('GET /api/execution/plans returns persisted execution plans', async () => {
     strategyName: 'US Trend Ema Cross',
     mode: 'paper',
     status: 'ready',
+    lifecycleStatus: 'submitted',
     approvalState: 'not_required',
     riskStatus: 'approved',
     summary: 'Seed execution plan',
@@ -1365,6 +1366,7 @@ test('GET /api/execution/plans/:id returns a single execution plan with workflow
     strategyName: 'US Trend Ema Cross',
     mode: 'paper',
     status: 'ready',
+    lifecycleStatus: 'submitted',
     approvalState: 'required',
     riskStatus: 'review',
     summary: 'detail plan',
@@ -1374,6 +1376,8 @@ test('GET /api/execution/plans/:id returns a single execution plan with workflow
   });
   context.executionRuntime.appendExecutionRuntimeEvent({
     cycle: 51,
+    executionPlanId: 'exec-plan-detail',
+    executionRunId: 'exec-run-detail',
     mode: 'paper',
     brokerAdapter: 'simulated',
     brokerConnected: true,
@@ -1396,6 +1400,7 @@ test('GET /api/execution/plans/:id returns a single execution plan with workflow
   assert.equal(response.json.plan.id, 'exec-plan-detail');
   assert.equal(response.json.workflow.id, 'exec-plan-workflow-detail');
   assert.equal(response.json.latestRuntime.submittedOrderCount, 1);
+  assert.equal(Array.isArray(response.json.orderStates), true);
 });
 
 test('GET /api/execution/plans/:id returns 404 for unknown plans', async () => {
@@ -1493,6 +1498,7 @@ test('GET /api/execution/ledger returns plans joined with workflow and runtime s
     strategyName: 'EMA Cross US',
     mode: 'live',
     status: 'ready',
+    lifecycleStatus: 'awaiting_approval',
     approvalState: 'required',
     riskStatus: 'review',
     summary: 'Plan ready for review.',
@@ -1502,6 +1508,8 @@ test('GET /api/execution/ledger returns plans joined with workflow and runtime s
   });
   context.executionRuntime.appendExecutionRuntimeEvent({
     cycle: 30,
+    executionPlanId: plan.id,
+    executionRunId: 'run-ledger-1',
     mode: 'live',
     brokerAdapter: 'simulated',
     brokerConnected: true,
@@ -1520,6 +1528,172 @@ test('GET /api/execution/ledger returns plans joined with workflow and runtime s
   assert.equal(response.json.entries[0].plan.id, 'plan-ledger-1');
   assert.equal(response.json.entries[0].workflow.status, 'completed');
   assert.equal(response.json.entries[0].latestRuntime.submittedOrderCount, 2);
+});
+
+test('GET /api/execution/workbench returns lifecycle summary and execution ledger entries', async () => {
+  context.executionPlans.appendExecutionPlan({
+    id: 'exec-workbench-plan',
+    strategyId: 'multi-factor-rotation',
+    strategyName: 'Multi Factor Rotation',
+    mode: 'paper',
+    status: 'ready',
+    lifecycleStatus: 'awaiting_approval',
+    approvalState: 'required',
+    riskStatus: 'approved',
+    summary: 'Awaiting approval before routing.',
+    capital: 88000,
+    orderCount: 1,
+    orders: [{ symbol: 'QQQ', side: 'BUY', qty: 12, weight: 1, rationale: 'seed' }],
+  });
+  context.executionRuns.appendExecutionRun({
+    id: 'exec-workbench-run',
+    executionPlanId: 'exec-workbench-plan',
+    strategyId: 'multi-factor-rotation',
+    strategyName: 'Multi Factor Rotation',
+    mode: 'paper',
+    lifecycleStatus: 'awaiting_approval',
+    summary: 'Awaiting approval before routing.',
+    owner: 'execution-desk',
+    orderCount: 1,
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/execution/workbench',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(typeof response.json.summary.awaitingApproval, 'number');
+  assert.equal(Array.isArray(response.json.entries), true);
+  assert.equal(response.json.entries.some((entry) => entry.plan.id === 'exec-workbench-plan'), true);
+});
+
+test('POST /api/execution/plans/:id/approve transitions awaiting plans into submitted lifecycle', async () => {
+  context.executionPlans.appendExecutionPlan({
+    id: 'exec-approve-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'live',
+    status: 'ready',
+    lifecycleStatus: 'awaiting_approval',
+    approvalState: 'required',
+    riskStatus: 'approved',
+    summary: 'Awaiting approval.',
+    capital: 100000,
+    orderCount: 2,
+    orders: [
+      { symbol: 'AAPL', side: 'BUY', qty: 10, weight: 0.5, rationale: 'trend' },
+      { symbol: 'MSFT', side: 'BUY', qty: 8, weight: 0.5, rationale: 'trend' },
+    ],
+  });
+  context.executionRuns.appendExecutionRun({
+    id: 'exec-approve-run',
+    executionPlanId: 'exec-approve-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'live',
+    lifecycleStatus: 'awaiting_approval',
+    summary: 'Awaiting approval.',
+    owner: 'execution-desk',
+    orderCount: 2,
+  });
+  context.executionRuns.appendExecutionOrderStates([
+    {
+      id: 'exec-approve-order-1',
+      executionPlanId: 'exec-approve-plan',
+      executionRunId: 'exec-approve-run',
+      symbol: 'AAPL',
+      side: 'BUY',
+      qty: 10,
+      weight: 0.5,
+      lifecycleStatus: 'planned',
+      summary: 'waiting approval',
+    },
+    {
+      id: 'exec-approve-order-2',
+      executionPlanId: 'exec-approve-plan',
+      executionRunId: 'exec-approve-run',
+      symbol: 'MSFT',
+      side: 'BUY',
+      qty: 8,
+      weight: 0.5,
+      lifecycleStatus: 'planned',
+      summary: 'waiting approval',
+    },
+  ]);
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/execution/plans/exec-approve-plan/approve',
+    body: {
+      actor: 'execution-desk',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.plan.lifecycleStatus, 'submitted');
+  assert.equal(response.json.executionRun.lifecycleStatus, 'submitted');
+  assert.equal(response.json.orderStates.every((item) => item.lifecycleStatus === 'submitted'), true);
+});
+
+test('POST /api/execution/plans/:id/settle moves submitted plans into filled lifecycle', async () => {
+  context.executionPlans.appendExecutionPlan({
+    id: 'exec-settle-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'paper',
+    status: 'ready',
+    lifecycleStatus: 'submitted',
+    approvalState: 'not_required',
+    riskStatus: 'approved',
+    summary: 'Submitted into broker route.',
+    capital: 100000,
+    orderCount: 1,
+    orders: [{ symbol: 'NVDA', side: 'BUY', qty: 5, weight: 1, rationale: 'trend' }],
+  });
+  context.executionRuns.appendExecutionRun({
+    id: 'exec-settle-run',
+    executionPlanId: 'exec-settle-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'paper',
+    lifecycleStatus: 'submitted',
+    summary: 'Submitted into broker route.',
+    owner: 'execution-desk',
+    orderCount: 1,
+    submittedOrderCount: 1,
+  });
+  context.executionRuns.appendExecutionOrderStates([
+    {
+      id: 'exec-settle-order-1',
+      executionPlanId: 'exec-settle-plan',
+      executionRunId: 'exec-settle-run',
+      symbol: 'NVDA',
+      side: 'BUY',
+      qty: 5,
+      weight: 1,
+      lifecycleStatus: 'submitted',
+      brokerOrderId: 'broker-exec-settle-1',
+      summary: 'submitted',
+      submittedAt: '2026-03-21T08:00:00.000Z',
+    },
+  ]);
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/execution/plans/exec-settle-plan/settle',
+    body: {
+      actor: 'execution-desk',
+      outcome: 'filled',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.plan.lifecycleStatus, 'filled');
+  assert.equal(response.json.executionRun.lifecycleStatus, 'filled');
+  assert.equal(response.json.orderStates[0].lifecycleStatus, 'filled');
 });
 
 test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control notification for recovery', async () => {

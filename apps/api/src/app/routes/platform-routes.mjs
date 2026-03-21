@@ -12,7 +12,8 @@ import { getResearchHubSnapshot, getResearchTaskDetail, getResearchTaskSummary, 
 import { evaluateBacktestRun, getResearchEvaluationSummary, listResearchEvaluations, promoteStrategyFromEvaluation } from '../../domains/research/services/evaluation-service.mjs';
 import { getResearchReportSummary, listResearchReports } from '../../domains/research/services/report-service.mjs';
 import { getResearchWorkbenchSnapshot, listResearchGovernanceActions, runResearchGovernanceAction } from '../../domains/research/services/workbench-service.mjs';
-import { getExecutionPlanDetail, getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
+import { getExecutionPlanDetail, getExecutionWorkbench, getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
+import { approveExecutionPlan, settleExecutionPlan } from '../../domains/execution/services/lifecycle-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { listPermissionDescriptors, writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
 import { getMonitoringStatus, listMonitoringAlerts, listMonitoringSnapshots } from '../../modules/monitoring/service.mjs';
@@ -550,6 +551,11 @@ export async function handlePlatformRoutes(context) {
     return true;
   }
 
+  if (req.method === 'GET' && reqUrl.pathname === '/api/execution/workbench') {
+    writeJson(res, 200, getExecutionWorkbench());
+    return true;
+  }
+
   if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/execution/plans/')) {
     const planId = reqUrl.pathname.split('/').at(-1);
     const detail = getExecutionPlanDetail(planId);
@@ -588,6 +594,30 @@ export async function handlePlatformRoutes(context) {
       ok: true,
       entries: listExecutionLedger(),
     });
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname.endsWith('/approve') && reqUrl.pathname.startsWith('/api/execution/plans/')) {
+    if (!hasPermission('execution:approve')) {
+      writeForbidden('execution:approve', 'approve execution plans');
+      return true;
+    }
+    const planId = reqUrl.pathname.split('/').at(-2);
+    const body = await readJsonBody(req);
+    const result = approveExecutionPlan(planId, body);
+    writeJson(res, result.ok ? 200 : 409, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname.endsWith('/settle') && reqUrl.pathname.startsWith('/api/execution/plans/')) {
+    if (!hasPermission('execution:approve')) {
+      writeForbidden('execution:approve', 'settle execution plans');
+      return true;
+    }
+    const planId = reqUrl.pathname.split('/').at(-2);
+    const body = await readJsonBody(req);
+    const result = settleExecutionPlan(planId, body);
+    writeJson(res, result.ok ? 200 : 409, result);
     return true;
   }
 

@@ -4,6 +4,7 @@ import { createBacktestRunRepository } from './repositories/backtest-run-repo.mj
 import { createBacktestResultRepository } from './repositories/backtest-result-repo.mjs';
 import { createCycleRepository } from './repositories/cycle-repo.mjs';
 import { createExecutionPlanRepository } from './repositories/execution-plan-repo.mjs';
+import { createExecutionRunRepository } from './repositories/execution-run-repo.mjs';
 import { createExecutionRuntimeRepository } from './repositories/execution-runtime-repo.mjs';
 import { createExecutionCandidateHandoffRepository } from './repositories/execution-candidate-handoff-repo.mjs';
 import { createIncidentRepository } from './repositories/incident-repo.mjs';
@@ -32,6 +33,7 @@ export function createControlPlaneContext(store = controlPlaneStore) {
     backtestRuns: createBacktestRunRepository(store),
     cycles: createCycleRepository(store),
     executionPlans: createExecutionPlanRepository(store),
+    executionRuns: createExecutionRunRepository(store),
     executionCandidateHandoffs: createExecutionCandidateHandoffRepository(store),
     executionRuntime: createExecutionRuntimeRepository(store),
     incidents: createIncidentRepository(store),

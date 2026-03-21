@@ -449,6 +449,31 @@ export async function fetchExecutionPlanDetail(planId: string): Promise<Executio
   });
 }
 
+export async function approveExecutionPlan(planId: string, payload: {
+  actor?: string;
+} = {}) {
+  const response = await fetch(`/api/execution/plans/${planId}/approve`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
+export async function settleExecutionPlan(planId: string, payload: {
+  actor?: string;
+  outcome?: 'filled' | 'partial_fill' | 'cancelled' | 'failed';
+} = {}) {
+  const response = await fetch(`/api/execution/plans/${planId}/settle`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
 export async function fetchLatestBrokerAccountSnapshot(): Promise<LatestBrokerAccountSnapshotResponse> {
   return fetchJson('/api/execution/account-snapshots/latest', {
     headers: { Accept: 'application/json' },

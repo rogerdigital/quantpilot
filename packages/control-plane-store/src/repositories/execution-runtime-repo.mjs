@@ -24,6 +24,8 @@ export function createExecutionRuntimeRepository(store) {
         id: payload.id || `broker-account-snapshot-${Date.now()}`,
         cycleId: payload.cycleId || '',
         cycle: Number(payload.cycle || 0),
+        executionPlanId: payload.executionPlanId || '',
+        executionRunId: payload.executionRunId || '',
         provider: payload.provider || 'simulated',
         connected: Boolean(payload.connected),
         account: payload.account || null,

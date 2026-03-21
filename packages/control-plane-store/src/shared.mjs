@@ -219,10 +219,13 @@ export function createExecutionPlanEntry(payload) {
   return {
     id: payload.id || `execution-plan-${randomUUID()}`,
     workflowRunId: payload.workflowRunId || '',
+    handoffId: payload.handoffId || '',
+    executionRunId: payload.executionRunId || '',
     strategyId: payload.strategyId || '',
     strategyName: payload.strategyName || 'Unknown Strategy',
     mode: payload.mode || 'paper',
     status: payload.status || 'draft',
+    lifecycleStatus: payload.lifecycleStatus || 'planned',
     approvalState: payload.approvalState || 'pending',
     riskStatus: payload.riskStatus || 'review',
     summary: payload.summary || '',
@@ -232,6 +235,53 @@ export function createExecutionPlanEntry(payload) {
     metadata: payload.metadata || {},
     createdAt: now,
     updatedAt: payload.updatedAt || now,
+  };
+}
+
+export function createExecutionRunEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `execution-run-${randomUUID()}`,
+    executionPlanId: payload.executionPlanId || '',
+    workflowRunId: payload.workflowRunId || '',
+    strategyId: payload.strategyId || '',
+    strategyName: payload.strategyName || 'Unknown Strategy',
+    mode: payload.mode || 'paper',
+    lifecycleStatus: payload.lifecycleStatus || 'planned',
+    summary: payload.summary || '',
+    owner: payload.owner || '',
+    orderCount: Number(payload.orderCount || 0),
+    submittedOrderCount: Number(payload.submittedOrderCount || 0),
+    filledOrderCount: Number(payload.filledOrderCount || 0),
+    rejectedOrderCount: Number(payload.rejectedOrderCount || 0),
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+    completedAt: payload.completedAt || '',
+    metadata: payload.metadata || {},
+  };
+}
+
+export function createExecutionOrderStateEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `execution-order-state-${randomUUID()}`,
+    executionPlanId: payload.executionPlanId || '',
+    executionRunId: payload.executionRunId || '',
+    symbol: payload.symbol || '',
+    side: payload.side || 'BUY',
+    qty: Number(payload.qty || 0),
+    weight: Number(payload.weight || 0),
+    lifecycleStatus: payload.lifecycleStatus || 'planned',
+    brokerOrderId: payload.brokerOrderId || '',
+    avgFillPrice: Number.isFinite(payload.avgFillPrice) ? Number(payload.avgFillPrice) : null,
+    filledQty: Number(payload.filledQty || 0),
+    summary: payload.summary || '',
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+    submittedAt: payload.submittedAt || '',
+    acknowledgedAt: payload.acknowledgedAt || '',
+    filledAt: payload.filledAt || '',
+    metadata: payload.metadata || {},
   };
 }
 
@@ -492,6 +542,8 @@ export function createExecutionRuntimeEntry(payload = {}) {
     id: payload.id || `execution-runtime-${randomUUID()}`,
     cycleId: payload.cycleId || '',
     cycle: Number(payload.cycle || 0),
+    executionPlanId: payload.executionPlanId || '',
+    executionRunId: payload.executionRunId || '',
     mode: payload.mode || 'paper',
     brokerAdapter: payload.brokerAdapter || 'simulated',
     brokerConnected: Boolean(payload.brokerConnected),

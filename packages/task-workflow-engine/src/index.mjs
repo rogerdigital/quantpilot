@@ -332,6 +332,8 @@ async function executeStrategyExecutionWorkflow(payload, context, options = {}) 
       { key: 'load-strategy-candidate', status: 'running' },
       { key: 'evaluate-risk', status: 'pending' },
       { key: 'persist-execution-plan', status: 'pending' },
+      { key: 'initialize-execution-lifecycle', status: 'pending' },
+      { key: 'record-execution-runtime', status: 'pending' },
       { key: 'enqueue-risk-scan', status: 'pending' },
     ],
   });
@@ -339,12 +341,17 @@ async function executeStrategyExecutionWorkflow(payload, context, options = {}) 
   try {
     const candidate = await context.buildStrategyExecutionCandidate(payload);
     const riskDecision = await context.assessExecutionCandidate(candidate);
+    const lifecycleStatus = riskDecision.riskStatus === 'blocked'
+      ? 'blocked'
+      : (riskDecision.approvalState === 'required' ? 'awaiting_approval' : 'submitted');
     const plan = await context.recordExecutionPlan({
       workflowRunId: workflow.id,
+      handoffId: payload.handoffId || '',
       strategyId: candidate.strategyId,
       strategyName: candidate.strategyName,
       mode: candidate.mode,
       status: riskDecision.riskStatus === 'blocked' ? 'blocked' : 'ready',
+      lifecycleStatus,
       approvalState: riskDecision.approvalState,
       riskStatus: riskDecision.riskStatus,
       summary: riskDecision.summary,
@@ -358,6 +365,101 @@ async function executeStrategyExecutionWorkflow(payload, context, options = {}) 
         reasons: riskDecision.reasons,
       },
     });
+    const executionRun = await context.recordExecutionRun?.({
+      executionPlanId: plan.id,
+      workflowRunId: workflow.id,
+      strategyId: plan.strategyId,
+      strategyName: plan.strategyName,
+      mode: plan.mode,
+      lifecycleStatus,
+      summary: riskDecision.summary,
+      owner: payload.owner || payload.requestedBy || context.getOperatorName(),
+      orderCount: candidate.orders.length,
+      submittedOrderCount: lifecycleStatus === 'submitted' ? candidate.orders.length : 0,
+      filledOrderCount: 0,
+      rejectedOrderCount: 0,
+      metadata: {
+        handoffId: payload.handoffId || '',
+        approvalState: riskDecision.approvalState,
+        riskStatus: riskDecision.riskStatus,
+      },
+      actor: payload.requestedBy || context.getOperatorName(),
+    }) || null;
+    const orderStates = context.appendExecutionOrderStates?.(
+      candidate.orders.map((order, index) => ({
+        executionPlanId: plan.id,
+        executionRunId: executionRun?.id || '',
+        symbol: order.symbol,
+        side: order.side,
+        qty: order.qty,
+        weight: order.weight,
+        lifecycleStatus: lifecycleStatus === 'submitted' ? 'submitted' : (lifecycleStatus === 'blocked' ? 'rejected' : 'planned'),
+        brokerOrderId: lifecycleStatus === 'submitted' ? `broker-${plan.id}-${index + 1}` : '',
+        filledQty: 0,
+        summary: lifecycleStatus === 'submitted'
+          ? `Submitted ${order.side} ${order.symbol} into the simulated broker route.`
+          : (lifecycleStatus === 'blocked'
+            ? `Execution for ${order.symbol} was blocked before broker submission.`
+            : `Execution for ${order.symbol} is waiting for operator approval.`),
+        submittedAt: lifecycleStatus === 'submitted' ? new Date().toISOString() : '',
+        metadata: {
+          rationale: order.rationale,
+        },
+      })),
+    ) || [];
+    context.updateExecutionPlan?.(plan.id, {
+      executionRunId: executionRun?.id || '',
+      lifecycleStatus,
+    });
+    let runtime = null;
+    if (lifecycleStatus === 'submitted') {
+      runtime = context.recordExecutionRuntime?.({
+        cycleId: workflow.id,
+        cycle: 0,
+        executionPlanId: plan.id,
+        executionRunId: executionRun?.id || '',
+        mode: plan.mode,
+        brokerAdapter: 'simulated',
+        brokerConnected: true,
+        marketConnected: true,
+        submittedOrderCount: plan.orderCount,
+        rejectedOrderCount: 0,
+        openOrderCount: plan.orderCount,
+        positionCount: 0,
+        cash: Number(candidate.capital || 0),
+        buyingPower: Number(candidate.capital || 0),
+        equity: Number(candidate.capital || 0),
+        message: `Submitted ${plan.orderCount} orders for ${plan.strategyName}.`,
+        orders: orderStates.map((item) => ({
+          id: item.brokerOrderId || item.id,
+          symbol: item.symbol,
+          side: item.side,
+          qty: item.qty,
+          type: 'market',
+          status: 'submitted',
+        })),
+        positions: [],
+        actor: payload.requestedBy || context.getOperatorName(),
+      }) || null;
+      context.updateExecutionCandidateHandoff?.(payload.handoffId || '', {
+        handoffStatus: 'converted',
+        updatedAt: new Date().toISOString(),
+        metadata: {
+          executionPlanId: plan.id,
+          executionRunId: executionRun?.id || '',
+        },
+      });
+    }
+    if (lifecycleStatus === 'blocked') {
+      context.updateExecutionCandidateHandoff?.(payload.handoffId || '', {
+        handoffStatus: 'blocked',
+        updatedAt: new Date().toISOString(),
+        metadata: {
+          executionPlanId: plan.id,
+          executionRunId: executionRun?.id || '',
+        },
+      });
+    }
 
     context.queueRiskScan({
       cycle: 0,
@@ -377,11 +479,14 @@ async function executeStrategyExecutionWorkflow(payload, context, options = {}) 
         { key: 'load-strategy-candidate', status: 'completed', strategyId: candidate.strategyId },
         { key: 'evaluate-risk', status: 'completed', riskStatus: riskDecision.riskStatus },
         { key: 'persist-execution-plan', status: 'completed', executionPlanId: plan.id },
+        { key: 'initialize-execution-lifecycle', status: 'completed', executionRunId: executionRun?.id || '' },
+        { key: 'record-execution-runtime', status: lifecycleStatus === 'submitted' ? 'completed' : 'skipped' },
         { key: 'enqueue-risk-scan', status: 'completed' },
       ],
       result: {
         ok: true,
         executionPlanId: plan.id,
+        executionRunId: executionRun?.id || '',
         riskStatus: riskDecision.riskStatus,
         orderCount: plan.orderCount,
       },
@@ -399,6 +504,8 @@ async function executeStrategyExecutionWorkflow(payload, context, options = {}) 
         { key: 'load-strategy-candidate', status: 'failed' },
         { key: 'evaluate-risk', status: 'skipped' },
         { key: 'persist-execution-plan', status: 'skipped' },
+        { key: 'initialize-execution-lifecycle', status: 'skipped' },
+        { key: 'record-execution-runtime', status: 'skipped' },
         { key: 'enqueue-risk-scan', status: 'skipped' },
       ],
     });

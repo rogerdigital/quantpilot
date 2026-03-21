@@ -1271,6 +1271,8 @@ describe('research workspace pages', () => {
         {
           id: 'runtime-1',
           cycle: 'cycle-1',
+          executionPlanId: 'plan-1',
+          executionRunId: 'exec-run-1',
           submittedOrderCount: 2,
           openOrderCount: 1,
           positionCount: 3,
@@ -1282,6 +1284,8 @@ describe('research workspace pages', () => {
           id: 'snapshot-1',
           provider: 'paper-broker',
           cycle: 'cycle-1',
+          executionPlanId: 'plan-1',
+          executionRunId: 'exec-run-1',
           connected: true,
           account: { cash: 54000 },
           positions: [{ symbol: 'AAPL' }],
@@ -1323,10 +1327,13 @@ describe('research workspace pages', () => {
           plan: {
             id: 'plan-1',
             workflowRunId: 'wf-exec-1',
+            handoffId: 'handoff-1',
+            executionRunId: 'exec-run-1',
             strategyId: 'strategy-1',
             strategyName: 'Momentum',
             mode: 'paper',
             status: 'ready',
+            lifecycleStatus: 'awaiting_approval',
             approvalState: 'pending',
             riskStatus: 'approved',
             summary: 'Paper execution plan',
@@ -1340,6 +1347,47 @@ describe('research workspace pages', () => {
             createdAt: '2026-03-13T11:30:00.000Z',
             updatedAt: '2026-03-13T11:35:00.000Z',
           },
+          executionRun: {
+            id: 'exec-run-1',
+            executionPlanId: 'plan-1',
+            workflowRunId: 'wf-exec-1',
+            strategyId: 'strategy-1',
+            strategyName: 'Momentum',
+            mode: 'paper',
+            lifecycleStatus: 'awaiting_approval',
+            summary: 'Awaiting approval before routing.',
+            owner: 'execution-desk',
+            orderCount: 2,
+            submittedOrderCount: 0,
+            filledOrderCount: 0,
+            rejectedOrderCount: 0,
+            createdAt: '2026-03-13T11:30:00.000Z',
+            updatedAt: '2026-03-13T11:35:00.000Z',
+            completedAt: '',
+            metadata: {},
+          },
+          orderStates: [
+            {
+              id: 'order-state-1',
+              executionPlanId: 'plan-1',
+              executionRunId: 'exec-run-1',
+              symbol: 'AAPL',
+              side: 'BUY',
+              qty: 10,
+              weight: 0.5,
+              lifecycleStatus: 'planned',
+              brokerOrderId: '',
+              avgFillPrice: null,
+              filledQty: 0,
+              summary: 'Awaiting approval.',
+              createdAt: '2026-03-13T11:31:00.000Z',
+              updatedAt: '2026-03-13T11:31:00.000Z',
+              submittedAt: '',
+              acknowledgedAt: '',
+              filledAt: '',
+              metadata: {},
+            },
+          ],
           workflow: {
             id: 'wf-exec-1',
             status: 'running',
@@ -1347,6 +1395,8 @@ describe('research workspace pages', () => {
           latestRuntime: {
             id: 'runtime-1',
             cycle: 'cycle-1',
+            executionPlanId: 'plan-1',
+            executionRunId: 'exec-run-1',
             submittedOrderCount: 2,
             openOrderCount: 1,
             equity: 102400,
@@ -1411,7 +1461,10 @@ describe('research workspace pages', () => {
 
     expect(html).toContain('Selected Execution Detail');
     expect(html).toContain('Research Execution Handoffs');
+    expect(html).toContain('Execution Lifecycle Summary');
     expect(html).toContain('Open Strategy Detail');
+    expect(html).toContain('Approve Routing');
+    expect(html).toContain('Order Lifecycle');
     expect(html).toContain('Return to Backtest Detail');
     expect(html).toContain('Selected Execution Workflow Step');
     expect(html).toContain('settlement_watch');
@@ -1423,6 +1476,8 @@ describe('research workspace pages', () => {
         {
           id: 'runtime-1',
           cycle: 'cycle-1',
+          executionPlanId: 'plan-1',
+          executionRunId: 'exec-run-1',
           submittedOrderCount: 2,
           openOrderCount: 1,
           positionCount: 3,
@@ -1434,6 +1489,8 @@ describe('research workspace pages', () => {
           id: 'snapshot-1',
           provider: 'paper-broker',
           cycle: 'cycle-1',
+          executionPlanId: 'plan-1',
+          executionRunId: 'exec-run-1',
           connected: true,
           account: { cash: 54000 },
           positions: [{ symbol: 'AAPL' }],
@@ -1475,10 +1532,13 @@ describe('research workspace pages', () => {
           plan: {
             id: 'plan-1',
             workflowRunId: 'wf-exec-1',
+            handoffId: 'handoff-1',
+            executionRunId: 'exec-run-1',
             strategyId: 'strategy-1',
             strategyName: 'Momentum',
             mode: 'paper',
             status: 'ready',
+            lifecycleStatus: 'submitted',
             approvalState: 'pending',
             riskStatus: 'approved',
             summary: 'Paper execution plan',
@@ -1492,6 +1552,26 @@ describe('research workspace pages', () => {
             createdAt: '2026-03-13T11:30:00.000Z',
             updatedAt: '2026-03-13T11:35:00.000Z',
           },
+          executionRun: {
+            id: 'exec-run-1',
+            executionPlanId: 'plan-1',
+            workflowRunId: 'wf-exec-1',
+            strategyId: 'strategy-1',
+            strategyName: 'Momentum',
+            mode: 'paper',
+            lifecycleStatus: 'submitted',
+            summary: 'Submitted into broker route.',
+            owner: 'execution-desk',
+            orderCount: 2,
+            submittedOrderCount: 2,
+            filledOrderCount: 0,
+            rejectedOrderCount: 0,
+            createdAt: '2026-03-13T11:30:00.000Z',
+            updatedAt: '2026-03-13T11:35:00.000Z',
+            completedAt: '',
+            metadata: {},
+          },
+          orderStates: [],
           workflow: {
             id: 'wf-exec-1',
             status: 'running',
@@ -1499,6 +1579,8 @@ describe('research workspace pages', () => {
           latestRuntime: {
             id: 'runtime-1',
             cycle: 'cycle-1',
+            executionPlanId: 'plan-1',
+            executionRunId: 'exec-run-1',
             submittedOrderCount: 2,
             openOrderCount: 1,
             equity: 102400,

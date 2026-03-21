@@ -234,8 +234,35 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     findExecutionPlanByWorkflowRunId(workflowRunId) {
       return context.executionPlans.findExecutionPlanByWorkflowRunId(workflowRunId);
     },
+    listExecutionRuns(limit = 50, filter = {}) {
+      return context.executionRuns.listExecutionRuns(limit, filter);
+    },
+    getExecutionRun(runId) {
+      return context.executionRuns.getExecutionRun(runId);
+    },
+    getExecutionRunByPlanId(executionPlanId) {
+      return context.executionRuns.getExecutionRunByPlanId(executionPlanId);
+    },
+    listExecutionOrderStates(limit = 200, filter = {}) {
+      return context.executionRuns.listExecutionOrderStates(limit, filter);
+    },
+    appendExecutionRun(payload) {
+      return context.executionRuns.appendExecutionRun(payload);
+    },
+    appendExecutionOrderStates(entries = []) {
+      return context.executionRuns.appendExecutionOrderStates(entries);
+    },
+    updateExecutionRun(runId, patch = {}) {
+      return context.executionRuns.updateExecutionRun(runId, patch);
+    },
+    updateExecutionOrderState(orderStateId, patch = {}) {
+      return context.executionRuns.updateExecutionOrderState(orderStateId, patch);
+    },
     appendExecutionPlan(payload) {
       return context.executionPlans.appendExecutionPlan(payload);
+    },
+    updateExecutionPlan(planId, patch = {}) {
+      return context.executionPlans.updateExecutionPlan(planId, patch);
     },
     recordExecutionPlan(payload) {
       const plan = context.executionPlans.appendExecutionPlan(payload);
@@ -274,6 +301,23 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return plan;
     },
+    recordExecutionRun(payload) {
+      const run = context.executionRuns.appendExecutionRun(payload);
+      context.audit.appendAuditRecord({
+        type: 'execution-run',
+        actor: payload.actor || 'execution-desk',
+        title: `Execution run ${run.lifecycleStatus}`,
+        detail: run.summary || `Execution run created for ${run.strategyName}.`,
+        metadata: {
+          executionRunId: run.id,
+          executionPlanId: run.executionPlanId,
+          workflowRunId: run.workflowRunId,
+          lifecycleStatus: run.lifecycleStatus,
+          orderCount: run.orderCount,
+        },
+      });
+      return run;
+    },
     listExecutionRuntimeEvents(limit = 50) {
       return context.executionRuntime.listExecutionRuntimeEvents(limit);
     },
@@ -291,6 +335,8 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       const brokerSnapshot = context.executionRuntime.appendBrokerAccountSnapshot({
         cycleId: payload.cycleId,
         cycle: payload.cycle,
+        executionPlanId: payload.executionPlanId,
+        executionRunId: payload.executionRunId,
         provider: payload.brokerAdapter,
         connected: payload.brokerConnected,
         account: payload.account || null,
@@ -766,11 +812,19 @@ export const setDefaultBrokerBinding = (...args) => controlPlaneRuntime.setDefau
 export const deleteBrokerBinding = (...args) => controlPlaneRuntime.deleteBrokerBinding(...args);
 export const listExecutionRuntimeEvents = (...args) => controlPlaneRuntime.listExecutionRuntimeEvents(...args);
 export const listBrokerAccountSnapshots = (...args) => controlPlaneRuntime.listBrokerAccountSnapshots(...args);
+export const listExecutionRuns = (...args) => controlPlaneRuntime.listExecutionRuns(...args);
+export const getExecutionRun = (...args) => controlPlaneRuntime.getExecutionRun(...args);
+export const getExecutionRunByPlanId = (...args) => controlPlaneRuntime.getExecutionRunByPlanId(...args);
+export const listExecutionOrderStates = (...args) => controlPlaneRuntime.listExecutionOrderStates(...args);
 export const listExecutionCandidateHandoffs = (...args) => controlPlaneRuntime.listExecutionCandidateHandoffs(...args);
 export const getExecutionCandidateHandoff = (...args) => controlPlaneRuntime.getExecutionCandidateHandoff(...args);
 export const getLatestExecutionCandidateHandoffForStrategy = (...args) => controlPlaneRuntime.getLatestExecutionCandidateHandoffForStrategy(...args);
 export const appendExecutionCandidateHandoff = (...args) => controlPlaneRuntime.appendExecutionCandidateHandoff(...args);
 export const updateExecutionCandidateHandoff = (...args) => controlPlaneRuntime.updateExecutionCandidateHandoff(...args);
+export const recordExecutionRun = (...args) => controlPlaneRuntime.recordExecutionRun(...args);
+export const updateExecutionRun = (...args) => controlPlaneRuntime.updateExecutionRun(...args);
+export const updateExecutionOrderState = (...args) => controlPlaneRuntime.updateExecutionOrderState(...args);
+export const updateExecutionPlan = (...args) => controlPlaneRuntime.updateExecutionPlan(...args);
 export const listBacktestRuns = (...args) => controlPlaneRuntime.listBacktestRuns(...args);
 export const listBacktestResults = (...args) => controlPlaneRuntime.listBacktestResults(...args);
 export const listBacktestResultsForRun = (...args) => controlPlaneRuntime.listBacktestResultsForRun(...args);

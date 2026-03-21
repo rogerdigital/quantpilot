@@ -357,6 +357,8 @@ export type ExecutionRuntimeEvent = {
   id: string;
   cycleId: string;
   cycle: number;
+  executionPlanId: string;
+  executionRunId: string;
   mode: string;
   brokerAdapter: string;
   brokerConnected: boolean;
@@ -377,6 +379,8 @@ export type BrokerAccountSnapshotRecord = {
   id: string;
   cycleId: string;
   cycle: number;
+  executionPlanId: string;
+  executionRunId: string;
   provider: string;
   connected: boolean;
   account: BrokerAccountSnapshot | null;
@@ -386,8 +390,51 @@ export type BrokerAccountSnapshotRecord = {
   createdAt: string;
 };
 
+export type ExecutionOrderStateRecord = {
+  id: string;
+  executionPlanId: string;
+  executionRunId: string;
+  symbol: string;
+  side: 'BUY' | 'SELL';
+  qty: number;
+  weight: number;
+  lifecycleStatus: 'planned' | 'submitted' | 'acknowledged' | 'filled' | 'rejected' | 'cancelled';
+  brokerOrderId: string;
+  avgFillPrice: number | null;
+  filledQty: number;
+  summary: string;
+  createdAt: string;
+  updatedAt: string;
+  submittedAt: string;
+  acknowledgedAt: string;
+  filledAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type ExecutionRunRecord = {
+  id: string;
+  executionPlanId: string;
+  workflowRunId: string;
+  strategyId: string;
+  strategyName: string;
+  mode: 'paper' | 'live';
+  lifecycleStatus: 'planned' | 'awaiting_approval' | 'routing' | 'submitted' | 'partial_fill' | 'filled' | 'blocked' | 'cancelled' | 'failed';
+  summary: string;
+  owner: string;
+  orderCount: number;
+  submittedOrderCount: number;
+  filledOrderCount: number;
+  rejectedOrderCount: number;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string;
+  metadata: Record<string, unknown>;
+};
+
 export type ExecutionLedgerEntry = {
   plan: ExecutionPlanRecord;
+  executionRun: ExecutionRunRecord | null;
+  orderStates: ExecutionOrderStateRecord[];
   workflow: {
     id: string;
     workflowId: string;
@@ -407,6 +454,8 @@ export type LatestBrokerAccountSnapshotResponse = {
 export type ExecutionPlanDetailResponse = {
   ok: boolean;
   plan: ExecutionPlanRecord | null;
+  executionRun: ExecutionRunRecord | null;
+  orderStates: ExecutionOrderStateRecord[];
   workflow: WorkflowRunRecord | null;
   latestRuntime: ExecutionRuntimeEvent | null;
 };
@@ -904,10 +953,13 @@ export type ExecutionCandidateHandoffSnapshot = {
 export type ExecutionPlanRecord = {
   id: string;
   workflowRunId: string;
+  handoffId: string;
+  executionRunId: string;
   strategyId: string;
   strategyName: string;
   mode: 'paper' | 'live';
   status: 'draft' | 'ready' | 'blocked';
+  lifecycleStatus: 'planned' | 'awaiting_approval' | 'routing' | 'submitted' | 'partial_fill' | 'filled' | 'blocked' | 'cancelled' | 'failed';
   approvalState: 'pending' | 'not_required' | 'required';
   riskStatus: 'approved' | 'review' | 'blocked';
   summary: string;

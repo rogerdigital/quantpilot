@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { queueExecutionCandidateHandoff } from '../../../app/api/controlPlane.ts';
+import { approveExecutionPlan, queueExecutionCandidateHandoff, settleExecutionPlan } from '../../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
@@ -32,6 +32,8 @@ export function ExecutionPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [handoffBusyId, setHandoffBusyId] = useState('');
   const [handoffMessage, setHandoffMessage] = useState('');
+  const [planBusyAction, setPlanBusyAction] = useState('');
+  const [planMessage, setPlanMessage] = useState('');
   const researchNavigation = useResearchNavigationContext(searchParams, navigate);
   const goToSettings = useSettingsNavigation();
   const canApproveExecution = hasPermission('execution:approve');
@@ -124,6 +126,27 @@ export function ExecutionPage() {
     actions: selectedExecutionActions.length,
     versions: selectedExecutionVersionItems.length,
   });
+  const selectedLifecycleStatus = selectedEntry?.executionRun?.lifecycleStatus || selectedEntry?.plan.lifecycleStatus || '--';
+  const selectedSubmittedCount = selectedEntry?.executionRun?.submittedOrderCount || 0;
+  const selectedFilledCount = selectedEntry?.executionRun?.filledOrderCount || 0;
+  const selectedOrderStates = selectedEntry?.orderStates || [];
+  const planSummary = ledgerEntries.reduce((acc, entry) => {
+    const lifecycle = entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus;
+    if (lifecycle === 'awaiting_approval') acc.awaitingApproval += 1;
+    if (lifecycle === 'routing') acc.routing += 1;
+    if (lifecycle === 'submitted' || lifecycle === 'partial_fill') acc.submitted += 1;
+    if (lifecycle === 'filled') acc.filled += 1;
+    if (lifecycle === 'blocked') acc.blocked += 1;
+    if (lifecycle === 'failed' || lifecycle === 'cancelled') acc.failed += 1;
+    return acc;
+  }, {
+    awaitingApproval: 0,
+    routing: 0,
+    submitted: 0,
+    filled: 0,
+    blocked: 0,
+    failed: 0,
+  });
 
   return (
     <>
@@ -165,6 +188,16 @@ export function ExecutionPage() {
       </section>
 
       <section className="panel-grid">
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '执行生命周期总览' : 'Execution Lifecycle Summary'}</div><div className="panel-copy">{locale === 'zh' ? '把待审批、已提交、已成交和阻塞的执行计划压缩成一块执行中台总览。' : 'Compress awaiting approval, submitted, filled, and blocked plans into one execution-lifecycle overview.'}</div></div><div className="panel-badge badge-info">{ledgerEntries.length}</div></div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '待审批' : 'Awaiting Approval'}</span><strong>{planSummary.awaitingApproval}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '路由中' : 'Routing'}</span><strong>{planSummary.routing}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '已提交' : 'Submitted'}</span><strong>{planSummary.submitted}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '已成交' : 'Filled'}</span><strong>{planSummary.filled}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '阻塞 / 失败' : 'Blocked / Failed'}</span><strong>{planSummary.blocked + planSummary.failed}</strong></div>
+          </div>
+        </article>
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '服务端执行记录' : 'Server Execution Runtime'}</div><div className="panel-copy">{locale === 'zh' ? '来自后端持久化的 broker 执行摘要，不依赖当前页面内存状态。' : 'Backend-persisted broker execution summaries, independent of the current page runtime state.'}</div></div><div className="panel-badge badge-info">{runtimeEvents.length}</div></div>
           <div className="focus-list">
@@ -266,9 +299,9 @@ export function ExecutionPage() {
                 key={entry.plan.id}
                 metrics={[
                   { label: locale === 'zh' ? '策略' : 'Strategy', value: entry.plan.strategyName },
-                  { label: locale === 'zh' ? '计划状态' : 'Plan', value: entry.plan.status },
+                  { label: locale === 'zh' ? '执行阶段' : 'Lifecycle', value: entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus },
                   { label: locale === 'zh' ? '工作流' : 'Workflow', value: entry.workflow?.status || '--' },
-                  { label: locale === 'zh' ? '最近执行' : 'Latest Runtime', value: entry.latestRuntime ? `${entry.latestRuntime.submittedOrderCount}/${entry.latestRuntime.openOrderCount}` : '--' },
+                  { label: locale === 'zh' ? '订单进度' : 'Order Progress', value: entry.executionRun ? `${entry.executionRun.filledOrderCount}/${entry.executionRun.orderCount}` : '--' },
                 ]}
                 actions={(
                   <button
@@ -293,7 +326,7 @@ export function ExecutionPage() {
         <InspectionPanel
           title={executionDetailInspection.title}
           copy={executionDetailInspection.copy}
-          badge={selectedEntry?.plan.riskStatus || '--'}
+          badge={selectedLifecycleStatus}
         >
           {!selectedEntry ? (
             <InspectionStatus>{executionDetailInspection.emptyMessage}</InspectionStatus>
@@ -302,8 +335,10 @@ export function ExecutionPage() {
               <div className="status-row"><span>{locale === 'zh' ? '策略' : 'Strategy'}</span><strong>{selectedEntry.plan.strategyName}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '模式' : 'Mode'}</span><strong>{selectedEntry.plan.mode}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '计划状态' : 'Plan status'}</span><strong>{selectedEntry.plan.status}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '执行阶段' : 'Lifecycle'}</span><strong>{selectedLifecycleStatus}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '审批状态' : 'Approval'}</span><strong>{selectedEntry.plan.approvalState}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '订单数' : 'Order count'}</span><strong>{selectedEntry.plan.orderCount}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '已提交 / 已成交' : 'Submitted / Filled'}</span><strong>{selectedSubmittedCount} / {selectedFilledCount}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '资金规模' : 'Capital'}</span><strong>{selectedEntry.plan.capital.toFixed(0)}</strong></div>
               <div className="settings-actions">
                 <button
@@ -312,6 +347,46 @@ export function ExecutionPage() {
                   onClick={() => researchNavigation.openStrategyDetail(selectedEntry.plan.strategyId)}
                 >
                   {locale === 'zh' ? '打开策略详情' : 'Open Strategy Detail'}
+                </button>
+                <button
+                  type="button"
+                  className="inline-action inline-action-approve"
+                  disabled={!canApproveExecution || selectedEntry.plan.lifecycleStatus !== 'awaiting_approval' || planBusyAction === 'approve'}
+                  onClick={async () => {
+                    setPlanBusyAction('approve');
+                    setPlanMessage('');
+                    try {
+                      await approveExecutionPlan(selectedEntry.plan.id, { actor: 'execution-desk' });
+                      setPlanMessage(locale === 'zh' ? '已批准执行计划并开始提交订单。' : 'Approved the execution plan and started order submission.');
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setPlanBusyAction('');
+                    }
+                  }}
+                >
+                  {planBusyAction === 'approve' ? (locale === 'zh' ? '审批中...' : 'Approving...') : (locale === 'zh' ? '批准路由' : 'Approve Routing')}
+                </button>
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={!canApproveExecution || !['submitted', 'partial_fill'].includes(selectedEntry.plan.lifecycleStatus) || planBusyAction === 'settle'}
+                  onClick={async () => {
+                    setPlanBusyAction('settle');
+                    setPlanMessage('');
+                    try {
+                      await settleExecutionPlan(selectedEntry.plan.id, { actor: 'execution-desk', outcome: 'filled' });
+                      setPlanMessage(locale === 'zh' ? '已将执行计划推进到 filled。' : 'Moved the execution plan into filled state.');
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setPlanBusyAction('');
+                    }
+                  }}
+                >
+                  {planBusyAction === 'settle' ? (locale === 'zh' ? '结算中...' : 'Settling...') : (locale === 'zh' ? '标记成交' : 'Mark Filled')}
                 </button>
                 {sourcePage === 'strategies' && requestedStrategyId ? (
                   <button
@@ -332,11 +407,33 @@ export function ExecutionPage() {
                   </button>
                 ) : null}
               </div>
+              {planMessage ? <InspectionStatus>{planMessage}</InspectionStatus> : null}
               <InspectionStatus>{executionDetailInspection.summary}</InspectionStatus>
               <InspectionStatus>{executionDetailInspection.runtimeMessage}</InspectionStatus>
             </div>
           )}
         </InspectionPanel>
+        <InspectionListPanel
+          title={locale === 'zh' ? '订单生命周期' : 'Order Lifecycle'}
+          copy={locale === 'zh' ? '查看当前执行计划下每笔订单的 lifecycle 变化。' : 'Inspect lifecycle changes for every order under the selected execution plan.'}
+          badge={String(selectedOrderStates.length)}
+        >
+            {!selectedEntry ? <InspectionStatus>{locale === 'zh' ? '先从账本中选择一个 execution plan。' : 'Select an execution plan from the ledger first.'}</InspectionStatus> : null}
+            {selectedEntry && !selectedOrderStates.length ? <InspectionStatus>{locale === 'zh' ? '当前 plan 还没有订单 lifecycle 记录。' : 'No order lifecycle records exist for this plan yet.'}</InspectionStatus> : null}
+            {selectedOrderStates.map((item) => (
+              <InspectionSelectableRow
+                key={item.id}
+                leadTitle={`${item.symbol} · ${item.side}`}
+                leadCopy={item.summary}
+                metrics={[
+                  { label: locale === 'zh' ? '状态' : 'Status', value: item.lifecycleStatus },
+                  { label: locale === 'zh' ? '数量' : 'Qty', value: item.qty },
+                  { label: locale === 'zh' ? '已成交' : 'Filled', value: item.filledQty },
+                  { label: locale === 'zh' ? 'Broker ID' : 'Broker ID', value: item.brokerOrderId || '--' },
+                ]}
+              />
+            ))}
+        </InspectionListPanel>
         <InspectionListPanel
           title={executionCollectionConfigs.audit.title}
           copy={executionCollectionConfigs.audit.copy}
