@@ -776,6 +776,21 @@ describe('research workspace pages', () => {
           reviewQueue: 1,
           dataSource: 'service',
         },
+        governanceSummary: {
+          total: 1,
+          promote: 1,
+          refreshBacktests: 0,
+          evaluate: 0,
+          latestCreatedAt: '2026-03-13T11:20:00.000Z',
+        },
+        handoffSummary: {
+          total: 1,
+          ready: 1,
+          queued: 0,
+          blocked: 0,
+          paper: 1,
+          live: 0,
+        },
         workbench: {
           ok: true,
           asOf: '2026-03-13T11:10:00.000Z',
@@ -893,6 +908,47 @@ describe('research workspace pages', () => {
           },
           recentActions: [],
         },
+        governanceActions: [
+          {
+            id: 'governance-1',
+            type: 'research-governance.promote-strategies',
+            title: 'Research governance: promote-strategies',
+            detail: 'Promoted 1 strategies from the governance workbench.',
+            actor: 'operator-1',
+            level: 'info',
+            createdAt: '2026-03-13T11:20:00.000Z',
+            metadata: {},
+          },
+        ],
+        handoffs: [
+          {
+            id: 'handoff-1',
+            strategyId: 'strategy-1',
+            strategyName: 'Momentum',
+            strategyStatus: 'candidate',
+            runId: 'run-1',
+            resultId: 'result-1',
+            evaluationId: 'evaluation-1',
+            reportId: 'report-1',
+            mode: 'paper',
+            capital: 50000,
+            orderCount: 2,
+            baseline: true,
+            champion: false,
+            readiness: 'paper',
+            verdict: 'prepare_execution',
+            riskStatus: 'approved',
+            approvalState: 'not_required',
+            handoffStatus: 'ready',
+            owner: 'execution-desk',
+            summary: 'Execution desk handoff is ready.',
+            reasons: ['Latest evaluation supports execution prep.'],
+            orders: [],
+            createdAt: '2026-03-13T11:08:00.000Z',
+            updatedAt: '2026-03-13T11:08:00.000Z',
+            metadata: {},
+          },
+        ],
       },
       loading: false,
       error: '',
@@ -1082,6 +1138,8 @@ describe('research workspace pages', () => {
     expect(html).toContain('Research Evaluations');
     expect(html).toContain('Research Operations Workbench');
     expect(html).toContain('Promotion Governance Queue');
+    expect(html).toContain('Research Governance Trail');
+    expect(html).toContain('Execution Handoff Queue');
   });
 
   it('renders backtest page with strategy source context and execution handoff actions', () => {

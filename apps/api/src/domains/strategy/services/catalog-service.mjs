@@ -63,6 +63,7 @@ function buildReplayTimeline(strategy, inputs = {}) {
     tasks = [],
     workflows = [],
     governanceActions = [],
+    handoffs = [],
   } = inputs;
 
   const items = [
@@ -183,6 +184,21 @@ function buildReplayTimeline(strategy, inputs = {}) {
         { label: 'Actor', value: action.actor || '--' },
       ],
     })),
+    ...handoffs.map((handoff) => ({
+      id: `handoff-${handoff.id}`,
+      eventType: 'execution',
+      lane: 'Execution',
+      title: `${handoff.handoffStatus} · ${handoff.mode}`,
+      detail: handoff.summary,
+      at: handoff.updatedAt || handoff.createdAt,
+      reference: handoff.strategyId,
+      linkedRunId: handoff.runId || '',
+      linkedResultId: handoff.resultId || '',
+      metrics: [
+        { label: 'Risk', value: handoff.riskStatus || '--' },
+        { label: 'Approval', value: handoff.approvalState || '--' },
+      ],
+    })),
   ];
 
   return items
@@ -273,6 +289,9 @@ export function getStrategyCatalogDetail(strategyId) {
     .filter((item) => item.type === 'strategy-catalog.saved')
     .filter((item) => item.metadata?.strategyId === strategy.id)
     .slice(0, 20);
+  const recentHandoffs = controlPlaneRuntime.listExecutionCandidateHandoffs(20, {
+    strategyId: strategy.id,
+  });
   const latestExecutionHandoff = controlPlaneRuntime.getLatestExecutionCandidateHandoffForStrategy(strategy.id);
   const replayTimeline = buildReplayTimeline(strategy, {
     auditItems: strategyAuditItems,
@@ -283,6 +302,7 @@ export function getStrategyCatalogDetail(strategyId) {
     tasks: researchTasks,
     workflows,
     governanceActions,
+    handoffs: recentHandoffs,
   });
   const replaySummary = buildReplaySummary(replayTimeline);
   let executionCandidatePreview = null;

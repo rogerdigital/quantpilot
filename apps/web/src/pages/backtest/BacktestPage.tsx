@@ -125,6 +125,23 @@ function BacktestPage() {
   const promotionQueue = data?.workbench?.promotionQueue || [];
   const comparisonRows = data?.workbench?.comparisons || [];
   const coverageRows = data?.workbench?.coverage || [];
+  const governanceActions = data?.governanceActions || [];
+  const governanceSummary = data?.governanceSummary || {
+    total: 0,
+    promote: 0,
+    refreshBacktests: 0,
+    evaluate: 0,
+    latestCreatedAt: '',
+  };
+  const handoffs = data?.handoffs || [];
+  const handoffSummary = data?.handoffSummary || {
+    total: 0,
+    ready: 0,
+    queued: 0,
+    blocked: 0,
+    paper: 0,
+    live: 0,
+  };
   const filteredTasks = data?.tasks?.filter((task) => {
     if (runFilter !== 'all' && task.status !== runFilter) {
       return false;
@@ -474,6 +491,8 @@ function BacktestPage() {
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '研究报告资产' : 'Research Reports'}</div><div className="tile-value">{data?.reportSummary?.total ?? '--'}</div><div className="tile-sub">{locale === 'zh' ? '异步沉淀后的研究交付物' : 'Asynchronous research deliverables'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '待评估策略' : 'Awaiting Evaluation'}</div><div className="tile-value">{workbenchSummary.needsEvaluation}</div><div className="tile-sub">{locale === 'zh' ? '结果已出但治理链路未完成' : 'Results exist but governance is not complete'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '待出报告策略' : 'Awaiting Reports'}</div><div className="tile-value">{workbenchSummary.waitingForReport}</div><div className="tile-sub">{locale === 'zh' ? '评估已完成，等待异步资产沉淀' : 'Evaluations are done, waiting on async assets'}</div></article>
+        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '治理动作' : 'Governance Actions'}</div><div className="tile-value">{governanceSummary.total}</div><div className="tile-sub">{governanceSummary.latestCreatedAt ? fmtDateTime(governanceSummary.latestCreatedAt, locale) : (locale === 'zh' ? '等待治理动作' : 'Waiting for governance activity')}</div></article>
+        <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '执行交接对象' : 'Execution Handoffs'}</div><div className="tile-value">{handoffSummary.total}</div><div className="tile-sub">{locale === 'zh' ? '研究链路正式移交到执行台' : 'Formal research packages handed into execution'}</div></article>
         <article className="metric-tile"><div className="tile-label">{locale === 'zh' ? '研究任务失败' : 'Failed Research Tasks'}</div><div className="tile-value">{taskSummary.failed}</div><div className="tile-sub">{locale === 'zh' ? '阶段 2 统一失败面板入口' : 'The unified failure entrypoint for stage 2'}</div></article>
       </section>
 
@@ -615,6 +634,81 @@ function BacktestPage() {
                 { label: locale === 'zh' ? '更新时间' : 'Updated', value: fmtDateTime(item.updatedAt, locale) },
               ]}
             />
+          ))}
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
+          title={locale === 'zh' ? '研究治理留痕' : 'Research Governance Trail'}
+          copy={locale === 'zh'
+            ? '把批量晋级、补跑回测、补做评估和基线/冠军切换统一沉淀成一条治理动作历史。'
+            : 'Capture promotion, refresh, evaluation, and baseline/champion updates as one governance action history.'}
+          badge={governanceActions.length}
+          terminal
+          isEmpty={governanceActions.length === 0}
+          emptyMessage={locale === 'zh' ? '当前还没有研究治理动作。' : 'No governance activity has been recorded yet.'}
+        >
+          {governanceActions.map((item) => (
+            <ResearchVersionSnapshotRow
+              key={item.id}
+              leadTitle={`${item.title} · ${item.actor}`}
+              leadCopy={item.detail}
+              metrics={[
+                { label: locale === 'zh' ? '级别' : 'Level', value: item.level },
+                { label: locale === 'zh' ? '时间' : 'Created', value: fmtDateTime(item.createdAt, locale) },
+                { label: locale === 'zh' ? '晋级/补跑/评估' : 'Promote / Refresh / Evaluate', value: `${governanceSummary.promote} / ${governanceSummary.refreshBacktests} / ${governanceSummary.evaluate}` },
+              ]}
+            />
+          ))}
+        </ResearchCollectionPanel>
+        <ResearchCollectionPanel
+          title={locale === 'zh' ? '执行交接队列' : 'Execution Handoff Queue'}
+          copy={locale === 'zh'
+            ? '查看哪些策略已经完成研究闭环并形成正式交接对象，直接跳到策略详情或执行台继续处理。'
+            : 'Review which strategies have become formal execution handoffs and jump straight into strategy detail or the execution desk.'}
+          badge={handoffs.length}
+          terminal
+          isEmpty={handoffs.length === 0}
+          emptyMessage={locale === 'zh' ? '当前还没有研究交接对象。' : 'No execution handoffs are available yet.'}
+        >
+          {handoffs.map((item) => (
+            <div className="focus-row" key={item.id}>
+              <div className="symbol-cell">
+                <strong>{item.strategyName}</strong>
+                <span>{item.summary}</span>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '状态' : 'Handoff'}</span>
+                <strong>{item.handoffStatus}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '模式' : 'Mode'}</span>
+                <strong>{item.mode}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '审批/风险' : 'Approval / Risk'}</span>
+                <strong>{item.approvalState} / {item.riskStatus}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '订单' : 'Orders'}</span>
+                <strong>{item.orderCount}</strong>
+              </div>
+              <div className="action-group">
+                <button type="button" className="inline-action" onClick={() => researchNavigation.openStrategyDetail(item.strategyId)}>
+                  {locale === 'zh' ? '打开策略' : 'Open Strategy'}
+                </button>
+                {item.runId ? (
+                  <button type="button" className="inline-action" onClick={() => setSelectedRunId(item.runId)}>
+                    {locale === 'zh' ? '查看回测' : 'Inspect Run'}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="inline-action"
+                  onClick={() => navigate(`/execution?strategy=${item.strategyId}&handoff=${item.id}&source=backtest`)}
+                >
+                  {locale === 'zh' ? '打开执行台' : 'Open Execution Desk'}
+                </button>
+              </div>
+            </div>
           ))}
         </ResearchCollectionPanel>
       </section>

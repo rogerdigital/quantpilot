@@ -1004,12 +1004,16 @@ export type ResearchHubSnapshot = {
   evaluationSummary?: ResearchEvaluationSummarySnapshot;
   reportSummary?: ResearchReportSummarySnapshot;
   workbench?: ResearchWorkbenchSnapshot;
+  governanceSummary?: ResearchWorkbenchSnapshot['actionSummary'];
+  handoffSummary?: ExecutionCandidateHandoffSnapshot['summary'];
   strategies: StrategyCatalogItem[];
   runs: BacktestRunItem[];
   tasks: ResearchTaskRecord[];
   results: BacktestResultRecord[];
   evaluations?: ResearchEvaluationRecord[];
   reports?: ResearchReportRecord[];
+  governanceActions?: ResearchGovernanceActionRecord[];
+  handoffs?: ExecutionCandidateHandoffRecord[];
 };
 
 export type MarketProviderStatusSnapshot = {

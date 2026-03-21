@@ -112,15 +112,17 @@ quantpilot/
 
 ## 研发迭代阶段
 
-### 当前阶段：阶段 1 已收官，进入阶段 2 准备
+### 当前阶段：阶段 1、阶段 2 已收官，进入阶段 3 准备
 
-当前仓库已经完成阶段 1 的平台底座产品化，并进入阶段 2 的准备期：
+当前仓库已经完成阶段 1 的平台底座产品化和阶段 2 的研究与策略闭环，并进入阶段 3 的准备期：
 
 1. `auth / user-account / scheduler / notification / audit / task-orchestrator / incident / operations / risk workbench` 这批基础模块已具备第一轮真实服务边界。
-2. 文件型控制面和多处前端示例态已收敛为稳定数据访问契约，为后续数据库和缓存升级铺路。
-3. 下一阶段重点将转向研究任务链、结果模型和策略闭环，而不是继续补平台底座骨架。
+2. `research task / backtest result / research evaluation / research report / governance / replay / execution handoff` 这批研究对象已具备稳定服务边界。
+3. 文件型控制面和多处前端示例态已收敛为稳定数据访问契约，为后续数据库和缓存升级铺路。
+4. 下一阶段重点将转向执行闭环、交易中台和真实执行承接，而不是继续补平台底座或研究骨架。
 
 阶段 1 的收官标准已经单独整理为 [stage-1-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-1-closeout.md)，后续判断是否进入阶段 2 以该文档为准。
+阶段 2 的收官标准已经单独整理为 [stage-2-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-2-closeout.md)，后续判断是否进入阶段 3 以该文档为准。
 
 ### 阶段 2 研究与策略闭环
 
