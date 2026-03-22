@@ -212,6 +212,115 @@ function buildExecutionReconciliation(orderStates = [], snapshot = null, latestR
   };
 }
 
+function buildExecutionCompensation(detail, exceptionPolicy = null, linkedIncidents = []) {
+  const policy = exceptionPolicy || detail.exceptionPolicy || null;
+  const reconciliation = detail.reconciliation || null;
+  const openIncident = (Array.isArray(linkedIncidents) ? linkedIncidents : []).find((incident) => incident.status !== 'resolved') || null;
+  const lastAutomatedAt = detail.plan?.metadata?.compensation?.lastAutomatedAt || '';
+  const reasons = [];
+  const steps = [];
+  let status = 'not_needed';
+  let mode = 'none';
+  let autoExecutable = false;
+  let recommendedAction = 'none';
+  let headline = 'Execution compensation automation is not needed.';
+
+  const needsReconciliation = Boolean(reconciliation && ['attention', 'drift', 'missing_snapshot'].includes(reconciliation.status));
+  const needsEscalation = Boolean(
+    (!openIncident && (policy?.incidentRecommended || policy?.recommendedAction === 'open_incident'))
+    || (policy?.status === 'compensation' && !openIncident),
+  );
+
+  if (policy?.status === 'stable' && !needsReconciliation) {
+    return {
+      status,
+      mode,
+      autoExecutable,
+      recommendedAction,
+      headline,
+      reasons,
+      linkedIncidentId: '',
+      linkedIncidentStatus: '',
+      lastAutomatedAt,
+      steps,
+    };
+  }
+
+  if (policy?.status === 'attention' || reconciliation?.status === 'attention' || reconciliation?.status === 'missing_snapshot') {
+    status = 'queued';
+    mode = 'manual_review';
+    recommendedAction = 'reconcile';
+    headline = 'Execution needs manual compensation review.';
+    reasons.push('Reconciliation needs operator review before automation can safely proceed.');
+  }
+
+  if (policy?.status === 'compensation' || (policy?.status === 'incident' && policy?.category === 'reconciliation_drift')) {
+    status = openIncident ? 'escalated' : 'ready';
+    mode = needsEscalation ? 'auto_reconcile_and_escalate' : 'auto_reconcile';
+    autoExecutable = needsReconciliation;
+    recommendedAction = 'reconcile';
+    headline = openIncident
+      ? 'Execution compensation is already escalated and needs incident follow-up.'
+      : 'Execution compensation can automate reconciliation before operator follow-up.';
+    reasons.push(...(policy?.reasons || []));
+  }
+
+  if (policy?.status === 'incident' && openIncident && mode === 'none') {
+    status = 'escalated';
+    mode = 'incident_followup';
+    recommendedAction = 'open_incident';
+    headline = 'Execution is already escalated into an incident and needs follow-up.';
+    reasons.push(`Incident ${openIncident.id} is already tracking this execution exception.`);
+  }
+
+  if (needsReconciliation) {
+    steps.push({
+      key: 'refresh-reconciliation',
+      title: 'Refresh reconciliation',
+      detail: 'Capture the latest order, position, and account drift before compensation closes out.',
+      automated: true,
+      status: autoExecutable ? 'ready' : 'pending',
+    });
+  }
+
+  if (needsEscalation || openIncident) {
+    steps.push({
+      key: 'sync-incident',
+      title: openIncident ? 'Sync linked incident' : 'Escalate into incident',
+      detail: openIncident
+        ? 'Keep the linked execution incident aligned with the latest compensation posture.'
+        : 'Open and link an execution incident if reconciliation drift still needs escalation.',
+      automated: true,
+      status: autoExecutable ? 'ready' : (openIncident ? 'completed' : 'pending'),
+    });
+  }
+
+  if (status !== 'not_needed') {
+    steps.push({
+      key: 'operator-followup',
+      title: 'Operator follow-up',
+      detail: openIncident
+        ? 'Hand off the compensated execution to the incident owner for final closeout.'
+        : 'Review the compensated execution and clear any remaining broker or risk follow-up.',
+      automated: false,
+      status: openIncident ? 'ready' : 'pending',
+    });
+  }
+
+  return {
+    status,
+    mode,
+    autoExecutable,
+    recommendedAction,
+    headline,
+    reasons,
+    linkedIncidentId: openIncident?.id || '',
+    linkedIncidentStatus: openIncident?.status || '',
+    lastAutomatedAt,
+    steps,
+  };
+}
+
 function buildExecutionLedgerEntry(plan, runtimeEvents = [], snapshots = []) {
   const workflow = plan.workflowRunId ? controlPlaneRuntime.getWorkflowRun(plan.workflowRunId) : null;
   const latestRuntime = runtimeEvents.find((event) => event.executionPlanId === plan.id) || null;
@@ -237,6 +346,14 @@ function buildExecutionLedgerEntry(plan, runtimeEvents = [], snapshots = []) {
     reconciliation,
     linkedIncidents,
   });
+  const compensation = buildExecutionCompensation({
+    plan,
+    executionRun,
+    workflow,
+    orderStates,
+    brokerEvents,
+    reconciliation,
+  }, exceptionPolicy, linkedIncidents);
   const recovery = buildExecutionRecovery(plan, workflow, reconciliation, exceptionPolicy);
 
   return {
@@ -255,6 +372,7 @@ function buildExecutionLedgerEntry(plan, runtimeEvents = [], snapshots = []) {
     latestSnapshot,
     brokerEvents,
     reconciliation,
+    compensation,
     exceptionPolicy,
     recovery,
     linkedIncidents,
@@ -415,6 +533,8 @@ export function getExecutionWorkbench(limit = 40) {
     interventionNeeded: 0,
     retryEligiblePlans: 0,
     compensationPlans: 0,
+    compensationReadyPlans: 0,
+    escalatedCompensationPlans: 0,
     incidentLinkedPlans: 0,
     brokerRejectPlans: 0,
     brokerEvents: 0,
@@ -444,6 +564,8 @@ export function getExecutionWorkbench(limit = 40) {
     if (entry.recovery?.recommendedAction !== 'none') summary.interventionNeeded += 1;
     if (entry.exceptionPolicy?.retryEligible) summary.retryEligiblePlans += 1;
     if (entry.exceptionPolicy?.status === 'compensation') summary.compensationPlans += 1;
+    if (entry.compensation?.autoExecutable) summary.compensationReadyPlans += 1;
+    if (entry.compensation?.status === 'escalated') summary.escalatedCompensationPlans += 1;
     if (entry.exceptionPolicy?.linkedIncidentId) summary.incidentLinkedPlans += 1;
     if (entry.exceptionPolicy?.category === 'broker_reject' || entry.exceptionPolicy?.category === 'mixed') summary.brokerRejectPlans += 1;
     summary.brokerEvents += Array.isArray(entry.brokerEvents) ? entry.brokerEvents.length : 0;
@@ -459,6 +581,7 @@ export function getExecutionWorkbench(limit = 40) {
     approvals: ledger.filter((entry) => (entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus) === 'awaiting_approval').slice(0, 8),
     retryEligible: ledger.filter((entry) => entry.exceptionPolicy?.retryEligible).slice(0, 8),
     compensation: ledger.filter((entry) => entry.exceptionPolicy?.status === 'compensation').slice(0, 8),
+    compensationAutomation: ledger.filter((entry) => entry.compensation?.autoExecutable).slice(0, 8),
     incidents: ledger.filter((entry) => Boolean(entry.exceptionPolicy?.linkedIncidentId) || entry.exceptionPolicy?.status === 'incident').slice(0, 8),
     activeRouting: ledger.filter((entry) => ['submitted', 'acknowledged', 'partial_fill'].includes(entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus)).slice(0, 8),
   };
@@ -472,6 +595,7 @@ export function getExecutionWorkbench(limit = 40) {
       approvals: 0,
       retryEligible: 0,
       compensation: 0,
+      compensationAutomation: 0,
       incidents: 0,
       activeRouting: 0,
     };
@@ -479,6 +603,7 @@ export function getExecutionWorkbench(limit = 40) {
     if ((entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus) === 'awaiting_approval') bucket.approvals += 1;
     if (entry.exceptionPolicy?.retryEligible) bucket.retryEligible += 1;
     if (entry.exceptionPolicy?.status === 'compensation') bucket.compensation += 1;
+    if (entry.compensation?.autoExecutable) bucket.compensationAutomation += 1;
     if (Boolean(entry.exceptionPolicy?.linkedIncidentId) || entry.exceptionPolicy?.status === 'incident') bucket.incidents += 1;
     if (['submitted', 'acknowledged', 'partial_fill'].includes(entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus)) bucket.activeRouting += 1;
     ownerBuckets.set(owner, bucket);
@@ -510,6 +635,15 @@ export function getExecutionWorkbench(limit = 40) {
       title: 'Resolve compensation queue',
       detail: 'Execution plans with broker drift or mixed fill/reject posture need reconciliation before closeout.',
       count: queues.compensation.length,
+    });
+  }
+  if (queues.compensationAutomation.length) {
+    nextActions.push({
+      key: 'run-compensation-automation',
+      priority: 'now',
+      title: 'Run compensation automation',
+      detail: 'Auto-executable compensation plans can refresh reconciliation and sync incidents before manual follow-up.',
+      count: queues.compensationAutomation.length,
     });
   }
   if (queues.incidents.length) {

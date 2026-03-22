@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { approveExecutionPlan, cancelExecutionPlan, ingestBrokerExecutionEvent, queueExecutionCandidateHandoff, reconcileExecutionPlan, recoverExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../../app/api/controlPlane.ts';
+import { approveExecutionPlan, cancelExecutionPlan, compensateExecutionPlan, ingestBrokerExecutionEvent, queueExecutionCandidateHandoff, reconcileExecutionPlan, recoverExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
@@ -133,6 +133,7 @@ export function ExecutionPage() {
   const selectedAcknowledgedCount = selectedOrderStates.filter((item) => item.lifecycleStatus === 'acknowledged').length;
   const selectedFilledCount = selectedEntry?.executionRun?.filledOrderCount || 0;
   const selectedReconciliation = selectedEntry?.reconciliation;
+  const selectedCompensation = selectedEntry?.compensation;
   const selectedExceptionPolicy = selectedEntry?.exceptionPolicy;
   const selectedRecovery = selectedEntry?.recovery;
   const selectedBrokerEvents = selectedEntry?.brokerEvents || [];
@@ -242,6 +243,7 @@ export function ExecutionPage() {
           <div className="status-stack">
             <div className="status-row"><span>{locale === 'zh' ? '可重试计划' : 'Retry Eligible'}</span><strong>{workbenchSummary?.retryEligiblePlans ?? 0}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '补偿队列' : 'Compensation Queue'}</span><strong>{workbenchSummary?.compensationPlans ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '自动补偿' : 'Auto Compensation'}</span><strong>{workbenchSummary?.compensationReadyPlans ?? 0}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '关联 Incident' : 'Linked Incidents'}</span><strong>{workbenchSummary?.incidentLinkedPlans ?? 0}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '拒单计划' : 'Reject Plans'}</span><strong>{workbenchSummary?.brokerRejectPlans ?? 0}</strong></div>
             <div className="status-copy">
@@ -252,12 +254,26 @@ export function ExecutionPage() {
           </div>
         </article>
         <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '自动补偿工作台' : 'Compensation Automation'}</div><div className="panel-copy">{locale === 'zh' ? '把可自动执行的补偿动作和已升级执行分开呈现，优先完成自动对账和 incident 同步。' : 'Surface auto-executable compensation separately from escalated follow-up so the desk can run reconciliation and incident sync first.'}</div></div><div className="panel-badge badge-info">{(workbenchSummary?.compensationReadyPlans ?? 0) + (workbenchSummary?.escalatedCompensationPlans ?? 0)}</div></div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '自动可执行' : 'Auto Ready'}</span><strong>{workbenchSummary?.compensationReadyPlans ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '已升级补偿' : 'Escalated'}</span><strong>{workbenchSummary?.escalatedCompensationPlans ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '自动化队列' : 'Automation Queue'}</span><strong>{workbenchOperations?.queues.compensationAutomation.length ?? 0}</strong></div>
+            <div className="status-copy">
+              {locale === 'zh'
+                ? '这层会把对账刷新、incident 同步和 operator follow-up 拆成标准步骤。'
+                : 'This layer breaks compensation into reconciliation refresh, incident sync, and operator follow-up.'}
+            </div>
+          </div>
+        </article>
+        <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '执行运营队列' : 'Execution Operations Console'}</div><div className="panel-copy">{locale === 'zh' ? '把审批、重试、补偿、incident 和活跃路由统一成执行台的处置队列。' : 'Turn approvals, retries, compensation, incidents, and active routing into one execution-ops queue view.'}</div></div><div className="panel-badge badge-info">{(workbenchOperations?.queues.approvals.length ?? 0) + (workbenchOperations?.queues.retryEligible.length ?? 0) + (workbenchOperations?.queues.compensation.length ?? 0) + (workbenchOperations?.queues.incidents.length ?? 0)}</div></div>
           <div className="focus-list">
             <div className="focus-row">
               <div className="focus-metric"><span>{locale === 'zh' ? '审批队列' : 'Approvals'}</span><strong>{workbenchOperations?.queues.approvals.length ?? 0}</strong></div>
               <div className="focus-metric"><span>{locale === 'zh' ? '可重试' : 'Retry Eligible'}</span><strong>{workbenchOperations?.queues.retryEligible.length ?? 0}</strong></div>
               <div className="focus-metric"><span>{locale === 'zh' ? '补偿队列' : 'Compensation'}</span><strong>{workbenchOperations?.queues.compensation.length ?? 0}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? '自动补偿' : 'Auto Comp'}</span><strong>{workbenchOperations?.queues.compensationAutomation.length ?? 0}</strong></div>
               <div className="focus-metric"><span>{locale === 'zh' ? '执行 Incident' : 'Incidents'}</span><strong>{workbenchOperations?.queues.incidents.length ?? 0}</strong></div>
             </div>
             {workbenchOperations?.nextActions.map((item) => (
@@ -283,6 +299,7 @@ export function ExecutionPage() {
                 <div className="focus-metric"><span>{locale === 'zh' ? '审批' : 'Approvals'}</span><strong>{item.approvals}</strong></div>
                 <div className="focus-metric"><span>{locale === 'zh' ? '重试' : 'Retry'}</span><strong>{item.retryEligible}</strong></div>
                 <div className="focus-metric"><span>{locale === 'zh' ? '补偿/Incident' : 'Comp/Inc'}</span><strong>{item.compensation + item.incidents}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '自动补偿' : 'Auto Comp'}</span><strong>{item.compensationAutomation}</strong></div>
               </div>
             ))}
             {!workbenchOperations?.ownerLoad.length ? (
@@ -669,6 +686,30 @@ export function ExecutionPage() {
                 <button
                   type="button"
                   className="inline-action"
+                  disabled={!canApproveExecution || !selectedEntry || !selectedCompensation?.autoExecutable || planBusyAction === 'compensate'}
+                  onClick={async () => {
+                    setPlanBusyAction('compensate');
+                    setPlanMessage('');
+                    try {
+                      const result = await compensateExecutionPlan(selectedEntry.plan.id, { actor: 'execution-desk' });
+                      setPlanMessage(
+                        locale === 'zh'
+                          ? `已执行自动补偿：${result.compensationAction || selectedCompensation?.mode || 'none'}。`
+                          : `Executed compensation automation: ${result.compensationAction || selectedCompensation?.mode || 'none'}.`,
+                      );
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setPlanBusyAction('');
+                    }
+                  }}
+                >
+                  {planBusyAction === 'compensate' ? (locale === 'zh' ? '补偿中...' : 'Compensating...') : (locale === 'zh' ? '执行自动补偿' : 'Run Compensation')}
+                </button>
+                <button
+                  type="button"
+                  className="inline-action"
                   disabled={!canApproveExecution || !selectedEntry || planBusyAction === 'reconcile'}
                   onClick={async () => {
                     setPlanBusyAction('reconcile');
@@ -780,6 +821,35 @@ export function ExecutionPage() {
               {!selectedReconciliation.issues.length ? <InspectionStatus>{locale === 'zh' ? '当前 execution lifecycle 与 broker snapshot 已对齐。' : 'The current execution lifecycle is aligned with the linked broker snapshot.'}</InspectionStatus> : null}
               {selectedReconciliation.issues.map((item) => (
                 <InspectionStatus key={item.id}>{`${item.title}: ${item.detail} (${item.expected} / ${item.actual})`}</InspectionStatus>
+              ))}
+            </div>
+          )}
+        </InspectionPanel>
+        <InspectionPanel
+          title={locale === 'zh' ? '自动补偿计划' : 'Compensation Plan'}
+          copy={locale === 'zh' ? '把自动补偿拆成标准步骤，明确哪些动作会自动跑，哪些还要 operator 跟进。' : 'Break compensation into standard steps so the desk can see what automation will run and what still needs operator follow-up.'}
+          badge={selectedCompensation?.status || '--'}
+        >
+          {!selectedEntry ? (
+            <InspectionStatus>{locale === 'zh' ? '先从账本中选择一个 execution plan。' : 'Select an execution plan from the ledger first.'}</InspectionStatus>
+          ) : !selectedCompensation ? (
+            <InspectionStatus>{locale === 'zh' ? '当前还没有自动补偿计划。' : 'No compensation plan is available yet.'}</InspectionStatus>
+          ) : (
+            <div className="status-stack">
+              <div className="status-row"><span>{locale === 'zh' ? '补偿状态' : 'Status'}</span><strong>{selectedCompensation.status}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '补偿模式' : 'Mode'}</span><strong>{selectedCompensation.mode}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '推荐动作' : 'Recommended Action'}</span><strong>{selectedCompensation.recommendedAction}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '自动可执行' : 'Auto Executable'}</span><strong>{selectedCompensation.autoExecutable ? (locale === 'zh' ? '是' : 'Yes') : (locale === 'zh' ? '否' : 'No')}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '关联 Incident' : 'Linked Incident'}</span><strong>{selectedCompensation.linkedIncidentId || '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '最近自动执行' : 'Last Automated'}</span><strong>{selectedCompensation.lastAutomatedAt || '--'}</strong></div>
+              <InspectionStatus>{selectedCompensation.headline}</InspectionStatus>
+              {selectedCompensation.reasons.map((reason) => (
+                <InspectionStatus key={`comp-reason-${reason}`}>{reason}</InspectionStatus>
+              ))}
+              {selectedCompensation.steps.map((step) => (
+                <InspectionStatus key={step.key}>
+                  {step.automated ? '[auto]' : '[manual]'} {step.title}: {step.status} · {step.detail}
+                </InspectionStatus>
               ))}
             </div>
           )}

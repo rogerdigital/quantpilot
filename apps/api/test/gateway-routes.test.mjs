@@ -1626,16 +1626,20 @@ test('GET /api/execution/workbench returns lifecycle summary and execution ledge
   assert.equal(typeof response.json.summary.interventionNeeded, 'number');
   assert.equal(typeof response.json.summary.retryEligiblePlans, 'number');
   assert.equal(typeof response.json.summary.compensationPlans, 'number');
+  assert.equal(typeof response.json.summary.compensationReadyPlans, 'number');
+  assert.equal(typeof response.json.summary.escalatedCompensationPlans, 'number');
   assert.equal(typeof response.json.summary.incidentLinkedPlans, 'number');
   assert.equal(Array.isArray(response.json.operations.queues.approvals), true);
   assert.equal(Array.isArray(response.json.operations.queues.retryEligible), true);
   assert.equal(Array.isArray(response.json.operations.queues.compensation), true);
+  assert.equal(Array.isArray(response.json.operations.queues.compensationAutomation), true);
   assert.equal(Array.isArray(response.json.operations.ownerLoad), true);
   assert.equal(Array.isArray(response.json.operations.nextActions), true);
   assert.equal(response.json.summary.recoverablePlans >= 1, true);
   assert.equal(Array.isArray(response.json.entries), true);
   assert.equal(response.json.entries.some((entry) => entry.plan.id === 'exec-workbench-plan'), true);
   assert.equal(response.json.entries.some((entry) => entry.recovery?.recommendedAction === 'reroute_orders'), true);
+  assert.equal(typeof response.json.entries[0].compensation?.status, 'string');
   assert.equal(typeof response.json.entries[0].exceptionPolicy?.status, 'string');
 });
 
@@ -2051,6 +2055,108 @@ test('POST /api/execution/plans/:id/recover reroutes cancelled plans back into e
   assert.equal(response.json.executionRun.lifecycleStatus, 'submitted');
   assert.equal(response.json.orderStates[0].lifecycleStatus, 'submitted');
   assert.equal(response.json.orderStates[0].filledQty, 0);
+});
+
+test('POST /api/execution/plans/:id/compensate runs execution compensation automation and syncs incident linkage', async () => {
+  context.executionPlans.appendExecutionPlan({
+    id: 'exec-compensate-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'paper',
+    status: 'ready',
+    lifecycleStatus: 'filled',
+    approvalState: 'not_required',
+    riskStatus: 'approved',
+    summary: 'Execution completed with account drift.',
+    capital: 100000,
+    orderCount: 1,
+    orders: [{ symbol: 'AAPL', side: 'BUY', qty: 5, weight: 1, rationale: 'trend' }],
+  });
+  context.executionRuns.appendExecutionRun({
+    id: 'exec-compensate-run',
+    executionPlanId: 'exec-compensate-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'paper',
+    lifecycleStatus: 'filled',
+    summary: 'Execution completed with account drift.',
+    owner: 'execution-desk',
+    orderCount: 1,
+    submittedOrderCount: 1,
+    filledOrderCount: 1,
+  });
+  context.executionRuns.appendExecutionOrderStates([
+    {
+      id: 'exec-compensate-order-1',
+      executionPlanId: 'exec-compensate-plan',
+      executionRunId: 'exec-compensate-run',
+      symbol: 'AAPL',
+      side: 'BUY',
+      qty: 5,
+      weight: 1,
+      lifecycleStatus: 'filled',
+      brokerOrderId: 'broker-exec-compensate-1',
+      filledQty: 5,
+      avgFillPrice: 181.5,
+      summary: 'filled',
+      submittedAt: '2026-03-21T08:00:00.000Z',
+      acknowledgedAt: '2026-03-21T08:01:00.000Z',
+      filledAt: '2026-03-21T08:02:00.000Z',
+    },
+  ]);
+  context.executionRuntime.appendBrokerAccountSnapshot({
+    id: 'exec-compensate-snapshot',
+    cycleId: 'cycle-compensate',
+    cycle: 1,
+    executionPlanId: 'exec-compensate-plan',
+    executionRunId: 'exec-compensate-run',
+    provider: 'simulated',
+    connected: true,
+    account: { cash: 90000, buyingPower: 90000, equity: 100000 },
+    positions: [{ symbol: 'AAPL', qty: 3, avgCost: 181.5 }],
+    orders: [{ id: 'broker-exec-compensate-1', symbol: 'AAPL', side: 'BUY', qty: 5, filledQty: 5, status: 'filled' }],
+    message: 'snapshot synced',
+    createdAt: '2026-03-21T08:03:00.000Z',
+  });
+  context.executionRuntime.appendExecutionRuntimeEvent({
+    id: 'exec-compensate-runtime',
+    cycleId: 'cycle-compensate',
+    cycle: 1,
+    executionPlanId: 'exec-compensate-plan',
+    executionRunId: 'exec-compensate-run',
+    mode: 'paper',
+    brokerAdapter: 'simulated',
+    brokerConnected: true,
+    marketConnected: true,
+    submittedOrderCount: 1,
+    rejectedOrderCount: 0,
+    openOrderCount: 0,
+    positionCount: 1,
+    cash: 91000,
+    buyingPower: 91500,
+    equity: 100500,
+    message: 'runtime synced',
+    createdAt: '2026-03-21T08:00:00.000Z',
+    metadata: {},
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/execution/plans/exec-compensate-plan/compensate',
+    body: {
+      actor: 'execution-desk',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.compensationAction, 'auto_reconcile_and_escalate');
+  assert.equal(Array.isArray(response.json.automatedSteps), true);
+  assert.equal(response.json.automatedSteps.includes('refresh-reconciliation'), true);
+  assert.equal(response.json.compensation.status, 'escalated');
+  assert.equal(Boolean(response.json.compensation.linkedIncidentId), true);
+  assert.equal(response.json.incident.id, response.json.compensation.linkedIncidentId);
+  assert.equal(response.json.exceptionPolicy.linkedIncidentId, response.json.compensation.linkedIncidentId);
 });
 
 test('POST /api/execution/plans/:id/broker-events ingests a broker fill event into execution state', async () => {

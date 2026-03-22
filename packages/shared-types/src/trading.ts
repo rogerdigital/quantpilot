@@ -487,6 +487,27 @@ export type ExecutionRecoveryRecord = {
   reasons: string[];
 };
 
+export type ExecutionCompensationStepRecord = {
+  key: 'refresh-reconciliation' | 'sync-incident' | 'operator-followup';
+  title: string;
+  detail: string;
+  automated: boolean;
+  status: 'pending' | 'ready' | 'completed' | 'blocked';
+};
+
+export type ExecutionCompensationRecord = {
+  status: 'not_needed' | 'queued' | 'ready' | 'running' | 'completed' | 'escalated';
+  mode: 'none' | 'manual_review' | 'auto_reconcile' | 'auto_reconcile_and_escalate' | 'incident_followup';
+  autoExecutable: boolean;
+  recommendedAction: 'reconcile' | 'open_incident' | 'none';
+  headline: string;
+  reasons: string[];
+  linkedIncidentId: string;
+  linkedIncidentStatus: string;
+  lastAutomatedAt: string;
+  steps: ExecutionCompensationStepRecord[];
+};
+
 export type ExecutionExceptionPolicyRecord = {
   status: 'stable' | 'attention' | 'retrying' | 'compensation' | 'incident';
   category: 'none' | 'broker_reject' | 'broker_cancel' | 'workflow_retry' | 'reconciliation_drift' | 'mixed';
@@ -521,6 +542,7 @@ export type ExecutionLedgerEntry = {
   latestSnapshot?: BrokerAccountSnapshotRecord | null;
   brokerEvents?: BrokerExecutionEventRecord[];
   reconciliation?: ExecutionReconciliationRecord | null;
+  compensation?: ExecutionCompensationRecord | null;
   exceptionPolicy?: ExecutionExceptionPolicyRecord | null;
   recovery?: ExecutionRecoveryRecord | null;
   linkedIncidents?: IncidentRecord[];
@@ -541,6 +563,7 @@ export type ExecutionPlanDetailResponse = {
   latestSnapshot?: BrokerAccountSnapshotRecord | null;
   brokerEvents?: BrokerExecutionEventRecord[];
   reconciliation?: ExecutionReconciliationRecord | null;
+  compensation?: ExecutionCompensationRecord | null;
   exceptionPolicy?: ExecutionExceptionPolicyRecord | null;
   recovery?: ExecutionRecoveryRecord | null;
   linkedIncidents?: IncidentRecord[];
@@ -570,6 +593,8 @@ export type ExecutionWorkbenchResponse = {
     interventionNeeded: number;
     retryEligiblePlans?: number;
     compensationPlans?: number;
+    compensationReadyPlans?: number;
+    escalatedCompensationPlans?: number;
     incidentLinkedPlans?: number;
     brokerRejectPlans?: number;
     brokerEvents: number;
@@ -581,6 +606,7 @@ export type ExecutionWorkbenchResponse = {
       approvals: ExecutionLedgerEntry[];
       retryEligible: ExecutionLedgerEntry[];
       compensation: ExecutionLedgerEntry[];
+      compensationAutomation: ExecutionLedgerEntry[];
       incidents: ExecutionLedgerEntry[];
       activeRouting: ExecutionLedgerEntry[];
     };
@@ -590,11 +616,12 @@ export type ExecutionWorkbenchResponse = {
       approvals: number;
       retryEligible: number;
       compensation: number;
+      compensationAutomation: number;
       incidents: number;
       activeRouting: number;
     }>;
     nextActions: Array<{
-      key: 'clear-approvals' | 'retry-rejected-orders' | 'reconcile-drift' | 'triage-execution-incidents' | 'watch-active-routing';
+      key: 'clear-approvals' | 'retry-rejected-orders' | 'run-compensation-automation' | 'reconcile-drift' | 'triage-execution-incidents' | 'watch-active-routing';
       priority: 'now' | 'next';
       title: string;
       detail: string;

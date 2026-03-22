@@ -725,6 +725,143 @@ export function reconcileExecutionPlan(planId, payload = {}) {
   };
 }
 
+export function compensateExecutionPlan(planId, payload = {}) {
+  const detail = getExecutionPlanDetail(planId);
+  if (!detail?.plan) {
+    return {
+      ok: false,
+      error: 'execution plan not found',
+      message: `Unknown execution plan: ${planId || 'missing planId'}`,
+    };
+  }
+
+  const compensation = detail.compensation || {
+    status: 'not_needed',
+    mode: 'none',
+    autoExecutable: false,
+    recommendedAction: 'none',
+    headline: 'No execution compensation is needed.',
+    reasons: [],
+    linkedIncidentId: '',
+    linkedIncidentStatus: '',
+    lastAutomatedAt: '',
+    steps: [],
+  };
+
+  if (compensation.status === 'not_needed') {
+    return {
+      ok: false,
+      error: 'execution compensation not needed',
+      message: `Execution plan ${detail.plan.id} does not currently need compensation.`,
+    };
+  }
+
+  if (!compensation.autoExecutable) {
+    return {
+      ok: false,
+      error: 'execution compensation requires manual review',
+      message: `Execution plan ${detail.plan.id} still requires manual compensation review.`,
+    };
+  }
+
+  const actor = payload.actor || 'execution-desk';
+  const now = new Date().toISOString();
+  const automatedSteps = [];
+  let reconciliationResult = null;
+  let exceptionState = {
+    detail,
+    exceptionPolicy: detail.exceptionPolicy || null,
+    incident: null,
+  };
+
+  if (compensation.steps.some((step) => step.key === 'refresh-reconciliation')) {
+    reconciliationResult = reconcileExecutionPlan(planId, { actor });
+    if (!reconciliationResult?.ok) return reconciliationResult;
+    automatedSteps.push('refresh-reconciliation');
+    exceptionState = {
+      detail: getExecutionPlanDetail(planId),
+      exceptionPolicy: reconciliationResult.exceptionPolicy || null,
+      incident: reconciliationResult.incident || null,
+    };
+  }
+
+  const nextCompensation = exceptionState.detail?.compensation || compensation;
+  if (nextCompensation.steps.some((step) => step.key === 'sync-incident' && step.status !== 'completed')) {
+    const synced = finalizeExecutionExceptionState(planId, {
+      actor,
+      resolveOnStable: exceptionState.detail?.reconciliation?.status === 'aligned',
+    });
+    automatedSteps.push('sync-incident');
+    exceptionState = {
+      detail: synced.detail || getExecutionPlanDetail(planId),
+      exceptionPolicy: synced.exceptionPolicy || null,
+      incident: synced.incident || exceptionState.incident,
+    };
+  }
+
+  const finalDetail = exceptionState.detail || getExecutionPlanDetail(planId);
+  const finalCompensation = finalDetail?.compensation || compensation;
+
+  controlPlaneRuntime.updateExecutionPlan(detail.plan.id, {
+    metadata: {
+      ...(detail.plan.metadata || {}),
+      compensation: {
+        lastAutomatedAt: now,
+        lastAutomatedBy: actor,
+        mode: compensation.mode,
+        status: finalCompensation.status,
+        automatedSteps,
+      },
+    },
+    updatedAt: now,
+  });
+
+  if (detail.executionRun?.id) {
+    controlPlaneRuntime.updateExecutionRun(detail.executionRun.id, {
+      metadata: {
+        ...(detail.executionRun.metadata || {}),
+        compensation: {
+          lastAutomatedAt: now,
+          lastAutomatedBy: actor,
+          mode: compensation.mode,
+          status: finalCompensation.status,
+          automatedSteps,
+        },
+      },
+      updatedAt: now,
+    });
+  }
+
+  controlPlaneRuntime.recordOperatorAction({
+    type: 'execution.compensate-plan',
+    actor,
+    title: `Ran compensation automation for ${detail.plan.strategyName}`,
+    detail: finalCompensation.headline,
+    symbol: detail.plan.strategyId,
+    level: finalCompensation.status === 'escalated' ? 'warn' : 'info',
+    metadata: {
+      executionPlanId: detail.plan.id,
+      executionRunId: detail.executionRun?.id || '',
+      compensationMode: compensation.mode,
+      compensationStatus: finalCompensation.status,
+      automatedSteps,
+      linkedIncidentId: finalCompensation.linkedIncidentId || '',
+    },
+  });
+
+  return {
+    ok: true,
+    compensationAction: compensation.mode,
+    automatedSteps,
+    detail: getExecutionPlanDetail(planId),
+    compensation: getExecutionPlanDetail(planId)?.compensation || finalCompensation,
+    reconciliation: reconciliationResult?.reconciliation || finalDetail?.reconciliation || null,
+    exceptionPolicy: getExecutionPlanDetail(planId)?.exceptionPolicy || exceptionState.exceptionPolicy,
+    incident: getExecutionPlanDetail(planId)?.linkedIncidents?.find((incident) => incident.status !== 'resolved') || exceptionState.incident || null,
+    automatedAt: now,
+  };
+}
+
 export function recoverExecutionPlan(planId, payload = {}) {
   const detail = getExecutionPlanDetail(planId);
   if (!detail?.plan) {
