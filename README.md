@@ -1,6 +1,6 @@
 # QuantPilot
 
-[English](/Users/Roger/codex/quantpilot/README.md) | [中文](/Users/Roger/codex/quantpilot/README.zh-CN.md)
+[English](./README.md) | [中文](./README.zh-CN.md)
 
 QuantPilot is an AI-native quantitative trading platform under active development. The long-term product target is:
 
