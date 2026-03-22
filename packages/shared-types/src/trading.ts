@@ -1487,9 +1487,14 @@ export type RiskWorkbenchResponse = {
     liveExposurePct: number;
     liveEquity: number;
     brokerConnected: boolean;
+    concentrationPct: number;
+    drawdownAlerts: number;
+    complianceAlerts: number;
+    emergencyActions: number;
+    schedulerAttention: number;
   };
   lanes: Array<{
-    key: 'risk-events' | 'execution-review' | 'backtest-review' | 'incidents' | 'broker';
+    key: 'risk-events' | 'execution-review' | 'backtest-review' | 'incidents' | 'portfolio' | 'drawdown' | 'compliance' | 'emergency' | 'scheduler' | 'broker';
     title: string;
     status: string;
     detail: string;
@@ -1497,10 +1502,19 @@ export type RiskWorkbenchResponse = {
     secondaryCount: number;
     updatedAt: string;
   }>;
+  runbook: Array<{
+    key: 'review-risk-off' | 'clear-review-queue' | 'inspect-live-exposure' | 'triage-risk-incidents' | 'review-scheduler-drift' | 'check-compliance-alerts' | 'release-emergency-brake';
+    priority: 'now' | 'next';
+    title: string;
+    detail: string;
+    count: number;
+  }>;
   reviewQueue: {
+    riskEvents: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestRiskEvent']>>;
     executionPlans: ExecutionPlanRecord[];
     backtestRuns: BacktestRunItem[];
     incidents: IncidentRecord[];
+    schedulerTicks: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestSchedulerTick']>>;
   };
   recent: {
     riskEvents: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestRiskEvent']>>;
@@ -1508,6 +1522,7 @@ export type RiskWorkbenchResponse = {
     backtestRuns: BacktestRunItem[];
     incidents: IncidentRecord[];
     brokerSnapshot: BrokerAccountSnapshotRecord | null;
+    schedulerTicks: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestSchedulerTick']>>;
   };
 };
 

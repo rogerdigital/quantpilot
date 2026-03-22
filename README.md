@@ -179,6 +179,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - `execution compensation automation` now turns compensation posture into a structured plan with automated reconciliation refresh, incident sync, and operator follow-up steps, and exposes a dedicated `compensate` action from the execution desk.
 - `execution bulk queue actions` now let the execution desk select plans from approval, retry, compensation, and incident queues and run bulk `approve / reconcile / compensate / recover` actions from the same console.
 - `execution incident triage` now lives in the execution console: queue-focus chips can filter the ledger by operational backlog, and linked incidents can be assigned, advanced, resolved, and annotated without leaving the execution workflow.
+- `risk governance workbench` now expands the risk console into a richer middleware snapshot with portfolio concentration, drawdown/compliance alerts, scheduler attention, and operator runbook actions.
 - The Overview page consumes backend `monitoring status`.
 - `user-account` now owns persisted `profile / preferences / access / broker bindings`.
 - Account mutations and broker-binding changes are audited.

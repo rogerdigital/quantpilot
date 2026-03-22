@@ -20,12 +20,20 @@ const EMPTY_WORKBENCH: RiskWorkbenchResponse = {
     liveExposurePct: 0,
     liveEquity: 0,
     brokerConnected: false,
+    concentrationPct: 0,
+    drawdownAlerts: 0,
+    complianceAlerts: 0,
+    emergencyActions: 0,
+    schedulerAttention: 0,
   },
   lanes: [],
+  runbook: [],
   reviewQueue: {
+    riskEvents: [],
     executionPlans: [],
     backtestRuns: [],
     incidents: [],
+    schedulerTicks: [],
   },
   recent: {
     riskEvents: [],
@@ -33,6 +41,7 @@ const EMPTY_WORKBENCH: RiskWorkbenchResponse = {
     backtestRuns: [],
     incidents: [],
     brokerSnapshot: null,
+    schedulerTicks: [],
   },
 };
 

@@ -116,7 +116,29 @@ test('GET /api/risk/workbench returns the consolidated risk workbench snapshot',
     message: 'approval still required before routing live execution',
     cycle: 109,
     riskLevel: 'RISK OFF',
-    status: 'approval-required',
+    status: 'risk-off',
+    level: 'warn',
+    source: 'risk-monitor',
+    createdAt: nowIso,
+  });
+  context.risk.appendRiskEvent({
+    id: 'risk-workbench-compliance',
+    title: 'Compliance policy review',
+    message: 'policy threshold still needs compliance review',
+    cycle: 109,
+    riskLevel: 'REVIEW',
+    status: 'attention',
+    level: 'warn',
+    source: 'risk-policy',
+    createdAt: nowIso,
+  });
+  context.risk.appendRiskEvent({
+    id: 'risk-workbench-drawdown',
+    title: 'Drawdown alert',
+    message: 'drawdown exceeded the review fence',
+    cycle: 109,
+    riskLevel: 'REVIEW',
+    status: 'attention',
     level: 'warn',
     source: 'risk-monitor',
     createdAt: nowIso,
@@ -146,6 +168,14 @@ test('GET /api/risk/workbench returns the consolidated risk workbench snapshot',
     windowLabel: '2024-01-01 -> 2026-03-01',
     createdAt: nowIso,
     updatedAt: nowIso,
+  });
+  context.scheduler.recordSchedulerTick({
+    id: 'risk-workbench-scheduler',
+    phase: 'INTRADAY',
+    status: 'warn',
+    title: 'Intraday scheduler drift',
+    message: 'scheduler drift may affect risk middleware jobs',
+    createdAt: nowIso,
   });
   context.incidents.appendIncident({
     id: 'risk-workbench-incident',
@@ -189,11 +219,19 @@ test('GET /api/risk/workbench returns the consolidated risk workbench snapshot',
   assert.equal(response.json.summary.approvalRequired >= 1, true);
   assert.equal(response.json.summary.reviewBacktests >= 1, true);
   assert.equal(response.json.summary.openRiskIncidents >= 1, true);
+  assert.equal(response.json.summary.complianceAlerts >= 1, true);
+  assert.equal(response.json.summary.drawdownAlerts >= 1, true);
+  assert.equal(response.json.summary.schedulerAttention >= 1, true);
   assert.equal(response.json.lanes.some((item) => item.key === 'execution-review'), true);
+  assert.equal(response.json.lanes.some((item) => item.key === 'scheduler'), true);
+  assert.equal(response.json.runbook.some((item) => item.key === 'review-risk-off'), true);
+  assert.equal(response.json.reviewQueue.riskEvents.some((item) => item.id === 'risk-workbench-event'), true);
+  assert.equal(response.json.reviewQueue.schedulerTicks[0].id, 'risk-workbench-scheduler');
   assert.equal(response.json.reviewQueue.executionPlans[0].id, 'risk-workbench-plan');
   assert.equal(response.json.reviewQueue.backtestRuns[0].id, 'risk-workbench-run');
   assert.equal(response.json.reviewQueue.incidents[0].id, 'risk-workbench-incident');
-  assert.equal(response.json.recent.riskEvents[0].id, 'risk-workbench-event');
+  assert.equal(response.json.recent.riskEvents.some((item) => item.id === 'risk-workbench-event'), true);
+  assert.equal(response.json.recent.schedulerTicks[0].id, 'risk-workbench-scheduler');
 });
 
 test('GET /api/risk/events/:id returns a single risk event', async () => {
@@ -2449,10 +2487,10 @@ test('GET /api/scheduler/ticks returns scheduler ticks from shared store', async
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ticks.length >= 1, true);
-  assert.equal(response.json.ticks[0].id, 'scheduler-tick-intraday');
+  assert.equal(response.json.ticks.some((item) => item.id === 'scheduler-tick-intraday'), true);
   assert.equal(filteredResponse.statusCode, 200);
-  assert.equal(filteredResponse.json.ticks.length, 1);
-  assert.equal(filteredResponse.json.ticks[0].id, 'scheduler-tick-intraday');
+  assert.equal(filteredResponse.json.ticks.some((item) => item.id === 'scheduler-tick-intraday'), true);
+  assert.equal(filteredResponse.json.ticks.every((item) => item.phase === 'INTRADAY'), true);
 });
 
 test('POST then GET /api/task-orchestrator/actions persists operator actions', async () => {
