@@ -471,7 +471,25 @@ export type ExecutionReconciliationRecord = {
 
 export type ExecutionRecoveryRecord = {
   status: 'ready' | 'monitor' | 'blocked';
-  recommendedAction: 'resume_workflow' | 'reroute_orders' | 'reconcile' | 'none';
+  recommendedAction: 'resume_workflow' | 'reroute_orders' | 'reconcile' | 'open_incident' | 'none';
+  headline: string;
+  reasons: string[];
+};
+
+export type ExecutionExceptionPolicyRecord = {
+  status: 'stable' | 'attention' | 'retrying' | 'compensation' | 'incident';
+  category: 'none' | 'broker_reject' | 'broker_cancel' | 'workflow_retry' | 'reconciliation_drift' | 'mixed';
+  retryEligible: boolean;
+  retryCount: number;
+  retryLimit: number;
+  remainingRetries: number;
+  recommendedAction: 'resume_workflow' | 'reroute_orders' | 'reconcile' | 'open_incident' | 'none';
+  incidentRecommended: boolean;
+  linkedIncidentId: string;
+  linkedIncidentStatus: string;
+  linkedIncidentCount: number;
+  latestBrokerEventId: string;
+  latestBrokerEventType: string;
   headline: string;
   reasons: string[];
 };
@@ -492,7 +510,9 @@ export type ExecutionLedgerEntry = {
   latestSnapshot?: BrokerAccountSnapshotRecord | null;
   brokerEvents?: BrokerExecutionEventRecord[];
   reconciliation?: ExecutionReconciliationRecord | null;
+  exceptionPolicy?: ExecutionExceptionPolicyRecord | null;
   recovery?: ExecutionRecoveryRecord | null;
+  linkedIncidents?: IncidentRecord[];
 };
 
 export type LatestBrokerAccountSnapshotResponse = {
@@ -510,7 +530,9 @@ export type ExecutionPlanDetailResponse = {
   latestSnapshot?: BrokerAccountSnapshotRecord | null;
   brokerEvents?: BrokerExecutionEventRecord[];
   reconciliation?: ExecutionReconciliationRecord | null;
+  exceptionPolicy?: ExecutionExceptionPolicyRecord | null;
   recovery?: ExecutionRecoveryRecord | null;
+  linkedIncidents?: IncidentRecord[];
 };
 
 export type ExecutionWorkbenchResponse = {
@@ -535,6 +557,10 @@ export type ExecutionWorkbenchResponse = {
     recoverablePlans: number;
     retryScheduledWorkflows: number;
     interventionNeeded: number;
+    retryEligiblePlans?: number;
+    compensationPlans?: number;
+    incidentLinkedPlans?: number;
+    brokerRejectPlans?: number;
     brokerEvents: number;
     rejectedBrokerEvents: number;
     fillEvents: number;

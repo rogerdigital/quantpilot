@@ -1,4 +1,5 @@
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
+import { buildExecutionExceptionPolicy, listLinkedExecutionIncidents } from './exception-policy-service.mjs';
 
 function groupBySymbol(items = [], qtySelector = () => 0) {
   return items.reduce((acc, item) => {
@@ -117,7 +118,24 @@ function buildExecutionLedgerEntry(plan, runtimeEvents = [], snapshots = []) {
   const executionRun = controlPlaneRuntime.getExecutionRunByPlanId(plan.id);
   const orderStates = controlPlaneRuntime.listExecutionOrderStates(80, { executionPlanId: plan.id });
   const reconciliation = buildExecutionReconciliation(orderStates, latestSnapshot);
-  const recovery = buildExecutionRecovery(plan, workflow, reconciliation);
+  const linkedIncidents = listLinkedExecutionIncidents({
+    plan,
+    executionRun,
+    workflow,
+    orderStates,
+    brokerEvents,
+    reconciliation,
+  }, { limit: 120 });
+  const exceptionPolicy = buildExecutionExceptionPolicy({
+    plan,
+    executionRun,
+    workflow,
+    orderStates,
+    brokerEvents,
+    reconciliation,
+    linkedIncidents,
+  });
+  const recovery = buildExecutionRecovery(plan, workflow, reconciliation, exceptionPolicy);
 
   return {
     plan,
@@ -135,12 +153,44 @@ function buildExecutionLedgerEntry(plan, runtimeEvents = [], snapshots = []) {
     latestSnapshot,
     brokerEvents,
     reconciliation,
+    exceptionPolicy,
     recovery,
+    linkedIncidents,
   };
 }
 
-function buildExecutionRecovery(plan, workflow, reconciliation) {
+function buildExecutionRecovery(plan, workflow, reconciliation, exceptionPolicy = null) {
   const reasons = [];
+
+  if (exceptionPolicy?.status === 'incident') {
+    reasons.push(...(exceptionPolicy.reasons || []));
+    return {
+      status: 'blocked',
+      recommendedAction: exceptionPolicy.linkedIncidentId ? 'reconcile' : 'open_incident',
+      headline: exceptionPolicy.headline,
+      reasons,
+    };
+  }
+
+  if (exceptionPolicy?.status === 'compensation') {
+    reasons.push(...(exceptionPolicy.reasons || []));
+    return {
+      status: 'ready',
+      recommendedAction: 'reconcile',
+      headline: exceptionPolicy.headline,
+      reasons,
+    };
+  }
+
+  if (exceptionPolicy?.status === 'retrying' && exceptionPolicy.recommendedAction === 'reroute_orders') {
+    reasons.push(...(exceptionPolicy.reasons || []));
+    return {
+      status: 'ready',
+      recommendedAction: 'reroute_orders',
+      headline: exceptionPolicy.headline,
+      reasons,
+    };
+  }
 
   if (workflow?.status === 'retry_scheduled') {
     reasons.push('The linked workflow is waiting for retry release.');
@@ -186,7 +236,7 @@ function buildExecutionRecovery(plan, workflow, reconciliation) {
     status: 'monitor',
     recommendedAction: 'none',
     headline: 'Execution is inside the current recovery guardrails.',
-    reasons,
+    reasons: exceptionPolicy?.reasons?.length ? exceptionPolicy.reasons : reasons,
   };
 }
 
@@ -261,6 +311,10 @@ export function getExecutionWorkbench(limit = 40) {
     recoverablePlans: 0,
     retryScheduledWorkflows: 0,
     interventionNeeded: 0,
+    retryEligiblePlans: 0,
+    compensationPlans: 0,
+    incidentLinkedPlans: 0,
+    brokerRejectPlans: 0,
     brokerEvents: 0,
     rejectedBrokerEvents: 0,
     fillEvents: 0,
@@ -286,6 +340,10 @@ export function getExecutionWorkbench(limit = 40) {
     if (entry.workflow?.status === 'retry_scheduled') summary.retryScheduledWorkflows += 1;
     if (entry.recovery?.status === 'ready') summary.recoverablePlans += 1;
     if (entry.recovery?.recommendedAction !== 'none') summary.interventionNeeded += 1;
+    if (entry.exceptionPolicy?.retryEligible) summary.retryEligiblePlans += 1;
+    if (entry.exceptionPolicy?.status === 'compensation') summary.compensationPlans += 1;
+    if (entry.exceptionPolicy?.linkedIncidentId) summary.incidentLinkedPlans += 1;
+    if (entry.exceptionPolicy?.category === 'broker_reject' || entry.exceptionPolicy?.category === 'mixed') summary.brokerRejectPlans += 1;
     summary.brokerEvents += Array.isArray(entry.brokerEvents) ? entry.brokerEvents.length : 0;
     summary.rejectedBrokerEvents += Array.isArray(entry.brokerEvents)
       ? entry.brokerEvents.filter((item) => item.eventType === 'rejected').length

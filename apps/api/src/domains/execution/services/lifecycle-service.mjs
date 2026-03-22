@@ -1,4 +1,5 @@
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
+import { syncExecutionExceptionState } from './exception-policy-service.mjs';
 import { getExecutionPlanDetail } from './query-service.mjs';
 
 const ACTIVE_ORDER_LIFECYCLES = new Set(['submitted', 'acknowledged']);
@@ -288,6 +289,25 @@ function loadMutableExecutionPlan(planId, errorMessage) {
   };
 }
 
+function finalizeExecutionExceptionState(planId, options = {}) {
+  const nextDetail = getExecutionPlanDetail(planId);
+  if (!nextDetail?.plan) {
+    return {
+      detail: nextDetail,
+      exceptionPolicy: null,
+      incident: null,
+    };
+  }
+
+  const synced = syncExecutionExceptionState(nextDetail, options);
+  const detail = getExecutionPlanDetail(planId);
+  return {
+    detail,
+    exceptionPolicy: synced.policy,
+    incident: synced.incident || null,
+  };
+}
+
 export function approveExecutionPlan(planId, payload = {}) {
   const loaded = loadMutableExecutionPlan(planId);
   if (!loaded.ok) return loaded;
@@ -346,9 +366,16 @@ export function approveExecutionPlan(planId, payload = {}) {
     });
   }
 
+  const exceptionState = finalizeExecutionExceptionState(plan.id, {
+    actor: payload.actor || 'execution-desk',
+    resolveOnStable: true,
+  });
+
   return {
     ok: true,
     ...result,
+    exceptionPolicy: exceptionState.exceptionPolicy,
+    incident: exceptionState.incident,
   };
 }
 
@@ -438,9 +465,16 @@ export function syncExecutionPlan(planId, payload = {}) {
     },
   });
 
+  const exceptionState = finalizeExecutionExceptionState(plan.id, {
+    actor: payload.actor || 'execution-desk',
+    resolveOnStable: scenario === 'filled' || scenario === 'acknowledge',
+  });
+
   return {
     ok: true,
     ...result,
+    exceptionPolicy: exceptionState.exceptionPolicy,
+    incident: exceptionState.incident,
   };
 }
 
@@ -514,10 +548,18 @@ export function ingestBrokerExecutionEvent(planId, payload = {}) {
     },
   });
 
+  const exceptionState = finalizeExecutionExceptionState(plan.id, {
+    actor,
+    brokerEvent: event,
+    resolveOnStable: payload.eventType === 'filled',
+  });
+
   return {
     ok: true,
     brokerEvent: event,
     ...result,
+    exceptionPolicy: exceptionState.exceptionPolicy,
+    incident: exceptionState.incident,
   };
 }
 
@@ -567,9 +609,15 @@ export function cancelExecutionPlan(planId, payload = {}) {
     },
   });
 
+  const exceptionState = finalizeExecutionExceptionState(plan.id, {
+    actor: payload.actor || 'execution-desk',
+  });
+
   return {
     ok: true,
     ...result,
+    exceptionPolicy: exceptionState.exceptionPolicy,
+    incident: exceptionState.incident,
   };
 }
 
@@ -636,6 +684,11 @@ export function reconcileExecutionPlan(planId, payload = {}) {
     createdAt: now,
   });
 
+  const exceptionState = finalizeExecutionExceptionState(detail.plan.id, {
+    actor: payload.actor || 'execution-desk',
+    resolveOnStable: reconciliation.status === 'aligned',
+  });
+
   return {
     ok: true,
     plan: detail.plan,
@@ -643,6 +696,8 @@ export function reconcileExecutionPlan(planId, payload = {}) {
     reconciliation,
     latestSnapshot: detail.latestSnapshot || null,
     reviewedAt: now,
+    exceptionPolicy: exceptionState.exceptionPolicy,
+    incident: exceptionState.incident,
   };
 }
 
@@ -684,11 +739,17 @@ export function recoverExecutionPlan(planId, payload = {}) {
         recoveryAction: 'resume_workflow',
       },
     });
+    const exceptionState = finalizeExecutionExceptionState(detail.plan.id, {
+      actor,
+      resolveOnStable: false,
+    });
     return {
       ok: true,
       workflow,
       recoveryAction: 'resume_workflow',
-      detail: getExecutionPlanDetail(planId),
+      detail: exceptionState.detail,
+      exceptionPolicy: exceptionState.exceptionPolicy,
+      incident: exceptionState.incident,
     };
   }
 
@@ -734,10 +795,16 @@ export function recoverExecutionPlan(planId, payload = {}) {
       },
     });
 
+    const exceptionState = finalizeExecutionExceptionState(detail.plan.id, {
+      actor,
+      resolveOnStable: reopenedLifecycle === 'submitted',
+    });
     return {
       ok: true,
       recoveryAction: 'reroute_orders',
       ...result,
+      exceptionPolicy: exceptionState.exceptionPolicy,
+      incident: exceptionState.incident,
     };
   }
 
@@ -746,6 +813,20 @@ export function recoverExecutionPlan(planId, payload = {}) {
     return {
       ...reconcileResult,
       recoveryAction: 'reconcile',
+    };
+  }
+
+  if (recovery.recommendedAction === 'open_incident') {
+    const exceptionState = finalizeExecutionExceptionState(detail.plan.id, {
+      actor,
+      resolveOnStable: false,
+    });
+    return {
+      ok: true,
+      recoveryAction: 'open_incident',
+      detail: exceptionState.detail,
+      exceptionPolicy: exceptionState.exceptionPolicy,
+      incident: exceptionState.incident,
     };
   }
 

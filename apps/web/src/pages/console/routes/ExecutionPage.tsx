@@ -133,8 +133,10 @@ export function ExecutionPage() {
   const selectedAcknowledgedCount = selectedOrderStates.filter((item) => item.lifecycleStatus === 'acknowledged').length;
   const selectedFilledCount = selectedEntry?.executionRun?.filledOrderCount || 0;
   const selectedReconciliation = selectedEntry?.reconciliation;
+  const selectedExceptionPolicy = selectedEntry?.exceptionPolicy;
   const selectedRecovery = selectedEntry?.recovery;
   const selectedBrokerEvents = selectedEntry?.brokerEvents || [];
+  const selectedLinkedIncidents = selectedEntry?.linkedIncidents || [];
   const workbenchSummary = workbench?.summary;
   const planSummary = ledgerEntries.reduce((acc, entry) => {
     const lifecycle = entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus;
@@ -231,6 +233,20 @@ export function ExecutionPage() {
               {locale === 'zh'
                 ? '当 workflow 失败、plan 取消或 reconciliation 发生 drift 时，这里会直接给出恢复姿态。'
                 : 'When a workflow fails, a plan is cancelled, or reconciliation drifts, this surface exposes the next recovery posture.'}
+            </div>
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '执行异常与重试策略' : 'Execution Exception And Retry Policies'}</div><div className="panel-copy">{locale === 'zh' ? '把 broker reject、取消、重试预算和 incident 升级压成统一异常姿态。' : 'Compress broker rejects, cancellations, retry budget, and incident escalation into one exception posture.'}</div></div><div className="panel-badge badge-warn">{(workbenchSummary?.retryEligiblePlans ?? 0) + (workbenchSummary?.compensationPlans ?? 0) + (workbenchSummary?.incidentLinkedPlans ?? 0)}</div></div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '可重试计划' : 'Retry Eligible'}</span><strong>{workbenchSummary?.retryEligiblePlans ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '补偿队列' : 'Compensation Queue'}</span><strong>{workbenchSummary?.compensationPlans ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '关联 Incident' : 'Linked Incidents'}</span><strong>{workbenchSummary?.incidentLinkedPlans ?? 0}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '拒单计划' : 'Reject Plans'}</span><strong>{workbenchSummary?.brokerRejectPlans ?? 0}</strong></div>
+            <div className="status-copy">
+              {locale === 'zh'
+                ? '这层策略会把 broker event 历史转成 retry、补偿和 incident 升级建议。'
+                : 'This policy layer turns broker event history into retry, compensation, and incident escalation guidance.'}
             </div>
           </div>
         </article>
@@ -393,6 +409,14 @@ export function ExecutionPage() {
                 <>
                   <div className="status-row"><span>{locale === 'zh' ? '恢复姿态' : 'Recovery Posture'}</span><strong>{selectedRecovery.status}</strong></div>
                   <div className="status-row"><span>{locale === 'zh' ? '推荐动作' : 'Recommended Action'}</span><strong>{selectedRecovery.recommendedAction}</strong></div>
+                </>
+              ) : null}
+              {selectedExceptionPolicy ? (
+                <>
+                  <div className="status-row"><span>{locale === 'zh' ? '异常姿态' : 'Exception Posture'}</span><strong>{selectedExceptionPolicy.status}</strong></div>
+                  <div className="status-row"><span>{locale === 'zh' ? '异常分类' : 'Exception Category'}</span><strong>{selectedExceptionPolicy.category}</strong></div>
+                  <div className="status-row"><span>{locale === 'zh' ? '重试预算' : 'Retry Budget'}</span><strong>{`${selectedExceptionPolicy.remainingRetries}/${selectedExceptionPolicy.retryLimit}`}</strong></div>
+                  <div className="status-row"><span>{locale === 'zh' ? '关联 Incident' : 'Linked Incident'}</span><strong>{selectedExceptionPolicy.linkedIncidentId || '--'}</strong></div>
                 </>
               ) : null}
               <div className="settings-actions">
@@ -666,6 +690,17 @@ export function ExecutionPage() {
                 ) : null}
               </div>
               {planMessage ? <InspectionStatus>{planMessage}</InspectionStatus> : null}
+              {selectedExceptionPolicy ? <InspectionStatus>{selectedExceptionPolicy.headline}</InspectionStatus> : null}
+              {selectedExceptionPolicy?.reasons?.map((reason) => (
+                <InspectionStatus key={`policy-${reason}`}>{reason}</InspectionStatus>
+              ))}
+              {selectedLinkedIncidents.map((incident) => (
+                <InspectionStatus key={incident.id}>
+                  {locale === 'zh'
+                    ? `关联 Incident ${incident.id}: ${incident.status} / ${incident.title}`
+                    : `Linked incident ${incident.id}: ${incident.status} / ${incident.title}`}
+                </InspectionStatus>
+              ))}
               {selectedRecovery ? <InspectionStatus>{selectedRecovery.headline}</InspectionStatus> : null}
               {selectedRecovery?.reasons?.map((reason) => (
                 <InspectionStatus key={reason}>{reason}</InspectionStatus>

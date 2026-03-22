@@ -1624,10 +1624,14 @@ test('GET /api/execution/workbench returns lifecycle summary and execution ledge
   assert.equal(typeof response.json.summary.recoverablePlans, 'number');
   assert.equal(typeof response.json.summary.retryScheduledWorkflows, 'number');
   assert.equal(typeof response.json.summary.interventionNeeded, 'number');
+  assert.equal(typeof response.json.summary.retryEligiblePlans, 'number');
+  assert.equal(typeof response.json.summary.compensationPlans, 'number');
+  assert.equal(typeof response.json.summary.incidentLinkedPlans, 'number');
   assert.equal(response.json.summary.recoverablePlans >= 1, true);
   assert.equal(Array.isArray(response.json.entries), true);
   assert.equal(response.json.entries.some((entry) => entry.plan.id === 'exec-workbench-plan'), true);
   assert.equal(response.json.entries.some((entry) => entry.recovery?.recommendedAction === 'reroute_orders'), true);
+  assert.equal(typeof response.json.entries[0].exceptionPolicy?.status, 'string');
 });
 
 test('POST /api/execution/plans/:id/approve transitions awaiting plans into submitted lifecycle', async () => {
@@ -2083,6 +2087,99 @@ test('POST /api/execution/plans/:id/broker-events ingests a broker fill event in
   assert.equal(response.json.orderStates[0].filledQty, 7);
   assert.equal(response.json.brokerEvent.eventType, 'filled');
   assert.equal(response.json.brokerEvent.metadata.externalEventId, 'evt-001');
+  assert.equal(response.json.exceptionPolicy.status, 'stable');
+});
+
+test('repeated broker rejects escalate execution exceptions into incident linkage', async () => {
+  context.executionPlans.appendExecutionPlan({
+    id: 'exec-broker-reject-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'live',
+    status: 'ready',
+    lifecycleStatus: 'submitted',
+    approvalState: 'not_required',
+    riskStatus: 'approved',
+    summary: 'Submitted into broker route.',
+    capital: 125000,
+    orderCount: 1,
+    orders: [{ symbol: 'AAPL', side: 'BUY', qty: 6, weight: 1, rationale: 'trend' }],
+  });
+  context.executionRuns.appendExecutionRun({
+    id: 'exec-broker-reject-run',
+    executionPlanId: 'exec-broker-reject-plan',
+    strategyId: 'ema-cross-us',
+    strategyName: 'US Trend Ema Cross',
+    mode: 'live',
+    lifecycleStatus: 'submitted',
+    summary: 'Submitted into broker route.',
+    owner: 'execution-desk',
+    orderCount: 1,
+    submittedOrderCount: 1,
+  });
+  context.executionRuns.appendExecutionOrderStates([
+    {
+      id: 'exec-broker-reject-order-1',
+      executionPlanId: 'exec-broker-reject-plan',
+      executionRunId: 'exec-broker-reject-run',
+      symbol: 'AAPL',
+      side: 'BUY',
+      qty: 6,
+      weight: 1,
+      lifecycleStatus: 'submitted',
+      brokerOrderId: 'broker-exec-reject-1',
+      summary: 'submitted',
+      submittedAt: '2026-03-21T10:00:00.000Z',
+    },
+  ]);
+
+  const firstReject = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/execution/plans/exec-broker-reject-plan/broker-events',
+    body: {
+      actor: 'broker-webhook',
+      source: 'broker-webhook',
+      eventType: 'rejected',
+      brokerOrderId: 'broker-exec-reject-1',
+      symbol: 'AAPL',
+      externalEventId: 'evt-reject-001',
+      message: 'Broker rejected the order the first time.',
+      reason: 'price-band',
+    },
+  });
+
+  const secondReject = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/execution/plans/exec-broker-reject-plan/broker-events',
+    body: {
+      actor: 'broker-webhook',
+      source: 'broker-webhook',
+      eventType: 'rejected',
+      brokerOrderId: 'broker-exec-reject-1',
+      symbol: 'AAPL',
+      externalEventId: 'evt-reject-002',
+      message: 'Broker rejected the order again.',
+      reason: 'price-band',
+    },
+  });
+
+  assert.equal(firstReject.statusCode, 200);
+  assert.equal(firstReject.json.exceptionPolicy.status, 'retrying');
+  assert.equal(firstReject.json.exceptionPolicy.retryEligible, true);
+
+  assert.equal(secondReject.statusCode, 200);
+  assert.equal(secondReject.json.exceptionPolicy.status, 'incident');
+  assert.equal(Boolean(secondReject.json.exceptionPolicy.linkedIncidentId), true);
+  assert.equal(secondReject.json.incident.id, secondReject.json.exceptionPolicy.linkedIncidentId);
+  assert.equal(secondReject.json.incident.source, 'execution');
+
+  const detail = await invokeGatewayRoute(handler, {
+    path: '/api/execution/plans/exec-broker-reject-plan',
+  });
+
+  assert.equal(detail.statusCode, 200);
+  assert.equal(detail.json.exceptionPolicy.status, 'incident');
+  assert.equal(detail.json.linkedIncidents.length >= 1, true);
 });
 
 test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control notification for recovery', async () => {
@@ -2185,7 +2282,7 @@ test('POST then GET /api/task-orchestrator/actions persists operator actions', a
   });
 
   const filteredResponse = await invokeGatewayRoute(handler, {
-    path: '/api/task-orchestrator/actions?level=warn&hours=48&limit=5',
+    path: '/api/task-orchestrator/actions?level=warn&hours=48&limit=20',
   });
 
   assert.equal(filteredResponse.statusCode, 200);

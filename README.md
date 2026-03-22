@@ -173,6 +173,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - `execution reconciliation` compares execution order states, broker snapshots, and positions and exposes `aligned / attention / drift / missing snapshot`.
 - `execution recovery workbench` derives recovery posture from workflow retry/failure, cancelled/failed plans, and reconciliation drift.
 - `broker event ingestion` is live: broker `acknowledged / partial fill / filled / rejected / cancelled` reports are now persisted as structured broker events and feed order-state aggregation and execution timelines.
+- `execution exception and retry policies` now turn broker-event history into retry budget, compensation posture, and incident linkage so repeated rejects or drift can escalate into execution incidents instead of staying as raw broker events.
 - The Overview page consumes backend `monitoring status`.
 - `user-account` now owns persisted `profile / preferences / access / broker bindings`.
 - Account mutations and broker-binding changes are audited.
