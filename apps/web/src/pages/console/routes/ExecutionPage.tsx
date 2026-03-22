@@ -138,6 +138,7 @@ export function ExecutionPage() {
   const selectedBrokerEvents = selectedEntry?.brokerEvents || [];
   const selectedLinkedIncidents = selectedEntry?.linkedIncidents || [];
   const workbenchSummary = workbench?.summary;
+  const workbenchOperations = workbench?.operations;
   const planSummary = ledgerEntries.reduce((acc, entry) => {
     const lifecycle = entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus;
     if (lifecycle === 'awaiting_approval') acc.awaitingApproval += 1;
@@ -248,6 +249,47 @@ export function ExecutionPage() {
                 ? '这层策略会把 broker event 历史转成 retry、补偿和 incident 升级建议。'
                 : 'This policy layer turns broker event history into retry, compensation, and incident escalation guidance.'}
             </div>
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '执行运营队列' : 'Execution Operations Console'}</div><div className="panel-copy">{locale === 'zh' ? '把审批、重试、补偿、incident 和活跃路由统一成执行台的处置队列。' : 'Turn approvals, retries, compensation, incidents, and active routing into one execution-ops queue view.'}</div></div><div className="panel-badge badge-info">{(workbenchOperations?.queues.approvals.length ?? 0) + (workbenchOperations?.queues.retryEligible.length ?? 0) + (workbenchOperations?.queues.compensation.length ?? 0) + (workbenchOperations?.queues.incidents.length ?? 0)}</div></div>
+          <div className="focus-list">
+            <div className="focus-row">
+              <div className="focus-metric"><span>{locale === 'zh' ? '审批队列' : 'Approvals'}</span><strong>{workbenchOperations?.queues.approvals.length ?? 0}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? '可重试' : 'Retry Eligible'}</span><strong>{workbenchOperations?.queues.retryEligible.length ?? 0}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? '补偿队列' : 'Compensation'}</span><strong>{workbenchOperations?.queues.compensation.length ?? 0}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? '执行 Incident' : 'Incidents'}</span><strong>{workbenchOperations?.queues.incidents.length ?? 0}</strong></div>
+            </div>
+            {workbenchOperations?.nextActions.map((item) => (
+              <div key={item.key} className="focus-row">
+                <div className="focus-metric"><span>{item.priority}</span><strong>{item.count}</strong></div>
+                <div className="status-copy"><strong>{item.title}</strong>{` - ${item.detail}`}</div>
+              </div>
+            ))}
+            {!workbenchOperations?.nextActions.length ? (
+              <div className="status-copy">
+                {locale === 'zh' ? '当前没有额外排队的执行运营动作。' : 'No extra execution operations actions are queued right now.'}
+              </div>
+            ) : null}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Owner 负载' : 'Owner Load'}</div><div className="panel-copy">{locale === 'zh' ? '按执行 owner 看审批、重试、补偿和 incident 压力。' : 'Review approval, retry, compensation, and incident pressure by execution owner.'}</div></div><div className="panel-badge badge-info">{workbenchOperations?.ownerLoad.length ?? 0}</div></div>
+          <div className="focus-list">
+            {workbenchOperations?.ownerLoad.map((item) => (
+              <div key={item.owner} className="focus-row">
+                <div className="focus-metric"><span>{locale === 'zh' ? 'Owner' : 'Owner'}</span><strong>{item.owner}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '总量' : 'Total'}</span><strong>{item.total}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '审批' : 'Approvals'}</span><strong>{item.approvals}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '重试' : 'Retry'}</span><strong>{item.retryEligible}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '补偿/Incident' : 'Comp/Inc'}</span><strong>{item.compensation + item.incidents}</strong></div>
+              </div>
+            ))}
+            {!workbenchOperations?.ownerLoad.length ? (
+              <div className="status-copy">
+                {locale === 'zh' ? '当前没有 owner 负载数据。' : 'No owner load data is available yet.'}
+              </div>
+            ) : null}
           </div>
         </article>
         <article className="panel">

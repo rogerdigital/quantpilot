@@ -353,10 +353,97 @@ export function getExecutionWorkbench(limit = 40) {
       : 0;
   });
 
+  const queues = {
+    approvals: ledger.filter((entry) => (entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus) === 'awaiting_approval').slice(0, 8),
+    retryEligible: ledger.filter((entry) => entry.exceptionPolicy?.retryEligible).slice(0, 8),
+    compensation: ledger.filter((entry) => entry.exceptionPolicy?.status === 'compensation').slice(0, 8),
+    incidents: ledger.filter((entry) => Boolean(entry.exceptionPolicy?.linkedIncidentId) || entry.exceptionPolicy?.status === 'incident').slice(0, 8),
+    activeRouting: ledger.filter((entry) => ['submitted', 'acknowledged', 'partial_fill'].includes(entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus)).slice(0, 8),
+  };
+
+  const ownerBuckets = new Map();
+  ledger.forEach((entry) => {
+    const owner = entry.executionRun?.owner || 'unassigned';
+    const bucket = ownerBuckets.get(owner) || {
+      owner,
+      total: 0,
+      approvals: 0,
+      retryEligible: 0,
+      compensation: 0,
+      incidents: 0,
+      activeRouting: 0,
+    };
+    bucket.total += 1;
+    if ((entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus) === 'awaiting_approval') bucket.approvals += 1;
+    if (entry.exceptionPolicy?.retryEligible) bucket.retryEligible += 1;
+    if (entry.exceptionPolicy?.status === 'compensation') bucket.compensation += 1;
+    if (Boolean(entry.exceptionPolicy?.linkedIncidentId) || entry.exceptionPolicy?.status === 'incident') bucket.incidents += 1;
+    if (['submitted', 'acknowledged', 'partial_fill'].includes(entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus)) bucket.activeRouting += 1;
+    ownerBuckets.set(owner, bucket);
+  });
+
+  const nextActions = [];
+  if (queues.approvals.length) {
+    nextActions.push({
+      key: 'clear-approvals',
+      priority: queues.approvals.length >= 3 ? 'now' : 'next',
+      title: 'Clear execution approvals',
+      detail: 'Approval-gated execution plans are waiting before they can enter broker routing.',
+      count: queues.approvals.length,
+    });
+  }
+  if (queues.retryEligible.length) {
+    nextActions.push({
+      key: 'retry-rejected-orders',
+      priority: 'now',
+      title: 'Retry rejected orders',
+      detail: 'Retry-eligible execution plans have remaining budget and can be rerouted from the desk.',
+      count: queues.retryEligible.length,
+    });
+  }
+  if (queues.compensation.length) {
+    nextActions.push({
+      key: 'reconcile-drift',
+      priority: 'now',
+      title: 'Resolve compensation queue',
+      detail: 'Execution plans with broker drift or mixed fill/reject posture need reconciliation before closeout.',
+      count: queues.compensation.length,
+    });
+  }
+  if (queues.incidents.length) {
+    nextActions.push({
+      key: 'triage-execution-incidents',
+      priority: 'now',
+      title: 'Triage execution incidents',
+      detail: 'Execution exceptions have already escalated into incidents and need active operator ownership.',
+      count: queues.incidents.length,
+    });
+  }
+  if (queues.activeRouting.length) {
+    nextActions.push({
+      key: 'watch-active-routing',
+      priority: 'next',
+      title: 'Watch active routing',
+      detail: 'Submitted and partially filled plans should stay under execution watch until broker state converges.',
+      count: queues.activeRouting.length,
+    });
+  }
+
   return {
     ok: true,
     asOf: ledger[0]?.plan.updatedAt || new Date().toISOString(),
     summary,
+    operations: {
+      queues,
+      ownerLoad: [...ownerBuckets.values()]
+        .sort((left, right) => right.incidents - left.incidents
+          || right.compensation - left.compensation
+          || right.retryEligible - left.retryEligible
+          || right.approvals - left.approvals
+          || right.total - left.total)
+        .slice(0, 8),
+      nextActions,
+    },
     entries: ledger,
   };
 }

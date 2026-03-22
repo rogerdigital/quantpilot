@@ -565,6 +565,31 @@ export type ExecutionWorkbenchResponse = {
     rejectedBrokerEvents: number;
     fillEvents: number;
   };
+  operations: {
+    queues: {
+      approvals: ExecutionLedgerEntry[];
+      retryEligible: ExecutionLedgerEntry[];
+      compensation: ExecutionLedgerEntry[];
+      incidents: ExecutionLedgerEntry[];
+      activeRouting: ExecutionLedgerEntry[];
+    };
+    ownerLoad: Array<{
+      owner: string;
+      total: number;
+      approvals: number;
+      retryEligible: number;
+      compensation: number;
+      incidents: number;
+      activeRouting: number;
+    }>;
+    nextActions: Array<{
+      key: 'clear-approvals' | 'retry-rejected-orders' | 'reconcile-drift' | 'triage-execution-incidents' | 'watch-active-routing';
+      priority: 'now' | 'next';
+      title: string;
+      detail: string;
+      count: number;
+    }>;
+  };
   entries: ExecutionLedgerEntry[];
 };
 

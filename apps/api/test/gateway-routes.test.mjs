@@ -1627,6 +1627,11 @@ test('GET /api/execution/workbench returns lifecycle summary and execution ledge
   assert.equal(typeof response.json.summary.retryEligiblePlans, 'number');
   assert.equal(typeof response.json.summary.compensationPlans, 'number');
   assert.equal(typeof response.json.summary.incidentLinkedPlans, 'number');
+  assert.equal(Array.isArray(response.json.operations.queues.approvals), true);
+  assert.equal(Array.isArray(response.json.operations.queues.retryEligible), true);
+  assert.equal(Array.isArray(response.json.operations.queues.compensation), true);
+  assert.equal(Array.isArray(response.json.operations.ownerLoad), true);
+  assert.equal(Array.isArray(response.json.operations.nextActions), true);
   assert.equal(response.json.summary.recoverablePlans >= 1, true);
   assert.equal(Array.isArray(response.json.entries), true);
   assert.equal(response.json.entries.some((entry) => entry.plan.id === 'exec-workbench-plan'), true);
