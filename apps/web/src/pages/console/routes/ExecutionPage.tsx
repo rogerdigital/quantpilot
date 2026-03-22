@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { approveExecutionPlan, bulkUpdateExecutionQueue, cancelExecutionPlan, compensateExecutionPlan, ingestBrokerExecutionEvent, queueExecutionCandidateHandoff, reconcileExecutionPlan, recoverExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../../app/api/controlPlane.ts';
+import { appendIncidentNote, approveExecutionPlan, bulkUpdateExecutionQueue, bulkUpdateIncidentQueue, cancelExecutionPlan, compensateExecutionPlan, fetchIncidentDetail, ingestBrokerExecutionEvent, queueExecutionCandidateHandoff, reconcileExecutionPlan, recoverExecutionPlan, settleExecutionPlan, syncExecutionPlan, updateIncident } from '../../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
+import { collectExecutionIncidentIds, filterExecutionEntriesByQueueFocus, getExecutionQueueFocusOptions, mapExecutionNextActionToFocus, type ExecutionQueueFocusKey } from '../../../modules/console/executionOperations.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
 import { formatActionGuardNotice } from '../../../modules/permissions/permissionCopy.ts';
 import { getExecutionCollectionConfigs } from '../../../modules/console/executionCollectionConfigs.ts';
@@ -34,7 +35,13 @@ export function ExecutionPage() {
   const [handoffMessage, setHandoffMessage] = useState('');
   const [planBusyAction, setPlanBusyAction] = useState('');
   const [planMessage, setPlanMessage] = useState('');
+  const [incidentBusyAction, setIncidentBusyAction] = useState('');
+  const [incidentMessage, setIncidentMessage] = useState('');
+  const [incidentNoteDraft, setIncidentNoteDraft] = useState('');
+  const [selectedIncidentId, setSelectedIncidentId] = useState('');
   const [selectedPlanIds, setSelectedPlanIds] = useState<string[]>([]);
+  const [queueFocus, setQueueFocus] = useState<ExecutionQueueFocusKey>('all');
+  const [selectedIncidentDetail, setSelectedIncidentDetail] = useState<any>(null);
   const researchNavigation = useResearchNavigationContext(searchParams, navigate);
   const goToSettings = useSettingsNavigation();
   const canApproveExecution = hasPermission('execution:approve');
@@ -142,11 +149,18 @@ export function ExecutionPage() {
   const workbenchSummary = workbench?.summary;
   const workbenchOperations = workbench?.operations;
   const selectedPlanCount = selectedPlanIds.length;
+  const selectedIncidentIds = collectExecutionIncidentIds(ledgerEntries, selectedPlanIds);
   const approvalQueueIds = workbenchOperations?.queues.approvals.map((entry) => entry.plan.id) || [];
   const retryQueueIds = workbenchOperations?.queues.retryEligible.map((entry) => entry.plan.id) || [];
   const compensationQueueIds = workbenchOperations?.queues.compensation.map((entry) => entry.plan.id) || [];
   const automationQueueIds = workbenchOperations?.queues.compensationAutomation.map((entry) => entry.plan.id) || [];
   const incidentQueueIds = workbenchOperations?.queues.incidents.map((entry) => entry.plan.id) || [];
+  const queueFocusOptions = getExecutionQueueFocusOptions(locale, workbenchOperations);
+  const focusedLedgerEntries = filterExecutionEntriesByQueueFocus(ledgerEntries, queueFocus, workbenchOperations);
+  const selectedExecutionIncident = (selectedLinkedIncidents.find((incident) => incident.id === selectedIncidentId)
+    || selectedLinkedIncidents.find((incident) => incident.status !== 'resolved')
+    || selectedLinkedIncidents[0]
+    || null);
   const planSummary = ledgerEntries.reduce((acc, entry) => {
     const lifecycle = entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus;
     if (lifecycle === 'awaiting_approval') acc.awaitingApproval += 1;
@@ -174,6 +188,48 @@ export function ExecutionPage() {
     setSelectedPlanIds((current) => current.filter((item) => validIds.has(item)));
   }, [ledgerEntries]);
 
+  useEffect(() => {
+    const focusedIds = focusedLedgerEntries.map((entry) => entry.plan.id);
+    if (!focusedIds.length) return;
+    if (!selectedPlanId || !focusedIds.includes(selectedPlanId)) {
+      setSelectedPlanId(focusedIds[0]);
+    }
+  }, [focusedLedgerEntries, selectedPlanId, setSelectedPlanId]);
+
+  useEffect(() => {
+    if (!selectedLinkedIncidents.length) {
+      setSelectedIncidentId('');
+      return;
+    }
+    if (!selectedLinkedIncidents.some((incident) => incident.id === selectedIncidentId)) {
+      setSelectedIncidentId(
+        selectedLinkedIncidents.find((incident) => incident.status !== 'resolved')?.id || selectedLinkedIncidents[0]?.id || '',
+      );
+    }
+  }, [selectedIncidentId, selectedLinkedIncidents]);
+
+  useEffect(() => {
+    let active = true;
+    if (!selectedExecutionIncident?.id) {
+      setSelectedIncidentDetail(null);
+      return () => {
+        active = false;
+      };
+    }
+
+    fetchIncidentDetail(selectedExecutionIncident.id)
+      .then((detail) => {
+        if (active) setSelectedIncidentDetail(detail);
+      })
+      .catch(() => {
+        if (active) setSelectedIncidentDetail(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [refreshKey, selectedExecutionIncident?.id]);
+
   function togglePlanSelection(planId: string) {
     setSelectedPlanIds((current) => (
       current.includes(planId)
@@ -185,6 +241,25 @@ export function ExecutionPage() {
   function replaceSelection(planIds: string[]) {
     const nextIds = [...new Set(planIds.filter(Boolean))];
     setSelectedPlanIds(nextIds);
+  }
+
+  async function runBulkIncidentAction(payload: Record<string, unknown>, successMessage: string) {
+    if (!selectedIncidentIds.length) return;
+    setIncidentBusyAction('bulk-incident');
+    setIncidentMessage('');
+    try {
+      const result = await bulkUpdateIncidentQueue({
+        incidentIds: selectedIncidentIds,
+        actor: state.controlPlane.operator,
+        ...payload,
+      });
+      setIncidentMessage(`${successMessage} (${result.updatedIds.length})`);
+      setRefreshKey((current) => current + 1);
+    } catch (error) {
+      setIncidentMessage(error instanceof Error ? error.message : 'unknown error');
+    } finally {
+      setIncidentBusyAction('');
+    }
   }
 
   return (
@@ -294,6 +369,19 @@ export function ExecutionPage() {
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '执行运营队列' : 'Execution Operations Console'}</div><div className="panel-copy">{locale === 'zh' ? '把审批、重试、补偿、incident 和活跃路由统一成执行台的处置队列。' : 'Turn approvals, retries, compensation, incidents, and active routing into one execution-ops queue view.'}</div></div><div className="panel-badge badge-info">{(workbenchOperations?.queues.approvals.length ?? 0) + (workbenchOperations?.queues.retryEligible.length ?? 0) + (workbenchOperations?.queues.compensation.length ?? 0) + (workbenchOperations?.queues.incidents.length ?? 0)}</div></div>
           <div className="focus-list">
+            <div className="settings-actions">
+              {queueFocusOptions.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  className="inline-action"
+                  disabled={queueFocus === item.key}
+                  onClick={() => setQueueFocus(item.key)}
+                >
+                  {`${item.label}${item.count ? ` (${item.count})` : ''}`}
+                </button>
+              ))}
+            </div>
             <div className="focus-row">
               <div className="focus-metric"><span>{locale === 'zh' ? '审批队列' : 'Approvals'}</span><strong>{workbenchOperations?.queues.approvals.length ?? 0}</strong></div>
               <div className="focus-metric"><span>{locale === 'zh' ? '可重试' : 'Retry Eligible'}</span><strong>{workbenchOperations?.queues.retryEligible.length ?? 0}</strong></div>
@@ -305,6 +393,13 @@ export function ExecutionPage() {
               <div key={item.key} className="focus-row">
                 <div className="focus-metric"><span>{item.priority}</span><strong>{item.count}</strong></div>
                 <div className="status-copy"><strong>{item.title}</strong>{` - ${item.detail}`}</div>
+                <button
+                  type="button"
+                  className="inline-action"
+                  onClick={() => setQueueFocus(mapExecutionNextActionToFocus(item.key))}
+                >
+                  {locale === 'zh' ? '聚焦队列' : 'Focus Queue'}
+                </button>
               </div>
             ))}
             {!workbenchOperations?.nextActions.length ? (
@@ -390,11 +485,11 @@ export function ExecutionPage() {
               <div className="focus-metric"><span>{locale === 'zh' ? 'Incident' : 'Incident'}</span><strong>{incidentQueueIds.length}</strong></div>
             </div>
             <div className="settings-actions">
-              <button type="button" className="inline-action" onClick={() => replaceSelection(approvalQueueIds)}>{locale === 'zh' ? '选中审批队列' : 'Select Approvals'}</button>
-              <button type="button" className="inline-action" onClick={() => replaceSelection(retryQueueIds)}>{locale === 'zh' ? '选中重试队列' : 'Select Retry Queue'}</button>
-              <button type="button" className="inline-action" onClick={() => replaceSelection(automationQueueIds)}>{locale === 'zh' ? '选中自动补偿' : 'Select Auto Comp'}</button>
-              <button type="button" className="inline-action" onClick={() => replaceSelection(compensationQueueIds)}>{locale === 'zh' ? '选中补偿队列' : 'Select Compensation'}</button>
-              <button type="button" className="inline-action" onClick={() => replaceSelection(incidentQueueIds)}>{locale === 'zh' ? '选中 Incident 队列' : 'Select Incidents'}</button>
+              <button type="button" className="inline-action" onClick={() => { setQueueFocus('approvals'); replaceSelection(approvalQueueIds); }}>{locale === 'zh' ? '选中审批队列' : 'Select Approvals'}</button>
+              <button type="button" className="inline-action" onClick={() => { setQueueFocus('retryEligible'); replaceSelection(retryQueueIds); }}>{locale === 'zh' ? '选中重试队列' : 'Select Retry Queue'}</button>
+              <button type="button" className="inline-action" onClick={() => { setQueueFocus('compensationAutomation'); replaceSelection(automationQueueIds); }}>{locale === 'zh' ? '选中自动补偿' : 'Select Auto Comp'}</button>
+              <button type="button" className="inline-action" onClick={() => { setQueueFocus('compensation'); replaceSelection(compensationQueueIds); }}>{locale === 'zh' ? '选中补偿队列' : 'Select Compensation'}</button>
+              <button type="button" className="inline-action" onClick={() => { setQueueFocus('incidents'); replaceSelection(incidentQueueIds); }}>{locale === 'zh' ? '选中 Incident 队列' : 'Select Incidents'}</button>
               <button type="button" className="inline-action" onClick={() => setSelectedPlanIds([])}>{locale === 'zh' ? '清空选择' : 'Clear Selection'}</button>
             </div>
             <div className="settings-actions">
@@ -479,7 +574,34 @@ export function ExecutionPage() {
                 {planBusyAction === 'bulk-recover' ? (locale === 'zh' ? '处理中...' : 'Running...') : (locale === 'zh' ? '批量恢复' : 'Bulk Recover')}
               </button>
             </div>
+            <div className="settings-actions">
+              <button
+                type="button"
+                className="inline-action"
+                disabled={!canApproveExecution || !selectedIncidentIds.length || incidentBusyAction === 'bulk-incident'}
+                onClick={() => runBulkIncidentAction(
+                  { owner: state.controlPlane.operator, status: 'investigating' },
+                  locale === 'zh' ? '已批量认领并推进 Incident 到 investigating' : 'Assigned selected incidents and moved them to investigating',
+                )}
+              >
+                {incidentBusyAction === 'bulk-incident'
+                  ? (locale === 'zh' ? '处理中...' : 'Running...')
+                  : (locale === 'zh' ? '批量认领 Incident' : 'Assign Incidents')}
+              </button>
+              <button
+                type="button"
+                className="inline-action"
+                disabled={!canApproveExecution || !selectedIncidentIds.length || incidentBusyAction === 'bulk-incident'}
+                onClick={() => runBulkIncidentAction(
+                  { note: locale === 'zh' ? '由执行台批量同步异常处置。' : 'Bulk synced from the execution desk.' },
+                  locale === 'zh' ? '已批量同步 Incident 处置记录' : 'Synced selected incident notes from the execution desk',
+                )}
+              >
+                {locale === 'zh' ? '批量同步 Incident 备注' : 'Sync Incident Notes'}
+              </button>
+            </div>
             {planMessage ? <div className="status-copy">{planMessage}</div> : null}
+            {incidentMessage ? <div className="status-copy">{incidentMessage}</div> : null}
           </div>
         </article>
         <article className="panel">
@@ -544,9 +666,14 @@ export function ExecutionPage() {
           </div>
         </article>
         <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '执行计划账本' : 'Execution Plan Ledger'}</div><div className="panel-copy">{locale === 'zh' ? '把 execution plan、workflow 状态和最新服务端执行结果放到同一视图。' : 'A single view for execution plans, workflow status, and the latest backend execution result.'}</div></div><div className="panel-badge badge-info">{ledgerEntries.length}</div></div>
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '执行计划账本' : 'Execution Plan Ledger'}</div><div className="panel-copy">{locale === 'zh' ? '把 execution plan、workflow 状态和最新服务端执行结果放到同一视图。' : 'A single view for execution plans, workflow status, and the latest backend execution result.'}</div></div><div className="panel-badge badge-info">{focusedLedgerEntries.length}</div></div>
           <div className="focus-list">
-            {ledgerEntries.slice(0, 6).map((entry) => (
+            <div className="status-copy">
+              {locale === 'zh'
+                ? `当前聚焦：${queueFocusOptions.find((item) => item.key === queueFocus)?.label || '全部计划'}`
+                : `Current focus: ${queueFocusOptions.find((item) => item.key === queueFocus)?.label || 'All Plans'}`}
+            </div>
+            {focusedLedgerEntries.slice(0, 6).map((entry) => (
               <InspectionSelectableRow
                 key={entry.plan.id}
                 metrics={[
@@ -580,7 +707,7 @@ export function ExecutionPage() {
                 )}
               />
             ))}
-            {!ledgerEntries.length ? <div className="status-copy">{executionDataLoading ? (locale === 'zh' ? '正在同步执行账本...' : 'Syncing execution ledger...') : (locale === 'zh' ? '尚无 execution ledger 数据。' : 'No execution ledger data yet.')}</div> : null}
+            {!focusedLedgerEntries.length ? <div className="status-copy">{executionDataLoading ? (locale === 'zh' ? '正在同步执行账本...' : 'Syncing execution ledger...') : (locale === 'zh' ? '当前聚焦队列中还没有 execution plan。' : 'No execution plans are available in the current queue focus.')}</div> : null}
           </div>
         </article>
       </section>
@@ -990,6 +1117,159 @@ export function ExecutionPage() {
                   {step.automated ? '[auto]' : '[manual]'} {step.title}: {step.status} · {step.detail}
                 </InspectionStatus>
               ))}
+            </div>
+          )}
+        </InspectionPanel>
+        <InspectionPanel
+          title={locale === 'zh' ? '执行 Incident 处置' : 'Execution Incident Triage'}
+          copy={locale === 'zh' ? '在执行台直接认领、推进和记录异常 incident，不需要再跳去别的控制面。' : 'Claim, advance, and document execution incidents directly from the execution desk without leaving this console.'}
+          badge={selectedExecutionIncident?.status || '--'}
+        >
+          {!selectedEntry ? (
+            <InspectionStatus>{locale === 'zh' ? '先从账本中选择一个 execution plan。' : 'Select an execution plan from the ledger first.'}</InspectionStatus>
+          ) : !selectedExecutionIncident ? (
+            <InspectionStatus>{locale === 'zh' ? '当前 execution plan 还没有关联的未解决 incident。' : 'The selected execution plan does not have a linked unresolved incident yet.'}</InspectionStatus>
+          ) : (
+            <div className="status-stack">
+              <div className="settings-actions">
+                {selectedLinkedIncidents.map((incident) => (
+                  <button
+                    key={incident.id}
+                    type="button"
+                    className="inline-action"
+                    disabled={selectedIncidentId === incident.id}
+                    onClick={() => setSelectedIncidentId(incident.id)}
+                  >
+                    {incident.id}
+                  </button>
+                ))}
+              </div>
+              <div className="status-row"><span>{locale === 'zh' ? '标题' : 'Title'}</span><strong>{selectedExecutionIncident.title}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{selectedExecutionIncident.status}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '级别' : 'Severity'}</span><strong>{selectedExecutionIncident.severity}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '负责人' : 'Owner'}</span><strong>{selectedExecutionIncident.owner || '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '来源' : 'Source'}</span><strong>{selectedExecutionIncident.source || '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '下一步' : 'Next Action'}</span><strong>{selectedIncidentDetail?.operations?.nextAction?.label || '--'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '阻塞任务' : 'Blocked Tasks'}</span><strong>{selectedIncidentDetail?.operations?.blockedTasks ?? 0}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '证据条数' : 'Evidence'}</span><strong>{selectedIncidentDetail?.evidence?.summary?.linked ?? 0}</strong></div>
+              <div className="settings-actions">
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={!canApproveExecution || incidentBusyAction === 'assign-incident'}
+                  onClick={async () => {
+                    setIncidentBusyAction('assign-incident');
+                    setIncidentMessage('');
+                    try {
+                      await updateIncident(selectedExecutionIncident.id, {
+                        owner: state.controlPlane.operator,
+                        status: selectedExecutionIncident.status === 'open' ? 'investigating' : selectedExecutionIncident.status,
+                        actor: state.controlPlane.operator,
+                      });
+                      setIncidentMessage(locale === 'zh' ? '已认领当前 Incident。' : 'Assigned the current incident to the execution desk.');
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setIncidentMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setIncidentBusyAction('');
+                    }
+                  }}
+                >
+                  {incidentBusyAction === 'assign-incident' ? (locale === 'zh' ? '处理中...' : 'Running...') : (locale === 'zh' ? '认领 Incident' : 'Assign Incident')}
+                </button>
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={!canApproveExecution || incidentBusyAction === 'advance-incident'}
+                  onClick={async () => {
+                    setIncidentBusyAction('advance-incident');
+                    setIncidentMessage('');
+                    try {
+                      await updateIncident(selectedExecutionIncident.id, {
+                        status: selectedExecutionIncident.status === 'investigating' ? 'mitigated' : 'investigating',
+                        actor: state.controlPlane.operator,
+                      });
+                      setIncidentMessage(locale === 'zh' ? '已推进当前 Incident 状态。' : 'Advanced the current incident status.');
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setIncidentMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setIncidentBusyAction('');
+                    }
+                  }}
+                >
+                  {locale === 'zh' ? '推进处置' : 'Advance Incident'}
+                </button>
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={!canApproveExecution || incidentBusyAction === 'resolve-incident'}
+                  onClick={async () => {
+                    setIncidentBusyAction('resolve-incident');
+                    setIncidentMessage('');
+                    try {
+                      await updateIncident(selectedExecutionIncident.id, {
+                        status: 'resolved',
+                        actor: state.controlPlane.operator,
+                      });
+                      setIncidentMessage(locale === 'zh' ? '已关闭当前 Incident。' : 'Resolved the current incident.');
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setIncidentMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setIncidentBusyAction('');
+                    }
+                  }}
+                >
+                  {locale === 'zh' ? '关闭 Incident' : 'Resolve Incident'}
+                </button>
+                <button
+                  type="button"
+                  className="inline-action"
+                  onClick={() => navigate(`/notifications?incident=${selectedExecutionIncident.id}`)}
+                >
+                  {locale === 'zh' ? '打开通知中心' : 'Open Notifications'}
+                </button>
+              </div>
+              <textarea
+                value={incidentNoteDraft}
+                onChange={(event) => setIncidentNoteDraft(event.target.value)}
+                placeholder={locale === 'zh' ? '记录这次执行异常的处置说明…' : 'Record the execution-incident triage note...'}
+                rows={3}
+              />
+              <div className="settings-actions">
+                <button
+                  type="button"
+                  className="inline-action"
+                  disabled={!canApproveExecution || !incidentNoteDraft.trim() || incidentBusyAction === 'incident-note'}
+                  onClick={async () => {
+                    setIncidentBusyAction('incident-note');
+                    setIncidentMessage('');
+                    try {
+                      await appendIncidentNote(selectedExecutionIncident.id, {
+                        author: state.controlPlane.operator,
+                        body: incidentNoteDraft.trim(),
+                        metadata: {
+                          source: 'execution-console',
+                          planId: selectedEntry.plan.id,
+                        },
+                      });
+                      setIncidentMessage(locale === 'zh' ? '已记录 Incident 处置备注。' : 'Recorded an execution-incident note.');
+                      setIncidentNoteDraft('');
+                      setRefreshKey((current) => current + 1);
+                    } catch (error) {
+                      setIncidentMessage(error instanceof Error ? error.message : 'unknown error');
+                    } finally {
+                      setIncidentBusyAction('');
+                    }
+                  }}
+                >
+                  {incidentBusyAction === 'incident-note' ? (locale === 'zh' ? '记录中...' : 'Recording...') : (locale === 'zh' ? '记录处置备注' : 'Add Triage Note')}
+                </button>
+              </div>
+              {incidentMessage ? <InspectionStatus>{incidentMessage}</InspectionStatus> : null}
+              {selectedIncidentDetail?.operations?.nextAction?.detail ? <InspectionStatus>{selectedIncidentDetail.operations.nextAction.detail}</InspectionStatus> : null}
+              {selectedIncidentDetail?.operations?.handoff?.summary ? <InspectionStatus>{selectedIncidentDetail.operations.handoff.summary}</InspectionStatus> : null}
             </div>
           )}
         </InspectionPanel>
