@@ -175,6 +175,7 @@ quantpilot/
 - `broker event ingestion` 已开始形成：执行层现会把 broker `acknowledged / partial fill / filled / rejected / cancelled` 回报落成结构化 `broker execution events`，并用这些事件驱动 order state、runtime 摘要与执行台时间线，执行闭环已开始从“平台主动推进状态”转向“接住 broker 回报再聚合状态”。
 - `execution exception and retry policies` 已开始形成：执行层现会把 broker event 历史进一步压成重试预算、补偿姿态和 incident 联动，重复 reject 或 reconciliation drift 不再只停留在事件层，而会升级成明确的执行异常处置路径。
 - `execution operations console` 已开始形成：执行台现会把审批、重试、补偿、incident 和活跃路由压成统一处置队列，并补上 owner 负载视图，执行侧已经开始从“逐条查看计划”转向“按运营队列处理异常和积压”。
+- `execution account reconciliation` 已开始做深：对账层现在除了 orders / fills / positions，还会比较 cash、buying power、equity、deployed capital、residual capital 和 snapshot cadence，执行台也会直接展示这些账户级信号。
 - Overview 首页已开始消费后端 `monitoring status` 摘要，可直接观察 `broker / market / worker / workflow / queues` 运行态。
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
 - 账户写操作和券商绑定变更已经进入 audit records，基础对象变更具备最小留痕能力。
@@ -362,6 +363,6 @@ npm run verify
 2. 把执行审批、broker sync、对账、成交结算、失败转移、取消和补偿动作进一步收敛到统一 lifecycle service 与 worker 任务流，而不是散落在页面逻辑里。
 3. 在现有 research replay、governance 和 handoff 契约之上，让执行、风险和调度侧围绕统一交接对象扩展，而不是重新拼装研究上下文。
 4. 保持阶段 1 和阶段 2 的账户、incident、operations、risk workbench、research hub 和 execution handoff 基线稳定，避免阶段切换时回归。
-5. 在进入真实 broker 多连接和补偿重试之前，优先把 execution workbench、订单生命周期和账户/持仓同步契约做稳。
+5. 在进入真实 broker 多连接和补偿重试之前，优先把 execution workbench、订单生命周期以及账户级对账 / 同步节奏契约做稳。
 
 研发节奏保持为“设计对齐 -> 小步实现 -> 自动化验证 -> 再推进下一层能力”。

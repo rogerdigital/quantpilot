@@ -451,7 +451,7 @@ export type ExecutionRunRecord = {
 
 export type ExecutionReconciliationIssue = {
   id: string;
-  kind: 'snapshot' | 'orders' | 'fills' | 'positions';
+  kind: 'snapshot' | 'orders' | 'fills' | 'positions' | 'account' | 'capital' | 'cadence';
   severity: 'info' | 'warn' | 'critical';
   title: string;
   detail: string;
@@ -466,6 +466,17 @@ export type ExecutionReconciliationRecord = {
   orderCountDelta: number;
   filledQtyDelta: number;
   positionDelta: number;
+  cashDelta: number;
+  buyingPowerDelta: number;
+  equityDelta: number;
+  deployedCapital: number;
+  residualCapital: number;
+  accountStatus: 'aligned' | 'attention' | 'drift' | 'missing_snapshot';
+  cadence: {
+    status: 'live' | 'stale' | 'missing_runtime';
+    runtimeAt: string;
+    snapshotLagMinutes: number;
+  };
   issues: ExecutionReconciliationIssue[];
 };
 

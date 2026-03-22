@@ -9,7 +9,11 @@ function groupBySymbol(items = [], qtySelector = () => 0) {
   }, {});
 }
 
-function buildExecutionReconciliation(orderStates = [], snapshot = null) {
+function round2(value) {
+  return Number(Number(value || 0).toFixed(2));
+}
+
+function buildExecutionReconciliation(orderStates = [], snapshot = null, latestRuntime = null, plan = null) {
   if (!snapshot) {
     return {
       status: 'missing_snapshot',
@@ -18,6 +22,17 @@ function buildExecutionReconciliation(orderStates = [], snapshot = null) {
       orderCountDelta: orderStates.length,
       filledQtyDelta: orderStates.reduce((sum, item) => sum + Number(item.filledQty || 0), 0),
       positionDelta: orderStates.filter((item) => Number(item.filledQty || 0) > 0).length,
+      cashDelta: latestRuntime ? round2(latestRuntime.cash) : 0,
+      buyingPowerDelta: latestRuntime ? round2(latestRuntime.buyingPower) : 0,
+      equityDelta: latestRuntime ? round2(latestRuntime.equity) : round2(plan?.capital || 0),
+      deployedCapital: round2(orderStates.reduce((sum, item) => sum + Number(item.filledQty || 0) * Number(item.avgFillPrice || 0), 0)),
+      residualCapital: round2(Math.max(0, Number(plan?.capital || 0) - orderStates.reduce((sum, item) => sum + Number(item.filledQty || 0) * Number(item.avgFillPrice || 0), 0))),
+      accountStatus: 'missing_snapshot',
+      cadence: {
+        status: latestRuntime ? 'stale' : 'missing_runtime',
+        runtimeAt: latestRuntime?.createdAt || '',
+        snapshotLagMinutes: 0,
+      },
       issues: [{
         id: 'missing-snapshot',
         kind: 'snapshot',
@@ -34,6 +49,8 @@ function buildExecutionReconciliation(orderStates = [], snapshot = null) {
   const snapshotOrders = Array.isArray(snapshot.orders) ? snapshot.orders : [];
   const snapshotPositions = Array.isArray(snapshot.positions) ? snapshot.positions : [];
   const filledOrders = orderStates.filter((item) => item.lifecycleStatus === 'filled');
+  const deployedCapital = round2(filledOrders.reduce((sum, item) => sum + Number(item.filledQty || item.qty || 0) * Number(item.avgFillPrice || 0), 0));
+  const residualCapital = round2(Math.max(0, Number(plan?.capital || 0) - deployedCapital));
   const orderCountDelta = Math.abs(orderStates.length - snapshotOrders.length);
 
   if (orderCountDelta > 0) {
@@ -95,9 +112,83 @@ function buildExecutionReconciliation(orderStates = [], snapshot = null) {
     }
   });
 
+  const runtimeCash = Number(latestRuntime?.cash || residualCapital);
+  const runtimeBuyingPower = Number(latestRuntime?.buyingPower || residualCapital);
+  const runtimeEquity = Number(latestRuntime?.equity || (Number(plan?.capital || 0) || deployedCapital + residualCapital));
+  const hasSnapshotAccount = snapshot.account
+    && Number.isFinite(Number(snapshot.account.cash))
+    && Number.isFinite(Number(snapshot.account.buyingPower))
+    && Number.isFinite(Number(snapshot.account.equity));
+  const snapshotCash = hasSnapshotAccount ? Number(snapshot.account.cash) : runtimeCash;
+  const snapshotBuyingPower = hasSnapshotAccount ? Number(snapshot.account.buyingPower) : runtimeBuyingPower;
+  const snapshotEquity = hasSnapshotAccount ? Number(snapshot.account.equity) : runtimeEquity;
+  const cashDelta = round2(Math.abs(runtimeCash - snapshotCash));
+  const buyingPowerDelta = round2(Math.abs(runtimeBuyingPower - snapshotBuyingPower));
+  const equityDelta = round2(Math.abs(runtimeEquity - snapshotEquity));
+
+  if (hasSnapshotAccount && cashDelta > 0) {
+    issues.push({
+      id: 'cash-delta',
+      kind: 'account',
+      severity: cashDelta >= 1000 ? 'critical' : 'warn',
+      title: 'Cash drift detected',
+      detail: 'Persisted execution runtime cash does not match the broker account snapshot.',
+      expected: String(round2(runtimeCash)),
+      actual: String(round2(snapshotCash)),
+    });
+  }
+
+  if (hasSnapshotAccount && buyingPowerDelta > 0) {
+    issues.push({
+      id: 'buying-power-delta',
+      kind: 'account',
+      severity: buyingPowerDelta >= 1000 ? 'critical' : 'warn',
+      title: 'Buying power drift detected',
+      detail: 'Persisted execution runtime buying power does not match the broker account snapshot.',
+      expected: String(round2(runtimeBuyingPower)),
+      actual: String(round2(snapshotBuyingPower)),
+    });
+  }
+
+  if (hasSnapshotAccount && equityDelta > 0) {
+    issues.push({
+      id: 'equity-delta',
+      kind: 'capital',
+      severity: equityDelta >= 1000 ? 'critical' : 'warn',
+      title: 'Equity drift detected',
+      detail: 'Persisted execution runtime equity does not match the broker account snapshot.',
+      expected: String(round2(runtimeEquity)),
+      actual: String(round2(snapshotEquity)),
+    });
+  }
+
+  const runtimeAt = Date.parse(latestRuntime?.createdAt || '');
+  const snapshotAt = Date.parse(snapshot.createdAt || '');
+  const snapshotLagMinutes = Number.isFinite(runtimeAt) && Number.isFinite(snapshotAt)
+    ? Math.max(0, Math.round((snapshotAt - runtimeAt) / (60 * 1000)))
+    : 0;
+  const cadenceStatus = !latestRuntime
+    ? 'missing_runtime'
+    : (snapshotLagMinutes > 15 ? 'stale' : 'live');
+
+  if (cadenceStatus === 'stale') {
+    issues.push({
+      id: 'snapshot-cadence-stale',
+      kind: 'cadence',
+      severity: snapshotLagMinutes > 60 ? 'critical' : 'warn',
+      title: 'Account snapshot cadence is stale',
+      detail: 'The linked broker snapshot lags too far behind the latest execution runtime update.',
+      expected: 'Snapshot within 15 minutes of runtime update',
+      actual: `${snapshotLagMinutes} minutes`,
+    });
+  }
+
   const status = issues.length === 0
     ? 'aligned'
     : (issues.some((item) => item.severity === 'critical') || positionDelta >= 5 ? 'drift' : 'attention');
+  const accountStatus = (cashDelta === 0 && buyingPowerDelta === 0 && equityDelta === 0 && cadenceStatus !== 'stale')
+    ? 'aligned'
+    : ((cashDelta >= 1000 || buyingPowerDelta >= 1000 || equityDelta >= 1000 || cadenceStatus === 'stale') ? 'drift' : 'attention');
 
   return {
     status,
@@ -106,6 +197,17 @@ function buildExecutionReconciliation(orderStates = [], snapshot = null) {
     orderCountDelta,
     filledQtyDelta,
     positionDelta,
+    cashDelta,
+    buyingPowerDelta,
+    equityDelta,
+    deployedCapital,
+    residualCapital,
+    accountStatus,
+    cadence: {
+      status: cadenceStatus,
+      runtimeAt: latestRuntime?.createdAt || '',
+      snapshotLagMinutes,
+    },
     issues,
   };
 }
@@ -117,7 +219,7 @@ function buildExecutionLedgerEntry(plan, runtimeEvents = [], snapshots = []) {
   const brokerEvents = controlPlaneRuntime.listBrokerExecutionEvents(8, { executionPlanId: plan.id });
   const executionRun = controlPlaneRuntime.getExecutionRunByPlanId(plan.id);
   const orderStates = controlPlaneRuntime.listExecutionOrderStates(80, { executionPlanId: plan.id });
-  const reconciliation = buildExecutionReconciliation(orderStates, latestSnapshot);
+  const reconciliation = buildExecutionReconciliation(orderStates, latestSnapshot, latestRuntime, plan);
   const linkedIncidents = listLinkedExecutionIncidents({
     plan,
     executionRun,

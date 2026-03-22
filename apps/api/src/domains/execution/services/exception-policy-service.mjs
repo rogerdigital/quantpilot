@@ -3,13 +3,12 @@ import { controlPlaneRuntime } from '../../../../../../packages/control-plane-ru
 const RETRY_LIMIT = 2;
 
 function hasExecutionLink(incident, detail) {
-  return Array.isArray(incident?.links) && incident.links.some((link) => {
-    const values = Object.values(link || {}).map((value) => String(value || ''));
-    return values.includes(String(detail.plan.id))
-      || values.includes(String(detail.executionRun?.id || ''))
-      || values.includes(String(detail.plan.workflowRunId || ''))
-      || values.includes(String(detail.plan.strategyId || ''));
-  });
+  return Array.isArray(incident?.links) && incident.links.some((link) => (
+    (link?.executionPlanId && String(link.executionPlanId) === String(detail.plan.id))
+    || (link?.executionRunId && String(link.executionRunId) === String(detail.executionRun?.id || ''))
+    || (link?.workflowRunId && String(link.workflowRunId) === String(detail.plan.workflowRunId || ''))
+    || (link?.brokerEventId && String(link.brokerEventId) === String(detail.brokerEvents?.[0]?.id || ''))
+  ));
 }
 
 function mergeIncidentLinks(detail, policy, brokerEvent = null) {

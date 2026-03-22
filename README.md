@@ -175,6 +175,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - `broker event ingestion` is live: broker `acknowledged / partial fill / filled / rejected / cancelled` reports are now persisted as structured broker events and feed order-state aggregation and execution timelines.
 - `execution exception and retry policies` now turn broker-event history into retry budget, compensation posture, and incident linkage so repeated rejects or drift can escalate into execution incidents instead of staying as raw broker events.
 - `execution operations console` now exposes approval, retry, compensation, incident, and active-routing queues plus owner load, so the execution desk can work from a queue-based operating view instead of only inspecting individual plans.
+- `execution account reconciliation` now compares cash, buying power, equity, deployed capital, residual capital, and snapshot cadence in addition to order and position drift, and the execution console surfaces those account-level signals directly.
 - The Overview page consumes backend `monitoring status`.
 - `user-account` now owns persisted `profile / preferences / access / broker bindings`.
 - Account mutations and broker-binding changes are audited.
@@ -357,7 +358,7 @@ Stage 1 and Stage 2 are closed. The active focus is now Stage 3: execution loop 
 2. Keep approval, broker sync, reconciliation, settlement, failure transfer, cancellation, and compensation logic converging into lifecycle services and worker flows instead of page-local logic.
 3. Extend execution, risk, and scheduling around the existing research replay, governance, and handoff contracts instead of rebuilding research context.
 4. Preserve the Stage 1 and Stage 2 baselines for accounts, incidents, operations, risk workbench, research hub, and execution handoff while Stage 3 expands.
-5. Before multi-broker live connectivity and more advanced retry/compensation work, keep stabilizing the execution workbench, order lifecycle contract, broker-event ingestion, and account/position sync contracts.
+5. Before multi-broker live connectivity and more advanced retry/compensation work, keep stabilizing the execution workbench, order lifecycle contract, broker-event ingestion, and account-level reconciliation/cadence contracts.
 
 The delivery cadence remains:
 

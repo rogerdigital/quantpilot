@@ -754,7 +754,7 @@ export function ExecutionPage() {
         </InspectionPanel>
         <InspectionPanel
           title={locale === 'zh' ? '执行对账结果' : 'Execution Reconciliation'}
-          copy={locale === 'zh' ? '把订单生命周期、成交数量和 broker 快照的持仓数量对到一起。' : 'Align order lifecycle, fill quantity, and broker snapshot positions in one reconciliation view.'}
+          copy={locale === 'zh' ? '把订单生命周期、成交数量、持仓和账户资金一起对到最新 broker 快照。' : 'Align order lifecycle, fills, positions, and account balances against the latest broker snapshot.'}
           badge={selectedReconciliation?.status || '--'}
         >
           {!selectedEntry ? (
@@ -768,6 +768,14 @@ export function ExecutionPage() {
               <div className="status-row"><span>{locale === 'zh' ? '订单偏差' : 'Order Delta'}</span><strong>{selectedReconciliation.orderCountDelta}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '成交偏差' : 'Fill Delta'}</span><strong>{selectedReconciliation.filledQtyDelta}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '持仓偏差' : 'Position Delta'}</span><strong>{selectedReconciliation.positionDelta}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '账户状态' : 'Account Status'}</span><strong>{selectedReconciliation.accountStatus}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '现金偏差' : 'Cash Delta'}</span><strong>{Number(selectedReconciliation.cashDelta || 0).toFixed(2)}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '买力偏差' : 'Buying Power Delta'}</span><strong>{Number(selectedReconciliation.buyingPowerDelta || 0).toFixed(2)}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '权益偏差' : 'Equity Delta'}</span><strong>{Number(selectedReconciliation.equityDelta || 0).toFixed(2)}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '已部署资金' : 'Deployed Capital'}</span><strong>{Number(selectedReconciliation.deployedCapital || 0).toFixed(2)}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '剩余资金' : 'Residual Capital'}</span><strong>{Number(selectedReconciliation.residualCapital || 0).toFixed(2)}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '快照节奏' : 'Snapshot Cadence'}</span><strong>{selectedReconciliation.cadence?.status || 'missing_runtime'}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '快照滞后(分钟)' : 'Snapshot Lag (min)'}</span><strong>{Number(selectedReconciliation.cadence?.snapshotLagMinutes || 0)}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '最新快照' : 'Snapshot'}</span><strong>{selectedReconciliation.latestSnapshotAt || '--'}</strong></div>
               {!selectedReconciliation.issues.length ? <InspectionStatus>{locale === 'zh' ? '当前 execution lifecycle 与 broker snapshot 已对齐。' : 'The current execution lifecycle is aligned with the linked broker snapshot.'}</InspectionStatus> : null}
               {selectedReconciliation.issues.map((item) => (
@@ -967,6 +975,8 @@ export function ExecutionPage() {
               <div className="status-row"><span>{locale === 'zh' ? '周期' : 'Cycle'}</span><strong>{selectedAccountSnapshot.cycle}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{selectedAccountSnapshot.connected ? 'connected' : 'disconnected'}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '现金' : 'Cash'}</span><strong>{Number(selectedAccountSnapshot.account?.cash || 0).toFixed(0)}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '买力' : 'Buying Power'}</span><strong>{Number(selectedAccountSnapshot.account?.buyingPower || 0).toFixed(0)}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '权益' : 'Equity'}</span><strong>{Number(selectedAccountSnapshot.account?.equity || 0).toFixed(0)}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '持仓数' : 'Positions'}</span><strong>{selectedAccountSnapshot.positions.length}</strong></div>
               <div className="status-row"><span>{locale === 'zh' ? '订单数' : 'Orders'}</span><strong>{selectedAccountSnapshot.orders.length}</strong></div>
               <InspectionStatus>{selectedAccountSnapshot.message}</InspectionStatus>

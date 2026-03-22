@@ -1947,6 +1947,27 @@ test('POST /api/execution/plans/:id/reconcile records structured reconciliation 
     message: 'snapshot synced',
     createdAt: '2026-03-21T08:03:00.000Z',
   });
+  context.executionRuntime.appendExecutionRuntimeEvent({
+    id: 'exec-reconcile-runtime',
+    cycleId: 'cycle-1',
+    cycle: 1,
+    executionPlanId: 'exec-reconcile-plan',
+    executionRunId: 'exec-reconcile-run',
+    mode: 'paper',
+    brokerAdapter: 'simulated',
+    brokerConnected: true,
+    marketConnected: true,
+    submittedOrderCount: 1,
+    rejectedOrderCount: 0,
+    openOrderCount: 0,
+    positionCount: 1,
+    cash: 91000,
+    buyingPower: 91500,
+    equity: 100500,
+    message: 'runtime synced',
+    createdAt: '2026-03-21T08:00:00.000Z',
+    metadata: {},
+  });
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
@@ -1958,8 +1979,15 @@ test('POST /api/execution/plans/:id/reconcile records structured reconciliation 
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
-  assert.equal(response.json.reconciliation.status, 'attention');
+  assert.equal(response.json.reconciliation.status, 'drift');
   assert.equal(response.json.reconciliation.issueCount > 0, true);
+  assert.equal(typeof response.json.reconciliation.cashDelta, 'number');
+  assert.equal(typeof response.json.reconciliation.buyingPowerDelta, 'number');
+  assert.equal(typeof response.json.reconciliation.equityDelta, 'number');
+  assert.equal(typeof response.json.reconciliation.deployedCapital, 'number');
+  assert.equal(typeof response.json.reconciliation.residualCapital, 'number');
+  assert.equal(typeof response.json.reconciliation.accountStatus, 'string');
+  assert.equal(typeof response.json.reconciliation.cadence.snapshotLagMinutes, 'number');
 });
 
 test('POST /api/execution/plans/:id/recover reroutes cancelled plans back into execution flow', async () => {
@@ -2093,6 +2121,8 @@ test('POST /api/execution/plans/:id/broker-events ingests a broker fill event in
   assert.equal(response.json.brokerEvent.eventType, 'filled');
   assert.equal(response.json.brokerEvent.metadata.externalEventId, 'evt-001');
   assert.equal(response.json.exceptionPolicy.status, 'stable');
+  assert.equal(response.json.runtime.brokerSnapshot.account.cash > 0, true);
+  assert.equal(response.json.runtime.brokerSnapshot.account.equity, 100000);
 });
 
 test('repeated broker rejects escalate execution exceptions into incident linkage', async () => {

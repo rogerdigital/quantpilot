@@ -87,6 +87,11 @@ function buildRuntimeSnapshot(plan, executionRun, orderStates, actor, message, n
     return sum + Number((item.avgFillPrice || 0) * item.filledQty);
   }, 0);
   const residualCapital = Math.max(0, Number(plan.capital || 0) - deployedCapital);
+  const account = {
+    cash: Number(residualCapital.toFixed(2)),
+    buyingPower: Number(residualCapital.toFixed(2)),
+    equity: Number(Number(plan.capital || 0).toFixed(2)),
+  };
 
   return controlPlaneRuntime.recordExecutionRuntime({
     cycleId: plan.workflowRunId || plan.id,
@@ -101,9 +106,10 @@ function buildRuntimeSnapshot(plan, executionRun, orderStates, actor, message, n
     rejectedOrderCount: counts.rejected,
     openOrderCount: counts.submitted + counts.acknowledged,
     positionCount: positions.length,
-    cash: residualCapital,
-    buyingPower: residualCapital,
-    equity: Number(plan.capital || 0),
+    cash: account.cash,
+    buyingPower: account.buyingPower,
+    equity: account.equity,
+    account,
     message,
     orders: buildBrokerOrders(orderStates),
     positions,
@@ -639,6 +645,17 @@ export function reconcileExecutionPlan(planId, payload = {}) {
     orderCountDelta: detail.orderStates.length,
     filledQtyDelta: 0,
     positionDelta: 0,
+    cashDelta: 0,
+    buyingPowerDelta: 0,
+    equityDelta: 0,
+    deployedCapital: 0,
+    residualCapital: Number(detail.plan.capital || 0),
+    accountStatus: 'missing_snapshot',
+    cadence: {
+      status: 'missing_runtime',
+      runtimeAt: '',
+      snapshotLagMinutes: 0,
+    },
     issues: [],
   };
   const level = reconciliation.status === 'drift'
@@ -679,6 +696,13 @@ export function reconcileExecutionPlan(planId, payload = {}) {
       orderCountDelta: reconciliation.orderCountDelta,
       filledQtyDelta: reconciliation.filledQtyDelta,
       positionDelta: reconciliation.positionDelta,
+      cashDelta: reconciliation.cashDelta,
+      buyingPowerDelta: reconciliation.buyingPowerDelta,
+      equityDelta: reconciliation.equityDelta,
+      deployedCapital: reconciliation.deployedCapital,
+      residualCapital: reconciliation.residualCapital,
+      accountStatus: reconciliation.accountStatus,
+      cadence: reconciliation.cadence,
       issues: reconciliation.issues,
     },
     createdAt: now,
