@@ -194,7 +194,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - Multi-tenant user isolation and full RBAC are not complete yet.
 - Market ingestion, historical data, and research persistence are still simplified.
 - The agent layer is still a controlled collaboration prototype, not a full planner/memory/tool-router system.
-- The execution engine is in the early-to-mid part of Stage 3. It already has an order state machine, structured reconciliation, recovery posture, and broker-event ingestion, but it is still far from complete broker-report handling, automated compensation policy, and multi-broker abstraction.
+- Stage 3 is now closed: the execution loop has a stable order-state machine, broker-event ingestion, structured reconciliation, recovery posture, compensation automation, and queue-based execution operations console.
 
 ## Development Principles
 
@@ -215,21 +215,20 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 
 ### Stage 1: Platform Foundations Productization (Closed)
 
-- Stage 1 closeout definition, non-goals, and Stage 2 entry conditions live in [docs/architecture/stage-1-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-1-closeout.md).
+- Stage 1 closeout definition, non-goals, and Stage 2 entry conditions live in [docs/architecture/stage-1-closeout.md](./docs/architecture/stage-1-closeout.md).
 - Stage 1 delivered account and permission foundations, incident and investigation console, operations workbench, risk workbench, and the first productized version of research/execution data boundaries.
 
 ### Stage 2: Research And Strategy Loop (Closed)
 
-- Stage 2 closeout definition, non-goals, and Stage 3 entry conditions live in [docs/architecture/stage-2-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-2-closeout.md).
+- Stage 2 closeout definition, non-goals, and Stage 3 entry conditions live in [docs/architecture/stage-2-closeout.md](./docs/architecture/stage-2-closeout.md).
 - Stage 2 delivered `Research Task Backbone`, `Backtest Result Model`, `Research Workspace Integration`, `Evaluation And Promotion Flow`, `Research Report Workflow`, `Research Workbench`, `Research Governance Actions`, `Research Baselines And Champions`, `Research Comparison And Baseline Analysis`, `Research Timeline And Replay`, and `Execution Candidate Handoff`.
 - The research loop now forms a unified async chain: `task -> workflow -> result -> evaluation -> report -> compare -> replay -> govern -> handoff -> act -> promote`.
 
-### Stage 3: Execution Loop And Trading Middleware
+### Stage 3: Execution Loop And Trading Middleware (Closed)
 
-- Upgrade execution into a real `broker connector / order manager / execution engine / fill handler / failure handler`.
-- Complete order state machine coverage, position sync, account-equity sync, and exception compensation.
-- Build the full mapping between execution plans and real orders, fills, positions, and account state.
-- Make every risk-cleared plan enter a traceable, recoverable, and auditable execution path.
+- Stage 3 closeout definition, non-goals, and Stage 4 entry conditions live in [docs/architecture/stage-3-closeout.md](./docs/architecture/stage-3-closeout.md).
+- Stage 3 delivered `Execution Lifecycle Backbone`, `Execution Order State Machine`, `Execution Reconciliation Workbench`, `Execution Recovery Workbench`, `Broker Event Ingestion`, `Execution Exception And Retry Policies`, `Execution Operations Console`, `Execution Account Reconciliation`, `Execution Compensation Automation`, `Execution Bulk Queue Actions`, and `Execution Incident Triage`.
+- The execution loop now forms a unified chain: `handoff -> workflow -> plan -> run -> order state -> broker event -> reconcile -> compensate -> recover -> incident -> operate`.
 
 ### Stage 4: Risk And Scheduling Middleware Deepening
 
@@ -355,13 +354,13 @@ Default ports:
 
 ## Current Development Focus
 
-Stage 1 and Stage 2 are closed. The active focus is now Stage 3: execution loop and trading middleware.
+Stage 1, Stage 2, and Stage 3 are closed. The active focus is now Stage 4: risk and scheduling middleware deepening.
 
-1. Build on the delivered `execution candidate handoff -> execution workflow -> execution plan -> execution run -> order lifecycle` backbone with stronger broker-report handling, order sync, account/position reconciliation, and compensation paths.
-2. Keep approval, broker sync, reconciliation, settlement, failure transfer, cancellation, and compensation logic converging into lifecycle services and worker flows instead of page-local logic.
-3. Extend execution, risk, and scheduling around the existing research replay, governance, and handoff contracts instead of rebuilding research context.
-4. Preserve the Stage 1 and Stage 2 baselines for accounts, incidents, operations, risk workbench, research hub, and execution handoff while Stage 3 expands.
-5. Before multi-broker live connectivity and more advanced retry/compensation work, keep stabilizing the execution workbench, order lifecycle contract, broker-event ingestion, account-level reconciliation/cadence, and compensation-automation contracts.
+1. Expand risk from event scanning into a deeper middleware layer for `position / portfolio / drawdown / volatility / compliance / emergency brake`.
+2. Upgrade scheduler from passive tick history into a more explicit pre-market / intraday / post-market operations surface with tighter linkage to incidents and notifications.
+3. Preserve the Stage 1, Stage 2, and Stage 3 baselines for accounts, incidents, operations, research hub, execution workbench, and handoff contracts while Stage 4 grows.
+4. Keep new risk and scheduling work anchored to the existing execution lifecycle, broker-event, reconciliation, compensation, and incident contracts instead of inventing parallel control planes.
+5. Before moving further into multi-broker live connectivity or autonomous execution, stabilize the shared risk/scheduler contracts that will sit above the now-closed execution middleware layer.
 
 The delivery cadence remains:
 

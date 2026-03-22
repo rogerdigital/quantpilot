@@ -194,7 +194,7 @@ quantpilot/
 - 用户系统和权限边界已经开始从 demo 常量迁到持久化账户配置，但租户、多用户隔离和完整 RBAC 仍未真正落地。
 - 行情接入、历史数据、研究结果持久化仍处于简化阶段。
 - Agent 仍处于受控协作原型阶段，当前以 allowlist 只读工具、动作请求和审批流为主，尚未形成真正的规划、记忆和工具编排系统。
-- 执行引擎仍在阶段 3 早中期，虽然已具备订单状态机、结构化对账和基础恢复姿态，但距离真实 broker 回报承接、自动补偿策略和多 broker 抽象还有较大差距。
+- 阶段 3 已收官：执行闭环现已具备稳定的订单状态机、broker 回报承接、结构化对账、恢复姿态、自动补偿和基于队列的 execution operations console。
 
 ## 研发迭代原则
 
@@ -217,8 +217,8 @@ quantpilot/
 
 这一阶段已经完成，阶段目标是把“可演示原型”推进成“可持续研发的平台底座”。
 
-- 阶段 1 的收官定义、非目标和阶段 2 入口条件已单独整理到 [docs/architecture/stage-1-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-1-closeout.md)。
-- 阶段 2 的收官定义、非目标和阶段 3 入口条件已单独整理到 [docs/architecture/stage-2-closeout.md](/Users/Roger/codex/quantpilot/docs/architecture/stage-2-closeout.md)。
+- 阶段 1 的收官定义、非目标和阶段 2 入口条件已单独整理到 [docs/architecture/stage-1-closeout.md](./docs/architecture/stage-1-closeout.md)。
+- 阶段 2 的收官定义、非目标和阶段 3 入口条件已单独整理到 [docs/architecture/stage-2-closeout.md](./docs/architecture/stage-2-closeout.md)。
 
 - 阶段 1 现已完成账户与权限底座、incident / investigation 控制台、operations workbench、risk workbench 和研究/执行基础数据边界的第一轮产品化。
 - 阶段 2 现已收官：已完成 `Research Task Backbone`、`Backtest Result Model`、`Research Workspace Integration`、`Evaluation And Promotion Flow`、`Research Report Workflow`、`Research Workbench`、`Research Governance Actions`、`Research Baselines And Champions`、`Research Comparison And Baseline Analysis`、`Research Timeline And Replay` 和 `Execution Candidate Handoff` 十一个大步，研究链路已形成 `task -> workflow -> result -> evaluation -> report -> compare -> replay -> govern -> handoff -> act -> promote` 的统一异步骨架。
@@ -230,12 +230,11 @@ quantpilot/
 - 建立研究结果持久化、版本化和可回溯查询能力。
 - 让策略层稳定输出信号、目标仓位、调仓建议和评分，而不是停留在静态快照。
 
-### 阶段 3：执行闭环与交易中台
+### 阶段 3：执行闭环与交易中台（已收官）
 
-- 将执行层升级为真实的 `broker connector / order manager / execution engine / fill handler / failure handler`。
-- 补齐订单状态机、持仓同步、账户权益同步和异常补偿重试。
-- 建立 execution plan 到真实订单、成交、持仓、账户状态的完整映射。
-- 让“通过风控的计划”真正进入可追踪、可恢复、可审计的执行流程。
+- 阶段 3 的收官定义、非目标和阶段 4 入口条件已单独整理到 [docs/architecture/stage-3-closeout.md](./docs/architecture/stage-3-closeout.md)。
+- 阶段 3 已完成 `Execution Lifecycle Backbone`、`Execution Order State Machine`、`Execution Reconciliation Workbench`、`Execution Recovery Workbench`、`Broker Event Ingestion`、`Execution Exception And Retry Policies`、`Execution Operations Console`、`Execution Account Reconciliation`、`Execution Compensation Automation`、`Execution Bulk Queue Actions` 和 `Execution Incident Triage`。
+- 执行链路现已形成 `handoff -> workflow -> plan -> run -> order state -> broker event -> reconcile -> compensate -> recover -> incident -> operate` 的统一闭环。
 
 ### 阶段 4：风险与调度中台深化
 
@@ -360,12 +359,12 @@ npm run verify
 
 ## 当前研发重点
 
-当前已完成“阶段 2：研究与策略闭环”，并开始转向“阶段 3：执行闭环与交易中台”，优先级如下：
+当前已完成“阶段 1 / 阶段 2 / 阶段 3”，并开始转向“阶段 4：风险与调度中台深化”，优先级如下：
 
-1. 在已落地的 `execution candidate handoff -> execution workflow -> execution plan -> execution run -> order lifecycle` 骨架之上，继续做实真实 broker 承接、订单同步、账户/持仓对账和异常补偿。
-2. 把执行审批、broker sync、对账、成交结算、失败转移、取消和补偿动作进一步收敛到统一 lifecycle service 与 worker 任务流，而不是散落在页面逻辑里。
-3. 在现有 research replay、governance 和 handoff 契约之上，让执行、风险和调度侧围绕统一交接对象扩展，而不是重新拼装研究上下文。
-4. 保持阶段 1 和阶段 2 的账户、incident、operations、risk workbench、research hub 和 execution handoff 基线稳定，避免阶段切换时回归。
-5. 在进入真实 broker 多连接和补偿重试之前，优先把 execution workbench、订单生命周期、账户级对账 / 同步节奏以及自动补偿契约做稳。
+1. 将风控从事件扫描继续做深为 `position / portfolio / drawdown / volatility / compliance / emergency brake` 多层中台。
+2. 把 scheduler 从节拍历史推进成更明确的盘前 / 盘中 / 盘后运行面，并与 incident、notification 更紧地联动。
+3. 保持阶段 1、阶段 2、阶段 3 的账户、incident、operations、research hub、execution workbench 和 handoff 契约稳定，避免阶段切换时回归。
+4. 让新的风险与调度能力继续围绕已落地的 execution lifecycle、broker event、reconciliation、compensation 和 incident 合同扩展，而不是另起一套控制面。
+5. 在进入更深的多 broker 实盘连接或更强自主执行前，优先把阶段 4 需要共享的 risk / scheduler contracts 做稳。
 
 研发节奏保持为“设计对齐 -> 小步实现 -> 自动化验证 -> 再推进下一层能力”。
