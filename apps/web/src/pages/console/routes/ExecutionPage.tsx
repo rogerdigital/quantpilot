@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { approveExecutionPlan, cancelExecutionPlan, compensateExecutionPlan, ingestBrokerExecutionEvent, queueExecutionCandidateHandoff, reconcileExecutionPlan, recoverExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../../app/api/controlPlane.ts';
+import { approveExecutionPlan, bulkUpdateExecutionQueue, cancelExecutionPlan, compensateExecutionPlan, ingestBrokerExecutionEvent, queueExecutionCandidateHandoff, reconcileExecutionPlan, recoverExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
 import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
 import { useExecutionConsoleData } from '../../../modules/console/useExecutionConsoleData.ts';
@@ -34,6 +34,7 @@ export function ExecutionPage() {
   const [handoffMessage, setHandoffMessage] = useState('');
   const [planBusyAction, setPlanBusyAction] = useState('');
   const [planMessage, setPlanMessage] = useState('');
+  const [selectedPlanIds, setSelectedPlanIds] = useState<string[]>([]);
   const researchNavigation = useResearchNavigationContext(searchParams, navigate);
   const goToSettings = useSettingsNavigation();
   const canApproveExecution = hasPermission('execution:approve');
@@ -140,6 +141,12 @@ export function ExecutionPage() {
   const selectedLinkedIncidents = selectedEntry?.linkedIncidents || [];
   const workbenchSummary = workbench?.summary;
   const workbenchOperations = workbench?.operations;
+  const selectedPlanCount = selectedPlanIds.length;
+  const approvalQueueIds = workbenchOperations?.queues.approvals.map((entry) => entry.plan.id) || [];
+  const retryQueueIds = workbenchOperations?.queues.retryEligible.map((entry) => entry.plan.id) || [];
+  const compensationQueueIds = workbenchOperations?.queues.compensation.map((entry) => entry.plan.id) || [];
+  const automationQueueIds = workbenchOperations?.queues.compensationAutomation.map((entry) => entry.plan.id) || [];
+  const incidentQueueIds = workbenchOperations?.queues.incidents.map((entry) => entry.plan.id) || [];
   const planSummary = ledgerEntries.reduce((acc, entry) => {
     const lifecycle = entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus;
     if (lifecycle === 'awaiting_approval') acc.awaitingApproval += 1;
@@ -161,6 +168,24 @@ export function ExecutionPage() {
     cancelled: 0,
     failed: 0,
   });
+
+  useEffect(() => {
+    const validIds = new Set(ledgerEntries.map((entry) => entry.plan.id));
+    setSelectedPlanIds((current) => current.filter((item) => validIds.has(item)));
+  }, [ledgerEntries]);
+
+  function togglePlanSelection(planId: string) {
+    setSelectedPlanIds((current) => (
+      current.includes(planId)
+        ? current.filter((item) => item !== planId)
+        : [...current, planId]
+    ));
+  }
+
+  function replaceSelection(planIds: string[]) {
+    const nextIds = [...new Set(planIds.filter(Boolean))];
+    setSelectedPlanIds(nextIds);
+  }
 
   return (
     <>
@@ -355,6 +380,109 @@ export function ExecutionPage() {
 
       <section className="panel-grid">
         <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '批量处置工具栏' : 'Bulk Queue Actions'}</div><div className="panel-copy">{locale === 'zh' ? '从审批、重试、补偿和 incident 队列一键选取执行计划，并批量执行处置动作。' : 'Select execution plans from approvals, retries, compensation, and incident queues, then run bulk actions from one toolbar.'}</div></div><div className="panel-badge badge-info">{selectedPlanCount}</div></div>
+          <div className="focus-list">
+            <div className="focus-row">
+              <div className="focus-metric"><span>{locale === 'zh' ? '已选计划' : 'Selected Plans'}</span><strong>{selectedPlanCount}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? '审批队列' : 'Approvals'}</span><strong>{approvalQueueIds.length}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? '重试队列' : 'Retry'}</span><strong>{retryQueueIds.length}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? '自动补偿' : 'Auto Comp'}</span><strong>{automationQueueIds.length}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? 'Incident' : 'Incident'}</span><strong>{incidentQueueIds.length}</strong></div>
+            </div>
+            <div className="settings-actions">
+              <button type="button" className="inline-action" onClick={() => replaceSelection(approvalQueueIds)}>{locale === 'zh' ? '选中审批队列' : 'Select Approvals'}</button>
+              <button type="button" className="inline-action" onClick={() => replaceSelection(retryQueueIds)}>{locale === 'zh' ? '选中重试队列' : 'Select Retry Queue'}</button>
+              <button type="button" className="inline-action" onClick={() => replaceSelection(automationQueueIds)}>{locale === 'zh' ? '选中自动补偿' : 'Select Auto Comp'}</button>
+              <button type="button" className="inline-action" onClick={() => replaceSelection(compensationQueueIds)}>{locale === 'zh' ? '选中补偿队列' : 'Select Compensation'}</button>
+              <button type="button" className="inline-action" onClick={() => replaceSelection(incidentQueueIds)}>{locale === 'zh' ? '选中 Incident 队列' : 'Select Incidents'}</button>
+              <button type="button" className="inline-action" onClick={() => setSelectedPlanIds([])}>{locale === 'zh' ? '清空选择' : 'Clear Selection'}</button>
+            </div>
+            <div className="settings-actions">
+              <button
+                type="button"
+                className="inline-action inline-action-approve"
+                disabled={!canApproveExecution || !selectedPlanCount || planBusyAction === 'bulk-approve'}
+                onClick={async () => {
+                  setPlanBusyAction('bulk-approve');
+                  setPlanMessage('');
+                  try {
+                    const result = await bulkUpdateExecutionQueue({ action: 'approve', planIds: selectedPlanIds, actor: 'execution-desk' });
+                    setPlanMessage(locale === 'zh' ? `已批量批准 ${result.updatedIds.length} 条执行计划。` : `Approved ${result.updatedIds.length} execution plans in bulk.`);
+                    setRefreshKey((current) => current + 1);
+                  } catch (error) {
+                    setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                  } finally {
+                    setPlanBusyAction('');
+                  }
+                }}
+              >
+                {planBusyAction === 'bulk-approve' ? (locale === 'zh' ? '处理中...' : 'Running...') : (locale === 'zh' ? '批量批准' : 'Bulk Approve')}
+              </button>
+              <button
+                type="button"
+                className="inline-action"
+                disabled={!canApproveExecution || !selectedPlanCount || planBusyAction === 'bulk-compensate'}
+                onClick={async () => {
+                  setPlanBusyAction('bulk-compensate');
+                  setPlanMessage('');
+                  try {
+                    const result = await bulkUpdateExecutionQueue({ action: 'compensate', planIds: selectedPlanIds, actor: 'execution-desk' });
+                    setPlanMessage(locale === 'zh' ? `已批量执行 ${result.updatedIds.length} 条自动补偿。` : `Ran compensation automation for ${result.updatedIds.length} execution plans.`);
+                    setRefreshKey((current) => current + 1);
+                  } catch (error) {
+                    setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                  } finally {
+                    setPlanBusyAction('');
+                  }
+                }}
+              >
+                {planBusyAction === 'bulk-compensate' ? (locale === 'zh' ? '处理中...' : 'Running...') : (locale === 'zh' ? '批量补偿' : 'Bulk Compensate')}
+              </button>
+              <button
+                type="button"
+                className="inline-action"
+                disabled={!canApproveExecution || !selectedPlanCount || planBusyAction === 'bulk-reconcile'}
+                onClick={async () => {
+                  setPlanBusyAction('bulk-reconcile');
+                  setPlanMessage('');
+                  try {
+                    const result = await bulkUpdateExecutionQueue({ action: 'reconcile', planIds: selectedPlanIds, actor: 'execution-desk' });
+                    setPlanMessage(locale === 'zh' ? `已批量对账 ${result.updatedIds.length} 条执行计划。` : `Reconciled ${result.updatedIds.length} execution plans in bulk.`);
+                    setRefreshKey((current) => current + 1);
+                  } catch (error) {
+                    setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                  } finally {
+                    setPlanBusyAction('');
+                  }
+                }}
+              >
+                {planBusyAction === 'bulk-reconcile' ? (locale === 'zh' ? '处理中...' : 'Running...') : (locale === 'zh' ? '批量对账' : 'Bulk Reconcile')}
+              </button>
+              <button
+                type="button"
+                className="inline-action"
+                disabled={!canApproveExecution || !selectedPlanCount || planBusyAction === 'bulk-recover'}
+                onClick={async () => {
+                  setPlanBusyAction('bulk-recover');
+                  setPlanMessage('');
+                  try {
+                    const result = await bulkUpdateExecutionQueue({ action: 'recover', planIds: selectedPlanIds, actor: 'execution-desk' });
+                    setPlanMessage(locale === 'zh' ? `已批量恢复 ${result.updatedIds.length} 条执行计划。` : `Recovered ${result.updatedIds.length} execution plans in bulk.`);
+                    setRefreshKey((current) => current + 1);
+                  } catch (error) {
+                    setPlanMessage(error instanceof Error ? error.message : 'unknown error');
+                  } finally {
+                    setPlanBusyAction('');
+                  }
+                }}
+              >
+                {planBusyAction === 'bulk-recover' ? (locale === 'zh' ? '处理中...' : 'Running...') : (locale === 'zh' ? '批量恢复' : 'Bulk Recover')}
+              </button>
+            </div>
+            {planMessage ? <div className="status-copy">{planMessage}</div> : null}
+          </div>
+        </article>
+        <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '研究执行交接台' : 'Research Execution Handoffs'}</div><div className="panel-copy">{locale === 'zh' ? '查看研究侧正式移交过来的执行候选对象，并从这里把它们排队进入 execution workflow。' : 'Review formal handoff objects coming from research and queue them into execution workflows from one place.'}</div></div><div className="panel-badge badge-info">{handoffs.length}</div></div>
           <div className="focus-list">
             {handoffMessage ? <div className="status-copy">{handoffMessage}</div> : null}
@@ -428,16 +556,27 @@ export function ExecutionPage() {
                   { label: locale === 'zh' ? '订单进度' : 'Order Progress', value: entry.executionRun ? `${entry.executionRun.filledOrderCount}/${entry.executionRun.orderCount}` : '--' },
                 ]}
                 actions={(
-                  <button
-                    type="button"
-                    className="inline-action"
-                    disabled={selectedPlanId === entry.plan.id}
-                    onClick={() => setSelectedPlanId(entry.plan.id)}
-                  >
-                    {selectedPlanId === entry.plan.id
-                      ? (locale === 'zh' ? '已选中' : 'Selected')
-                      : (locale === 'zh' ? '查看' : 'Inspect')}
-                  </button>
+                  <div className="action-group">
+                    <button
+                      type="button"
+                      className="inline-action"
+                      onClick={() => togglePlanSelection(entry.plan.id)}
+                    >
+                      {selectedPlanIds.includes(entry.plan.id)
+                        ? (locale === 'zh' ? '取消选择' : 'Deselect')
+                        : (locale === 'zh' ? '加入批量' : 'Select')}
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-action"
+                      disabled={selectedPlanId === entry.plan.id}
+                      onClick={() => setSelectedPlanId(entry.plan.id)}
+                    >
+                      {selectedPlanId === entry.plan.id
+                        ? (locale === 'zh' ? '已选中' : 'Selected')
+                        : (locale === 'zh' ? '查看' : 'Inspect')}
+                    </button>
+                  </div>
                 )}
               />
             ))}

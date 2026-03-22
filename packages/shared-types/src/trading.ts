@@ -631,6 +631,23 @@ export type ExecutionWorkbenchResponse = {
   entries: ExecutionLedgerEntry[];
 };
 
+export type ExecutionBulkActionResult = {
+  planId: string;
+  ok: boolean;
+  action: 'approve' | 'reconcile' | 'compensate' | 'recover' | 'cancel';
+  lifecycleStatus: string;
+  compensationStatus: string;
+  incidentId: string;
+  error?: string;
+};
+
+export type ExecutionBulkActionResponse = {
+  ok: boolean;
+  action: 'approve' | 'reconcile' | 'compensate' | 'recover' | 'cancel';
+  updatedIds: string[];
+  results: ExecutionBulkActionResult[];
+};
+
 export type StrategyCatalogItem = {
   id: string;
   name: string;

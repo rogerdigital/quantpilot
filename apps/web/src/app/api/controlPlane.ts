@@ -20,6 +20,7 @@ import type {
   MonitoringAlertsResponse,
   MonitoringSnapshotsResponse,
   IncidentBulkUpdateResponse,
+  ExecutionBulkActionResponse,
   IncidentsResponse,
   IncidentDetailResponse,
   IncidentSummaryResponse,
@@ -556,6 +557,20 @@ export async function recoverExecutionPlan(planId: string, payload: {
   actor?: string;
 } = {}) {
   const response = await fetch(`/api/execution/plans/${planId}/recover`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
+}
+
+export async function bulkUpdateExecutionQueue(payload: {
+  action: 'approve' | 'reconcile' | 'compensate' | 'recover' | 'cancel';
+  planIds: string[];
+  actor?: string;
+}): Promise<ExecutionBulkActionResponse> {
+  const response = await fetch('/api/execution/plans/bulk', {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),

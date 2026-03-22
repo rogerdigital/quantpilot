@@ -13,7 +13,7 @@ import { evaluateBacktestRun, getResearchEvaluationSummary, listResearchEvaluati
 import { getResearchReportSummary, listResearchReports } from '../../domains/research/services/report-service.mjs';
 import { getResearchWorkbenchSnapshot, listResearchGovernanceActions, runResearchGovernanceAction } from '../../domains/research/services/workbench-service.mjs';
 import { getExecutionPlanDetail, getExecutionWorkbench, getLatestBrokerAccountSnapshot, listBrokerAccountSnapshots, listBrokerExecutionEvents, listExecutionLedger, listExecutionPlans, listExecutionRuntimeEvents } from '../../domains/execution/services/query-service.mjs';
-import { approveExecutionPlan, cancelExecutionPlan, compensateExecutionPlan, ingestBrokerExecutionEvent, reconcileExecutionPlan, recoverExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../domains/execution/services/lifecycle-service.mjs';
+import { approveExecutionPlan, bulkOperateExecutionPlans, cancelExecutionPlan, compensateExecutionPlan, ingestBrokerExecutionEvent, reconcileExecutionPlan, recoverExecutionPlan, settleExecutionPlan, syncExecutionPlan } from '../../domains/execution/services/lifecycle-service.mjs';
 import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { listPermissionDescriptors, writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
 import { getMonitoringStatus, listMonitoringAlerts, listMonitoringSnapshots } from '../../modules/monitoring/service.mjs';
@@ -553,6 +553,17 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/execution/workbench') {
     writeJson(res, 200, getExecutionWorkbench());
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/execution/plans/bulk') {
+    if (!hasPermission('execution:approve')) {
+      writeForbidden('execution:approve', 'run bulk execution actions');
+      return true;
+    }
+    const body = await readJsonBody(req);
+    const result = bulkOperateExecutionPlans(body);
+    writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
 

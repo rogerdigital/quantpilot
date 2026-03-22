@@ -177,6 +177,7 @@ quantpilot/
 - `execution operations console` 已开始形成：执行台现会把审批、重试、补偿、incident 和活跃路由压成统一处置队列，并补上 owner 负载视图，执行侧已经开始从“逐条查看计划”转向“按运营队列处理异常和积压”。
 - `execution account reconciliation` 已开始做深：对账层现在除了 orders / fills / positions，还会比较 cash、buying power、equity、deployed capital、residual capital 和 snapshot cadence，执行台也会直接展示这些账户级信号。
 - `execution compensation automation` 已开始形成：执行层现在会把 compensation posture 进一步拆成自动对账刷新、incident 同步和 operator follow-up 三层步骤，并在执行台暴露正式的自动补偿动作。
+- `execution bulk queue actions` 已开始形成：执行台现在可以直接从 approval、retry、compensation 和 incident 队列选取执行计划，并批量执行 `approve / reconcile / compensate / recover` 等动作。
 - Overview 首页已开始消费后端 `monitoring status` 摘要，可直接观察 `broker / market / worker / workflow / queues` 运行态。
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
 - 账户写操作和券商绑定变更已经进入 audit records，基础对象变更具备最小留痕能力。

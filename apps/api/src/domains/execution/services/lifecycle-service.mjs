@@ -862,6 +862,58 @@ export function compensateExecutionPlan(planId, payload = {}) {
   };
 }
 
+export function bulkOperateExecutionPlans(payload = {}) {
+  const action = ['approve', 'reconcile', 'compensate', 'recover', 'cancel'].includes(payload.action)
+    ? payload.action
+    : '';
+  const planIds = [...new Set((Array.isArray(payload.planIds) ? payload.planIds : [])
+    .map((item) => String(item || '').trim())
+    .filter(Boolean))];
+
+  if (!action) {
+    return {
+      ok: false,
+      error: 'execution bulk action invalid',
+      message: 'Execution bulk action is required.',
+    };
+  }
+
+  if (!planIds.length) {
+    return {
+      ok: false,
+      error: 'execution bulk selection empty',
+      message: 'Select at least one execution plan before running a bulk action.',
+    };
+  }
+
+  const results = planIds.map((planId) => {
+    let result = null;
+    if (action === 'approve') result = approveExecutionPlan(planId, payload);
+    if (action === 'reconcile') result = reconcileExecutionPlan(planId, payload);
+    if (action === 'compensate') result = compensateExecutionPlan(planId, payload);
+    if (action === 'recover') result = recoverExecutionPlan(planId, payload);
+    if (action === 'cancel') result = cancelExecutionPlan(planId, payload);
+
+    const detail = getExecutionPlanDetail(planId);
+    return {
+      planId,
+      ok: Boolean(result?.ok),
+      action,
+      lifecycleStatus: detail?.executionRun?.lifecycleStatus || detail?.plan?.lifecycleStatus || '',
+      compensationStatus: detail?.compensation?.status || '',
+      incidentId: detail?.linkedIncidents?.find((incident) => incident.status !== 'resolved')?.id || '',
+      error: result?.ok ? '' : (result?.message || result?.error || 'unknown error'),
+    };
+  });
+
+  return {
+    ok: true,
+    action,
+    updatedIds: results.filter((item) => item.ok).map((item) => item.planId),
+    results,
+  };
+}
+
 export function recoverExecutionPlan(planId, payload = {}) {
   const detail = getExecutionPlanDetail(planId);
   if (!detail?.plan) {

@@ -1712,6 +1712,73 @@ test('POST /api/execution/plans/:id/approve transitions awaiting plans into subm
   assert.equal(response.json.orderStates.every((item) => item.lifecycleStatus === 'submitted'), true);
 });
 
+test('POST /api/execution/plans/bulk runs approval actions across multiple execution plans', async () => {
+  ['exec-bulk-approve-plan-1', 'exec-bulk-approve-plan-2'].forEach((planId, index) => {
+    context.executionPlans.appendExecutionPlan({
+      id: planId,
+      strategyId: 'ema-cross-us',
+      strategyName: `US Trend Ema Cross ${index + 1}`,
+      mode: 'live',
+      status: 'ready',
+      lifecycleStatus: 'awaiting_approval',
+      approvalState: 'required',
+      riskStatus: 'approved',
+      summary: 'Awaiting approval.',
+      capital: 100000,
+      orderCount: 1,
+      orders: [{ symbol: index === 0 ? 'AAPL' : 'MSFT', side: 'BUY', qty: 5, weight: 1, rationale: 'trend' }],
+    });
+    context.executionRuns.appendExecutionRun({
+      id: `exec-bulk-approve-run-${index + 1}`,
+      executionPlanId: planId,
+      strategyId: 'ema-cross-us',
+      strategyName: `US Trend Ema Cross ${index + 1}`,
+      mode: 'live',
+      lifecycleStatus: 'awaiting_approval',
+      summary: 'Awaiting approval.',
+      owner: 'execution-desk',
+      orderCount: 1,
+    });
+    context.executionRuns.appendExecutionOrderStates([{
+      id: `exec-bulk-approve-order-${index + 1}`,
+      executionPlanId: planId,
+      executionRunId: `exec-bulk-approve-run-${index + 1}`,
+      symbol: index === 0 ? 'AAPL' : 'MSFT',
+      side: 'BUY',
+      qty: 5,
+      weight: 1,
+      lifecycleStatus: 'planned',
+      brokerOrderId: '',
+      filledQty: 0,
+      avgFillPrice: null,
+      summary: 'planned',
+      createdAt: '',
+      updatedAt: '',
+      submittedAt: '',
+      acknowledgedAt: '',
+      filledAt: '',
+      metadata: {},
+    }]);
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/execution/plans/bulk',
+    body: {
+      actor: 'execution-desk',
+      action: 'approve',
+      planIds: ['exec-bulk-approve-plan-1', 'exec-bulk-approve-plan-2'],
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.action, 'approve');
+  assert.deepEqual(response.json.updatedIds.sort(), ['exec-bulk-approve-plan-1', 'exec-bulk-approve-plan-2']);
+  assert.equal(response.json.results.every((item) => item.ok), true);
+  assert.equal(response.json.results.every((item) => item.lifecycleStatus === 'submitted'), true);
+});
+
 test('POST /api/execution/plans/:id/settle moves submitted plans into filled lifecycle', async () => {
   context.executionPlans.appendExecutionPlan({
     id: 'exec-settle-plan',

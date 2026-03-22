@@ -177,6 +177,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - `execution operations console` now exposes approval, retry, compensation, incident, and active-routing queues plus owner load, so the execution desk can work from a queue-based operating view instead of only inspecting individual plans.
 - `execution account reconciliation` now compares cash, buying power, equity, deployed capital, residual capital, and snapshot cadence in addition to order and position drift, and the execution console surfaces those account-level signals directly.
 - `execution compensation automation` now turns compensation posture into a structured plan with automated reconciliation refresh, incident sync, and operator follow-up steps, and exposes a dedicated `compensate` action from the execution desk.
+- `execution bulk queue actions` now let the execution desk select plans from approval, retry, compensation, and incident queues and run bulk `approve / reconcile / compensate / recover` actions from the same console.
 - The Overview page consumes backend `monitoring status`.
 - `user-account` now owns persisted `profile / preferences / access / broker bindings`.
 - Account mutations and broker-binding changes are audited.
