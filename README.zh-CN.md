@@ -1,6 +1,6 @@
 # QuantPilot
 
-默认 README 现已切换为英文版，见 [README.md](/Users/Roger/codex/quantpilot/README.md)。本文件为中文同步版，后续会与英文版一起维护。
+[English](/Users/Roger/codex/quantpilot/README.md) | [中文](/Users/Roger/codex/quantpilot/README.zh-CN.md)
 
 QuantPilot 是一个 AI 自动量化交易平台项目，目标定义为：
 
