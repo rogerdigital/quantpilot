@@ -17,10 +17,12 @@ import { useMonitoringSnapshotsFeed } from '../../modules/notifications/useMonit
 import { useOperationsWorkbench } from '../../modules/notifications/useOperationsWorkbench.ts';
 import { useOperatorActionsFeed } from '../../modules/notifications/useOperatorActionsFeed.ts';
 import { useRiskEventsFeed } from '../../modules/notifications/useRiskEventsFeed.ts';
+import { useSchedulerWorkbench } from '../../modules/notifications/useSchedulerWorkbench.ts';
 import { useSchedulerTicksFeed } from '../../modules/notifications/useSchedulerTicksFeed.ts';
 import { useWorkflowRunsFeed } from '../../modules/notifications/useWorkflowRunsFeed.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { ActivityLog } from '../console/components/ConsoleTables.tsx';
+import { InspectionSelectableRow } from '../console/components/InspectionPanels.tsx';
 import { copy, useLocale } from '../console/i18n.tsx';
 import { connectionLabel, fmtDateTime, monitoringTone, translateMonitoringStatus, translateProviderLabel } from '../console/utils.ts';
 
@@ -366,6 +368,11 @@ function NotificationsPage() {
     hours: activeSchedulerTimeWindow.hours,
     phase: schedulerPhaseFilter === 'all' ? '' : schedulerPhaseFilter,
   });
+  const { workbench: schedulerWorkbench, loading: schedulerWorkbenchLoading } = useSchedulerWorkbench({
+    hours: activeSchedulerTimeWindow.hours,
+    limit: 12,
+    refreshKey: incidentRefreshKey,
+  });
   const marketConnected = marketStatus?.connected ?? state.integrationStatus.marketData.connected;
   const marketFallback = marketStatus?.fallback ?? !marketConnected;
   const brokerConnected = Boolean(snapshot?.connected ?? state.integrationStatus.broker.connected);
@@ -403,9 +410,9 @@ function NotificationsPage() {
   const auditWorkflowCount = auditItems.filter((item) => item.type === 'workflow').length;
   const auditExecutionCount = auditItems.filter((item) => item.type === 'execution-plan').length;
   const auditAgentCount = auditItems.filter((item) => item.type === 'agent-action-request').length;
-  const schedulerOffHoursCount = schedulerItems.filter((item) => item.phase === 'OFF_HOURS').length;
-  const schedulerIntradayCount = schedulerItems.filter((item) => item.phase === 'INTRADAY').length;
-  const schedulerAttentionCount = schedulerItems.filter((item) => item.status !== 'ok' && item.status !== 'healthy').length;
+  const schedulerOffHoursCount = schedulerWorkbench.summary.offHoursTicks;
+  const schedulerIntradayCount = schedulerWorkbench.summary.intradayTicks;
+  const schedulerAttentionCount = schedulerWorkbench.summary.attentionTicks;
   const controlPlaneBoards = [
     {
       id: 'monitoring',
@@ -811,6 +818,69 @@ function NotificationsPage() {
   function focusSchedulerItem(phase: string) {
     applySchedulerFocus({ phase, timeWindow: '24h' });
     applyNotificationFocus({ source: 'scheduler', timeWindow: '24h' });
+  }
+
+  function focusSchedulerWorkbenchLane(key: 'pre-open' | 'intraday' | 'post-close' | 'off-hours' | 'incidents' | 'cycles' | 'notifications' | 'risk') {
+    if (key === 'pre-open') {
+      focusSchedulerItem('PRE_OPEN');
+      return;
+    }
+    if (key === 'intraday') {
+      focusSchedulerItem('INTRADAY');
+      return;
+    }
+    if (key === 'post-close') {
+      focusSchedulerItem('POST_CLOSE');
+      return;
+    }
+    if (key === 'off-hours') {
+      focusSchedulerItem('OFF_HOURS');
+      return;
+    }
+    if (key === 'incidents') {
+      applyIncidentFocus({ source: 'scheduler', timeWindow: '7d' });
+      return;
+    }
+    if (key === 'cycles') {
+      applyAuditFocus({ type: 'cycle', timeWindow: '24h' });
+      applyNotificationFocus({ source: 'task-orchestrator', timeWindow: '24h' });
+      return;
+    }
+    if (key === 'notifications') {
+      applyNotificationFocus({ source: 'scheduler', timeWindow: '24h' });
+      return;
+    }
+    applyRiskFocus({ level: 'all', status: 'all' });
+    applyMonitoringFocus({ source: 'risk', timeWindow: '24h' });
+  }
+
+  function focusSchedulerRunbook(key: 'review-current-window' | 'triage-scheduler-incidents' | 'clear-scheduler-signals' | 'follow-cycle-drift' | 'align-risk-window' | 'review-off-hours-watch') {
+    if (key === 'review-current-window') {
+      const phase = schedulerWorkbench.posture.currentPhase && schedulerWorkbench.posture.currentPhase !== 'UNKNOWN'
+        ? schedulerWorkbench.posture.currentPhase
+        : 'INTRADAY';
+      focusSchedulerItem(phase);
+      return;
+    }
+    if (key === 'triage-scheduler-incidents') {
+      applyIncidentFocus({ source: 'scheduler', timeWindow: '7d' });
+      return;
+    }
+    if (key === 'clear-scheduler-signals') {
+      applyNotificationFocus({ source: 'scheduler', timeWindow: '24h' });
+      return;
+    }
+    if (key === 'follow-cycle-drift') {
+      applyAuditFocus({ type: 'cycle', timeWindow: '24h' });
+      applyNotificationFocus({ source: 'task-orchestrator', timeWindow: '24h' });
+      return;
+    }
+    if (key === 'align-risk-window') {
+      applyRiskFocus({ level: 'all', status: 'all' });
+      applyMonitoringFocus({ source: 'risk', timeWindow: '24h' });
+      return;
+    }
+    focusSchedulerItem('OFF_HOURS');
   }
 
   function focusOperatorActionItem(level: string) {
@@ -3473,6 +3543,133 @@ function NotificationsPage() {
             <button type="button" className="status-row status-row-button" onClick={() => applyNotificationFocus({ source: 'task-orchestrator', timeWindow: '24h' })}><span>{locale === 'zh' ? '最近行情同步' : 'Last market sync'}</span><strong>{fmtDateTime(marketStatus?.asOf, locale)}</strong></button>
             <div className="status-copy">{marketStatus?.message || state.integrationStatus.marketData.message}</div>
             <div className="status-copy">{snapshot?.message || state.integrationStatus.broker.message}</div>
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '调度运营工作台' : 'Scheduler Operations Workbench'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把 scheduler windows、cycle drift、scheduler notifications 和相关 risk linkage 收到统一工作台里。'
+                  : 'Collapse scheduler windows, cycle drift, scheduler notifications, and linked risk signals into one operations workbench.'}
+              </div>
+            </div>
+            <div className={`panel-badge badge-${monitoringTone(schedulerWorkbench.posture.status)}`}>{schedulerWorkbench.summary.totalTicks}</div>
+          </div>
+          <div className="metrics-grid metrics-grid-compact">
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '当前窗口' : 'Current Phase'}</span>
+              <strong>{schedulerWorkbench.posture.currentPhase || '--'}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '关注项' : 'Attention'}</span>
+              <strong>{schedulerWorkbench.summary.attentionTicks}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Cycle Drift' : 'Cycle Drift'}</span>
+              <strong>{schedulerWorkbench.summary.cycleAttention}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Scheduler Incidents' : 'Scheduler Incidents'}</span>
+              <strong>{schedulerWorkbench.summary.openIncidents}</strong>
+            </div>
+          </div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '姿态' : 'Posture'}</span><strong>{schedulerWorkbench.posture.title || '--'}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '最近节拍' : 'Last Tick'}</span><strong>{fmtDateTime(schedulerWorkbench.posture.lastTickAt, locale)}</strong></div>
+            <div className="status-copy">{schedulerWorkbench.posture.detail || (locale === 'zh' ? '当前 scheduler posture 会随着窗口和控制面信号实时聚合。' : 'The scheduler posture is derived from live windows and control-plane signals.')}</div>
+          </div>
+          <div className="focus-list">
+            {schedulerWorkbenchLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载调度工作台...' : 'Loading scheduler workbench...'}</div> : null}
+            {!schedulerWorkbenchLoading ? schedulerWorkbench.lanes.map((lane) => (
+              <div className="focus-row" key={lane.key}>
+                <button type="button" className="focus-main-button" onClick={() => focusSchedulerWorkbenchLane(lane.key)}>
+                  <div className="symbol-cell">
+                    <strong>{lane.title}</strong>
+                    <span>{lane.detail}</span>
+                  </div>
+                </button>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '主要计数' : 'Primary'}</span>
+                  <strong>{lane.primaryCount}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '次级计数' : 'Secondary'}</span>
+                  <strong>{lane.secondaryCount}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                  <strong>{lane.status}</strong>
+                </div>
+              </div>
+            )) : null}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '调度 Runbook 与队列' : 'Scheduler Runbook And Queue'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把当前窗口、incident、cycle、notification 和风险联动压成可执行的 scheduler 处置路径。'
+                  : 'Turn the active window, incidents, cycles, notifications, and risk linkage into operator-ready scheduler actions.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-info">{schedulerWorkbench.runbook.length}</div>
+          </div>
+          <div className="focus-list">
+            <div className="focus-row">
+              <div className="focus-metric"><span>{locale === 'zh' ? 'Attention Ticks' : 'Attention Ticks'}</span><strong>{schedulerWorkbench.queue.attentionTicks.length}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? 'Incidents' : 'Incidents'}</span><strong>{schedulerWorkbench.queue.incidents.length}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? 'Notifications' : 'Notifications'}</span><strong>{schedulerWorkbench.queue.notifications.length}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? 'Cycles' : 'Cycles'}</span><strong>{schedulerWorkbench.queue.cycleRecords.length}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? 'Risk' : 'Risk'}</span><strong>{schedulerWorkbench.queue.riskEvents.length}</strong></div>
+            </div>
+            {schedulerWorkbench.runbook.map((item) => (
+              <div className="focus-row" key={item.key}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '优先级' : 'Priority'}</span>
+                  <strong>{item.priority}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '计数' : 'Count'}</span>
+                  <strong>{item.count}</strong>
+                </div>
+                <button type="button" className="inline-action" onClick={() => focusSchedulerRunbook(item.key)}>
+                  {locale === 'zh' ? '执行建议' : 'Focus Action'}
+                </button>
+              </div>
+            ))}
+            {!schedulerWorkbench.runbook.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有额外的 scheduler runbook 动作。' : 'No extra scheduler runbook actions are queued right now.'}</div> : null}
+            {schedulerWorkbench.queue.attentionTicks.slice(0, 2).map((item) => (
+              <InspectionSelectableRow
+                key={item.id}
+                metrics={[
+                  { label: locale === 'zh' ? '窗口' : 'Phase', value: item.phase },
+                  { label: locale === 'zh' ? '状态' : 'Status', value: item.status },
+                  { label: locale === 'zh' ? '标题' : 'Title', value: item.title },
+                  { label: locale === 'zh' ? '时间' : 'Time', value: fmtDateTime(item.createdAt, locale) },
+                ]}
+                actions={<button type="button" className="inline-action" onClick={() => focusSchedulerItem(item.phase)}>{locale === 'zh' ? '打开窗口' : 'Open Phase'}</button>}
+              />
+            ))}
+            {schedulerWorkbench.queue.incidents.slice(0, 2).map((item) => (
+              <InspectionSelectableRow
+                key={item.id}
+                metrics={[
+                  { label: locale === 'zh' ? 'Incident' : 'Incident', value: item.title },
+                  { label: locale === 'zh' ? '级别' : 'Severity', value: item.severity },
+                  { label: locale === 'zh' ? '状态' : 'Status', value: item.status },
+                  { label: locale === 'zh' ? '负责人' : 'Owner', value: item.owner || '--' },
+                ]}
+                actions={<button type="button" className="inline-action" onClick={() => applyIncidentFocus({ incidentId: item.id, source: 'scheduler', timeWindow: '7d' })}>{locale === 'zh' ? '打开事件' : 'Open Incident'}</button>}
+              />
+            ))}
           </div>
         </article>
         <article className="panel">

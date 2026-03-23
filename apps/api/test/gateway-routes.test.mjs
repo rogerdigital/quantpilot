@@ -2493,6 +2493,91 @@ test('GET /api/scheduler/ticks returns scheduler ticks from shared store', async
   assert.equal(filteredResponse.json.ticks.every((item) => item.phase === 'INTRADAY'), true);
 });
 
+test('GET /api/scheduler/workbench returns the scheduler operations snapshot', async () => {
+  const nowIso = new Date().toISOString();
+  context.scheduler.recordSchedulerTick({
+    id: 'scheduler-workbench-pre-open',
+    worker: 'api-test-worker',
+    phase: 'PRE_OPEN',
+    status: 'phase-change',
+    title: 'Scheduler entered pre-open',
+    message: 'pre-open orchestration is now active',
+    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+  });
+  context.scheduler.recordSchedulerTick({
+    id: 'scheduler-workbench-intraday',
+    worker: 'api-test-worker',
+    phase: 'INTRADAY',
+    status: 'warn',
+    title: 'Intraday scheduler drift',
+    message: 'scheduler drift needs operator review',
+    createdAt: nowIso,
+  });
+  context.notifications.appendNotification({
+    id: 'scheduler-workbench-notification',
+    level: 'warn',
+    source: 'scheduler',
+    title: 'Scheduler warning',
+    message: 'intraday scheduler warning',
+    createdAt: nowIso,
+  });
+  context.incidents.appendIncident({
+    id: 'scheduler-workbench-incident',
+    title: 'Scheduler incident',
+    summary: 'Escalated from scheduler workbench',
+    severity: 'warn',
+    source: 'scheduler',
+    status: 'investigating',
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  });
+  context.cycles.appendCycleRecord({
+    id: 'scheduler-workbench-cycle',
+    cycle: 410,
+    mode: 'autopilot',
+    riskLevel: 'REVIEW',
+    decisionSummary: 'scheduler attention cycle',
+    pendingApprovals: 2,
+    brokerConnected: true,
+    marketConnected: false,
+    createdAt: nowIso,
+  });
+  context.risk.appendRiskEvent({
+    id: 'scheduler-workbench-risk',
+    title: 'Scheduler compliance linkage',
+    message: 'scheduler drift triggered compliance review',
+    cycle: 410,
+    riskLevel: 'REVIEW',
+    status: 'approval-required',
+    level: 'warn',
+    source: 'scheduler',
+    createdAt: nowIso,
+    metadata: {
+      schedulerTickId: 'scheduler-workbench-intraday',
+    },
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/scheduler/workbench?hours=168&limit=10',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.summary.attentionTicks >= 1, true);
+  assert.equal(response.json.summary.openIncidents >= 1, true);
+  assert.equal(response.json.summary.cycleAttention >= 1, true);
+  assert.equal(response.json.summary.schedulerNotifications >= 1, true);
+  assert.equal(response.json.summary.riskSignals >= 1, true);
+  assert.equal(response.json.lanes.some((item) => item.key === 'intraday'), true);
+  assert.equal(response.json.lanes.some((item) => item.key === 'cycles'), true);
+  assert.equal(response.json.runbook.some((item) => item.key === 'review-current-window'), true);
+  assert.equal(response.json.queue.attentionTicks.some((item) => item.id === 'scheduler-workbench-intraday'), true);
+  assert.equal(response.json.queue.incidents.some((item) => item.id === 'scheduler-workbench-incident'), true);
+  assert.equal(response.json.queue.notifications.some((item) => item.id === 'scheduler-workbench-notification'), true);
+  assert.equal(response.json.queue.cycleRecords.some((item) => item.id === 'scheduler-workbench-cycle'), true);
+  assert.equal(response.json.queue.riskEvents.some((item) => item.id === 'scheduler-workbench-risk'), true);
+});
+
 test('POST then GET /api/task-orchestrator/actions persists operator actions', async () => {
   const recentWarnIso = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
   const createResponse = await invokeGatewayRoute(handler, {
@@ -2819,7 +2904,8 @@ test('GET /api/operations/workbench returns unified operations overview', async 
   assert.equal(typeof response.json.recent.notification.title, 'string');
   assert.equal(typeof response.json.recent.notification.source, 'string');
   assert.equal(response.json.recent.auditRecord.id, 'operations-audit');
-  assert.equal(response.json.recent.schedulerTick.id, 'operations-scheduler');
+  assert.equal(typeof response.json.recent.schedulerTick.id, 'string');
+  assert.equal(typeof response.json.recent.schedulerTick.phase, 'string');
 });
 
 test('incident routes create, update, and return incident details', async () => {

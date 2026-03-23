@@ -1,5 +1,6 @@
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
 import { getMonitoringStatus } from '../monitoring/service.mjs';
+import { isSchedulerAttentionStatus } from '../scheduler/service.mjs';
 
 const ACK_OVERDUE_HOURS = 1;
 const STALE_HOURS = 24;
@@ -28,10 +29,6 @@ function getAgeHours(timestamp) {
   const valueMs = parseTimestamp(timestamp);
   if (valueMs === null) return 0;
   return Math.max(0, (Date.now() - valueMs) / (60 * 60 * 1000));
-}
-
-function isSchedulerAttention(status) {
-  return status && status !== 'healthy' && status !== 'ok' && status !== 'completed' && status !== 'success';
 }
 
 function buildRunbookEntries(input) {
@@ -129,7 +126,7 @@ export async function getOperationsWorkbench(options = {}) {
     since,
   });
 
-  const schedulerAttention = schedulerTicks.filter((item) => isSchedulerAttention(item.status));
+  const schedulerAttention = schedulerTicks.filter((item) => isSchedulerAttentionStatus(item.status));
   const connectivityIssues = countBy([
     monitoring.services.broker.status,
     monitoring.services.market.status,

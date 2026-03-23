@@ -1526,6 +1526,98 @@ export type RiskWorkbenchResponse = {
   };
 };
 
+export type SchedulerWorkbenchResponse = {
+  ok: boolean;
+  generatedAt: string;
+  posture: {
+    status: 'healthy' | 'warn' | 'critical';
+    title: string;
+    detail: string;
+    currentPhase: string;
+    lastTickAt: string;
+  };
+  summary: {
+    totalTicks: number;
+    attentionTicks: number;
+    criticalTicks: number;
+    phaseChanges: number;
+    preOpenTicks: number;
+    intradayTicks: number;
+    postCloseTicks: number;
+    offHoursTicks: number;
+    openIncidents: number;
+    cycleAttention: number;
+    schedulerNotifications: number;
+    riskSignals: number;
+  };
+  lanes: Array<{
+    key: 'pre-open' | 'intraday' | 'post-close' | 'off-hours' | 'incidents' | 'cycles' | 'notifications' | 'risk';
+    title: string;
+    status: string;
+    detail: string;
+    primaryCount: number;
+    secondaryCount: number;
+    updatedAt: string;
+  }>;
+  runbook: Array<{
+    key: 'review-current-window' | 'triage-scheduler-incidents' | 'clear-scheduler-signals' | 'follow-cycle-drift' | 'align-risk-window' | 'review-off-hours-watch';
+    priority: 'now' | 'next';
+    title: string;
+    detail: string;
+    count: number;
+  }>;
+  queue: {
+    attentionTicks: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestSchedulerTick']>>;
+    incidents: IncidentRecord[];
+    notifications: Array<{
+      id: string;
+      level: string;
+      title: string;
+      message: string;
+      source: string;
+      createdAt: string;
+      metadata?: Record<string, unknown>;
+    }>;
+    cycleRecords: Array<{
+      id: string;
+      cycle: number;
+      mode: string;
+      riskLevel: string;
+      decisionSummary: string;
+      pendingApprovals: number;
+      brokerConnected: boolean;
+      marketConnected: boolean;
+      createdAt: string;
+    }>;
+    riskEvents: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestRiskEvent']>>;
+  };
+  recent: {
+    ticks: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestSchedulerTick']>>;
+    incidents: IncidentRecord[];
+    notifications: Array<{
+      id: string;
+      level: string;
+      title: string;
+      message: string;
+      source: string;
+      createdAt: string;
+      metadata?: Record<string, unknown>;
+    }>;
+    cycleRecords: Array<{
+      id: string;
+      cycle: number;
+      mode: string;
+      riskLevel: string;
+      decisionSummary: string;
+      pendingApprovals: number;
+      brokerConnected: boolean;
+      marketConnected: boolean;
+      createdAt: string;
+    }>;
+    riskEvents: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestRiskEvent']>>;
+  };
+};
+
 export type IncidentRecord = {
   id: string;
   title: string;

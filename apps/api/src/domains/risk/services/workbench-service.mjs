@@ -1,4 +1,5 @@
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
+import { isSchedulerAttentionStatus } from '../../../modules/scheduler/service.mjs';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);
@@ -38,10 +39,6 @@ function getLiveExposure(snapshot) {
     exposurePct: equity > 0 ? (marketValue / equity) * 100 : 0,
     concentrationPct: equity > 0 ? (largestPosition / equity) * 100 : 0,
   };
-}
-
-function isSchedulerAttention(status = '') {
-  return ['warn', 'critical', 'phase-change'].includes(status);
 }
 
 function createRunbook(input) {
@@ -171,7 +168,7 @@ export function getRiskWorkbench(options = {}) {
   const riskIncidents = incidents.filter((item) => item.status !== 'resolved')
     .filter((item) => item.source === 'risk' || item.metadata?.riskEventId);
   const criticalIncidents = riskIncidents.filter((item) => item.severity === 'critical');
-  const schedulerAttention = schedulerTicks.filter((item) => isSchedulerAttention(item.status));
+  const schedulerAttention = schedulerTicks.filter((item) => isSchedulerAttentionStatus(item.status));
   const exposure = getLiveExposure(brokerSnapshot);
   const emergencyActions = blockedExecutionPlans.length + riskOffEvents.length;
   const posture = resolvePosture({

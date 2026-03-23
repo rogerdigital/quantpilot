@@ -5,7 +5,7 @@ import { appendIncidentNote, appendIncidentTask, bulkUpdateIncidents, createInci
 import { listNotifications } from '../../modules/notification/service.mjs';
 import { getRiskEvent, listRiskEvents } from '../../domains/risk/services/feed-service.mjs';
 import { getRiskWorkbench } from '../../domains/risk/services/workbench-service.mjs';
-import { listSchedulerTicks } from '../../modules/scheduler/service.mjs';
+import { getSchedulerWorkbench, listSchedulerTicks } from '../../modules/scheduler/service.mjs';
 import { runCycle } from '../../control-plane/task-orchestrator/cycle-runner.mjs';
 import { runStateCycle } from '../../control-plane/task-orchestrator/state-runner.mjs';
 import {
@@ -208,6 +208,15 @@ export async function handleControlPlaneRoutes(context) {
         hours: reqUrl.searchParams.get('hours'),
       }),
     });
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/scheduler/workbench') {
+    writeJson(res, 200, getSchedulerWorkbench({
+      limit: reqUrl.searchParams.get('limit'),
+      hours: reqUrl.searchParams.get('hours'),
+      phase: reqUrl.searchParams.get('phase'),
+    }));
     return true;
   }
 

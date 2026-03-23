@@ -17,6 +17,7 @@ import type {
   MonitoringStatusSnapshot,
   OperationsWorkbenchResponse,
   RiskWorkbenchResponse,
+  SchedulerWorkbenchResponse,
   MonitoringAlertsResponse,
   MonitoringSnapshotsResponse,
   IncidentBulkUpdateResponse,
@@ -351,6 +352,12 @@ export async function fetchSchedulerTicks(options: SchedulerTicksQuery = {}): Pr
   }>;
 }> {
   return fetchJson(`/api/scheduler/ticks${buildSchedulerTicksQuery(options)}`, {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export async function fetchSchedulerWorkbench(options: SchedulerTicksQuery = {}): Promise<SchedulerWorkbenchResponse> {
+  return fetchJson(`/api/scheduler/workbench${buildSchedulerTicksQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
