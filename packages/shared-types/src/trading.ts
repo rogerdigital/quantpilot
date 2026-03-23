@@ -1524,6 +1524,67 @@ export type RiskWorkbenchResponse = {
     brokerSnapshot: BrokerAccountSnapshotRecord | null;
     schedulerTicks: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestSchedulerTick']>>;
   };
+  linkage: RiskSchedulerLinkageSnapshot;
+};
+
+export type RiskSchedulerLinkageSnapshot = {
+  posture: {
+    status: 'healthy' | 'warn' | 'critical';
+    title: string;
+    detail: string;
+  };
+  summary: {
+    linkedRiskEvents: number;
+    linkedSchedulerTicks: number;
+    linkedIncidents: number;
+    linkedNotifications: number;
+    cycleAttention: number;
+    currentPhaseAttention: number;
+    riskOffLinked: number;
+    complianceLinked: number;
+    activePhase: string;
+  };
+  lanes: Array<{
+    key: 'current-window' | 'risk-events' | 'scheduler-ticks' | 'incidents' | 'cycles' | 'notifications';
+    title: string;
+    status: string;
+    detail: string;
+    primaryCount: number;
+    secondaryCount: number;
+    updatedAt: string;
+  }>;
+  runbook: Array<{
+    key: 'focus-linked-window' | 'review-linked-risk' | 'triage-linked-incidents' | 'align-cycle-posture' | 'clear-linked-notifications';
+    priority: 'now' | 'next';
+    title: string;
+    detail: string;
+    count: number;
+  }>;
+  queue: {
+    riskEvents: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestRiskEvent']>>;
+    schedulerTicks: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestSchedulerTick']>>;
+    incidents: IncidentRecord[];
+    notifications: Array<{
+      id: string;
+      level: string;
+      title: string;
+      message: string;
+      source: string;
+      createdAt: string;
+      metadata?: Record<string, unknown>;
+    }>;
+    cycleRecords: Array<{
+      id: string;
+      cycle: number;
+      mode: string;
+      riskLevel: string;
+      decisionSummary: string;
+      pendingApprovals: number;
+      brokerConnected: boolean;
+      marketConnected: boolean;
+      createdAt: string;
+    }>;
+  };
 };
 
 export type SchedulerWorkbenchResponse = {
@@ -1616,6 +1677,7 @@ export type SchedulerWorkbenchResponse = {
     }>;
     riskEvents: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestRiskEvent']>>;
   };
+  linkage: RiskSchedulerLinkageSnapshot;
 };
 
 export type IncidentRecord = {

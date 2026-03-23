@@ -1,4 +1,5 @@
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
+import { getRiskSchedulerLinkage } from '../../domains/risk/services/risk-scheduler-linkage-service.mjs';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);
@@ -162,6 +163,7 @@ export function getSchedulerWorkbench(options = {}) {
   const riskEvents = controlPlaneRuntime.listRiskEvents(Math.max(limit * 3, 120))
     .filter((item) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since))
     .filter(isSchedulerLinkedRiskEvent);
+  const linkage = getRiskSchedulerLinkage({ limit, since });
 
   const attentionTicks = ticks.filter((item) => isSchedulerAttentionStatus(item.status));
   const criticalTicks = attentionTicks.filter((item) => isSchedulerCriticalStatus(item.status));
@@ -299,5 +301,6 @@ export function getSchedulerWorkbench(options = {}) {
       cycleRecords: takeLatest(cycleRecords, limit),
       riskEvents: takeLatest(riskEvents, limit),
     },
+    linkage,
   };
 }

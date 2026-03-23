@@ -111,6 +111,34 @@ function RiskPage() {
     }
   }
 
+  function focusRiskLinkageRunbook(key: (typeof workbench.linkage.runbook)[number]['key']) {
+    if (key === 'focus-linked-window') {
+      const tick = workbench.linkage.queue.schedulerTicks[0] || workbench.recent.schedulerTicks[0];
+      if (tick) setSelectedSchedulerTickId(tick.id);
+      return;
+    }
+    if (key === 'review-linked-risk') {
+      const event = workbench.linkage.queue.riskEvents[0] || workbench.recent.riskEvents[0];
+      if (event) setSelectedRiskEventId(event.id);
+      return;
+    }
+    if (key === 'triage-linked-incidents') {
+      const incident = workbench.linkage.queue.incidents[0] || workbench.reviewQueue.incidents[0];
+      if (incident) openIncident(incident.id);
+      return;
+    }
+    if (key === 'align-cycle-posture') {
+      navigate(buildDeepLink('/notifications', {
+        source: 'risk-scheduler-linkage',
+        scheduler: workbench.linkage.summary.activePhase || 'INTRADAY',
+      }));
+      return;
+    }
+    navigate(buildDeepLink('/notifications', {
+      source: 'scheduler',
+    }));
+  }
+
   return (
     <>
       <SectionHeader routeKey="risk" />
@@ -209,6 +237,33 @@ function RiskPage() {
               </div>
             ))}
             {!workbench.runbook.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有额外的 risk runbook 动作。' : 'No extra risk runbook actions are queued right now.'}</div> : null}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Risk Scheduler Linkage' : 'Risk Scheduler Linkage'}</div><div className="panel-copy">{locale === 'zh' ? '把同一条风控问题在 risk 与 scheduler 两侧的上下文收成一份联动视图。' : 'Collapse the shared risk and scheduler context for the same middleware issue into one linkage view.'}</div></div><div className={`panel-badge badge-${riskTone(workbench.linkage.posture.status)}`}>{workbench.linkage.summary.linkedRiskEvents + workbench.linkage.summary.linkedSchedulerTicks}</div></div>
+          <div className="focus-list">
+            <div className="focus-row">
+              <div className="focus-metric"><span>{locale === 'zh' ? '当前窗口' : 'Active Phase'}</span><strong>{workbench.linkage.summary.activePhase || '--'}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? 'Linked Risk' : 'Linked Risk'}</span><strong>{workbench.linkage.summary.linkedRiskEvents}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? 'Linked Scheduler' : 'Linked Scheduler'}</span><strong>{workbench.linkage.summary.linkedSchedulerTicks}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? 'Incidents' : 'Incidents'}</span><strong>{workbench.linkage.summary.linkedIncidents}</strong></div>
+              <div className="focus-metric"><span>{locale === 'zh' ? 'Cycle Drift' : 'Cycle Drift'}</span><strong>{workbench.linkage.summary.cycleAttention}</strong></div>
+            </div>
+            <div className="status-copy">{workbench.linkage.posture.detail || (locale === 'zh' ? '当前还没有明显的 risk/scheduler 联动异常。' : 'No material risk/scheduler linkage drift is active right now.')}</div>
+            {workbench.linkage.runbook.map((item) => (
+              <div className="focus-row" key={item.key}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
+                </div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '优先级' : 'Priority'}</span><strong>{item.priority}</strong></div>
+                <div className="focus-metric"><span>{locale === 'zh' ? '计数' : 'Count'}</span><strong>{item.count}</strong></div>
+                <button type="button" className="inline-action" onClick={() => focusRiskLinkageRunbook(item.key)}>
+                  {locale === 'zh' ? '执行建议' : 'Focus Action'}
+                </button>
+              </div>
+            ))}
+            {!workbench.linkage.runbook.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有额外的 risk/scheduler linkage 动作。' : 'No extra risk/scheduler linkage actions are queued right now.'}</div> : null}
           </div>
         </article>
       </section>

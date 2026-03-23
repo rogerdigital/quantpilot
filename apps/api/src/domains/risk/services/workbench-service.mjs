@@ -1,5 +1,6 @@
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
 import { isSchedulerAttentionStatus } from '../../../modules/scheduler/service.mjs';
+import { getRiskSchedulerLinkage } from './risk-scheduler-linkage-service.mjs';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);
@@ -151,6 +152,7 @@ export function getRiskWorkbench(options = {}) {
   const incidents = controlPlaneRuntime.listIncidents(120, { since });
   const brokerSnapshot = controlPlaneRuntime.listBrokerAccountSnapshots(1)[0] || null;
   const schedulerTicks = controlPlaneRuntime.listSchedulerTicks(80, { since });
+  const linkage = getRiskSchedulerLinkage({ limit, since });
 
   const unresolvedRiskEvents = riskEvents.filter((item) => item.status !== 'healthy');
   const riskOffEvents = riskEvents.filter((item) => item.status === 'risk-off');
@@ -323,5 +325,6 @@ export function getRiskWorkbench(options = {}) {
       brokerSnapshot,
       schedulerTicks: takeLatest(schedulerTicks, limit),
     },
+    linkage,
   };
 }

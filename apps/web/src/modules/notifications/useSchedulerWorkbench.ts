@@ -42,6 +42,33 @@ const EMPTY_WORKBENCH: SchedulerWorkbenchResponse = {
     cycleRecords: [],
     riskEvents: [],
   },
+  linkage: {
+    posture: {
+      status: 'healthy',
+      title: '',
+      detail: '',
+    },
+    summary: {
+      linkedRiskEvents: 0,
+      linkedSchedulerTicks: 0,
+      linkedIncidents: 0,
+      linkedNotifications: 0,
+      cycleAttention: 0,
+      currentPhaseAttention: 0,
+      riskOffLinked: 0,
+      complianceLinked: 0,
+      activePhase: '',
+    },
+    lanes: [],
+    runbook: [],
+    queue: {
+      riskEvents: [],
+      schedulerTicks: [],
+      incidents: [],
+      notifications: [],
+      cycleRecords: [],
+    },
+  },
 };
 
 export function useSchedulerWorkbench(options: {

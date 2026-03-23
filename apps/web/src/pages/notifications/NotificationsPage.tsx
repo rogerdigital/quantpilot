@@ -883,6 +883,29 @@ function NotificationsPage() {
     focusSchedulerItem('OFF_HOURS');
   }
 
+  function focusRiskSchedulerLinkage(key: 'focus-linked-window' | 'review-linked-risk' | 'triage-linked-incidents' | 'align-cycle-posture' | 'clear-linked-notifications') {
+    if (key === 'focus-linked-window') {
+      const phase = schedulerWorkbench.linkage.summary.activePhase || schedulerWorkbench.posture.currentPhase || 'INTRADAY';
+      applySchedulerFocus({ phase, timeWindow: '24h' });
+      return;
+    }
+    if (key === 'review-linked-risk') {
+      applyRiskFocus({ level: 'all', status: 'all' });
+      applyMonitoringFocus({ source: 'risk', timeWindow: '24h' });
+      return;
+    }
+    if (key === 'triage-linked-incidents') {
+      applyIncidentFocus({ source: 'scheduler', timeWindow: '7d' });
+      return;
+    }
+    if (key === 'align-cycle-posture') {
+      applyAuditFocus({ type: 'cycle', timeWindow: '24h' });
+      applyNotificationFocus({ source: 'task-orchestrator', timeWindow: '24h' });
+      return;
+    }
+    applyNotificationFocus({ source: 'scheduler', timeWindow: '24h' });
+  }
+
   function focusOperatorActionItem(level: string) {
     applyOperatorActionFocus({ level, timeWindow: '24h' });
     applyAuditFocus({ timeWindow: '24h' });
@@ -3604,6 +3627,75 @@ function NotificationsPage() {
                 </div>
               </div>
             )) : null}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? 'Risk Scheduler Linkage' : 'Risk Scheduler Linkage'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '把 risk events、scheduler ticks、linked incidents、cycle drift 和通知压成同一条联动排查路径。'
+                  : 'Read risk events, scheduler ticks, linked incidents, cycle drift, and notifications as one shared linkage path.'}
+              </div>
+            </div>
+            <div className={`panel-badge badge-${monitoringTone(schedulerWorkbench.linkage.posture.status)}`}>{schedulerWorkbench.linkage.summary.linkedRiskEvents + schedulerWorkbench.linkage.summary.linkedSchedulerTicks}</div>
+          </div>
+          <div className="metrics-grid metrics-grid-compact">
+            <div className="metric-card">
+              <span>{locale === 'zh' ? '活动窗口' : 'Active Phase'}</span>
+              <strong>{schedulerWorkbench.linkage.summary.activePhase || '--'}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Linked Risk' : 'Linked Risk'}</span>
+              <strong>{schedulerWorkbench.linkage.summary.linkedRiskEvents}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Linked Scheduler' : 'Linked Scheduler'}</span>
+              <strong>{schedulerWorkbench.linkage.summary.linkedSchedulerTicks}</strong>
+            </div>
+            <div className="metric-card">
+              <span>{locale === 'zh' ? 'Cycle Drift' : 'Cycle Drift'}</span>
+              <strong>{schedulerWorkbench.linkage.summary.cycleAttention}</strong>
+            </div>
+          </div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '姿态' : 'Posture'}</span><strong>{schedulerWorkbench.linkage.posture.title || '--'}</strong></div>
+            <div className="status-copy">{schedulerWorkbench.linkage.posture.detail || (locale === 'zh' ? '当前没有明显的 risk/scheduler linkage drift。' : 'No material risk/scheduler linkage drift is active right now.')}</div>
+          </div>
+          <div className="focus-list">
+            {schedulerWorkbench.linkage.runbook.map((item) => (
+              <div className="focus-row" key={item.key}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '优先级' : 'Priority'}</span>
+                  <strong>{item.priority}</strong>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '计数' : 'Count'}</span>
+                  <strong>{item.count}</strong>
+                </div>
+                <button type="button" className="inline-action" onClick={() => focusRiskSchedulerLinkage(item.key)}>
+                  {locale === 'zh' ? '执行建议' : 'Focus Action'}
+                </button>
+              </div>
+            ))}
+            {!schedulerWorkbench.linkage.runbook.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有额外的 risk/scheduler linkage 动作。' : 'No extra risk/scheduler linkage actions are queued right now.'}</div> : null}
+            {schedulerWorkbench.linkage.queue.riskEvents.slice(0, 2).map((item) => (
+              <InspectionSelectableRow
+                key={item.id}
+                metrics={[
+                  { label: locale === 'zh' ? '风险事件' : 'Risk Event', value: item.title },
+                  { label: locale === 'zh' ? '状态' : 'Status', value: item.status },
+                  { label: locale === 'zh' ? '级别' : 'Level', value: item.level },
+                  { label: locale === 'zh' ? '窗口' : 'Phase', value: String(item.metadata?.schedulerPhase || schedulerWorkbench.linkage.summary.activePhase || '--') },
+                ]}
+                actions={<button type="button" className="inline-action" onClick={() => focusRiskSchedulerLinkage('review-linked-risk')}>{locale === 'zh' ? '打开风控' : 'Open Risk'}</button>}
+              />
+            ))}
           </div>
         </article>
         <article className="panel">

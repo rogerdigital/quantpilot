@@ -120,6 +120,10 @@ test('GET /api/risk/workbench returns the consolidated risk workbench snapshot',
     level: 'warn',
     source: 'risk-monitor',
     createdAt: nowIso,
+    metadata: {
+      schedulerTickId: 'risk-workbench-scheduler',
+      schedulerPhase: 'INTRADAY',
+    },
   });
   context.risk.appendRiskEvent({
     id: 'risk-workbench-compliance',
@@ -232,6 +236,11 @@ test('GET /api/risk/workbench returns the consolidated risk workbench snapshot',
   assert.equal(response.json.reviewQueue.incidents[0].id, 'risk-workbench-incident');
   assert.equal(response.json.recent.riskEvents.some((item) => item.id === 'risk-workbench-event'), true);
   assert.equal(response.json.recent.schedulerTicks[0].id, 'risk-workbench-scheduler');
+  assert.equal(response.json.linkage.summary.linkedRiskEvents >= 1, true);
+  assert.equal(response.json.linkage.summary.linkedSchedulerTicks >= 1, true);
+  assert.equal(response.json.linkage.lanes.some((item) => item.key === 'risk-events'), true);
+  assert.equal(response.json.linkage.runbook.some((item) => item.key === 'review-linked-risk'), true);
+  assert.equal(response.json.linkage.queue.schedulerTicks.some((item) => item.id === 'risk-workbench-scheduler'), true);
 });
 
 test('GET /api/risk/events/:id returns a single risk event', async () => {
@@ -2576,6 +2585,11 @@ test('GET /api/scheduler/workbench returns the scheduler operations snapshot', a
   assert.equal(response.json.queue.notifications.some((item) => item.id === 'scheduler-workbench-notification'), true);
   assert.equal(response.json.queue.cycleRecords.some((item) => item.id === 'scheduler-workbench-cycle'), true);
   assert.equal(response.json.queue.riskEvents.some((item) => item.id === 'scheduler-workbench-risk'), true);
+  assert.equal(response.json.linkage.summary.linkedRiskEvents >= 1, true);
+  assert.equal(response.json.linkage.summary.linkedSchedulerTicks >= 1, true);
+  assert.equal(response.json.linkage.lanes.some((item) => item.key === 'current-window'), true);
+  assert.equal(response.json.linkage.runbook.some((item) => item.key === 'focus-linked-window'), true);
+  assert.equal(response.json.linkage.queue.riskEvents.some((item) => item.id === 'scheduler-workbench-risk'), true);
 });
 
 test('POST then GET /api/task-orchestrator/actions persists operator actions', async () => {
