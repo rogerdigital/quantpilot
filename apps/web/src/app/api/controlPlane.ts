@@ -17,6 +17,7 @@ import type {
   MonitoringStatusSnapshot,
   OperationsWorkbenchResponse,
   RiskWorkbenchResponse,
+  RiskPolicyActionResponse,
   SchedulerWorkbenchResponse,
   SchedulerOrchestrationActionResponse,
   MonitoringAlertsResponse,
@@ -309,6 +310,21 @@ export async function fetchRiskWorkbench(options: { hours?: number | null; limit
   return fetchJson(`/api/risk/workbench${query ? `?${query}` : ''}`, {
     headers: { Accept: 'application/json' },
   });
+}
+
+export async function runRiskPolicyAction(payload: {
+  actionKey: string;
+  actor?: string;
+  hours?: number | null;
+  limit?: number;
+}): Promise<RiskPolicyActionResponse> {
+  const response = await fetch('/api/risk/actions', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
 }
 
 export async function fetchRiskEventDetail(eventId: string): Promise<RiskEventDetailResponse> {

@@ -183,6 +183,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - `scheduler operations workbench` now turns scheduler windows into a middleware surface with current-phase posture, cycle drift, scheduler incidents, notification pressure, risk linkage, and operator runbook actions.
 - `risk scheduler linkage` now gives both consoles a shared linkage snapshot so the same scheduler window, risk events, incidents, cycle drift, and notifications can be reviewed through one middleware context instead of two disconnected boards.
 - `scheduler orchestration actions` now turn scheduler runbook items into real control-plane operations: operator actions, scheduler ticks, cycle records, and scheduler incident triage are written together from one scheduler action API and notifications-console workflow.
+- `risk middleware policy actions` now turn the risk runbook into real policy operations: the risk console can execute reviewed policy actions that write operator history, append risk-policy events, notify the control plane, and triage linked risk incidents from the same workbench.
 - The Overview page consumes backend `monitoring status`.
 - `user-account` now owns persisted `profile / preferences / access / broker bindings`.
 - Account mutations and broker-binding changes are audited.

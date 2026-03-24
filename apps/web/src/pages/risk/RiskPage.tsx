@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { RiskPolicyActionResponse, RiskRunbookActionKey } from '@shared-types/trading.ts';
 import { buildDeepLink } from '../../modules/console/deepLinks.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { formatActionGuardNotice } from '../../modules/permissions/permissionCopy.ts';
+import { runRiskPolicyAction } from '../../app/api/controlPlane.ts';
 import { useRiskWorkbench } from '../../modules/risk/useRiskWorkbench.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { ApprovalQueueTable, BrokerSnapshotPositionsTable, PositionsTable } from '../console/components/ConsoleTables.tsx';
@@ -16,8 +18,12 @@ function RiskPage() {
   const { locale } = useLocale();
   const navigate = useNavigate();
   const canApproveExecution = hasPermission('execution:approve');
+  const canReviewRisk = hasPermission('risk:review');
   const { paper, live } = useSummary();
-  const { data: workbench, loading, error } = useRiskWorkbench(state.controlPlane.lastSyncAt);
+  const [riskActionBusy, setRiskActionBusy] = useState(false);
+  const [riskActionRefreshKey, setRiskActionRefreshKey] = useState(0);
+  const [riskActionResult, setRiskActionResult] = useState<RiskPolicyActionResponse['action'] | null>(null);
+  const { data: workbench, loading, error } = useRiskWorkbench(`${state.controlPlane.lastSyncAt}:${riskActionRefreshKey}`);
   const [selectedRiskEventId, setSelectedRiskEventId] = useState('');
   const [selectedSchedulerTickId, setSelectedSchedulerTickId] = useState('');
   const brokerSnapshot = workbench.recent.brokerSnapshot;
@@ -74,7 +80,7 @@ function RiskPage() {
     }));
   }
 
-  function focusRiskRunbook(key: (typeof workbench.runbook)[number]['key']) {
+  function focusRiskRunbook(key: RiskRunbookActionKey) {
     if (key === 'review-risk-off') {
       const riskOff = workbench.recent.riskEvents.find((item) => item.status === 'risk-off') || workbench.reviewQueue.riskEvents[0];
       if (riskOff) setSelectedRiskEventId(riskOff.id);
@@ -108,6 +114,23 @@ function RiskPage() {
     if (key === 'release-emergency-brake') {
       const blocked = workbench.reviewQueue.executionPlans.find((item) => item.riskStatus === 'blocked' || item.status === 'blocked') || workbench.reviewQueue.executionPlans[0];
       if (blocked) openExecutionDetail(blocked.id, blocked.strategyId);
+    }
+  }
+
+  async function executeRiskRunbook(key: RiskRunbookActionKey) {
+    setRiskActionBusy(true);
+    try {
+      const response = await runRiskPolicyAction({
+        actionKey: key,
+        actor: state.controlPlane.operator,
+        hours: 168,
+        limit: 8,
+      });
+      setRiskActionResult(response.action);
+      setRiskActionRefreshKey((value) => value + 1);
+      focusRiskRunbook(key);
+    } finally {
+      setRiskActionBusy(false);
     }
   }
 
@@ -162,6 +185,11 @@ function RiskPage() {
       <section className="panel-grid">
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Risk Workbench' : 'Risk Workbench'}</div><div className="panel-copy">{locale === 'zh' ? '把风险事件、执行复核、研究复核和 incident 收敛到同一份后端风险快照。' : 'Aggregate risk events, execution review, research review, and incidents into one backend risk snapshot.'}</div></div><div className={`panel-badge badge-${riskTone(workbench.posture.status)}`}>{workbench.posture.status}</div></div>
+          <div className="status-stack">
+            <div className="status-row"><span>{locale === 'zh' ? '最近策略动作' : 'Last Policy Action'}</span><strong>{riskActionResult?.title || '--'}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '执行时间' : 'Executed At'}</span><strong>{fmtDateTime(riskActionResult?.executedAt || '', locale)}</strong></div>
+            {riskActionResult ? <div className="status-copy">{riskActionResult.detail}</div> : null}
+          </div>
           <div className="focus-list">
             {error ? <div className="status-copy">{locale === 'zh' ? `风险工作台加载失败：${error}` : `Failed to load risk workbench: ${error}`}</div> : null}
             {loading ? <div className="status-copy">{locale === 'zh' ? '正在同步风险工作台...' : 'Syncing risk workbench...'}</div> : null}
@@ -231,12 +259,18 @@ function RiskPage() {
                 </div>
                 <div className="focus-metric"><span>{locale === 'zh' ? '优先级' : 'Priority'}</span><strong>{item.priority}</strong></div>
                 <div className="focus-metric"><span>{locale === 'zh' ? '计数' : 'Count'}</span><strong>{item.count}</strong></div>
-                <button type="button" className="inline-action" onClick={() => focusRiskRunbook(item.key)}>
-                  {locale === 'zh' ? '执行建议' : 'Focus Action'}
-                </button>
+                <div className="settings-chip-row">
+                  <button type="button" className="inline-action" onClick={() => focusRiskRunbook(item.key)}>
+                    {locale === 'zh' ? '聚焦路径' : 'Focus Action'}
+                  </button>
+                  <button type="button" className="inline-action" disabled={!canReviewRisk || riskActionBusy} onClick={() => void executeRiskRunbook(item.key)}>
+                    {riskActionBusy ? (locale === 'zh' ? '执行中...' : 'Running...') : (locale === 'zh' ? '运行策略' : 'Run Policy')}
+                  </button>
+                </div>
               </div>
             ))}
             {!workbench.runbook.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有额外的 risk runbook 动作。' : 'No extra risk runbook actions are queued right now.'}</div> : null}
+            {actionGuardNotice?.permission === 'risk:review' ? <div className="status-copy">{formatActionGuardNotice(locale, actionGuardNotice)}</div> : null}
           </div>
         </article>
         <article className="panel">

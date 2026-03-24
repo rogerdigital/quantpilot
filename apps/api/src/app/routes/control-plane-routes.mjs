@@ -4,6 +4,7 @@ import { writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
 import { appendIncidentNote, appendIncidentTask, bulkUpdateIncidents, createIncident, getIncidentDetail, getIncidentSummary, listIncidents, updateIncident, updateIncidentTask } from '../../modules/incidents/service.mjs';
 import { listNotifications } from '../../modules/notification/service.mjs';
 import { getRiskEvent, listRiskEvents } from '../../domains/risk/services/feed-service.mjs';
+import { runRiskPolicyAction } from '../../domains/risk/services/policy-action-service.mjs';
 import { getRiskWorkbench } from '../../domains/risk/services/workbench-service.mjs';
 import { getSchedulerWorkbench, listSchedulerTicks, runSchedulerOrchestrationAction } from '../../modules/scheduler/service.mjs';
 import { runCycle } from '../../control-plane/task-orchestrator/cycle-runner.mjs';
@@ -187,6 +188,14 @@ export async function handleControlPlaneRoutes(context) {
       hours: reqUrl.searchParams.get('hours'),
       limit: reqUrl.searchParams.get('limit'),
     }));
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/risk/actions') {
+    if (!requirePermission('risk:review', 'run risk policy actions')) return true;
+    const body = await readJsonBody(req);
+    const result = runRiskPolicyAction(body);
+    writeJson(res, result?.ok === false ? 400 : 200, result);
     return true;
   }
 

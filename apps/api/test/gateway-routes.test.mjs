@@ -243,6 +243,73 @@ test('GET /api/risk/workbench returns the consolidated risk workbench snapshot',
   assert.equal(response.json.linkage.queue.schedulerTicks.some((item) => item.id === 'risk-workbench-scheduler'), true);
 });
 
+test('POST /api/risk/actions executes risk policy actions and leaves policy traces', async () => {
+  const nowIso = new Date().toISOString();
+  context.risk.appendRiskEvent({
+    id: 'risk-policy-risk-off',
+    title: 'Risk-off breach',
+    message: 'live exposure breached the hard fence',
+    cycle: 511,
+    riskLevel: 'RISK OFF',
+    status: 'risk-off',
+    level: 'critical',
+    source: 'risk-monitor',
+    createdAt: nowIso,
+  });
+  context.executionPlans.appendExecutionPlan({
+    id: 'risk-policy-plan',
+    workflowRunId: 'risk-policy-workflow',
+    strategyId: 'risk-policy-strategy',
+    strategyName: 'Risk Policy Strategy',
+    mode: 'live',
+    status: 'blocked',
+    approvalState: 'required',
+    riskStatus: 'blocked',
+    summary: 'Execution is blocked by the current risk posture.',
+    capital: 22000,
+    orderCount: 1,
+    orders: [],
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  });
+  context.incidents.appendIncident({
+    id: 'risk-policy-incident',
+    title: 'Risk policy incident',
+    summary: 'Pending triage from risk console',
+    severity: 'critical',
+    source: 'risk',
+    status: 'open',
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/risk/actions',
+    body: {
+      actionKey: 'release-emergency-brake',
+      actor: 'risk-operator',
+      hours: 168,
+      limit: 8,
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.action.key, 'release-emergency-brake');
+  assert.equal(response.json.action.actor, 'risk-operator');
+  assert.equal(response.json.operatorAction.type, 'risk.policy.release-emergency-brake');
+  assert.equal(response.json.action.linkedIncidentIds.includes('risk-policy-incident'), true);
+  assert.equal(response.json.action.linkedRiskEventIds.includes('risk-policy-risk-off'), true);
+  assert.equal(response.json.action.linkedExecutionPlanIds.includes('risk-policy-plan'), true);
+  assert.equal(response.json.riskEvent.source, 'risk-policy');
+  assert.equal(response.json.riskEvent.metadata.policyAction, 'release-emergency-brake');
+  assert.equal(context.incidents.getIncident('risk-policy-incident')?.status, 'investigating');
+  assert.equal(context.incidents.listIncidentNotes('risk-policy-incident', 10).length >= 1, true);
+  assert.equal(context.operatorActions.listOperatorActions(10).some((item) => item.type === 'risk.policy.release-emergency-brake'), true);
+  assert.equal(response.json.workbench.runbook.some((item) => item.key === 'release-emergency-brake'), true);
+});
+
 test('GET /api/risk/events/:id returns a single risk event', async () => {
   context.risk.appendRiskEvent({
     id: 'risk-api-detail',

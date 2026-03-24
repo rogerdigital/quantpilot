@@ -1527,6 +1527,45 @@ export type RiskWorkbenchResponse = {
   linkage: RiskSchedulerLinkageSnapshot;
 };
 
+export type RiskRunbookActionKey =
+  | 'review-risk-off'
+  | 'clear-review-queue'
+  | 'inspect-live-exposure'
+  | 'triage-risk-incidents'
+  | 'review-scheduler-drift'
+  | 'check-compliance-alerts'
+  | 'release-emergency-brake';
+
+export type RiskPolicyActionResponse = {
+  ok: boolean;
+  action: {
+    key: RiskRunbookActionKey;
+    actor: string;
+    title: string;
+    detail: string;
+    level: 'info' | 'warn' | 'critical';
+    executedAt: string;
+    linkedIncidentIds: string[];
+    linkedRiskEventIds: string[];
+    linkedExecutionPlanIds: string[];
+    linkedBacktestRunIds: string[];
+    linkedSchedulerTickIds: string[];
+  };
+  operatorAction: {
+    id: string;
+    type: string;
+    actor: string;
+    title: string;
+    detail: string;
+    level: string;
+    createdAt: string;
+    metadata?: Record<string, unknown>;
+  };
+  riskEvent: NonNullable<MonitoringStatusSnapshot['recent']['latestRiskEvent']>;
+  incidents: IncidentRecord[];
+  workbench: RiskWorkbenchResponse;
+};
+
 export type RiskSchedulerLinkageSnapshot = {
   posture: {
     status: 'healthy' | 'warn' | 'critical';
