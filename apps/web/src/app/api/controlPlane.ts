@@ -18,6 +18,7 @@ import type {
   OperationsWorkbenchResponse,
   RiskWorkbenchResponse,
   SchedulerWorkbenchResponse,
+  SchedulerOrchestrationActionResponse,
   MonitoringAlertsResponse,
   MonitoringSnapshotsResponse,
   IncidentBulkUpdateResponse,
@@ -360,6 +361,21 @@ export async function fetchSchedulerWorkbench(options: SchedulerTicksQuery = {})
   return fetchJson(`/api/scheduler/workbench${buildSchedulerTicksQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
+}
+
+export async function runSchedulerOrchestrationAction(payload: {
+  actionKey: string;
+  actor?: string;
+  hours?: number | null;
+  limit?: number;
+}): Promise<SchedulerOrchestrationActionResponse> {
+  const response = await fetch('/api/scheduler/actions', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+  await assertOk(response);
+  return response.json();
 }
 
 type OperatorActionsQuery = {

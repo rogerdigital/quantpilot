@@ -1,6 +1,15 @@
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
 import { getRiskSchedulerLinkage } from '../../domains/risk/services/risk-scheduler-linkage-service.mjs';
 
+const SCHEDULER_RUNBOOK_KEYS = new Set([
+  'review-current-window',
+  'triage-scheduler-incidents',
+  'clear-scheduler-signals',
+  'follow-cycle-drift',
+  'align-risk-window',
+  'review-off-hours-watch',
+]);
+
 function parseLimit(value, fallback) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
@@ -302,5 +311,320 @@ export function getSchedulerWorkbench(options = {}) {
       riskEvents: takeLatest(riskEvents, limit),
     },
     linkage,
+  };
+}
+
+function resolveCurrentPhase(workbench) {
+  if (workbench.posture.currentPhase && workbench.posture.currentPhase !== 'UNKNOWN') {
+    return workbench.posture.currentPhase;
+  }
+  return workbench.linkage.summary.activePhase || 'INTRADAY';
+}
+
+function resolveActionTargets(actionKey, workbench) {
+  const currentPhase = resolveCurrentPhase(workbench);
+  const currentWindowAttention = workbench.queue.attentionTicks.filter((item) => item.phase === currentPhase);
+  const offHoursAttention = workbench.queue.attentionTicks.filter((item) => item.phase === 'OFF_HOURS');
+
+  if (actionKey === 'review-current-window') {
+    return {
+      phase: currentPhase,
+      attentionTicks: currentWindowAttention,
+      incidents: workbench.queue.incidents,
+      notifications: workbench.queue.notifications,
+      cycleRecords: workbench.queue.cycleRecords,
+      riskEvents: workbench.queue.riskEvents,
+    };
+  }
+
+  if (actionKey === 'triage-scheduler-incidents') {
+    return {
+      phase: currentPhase,
+      attentionTicks: currentWindowAttention,
+      incidents: workbench.queue.incidents,
+      notifications: [],
+      cycleRecords: [],
+      riskEvents: [],
+    };
+  }
+
+  if (actionKey === 'clear-scheduler-signals') {
+    return {
+      phase: currentPhase,
+      attentionTicks: currentWindowAttention,
+      incidents: workbench.queue.incidents,
+      notifications: workbench.queue.notifications,
+      cycleRecords: [],
+      riskEvents: [],
+    };
+  }
+
+  if (actionKey === 'follow-cycle-drift') {
+    return {
+      phase: currentPhase,
+      attentionTicks: currentWindowAttention,
+      incidents: workbench.queue.incidents,
+      notifications: workbench.queue.notifications,
+      cycleRecords: workbench.queue.cycleRecords,
+      riskEvents: [],
+    };
+  }
+
+  if (actionKey === 'align-risk-window') {
+    return {
+      phase: currentPhase,
+      attentionTicks: currentWindowAttention,
+      incidents: workbench.queue.incidents,
+      notifications: workbench.queue.notifications,
+      cycleRecords: workbench.queue.cycleRecords,
+      riskEvents: workbench.queue.riskEvents,
+    };
+  }
+
+  return {
+    phase: 'OFF_HOURS',
+    attentionTicks: offHoursAttention,
+    incidents: workbench.queue.incidents,
+    notifications: workbench.queue.notifications,
+    cycleRecords: workbench.queue.cycleRecords,
+    riskEvents: workbench.queue.riskEvents.filter((item) => String(item.metadata?.schedulerPhase || '') === 'OFF_HOURS'),
+  };
+}
+
+function buildOrchestrationDescriptor(actionKey, workbench, targets) {
+  const currentPhase = targets.phase || resolveCurrentPhase(workbench);
+  const hasCriticalNotification = targets.notifications.some((item) => item.level === 'critical');
+  const hasCriticalRisk = targets.riskEvents.some((item) => item.level === 'critical' || item.status === 'risk-off');
+  const hasCriticalTick = targets.attentionTicks.some((item) => isSchedulerCriticalStatus(item.status));
+  const hasCriticalIncident = targets.incidents.some((item) => item.severity === 'critical');
+  const level = hasCriticalNotification || hasCriticalRisk || hasCriticalTick || hasCriticalIncident ? 'critical' : 'warn';
+
+  if (actionKey === 'review-current-window') {
+    return {
+      phase: currentPhase,
+      level,
+      title: 'Review current scheduler window',
+      detail: `Operator review was triggered for the ${currentPhase} scheduler window to reconcile attention ticks, incidents, and linked control-plane signals.`,
+      tickStatus: 'info',
+      createCycleRecord: true,
+      riskLevel: level === 'critical' ? 'REVIEW' : 'NORMAL',
+    };
+  }
+  if (actionKey === 'triage-scheduler-incidents') {
+    return {
+      phase: currentPhase,
+      level: hasCriticalIncident ? 'critical' : 'warn',
+      title: 'Triage scheduler incidents',
+      detail: `Scheduler incidents were moved into an active triage pass for the ${currentPhase} orchestration window.`,
+      tickStatus: 'info',
+      createCycleRecord: false,
+      riskLevel: 'REVIEW',
+    };
+  }
+  if (actionKey === 'clear-scheduler-signals') {
+    return {
+      phase: currentPhase,
+      level: hasCriticalNotification ? 'critical' : 'warn',
+      title: 'Clear scheduler notifications',
+      detail: `Scheduler notifications were reviewed against the ${currentPhase} window so stale or duplicated signals can be cleared before they stack up.`,
+      tickStatus: 'info',
+      createCycleRecord: false,
+      riskLevel: 'NORMAL',
+    };
+  }
+  if (actionKey === 'follow-cycle-drift') {
+    return {
+      phase: currentPhase,
+      level: targets.cycleRecords.length > 0 ? 'warn' : 'info',
+      title: 'Follow cycle drift',
+      detail: `Cycle drift was reviewed alongside the active scheduler window to stabilize pending approvals and middleware connectivity.`,
+      tickStatus: 'info',
+      createCycleRecord: true,
+      riskLevel: 'REVIEW',
+    };
+  }
+  if (actionKey === 'align-risk-window') {
+    return {
+      phase: currentPhase,
+      level: hasCriticalRisk ? 'critical' : 'warn',
+      title: 'Align risk with scheduler',
+      detail: `Risk-linked scheduler signals were synchronized with the ${currentPhase} window so review posture, incidents, and notifications share one operator path.`,
+      tickStatus: 'info',
+      createCycleRecord: true,
+      riskLevel: hasCriticalRisk ? 'RISK OFF' : 'REVIEW',
+    };
+  }
+  return {
+    phase: 'OFF_HOURS',
+    level: targets.attentionTicks.length ? 'warn' : 'info',
+    title: 'Review off-hours watch',
+    detail: 'Off-hours scheduler activity was reviewed so overnight drift and pending follow-up stay visible before the next market window.',
+    tickStatus: 'info',
+    createCycleRecord: false,
+    riskLevel: 'NORMAL',
+  };
+}
+
+function buildIncidentLinks(targets) {
+  return [
+    ...targets.attentionTicks.map((item) => ({ kind: 'scheduler-tick', tickId: item.id })),
+    ...targets.notifications.map((item) => ({ kind: 'notification', notificationId: item.id })),
+    ...targets.cycleRecords.map((item) => ({ kind: 'cycle', cycleId: item.id })),
+    ...targets.riskEvents.map((item) => ({ kind: 'risk-event', riskEventId: item.id })),
+  ].slice(0, 12);
+}
+
+function upsertSchedulerIncidents(actor, descriptor, targets) {
+  const incidentNote = `${descriptor.title} runbook action executed by ${actor}. ${descriptor.detail}`;
+  const touched = [];
+  const existing = targets.incidents.filter((item) => item.status !== 'resolved');
+
+  existing.forEach((incident) => {
+    const nextStatus = incident.status === 'open' ? 'investigating' : incident.status;
+    const transitioned = controlPlaneRuntime.transitionIncident(incident.id, {
+      actor,
+      owner: incident.owner || actor,
+      status: nextStatus,
+      summary: incident.summary || descriptor.detail,
+    });
+    if (transitioned) {
+      touched.push(transitioned);
+      controlPlaneRuntime.recordIncidentNote(transitioned.id, {
+        author: actor,
+        body: incidentNote,
+        metadata: {
+          schedulerAction: descriptor.title,
+          schedulerPhase: descriptor.phase,
+        },
+      });
+    }
+  });
+
+  if (!touched.length && descriptor.level !== 'info') {
+    const created = controlPlaneRuntime.recordIncident({
+      title: `${descriptor.title} requires follow-up`,
+      summary: descriptor.detail,
+      severity: descriptor.level === 'critical' ? 'critical' : 'warn',
+      source: 'scheduler',
+      status: 'investigating',
+      owner: actor,
+      actor,
+      links: buildIncidentLinks(targets),
+      tags: ['scheduler', 'orchestration', descriptor.phase.toLowerCase()],
+      metadata: {
+        schedulerAction: descriptor.title,
+        schedulerPhase: descriptor.phase,
+      },
+    });
+    if (created) {
+      touched.push(created);
+      controlPlaneRuntime.recordIncidentNote(created.id, {
+        author: actor,
+        body: incidentNote,
+        metadata: {
+          schedulerAction: descriptor.title,
+          schedulerPhase: descriptor.phase,
+          autoCreated: true,
+        },
+      });
+    }
+  }
+
+  return touched;
+}
+
+export function runSchedulerOrchestrationAction(payload = {}) {
+  const actionKey = String(payload.actionKey || '').trim();
+  if (!SCHEDULER_RUNBOOK_KEYS.has(actionKey)) {
+    return {
+      ok: false,
+      message: 'unknown scheduler action',
+    };
+  }
+
+  const actor = String(payload.actor || 'operator').trim() || 'operator';
+  const workbench = getSchedulerWorkbench({
+    limit: payload.limit,
+    hours: payload.hours,
+  });
+  const targets = resolveActionTargets(actionKey, workbench);
+  const descriptor = buildOrchestrationDescriptor(actionKey, workbench, targets);
+
+  const incidents = upsertSchedulerIncidents(actor, descriptor, targets);
+  const touchedIncidentIds = incidents.map((item) => item.id);
+  const touchedNotificationIds = targets.notifications.map((item) => item.id);
+  const touchedRiskEventIds = targets.riskEvents.map((item) => item.id);
+  const touchedCycleIds = targets.cycleRecords.map((item) => item.id);
+
+  const operatorAction = controlPlaneRuntime.recordOperatorAction({
+    type: `scheduler.orchestration.${actionKey}`,
+    actor,
+    title: descriptor.title,
+    detail: descriptor.detail,
+    level: descriptor.level,
+    metadata: {
+      schedulerPhase: descriptor.phase,
+      incidentIds: touchedIncidentIds,
+      notificationIds: touchedNotificationIds,
+      riskEventIds: touchedRiskEventIds,
+      cycleIds: touchedCycleIds,
+    },
+  });
+
+  const schedulerTick = controlPlaneRuntime.recordSchedulerTick({
+    phase: descriptor.phase,
+    status: descriptor.tickStatus,
+    title: `${descriptor.title} executed`,
+    message: descriptor.detail,
+    metadata: {
+      orchestrated: true,
+      actionKey,
+      actor,
+      incidentIds: touchedIncidentIds,
+      notificationIds: touchedNotificationIds,
+      riskEventIds: touchedRiskEventIds,
+      cycleIds: touchedCycleIds,
+    },
+  });
+
+  let cycleRecord = null;
+  if (descriptor.createCycleRecord) {
+    const latestCycle = controlPlaneRuntime.listCycleRecords(1)[0] || null;
+    cycleRecord = controlPlaneRuntime.recordCycleRun({
+      cycle: Number(latestCycle?.cycle || 0) + 1,
+      mode: 'scheduler-orchestration',
+      riskLevel: descriptor.riskLevel,
+      decisionSummary: descriptor.detail,
+      marketClock: descriptor.phase,
+      pendingApprovals: touchedIncidentIds.length,
+      liveIntentCount: 0,
+      brokerConnected: latestCycle?.brokerConnected ?? true,
+      marketConnected: latestCycle?.marketConnected ?? true,
+    });
+  }
+
+  return {
+    ok: true,
+    action: {
+      key: actionKey,
+      actor,
+      title: descriptor.title,
+      detail: descriptor.detail,
+      level: descriptor.level,
+      phase: descriptor.phase,
+      executedAt: schedulerTick.createdAt,
+      touchedIncidentIds,
+      touchedNotificationIds,
+      touchedRiskEventIds,
+      touchedCycleIds,
+    },
+    operatorAction,
+    schedulerTick,
+    cycleRecord,
+    incidents,
+    workbench: getSchedulerWorkbench({
+      limit: payload.limit,
+      hours: payload.hours,
+    }),
   };
 }

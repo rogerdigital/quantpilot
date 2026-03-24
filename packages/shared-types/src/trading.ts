@@ -1587,6 +1587,55 @@ export type RiskSchedulerLinkageSnapshot = {
   };
 };
 
+export type SchedulerRunbookActionKey =
+  | 'review-current-window'
+  | 'triage-scheduler-incidents'
+  | 'clear-scheduler-signals'
+  | 'follow-cycle-drift'
+  | 'align-risk-window'
+  | 'review-off-hours-watch';
+
+export type SchedulerOrchestrationActionResponse = {
+  ok: boolean;
+  action: {
+    key: SchedulerRunbookActionKey;
+    actor: string;
+    title: string;
+    detail: string;
+    level: 'info' | 'warn' | 'critical';
+    phase: string;
+    executedAt: string;
+    touchedIncidentIds: string[];
+    touchedNotificationIds: string[];
+    touchedRiskEventIds: string[];
+    touchedCycleIds: string[];
+  };
+  operatorAction: {
+    id: string;
+    type: string;
+    actor: string;
+    title: string;
+    detail: string;
+    level: string;
+    createdAt: string;
+    metadata?: Record<string, unknown>;
+  };
+  schedulerTick: NonNullable<MonitoringStatusSnapshot['recent']['latestSchedulerTick']>;
+  cycleRecord: {
+    id: string;
+    cycle: number;
+    mode: string;
+    riskLevel: string;
+    decisionSummary: string;
+    pendingApprovals: number;
+    brokerConnected: boolean;
+    marketConnected: boolean;
+    createdAt: string;
+  } | null;
+  incidents: IncidentRecord[];
+  workbench: SchedulerWorkbenchResponse;
+};
+
 export type SchedulerWorkbenchResponse = {
   ok: boolean;
   generatedAt: string;

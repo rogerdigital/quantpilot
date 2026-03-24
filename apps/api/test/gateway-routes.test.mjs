@@ -2592,6 +2592,91 @@ test('GET /api/scheduler/workbench returns the scheduler operations snapshot', a
   assert.equal(response.json.linkage.queue.riskEvents.some((item) => item.id === 'scheduler-workbench-risk'), true);
 });
 
+test('POST /api/scheduler/actions executes scheduler orchestration actions and leaves control-plane traces', async () => {
+  const nowIso = new Date().toISOString();
+  context.scheduler.recordSchedulerTick({
+    id: 'scheduler-action-intraday',
+    worker: 'api-test-worker',
+    phase: 'INTRADAY',
+    status: 'warn',
+    title: 'Intraday scheduler drift',
+    message: 'scheduler drift needs orchestration',
+    createdAt: nowIso,
+  });
+  context.notifications.appendNotification({
+    id: 'scheduler-action-notification',
+    level: 'critical',
+    source: 'scheduler',
+    title: 'Scheduler escalation',
+    message: 'critical scheduler warning',
+    createdAt: nowIso,
+  });
+  context.incidents.appendIncident({
+    id: 'scheduler-action-incident',
+    title: 'Scheduler action incident',
+    summary: 'Pending scheduler triage',
+    severity: 'warn',
+    source: 'scheduler',
+    status: 'open',
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  });
+  context.cycles.appendCycleRecord({
+    id: 'scheduler-action-cycle',
+    cycle: 422,
+    mode: 'autopilot',
+    riskLevel: 'REVIEW',
+    decisionSummary: 'scheduler cycle drift',
+    pendingApprovals: 1,
+    brokerConnected: true,
+    marketConnected: true,
+    createdAt: nowIso,
+  });
+  context.risk.appendRiskEvent({
+    id: 'scheduler-action-risk',
+    title: 'Scheduler risk linkage',
+    message: 'risk requires scheduler alignment',
+    cycle: 422,
+    riskLevel: 'REVIEW',
+    status: 'approval-required',
+    level: 'warn',
+    source: 'scheduler',
+    createdAt: nowIso,
+    metadata: {
+      schedulerTickId: 'scheduler-action-intraday',
+      schedulerPhase: 'INTRADAY',
+    },
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/scheduler/actions',
+    body: {
+      actionKey: 'align-risk-window',
+      actor: 'scheduler-operator',
+      hours: 168,
+      limit: 10,
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.action.key, 'align-risk-window');
+  assert.equal(response.json.action.actor, 'scheduler-operator');
+  assert.equal(response.json.operatorAction.type, 'scheduler.orchestration.align-risk-window');
+  assert.equal(response.json.schedulerTick.phase, 'INTRADAY');
+  assert.equal(response.json.action.title.includes('Align risk'), true);
+  assert.equal(response.json.action.touchedIncidentIds.includes('scheduler-action-incident'), true);
+  assert.equal(response.json.action.touchedNotificationIds.includes('scheduler-action-notification'), true);
+  assert.equal(response.json.action.touchedRiskEventIds.includes('scheduler-action-risk'), true);
+  assert.equal(response.json.action.touchedCycleIds.includes('scheduler-action-cycle'), true);
+  assert.equal(response.json.cycleRecord?.mode, 'scheduler-orchestration');
+  assert.equal(response.json.workbench.runbook.some((item) => item.key === 'align-risk-window'), true);
+  assert.equal(context.incidents.getIncident('scheduler-action-incident')?.status, 'investigating');
+  assert.equal(context.incidents.listIncidentNotes('scheduler-action-incident', 10).length >= 1, true);
+  assert.equal(context.operatorActions.listOperatorActions(10).some((item) => item.type === 'scheduler.orchestration.align-risk-window'), true);
+});
+
 test('POST then GET /api/task-orchestrator/actions persists operator actions', async () => {
   const recentWarnIso = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
   const createResponse = await invokeGatewayRoute(handler, {

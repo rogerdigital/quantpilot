@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import type { IncidentActivityRecord, IncidentEvidenceItem } from '@shared-types/trading.ts';
+import type { IncidentActivityRecord, IncidentEvidenceItem, SchedulerOrchestrationActionResponse, SchedulerRunbookActionKey } from '@shared-types/trading.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useMonitoringStatus } from '../../hooks/useMonitoringStatus.ts';
-import { appendIncidentNote, appendIncidentTask, bulkUpdateIncidentQueue, createIncident, updateIncident, updateIncidentTask } from '../../app/api/controlPlane.ts';
+import { appendIncidentNote, appendIncidentTask, bulkUpdateIncidentQueue, createIncident, runSchedulerOrchestrationAction, updateIncident, updateIncidentTask } from '../../app/api/controlPlane.ts';
 import { useExecutionLedgerFeed } from '../../modules/notifications/useExecutionLedgerFeed.ts';
 import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
 import { useAuditRecordsFeed } from '../../modules/notifications/useAuditRecordsFeed.ts';
@@ -283,6 +283,8 @@ function NotificationsPage() {
   const [incidentBulkOwnerDraft, setIncidentBulkOwnerDraft] = useState('');
   const [incidentBulkNoteDraft, setIncidentBulkNoteDraft] = useState('');
   const [incidentBusy, setIncidentBusy] = useState(false);
+  const [schedulerActionBusy, setSchedulerActionBusy] = useState(false);
+  const [schedulerActionResult, setSchedulerActionResult] = useState<SchedulerOrchestrationActionResponse['action'] | null>(null);
   const [riskEventLevelFilter, setRiskEventLevelFilter] = useState('all');
   const [riskEventStatusFilter, setRiskEventStatusFilter] = useState('all');
   const [workflowRunStatusFilter, setWorkflowRunStatusFilter] = useState('all');
@@ -854,7 +856,7 @@ function NotificationsPage() {
     applyMonitoringFocus({ source: 'risk', timeWindow: '24h' });
   }
 
-  function focusSchedulerRunbook(key: 'review-current-window' | 'triage-scheduler-incidents' | 'clear-scheduler-signals' | 'follow-cycle-drift' | 'align-risk-window' | 'review-off-hours-watch') {
+  function focusSchedulerRunbook(key: SchedulerRunbookActionKey) {
     if (key === 'review-current-window') {
       const phase = schedulerWorkbench.posture.currentPhase && schedulerWorkbench.posture.currentPhase !== 'UNKNOWN'
         ? schedulerWorkbench.posture.currentPhase
@@ -881,6 +883,23 @@ function NotificationsPage() {
       return;
     }
     focusSchedulerItem('OFF_HOURS');
+  }
+
+  async function executeSchedulerRunbook(key: SchedulerRunbookActionKey) {
+    setSchedulerActionBusy(true);
+    try {
+      const response = await runSchedulerOrchestrationAction({
+        actionKey: key,
+        actor: state.controlPlane.operator,
+        hours: activeSchedulerTimeWindow.hours,
+        limit: 12,
+      });
+      setSchedulerActionResult(response.action);
+      setIncidentRefreshKey((value) => value + 1);
+      focusSchedulerRunbook(key);
+    } finally {
+      setSchedulerActionBusy(false);
+    }
   }
 
   function focusRiskSchedulerLinkage(key: 'focus-linked-window' | 'review-linked-risk' | 'triage-linked-incidents' | 'align-cycle-posture' | 'clear-linked-notifications') {
@@ -3601,7 +3620,14 @@ function NotificationsPage() {
           <div className="status-stack">
             <div className="status-row"><span>{locale === 'zh' ? '姿态' : 'Posture'}</span><strong>{schedulerWorkbench.posture.title || '--'}</strong></div>
             <div className="status-row"><span>{locale === 'zh' ? '最近节拍' : 'Last Tick'}</span><strong>{fmtDateTime(schedulerWorkbench.posture.lastTickAt, locale)}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '最近编排动作' : 'Last Orchestration'}</span><strong>{schedulerActionResult?.title || '--'}</strong></div>
+            <div className="status-row"><span>{locale === 'zh' ? '动作时间' : 'Executed At'}</span><strong>{fmtDateTime(schedulerActionResult?.executedAt || '', locale)}</strong></div>
             <div className="status-copy">{schedulerWorkbench.posture.detail || (locale === 'zh' ? '当前 scheduler posture 会随着窗口和控制面信号实时聚合。' : 'The scheduler posture is derived from live windows and control-plane signals.')}</div>
+            {schedulerActionResult ? (
+              <div className="status-copy">
+                {schedulerActionResult.detail}
+              </div>
+            ) : null}
           </div>
           <div className="focus-list">
             {schedulerWorkbenchLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载调度工作台...' : 'Loading scheduler workbench...'}</div> : null}
@@ -3732,9 +3758,14 @@ function NotificationsPage() {
                   <span>{locale === 'zh' ? '计数' : 'Count'}</span>
                   <strong>{item.count}</strong>
                 </div>
-                <button type="button" className="inline-action" onClick={() => focusSchedulerRunbook(item.key)}>
-                  {locale === 'zh' ? '执行建议' : 'Focus Action'}
-                </button>
+                <div className="settings-chip-row">
+                  <button type="button" className="inline-action" onClick={() => focusSchedulerRunbook(item.key)}>
+                    {locale === 'zh' ? '聚焦路径' : 'Focus Action'}
+                  </button>
+                  <button type="button" className="inline-action" disabled={schedulerActionBusy} onClick={() => void executeSchedulerRunbook(item.key)}>
+                    {schedulerActionBusy ? (locale === 'zh' ? '执行中...' : 'Running...') : (locale === 'zh' ? '运行编排' : 'Run Action')}
+                  </button>
+                </div>
               </div>
             ))}
             {!schedulerWorkbench.runbook.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有额外的 scheduler runbook 动作。' : 'No extra scheduler runbook actions are queued right now.'}</div> : null}

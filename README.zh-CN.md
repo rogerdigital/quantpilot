@@ -182,6 +182,7 @@ quantpilot/
 - `risk governance workbench` 已开始形成：风险页现在会把组合集中度、drawdown/compliance alerts、scheduler attention 和 operator runbook 收到统一的风险中台快照里。
 - `scheduler operations workbench` 已开始形成：调度侧现在会把当前窗口姿态、cycle drift、scheduler incidents、通知压力、风险联动和 operator runbook 聚成统一的 scheduler 中台工作台。
 - `risk scheduler linkage` 已开始形成：risk 与 scheduler 两边现在共享同一份 linkage 快照，可以围绕同一条 scheduler window、risk event、incident、cycle drift 和通知上下文做联动排查，不再是两块彼此分离的面板。
+- `scheduler orchestration actions` 已开始形成：scheduler runbook 现在不只是给出建议，还能通过统一动作 API 真实写入 operator actions、scheduler ticks、cycle 记录和 scheduler incident triage，通知中心也已经接上这条编排路径。
 - Overview 首页已开始消费后端 `monitoring status` 摘要，可直接观察 `broker / market / worker / workflow / queues` 运行态。
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
 - 账户写操作和券商绑定变更已经进入 audit records，基础对象变更具备最小留痕能力。
