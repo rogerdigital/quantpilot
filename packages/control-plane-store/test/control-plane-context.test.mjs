@@ -220,6 +220,83 @@ test('workflow repository persists and updates workflow runs through the injecte
   assert.equal(context.workflows.getWorkflowRun('workflow-1').steps.length, 2);
 });
 
+test('agent collaboration repositories persist sessions, plans, and analysis runs', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const session = context.agentSessions.appendAgentSession({
+    id: 'agent-session-1',
+    title: 'Investigate risk posture',
+    prompt: 'Summarize the latest risk posture for this strategy.',
+    requestedBy: 'operator-demo',
+    latestIntent: {
+      kind: 'request_risk_explanation',
+      summary: 'Review risk posture before an execution decision.',
+      targetType: 'strategy',
+      targetId: 'ema-cross-us',
+      requiresApproval: false,
+      requestedMode: 'read_only',
+    },
+    tags: ['risk', 'strategy'],
+  });
+  const plan = context.agentPlans.appendAgentPlan({
+    id: 'agent-plan-1',
+    sessionId: session.id,
+    summary: 'Read risk workbench and explain posture.',
+    requestedBy: 'operator-demo',
+    steps: [
+      {
+        id: 'step-1',
+        kind: 'read',
+        title: 'Load risk workbench',
+        status: 'pending',
+        toolName: 'risk.workbench.get',
+      },
+    ],
+  });
+  const run = context.agentAnalysisRuns.appendAgentAnalysisRun({
+    id: 'agent-analysis-1',
+    sessionId: session.id,
+    planId: plan.id,
+    status: 'completed',
+    summary: 'Risk posture summarized.',
+    conclusion: 'Risk posture is elevated because drawdown alert remains active.',
+    requestedBy: 'operator-demo',
+    toolCalls: [
+      {
+        tool: 'risk.workbench.get',
+        status: 'completed',
+        summary: 'Loaded risk workbench.',
+      },
+    ],
+    evidence: [
+      {
+        id: 'evidence-1',
+        kind: 'domain_snapshot',
+        title: 'Risk workbench snapshot',
+        summary: 'Drawdown alert and scheduler attention are both active.',
+        source: 'risk-workbench',
+      },
+    ],
+    explanation: {
+      thesis: 'Risk posture is elevated.',
+      rationale: ['Drawdown alert remains active.'],
+      warnings: ['Do not bypass risk review.'],
+      recommendedNextStep: 'Escalate to the risk console before preparing execution.',
+    },
+  });
+
+  const updatedSession = context.agentSessions.updateAgentSession(session.id, {
+    latestPlanId: plan.id,
+    latestAnalysisRunId: run.id,
+    status: 'completed',
+  });
+
+  assert.equal(context.agentSessions.listAgentSessions(5)[0].id, session.id);
+  assert.equal(context.agentPlans.getLatestAgentPlanForSession(session.id).id, plan.id);
+  assert.equal(context.agentAnalysisRuns.getLatestAgentAnalysisRunForSession(session.id).id, run.id);
+  assert.equal(updatedSession.latestAnalysisRunId, run.id);
+  assert.equal(updatedSession.status, 'completed');
+});
+
 test('workflow repository releases due retry-scheduled runs back to queued', () => {
   const context = createControlPlaneContext(createMemoryStore());
   context.workflows.appendWorkflowRun({

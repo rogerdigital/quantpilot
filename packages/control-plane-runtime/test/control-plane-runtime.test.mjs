@@ -225,6 +225,82 @@ test('control plane runtime records agent action requests with audit and notific
   assert.equal(runtime.listAgentActionRequests()[0].riskStatus, 'pending');
 });
 
+test('control plane runtime records agent collaboration sessions, plans, and analysis runs', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  const session = runtime.recordAgentSession({
+    id: 'agent-session-runtime-1',
+    title: 'Review execution readiness',
+    prompt: 'Can we prepare an execution plan for ema-cross-us?',
+    requestedBy: 'operator-demo',
+    latestIntent: {
+      kind: 'request_execution_prep',
+      summary: 'Check if strategy is ready for execution prep.',
+      targetType: 'strategy',
+      targetId: 'ema-cross-us',
+      requiresApproval: true,
+      requestedMode: 'prepare_action',
+    },
+  });
+  const plan = runtime.recordAgentPlan({
+    id: 'agent-plan-runtime-1',
+    sessionId: session.id,
+    status: 'ready',
+    summary: 'Read research, risk, and execution posture before requesting action.',
+    requiresApproval: true,
+    requestedBy: 'operator-demo',
+    steps: [
+      {
+        id: 'step-1',
+        kind: 'read',
+        title: 'Load execution candidates',
+        status: 'pending',
+        toolName: 'research.execution-candidates.list',
+      },
+    ],
+  });
+  const run = runtime.recordAgentAnalysisRun({
+    id: 'agent-analysis-runtime-1',
+    sessionId: session.id,
+    planId: plan.id,
+    status: 'completed',
+    summary: 'Execution readiness summarized.',
+    conclusion: 'Strategy can move to controlled execution prep after risk review.',
+    requestedBy: 'operator-demo',
+    toolCalls: [
+      {
+        tool: 'research.execution-candidates.list',
+        status: 'completed',
+        summary: 'Loaded execution candidate posture.',
+      },
+    ],
+    evidence: [
+      {
+        id: 'evidence-1',
+        kind: 'tool_result',
+        title: 'Execution candidate',
+        summary: 'Latest evaluation is promotable with manual approval.',
+        source: 'research',
+      },
+    ],
+    explanation: {
+      thesis: 'Execution prep is reasonable but still gated.',
+      rationale: ['Latest evaluation is promotable.'],
+      warnings: ['Manual approval is still required.'],
+      recommendedNextStep: 'Create an agent action request for execution prep.',
+    },
+  });
+
+  assert.equal(runtime.listAgentSessions()[0].id, session.id);
+  assert.equal(runtime.getLatestAgentPlanForSession(session.id).id, plan.id);
+  assert.equal(runtime.getLatestAgentAnalysisRunForSession(session.id).id, run.id);
+  assert.equal(runtime.getAgentSession(session.id).latestPlanId, plan.id);
+  assert.equal(runtime.getAgentSession(session.id).latestAnalysisRunId, run.id);
+  assert.equal(runtime.listAuditRecords().some((item) => item.type === 'agent-session'), true);
+  assert.equal(runtime.listAuditRecords().some((item) => item.type === 'agent-plan'), true);
+  assert.equal(runtime.listAuditRecords().some((item) => item.type === 'agent-analysis-run'), true);
+});
+
 test('control plane runtime persists workflow runs through start and complete transitions', () => {
   const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
 

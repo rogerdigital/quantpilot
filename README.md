@@ -184,6 +184,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - `risk scheduler linkage` now gives both consoles a shared linkage snapshot so the same scheduler window, risk events, incidents, cycle drift, and notifications can be reviewed through one middleware context instead of two disconnected boards.
 - `scheduler orchestration actions` now turn scheduler runbook items into real control-plane operations: operator actions, scheduler ticks, cycle records, and scheduler incident triage are written together from one scheduler action API and notifications-console workflow.
 - `risk middleware policy actions` now turn the risk runbook into real policy operations: the risk console can execute reviewed policy actions that write operator history, append risk-policy events, notify the control plane, and triage linked risk incidents from the same workbench.
+- Stage 5 foundation has started: the control plane now has formal contracts for `agent session / intent / plan / analysis run`, so the next Agent work can build on persisted collaboration state instead of frontend-only prompt scaffolding.
 - The Overview page consumes backend `monitoring status`.
 - `user-account` now owns persisted `profile / preferences / access / broker bindings`.
 - Account mutations and broker-binding changes are audited.
@@ -362,6 +363,7 @@ Stage 1, Stage 2, Stage 3, and Stage 4 are closed. The active focus is now Stage
 
 1. Build an `agent collaboration workbench` on top of the now-stable research, execution, risk, scheduler, and incident middleware contracts.
 2. Introduce `intent parsing / planner / tool routing / explanation` as explicit backend-facing contracts instead of frontend-only assistant surfaces.
+   The shared contracts for `session / intent / plan / analysis run` are now in place; the next step is wiring parsing and routing onto them.
 3. Keep every agent request inside the existing audit, risk, approval, execution, and control-plane boundaries instead of creating a parallel action path.
 4. Preserve the Stage 1 through Stage 4 baselines for accounts, incidents, research hub, execution workbench, risk middleware, scheduler workbench, and linkage contracts while agent capabilities grow.
 5. Before moving into stronger autonomy, stabilize the read-only analysis and controlled action-request loop that will sit above the now-closed risk and scheduling middleware layer.

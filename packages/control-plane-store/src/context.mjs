@@ -1,5 +1,8 @@
 import { createAuditRepository } from './repositories/audit-repo.mjs';
 import { createAgentActionRequestRepository } from './repositories/agent-action-request-repo.mjs';
+import { createAgentAnalysisRunRepository } from './repositories/agent-analysis-run-repo.mjs';
+import { createAgentPlanRepository } from './repositories/agent-plan-repo.mjs';
+import { createAgentSessionRepository } from './repositories/agent-session-repo.mjs';
 import { createBacktestRunRepository } from './repositories/backtest-run-repo.mjs';
 import { createBacktestResultRepository } from './repositories/backtest-result-repo.mjs';
 import { createCycleRepository } from './repositories/cycle-repo.mjs';
@@ -28,6 +31,9 @@ export function createControlPlaneContext(store = controlPlaneStore) {
   return {
     store,
     agentActionRequests: createAgentActionRequestRepository(store),
+    agentAnalysisRuns: createAgentAnalysisRunRepository(store),
+    agentPlans: createAgentPlanRepository(store),
+    agentSessions: createAgentSessionRepository(store),
     audit: createAuditRepository(store),
     backtestResults: createBacktestResultRepository(store),
     backtestRuns: createBacktestRunRepository(store),

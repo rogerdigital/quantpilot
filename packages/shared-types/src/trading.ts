@@ -1173,6 +1173,104 @@ export type AgentToolExecutionResult = {
   data: Record<string, unknown>;
 };
 
+export type AgentSessionStatus = 'draft' | 'ready' | 'running' | 'waiting_approval' | 'completed' | 'failed';
+
+export type AgentIntentKind =
+  | 'unknown'
+  | 'read_only_analysis'
+  | 'request_backtest_review'
+  | 'request_execution_prep'
+  | 'request_risk_explanation'
+  | 'request_scheduler_action';
+
+export type AgentIntentRecord = {
+  kind: AgentIntentKind;
+  summary: string;
+  targetType: 'strategy' | 'backtest_run' | 'execution_plan' | 'risk_event' | 'scheduler_window' | 'incident' | 'unknown';
+  targetId: string;
+  urgency: 'low' | 'normal' | 'high';
+  requiresApproval: boolean;
+  requestedMode: 'read_only' | 'prepare_action';
+  metadata: Record<string, unknown>;
+};
+
+export type AgentPlanStep = {
+  id: string;
+  kind: 'read' | 'analyze' | 'explain' | 'request_action';
+  title: string;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
+  toolName: string;
+  description: string;
+  outputSummary: string;
+  metadata: Record<string, unknown>;
+};
+
+export type AgentPlanRecord = {
+  id: string;
+  sessionId: string;
+  status: 'draft' | 'ready' | 'running' | 'completed' | 'failed';
+  summary: string;
+  requiresApproval: boolean;
+  requestedBy: string;
+  steps: AgentPlanStep[];
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AgentEvidenceRecord = {
+  id: string;
+  kind: 'tool_result' | 'domain_snapshot' | 'risk_note' | 'incident_context' | 'operator_note';
+  title: string;
+  summary: string;
+  source: string;
+  sourceId: string;
+  metadata: Record<string, unknown>;
+};
+
+export type AgentAnalysisRunRecord = {
+  id: string;
+  sessionId: string;
+  planId: string;
+  status: 'queued' | 'running' | 'completed' | 'failed';
+  summary: string;
+  conclusion: string;
+  requestedBy: string;
+  toolCalls: Array<{
+    tool: string;
+    status: 'pending' | 'completed' | 'failed';
+    summary: string;
+    metadata: Record<string, unknown>;
+  }>;
+  evidence: AgentEvidenceRecord[];
+  explanation: {
+    thesis: string;
+    rationale: string[];
+    warnings: string[];
+    recommendedNextStep: string;
+  };
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string;
+};
+
+export type AgentSessionRecord = {
+  id: string;
+  status: AgentSessionStatus;
+  title: string;
+  prompt: string;
+  requestedBy: string;
+  latestIntent: AgentIntentRecord;
+  latestPlanId: string;
+  latestAnalysisRunId: string;
+  latestActionRequestId: string;
+  tags: string[];
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type AgentActionRequest = {
   id: string;
   workflowRunId: string;

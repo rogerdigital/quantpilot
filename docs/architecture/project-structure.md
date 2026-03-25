@@ -149,6 +149,7 @@ quantpilot/
 1. 将 Agent 接入限制在 tool layer、分析解释和受控动作请求之内。
 2. 建立意图解析、任务规划、工具路由、结果解释和审批控制链路。
 3. 确保 Agent 永远不绕过风险和执行边界。
+4. 先在控制面沉淀 `session / intent / plan / analysis run` 基础合同，再向上扩展 planner、workbench 和审批流。
 
 ### 阶段 6 生产化与专业化
 

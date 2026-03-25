@@ -27,6 +27,114 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
   }
 
   return {
+    listAgentSessions(limit = 50, filter = {}) {
+      return context.agentSessions.listAgentSessions(limit, filter);
+    },
+    getAgentSession(sessionId) {
+      return context.agentSessions.getAgentSession(sessionId);
+    },
+    appendAgentSession(payload = {}) {
+      return context.agentSessions.appendAgentSession(payload);
+    },
+    recordAgentSession(payload = {}) {
+      const session = context.agentSessions.appendAgentSession(payload);
+
+      context.audit.appendAuditRecord({
+        type: 'agent-session',
+        actor: session.requestedBy,
+        title: `Agent session opened`,
+        detail: session.title || 'Agent collaboration session created.',
+        metadata: {
+          agentSessionId: session.id,
+          status: session.status,
+          latestIntentKind: session.latestIntent.kind,
+        },
+      });
+
+      return session;
+    },
+    updateAgentSession(sessionId, patch = {}) {
+      return context.agentSessions.updateAgentSession(sessionId, patch);
+    },
+    listAgentPlans(limit = 50, filter = {}) {
+      return context.agentPlans.listAgentPlans(limit, filter);
+    },
+    getAgentPlan(planId) {
+      return context.agentPlans.getAgentPlan(planId);
+    },
+    getLatestAgentPlanForSession(sessionId) {
+      return context.agentPlans.getLatestAgentPlanForSession(sessionId);
+    },
+    appendAgentPlan(payload = {}) {
+      return context.agentPlans.appendAgentPlan(payload);
+    },
+    recordAgentPlan(payload = {}) {
+      const plan = context.agentPlans.appendAgentPlan(payload);
+      if (plan.sessionId) {
+        context.agentSessions.updateAgentSession(plan.sessionId, {
+          latestPlanId: plan.id,
+          status: plan.status === 'completed' ? 'ready' : 'running',
+        });
+      }
+
+      context.audit.appendAuditRecord({
+        type: 'agent-plan',
+        actor: plan.requestedBy,
+        title: `Agent plan prepared`,
+        detail: plan.summary || 'Agent plan persisted.',
+        metadata: {
+          agentPlanId: plan.id,
+          agentSessionId: plan.sessionId,
+          requiresApproval: plan.requiresApproval,
+          stepCount: plan.steps.length,
+        },
+      });
+
+      return plan;
+    },
+    updateAgentPlan(planId, patch = {}) {
+      return context.agentPlans.updateAgentPlan(planId, patch);
+    },
+    listAgentAnalysisRuns(limit = 50, filter = {}) {
+      return context.agentAnalysisRuns.listAgentAnalysisRuns(limit, filter);
+    },
+    getAgentAnalysisRun(runId) {
+      return context.agentAnalysisRuns.getAgentAnalysisRun(runId);
+    },
+    getLatestAgentAnalysisRunForSession(sessionId) {
+      return context.agentAnalysisRuns.getLatestAgentAnalysisRunForSession(sessionId);
+    },
+    appendAgentAnalysisRun(payload = {}) {
+      return context.agentAnalysisRuns.appendAgentAnalysisRun(payload);
+    },
+    recordAgentAnalysisRun(payload = {}) {
+      const run = context.agentAnalysisRuns.appendAgentAnalysisRun(payload);
+      if (run.sessionId) {
+        context.agentSessions.updateAgentSession(run.sessionId, {
+          latestAnalysisRunId: run.id,
+          status: run.status === 'completed' ? 'completed' : 'running',
+        });
+      }
+
+      context.audit.appendAuditRecord({
+        type: 'agent-analysis-run',
+        actor: run.requestedBy,
+        title: `Agent analysis ${run.status}`,
+        detail: run.summary || 'Agent analysis run persisted.',
+        metadata: {
+          agentAnalysisRunId: run.id,
+          agentSessionId: run.sessionId,
+          agentPlanId: run.planId,
+          toolCallCount: run.toolCalls.length,
+          evidenceCount: run.evidence.length,
+        },
+      });
+
+      return run;
+    },
+    updateAgentAnalysisRun(runId, patch = {}) {
+      return context.agentAnalysisRuns.updateAgentAnalysisRun(runId, patch);
+    },
     listAgentActionRequests(limit = 50, filter = {}) {
       return context.agentActionRequests.listAgentActionRequests(limit, filter);
     },

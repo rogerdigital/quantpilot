@@ -335,6 +335,97 @@ export function createAgentActionRequestEntry(payload) {
   };
 }
 
+export function createAgentSessionEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `agent-session-${randomUUID()}`,
+    status: payload.status || 'draft',
+    title: payload.title || 'Agent collaboration session',
+    prompt: payload.prompt || '',
+    requestedBy: payload.requestedBy || 'operator',
+    latestIntent: {
+      kind: payload.latestIntent?.kind || 'unknown',
+      summary: payload.latestIntent?.summary || '',
+      targetType: payload.latestIntent?.targetType || 'unknown',
+      targetId: payload.latestIntent?.targetId || '',
+      urgency: payload.latestIntent?.urgency || 'normal',
+      requiresApproval: Boolean(payload.latestIntent?.requiresApproval),
+      requestedMode: payload.latestIntent?.requestedMode || 'read_only',
+      metadata: payload.latestIntent?.metadata || {},
+    },
+    latestPlanId: payload.latestPlanId || '',
+    latestAnalysisRunId: payload.latestAnalysisRunId || '',
+    latestActionRequestId: payload.latestActionRequestId || '',
+    tags: Array.isArray(payload.tags) ? payload.tags : [],
+    metadata: payload.metadata || {},
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+  };
+}
+
+export function createAgentPlanEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `agent-plan-${randomUUID()}`,
+    sessionId: payload.sessionId || '',
+    status: payload.status || 'draft',
+    summary: payload.summary || '',
+    requiresApproval: Boolean(payload.requiresApproval),
+    requestedBy: payload.requestedBy || 'agent',
+    steps: Array.isArray(payload.steps) ? payload.steps.map((step, index) => ({
+      id: step.id || `agent-plan-step-${index + 1}`,
+      kind: step.kind || 'read',
+      title: step.title || 'Untitled step',
+      status: step.status || 'pending',
+      toolName: step.toolName || '',
+      description: step.description || '',
+      outputSummary: step.outputSummary || '',
+      metadata: step.metadata || {},
+    })) : [],
+    metadata: payload.metadata || {},
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+  };
+}
+
+export function createAgentAnalysisRunEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `agent-analysis-run-${randomUUID()}`,
+    sessionId: payload.sessionId || '',
+    planId: payload.planId || '',
+    status: payload.status || 'queued',
+    summary: payload.summary || '',
+    conclusion: payload.conclusion || '',
+    requestedBy: payload.requestedBy || 'agent',
+    toolCalls: Array.isArray(payload.toolCalls) ? payload.toolCalls.map((call) => ({
+      tool: call.tool || '',
+      status: call.status || 'pending',
+      summary: call.summary || '',
+      metadata: call.metadata || {},
+    })) : [],
+    evidence: Array.isArray(payload.evidence) ? payload.evidence.map((entry, index) => ({
+      id: entry.id || `agent-evidence-${index + 1}`,
+      kind: entry.kind || 'tool_result',
+      title: entry.title || 'Evidence',
+      summary: entry.summary || '',
+      source: entry.source || 'agent',
+      sourceId: entry.sourceId || '',
+      metadata: entry.metadata || {},
+    })) : [],
+    explanation: {
+      thesis: payload.explanation?.thesis || '',
+      rationale: Array.isArray(payload.explanation?.rationale) ? payload.explanation.rationale : [],
+      warnings: Array.isArray(payload.explanation?.warnings) ? payload.explanation.warnings : [],
+      recommendedNextStep: payload.explanation?.recommendedNextStep || '',
+    },
+    metadata: payload.metadata || {},
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+    completedAt: payload.completedAt || '',
+  };
+}
+
 export function createResearchTaskEntry(payload = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
