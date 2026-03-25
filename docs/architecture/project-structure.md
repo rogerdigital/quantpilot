@@ -112,18 +112,19 @@ quantpilot/
 
 ## 研发迭代阶段
 
-### 当前阶段：阶段 1、阶段 2、阶段 3 已收官，进入阶段 4 准备
+### 当前阶段：阶段 1、阶段 2、阶段 3、阶段 4 已收官，进入阶段 5 准备
 
-当前仓库已经完成阶段 1 的平台底座产品化、阶段 2 的研究与策略闭环和阶段 3 的执行闭环与交易中台，并进入阶段 4 的准备期：
+当前仓库已经完成阶段 1 的平台底座产品化、阶段 2 的研究与策略闭环、阶段 3 的执行闭环与交易中台，以及阶段 4 的风险与调度中台深化，并进入阶段 5 的准备期：
 
-1. `auth / user-account / scheduler / notification / audit / task-orchestrator / incident / operations / risk workbench` 这批基础模块已具备第一轮真实服务边界。
+1. `auth / user-account / scheduler / notification / audit / task-orchestrator / incident / operations / risk workbench` 这批基础模块已具备稳定服务边界。
 2. `research task / backtest result / research evaluation / research report / governance / replay / execution handoff` 这批研究对象已具备稳定服务边界。
-3. 文件型控制面和多处前端示例态已收敛为稳定数据访问契约，为后续数据库和缓存升级铺路。
-4. 下一阶段重点将转向风险与调度中台深化，而不是继续返工平台底座、研究骨架或执行主链路。
+3. `execution lifecycle / broker events / reconciliation / compensation / triage` 与 `risk / scheduler linkage / reviewed actions` 已形成稳定中台契约。
+4. 下一阶段重点将转向 Agent 受控协作，而不是继续返工平台底座、研究骨架、执行主链路或风险/调度中台骨架。
 
 阶段 1 的收官标准已经单独整理为 [stage-1-closeout.md](./stage-1-closeout.md)，后续判断是否进入阶段 2 以该文档为准。
 阶段 2 的收官标准已经单独整理为 [stage-2-closeout.md](./stage-2-closeout.md)，后续判断是否进入阶段 3 以该文档为准。
 阶段 3 的收官标准已经单独整理为 [stage-3-closeout.md](./stage-3-closeout.md)，后续判断是否进入阶段 4 以该文档为准。
+阶段 4 的收官标准已经单独整理为 [stage-4-closeout.md](./stage-4-closeout.md)，后续判断是否进入阶段 5 以该文档为准。
 
 ### 阶段 2 研究与策略闭环
 
@@ -137,11 +138,11 @@ quantpilot/
 2. 扩展 broker 适配边界，形成多券商接入和环境切换能力。
 3. 让审计、通知、风险、执行状态在控制面内形成完整闭环。
 
-### 阶段 4 风控与调度中台深化
+### 阶段 4 风控与调度中台深化（已收官）
 
-1. 把风险事件从基础扫描扩展为组合风险、回撤保护、规则引擎和熔断控制。
-2. 把 scheduler 从 tick 记录升级为盘前、盘中、盘后和定时报表的任务中枢。
-3. 强化恢复、取消、重试、审批和人工接管路径。
+1. 风险页已形成 `Risk Governance Workbench` 与 `Risk Middleware Policy Actions`，可围绕 drawdown、compliance、scheduler attention 和 incident 做统一治理。
+2. 调度侧已形成 `Scheduler Operations Workbench` 与 `Scheduler Orchestration Actions`，可围绕 scheduler windows、cycle drift、notifications 和 incidents 做统一编排。
+3. Risk 与 scheduler 现已共享 linkage 中台上下文，可围绕同一条 scheduler window、risk event、incident 和 notification 做统一排查与处置。
 
 ### 阶段 5 Agent 受控协作
 
@@ -157,9 +158,8 @@ quantpilot/
 
 ## 当前阶段的具体建议
 
-1. 优先补齐 `auth / user-account / broker binding` 的真实服务与数据边界，因为这是平台底座产品化的主要缺口。
-2. 把文件型控制面和页面示例数据逐步收敛为稳定 repository 与 service contract，为数据库和缓存升级铺路。
-3. 把 `strategy / backtest` 从静态 research snapshot 升级为真实的任务执行与结果持久化模块，为阶段 2 做准备。
-4. 把 `task-orchestrator` 从当前的文件型控制面升级为真正的任务流和队列执行层。
-5. 把 `core/lifecycle.ts` 里的异步编排继续迁到后端任务层，前端只保留状态消费和交互动作。
-6. 在平台底座和交易闭环稳定后，再推进 Agent 的 tool layer、分析解释和受控动作请求能力。
+1. 以阶段 1 到阶段 4 已稳定的 contracts 为前提，先建设 Agent 只读分析、解释和受控动作请求，不新增绕过执行与风控的平行链路。
+2. 把 `intent parser / planner / tool router / explanation engine / approval controller` 作为正式后端契约推进，而不是仅在前端对话层堆逻辑。
+3. 让 Agent 消费现有 `research / execution / risk / scheduler / incidents / notifications` 的稳定 workbench 和 detail 数据，而不是自己重新拼状态。
+4. 把 Agent 产生的建议、计划、动作请求和审批结果继续沉淀到 audit、notification、incident 和 operator action 历史里。
+5. 在阶段 5 推进过程中，持续用基线测试守住阶段 1 到阶段 4 已关闭阶段的合同稳定性。

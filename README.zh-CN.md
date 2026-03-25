@@ -199,7 +199,7 @@ quantpilot/
 - 用户系统和权限边界已经开始从 demo 常量迁到持久化账户配置，但租户、多用户隔离和完整 RBAC 仍未真正落地。
 - 行情接入、历史数据、研究结果持久化仍处于简化阶段。
 - Agent 仍处于受控协作原型阶段，当前以 allowlist 只读工具、动作请求和审批流为主，尚未形成真正的规划、记忆和工具编排系统。
-- 阶段 3 已收官：执行闭环现已具备稳定的订单状态机、broker 回报承接、结构化对账、恢复姿态、自动补偿和基于队列的 execution operations console。
+- 阶段 4 已收官：风险与调度现在已经具备稳定的中台契约，包括 workbench 快照、linkage 上下文、经过审核的操作动作以及带 incident 语义的控制面 fanout。
 
 ## 研发迭代原则
 
@@ -241,12 +241,11 @@ quantpilot/
 - 阶段 3 已完成 `Execution Lifecycle Backbone`、`Execution Order State Machine`、`Execution Reconciliation Workbench`、`Execution Recovery Workbench`、`Broker Event Ingestion`、`Execution Exception And Retry Policies`、`Execution Operations Console`、`Execution Account Reconciliation`、`Execution Compensation Automation`、`Execution Bulk Queue Actions` 和 `Execution Incident Triage`。
 - 执行链路现已形成 `handoff -> workflow -> plan -> run -> order state -> broker event -> reconcile -> compensate -> recover -> incident -> operate` 的统一闭环。
 
-### 阶段 4：风险与调度中台深化
+### 阶段 4：风险与调度中台深化（已收官）
 
-- 将风控从基础扫描升级为 `position / portfolio / drawdown / volatility / compliance / emergency brake` 六类能力。
-- 将 scheduler 从节拍记录升级为盘前、盘中、盘后和定时任务编排中心。
-- 建立风险阻断、人工审批、熔断、恢复和通知联动闭环。
-- 让控制面具备更完整的恢复、取消、重试、补偿和人工介入能力。
+- 阶段 4 的收官定义、非目标和阶段 5 入口条件已单独整理到 [docs/architecture/stage-4-closeout.md](./docs/architecture/stage-4-closeout.md)。
+- 阶段 4 已完成 `Risk Governance Workbench`、`Scheduler Operations Workbench`、`Risk Scheduler Linkage`、`Scheduler Orchestration Actions` 和 `Risk Middleware Policy Actions`。
+- 风险与调度中台现已形成 `risk/scheduler snapshot -> linkage -> runbook -> reviewed action -> operator history / notification / incident triage` 的统一链路。
 
 ### 阶段 5：Agent 受控协作落地
 
@@ -364,12 +363,12 @@ npm run verify
 
 ## 当前研发重点
 
-当前已完成“阶段 1 / 阶段 2 / 阶段 3”，并开始转向“阶段 4：风险与调度中台深化”，优先级如下：
+当前已完成“阶段 1 / 阶段 2 / 阶段 3 / 阶段 4”，并开始转向“阶段 5：Agent 受控协作落地”，优先级如下：
 
-1. 将风控从事件扫描继续做深为 `position / portfolio / drawdown / volatility / compliance / emergency brake` 多层中台。
-2. 把 scheduler 从节拍历史推进成更明确的盘前 / 盘中 / 盘后运行面，并与 incident、notification 更紧地联动。
-3. 保持阶段 1、阶段 2、阶段 3 的账户、incident、operations、research hub、execution workbench 和 handoff 契约稳定，避免阶段切换时回归。
-4. 让新的风险与调度能力继续围绕已落地的 execution lifecycle、broker event、reconciliation、compensation 和 incident 合同扩展，而不是另起一套控制面。
-5. 在进入更深的多 broker 实盘连接或更强自主执行前，优先把阶段 4 需要共享的 risk / scheduler contracts 做稳。
+1. 在已经稳定的 research、execution、risk、scheduler 和 incident 中台契约之上，建设统一的 `agent collaboration workbench`。
+2. 把 `intent parsing / planner / tool routing / explanation` 变成明确的后端契约，而不再只是前端对话层能力。
+3. 保持所有 Agent 请求都落在既有的 audit、risk、approval、execution 和 control-plane 边界内，不新增平行动作通道。
+4. 在 Agent 能力推进过程中，持续守住阶段 1 到阶段 4 的账户、incident、research hub、execution workbench、risk middleware、scheduler workbench 和 linkage 契约稳定性。
+5. 在进入更高自主性之前，先把只读分析和受控动作请求闭环做稳。
 
 研发节奏保持为“设计对齐 -> 小步实现 -> 自动化验证 -> 再推进下一层能力”。
