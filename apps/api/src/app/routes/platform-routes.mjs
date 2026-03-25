@@ -4,6 +4,8 @@ import {
   queueAgentActionRequest,
   rejectAgentActionRequest,
 } from '../../domains/agent/services/action-request-service.mjs';
+import { parseAgentIntent } from '../../domains/agent/services/intent-service.mjs';
+import { createAgentPlan } from '../../domains/agent/services/planning-service.mjs';
 import { listAgentTools, executeAgentTool } from '../../domains/agent/services/tools-service.mjs';
 import { getBacktestSummary } from '../../domains/backtest/services/summary-service.mjs';
 import { getBacktestResultDetail, getBacktestResultSummary, listBacktestResults } from '../../domains/backtest/services/results-service.mjs';
@@ -224,6 +226,20 @@ export async function handlePlatformRoutes(context) {
     const body = await readJsonBody(req);
     const result = executeAgentTool(body);
     writeJson(res, result.ok ? 200 : 403, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/agent/intent') {
+    const body = await readJsonBody(req);
+    const result = parseAgentIntent(body);
+    writeJson(res, result.ok ? 200 : 400, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/agent/plans') {
+    const body = await readJsonBody(req);
+    const result = createAgentPlan(body);
+    writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
 

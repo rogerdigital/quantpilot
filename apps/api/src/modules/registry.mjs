@@ -31,7 +31,7 @@ export const ARCHITECTURE_LAYERS = [
     id: 'agent',
     name: 'Agent Layer',
     status: 'prototype',
-    responsibility: 'tool allowlist, structured summaries, and approval-gated action requests',
+    responsibility: 'intent parsing, session-linked planning, tool allowlist, structured summaries, and approval-gated action requests',
     codeLocations: ['apps/api/src/domains/agent', 'apps/api/src/modules/agent', 'apps/web/src/pages/agent'],
   },
   {

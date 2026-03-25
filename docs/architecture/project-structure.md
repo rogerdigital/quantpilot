@@ -150,6 +150,7 @@ quantpilot/
 2. 建立意图解析、任务规划、工具路由、结果解释和审批控制链路。
 3. 确保 Agent 永远不绕过风险和执行边界。
 4. 先在控制面沉淀 `session / intent / plan / analysis run` 基础合同，再向上扩展 planner、workbench 和审批流。
+5. 当前应优先把 `POST /api/agent/intent` 和 `POST /api/agent/plans` 做成稳定后端合同，再让前端 workbench 只消费这些结构化结果。
 
 ### 阶段 6 生产化与专业化
 

@@ -1200,6 +1200,60 @@ test('POST /api/agent/tools/execute rejects non-allowlisted tools', async () => 
   assert.equal(response.json.ok, false);
 });
 
+test('POST /api/agent/intent parses execution-prep prompts into persisted agent sessions', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/intent',
+    body: {
+      prompt: '请在开盘前为 ema-cross-us 准备执行计划，并确认是否需要审批。',
+      requestedBy: 'operator-demo',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.intent.kind, 'request_execution_prep');
+  assert.equal(response.json.intent.targetType, 'strategy');
+  assert.equal(response.json.intent.targetId, 'ema-cross-us');
+  assert.equal(response.json.intent.requiresApproval, true);
+  assert.equal(response.json.session.latestIntent.kind, 'request_execution_prep');
+  assert.equal(context.agentSessions.getAgentSession(response.json.session.id).latestIntent.kind, 'request_execution_prep');
+});
+
+test('POST /api/agent/intent rejects empty prompts', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/intent',
+    body: {
+      prompt: '   ',
+    },
+  });
+
+  assert.equal(response.statusCode, 400);
+  assert.equal(response.json.ok, false);
+  assert.equal(response.json.error, 'missing_prompt');
+});
+
+test('POST /api/agent/plans creates a persisted plan with structured steps', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/plans',
+    body: {
+      prompt: 'Explain the latest risk posture for ema-cross-us and tell me what to review next.',
+      requestedBy: 'operator-demo',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.intent.kind, 'request_risk_explanation');
+  assert.equal(response.json.plan.status, 'ready');
+  assert.equal(response.json.plan.steps.some((item) => item.toolName === 'risk.events.list'), true);
+  assert.equal(response.json.plan.steps.some((item) => item.kind === 'explain'), true);
+  assert.equal(context.agentPlans.getAgentPlan(response.json.plan.id).sessionId, response.json.session.id);
+  assert.equal(context.agentSessions.getAgentSession(response.json.session.id).latestPlanId, response.json.plan.id);
+});
+
 test('POST /api/agent/action-requests queues an agent action request workflow', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
