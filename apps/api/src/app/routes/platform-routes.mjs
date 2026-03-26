@@ -58,6 +58,7 @@ export async function handlePlatformRoutes(context) {
   const { req, reqUrl, res, config, readJsonBody, writeJson } = context;
   const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);
   const canWriteAccount = () => hasPermission('account:write');
+  const canMaintainOperations = () => hasPermission('operations:maintain');
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/health') {
     writeJson(res, 200, {
@@ -111,8 +112,8 @@ export async function handlePlatformRoutes(context) {
   }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/operations/maintenance') {
-    if (!canWriteAccount()) {
-      writeForbidden('account:write', 'inspect control-plane maintenance posture');
+    if (!canMaintainOperations()) {
+      writeForbidden('operations:maintain', 'inspect control-plane maintenance posture');
       return true;
     }
     const summary = await getOperationsMaintenanceSnapshot({
@@ -124,8 +125,8 @@ export async function handlePlatformRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/operations/maintenance/backup') {
-    if (!canWriteAccount()) {
-      writeForbidden('account:write', 'export control-plane backups');
+    if (!canMaintainOperations()) {
+      writeForbidden('operations:maintain', 'export control-plane backups');
       return true;
     }
     writeJson(res, 200, createOperationsMaintenanceBackup());
@@ -133,8 +134,8 @@ export async function handlePlatformRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/operations/maintenance/restore') {
-    if (!canWriteAccount()) {
-      writeForbidden('account:write', 'restore control-plane backups');
+    if (!canMaintainOperations()) {
+      writeForbidden('operations:maintain', 'restore control-plane backups');
       return true;
     }
     const body = await readJsonBody(req);
@@ -143,8 +144,8 @@ export async function handlePlatformRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/operations/maintenance/repair/workflows') {
-    if (!canWriteAccount()) {
-      writeForbidden('account:write', 'repair workflow retry backlog');
+    if (!canMaintainOperations()) {
+      writeForbidden('operations:maintain', 'repair workflow retry backlog');
       return true;
     }
     const body = await readJsonBody(req);

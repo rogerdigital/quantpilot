@@ -2,6 +2,7 @@ import {
   buildRiskScanResult,
   createNotificationEntry,
   createRiskEventEntry,
+  matchesScopeFilter,
   trimAndSave,
 } from '../shared.mjs';
 
@@ -11,8 +12,10 @@ const NOTIFICATIONS_FILE = 'notifications.json';
 
 export function createRiskRepository(store) {
   return {
-    listRiskEvents(limit = 50) {
-      return store.readCollection(EVENTS_FILE).slice(0, limit);
+    listRiskEvents(limit = 50, filter = {}) {
+      return store.readCollection(EVENTS_FILE)
+        .filter((item) => matchesScopeFilter(item, filter))
+        .slice(0, limit);
     },
     appendRiskEvent(event) {
       const events = store.readCollection(EVENTS_FILE);

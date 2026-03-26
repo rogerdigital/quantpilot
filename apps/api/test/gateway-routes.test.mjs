@@ -878,6 +878,7 @@ test('GET /api/auth/permissions returns the shared permission catalog', async ()
   assert.equal(response.json.ok, true);
   assert.equal(Array.isArray(response.json.permissions), true);
   assert.equal(response.json.permissions.some((item) => item.id === 'execution:approve' && item.scope === 'execution'), true);
+  assert.equal(response.json.permissions.some((item) => item.id === 'operations:maintain' && item.scope === 'operations'), true);
 });
 
 test('GET /api/user-account/profile returns profile and preferences', async () => {
@@ -1417,6 +1418,49 @@ test('GET /api/agent/sessions and detail expose persisted plans and analysis run
   assert.equal(detailResponse.json.latestAnalysisRun.id, createResponse.json.run.id);
   assert.equal(Array.isArray(detailResponse.json.plans), true);
   assert.equal(Array.isArray(detailResponse.json.analysisRuns), true);
+});
+
+test('GET /api/agent/sessions respects the current workspace scope by default', async () => {
+  context.userAccount.setCurrentWorkspace('workspace-operations');
+  const operationsResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/analysis-runs',
+    body: {
+      prompt: 'Explain the latest risk posture for workspace operations.',
+      requestedBy: 'operator-demo',
+    },
+  });
+
+  context.userAccount.upsertWorkspace({
+    id: 'workspace-live-ops-scope',
+    key: 'live-ops-scope',
+    label: 'Live Ops Scope',
+    description: 'Workspace used to verify scoped agent session reads.',
+    role: 'execution-approver',
+  });
+  context.userAccount.setCurrentWorkspace('workspace-live-ops-scope');
+  const liveResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/analysis-runs',
+    body: {
+      prompt: 'Explain the latest execution posture for live ops.',
+      requestedBy: 'operator-demo',
+    },
+  });
+
+  const scopedList = await invokeGatewayRoute(handler, {
+    path: '/api/agent/sessions?limit=10',
+  });
+  const hiddenDetail = await invokeGatewayRoute(handler, {
+    path: `/api/agent/sessions/${operationsResponse.json.session.id}`,
+  });
+
+  assert.equal(scopedList.statusCode, 200);
+  assert.equal(scopedList.json.sessions.some((item) => item.id === liveResponse.json.session.id), true);
+  assert.equal(scopedList.json.sessions.some((item) => item.id === operationsResponse.json.session.id), false);
+  assert.equal(hiddenDetail.statusCode, 404);
+
+  context.userAccount.setCurrentWorkspace('workspace-operations');
 });
 
 test('GET /api/agent/workbench returns explanation queues and operator trail', async () => {
@@ -3595,6 +3639,11 @@ test('GET /api/operations/workbench returns unified operations overview', async 
 });
 
 test('GET /api/operations/maintenance returns backup posture and integrity summary', async () => {
+  context.userAccount.updateUserAccess({
+    role: 'admin',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write', 'operations:maintain'],
+  });
   context.notifications.enqueueNotification({
     id: 'maintenance-route-notification',
     title: 'Pending maintenance notification',
@@ -3630,6 +3679,11 @@ test('GET /api/operations/maintenance returns backup posture and integrity summa
 });
 
 test('operations maintenance routes export backups, dry-run restores, and repair workflow backlog', async () => {
+  context.userAccount.updateUserAccess({
+    role: 'admin',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write', 'operations:maintain'],
+  });
   const dueIso = new Date(Date.now() - 15 * 60 * 1000).toISOString();
   context.workflows.appendWorkflowRun({
     id: 'maintenance-repair-workflow',
@@ -3678,6 +3732,29 @@ test('operations maintenance routes export backups, dry-run restores, and repair
   assert.equal(repairResponse.json.releasedCount >= 1, true);
   assert.equal(repairResponse.json.workflows.some((item) => item.id === 'maintenance-repair-workflow'), true);
   assert.equal(context.workflows.getWorkflowRun('maintenance-repair-workflow').status, 'queued');
+});
+
+test('operations maintenance routes reject requests without operations:maintain permission', async () => {
+  context.userAccount.updateUserAccess({
+    role: 'admin',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/operations/maintenance?limit=5',
+  });
+
+  assert.equal(response.statusCode, 403);
+  assert.equal(response.json.ok, false);
+  assert.equal(response.json.missingPermission, 'operations:maintain');
+  assert.equal(response.json.permission.id, 'operations:maintain');
+
+  context.userAccount.updateUserAccess({
+    role: 'admin',
+    status: 'active',
+    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write', 'operations:maintain'],
+  });
 });
 
 test('incident routes create, update, and return incident details', async () => {

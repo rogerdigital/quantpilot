@@ -1,4 +1,4 @@
-import { createAgentPlanEntry, trimAndSave } from '../shared.mjs';
+import { createAgentPlanEntry, matchesScopeFilter, trimAndSave } from '../shared.mjs';
 
 const FILENAME = 'agent-plans.json';
 
@@ -7,6 +7,7 @@ export function createAgentPlanRepository(store) {
     listAgentPlans(limit = 50, filter = {}) {
       return store.readCollection(FILENAME)
         .filter((item) => {
+          if (!matchesScopeFilter(item, filter)) return false;
           if (filter.status && item.status !== filter.status) return false;
           if (filter.sessionId && item.sessionId !== filter.sessionId) return false;
           return true;

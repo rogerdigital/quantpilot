@@ -1,4 +1,4 @@
-import { createAgentActionRequestEntry, trimAndSave } from '../shared.mjs';
+import { createAgentActionRequestEntry, matchesScopeFilter, trimAndSave } from '../shared.mjs';
 
 const FILENAME = 'agent-action-requests.json';
 
@@ -7,6 +7,7 @@ export function createAgentActionRequestRepository(store) {
     listAgentActionRequests(limit = 50, filter = {}) {
       return store.readCollection(FILENAME)
         .filter((item) => {
+          if (!matchesScopeFilter(item, filter)) return false;
           if (filter.status && item.status !== filter.status) return false;
           if (filter.requestType && item.requestType !== filter.requestType) return false;
           return true;

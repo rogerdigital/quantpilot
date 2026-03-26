@@ -32,6 +32,47 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     };
   }
 
+  function withScopedFilter(filter = {}, options = {}) {
+    if (filter.allScopes || filter.scope === 'all') {
+      return filter;
+    }
+
+    const scope = getCurrentScope();
+    return {
+      includeUnscoped: options.includeUnscoped ?? true,
+      ...filter,
+      tenantId: filter.tenantId ?? scope.tenantId,
+      workspaceId: filter.workspaceId ?? scope.workspaceId,
+    };
+  }
+
+  function isVisibleInCurrentScope(item, options = {}) {
+    if (!item) return null;
+
+    const filter = withScopedFilter({}, options);
+    const tenantId = item?.metadata?.tenantId || item?.tenantId || '';
+    const workspaceId = item?.metadata?.workspaceId || item?.workspaceId || '';
+    const includeUnscoped = filter.includeUnscoped !== false;
+
+    if (!tenantId && !workspaceId) {
+      return includeUnscoped ? item : null;
+    }
+    if (filter.tenantId && tenantId && tenantId !== filter.tenantId) {
+      return null;
+    }
+    if (filter.workspaceId && workspaceId && workspaceId !== filter.workspaceId) {
+      return null;
+    }
+    if (filter.tenantId && !tenantId) {
+      return includeUnscoped ? item : null;
+    }
+    if (filter.workspaceId && !workspaceId) {
+      return includeUnscoped ? item : null;
+    }
+
+    return item;
+  }
+
   function fanoutWorkflowEvent(level, title, message, metadata = {}) {
     context.audit.appendAuditRecord({
       type: 'workflow',
@@ -59,10 +100,10 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
   return {
     listAgentSessions(limit = 50, filter = {}) {
-      return context.agentSessions.listAgentSessions(limit, filter);
+      return context.agentSessions.listAgentSessions(limit, withScopedFilter(filter));
     },
     getAgentSession(sessionId) {
-      return context.agentSessions.getAgentSession(sessionId);
+      return isVisibleInCurrentScope(context.agentSessions.getAgentSession(sessionId));
     },
     appendAgentSession(payload = {}) {
       return context.agentSessions.appendAgentSession(withScopeMetadata(payload));
@@ -88,10 +129,10 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.agentSessions.updateAgentSession(sessionId, patch);
     },
     listAgentPlans(limit = 50, filter = {}) {
-      return context.agentPlans.listAgentPlans(limit, filter);
+      return context.agentPlans.listAgentPlans(limit, withScopedFilter(filter));
     },
     getAgentPlan(planId) {
-      return context.agentPlans.getAgentPlan(planId);
+      return isVisibleInCurrentScope(context.agentPlans.getAgentPlan(planId));
     },
     getLatestAgentPlanForSession(sessionId) {
       return context.agentPlans.getLatestAgentPlanForSession(sessionId);
@@ -127,10 +168,10 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.agentPlans.updateAgentPlan(planId, patch);
     },
     listAgentAnalysisRuns(limit = 50, filter = {}) {
-      return context.agentAnalysisRuns.listAgentAnalysisRuns(limit, filter);
+      return context.agentAnalysisRuns.listAgentAnalysisRuns(limit, withScopedFilter(filter));
     },
     getAgentAnalysisRun(runId) {
-      return context.agentAnalysisRuns.getAgentAnalysisRun(runId);
+      return isVisibleInCurrentScope(context.agentAnalysisRuns.getAgentAnalysisRun(runId));
     },
     getLatestAgentAnalysisRunForSession(sessionId) {
       return context.agentAnalysisRuns.getLatestAgentAnalysisRunForSession(sessionId);
@@ -167,10 +208,10 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.agentAnalysisRuns.updateAgentAnalysisRun(runId, patch);
     },
     listAgentActionRequests(limit = 50, filter = {}) {
-      return context.agentActionRequests.listAgentActionRequests(limit, filter);
+      return context.agentActionRequests.listAgentActionRequests(limit, withScopedFilter(filter));
     },
     getAgentActionRequest(requestId) {
-      return context.agentActionRequests.getAgentActionRequest(requestId);
+      return isVisibleInCurrentScope(context.agentActionRequests.getAgentActionRequest(requestId));
     },
     appendAgentActionRequest(payload) {
       return context.agentActionRequests.appendAgentActionRequest(withScopeMetadata(payload));
@@ -269,7 +310,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.backtestRuns.updateBacktestRun(runId, patch);
     },
     listAuditRecords(limit = 50, filter = {}) {
-      return context.audit.listAuditRecords(limit, filter);
+      return context.audit.listAuditRecords(limit, withScopedFilter(filter));
     },
     appendAuditRecord(record) {
       return context.audit.appendAuditRecord({
@@ -326,7 +367,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return entry;
     },
     listOperatorActions(limit = 50, filter = {}) {
-      return context.operatorActions.listOperatorActions(limit, filter);
+      return context.operatorActions.listOperatorActions(limit, withScopedFilter(filter));
     },
     appendOperatorAction(payload) {
       return context.operatorActions.appendOperatorAction(withScopeMetadata(payload));
@@ -519,19 +560,19 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.marketProviders.updateMarketProviderStatus(snapshot);
     },
     listMonitoringSnapshots(limit = 50, filter = {}) {
-      return context.monitoring.listMonitoringSnapshots(limit, filter);
+      return context.monitoring.listMonitoringSnapshots(limit, withScopedFilter(filter));
     },
     listMonitoringAlerts(limit = 100, filter = {}) {
-      return context.monitoring.listMonitoringAlerts(limit, filter);
+      return context.monitoring.listMonitoringAlerts(limit, withScopedFilter(filter));
     },
     recordMonitoringSnapshot(payload = {}) {
       return context.monitoring.recordMonitoringSnapshot(withScopeMetadata(payload));
     },
     listIncidents(limit = 50, filter = {}) {
-      return context.incidents.listIncidents(limit, filter);
+      return context.incidents.listIncidents(limit, withScopedFilter(filter));
     },
     getIncident(incidentId) {
-      return context.incidents.getIncident(incidentId);
+      return isVisibleInCurrentScope(context.incidents.getIncident(incidentId));
     },
     listIncidentActivities(incidentId, limit = 100) {
       return context.incidents.listIncidentActivities(incidentId, limit);
@@ -651,7 +692,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.incidents.updateIncidentTask(incidentId, taskId, payload);
     },
     listNotifications(limit = 50, filter = {}) {
-      return context.notifications.listNotifications(limit, filter);
+      return context.notifications.listNotifications(limit, withScopedFilter(filter));
     },
     appendNotification(event) {
       return context.notifications.appendNotification(withScopeMetadata(event));
@@ -692,8 +733,8 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     upsertResearchTask(payload = {}) {
       return context.researchTasks.upsertResearchTask(withScopeMetadata(payload));
     },
-    listRiskEvents(limit = 50) {
-      return context.risk.listRiskEvents(limit);
+    listRiskEvents(limit = 50, filter = {}) {
+      return context.risk.listRiskEvents(limit, withScopedFilter(filter));
     },
     appendRiskEvent(event) {
       return context.risk.appendRiskEvent(withScopeMetadata(event));
@@ -708,7 +749,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.risk.dispatchPendingRiskScans(options);
     },
     listSchedulerTicks(limit = 50, filter = {}) {
-      return context.scheduler.listSchedulerTicks(limit, filter);
+      return context.scheduler.listSchedulerTicks(limit, withScopedFilter(filter));
     },
     recordSchedulerTick(options = {}) {
       return context.scheduler.recordSchedulerTick(options);
@@ -788,20 +829,20 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     deleteBrokerBinding(bindingId) {
       return context.userAccount.deleteBrokerBinding(bindingId);
     },
-    listWorkerHeartbeats(limit = 50) {
-      return context.workerHeartbeats.listWorkerHeartbeats(limit);
+    listWorkerHeartbeats(limit = 50, filter = {}) {
+      return context.workerHeartbeats.listWorkerHeartbeats(limit, withScopedFilter(filter));
     },
     getLatestWorkerHeartbeat(worker = '') {
-      return context.workerHeartbeats.getLatestWorkerHeartbeat(worker);
+      return this.listWorkerHeartbeats(120).find((item) => !worker || item.worker === worker) || null;
     },
     recordWorkerHeartbeat(payload = {}) {
       return context.workerHeartbeats.recordWorkerHeartbeat(payload);
     },
     listWorkflowRuns(limit = 50, filter = {}) {
-      return context.workflows.listWorkflowRuns(limit, filter);
+      return context.workflows.listWorkflowRuns(limit, withScopedFilter(filter));
     },
     getWorkflowRun(workflowRunId) {
-      return context.workflows.getWorkflowRun(workflowRunId);
+      return isVisibleInCurrentScope(context.workflows.getWorkflowRun(workflowRunId));
     },
     startWorkflowRun(payload) {
       return context.workflows.appendWorkflowRun({

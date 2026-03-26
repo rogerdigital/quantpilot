@@ -1,4 +1,4 @@
-import { createOperatorActionEntry, trimAndSave } from '../shared.mjs';
+import { createOperatorActionEntry, matchesScopeFilter, trimAndSave } from '../shared.mjs';
 
 const FILENAME = 'operator-actions.json';
 
@@ -28,6 +28,7 @@ export function createOperatorActionRepository(store) {
     listOperatorActions(limit = 50, filter = {}) {
       const items = sortByCreatedAtDesc(
         filterByDate(store.readCollection(FILENAME), filter.since)
+          .filter((item) => matchesScopeFilter(item, filter))
           .filter((item) => !filter.level || item.level === filter.level),
       );
       return items.slice(0, limit);

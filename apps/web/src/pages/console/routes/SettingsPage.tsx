@@ -69,7 +69,7 @@ export function SettingsPage() {
   const [accessForm, setAccessForm] = useState({
     role: 'admin',
     status: 'active',
-    permissions: 'dashboard:read, strategy:write, risk:review, execution:approve, account:write',
+    permissions: 'dashboard:read, strategy:write, risk:review, execution:approve, account:write, operations:maintain',
   });
   const [bindingForm, setBindingForm] = useState({
     id: '',
@@ -98,6 +98,7 @@ export function SettingsPage() {
     'risk:review',
     'execution:approve',
     'account:write',
+    'operations:maintain',
   ];
   const bindings = account?.brokerBindings || [];
   const selectedRoleTemplate = account?.roleTemplates.find((item) => item.id === accessForm.role) || null;

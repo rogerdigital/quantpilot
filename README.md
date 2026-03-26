@@ -364,14 +364,14 @@ Default ports:
 
 ## Current Development Focus
 
-Stage 1, Stage 2, Stage 3, and Stage 4 are closed. The active focus is now Stage 5: controlled agent collaboration.
+Stage 1 through Stage 6 are now closed. The active focus is no longer a staged backlog item, but hardening the closed roadmap contracts without reopening earlier boundaries.
 
 1. Build an `agent collaboration workbench` on top of the now-stable research, execution, risk, scheduler, and incident middleware contracts.
 2. Introduce `intent parsing / planner / tool routing / explanation` as explicit backend-facing contracts instead of frontend-only assistant surfaces.
    The shared contracts for `session / intent / plan / analysis run` are now in place; the next step is wiring parsing and routing onto them.
 3. Keep every agent request inside the existing audit, risk, approval, execution, and control-plane boundaries instead of creating a parallel action path.
-4. Preserve the Stage 1 through Stage 4 baselines for accounts, incidents, research hub, execution workbench, risk middleware, scheduler workbench, and linkage contracts while agent capabilities grow.
-5. Before moving into stronger autonomy, stabilize the read-only analysis and controlled action-request loop that will sit above the now-closed risk and scheduling middleware layer.
+4. Preserve the Stage 1 through Stage 6 baselines for accounts, incidents, research hub, execution workbench, risk middleware, scheduler workbench, agent collaboration, storage adapters, workspace scope, and maintenance contracts.
+5. Treat production-readiness work as contract hardening, observability refinement, and deployment-facing cleanup instead of reopening closed roadmap phases.
 
 The delivery cadence remains:
 

@@ -1,4 +1,4 @@
-import { createMonitoringAlertEntry, createMonitoringSnapshotEntry, trimAndSave } from '../shared.mjs';
+import { createMonitoringAlertEntry, createMonitoringSnapshotEntry, matchesScopeFilter, trimAndSave } from '../shared.mjs';
 
 const SNAPSHOTS_FILE = 'monitoring-snapshots.json';
 const ALERTS_FILE = 'monitoring-alerts.json';
@@ -29,6 +29,7 @@ export function createMonitoringRepository(store) {
     listMonitoringSnapshots(limit = 50, filter = {}) {
       const items = sortByDateDesc(
         filterByDate(store.readCollection(SNAPSHOTS_FILE), 'generatedAt', filter.since)
+          .filter((item) => matchesScopeFilter(item, filter))
           .filter((item) => !filter.status || item.status === filter.status),
         'generatedAt',
       );
@@ -37,6 +38,7 @@ export function createMonitoringRepository(store) {
     listMonitoringAlerts(limit = 100, filter = {}) {
       const items = sortByDateDesc(
         filterByDate(store.readCollection(ALERTS_FILE), 'createdAt', filter.since)
+          .filter((item) => matchesScopeFilter(item, filter))
           .filter((item) => !filter.snapshotId || item.snapshotId === filter.snapshotId)
           .filter((item) => !filter.source || item.source === filter.source)
           .filter((item) => !filter.level || item.level === filter.level),

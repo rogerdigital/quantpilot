@@ -365,11 +365,11 @@ npm run verify
 
 ## 当前研发重点
 
-当前已完成“阶段 1 / 阶段 2 / 阶段 3 / 阶段 4 / 阶段 5”，并开始转向“阶段 6：生产化与专业化”，优先级如下：
+当前“阶段 1 到阶段 6”都已收官，后续重点不再是开启新的阶段，而是继续加固已关闭 roadmap 的正式契约，优先级如下：
 
 1. 在已经稳定的 research、execution、risk、scheduler、incident 和 agent collaboration 契约之上，推进数据库、权限、缓存和可观测性能力。
 2. 保持所有 Agent 请求继续落在既有的 audit、risk、approval、execution 和 control-plane 边界内，不为生产化建设引入绕过式通道。
-3. 在生产化推进过程中，持续守住阶段 1 到阶段 5 的账户、incident、research hub、execution workbench、risk middleware、scheduler workbench、linkage 和 agent collaboration 契约稳定性。
-4. 在更高自主性能力进入规划之前，先把现有受控 handoff、审批和下游 workflow 链路做稳。
+3. 在后续生产化和平台化打磨过程中，持续守住阶段 1 到阶段 6 的账户、incident、research hub、execution workbench、risk middleware、scheduler workbench、agent collaboration、storage adapter、workspace scope 和 maintenance 契约稳定性。
+4. 后续工作默认以契约加固、可观测性优化、部署与恢复能力整理为主，而不是重新打开已关闭阶段的主线需求。
 
 研发节奏保持为“设计对齐 -> 小步实现 -> 自动化验证 -> 再推进下一层能力”。

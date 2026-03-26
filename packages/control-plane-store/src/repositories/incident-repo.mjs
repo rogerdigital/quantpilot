@@ -1,4 +1,11 @@
-import { createIncidentActivityEntry, createIncidentEntry, createIncidentNoteEntry, createIncidentTaskEntry, trimAndSave } from '../shared.mjs';
+import {
+  createIncidentActivityEntry,
+  createIncidentEntry,
+  createIncidentNoteEntry,
+  createIncidentTaskEntry,
+  matchesScopeFilter,
+  trimAndSave,
+} from '../shared.mjs';
 
 const INCIDENTS_FILE = 'incidents.json';
 const NOTES_FILE = 'incident-notes.json';
@@ -215,6 +222,7 @@ export function createIncidentRepository(store) {
     listIncidents(limit = 50, filter = {}) {
       const items = sortByUpdatedAtDesc(
         filterByDate(readIncidents(), filter.since)
+          .filter((item) => matchesScopeFilter(item, filter))
           .filter((item) => !filter.status || item.status === filter.status)
           .filter((item) => !filter.severity || item.severity === filter.severity)
           .filter((item) => !filter.source || item.source === filter.source)

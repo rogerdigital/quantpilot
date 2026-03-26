@@ -29,6 +29,12 @@ const PERMISSION_CATALOG = {
     summary: 'Allows the operator to update account profile, preferences, access policy, and broker bindings.',
     scope: 'account',
   },
+  'operations:maintain': {
+    id: 'operations:maintain',
+    label: 'Operations Maintenance',
+    summary: 'Allows the operator to inspect control-plane maintenance posture and run backup, restore, and repair actions.',
+    scope: 'operations',
+  },
 };
 
 export function listPermissionDescriptors() {

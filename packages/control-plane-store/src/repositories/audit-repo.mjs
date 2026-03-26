@@ -1,4 +1,4 @@
-import { createAuditRecordEntry, trimAndSave } from '../shared.mjs';
+import { createAuditRecordEntry, matchesScopeFilter, trimAndSave } from '../shared.mjs';
 
 const FILENAME = 'audit-records.json';
 
@@ -28,6 +28,7 @@ export function createAuditRepository(store) {
     listAuditRecords(limit = 50, filter = {}) {
       const items = sortByCreatedAtDesc(
         filterByDate(store.readCollection(FILENAME), filter.since)
+          .filter((item) => matchesScopeFilter(item, filter))
           .filter((item) => !filter.type || item.type === filter.type),
       );
       return items.slice(0, limit);

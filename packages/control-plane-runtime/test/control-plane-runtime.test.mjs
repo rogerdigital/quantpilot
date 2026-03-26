@@ -50,6 +50,55 @@ test('control plane runtime stamps current workspace scope into new records', ()
   assert.equal(runtime.listNotificationJobs()[0].payload.metadata.tenantId, 'tenant-quantpilot-labs');
 });
 
+test('control plane runtime filters scoped records to the current workspace by default', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  runtime.upsertWorkspace({
+    id: 'workspace-live-ops',
+    key: 'live-ops',
+    label: 'Live Operations',
+    description: 'Live trading desk workspace.',
+    role: 'execution-approver',
+  });
+
+  runtime.setCurrentWorkspace('workspace-operations');
+  runtime.appendNotification({
+    id: 'notification-ops',
+    title: 'Operations signal',
+    message: 'operations workspace only',
+    source: 'runtime-test',
+  });
+  runtime.startWorkflowRun({
+    id: 'workflow-ops',
+    workflowId: 'task-orchestrator.ops',
+    actor: 'runtime-test',
+    trigger: 'api',
+  });
+
+  runtime.setCurrentWorkspace('workspace-live-ops');
+  runtime.appendNotification({
+    id: 'notification-live',
+    title: 'Live ops signal',
+    message: 'live workspace only',
+    source: 'runtime-test',
+  });
+  runtime.startWorkflowRun({
+    id: 'workflow-live',
+    workflowId: 'task-orchestrator.live',
+    actor: 'runtime-test',
+    trigger: 'api',
+  });
+
+  assert.equal(runtime.listNotifications()[0].id, 'notification-live');
+  assert.equal(runtime.listWorkflowRuns()[0].id, 'workflow-live');
+  assert.equal(runtime.listNotifications(10, { allScopes: true }).length, 2);
+  assert.equal(runtime.listWorkflowRuns(10, { allScopes: true }).length, 2);
+
+  runtime.setCurrentWorkspace('workspace-operations');
+  assert.equal(runtime.listNotifications()[0].id, 'notification-ops');
+  assert.equal(runtime.listWorkflowRuns()[0].id, 'workflow-ops');
+});
+
 test('control plane runtime persists worker heartbeat entries', () => {
   const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
 

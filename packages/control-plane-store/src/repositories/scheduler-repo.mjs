@@ -3,6 +3,7 @@ import {
   createNotificationEntry,
   createSchedulerTickEntry,
   getShanghaiTimeParts,
+  matchesScopeFilter,
   resolveSchedulerPhase,
   trimAndSave,
 } from '../shared.mjs';
@@ -37,6 +38,7 @@ export function createSchedulerRepository(store) {
     listSchedulerTicks(limit = 50, filter = {}) {
       const items = sortByCreatedAtDesc(
         filterByDate(store.readCollection(TICKS_FILE), filter.since)
+          .filter((item) => matchesScopeFilter(item, filter))
           .filter((item) => !filter.phase || item.phase === filter.phase),
       );
       return items.slice(0, limit);

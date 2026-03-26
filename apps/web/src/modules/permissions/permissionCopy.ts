@@ -6,6 +6,7 @@ const PERMISSION_LABELS: Record<string, { zh: string; en: string }> = {
   'risk:review': { zh: '风控复核', en: 'risk reviews' },
   'execution:approve': { zh: '执行审批', en: 'execution approvals' },
   'account:write': { zh: '账户设置', en: 'account updates' },
+  'operations:maintain': { zh: '运维维护', en: 'operations maintenance' },
 };
 
 const ACTION_LABELS: Record<string, { zh: string; en: string }> = {

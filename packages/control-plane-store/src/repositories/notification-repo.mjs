@@ -1,4 +1,4 @@
-import { createNotificationEntry, trimAndSave } from '../shared.mjs';
+import { createNotificationEntry, matchesScopeFilter, trimAndSave } from '../shared.mjs';
 
 const EVENTS_FILE = 'notifications.json';
 const OUTBOX_FILE = 'notification-outbox.json';
@@ -29,6 +29,7 @@ export function createNotificationRepository(store) {
     listNotifications(limit = 50, filter = {}) {
       const items = sortByCreatedAtDesc(
         filterByDate(store.readCollection(EVENTS_FILE), filter.since)
+          .filter((item) => matchesScopeFilter(item, filter))
           .filter((item) => !filter.level || item.level === filter.level)
           .filter((item) => !filter.source || item.source === filter.source),
       );

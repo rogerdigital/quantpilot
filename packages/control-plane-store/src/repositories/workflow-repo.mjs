@@ -1,4 +1,4 @@
-import { createWorkflowRunEntry, trimAndSave } from '../shared.mjs';
+import { createWorkflowRunEntry, matchesScopeFilter, trimAndSave } from '../shared.mjs';
 
 const FILENAME = 'workflow-runs.json';
 
@@ -7,6 +7,7 @@ export function createWorkflowRepository(store) {
     listWorkflowRuns(limit = 50, filter = {}) {
       return store.readCollection(FILENAME)
         .filter((item) => {
+          if (!matchesScopeFilter(item, filter)) return false;
           if (filter.status && item.status !== filter.status) return false;
           if (filter.workflowId && item.workflowId !== filter.workflowId) return false;
           return true;

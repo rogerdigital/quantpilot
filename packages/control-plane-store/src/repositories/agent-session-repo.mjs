@@ -1,4 +1,4 @@
-import { createAgentSessionEntry, trimAndSave } from '../shared.mjs';
+import { createAgentSessionEntry, matchesScopeFilter, trimAndSave } from '../shared.mjs';
 
 const FILENAME = 'agent-sessions.json';
 
@@ -7,6 +7,7 @@ export function createAgentSessionRepository(store) {
     listAgentSessions(limit = 50, filter = {}) {
       return store.readCollection(FILENAME)
         .filter((item) => {
+          if (!matchesScopeFilter(item, filter)) return false;
           if (filter.status && item.status !== filter.status) return false;
           if (filter.requestedBy && item.requestedBy !== filter.requestedBy) return false;
           return true;

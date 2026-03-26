@@ -576,13 +576,52 @@ function listUniquePermissions(items = []) {
   return [...new Set(items.map((item) => String(item || '').trim()).filter(Boolean))];
 }
 
+export function getItemScopeMetadata(item = {}) {
+  return {
+    tenantId: item?.metadata?.tenantId || item?.tenantId || '',
+    workspaceId: item?.metadata?.workspaceId || item?.workspaceId || '',
+  };
+}
+
+export function matchesScopeFilter(item = {}, filter = {}) {
+  if (filter.allScopes || filter.scope === 'all') return true;
+
+  const tenantId = filter.tenantId || '';
+  const workspaceId = filter.workspaceId || '';
+  if (!tenantId && !workspaceId) return true;
+
+  const includeUnscoped = filter.includeUnscoped !== false;
+  const itemScope = getItemScopeMetadata(item);
+  const hasTenant = Boolean(itemScope.tenantId);
+  const hasWorkspace = Boolean(itemScope.workspaceId);
+
+  if (!hasTenant && !hasWorkspace) {
+    return includeUnscoped;
+  }
+
+  if (tenantId && itemScope.tenantId && itemScope.tenantId !== tenantId) {
+    return false;
+  }
+  if (workspaceId && itemScope.workspaceId && itemScope.workspaceId !== workspaceId) {
+    return false;
+  }
+  if (tenantId && !itemScope.tenantId) {
+    return includeUnscoped;
+  }
+  if (workspaceId && !itemScope.workspaceId) {
+    return includeUnscoped;
+  }
+
+  return true;
+}
+
 export function listUserRoleTemplates() {
   return [
     {
       id: 'admin',
       label: 'Admin',
       summary: 'Full control over account settings, strategy changes, risk reviews, and execution approvals.',
-      defaultPermissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+      defaultPermissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write', 'operations:maintain'],
       system: true,
     },
     {

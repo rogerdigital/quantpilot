@@ -1,11 +1,13 @@
-import { createWorkerHeartbeatEntry, trimAndSave } from '../shared.mjs';
+import { createWorkerHeartbeatEntry, matchesScopeFilter, trimAndSave } from '../shared.mjs';
 
 const FILENAME = 'worker-heartbeats.json';
 
 export function createWorkerHeartbeatRepository(store) {
   return {
-    listWorkerHeartbeats(limit = 50) {
-      return store.readCollection(FILENAME).slice(0, limit);
+    listWorkerHeartbeats(limit = 50, filter = {}) {
+      return store.readCollection(FILENAME)
+        .filter((item) => matchesScopeFilter(item, filter))
+        .slice(0, limit);
     },
     recordWorkerHeartbeat(payload = {}) {
       const heartbeats = store.readCollection(FILENAME);
