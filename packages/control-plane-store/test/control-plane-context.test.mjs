@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { createControlPlaneContext } from '../src/context.mjs';
+import { exportControlPlaneBackup, getControlPlaneIntegrityReport, restoreControlPlaneBackup } from '../src/maintenance.mjs';
 import { createControlPlaneStore, listSupportedControlPlaneAdapters } from '../src/store.mjs';
 import { createMemoryStore } from './helpers/memory-store.mjs';
 
@@ -677,4 +678,46 @@ test('research repositories persist strategy catalog, backtest runs, summary, an
   assert.equal(updated.status, 'completed');
   assert.equal(summary.completedRuns, 2);
   assert.equal(marketStatus.connected, true);
+});
+
+test('control plane maintenance exports backups, validates integrity, and restores snapshots', () => {
+  const store = createMemoryStore();
+  const context = createControlPlaneContext(store);
+  context.notifications.appendNotification({
+    id: 'maintenance-notification',
+    title: 'Operator alert',
+    message: 'maintenance smoke test',
+    source: 'test',
+  });
+  context.workflows.appendWorkflowRun({
+    id: 'maintenance-workflow',
+    workflowId: 'task-orchestrator.state-run',
+    status: 'retry_scheduled',
+  });
+
+  const backup = exportControlPlaneBackup(store);
+  const integrity = getControlPlaneIntegrityReport(store);
+
+  assert.equal(backup.ok, true);
+  assert.equal(backup.files.some((item) => item.filename === 'notifications.json'), true);
+  assert.equal(backup.data['notifications.json'][0].id, 'maintenance-notification');
+  assert.equal(integrity.ok, true);
+  assert.equal(integrity.summary.retryScheduledWorkflows, 1);
+  assert.equal(integrity.status, 'healthy');
+
+  context.notifications.appendNotification({
+    id: 'maintenance-notification-new',
+    title: 'Temporary mutation',
+    message: 'will be overwritten',
+    source: 'test',
+  });
+
+  const restorePreview = restoreControlPlaneBackup(store, backup, { dryRun: true });
+  const restoreApplied = restoreControlPlaneBackup(store, backup);
+
+  assert.equal(restorePreview.ok, true);
+  assert.equal(restorePreview.dryRun, true);
+  assert.equal(restoreApplied.ok, true);
+  assert.equal(restoreApplied.dryRun, false);
+  assert.equal(context.notifications.listNotifications(5)[0].id, 'maintenance-notification');
 });

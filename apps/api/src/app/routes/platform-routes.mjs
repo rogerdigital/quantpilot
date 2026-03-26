@@ -24,6 +24,12 @@ import { getSession, hasPermission } from '../../modules/auth/service.mjs';
 import { listPermissionDescriptors, writeForbiddenJson } from '../../modules/auth/permission-catalog.mjs';
 import { getMonitoringStatus, listMonitoringAlerts, listMonitoringSnapshots } from '../../modules/monitoring/service.mjs';
 import { getOperationsWorkbench } from '../../modules/operations/service.mjs';
+import {
+  createOperationsMaintenanceBackup,
+  getOperationsMaintenanceSnapshot,
+  releaseWorkflowMaintenanceBacklog,
+  restoreOperationsMaintenanceBackup,
+} from '../../modules/operations/maintenance-service.mjs';
 import { describeArchitecture, listArchitectureLayers, listModules } from '../../modules/registry.mjs';
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
 import {
@@ -101,6 +107,48 @@ export async function handlePlatformRoutes(context) {
       limit: reqUrl.searchParams.get('limit'),
     });
     writeJson(res, 200, summary);
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/operations/maintenance') {
+    if (!canWriteAccount()) {
+      writeForbidden('account:write', 'inspect control-plane maintenance posture');
+      return true;
+    }
+    const summary = await getOperationsMaintenanceSnapshot({
+      getBrokerHealth: context.gatewayDependencies.getBrokerHealth,
+      limit: reqUrl.searchParams.get('limit'),
+    });
+    writeJson(res, 200, summary);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/operations/maintenance/backup') {
+    if (!canWriteAccount()) {
+      writeForbidden('account:write', 'export control-plane backups');
+      return true;
+    }
+    writeJson(res, 200, createOperationsMaintenanceBackup());
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/operations/maintenance/restore') {
+    if (!canWriteAccount()) {
+      writeForbidden('account:write', 'restore control-plane backups');
+      return true;
+    }
+    const body = await readJsonBody(req);
+    writeJson(res, 200, restoreOperationsMaintenanceBackup(body || {}));
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/operations/maintenance/repair/workflows') {
+    if (!canWriteAccount()) {
+      writeForbidden('account:write', 'repair workflow retry backlog');
+      return true;
+    }
+    const body = await readJsonBody(req);
+    writeJson(res, 200, releaseWorkflowMaintenanceBacklog(body || {}));
     return true;
   }
 

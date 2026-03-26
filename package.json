@@ -21,6 +21,7 @@
     "check:workspaces": "node scripts/check-workspace-integrity.mjs",
     "check:lockfile": "node scripts/check-lockfile-sync.mjs",
     "check:stage-docs": "node scripts/check-stage-1-docs.mjs",
+    "control-plane:maintenance": "node scripts/control-plane-maintenance.mjs",
     "test:api": "node --test apps/api/test/*.test.mjs",
     "test:engine": "node --test packages/task-workflow-engine/test/*.test.mjs",
     "test:runtime": "node --test packages/control-plane-runtime/test/*.test.mjs",

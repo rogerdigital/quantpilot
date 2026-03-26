@@ -3594,6 +3594,92 @@ test('GET /api/operations/workbench returns unified operations overview', async 
   assert.equal(typeof response.json.recent.schedulerTick.phase, 'string');
 });
 
+test('GET /api/operations/maintenance returns backup posture and integrity summary', async () => {
+  context.notifications.enqueueNotification({
+    id: 'maintenance-route-notification',
+    title: 'Pending maintenance notification',
+    message: 'waiting for worker dispatch',
+    source: 'test',
+  });
+  context.risk.enqueueRiskScan({
+    id: 'maintenance-route-risk-job',
+    cycle: 501,
+    pendingApprovals: 0,
+    brokerConnected: true,
+    marketConnected: true,
+  });
+  context.workflows.appendWorkflowRun({
+    id: 'maintenance-route-retry-workflow',
+    workflowId: 'task-orchestrator.state-run',
+    status: 'retry_scheduled',
+    nextRunAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/operations/maintenance?limit=5',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(typeof response.json.storageAdapter.kind, 'string');
+  assert.equal(typeof response.json.integrity.status, 'string');
+  assert.equal(response.json.integrity.summary.retryScheduledWorkflows >= 1, true);
+  assert.equal(response.json.backlog.totalPending >= 2, true);
+  assert.equal(Array.isArray(response.json.recentRetryScheduledWorkflows), true);
+  assert.equal(Array.isArray(response.json.supportedRepairs), true);
+});
+
+test('operations maintenance routes export backups, dry-run restores, and repair workflow backlog', async () => {
+  const dueIso = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+  context.workflows.appendWorkflowRun({
+    id: 'maintenance-repair-workflow',
+    workflowId: 'task-orchestrator.agent-action-request',
+    status: 'retry_scheduled',
+    nextRunAt: dueIso,
+    createdAt: dueIso,
+    updatedAt: dueIso,
+  });
+
+  const backupResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/operations/maintenance/backup',
+  });
+
+  assert.equal(backupResponse.statusCode, 200);
+  assert.equal(backupResponse.json.ok, true);
+  assert.equal(backupResponse.json.backup.files.some((item) => item.filename === 'workflow-runs.json'), true);
+
+  const restoreResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/operations/maintenance/restore',
+    body: {
+      dryRun: true,
+      backup: backupResponse.json.backup,
+    },
+  });
+
+  assert.equal(restoreResponse.statusCode, 200);
+  assert.equal(restoreResponse.json.ok, true);
+  assert.equal(restoreResponse.json.dryRun, true);
+  assert.equal(Array.isArray(restoreResponse.json.restoredFiles), true);
+
+  const repairResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/operations/maintenance/repair/workflows',
+    body: {
+      worker: 'api-maintenance-worker',
+      limit: 5,
+      now: new Date().toISOString(),
+    },
+  });
+
+  assert.equal(repairResponse.statusCode, 200);
+  assert.equal(repairResponse.json.ok, true);
+  assert.equal(repairResponse.json.releasedCount >= 1, true);
+  assert.equal(repairResponse.json.workflows.some((item) => item.id === 'maintenance-repair-workflow'), true);
+  assert.equal(context.workflows.getWorkflowRun('maintenance-repair-workflow').status, 'queued');
+});
+
 test('incident routes create, update, and return incident details', async () => {
   context.monitoring.recordMonitoringSnapshot({
     id: 'incident-monitoring-snapshot',
@@ -3853,7 +3939,7 @@ test('POST then GET /api/audit/records persists audit entries', async () => {
   });
 
   const filteredResponse = await invokeGatewayRoute(handler, {
-    path: '/api/audit/records?type=workflow&hours=48&limit=5',
+    path: '/api/audit/records?type=workflow&hours=48&limit=50',
   });
 
   assert.equal(filteredResponse.statusCode, 200);

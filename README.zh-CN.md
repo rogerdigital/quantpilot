@@ -150,6 +150,7 @@ quantpilot/
 - incident 控制台已进一步补齐运营态能力：summary 现在会输出 `ack overdue / blocked tasks / owner hotspots / next actions`，详情页会展示 `response posture / handoff / next step`，并支持批量归我、备注并收尾等更完整的处置动作。
 - 通知中心中的 control-plane feed 已开始统一成 `boards + context + feed detail` 模式：monitoring、notifications、audit、operator actions 和 scheduler 都会先给出板块摘要和当前筛选上下文，再下钻到各自列表。
 - 平台现已提供统一的 `operations workbench` 聚合快照：后端会把 monitoring、incident、scheduler、connectivity 和 control-plane trail 汇总成一份运维摘要，并补上 worker lag、queue backlog、workflow reliability 的 observability posture，通知中心据此展示 runbook、运维泳道和最近运维信号。
+- control-plane maintenance 现已具备首批运维工具：支持 backup export、restore dry run、integrity check 和 workflow retry repair，并同时提供共享 store contract、API 路由和 CLI 入口。
 - Risk Console 已切到统一 `risk workbench` 聚合快照：后端现会把风险事件、执行复核、研究复核、风险 incident 和 broker live 暴露汇总成一份风险工作台摘要，风险页不再只依赖前端 runtime 拼装态。
 - worker 已接管通知分发、风险扫描、调度 tick、workflow maintenance 和 workflow execution。
 - 共享运行时已经拆分到 `trading-engine / control-plane-runtime / task-workflow-engine / shared-types`。
@@ -262,6 +263,7 @@ quantpilot/
 - 权限基础也已前进一步：role template 与 access policy 现已正式持久化，为后续更完整的 RBAC 和多用户边界做准备。
 - workspace 与 tenant foundation 也已落地：账户工作区已正式持久化，新的控制面写入会自动带上当前 scope metadata，为后续真正的隔离与过滤打底。
 - monitoring 与 operations workbench 现已补齐 worker freshness、workflow retry posture、queue backlog posture 和 observability summary 字段，为值守与运维面板提供统一运行姿态。
+- control-plane maintenance 现已补齐 backup export、restore dry run、integrity validation 和 workflow retry repair，形成第一批恢复与维护基线。
 - 完成数据库、缓存、对象存储、日志监控、告警通道和部署体系升级。
 - 补齐租户、权限、订阅、可观测性、备份恢复和运维工具链。
 - 建立实盘运行所需的稳定性指标、回放能力、故障演练和发布流程。

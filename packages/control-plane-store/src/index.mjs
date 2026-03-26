@@ -8,6 +8,12 @@ export {
   getControlPlaneStorageConfig,
   listSupportedControlPlaneAdapters,
 } from './store.mjs';
+export {
+  CONTROL_PLANE_FILE_MANIFEST,
+  exportControlPlaneBackup,
+  getControlPlaneIntegrityReport,
+  restoreControlPlaneBackup,
+} from './maintenance.mjs';
 export { createAgentActionRequestRepository } from './repositories/agent-action-request-repo.mjs';
 export { createAgentAnalysisRunRepository } from './repositories/agent-analysis-run-repo.mjs';
 export { createAgentPlanRepository } from './repositories/agent-plan-repo.mjs';
