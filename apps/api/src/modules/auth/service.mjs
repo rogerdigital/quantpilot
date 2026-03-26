@@ -6,6 +6,7 @@ export function getSession() {
     ? (account.access.effectivePermissions || account.access.permissions || [])
     : [];
   const defaultBrokerBinding = account.brokerBindings.find((binding) => binding.isDefault) || account.brokerBindings[0] || null;
+  const currentWorkspace = account.currentWorkspace || account.workspaces?.find((workspace) => workspace.isCurrent) || null;
 
   return {
     ok: true,
@@ -15,9 +16,13 @@ export function getSession() {
       email: account.profile.email,
       role: account.access?.role || account.profile.role,
       organization: account.profile.organization,
+      tenantId: account.tenant?.id || '',
+      workspaceId: currentWorkspace?.id || '',
       permissions,
       accessStatus: account.access?.status || 'active',
     },
+    tenant: account.tenant || null,
+    workspace: currentWorkspace,
     preferences: account.preferences,
     brokerBinding: defaultBrokerBinding ? {
       id: defaultBrokerBinding.id,

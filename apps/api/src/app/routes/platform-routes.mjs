@@ -32,6 +32,7 @@ import {
   getUserAccountSnapshot,
   getUserProfileSnapshot,
   getUserRoleTemplatesSnapshot,
+  getUserWorkspaceSnapshot,
   patchUserProfile,
   patchUserAccess,
   patchUserPreferences,
@@ -39,6 +40,8 @@ import {
   removeBrokerBinding,
   saveBrokerBinding,
   saveUserRoleTemplate,
+  saveWorkspace,
+  selectCurrentWorkspace,
   setPrimaryBrokerBinding,
   syncBrokerBindingRuntime,
 } from '../../modules/user-account/service.mjs';
@@ -124,6 +127,11 @@ export async function handlePlatformRoutes(context) {
     return true;
   }
 
+  if (req.method === 'GET' && reqUrl.pathname === '/api/user-account/workspaces') {
+    writeJson(res, 200, getUserWorkspaceSnapshot());
+    return true;
+  }
+
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/profile') {
     if (!canWriteAccount()) {
       writeForbidden('account:write', 'update the account profile');
@@ -167,6 +175,28 @@ export async function handlePlatformRoutes(context) {
     const body = await readJsonBody(req);
     const result = saveUserRoleTemplate(body);
     writeJson(res, result.ok ? 200 : 400, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/workspaces') {
+    if (!canWriteAccount()) {
+      writeForbidden('account:write', 'save workspaces');
+      return true;
+    }
+    const body = await readJsonBody(req);
+    const result = saveWorkspace(body);
+    writeJson(res, result.ok ? 200 : 400, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/workspaces/current') {
+    if (!canWriteAccount()) {
+      writeForbidden('account:write', 'switch workspaces');
+      return true;
+    }
+    const body = await readJsonBody(req);
+    const result = selectCurrentWorkspace(body.workspaceId);
+    writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
 

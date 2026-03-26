@@ -536,6 +536,29 @@ export function createUserAccountProfile(payload = {}) {
   };
 }
 
+export function createTenantEntry(payload = {}) {
+  return {
+    id: payload.id || 'tenant-quantpilot-labs',
+    key: payload.key || 'quantpilot-labs',
+    label: payload.label || payload.organization || 'QuantPilot Labs',
+    status: payload.status || 'active',
+  };
+}
+
+export function createWorkspaceEntry(payload = {}, tenant = createTenantEntry()) {
+  return {
+    id: payload.id || 'workspace-operations',
+    tenantId: payload.tenantId || tenant.id,
+    key: payload.key || 'operations',
+    label: payload.label || 'Operations',
+    description: payload.description || 'Default platform operations workspace.',
+    role: payload.role || 'admin',
+    status: payload.status || 'active',
+    isDefault: payload.isDefault !== false,
+    isCurrent: Boolean(payload.isCurrent),
+  };
+}
+
 export function createUserPreferences(payload = {}) {
   return {
     locale: payload.locale || 'zh-CN',

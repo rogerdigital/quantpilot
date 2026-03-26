@@ -1,9 +1,11 @@
 import {
   createBrokerBindingEntry,
+  createTenantEntry,
   createUserAccessPolicy,
   createUserAccountProfile,
   createUserPreferences,
   createUserRoleTemplateEntry,
+  createWorkspaceEntry,
   getDefaultPermissionsForRole,
   listUserRoleTemplates,
 } from '../shared.mjs';
@@ -19,6 +21,54 @@ function diffPermissions(base = [], compare = []) {
     added: compare.filter((item) => !base.includes(item)),
     removed: base.filter((item) => !compare.includes(item)),
   };
+}
+
+function mergeWorkspaces(rawWorkspaces = [], tenant = createTenantEntry()) {
+  const defaultWorkspaces = [
+    createWorkspaceEntry({
+      id: 'workspace-operations',
+      key: 'operations',
+      label: 'Operations',
+      description: 'Default platform operations workspace.',
+      role: 'admin',
+      isDefault: true,
+      isCurrent: true,
+    }, tenant),
+    createWorkspaceEntry({
+      id: 'workspace-research',
+      key: 'research',
+      label: 'Research Lab',
+      description: 'Research and strategy iteration workspace.',
+      role: 'operator',
+      isDefault: false,
+      isCurrent: false,
+    }, tenant),
+  ];
+  const map = new Map(defaultWorkspaces.map((workspace) => [workspace.id, workspace]));
+
+  if (Array.isArray(rawWorkspaces)) {
+    rawWorkspaces.forEach((workspace) => {
+      const existing = map.get(workspace.id) || null;
+      const entry = createWorkspaceEntry({
+        ...existing,
+        ...workspace,
+      }, tenant);
+      map.set(entry.id, entry);
+    });
+  }
+
+  const items = [...map.values()];
+  const currentWorkspaceId = items.find((workspace) => workspace.isCurrent)?.id
+    || items.find((workspace) => workspace.isDefault)?.id
+    || items[0]?.id
+    || '';
+
+  return items.map((workspace, index) => ({
+    ...workspace,
+    tenantId: workspace.tenantId || tenant.id,
+    isDefault: items.some((item) => item.isDefault) ? workspace.isDefault : index === 0,
+    isCurrent: workspace.id === currentWorkspaceId,
+  }));
 }
 
 function toAccessPolicyInput(access = {}, patch = {}) {
@@ -60,9 +110,15 @@ function mergeRoleTemplates(rawTemplates = []) {
 
 function createDefaultAccountSnapshot() {
   const profile = createUserAccountProfile();
+  const tenant = createTenantEntry({
+    label: profile.organization,
+  });
+  const workspaces = mergeWorkspaces([], tenant);
   const roleTemplates = listUserRoleTemplates();
   return {
     profile,
+    tenant,
+    currentWorkspaceId: workspaces.find((workspace) => workspace.isCurrent)?.id || workspaces[0]?.id || '',
     access: createUserAccessPolicy({
       role: profile.role,
     }, roleTemplates),
@@ -74,6 +130,7 @@ function createDefaultAccountSnapshot() {
       plan: 'internal',
       status: 'active',
     },
+    workspaces,
     roleTemplates,
     brokerBindings: [
       createBrokerBindingEntry({
@@ -93,6 +150,15 @@ function createDefaultAccountSnapshot() {
 
 function normalizeSnapshot(snapshot = {}) {
   const defaults = createDefaultAccountSnapshot();
+  const tenant = createTenantEntry({
+    ...defaults.tenant,
+    ...(snapshot.tenant || {}),
+    label: snapshot.tenant?.label || snapshot.profile?.organization || defaults.tenant.label,
+  });
+  const workspaces = mergeWorkspaces(snapshot.workspaces, tenant);
+  const currentWorkspaceId = workspaces.find((workspace) => workspace.isCurrent)?.id
+    || snapshot.currentWorkspaceId
+    || defaults.currentWorkspaceId;
   const roleTemplates = mergeRoleTemplates(snapshot.roleTemplates);
   const profile = createUserAccountProfile({
     ...defaults.profile,
@@ -122,6 +188,10 @@ function normalizeSnapshot(snapshot = {}) {
 
   return {
     profile,
+    tenant,
+    currentWorkspaceId,
+    currentWorkspace: workspaces.find((workspace) => workspace.id === currentWorkspaceId) || workspaces[0] || null,
+    workspaces,
     access,
     preferences,
     subscription: {
@@ -205,12 +275,26 @@ export function createUserAccountRepository(store) {
     getUserProfile() {
       return readSnapshot().profile;
     },
+    getTenant() {
+      return readSnapshot().tenant;
+    },
+    listWorkspaces() {
+      return readSnapshot().workspaces;
+    },
+    getCurrentWorkspace() {
+      return readSnapshot().currentWorkspace;
+    },
     updateUserProfile(patch = {}) {
       const snapshot = readSnapshot();
       const profile = createUserAccountProfile({
         ...snapshot.profile,
         ...patch,
       });
+      const tenant = createTenantEntry({
+        ...snapshot.tenant,
+        label: patch.organization || profile.organization,
+      });
+      const workspaces = mergeWorkspaces(snapshot.workspaces, tenant);
       const access = createUserAccessPolicy(
         toAccessPolicyInput(snapshot.access, {
           role: profile.role,
@@ -220,6 +304,10 @@ export function createUserAccountRepository(store) {
       return writeSnapshot({
         ...snapshot,
         profile,
+        tenant,
+        workspaces,
+        currentWorkspaceId: snapshot.currentWorkspaceId,
+        currentWorkspace: workspaces.find((workspace) => workspace.id === snapshot.currentWorkspaceId) || workspaces[0] || null,
         access,
       }).profile;
     },
@@ -240,6 +328,49 @@ export function createUserAccountRepository(store) {
     },
     getBrokerSummary() {
       return getBrokerSummary(readSnapshot());
+    },
+    upsertWorkspace(payload = {}) {
+      const snapshot = readSnapshot();
+      const workspaces = mergeWorkspaces([
+        ...snapshot.workspaces.filter((item) => item.id !== payload.id),
+        payload,
+      ], snapshot.tenant);
+      const currentWorkspaceId = payload.isCurrent
+        ? (workspaces.find((workspace) => workspace.id === payload.id)?.id || snapshot.currentWorkspaceId)
+        : (workspaces.find((workspace) => workspace.isCurrent)?.id || snapshot.currentWorkspaceId);
+      const nextWorkspaces = workspaces.map((workspace) => ({
+        ...workspace,
+        isCurrent: workspace.id === currentWorkspaceId,
+      }));
+
+      writeSnapshot({
+        ...snapshot,
+        workspaces: nextWorkspaces,
+        currentWorkspaceId,
+        currentWorkspace: nextWorkspaces.find((workspace) => workspace.id === currentWorkspaceId) || nextWorkspaces[0] || null,
+      });
+
+      return nextWorkspaces.find((workspace) => workspace.id === payload.id) || null;
+    },
+    setCurrentWorkspace(workspaceId) {
+      if (!workspaceId) return null;
+      const snapshot = readSnapshot();
+      if (!snapshot.workspaces.some((workspace) => workspace.id === workspaceId)) {
+        return null;
+      }
+      const workspaces = snapshot.workspaces.map((workspace) => ({
+        ...workspace,
+        isCurrent: workspace.id === workspaceId,
+      }));
+
+      const next = writeSnapshot({
+        ...snapshot,
+        workspaces,
+        currentWorkspaceId: workspaceId,
+        currentWorkspace: workspaces.find((workspace) => workspace.id === workspaceId) || null,
+      });
+
+      return next.currentWorkspace;
     },
     updateUserPreferences(patch = {}) {
       const snapshot = readSnapshot();

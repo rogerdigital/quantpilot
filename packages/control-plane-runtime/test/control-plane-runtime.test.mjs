@@ -21,6 +21,33 @@ test('control plane runtime delegates notification and audit operations', () => 
 
   assert.equal(runtime.listNotifications()[0].id, notification.id);
   assert.equal(runtime.listAuditRecords()[0].id, audit.id);
+  assert.equal(runtime.listNotifications()[0].metadata.workspaceId, 'workspace-operations');
+  assert.equal(runtime.listAuditRecords()[0].metadata.tenantId, 'tenant-quantpilot-labs');
+});
+
+test('control plane runtime stamps current workspace scope into new records', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  runtime.upsertWorkspace({
+    id: 'workspace-live-ops',
+    key: 'live-ops',
+    label: 'Live Operations',
+    description: 'Live trading desk workspace.',
+    role: 'execution-approver',
+  });
+  runtime.setCurrentWorkspace('workspace-live-ops');
+  runtime.recordOperatorAction({
+    type: 'workspace-scope-check',
+    actor: 'runtime-test',
+    title: 'Scope check',
+    detail: 'operator action should inherit workspace scope',
+    level: 'info',
+  });
+
+  assert.equal(runtime.getCurrentWorkspace().id, 'workspace-live-ops');
+  assert.equal(runtime.listOperatorActions()[0].metadata.workspaceId, 'workspace-live-ops');
+  assert.equal(runtime.listAuditRecords()[0].metadata.workspaceId, 'workspace-live-ops');
+  assert.equal(runtime.listNotificationJobs()[0].payload.metadata.tenantId, 'tenant-quantpilot-labs');
 });
 
 test('control plane runtime persists worker heartbeat entries', () => {

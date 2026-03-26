@@ -163,6 +163,9 @@ test('user account repository persists profile preferences and broker bindings',
   });
 
   assert.equal(initial.profile.id, 'operator-demo');
+  assert.equal(initial.tenant.id, 'tenant-quantpilot-labs');
+  assert.equal(initial.currentWorkspace.id, 'workspace-operations');
+  assert.equal(initial.workspaces.some((item) => item.id === 'workspace-research'), true);
   assert.equal(preferences.locale, 'en-US');
   assert.equal(binding.isDefault, true);
   assert.equal(binding.health.connected, true);
@@ -201,6 +204,24 @@ test('user account repository persists role templates and resolves access policy
   assert.equal(accessSummary.roleLabel, 'Quant Analyst');
   assert.equal(accessSummary.grants.includes('risk:review'), true);
   assert.equal(accessSummary.revokes.includes('strategy:write'), true);
+});
+
+test('user account repository persists tenant workspaces and current workspace selection', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const workspace = context.userAccount.upsertWorkspace({
+    id: 'workspace-live-ops',
+    key: 'live-ops',
+    label: 'Live Operations',
+    description: 'Workspace for live trading operations.',
+    role: 'execution-approver',
+  });
+  const currentWorkspace = context.userAccount.setCurrentWorkspace('workspace-live-ops');
+
+  assert.equal(workspace.id, 'workspace-live-ops');
+  assert.equal(context.userAccount.getTenant().id, 'tenant-quantpilot-labs');
+  assert.equal(context.userAccount.listWorkspaces().some((item) => item.id === 'workspace-live-ops'), true);
+  assert.equal(currentWorkspace.id, 'workspace-live-ops');
+  assert.equal(context.userAccount.getCurrentWorkspace().role, 'execution-approver');
 });
 
 test('execution runtime repository persists runtime events and broker snapshots', () => {

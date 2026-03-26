@@ -889,9 +889,11 @@ test('GET /api/user-account/profile returns profile and preferences', async () =
   assert.equal(response.json.ok, true);
   assert.equal(response.json.profile.email, 'operator@quantpilot.local');
   assert.equal(Array.isArray(response.json.access.permissions), true);
+  assert.equal(Array.isArray(response.json.workspaces), true);
   assert.equal(Array.isArray(response.json.roleTemplates), true);
   assert.equal(typeof response.json.accessSummary.isSessionAligned, 'boolean');
   assert.equal(typeof response.json.preferences.defaultMode, 'string');
+  assert.equal(response.json.currentWorkspace.id, 'workspace-operations');
 });
 
 test('GET /api/user-account/roles returns persisted role templates', async () => {
@@ -913,10 +915,25 @@ test('GET /api/user-account returns consolidated account workspace data', async 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(Array.isArray(response.json.brokerBindings), true);
+  assert.equal(Array.isArray(response.json.workspaces), true);
   assert.equal(Array.isArray(response.json.roleTemplates), true);
   assert.equal(typeof response.json.brokerSummary.total, 'number');
   assert.equal(typeof response.json.accessSummary.isSessionAligned, 'boolean');
   assert.equal(response.json.session.user.id, 'operator-demo');
+  assert.equal(response.json.session.user.workspaceId, 'workspace-operations');
+  assert.equal(response.json.tenant.id, 'tenant-quantpilot-labs');
+});
+
+test('GET /api/user-account/workspaces returns tenant and workspace memberships', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/user-account/workspaces',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.tenant.id, 'tenant-quantpilot-labs');
+  assert.equal(Array.isArray(response.json.workspaces), true);
+  assert.equal(response.json.currentWorkspace.id, 'workspace-operations');
 });
 
 test('POST /api/user-account/access updates persisted access policy and session permissions', async () => {
@@ -992,6 +1009,58 @@ test('POST and DELETE /api/user-account/roles persist custom role templates', as
   assert.equal(deleteResponse.statusCode, 200);
   assert.equal(deleteResponse.json.ok, true);
   assert.equal(deleteResponse.json.roleTemplates.some((item) => item.id === 'quant-analyst'), false);
+});
+
+test('POST /api/user-account/workspaces and /current persist workspace scope selection', async () => {
+  const createResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/user-account/workspaces',
+    body: {
+      id: 'workspace-live-ops',
+      key: 'live-ops',
+      label: 'Live Operations',
+      description: 'Workspace for live trading operations.',
+      role: 'execution-approver',
+    },
+  });
+
+  assert.equal(createResponse.statusCode, 200);
+  assert.equal(createResponse.json.ok, true);
+  assert.equal(createResponse.json.workspaces.some((item) => item.id === 'workspace-live-ops'), true);
+
+  const selectResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/user-account/workspaces/current',
+    body: {
+      workspaceId: 'workspace-live-ops',
+    },
+  });
+
+  assert.equal(selectResponse.statusCode, 200);
+  assert.equal(selectResponse.json.ok, true);
+  assert.equal(selectResponse.json.currentWorkspace.id, 'workspace-live-ops');
+  assert.equal(selectResponse.json.session.user.workspaceId, 'workspace-live-ops');
+  assert.equal(selectResponse.json.workspaces.find((item) => item.id === 'workspace-live-ops').isCurrent, true);
+
+  const auditResponse = await invokeGatewayRoute(handler, {
+    path: '/api/audit/records',
+  });
+  assert.equal(auditResponse.statusCode, 200);
+  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.workspace.selected' && item.metadata.workspaceId === 'workspace-live-ops'), true);
+
+  const sessionResponse = await invokeGatewayRoute(handler, {
+    path: '/api/auth/session',
+  });
+  assert.equal(sessionResponse.statusCode, 200);
+  assert.equal(sessionResponse.json.workspace.id, 'workspace-live-ops');
+
+  await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/user-account/workspaces/current',
+    body: {
+      workspaceId: 'workspace-operations',
+    },
+  });
 });
 
 test('POST /api/user-account/profile updates persisted profile data', async () => {

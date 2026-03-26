@@ -191,6 +191,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - The Overview page consumes backend `monitoring status`.
 - `user-account` now owns persisted `profile / preferences / access / broker bindings`.
 - `user-account` now persists role templates and access policies with `default permissions / grants / revokes / effective permissions`, instead of relying on demo-only role constants.
+- `tenant / workspace` foundations are now formalized in the account domain, including workspace memberships, current-workspace session context, and controlled workspace switching.
 - Account mutations and broker-binding changes are audited.
 - `auth/session` is now driven by persisted account-access policy instead of frontend-only demo constants.
 - The account domain has converged into a unified `account workspace` snapshot for profile, preferences, access, broker summary, role templates, and session state.
@@ -256,6 +257,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 
 - The first productionization step is in place: control-plane storage now has `file / db` adapter foundations.
 - Access policy foundations now persist role templates and effective permission overlays, which prepares the platform for fuller RBAC and multi-user boundaries.
+- Workspace and tenant foundations now persist account workspaces and stamp current scope metadata into new control-plane writes, which prepares later isolation and filtering work.
 - Upgrade database, cache, object storage, logging, alerting, and deployment infrastructure.
 - Complete tenancy, permissions, subscriptions, observability, backup/recovery, and operator tooling.
 - Add live-run stability metrics, replay, failure drills, and release workflows.

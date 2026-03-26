@@ -646,7 +646,8 @@ function collectIncidentEvidence(incident, options = {}) {
   });
 
   const deduped = [...new Map(evidence.map((item) => [`${item.kind}:${item.id}`, item])).values()]
-    .sort((left, right) => (parseTimestamp(right.timestamp) || 0) - (parseTimestamp(left.timestamp) || 0))
+    .sort((left, right) => Number(right.linked) - Number(left.linked)
+      || (parseTimestamp(right.timestamp) || 0) - (parseTimestamp(left.timestamp) || 0))
     .slice(0, limit);
 
   const summary = deduped.reduce((acc, item) => {

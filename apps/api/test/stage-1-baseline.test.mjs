@@ -70,14 +70,18 @@ test('stage 1 baseline exposes account workspace, session, and permission catalo
   assert.equal(typeof workspace.json.profile.email, 'string');
   assert.equal(typeof workspace.json.preferences.defaultMode, 'string');
   assert.equal(Array.isArray(workspace.json.roleTemplates), true);
+  assert.equal(Array.isArray(workspace.json.workspaces), true);
   assert.equal(Array.isArray(workspace.json.brokerBindings), true);
   assert.equal(typeof workspace.json.brokerSummary.total, 'number');
   assert.equal(typeof workspace.json.accessSummary.isSessionAligned, 'boolean');
+  assert.equal(typeof workspace.json.tenant.id, 'string');
+  assert.equal(typeof workspace.json.currentWorkspace.id, 'string');
 
   assert.equal(session.statusCode, 200);
   assert.equal(session.json.ok, true);
   assert.equal(Array.isArray(session.json.user.permissions), true);
   assert.equal(typeof session.json.user.role, 'string');
+  assert.equal(typeof session.json.user.workspaceId, 'string');
 
   assert.equal(permissions.statusCode, 200);
   assert.equal(permissions.json.ok, true);

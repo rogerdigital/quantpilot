@@ -177,6 +177,26 @@ export type ControlPlaneNotification = {
   message: string;
   source: string;
   createdAt: string;
+  metadata?: Record<string, unknown>;
+};
+
+export type TenantRecord = {
+  id: string;
+  key: string;
+  label: string;
+  status: 'active' | 'suspended';
+};
+
+export type WorkspaceRecord = {
+  id: string;
+  tenantId: string;
+  key: string;
+  label: string;
+  description: string;
+  role: string;
+  status: 'active' | 'archived';
+  isDefault: boolean;
+  isCurrent: boolean;
 };
 
 export type OperatorSession = {
@@ -187,9 +207,13 @@ export type OperatorSession = {
     email: string;
     role: string;
     organization: string;
+    tenantId: string;
+    workspaceId: string;
     permissions: string[];
     accessStatus: string;
   };
+  tenant: TenantRecord | null;
+  workspace: WorkspaceRecord | null;
   preferences: {
     locale: string;
     timezone: string;
@@ -249,6 +273,9 @@ export type UserAccountProfileSnapshot = {
     timezone: string;
     locale: string;
   };
+  tenant: TenantRecord | null;
+  currentWorkspace: WorkspaceRecord | null;
+  workspaces: WorkspaceRecord[];
   access: {
     role: string;
     status: string;
@@ -323,6 +350,22 @@ export type UserAccessUpdateSnapshot = {
 export type UserRoleTemplateSnapshot = {
   ok: boolean;
   roleTemplates: UserRoleTemplate[];
+};
+
+export type UserWorkspaceSnapshot = {
+  ok: boolean;
+  tenant: TenantRecord | null;
+  currentWorkspace: WorkspaceRecord | null;
+  workspaces: WorkspaceRecord[];
+};
+
+export type UserWorkspaceUpdateSnapshot = {
+  ok: boolean;
+  tenant: TenantRecord | null;
+  currentWorkspace: WorkspaceRecord | null;
+  workspaces: WorkspaceRecord[];
+  session?: OperatorSession;
+  error?: string;
 };
 
 export type UserProfileUpdateSnapshot = {

@@ -1,13 +1,44 @@
 import { controlPlaneContext } from '../../control-plane-store/src/context.mjs';
 
 export function createControlPlaneRuntime(context = controlPlaneContext) {
+  function getCurrentScope() {
+    const tenant = context.userAccount?.getTenant?.() || null;
+    const workspace = context.userAccount?.getCurrentWorkspace?.() || null;
+    return {
+      tenantId: workspace?.tenantId || tenant?.id || '',
+      workspaceId: workspace?.id || '',
+    };
+  }
+
+  function withScopeMetadata(payload = {}, extraMetadata = {}) {
+    const scope = getCurrentScope();
+    return {
+      ...payload,
+      metadata: {
+        tenantId: scope.tenantId,
+        workspaceId: scope.workspaceId,
+        ...(payload.metadata || {}),
+        ...extraMetadata,
+      },
+    };
+  }
+
+  function withScopeMetaRecord(metadata = {}) {
+    const scope = getCurrentScope();
+    return {
+      tenantId: scope.tenantId,
+      workspaceId: scope.workspaceId,
+      ...metadata,
+    };
+  }
+
   function fanoutWorkflowEvent(level, title, message, metadata = {}) {
     context.audit.appendAuditRecord({
       type: 'workflow',
       actor: metadata.actor || 'task-orchestrator',
       title,
       detail: message,
-      metadata,
+      metadata: withScopeMetaRecord(metadata),
     });
 
     context.notifications.enqueueNotification({
@@ -15,7 +46,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       source: 'workflow-control',
       title,
       message,
-      metadata,
+      metadata: withScopeMetaRecord(metadata),
     });
   }
 
@@ -34,21 +65,21 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.agentSessions.getAgentSession(sessionId);
     },
     appendAgentSession(payload = {}) {
-      return context.agentSessions.appendAgentSession(payload);
+      return context.agentSessions.appendAgentSession(withScopeMetadata(payload));
     },
     recordAgentSession(payload = {}) {
-      const session = context.agentSessions.appendAgentSession(payload);
+      const session = context.agentSessions.appendAgentSession(withScopeMetadata(payload));
 
       context.audit.appendAuditRecord({
         type: 'agent-session',
         actor: session.requestedBy,
         title: `Agent session opened`,
         detail: session.title || 'Agent collaboration session created.',
-        metadata: {
+        metadata: withScopeMetaRecord({
           agentSessionId: session.id,
           status: session.status,
           latestIntentKind: session.latestIntent.kind,
-        },
+        }),
       });
 
       return session;
@@ -66,10 +97,10 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.agentPlans.getLatestAgentPlanForSession(sessionId);
     },
     appendAgentPlan(payload = {}) {
-      return context.agentPlans.appendAgentPlan(payload);
+      return context.agentPlans.appendAgentPlan(withScopeMetadata(payload));
     },
     recordAgentPlan(payload = {}) {
-      const plan = context.agentPlans.appendAgentPlan(payload);
+      const plan = context.agentPlans.appendAgentPlan(withScopeMetadata(payload));
       if (plan.sessionId) {
         context.agentSessions.updateAgentSession(plan.sessionId, {
           latestPlanId: plan.id,
@@ -82,12 +113,12 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         actor: plan.requestedBy,
         title: `Agent plan prepared`,
         detail: plan.summary || 'Agent plan persisted.',
-        metadata: {
+        metadata: withScopeMetaRecord({
           agentPlanId: plan.id,
           agentSessionId: plan.sessionId,
           requiresApproval: plan.requiresApproval,
           stepCount: plan.steps.length,
-        },
+        }),
       });
 
       return plan;
@@ -105,10 +136,10 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.agentAnalysisRuns.getLatestAgentAnalysisRunForSession(sessionId);
     },
     appendAgentAnalysisRun(payload = {}) {
-      return context.agentAnalysisRuns.appendAgentAnalysisRun(payload);
+      return context.agentAnalysisRuns.appendAgentAnalysisRun(withScopeMetadata(payload));
     },
     recordAgentAnalysisRun(payload = {}) {
-      const run = context.agentAnalysisRuns.appendAgentAnalysisRun(payload);
+      const run = context.agentAnalysisRuns.appendAgentAnalysisRun(withScopeMetadata(payload));
       if (run.sessionId) {
         context.agentSessions.updateAgentSession(run.sessionId, {
           latestAnalysisRunId: run.id,
@@ -121,13 +152,13 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         actor: run.requestedBy,
         title: `Agent analysis ${run.status}`,
         detail: run.summary || 'Agent analysis run persisted.',
-        metadata: {
+        metadata: withScopeMetaRecord({
           agentAnalysisRunId: run.id,
           agentSessionId: run.sessionId,
           agentPlanId: run.planId,
           toolCallCount: run.toolCalls.length,
           evidenceCount: run.evidence.length,
-        },
+        }),
       });
 
       return run;
@@ -142,22 +173,22 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.agentActionRequests.getAgentActionRequest(requestId);
     },
     appendAgentActionRequest(payload) {
-      return context.agentActionRequests.appendAgentActionRequest(payload);
+      return context.agentActionRequests.appendAgentActionRequest(withScopeMetadata(payload));
     },
     recordAgentActionRequest(payload) {
-      const request = context.agentActionRequests.appendAgentActionRequest(payload);
+      const request = context.agentActionRequests.appendAgentActionRequest(withScopeMetadata(payload));
 
       context.audit.appendAuditRecord({
         type: 'agent-action-request',
         actor: payload.requestedBy || 'agent',
         title: `Agent requested ${request.requestType}`,
         detail: request.summary || 'Agent action request submitted.',
-        metadata: {
+        metadata: withScopeMetaRecord({
           targetId: request.targetId,
           approvalState: request.approvalState,
           riskStatus: request.riskStatus,
           workflowRunId: request.workflowRunId,
-        },
+        }),
       });
 
       context.notifications.enqueueNotification({
@@ -165,11 +196,11 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         source: 'agent-control',
         title: `Agent action request submitted`,
         message: request.summary || `${request.requestType} request is waiting for operator review.`,
-        metadata: {
+        metadata: withScopeMetaRecord({
           agentActionRequestId: request.id,
           requestType: request.requestType,
           targetId: request.targetId,
-        },
+        }),
       });
 
       return request;
@@ -193,7 +224,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.backtestResults.getLatestBacktestResultForRun(runId);
     },
     appendBacktestResult(payload = {}) {
-      return context.backtestResults.appendBacktestResult(payload);
+      return context.backtestResults.appendBacktestResult(withScopeMetadata(payload));
     },
     listResearchEvaluations(limit = 100, filter = {}) {
       return context.researchEvaluations.listResearchEvaluations(limit, filter);
@@ -208,7 +239,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.researchEvaluations.getLatestEvaluationForStrategy(strategyId);
     },
     appendResearchEvaluation(payload = {}) {
-      return context.researchEvaluations.appendResearchEvaluation(payload);
+      return context.researchEvaluations.appendResearchEvaluation(withScopeMetadata(payload));
     },
     listResearchReports(limit = 100, filter = {}) {
       return context.researchReports.listResearchReports(limit, filter);
@@ -223,7 +254,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.researchReports.getLatestResearchReportForStrategy(strategyId);
     },
     appendResearchReport(payload = {}) {
-      return context.researchReports.appendResearchReport(payload);
+      return context.researchReports.appendResearchReport(withScopeMetadata(payload));
     },
     getBacktestRun(runId) {
       return context.backtestRuns.getBacktestRun(runId);
@@ -232,7 +263,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.backtestRuns.findBacktestRunByWorkflowRunId(workflowRunId);
     },
     appendBacktestRun(payload) {
-      return context.backtestRuns.appendBacktestRun(payload);
+      return context.backtestRuns.appendBacktestRun(withScopeMetadata(payload));
     },
     updateBacktestRun(runId, patch = {}) {
       return context.backtestRuns.updateBacktestRun(runId, patch);
@@ -241,28 +272,31 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.audit.listAuditRecords(limit, filter);
     },
     appendAuditRecord(record) {
-      return context.audit.appendAuditRecord(record);
+      return context.audit.appendAuditRecord({
+        ...record,
+        metadata: withScopeMetaRecord(record.metadata || {}),
+      });
     },
     listCycleRecords(limit = 30) {
       return context.cycles.listCycleRecords(limit);
     },
     appendCycleRecord(payload) {
-      return context.cycles.appendCycleRecord(payload);
+      return context.cycles.appendCycleRecord(withScopeMetadata(payload));
     },
     recordCycleRun(payload) {
-      const entry = context.cycles.appendCycleRecord(payload);
+      const entry = context.cycles.appendCycleRecord(withScopeMetadata(payload));
 
       context.audit.appendAuditRecord({
         type: 'cycle',
         actor: 'task-orchestrator',
         title: `Cycle ${entry.cycle} completed`,
         detail: entry.decisionSummary || 'Cycle completed without a new priority decision.',
-        metadata: {
+        metadata: withScopeMetaRecord({
           mode: entry.mode,
           riskLevel: entry.riskLevel,
           pendingApprovals: entry.pendingApprovals,
           liveIntentCount: entry.liveIntentCount,
-        },
+        }),
       });
 
       if (entry.pendingApprovals > 0) {
@@ -271,7 +305,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
           source: 'task-orchestrator',
           title: `Cycle ${entry.cycle} requires approval`,
           message: `${entry.pendingApprovals} live actions are waiting for review.`,
-          metadata: { cycle: entry.cycle },
+          metadata: withScopeMetaRecord({ cycle: entry.cycle }),
         });
       }
 
@@ -281,11 +315,11 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
           source: 'task-orchestrator',
           title: `Cycle ${entry.cycle} degraded`,
           message: 'One or more platform integrations are disconnected or running in fallback mode.',
-          metadata: {
+          metadata: withScopeMetaRecord({
             cycle: entry.cycle,
             brokerConnected: entry.brokerConnected,
             marketConnected: entry.marketConnected,
-          },
+          }),
         });
       }
 
@@ -295,17 +329,17 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.operatorActions.listOperatorActions(limit, filter);
     },
     appendOperatorAction(payload) {
-      return context.operatorActions.appendOperatorAction(payload);
+      return context.operatorActions.appendOperatorAction(withScopeMetadata(payload));
     },
     recordOperatorAction(payload) {
-      const action = context.operatorActions.appendOperatorAction(payload);
+      const action = context.operatorActions.appendOperatorAction(withScopeMetadata(payload));
 
       context.audit.appendAuditRecord({
         type: action.type,
         actor: action.actor,
         title: action.title,
         detail: action.detail,
-        metadata: { symbol: action.symbol, level: action.level },
+        metadata: withScopeMetaRecord({ symbol: action.symbol, level: action.level }),
       });
 
       context.notifications.enqueueNotification({
@@ -313,7 +347,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         source: 'control-plane',
         title: action.title,
         message: action.detail,
-        metadata: { symbol: action.symbol, type: action.type },
+        metadata: withScopeMetaRecord({ symbol: action.symbol, type: action.type }),
       });
 
       return action;
@@ -331,7 +365,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.executionCandidateHandoffs.getLatestExecutionCandidateHandoffForStrategy(strategyId);
     },
     appendExecutionCandidateHandoff(payload) {
-      return context.executionCandidateHandoffs.appendExecutionCandidateHandoff(payload);
+      return context.executionCandidateHandoffs.appendExecutionCandidateHandoff(withScopeMetadata(payload));
     },
     updateExecutionCandidateHandoff(handoffId, patch = {}) {
       return context.executionCandidateHandoffs.updateExecutionCandidateHandoff(handoffId, patch);
@@ -355,10 +389,10 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.executionRuns.listExecutionOrderStates(limit, filter);
     },
     appendExecutionRun(payload) {
-      return context.executionRuns.appendExecutionRun(payload);
+      return context.executionRuns.appendExecutionRun(withScopeMetadata(payload));
     },
     appendExecutionOrderStates(entries = []) {
-      return context.executionRuns.appendExecutionOrderStates(entries);
+      return context.executionRuns.appendExecutionOrderStates(entries.map((entry) => withScopeMetadata(entry)));
     },
     updateExecutionRun(runId, patch = {}) {
       return context.executionRuns.updateExecutionRun(runId, patch);
@@ -367,20 +401,20 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.executionRuns.updateExecutionOrderState(orderStateId, patch);
     },
     appendExecutionPlan(payload) {
-      return context.executionPlans.appendExecutionPlan(payload);
+      return context.executionPlans.appendExecutionPlan(withScopeMetadata(payload));
     },
     updateExecutionPlan(planId, patch = {}) {
       return context.executionPlans.updateExecutionPlan(planId, patch);
     },
     recordExecutionPlan(payload) {
-      const plan = context.executionPlans.appendExecutionPlan(payload);
+      const plan = context.executionPlans.appendExecutionPlan(withScopeMetadata(payload));
 
       context.audit.appendAuditRecord({
         type: 'execution-plan',
         actor: payload.actor || 'strategy-worker',
         title: `Execution plan created for ${plan.strategyName}`,
         detail: plan.summary || 'Execution plan generated.',
-        metadata: {
+        metadata: withScopeMetaRecord({
           executionPlanId: plan.id,
           strategyId: plan.strategyId,
           mode: plan.mode,
@@ -392,7 +426,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
           summary: plan.summary,
           metrics: plan.metadata?.metrics || {},
           reasons: plan.metadata?.reasons || [],
-        },
+        }),
       });
 
       context.notifications.enqueueNotification({
@@ -400,29 +434,29 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         source: 'execution-planner',
         title: `Execution plan ${plan.riskStatus}`,
         message: plan.summary || `${plan.strategyName} generated an execution plan.`,
-        metadata: {
+        metadata: withScopeMetaRecord({
           executionPlanId: plan.id,
           strategyId: plan.strategyId,
           workflowRunId: plan.workflowRunId,
-        },
+        }),
       });
 
       return plan;
     },
     recordExecutionRun(payload) {
-      const run = context.executionRuns.appendExecutionRun(payload);
+      const run = context.executionRuns.appendExecutionRun(withScopeMetadata(payload));
       context.audit.appendAuditRecord({
         type: 'execution-run',
         actor: payload.actor || 'execution-desk',
         title: `Execution run ${run.lifecycleStatus}`,
         detail: run.summary || `Execution run created for ${run.strategyName}.`,
-        metadata: {
+        metadata: withScopeMetaRecord({
           executionRunId: run.id,
           executionPlanId: run.executionPlanId,
           workflowRunId: run.workflowRunId,
           lifecycleStatus: run.lifecycleStatus,
           orderCount: run.orderCount,
-        },
+        }),
       });
       return run;
     },
@@ -430,23 +464,23 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.executionRuntime.listExecutionRuntimeEvents(limit);
     },
     appendExecutionRuntimeEvent(payload) {
-      return context.executionRuntime.appendExecutionRuntimeEvent(payload);
+      return context.executionRuntime.appendExecutionRuntimeEvent(withScopeMetadata(payload));
     },
     listBrokerAccountSnapshots(limit = 50) {
       return context.executionRuntime.listBrokerAccountSnapshots(limit);
     },
     appendBrokerAccountSnapshot(payload) {
-      return context.executionRuntime.appendBrokerAccountSnapshot(payload);
+      return context.executionRuntime.appendBrokerAccountSnapshot(withScopeMetadata(payload));
     },
     listBrokerExecutionEvents(limit = 50, filter = {}) {
       return context.executionRuntime.listBrokerExecutionEvents(limit, filter);
     },
     appendBrokerExecutionEvent(payload) {
-      return context.executionRuntime.appendBrokerExecutionEvent(payload);
+      return context.executionRuntime.appendBrokerExecutionEvent(withScopeMetadata(payload));
     },
     recordExecutionRuntime(payload) {
-      const runtimeEvent = context.executionRuntime.appendExecutionRuntimeEvent(payload);
-      const brokerSnapshot = context.executionRuntime.appendBrokerAccountSnapshot({
+      const runtimeEvent = context.executionRuntime.appendExecutionRuntimeEvent(withScopeMetadata(payload));
+      const brokerSnapshot = context.executionRuntime.appendBrokerAccountSnapshot(withScopeMetadata({
         cycleId: payload.cycleId,
         cycle: payload.cycle,
         executionPlanId: payload.executionPlanId,
@@ -458,19 +492,19 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         orders: payload.orders || [],
         message: payload.message,
         createdAt: payload.createdAt,
-      });
+      }));
 
       context.audit.appendAuditRecord({
         type: 'execution-runtime',
         actor: payload.actor || 'task-orchestrator',
         title: `Execution runtime synced for cycle ${payload.cycle}`,
         detail: payload.message || 'Execution runtime snapshot recorded.',
-        metadata: {
+        metadata: withScopeMetaRecord({
           cycleId: payload.cycleId,
           submittedOrderCount: payload.submittedOrderCount,
           rejectedOrderCount: payload.rejectedOrderCount,
           brokerConnected: payload.brokerConnected,
-        },
+        }),
       });
 
       return {
@@ -491,7 +525,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.monitoring.listMonitoringAlerts(limit, filter);
     },
     recordMonitoringSnapshot(payload = {}) {
-      return context.monitoring.recordMonitoringSnapshot(payload);
+      return context.monitoring.recordMonitoringSnapshot(withScopeMetadata(payload));
     },
     listIncidents(limit = 50, filter = {}) {
       return context.incidents.listIncidents(limit, filter);
@@ -509,24 +543,24 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.incidents.listIncidentNotes(incidentId, limit);
     },
     appendIncident(payload = {}) {
-      return context.incidents.appendIncident(payload);
+      return context.incidents.appendIncident(withScopeMetadata(payload));
     },
     recordIncident(payload = {}) {
-      const incident = context.incidents.appendIncident(payload);
+      const incident = context.incidents.appendIncident(withScopeMetadata(payload));
 
       context.audit.appendAuditRecord({
         type: 'incident',
         actor: payload.actor || incident.owner || 'operator',
         title: `Incident opened: ${incident.title}`,
         detail: incident.summary || 'Incident created from the investigation console.',
-        metadata: {
+        metadata: withScopeMetaRecord({
           incidentId: incident.id,
           severity: incident.severity,
           status: incident.status,
           source: incident.source,
           owner: incident.owner,
           links: incident.links,
-        },
+        }),
       });
 
       context.notifications.enqueueNotification({
@@ -534,12 +568,12 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         source: 'control-plane',
         title: 'Incident opened',
         message: incident.title,
-        metadata: {
+        metadata: withScopeMetaRecord({
           incidentId: incident.id,
           severity: incident.severity,
           status: incident.status,
           source: incident.source,
-        },
+        }),
       });
 
       return incident;
@@ -556,13 +590,13 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         actor: patch.actor || incident.owner || 'operator',
         title: `Incident ${incident.status}`,
         detail: patch.summary || incident.summary || incident.title,
-        metadata: {
+        metadata: withScopeMetaRecord({
           incidentId: incident.id,
           severity: incident.severity,
           status: incident.status,
           owner: incident.owner,
           source: incident.source,
-        },
+        }),
       });
 
       context.notifications.enqueueNotification({
@@ -570,27 +604,27 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         source: 'control-plane',
         title: `Incident ${incident.status}`,
         message: incident.title,
-        metadata: {
+        metadata: withScopeMetaRecord({
           incidentId: incident.id,
           severity: incident.severity,
           status: incident.status,
           owner: incident.owner,
-        },
+        }),
       });
 
       return incident;
     },
     appendIncidentNote(incidentId, payload = {}) {
-      return context.incidents.appendIncidentNote(incidentId, payload);
+      return context.incidents.appendIncidentNote(incidentId, withScopeMetadata(payload));
     },
     appendIncidentTask(incidentId, payload = {}) {
-      return context.incidents.appendIncidentTask(incidentId, payload);
+      return context.incidents.appendIncidentTask(incidentId, withScopeMetadata(payload));
     },
     updateIncidentTask(incidentId, taskId, payload = {}) {
       return context.incidents.updateIncidentTask(incidentId, taskId, payload);
     },
     recordIncidentNote(incidentId, payload = {}) {
-      const note = context.incidents.appendIncidentNote(incidentId, payload);
+      const note = context.incidents.appendIncidentNote(incidentId, withScopeMetadata(payload));
       if (!note) return null;
       const incident = context.incidents.getIncident(incidentId);
 
@@ -599,10 +633,10 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         actor: payload.author || 'operator',
         title: 'Incident note added',
         detail: note.body,
-        metadata: {
+        metadata: withScopeMetaRecord({
           incidentId,
           incidentTitle: incident?.title || '',
-        },
+        }),
       });
 
       return {
@@ -611,7 +645,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       };
     },
     recordIncidentTask(incidentId, payload = {}) {
-      return context.incidents.appendIncidentTask(incidentId, payload);
+      return context.incidents.appendIncidentTask(incidentId, withScopeMetadata(payload));
     },
     transitionIncidentTask(incidentId, taskId, payload = {}) {
       return context.incidents.updateIncidentTask(incidentId, taskId, payload);
@@ -620,10 +654,10 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.notifications.listNotifications(limit, filter);
     },
     appendNotification(event) {
-      return context.notifications.appendNotification(event);
+      return context.notifications.appendNotification(withScopeMetadata(event));
     },
     enqueueNotification(event) {
-      return context.notifications.enqueueNotification(event);
+      return context.notifications.enqueueNotification(withScopeMetadata(event));
     },
     listNotificationJobs(limit = 50) {
       return context.notifications.listNotificationJobs(limit);
@@ -650,22 +684,22 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.researchTasks.findResearchTaskByRunId(runId);
     },
     appendResearchTask(payload = {}) {
-      return context.researchTasks.appendResearchTask(payload);
+      return context.researchTasks.appendResearchTask(withScopeMetadata(payload));
     },
     updateResearchTask(taskId, patch = {}) {
       return context.researchTasks.updateResearchTask(taskId, patch);
     },
     upsertResearchTask(payload = {}) {
-      return context.researchTasks.upsertResearchTask(payload);
+      return context.researchTasks.upsertResearchTask(withScopeMetadata(payload));
     },
     listRiskEvents(limit = 50) {
       return context.risk.listRiskEvents(limit);
     },
     appendRiskEvent(event) {
-      return context.risk.appendRiskEvent(event);
+      return context.risk.appendRiskEvent(withScopeMetadata(event));
     },
     enqueueRiskScan(payload) {
-      return context.risk.enqueueRiskScan(payload);
+      return context.risk.enqueueRiskScan(withScopeMetadata(payload));
     },
     listRiskScanJobs(limit = 50) {
       return context.risk.listRiskScanJobs(limit);
@@ -693,6 +727,15 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     },
     getUserProfile() {
       return context.userAccount.getUserProfile();
+    },
+    getTenant() {
+      return context.userAccount.getTenant();
+    },
+    listWorkspaces() {
+      return context.userAccount.listWorkspaces();
+    },
+    getCurrentWorkspace() {
+      return context.userAccount.getCurrentWorkspace();
     },
     updateUserProfile(patch = {}) {
       return context.userAccount.updateUserProfile(patch);
@@ -723,6 +766,12 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     },
     upsertUserRoleTemplate(payload = {}) {
       return context.userAccount.upsertRoleTemplate(payload);
+    },
+    upsertWorkspace(payload = {}) {
+      return context.userAccount.upsertWorkspace(payload);
+    },
+    setCurrentWorkspace(workspaceId) {
+      return context.userAccount.setCurrentWorkspace(workspaceId);
     },
     deleteUserRoleTemplate(roleId) {
       return context.userAccount.deleteRoleTemplate(roleId);
@@ -756,7 +805,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     },
     startWorkflowRun(payload) {
       return context.workflows.appendWorkflowRun({
-        ...payload,
+        ...withScopeMetadata(payload),
         status: payload.status || 'running',
         attempt: Number(payload.attempt || 1),
         startedAt: payload.startedAt || new Date().toISOString(),
@@ -765,7 +814,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     },
     enqueueWorkflowRun(payload) {
       return context.workflows.appendWorkflowRun({
-        ...payload,
+        ...withScopeMetadata(payload),
         status: payload.status || 'queued',
         startedAt: '',
         nextRunAt: payload.nextRunAt || new Date().toISOString(),
@@ -921,6 +970,9 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 export const controlPlaneRuntime = createControlPlaneRuntime();
 export const getUserAccount = (...args) => controlPlaneRuntime.getUserAccount(...args);
 export const getUserProfile = (...args) => controlPlaneRuntime.getUserProfile(...args);
+export const getTenant = (...args) => controlPlaneRuntime.getTenant(...args);
+export const listWorkspaces = (...args) => controlPlaneRuntime.listWorkspaces(...args);
+export const getCurrentWorkspace = (...args) => controlPlaneRuntime.getCurrentWorkspace(...args);
 export const updateUserProfile = (...args) => controlPlaneRuntime.updateUserProfile(...args);
 export const getUserPreferences = (...args) => controlPlaneRuntime.getUserPreferences(...args);
 export const getUserAccess = (...args) => controlPlaneRuntime.getUserAccess(...args);
@@ -932,6 +984,8 @@ export const updateUserPreferences = (...args) => controlPlaneRuntime.updateUser
 export const updateUserAccess = (...args) => controlPlaneRuntime.updateUserAccess(...args);
 export const upsertUserRoleTemplate = (...args) => controlPlaneRuntime.upsertUserRoleTemplate(...args);
 export const deleteUserRoleTemplate = (...args) => controlPlaneRuntime.deleteUserRoleTemplate(...args);
+export const upsertWorkspace = (...args) => controlPlaneRuntime.upsertWorkspace(...args);
+export const setCurrentWorkspace = (...args) => controlPlaneRuntime.setCurrentWorkspace(...args);
 export const listBrokerBindings = (...args) => controlPlaneRuntime.listBrokerBindings(...args);
 export const upsertBrokerBinding = (...args) => controlPlaneRuntime.upsertBrokerBinding(...args);
 export const setDefaultBrokerBinding = (...args) => controlPlaneRuntime.setDefaultBrokerBinding(...args);

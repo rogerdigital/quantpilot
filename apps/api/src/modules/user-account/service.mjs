@@ -1,12 +1,17 @@
 import {
   deleteUserRoleTemplate,
   getBrokerBindingSummary,
+  getCurrentWorkspace,
   deleteBrokerBinding,
+  getTenant,
   getUserAccount,
   getUserAccessSummary,
   getUserRoleTemplate,
   listBrokerBindings,
+  listWorkspaces,
+  setCurrentWorkspace,
   setDefaultBrokerBinding,
+  upsertWorkspace,
   upsertUserRoleTemplate,
   updateUserProfile,
   updateUserAccess,
@@ -33,6 +38,9 @@ export function getUserAccountSnapshot() {
   return {
     ok: true,
     profile: account.profile,
+    tenant: account.tenant,
+    currentWorkspace: account.currentWorkspace,
+    workspaces: account.workspaces,
     access: account.access,
     preferences: account.preferences,
     subscription: account.subscription,
@@ -51,6 +59,9 @@ export function getUserProfileSnapshot() {
   return {
     ok: true,
     profile: account.profile,
+    tenant: account.tenant,
+    currentWorkspace: account.currentWorkspace,
+    workspaces: account.workspaces,
     access: account.access,
     preferences: account.preferences,
     roleTemplates: account.roleTemplates,
@@ -63,6 +74,15 @@ export function getUserRoleTemplatesSnapshot() {
   return {
     ok: true,
     roleTemplates: account.roleTemplates,
+  };
+}
+
+export function getUserWorkspaceSnapshot() {
+  return {
+    ok: true,
+    tenant: getTenant(),
+    currentWorkspace: getCurrentWorkspace(),
+    workspaces: listWorkspaces(),
   };
 }
 
@@ -152,6 +172,65 @@ export function saveUserRoleTemplate(payload = {}) {
     ok: true,
     roleTemplate,
     roleTemplates: getUserAccount().roleTemplates,
+  };
+}
+
+export function saveWorkspace(payload = {}) {
+  if (!payload.id || !payload.label) {
+    return {
+      ok: false,
+      error: 'workspace id and label are required',
+    };
+  }
+
+  const workspace = upsertWorkspace(payload);
+  recordAccountAuditEvent(
+    'user-account.workspace.saved',
+    'Workspace saved',
+    `Saved workspace ${workspace.label}.`,
+    {
+      workspaceId: workspace.id,
+      tenantId: workspace.tenantId,
+      role: workspace.role,
+      status: workspace.status,
+      isDefault: workspace.isDefault,
+    },
+  );
+
+  return {
+    ok: true,
+    tenant: getTenant(),
+    currentWorkspace: getCurrentWorkspace(),
+    workspaces: listWorkspaces(),
+  };
+}
+
+export function selectCurrentWorkspace(workspaceId) {
+  const workspace = setCurrentWorkspace(workspaceId);
+  if (!workspace) {
+    return {
+      ok: false,
+      error: 'workspace was not found',
+    };
+  }
+
+  recordAccountAuditEvent(
+    'user-account.workspace.selected',
+    'Workspace switched',
+    `Switched current workspace to ${workspace.label}.`,
+    {
+      workspaceId: workspace.id,
+      tenantId: workspace.tenantId,
+      role: workspace.role,
+    },
+  );
+
+  return {
+    ok: true,
+    tenant: getTenant(),
+    currentWorkspace: workspace,
+    workspaces: listWorkspaces(),
+    session: getSession(),
   };
 }
 
