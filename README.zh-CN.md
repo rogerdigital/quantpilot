@@ -257,17 +257,11 @@ quantpilot/
 - 阶段 5 已完成 `Agent Contracts`、`Intent Parsing And Planning`、`Analysis Runs`、`Agent Workbench` 和 `Controlled Action Handoffs`。
 - Agent 协作链路现已形成 `prompt -> intent -> plan -> analysis -> explanation -> action request -> approval -> downstream workflow` 的统一闭环。
 
-### 阶段 6：生产化与专业化
+### 阶段 6：生产化与专业化（已收官）
 
-- 阶段 6 的第一步已落地：control-plane storage 已具备 `file / db` 两类 adapter foundation。
-- 权限基础也已前进一步：role template 与 access policy 现已正式持久化，为后续更完整的 RBAC 和多用户边界做准备。
-- workspace 与 tenant foundation 也已落地：账户工作区已正式持久化，新的控制面写入会自动带上当前 scope metadata，为后续真正的隔离与过滤打底。
-- monitoring 与 operations workbench 现已补齐 worker freshness、workflow retry posture、queue backlog posture 和 observability summary 字段，为值守与运维面板提供统一运行姿态。
-- control-plane maintenance 现已补齐 backup export、restore dry run、integrity validation 和 workflow retry repair，形成第一批恢复与维护基线。
-- 完成数据库、缓存、对象存储、日志监控、告警通道和部署体系升级。
-- 补齐租户、权限、订阅、可观测性、备份恢复和运维工具链。
-- 建立实盘运行所需的稳定性指标、回放能力、故障演练和发布流程。
-- 将平台从“研发可用”推进到“专业可运营”。
+- 阶段 6 的收官定义、非目标和后续扩展前提已单独整理到 [docs/architecture/stage-6-closeout.md](./docs/architecture/stage-6-closeout.md)。
+- 阶段 6 已完成 `Control-Plane Storage Adapters`、`Persisted Roles And Access Policies`、`Workspace And Tenant Foundations`、`Monitoring And Operational Observability`、`Backup Recovery And Maintenance Tools` 和 `Production Readiness Baselines`。
+- 生产化链路现已形成 `storage adapter -> access/workspace scope -> observability posture -> maintenance snapshot -> backup/restore/repair -> baseline verification` 的统一基线。
 
 ## 目录说明
 

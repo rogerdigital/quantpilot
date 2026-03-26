@@ -254,17 +254,11 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - Stage 5 delivered `Agent Contracts`, `Intent Parsing And Planning`, `Analysis Runs`, `Agent Workbench`, and `Controlled Action Handoffs`.
 - The agent loop now forms a unified chain: `prompt -> intent -> plan -> analysis -> explanation -> action request -> approval -> downstream workflow`.
 
-### Stage 6: Productionization And Professionalization
+### Stage 6: Productionization And Professionalization (Closed)
 
-- The first productionization step is in place: control-plane storage now has `file / db` adapter foundations.
-- Access policy foundations now persist role templates and effective permission overlays, which prepares the platform for fuller RBAC and multi-user boundaries.
-- Workspace and tenant foundations now persist account workspaces and stamp current scope metadata into new control-plane writes, which prepares later isolation and filtering work.
-- Monitoring and operations workbench now expose worker freshness, workflow retry posture, queue backlog posture, and observability summary fields for operator triage.
-- Control-plane maintenance now supports backup export, restore dry runs, integrity validation, and workflow retry repair as the first recovery and maintenance baseline.
-- Upgrade database, cache, object storage, logging, alerting, and deployment infrastructure.
-- Complete tenancy, permissions, subscriptions, observability, backup/recovery, and operator tooling.
-- Add live-run stability metrics, replay, failure drills, and release workflows.
-- Move the system from “usable for R&D” to “operable as a professional platform”.
+- Stage 6 closeout definition, non-goals, and future expansion conditions live in [docs/architecture/stage-6-closeout.md](./docs/architecture/stage-6-closeout.md).
+- Stage 6 delivered `Control-Plane Storage Adapters`, `Persisted Roles And Access Policies`, `Workspace And Tenant Foundations`, `Monitoring And Operational Observability`, `Backup Recovery And Maintenance Tools`, and `Production Readiness Baselines`.
+- The productionization loop now forms a unified chain: `storage adapter -> access/workspace scope -> observability posture -> maintenance snapshot -> backup/restore/repair -> baseline verification`.
 
 ## Directory Notes
 

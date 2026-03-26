@@ -112,9 +112,9 @@ quantpilot/
 
 ## 研发迭代阶段
 
-### 当前阶段：阶段 1、阶段 2、阶段 3、阶段 4、阶段 5 已收官，进入阶段 6 准备
+### 当前阶段：阶段 1 到阶段 6 已收官
 
-当前仓库已经完成阶段 1 的平台底座产品化、阶段 2 的研究与策略闭环、阶段 3 的执行闭环与交易中台、阶段 4 的风险与调度中台深化，以及阶段 5 的 Agent 受控协作落地，并进入阶段 6 的准备期：
+当前仓库已经完成阶段 1 的平台底座产品化、阶段 2 的研究与策略闭环、阶段 3 的执行闭环与交易中台、阶段 4 的风险与调度中台深化、阶段 5 的 Agent 受控协作落地，以及阶段 6 的生产化与专业化基线：
 
 1. `auth / user-account / scheduler / notification / audit / task-orchestrator / incident / operations / risk workbench` 这批基础模块已具备稳定服务边界。
 2. `research task / backtest result / research evaluation / research report / governance / replay / execution handoff` 这批研究对象已具备稳定服务边界。
@@ -126,6 +126,7 @@ quantpilot/
 阶段 3 的收官标准已经单独整理为 [stage-3-closeout.md](./stage-3-closeout.md)，后续判断是否进入阶段 4 以该文档为准。
 阶段 4 的收官标准已经单独整理为 [stage-4-closeout.md](./stage-4-closeout.md)，后续判断是否进入阶段 5 以该文档为准。
 阶段 5 的收官标准已经单独整理为 [stage-5-closeout.md](./stage-5-closeout.md)，后续判断是否进入阶段 6 以该文档为准。
+阶段 6 的收官标准已经单独整理为 [stage-6-closeout.md](./stage-6-closeout.md)，后续判断是否继续进入更高阶平台化扩展以前者为准。
 
 ### 阶段 2 研究与策略闭环
 
@@ -152,16 +153,15 @@ quantpilot/
 3. 完成的 analysis session 现已可通过 `controlled handoff` 正式提交 action request，并继续走 risk、approval 和 downstream workflow contracts。
 4. Agent 的建议、请求、审批和留痕已稳定沉淀到 audit、notification、operator action 和 session timeline。
 
-### 阶段 6 生产化与专业化
+### 阶段 6 生产化与专业化（已收官）
 
-1. control-plane storage 已先具备 `file / db` adapter foundation，后续数据库化迁移可以在既有仓储合同内推进。
-2. 账户域现已正式持久化 role template 与 access policy，权限不再只由 demo 常量驱动，而是支持默认权限、额外授予和显式移除。
-3. 账户域现已补上 tenant / workspace foundation：session、account workspace、workspace memberships 与 current workspace 切换都已形成正式合同。
+1. control-plane storage 已具备 `file / db` adapter foundation，后续数据库化迁移可以在既有仓储合同内推进。
+2. 账户域已正式持久化 role template 与 access policy，权限不再只由 demo 常量驱动，而是支持默认权限、额外授予和显式移除。
+3. 账户域已补上 tenant / workspace foundation：session、account workspace、workspace memberships 与 current workspace 切换都已形成正式合同。
 4. 新的 control-plane 写入会自动附带当前 tenant / workspace scope metadata，为后续真正的多工作区过滤和隔离做准备。
-5. monitoring 与 operations workbench 现已补齐 worker freshness、workflow retry posture、queue backlog posture 和 observability summary，为值守与运维界面提供统一运行姿态。
-6. control-plane maintenance 现已具备 backup export、restore dry run、integrity check 和 workflow retry repair，并提供 API 与 CLI 双入口。
-7. 接下来继续推进数据库、缓存、对象存储、日志监控、部署体系、租户边界、备份恢复和运维工具链。
-8. 以稳定性、可观测性和可运营性为目标推进实盘级平台建设。
+5. monitoring 与 operations workbench 已补齐 worker freshness、workflow retry posture、queue backlog posture 和 observability summary，为值守与运维界面提供统一运行姿态。
+6. control-plane maintenance 已具备 backup export、restore dry run、integrity check 和 workflow retry repair，并提供 API 与 CLI 双入口。
+7. 阶段 6 baseline tests 与 closeout 文档已把 production readiness contracts 正式纳入验收基线。
 
 ## 当前阶段的具体建议
 
