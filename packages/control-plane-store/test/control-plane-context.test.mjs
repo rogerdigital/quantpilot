@@ -1,7 +1,72 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { createControlPlaneContext } from '../src/context.mjs';
+import { createControlPlaneStore, listSupportedControlPlaneAdapters } from '../src/store.mjs';
 import { createMemoryStore } from './helpers/memory-store.mjs';
+
+test.after(() => {
+  rmSync(join(process.cwd(), '.quantpilot-runtime', 'cp-store-test-file-adapter'), { recursive: true, force: true });
+  rmSync(join(process.cwd(), '.quantpilot-runtime-db', 'cp-store-test-db-adapter'), { recursive: true, force: true });
+});
+
+test('control plane store exposes supported storage adapters and metadata', () => {
+  const fileStore = createControlPlaneStore({
+    namespace: 'cp-store-test-file-adapter',
+    adapter: 'file',
+  });
+  const dbStore = createControlPlaneStore({
+    namespace: 'cp-store-test-db-adapter',
+    adapter: 'db',
+  });
+  const supported = listSupportedControlPlaneAdapters();
+
+  assert.equal(supported.some((item) => item.kind === 'file'), true);
+  assert.equal(supported.some((item) => item.kind === 'db'), true);
+  assert.equal(fileStore.adapter.kind, 'file');
+  assert.equal(dbStore.adapter.kind, 'db');
+  assert.equal(fileStore.adapter.persistence, 'filesystem-json');
+  assert.equal(dbStore.adapter.persistence, 'embedded-json-db');
+});
+
+test('control plane context persists repository contracts through the db adapter foundation', () => {
+  const namespace = `cp-store-db-contract-${randomUUID()}`;
+  const context = createControlPlaneContext(createControlPlaneStore({
+    namespace,
+    adapter: 'db',
+  }));
+
+  try {
+    const session = context.agentSessions.appendAgentSession({
+      title: 'DB adapter session',
+      prompt: 'Prepare a controlled review.',
+      requestedBy: 'operator-demo',
+      latestIntent: {
+        kind: 'request_execution_prep',
+        summary: 'Prepare an execution review.',
+        targetType: 'strategy',
+        targetId: 'ema-cross-us',
+        requiresApproval: true,
+        requestedMode: 'prepare_action',
+      },
+    });
+    const workflow = context.workflows.appendWorkflowRun({
+      workflowId: 'task-orchestrator.agent-action-request',
+      status: 'queued',
+      payload: {
+        requestType: 'prepare_execution_plan',
+      },
+    });
+
+    assert.equal(context.storageAdapter.kind, 'db');
+    assert.equal(context.agentSessions.getAgentSession(session.id).id, session.id);
+    assert.equal(context.workflows.getWorkflowRun(workflow.id).id, workflow.id);
+  } finally {
+    rmSync(join(process.cwd(), '.quantpilot-runtime-db', namespace), { recursive: true, force: true });
+  }
+});
 
 test('notification repository dispatches queued notifications', () => {
   const context = createControlPlaneContext(createMemoryStore());

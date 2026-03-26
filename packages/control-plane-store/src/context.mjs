@@ -30,6 +30,10 @@ import { controlPlaneStore } from './store.mjs';
 export function createControlPlaneContext(store = controlPlaneStore) {
   return {
     store,
+    storageAdapter: store.describeAdapter ? store.describeAdapter() : (store.adapter || {
+      kind: 'custom',
+      label: 'Custom Store',
+    }),
     agentActionRequests: createAgentActionRequestRepository(store),
     agentAnalysisRuns: createAgentAnalysisRunRepository(store),
     agentPlans: createAgentPlanRepository(store),

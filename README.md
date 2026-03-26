@@ -153,7 +153,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - Risk Console now consumes a unified `risk workbench` snapshot instead of relying on frontend-assembled runtime state.
 - Workers now handle notification dispatch, risk scans, scheduler ticks, workflow maintenance, and workflow execution.
 - Shared runtime logic has been split into `trading-engine / control-plane-runtime / task-workflow-engine / shared-types`.
-- Control-plane persistence lives in `control-plane-store`, currently backed by file-based storage.
+- Control-plane persistence lives in `control-plane-store`, and now exposes both `file` and `db` storage adapter foundations while keeping the existing file-backed path as the default runtime.
 - The minimum workflow loop is operational: `API enqueue -> worker execution -> control-plane persistence -> risk review -> execution-plan preparation / notification fanout`.
 - `strategy catalog` already has structured registry boundaries and per-strategy research context.
 - `backtest runs` support listing, enqueue, manual review, and detail reads with linked workflow and strategy context.
@@ -295,7 +295,7 @@ Persistence for notifications, risk events, scheduler ticks, audit records, work
 
 ### `packages/db`
 
-Low-level storage abstraction. It currently provides a file adapter and a base store boundary for future database migration.
+Low-level storage abstraction. It now provides `file` and `db` control-plane adapter foundations so the current runtime can stay file-backed while later work migrates repositories toward a fuller database-backed path.
 
 ### `packages/shared-types`
 

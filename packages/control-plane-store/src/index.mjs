@@ -1,7 +1,13 @@
 import { controlPlaneContext } from './context.mjs';
 
 export { createControlPlaneContext, controlPlaneContext } from './context.mjs';
-export { createControlPlaneStore, controlPlaneStore } from './store.mjs';
+export {
+  createControlPlaneStorageAdapter,
+  createControlPlaneStore,
+  controlPlaneStore,
+  getControlPlaneStorageConfig,
+  listSupportedControlPlaneAdapters,
+} from './store.mjs';
 export { createAgentActionRequestRepository } from './repositories/agent-action-request-repo.mjs';
 export { createAgentAnalysisRunRepository } from './repositories/agent-analysis-run-repo.mjs';
 export { createAgentPlanRepository } from './repositories/agent-plan-repo.mjs';

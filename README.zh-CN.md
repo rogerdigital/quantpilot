@@ -153,7 +153,7 @@ quantpilot/
 - Risk Console 已切到统一 `risk workbench` 聚合快照：后端现会把风险事件、执行复核、研究复核、风险 incident 和 broker live 暴露汇总成一份风险工作台摘要，风险页不再只依赖前端 runtime 拼装态。
 - worker 已接管通知分发、风险扫描、调度 tick、workflow maintenance 和 workflow execution。
 - 共享运行时已经拆分到 `trading-engine / control-plane-runtime / task-workflow-engine / shared-types`。
-- 控制面持久化已抽到 `control-plane-store`，当前以文件型存储为主。
+- 控制面持久化已抽到 `control-plane-store`，当前已经具备 `file / db` 两类 storage adapter foundation，运行时默认仍以文件型存储为主。
 - 最小工作流链路已经打通：`API 入队 -> worker 执行 -> control-plane 持久化 -> risk 审核 -> execution plan 准备 / notification fanout`。
 - `strategy catalog` 已具备结构化注册表读写边界，并可按单条策略查看最近研究运行上下文。
 - `backtest runs` 已具备列表、入队、人工复核与单条详情读取能力，可关联 workflow 与策略目录追踪研究链路。
