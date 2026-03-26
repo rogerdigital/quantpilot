@@ -169,12 +169,38 @@ test('user account repository persists profile preferences and broker bindings',
   assert.equal(binding.health.status, 'healthy');
   assert.equal(context.userAccount.listBrokerBindings()[0].id, 'broker-binding-live');
   assert.equal(context.userAccount.listRoleTemplates().some((item) => item.id === 'operator'), true);
+  assert.equal(context.userAccount.listRoleTemplates().some((item) => item.id === 'risk-reviewer'), true);
   const accessSummary = context.userAccount.getAccessSummary(['dashboard:read']);
   assert.equal(accessSummary.defaultPermissions.includes('execution:approve'), true);
   assert.equal(accessSummary.sessionRemovedPermissions.includes('execution:approve'), true);
   const brokerSummary = context.userAccount.getBrokerSummary();
   assert.equal(brokerSummary.total >= 1, true);
   assert.equal(brokerSummary.connected >= 1, true);
+});
+
+test('user account repository persists role templates and resolves access policy grants and revokes', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+  const roleTemplate = context.userAccount.upsertRoleTemplate({
+    id: 'quant-analyst',
+    label: 'Quant Analyst',
+    summary: 'Research-focused role.',
+    defaultPermissions: ['dashboard:read', 'strategy:write'],
+  });
+  const access = context.userAccount.updateUserAccess({
+    role: 'quant-analyst',
+    grants: ['risk:review'],
+    revokes: ['strategy:write'],
+  });
+  const accessSummary = context.userAccount.getAccessSummary(['dashboard:read', 'risk:review']);
+
+  assert.equal(roleTemplate.id, 'quant-analyst');
+  assert.equal(context.userAccount.listRoleTemplates().some((item) => item.id === 'quant-analyst'), true);
+  assert.equal(access.permissions.includes('dashboard:read'), true);
+  assert.equal(access.permissions.includes('risk:review'), true);
+  assert.equal(access.permissions.includes('strategy:write'), false);
+  assert.equal(accessSummary.roleLabel, 'Quant Analyst');
+  assert.equal(accessSummary.grants.includes('risk:review'), true);
+  assert.equal(accessSummary.revokes.includes('strategy:write'), true);
 });
 
 test('execution runtime repository persists runtime events and broker snapshots', () => {

@@ -894,6 +894,17 @@ test('GET /api/user-account/profile returns profile and preferences', async () =
   assert.equal(typeof response.json.preferences.defaultMode, 'string');
 });
 
+test('GET /api/user-account/roles returns persisted role templates', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/user-account/roles',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(Array.isArray(response.json.roleTemplates), true);
+  assert.equal(response.json.roleTemplates.some((item) => item.id === 'risk-reviewer'), true);
+});
+
 test('GET /api/user-account returns consolidated account workspace data', async () => {
   const response = await invokeGatewayRoute(handler, {
     path: '/api/user-account',
@@ -914,7 +925,8 @@ test('POST /api/user-account/access updates persisted access policy and session 
     path: '/api/user-account/access',
     body: {
       role: 'operator',
-      permissions: ['dashboard:read', 'risk:review'],
+      grants: ['execution:approve'],
+      revokes: ['strategy:write'],
       status: 'active',
     },
   });
@@ -923,8 +935,13 @@ test('POST /api/user-account/access updates persisted access policy and session 
   assert.equal(response.json.ok, true);
   assert.equal(response.json.access.role, 'operator');
   assert.equal(response.json.access.permissions.includes('risk:review'), true);
+  assert.equal(response.json.access.permissions.includes('execution:approve'), true);
   assert.equal(response.json.access.permissions.includes('account:write'), false);
+  assert.equal(response.json.access.permissions.includes('strategy:write'), false);
+  assert.equal(response.json.access.grants.includes('execution:approve'), true);
+  assert.equal(response.json.access.revokes.includes('strategy:write'), true);
   assert.equal(response.json.accessSummary.effectivePermissions.includes('risk:review'), true);
+  assert.equal(response.json.accessSummary.roleLabel, 'Operator');
   assert.equal(response.json.session.user.role, 'operator');
 
   const sessionResponse = await invokeGatewayRoute(handler, {
@@ -934,6 +951,8 @@ test('POST /api/user-account/access updates persisted access policy and session 
   assert.equal(sessionResponse.json.user.role, 'operator');
   assert.equal(sessionResponse.json.user.permissions.includes('risk:review'), true);
   assert.equal(sessionResponse.json.user.permissions.includes('account:write'), false);
+  assert.equal(sessionResponse.json.user.permissions.includes('execution:approve'), true);
+  assert.equal(sessionResponse.json.user.permissions.includes('strategy:write'), false);
 
   const auditResponse = await invokeGatewayRoute(handler, {
     path: '/api/audit/records',
@@ -946,6 +965,33 @@ test('POST /api/user-account/access updates persisted access policy and session 
     status: 'active',
     permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
   });
+});
+
+test('POST and DELETE /api/user-account/roles persist custom role templates', async () => {
+  const createResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/user-account/roles',
+    body: {
+      id: 'quant-analyst',
+      label: 'Quant Analyst',
+      summary: 'Research-focused role.',
+      defaultPermissions: ['dashboard:read', 'strategy:write'],
+    },
+  });
+
+  assert.equal(createResponse.statusCode, 200);
+  assert.equal(createResponse.json.ok, true);
+  assert.equal(createResponse.json.roleTemplate.id, 'quant-analyst');
+  assert.equal(createResponse.json.roleTemplates.some((item) => item.id === 'quant-analyst'), true);
+
+  const deleteResponse = await invokeGatewayRoute(handler, {
+    method: 'DELETE',
+    path: '/api/user-account/roles/quant-analyst',
+  });
+
+  assert.equal(deleteResponse.statusCode, 200);
+  assert.equal(deleteResponse.json.ok, true);
+  assert.equal(deleteResponse.json.roleTemplates.some((item) => item.id === 'quant-analyst'), false);
 });
 
 test('POST /api/user-account/profile updates persisted profile data', async () => {

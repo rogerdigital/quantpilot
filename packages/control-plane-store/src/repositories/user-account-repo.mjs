@@ -3,19 +3,69 @@ import {
   createUserAccessPolicy,
   createUserAccountProfile,
   createUserPreferences,
+  createUserRoleTemplateEntry,
   getDefaultPermissionsForRole,
   listUserRoleTemplates,
 } from '../shared.mjs';
 
 const FILENAME = 'user-account.json';
 
+function listUnique(items = []) {
+  return [...new Set(items.filter(Boolean))];
+}
+
+function diffPermissions(base = [], compare = []) {
+  return {
+    added: compare.filter((item) => !base.includes(item)),
+    removed: base.filter((item) => !compare.includes(item)),
+  };
+}
+
+function toAccessPolicyInput(access = {}, patch = {}) {
+  const next = {
+    role: patch.role || access.role || 'admin',
+    status: patch.status || access.status || 'active',
+    grants: Object.prototype.hasOwnProperty.call(patch, 'grants')
+      ? patch.grants
+      : (access.grants || []),
+    revokes: Object.prototype.hasOwnProperty.call(patch, 'revokes')
+      ? patch.revokes
+      : (access.revokes || []),
+    roleTemplateId: patch.roleTemplateId || access.roleTemplateId || patch.role || access.role || 'admin',
+  };
+
+  if (Object.prototype.hasOwnProperty.call(patch, 'permissions')) {
+    next.permissions = patch.permissions;
+  }
+
+  return next;
+}
+
+function mergeRoleTemplates(rawTemplates = []) {
+  const defaults = listUserRoleTemplates();
+  const map = new Map(defaults.map((template) => [template.id, template]));
+
+  if (Array.isArray(rawTemplates)) {
+    rawTemplates.forEach((template) => {
+      const entry = createUserRoleTemplateEntry(template, defaults);
+      map.set(entry.id, {
+        ...(map.get(entry.id) || {}),
+        ...entry,
+      });
+    });
+  }
+
+  return [...map.values()];
+}
+
 function createDefaultAccountSnapshot() {
   const profile = createUserAccountProfile();
+  const roleTemplates = listUserRoleTemplates();
   return {
     profile,
     access: createUserAccessPolicy({
       role: profile.role,
-    }),
+    }, roleTemplates),
     preferences: createUserPreferences({
       locale: profile.locale,
       timezone: profile.timezone,
@@ -24,6 +74,7 @@ function createDefaultAccountSnapshot() {
       plan: 'internal',
       status: 'active',
     },
+    roleTemplates,
     brokerBindings: [
       createBrokerBindingEntry({
         id: 'broker-binding-primary',
@@ -42,6 +93,7 @@ function createDefaultAccountSnapshot() {
 
 function normalizeSnapshot(snapshot = {}) {
   const defaults = createDefaultAccountSnapshot();
+  const roleTemplates = mergeRoleTemplates(snapshot.roleTemplates);
   const profile = createUserAccountProfile({
     ...defaults.profile,
     ...(snapshot.profile || {}),
@@ -49,7 +101,7 @@ function normalizeSnapshot(snapshot = {}) {
   const access = createUserAccessPolicy({
     role: profile.role,
     ...(snapshot.access || {}),
-  });
+  }, roleTemplates);
   const preferences = createUserPreferences({
     ...defaults.preferences,
     ...(snapshot.preferences || {}),
@@ -76,19 +128,9 @@ function normalizeSnapshot(snapshot = {}) {
       ...defaults.subscription,
       ...(snapshot.subscription || {}),
     },
+    roleTemplates,
     brokerBindings: normalizedBindings,
     updatedAt: snapshot.updatedAt || defaults.updatedAt,
-  };
-}
-
-function listUnique(items = []) {
-  return [...new Set(items.filter(Boolean))];
-}
-
-function diffPermissions(base = [], compare = []) {
-  return {
-    added: compare.filter((item) => !base.includes(item)),
-    removed: base.filter((item) => !compare.includes(item)),
   };
 }
 
@@ -107,9 +149,10 @@ export function createUserAccountRepository(store) {
   }
 
   function getAccessSummary(snapshot = readSnapshot(), sessionPermissions = null) {
-    const defaultPermissions = getDefaultPermissionsForRole(snapshot.access.role);
+    const roleTemplate = snapshot.roleTemplates.find((item) => item.id === snapshot.access.role) || null;
+    const defaultPermissions = getDefaultPermissionsForRole(snapshot.access.role, snapshot.roleTemplates);
     const effectivePermissions = snapshot.access.status === 'active'
-      ? listUnique(snapshot.access.permissions)
+      ? listUnique(snapshot.access.effectivePermissions || snapshot.access.permissions)
       : [];
     const accessDelta = diffPermissions(defaultPermissions, effectivePermissions);
     const sessionList = Array.isArray(sessionPermissions) ? listUnique(sessionPermissions) : effectivePermissions;
@@ -117,9 +160,12 @@ export function createUserAccountRepository(store) {
 
     return {
       role: snapshot.access.role,
+      roleLabel: roleTemplate?.label || snapshot.access.role,
       status: snapshot.access.status,
       defaultPermissions,
       effectivePermissions,
+      grants: listUnique(snapshot.access.grants || []),
+      revokes: listUnique(snapshot.access.revokes || []),
       addedPermissions: accessDelta.added,
       removedPermissions: accessDelta.removed,
       sessionPermissions: sessionList,
@@ -165,10 +211,12 @@ export function createUserAccountRepository(store) {
         ...snapshot.profile,
         ...patch,
       });
-      const access = createUserAccessPolicy({
-        ...snapshot.access,
-        role: profile.role,
-      });
+      const access = createUserAccessPolicy(
+        toAccessPolicyInput(snapshot.access, {
+          role: profile.role,
+        }),
+        snapshot.roleTemplates,
+      );
       return writeSnapshot({
         ...snapshot,
         profile,
@@ -185,7 +233,10 @@ export function createUserAccountRepository(store) {
       return getAccessSummary(readSnapshot(), sessionPermissions);
     },
     listRoleTemplates() {
-      return listUserRoleTemplates();
+      return readSnapshot().roleTemplates;
+    },
+    getRoleTemplate(roleId) {
+      return readSnapshot().roleTemplates.find((item) => item.id === roleId) || null;
     },
     getBrokerSummary() {
       return getBrokerSummary(readSnapshot());
@@ -203,11 +254,13 @@ export function createUserAccountRepository(store) {
     },
     updateUserAccess(patch = {}) {
       const snapshot = readSnapshot();
-      const access = createUserAccessPolicy({
-        ...snapshot.access,
-        ...patch,
-        role: patch.role || snapshot.profile.role,
-      });
+      const access = createUserAccessPolicy(
+        toAccessPolicyInput(snapshot.access, {
+          ...patch,
+          role: patch.role || snapshot.profile.role,
+        }),
+        snapshot.roleTemplates,
+      );
       const profile = createUserAccountProfile({
         ...snapshot.profile,
         role: access.role,
@@ -217,6 +270,61 @@ export function createUserAccountRepository(store) {
         profile,
         access,
       }).access;
+    },
+    upsertRoleTemplate(payload = {}) {
+      const snapshot = readSnapshot();
+      const roleTemplates = mergeRoleTemplates([
+        ...snapshot.roleTemplates.filter((item) => item.id !== payload.id),
+        payload,
+      ]);
+      const access = createUserAccessPolicy(toAccessPolicyInput(snapshot.access), roleTemplates);
+      const profile = createUserAccountProfile({
+        ...snapshot.profile,
+        role: access.role,
+      });
+
+      writeSnapshot({
+        ...snapshot,
+        profile,
+        access,
+        roleTemplates,
+      });
+
+      return roleTemplates.find((item) => item.id === payload.id) || null;
+    },
+    deleteRoleTemplate(roleId) {
+      const snapshot = readSnapshot();
+      const existing = snapshot.roleTemplates.find((item) => item.id === roleId);
+      if (!existing) {
+        return {
+          ok: false,
+          error: 'role template was not found',
+        };
+      }
+      if (existing.system) {
+        return {
+          ok: false,
+          error: 'system role template cannot be deleted',
+        };
+      }
+      if (snapshot.access.role === roleId || snapshot.profile.role === roleId) {
+        return {
+          ok: false,
+          error: 'active account role template cannot be deleted',
+        };
+      }
+
+      const roleTemplates = snapshot.roleTemplates.filter((item) => item.id !== roleId);
+      writeSnapshot({
+        ...snapshot,
+        roleTemplates,
+      });
+
+      return {
+        ok: true,
+        roleTemplate: existing,
+        roleTemplates,
+      };
     },
     listBrokerBindings() {
       return readSnapshot().brokerBindings;

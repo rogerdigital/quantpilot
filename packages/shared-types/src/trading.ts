@@ -214,6 +214,7 @@ export type UserRoleTemplate = {
   label: string;
   summary: string;
   defaultPermissions: string[];
+  system?: boolean;
 };
 
 export type UserBrokerBinding = {
@@ -252,6 +253,11 @@ export type UserAccountProfileSnapshot = {
     role: string;
     status: string;
     permissions: string[];
+    grants?: string[];
+    revokes?: string[];
+    defaultPermissions?: string[];
+    effectivePermissions?: string[];
+    roleTemplateId?: string;
   };
   preferences: {
     locale: string;
@@ -264,9 +270,12 @@ export type UserAccountProfileSnapshot = {
   roleTemplates: UserRoleTemplate[];
   accessSummary: {
     role: string;
+    roleLabel?: string;
     status: string;
     defaultPermissions: string[];
     effectivePermissions: string[];
+    grants?: string[];
+    revokes?: string[];
     addedPermissions: string[];
     removedPermissions: string[];
     sessionPermissions: string[];
@@ -309,6 +318,11 @@ export type UserAccessUpdateSnapshot = {
   access: UserAccountProfileSnapshot['access'];
   accessSummary?: UserAccountProfileSnapshot['accessSummary'];
   session?: OperatorSession;
+};
+
+export type UserRoleTemplateSnapshot = {
+  ok: boolean;
+  roleTemplates: UserRoleTemplate[];
 };
 
 export type UserProfileUpdateSnapshot = {

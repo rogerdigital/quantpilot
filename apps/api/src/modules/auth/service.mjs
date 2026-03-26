@@ -2,7 +2,9 @@ import { getUserAccount } from '../../../../../packages/control-plane-runtime/sr
 
 export function getSession() {
   const account = getUserAccount();
-  const permissions = account.access?.status === 'active' ? (account.access.permissions || []) : [];
+  const permissions = account.access?.status === 'active'
+    ? (account.access.effectivePermissions || account.access.permissions || [])
+    : [];
   const defaultBrokerBinding = account.brokerBindings.find((binding) => binding.isDefault) || account.brokerBindings[0] || null;
 
   return {

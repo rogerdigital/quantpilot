@@ -709,6 +709,9 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     listUserRoleTemplates() {
       return context.userAccount.listRoleTemplates();
     },
+    getUserRoleTemplate(roleId) {
+      return context.userAccount.getRoleTemplate(roleId);
+    },
     getBrokerBindingSummary() {
       return context.userAccount.getBrokerSummary();
     },
@@ -717,6 +720,12 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     },
     updateUserAccess(patch = {}) {
       return context.userAccount.updateUserAccess(patch);
+    },
+    upsertUserRoleTemplate(payload = {}) {
+      return context.userAccount.upsertRoleTemplate(payload);
+    },
+    deleteUserRoleTemplate(roleId) {
+      return context.userAccount.deleteRoleTemplate(roleId);
     },
     listBrokerBindings() {
       return context.userAccount.listBrokerBindings();
@@ -917,9 +926,12 @@ export const getUserPreferences = (...args) => controlPlaneRuntime.getUserPrefer
 export const getUserAccess = (...args) => controlPlaneRuntime.getUserAccess(...args);
 export const getUserAccessSummary = (...args) => controlPlaneRuntime.getUserAccessSummary(...args);
 export const listUserRoleTemplates = (...args) => controlPlaneRuntime.listUserRoleTemplates(...args);
+export const getUserRoleTemplate = (...args) => controlPlaneRuntime.getUserRoleTemplate(...args);
 export const getBrokerBindingSummary = (...args) => controlPlaneRuntime.getBrokerBindingSummary(...args);
 export const updateUserPreferences = (...args) => controlPlaneRuntime.updateUserPreferences(...args);
 export const updateUserAccess = (...args) => controlPlaneRuntime.updateUserAccess(...args);
+export const upsertUserRoleTemplate = (...args) => controlPlaneRuntime.upsertUserRoleTemplate(...args);
+export const deleteUserRoleTemplate = (...args) => controlPlaneRuntime.deleteUserRoleTemplate(...args);
 export const listBrokerBindings = (...args) => controlPlaneRuntime.listBrokerBindings(...args);
 export const upsertBrokerBinding = (...args) => controlPlaneRuntime.upsertBrokerBinding(...args);
 export const setDefaultBrokerBinding = (...args) => controlPlaneRuntime.setDefaultBrokerBinding(...args);

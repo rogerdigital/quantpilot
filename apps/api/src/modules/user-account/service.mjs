@@ -1,14 +1,13 @@
 import {
+  deleteUserRoleTemplate,
   getBrokerBindingSummary,
   deleteBrokerBinding,
   getUserAccount,
-  getUserAccess,
   getUserAccessSummary,
-  getUserPreferences,
-  getUserProfile,
+  getUserRoleTemplate,
   listBrokerBindings,
-  listUserRoleTemplates,
   setDefaultBrokerBinding,
+  upsertUserRoleTemplate,
   updateUserProfile,
   updateUserAccess,
   updateUserPreferences,
@@ -38,7 +37,7 @@ export function getUserAccountSnapshot() {
     preferences: account.preferences,
     subscription: account.subscription,
     brokerBindings: account.brokerBindings,
-    roleTemplates: listUserRoleTemplates(),
+    roleTemplates: account.roleTemplates,
     accessSummary: getUserAccessSummary(session.user.permissions),
     brokerSummary: getBrokerBindingSummary(),
     session,
@@ -47,14 +46,23 @@ export function getUserAccountSnapshot() {
 }
 
 export function getUserProfileSnapshot() {
+  const account = getUserAccount();
   const session = getSession();
   return {
     ok: true,
-    profile: getUserProfile(),
-    access: getUserAccess(),
-    preferences: getUserPreferences(),
-    roleTemplates: listUserRoleTemplates(),
+    profile: account.profile,
+    access: account.access,
+    preferences: account.preferences,
+    roleTemplates: account.roleTemplates,
     accessSummary: getUserAccessSummary(session.user.permissions),
+  };
+}
+
+export function getUserRoleTemplatesSnapshot() {
+  const account = getUserAccount();
+  return {
+    ok: true,
+    roleTemplates: account.roleTemplates,
   };
 }
 
@@ -107,6 +115,8 @@ export function patchUserAccess(payload = {}) {
       role: updated.role,
       status: updated.status,
       permissions: updated.permissions,
+      grants: updated.grants || [],
+      revokes: updated.revokes || [],
     },
   );
   return {
@@ -114,6 +124,58 @@ export function patchUserAccess(payload = {}) {
     access: updated,
     accessSummary: getUserAccessSummary(getSession().user.permissions),
     session: getSession(),
+  };
+}
+
+export function saveUserRoleTemplate(payload = {}) {
+  if (!payload.id || !payload.label) {
+    return {
+      ok: false,
+      error: 'role template id and label are required',
+    };
+  }
+
+  const roleTemplate = upsertUserRoleTemplate(payload);
+  recordAccountAuditEvent(
+    'user-account.role-template.saved',
+    'User role template saved',
+    `Saved role template ${roleTemplate.label}.`,
+    {
+      roleTemplateId: roleTemplate.id,
+      label: roleTemplate.label,
+      defaultPermissions: roleTemplate.defaultPermissions,
+      system: Boolean(roleTemplate.system),
+    },
+  );
+
+  return {
+    ok: true,
+    roleTemplate,
+    roleTemplates: getUserAccount().roleTemplates,
+  };
+}
+
+export function removeUserRoleTemplate(roleId) {
+  const existing = getUserRoleTemplate(roleId);
+  const result = deleteUserRoleTemplate(roleId);
+  if (!result?.ok) {
+    return result;
+  }
+
+  recordAccountAuditEvent(
+    'user-account.role-template.deleted',
+    'User role template deleted',
+    `Deleted role template ${existing?.label || roleId}.`,
+    {
+      roleTemplateId: existing?.id || roleId,
+      label: existing?.label || '',
+    },
+  );
+
+  return {
+    ok: true,
+    roleTemplate: result.roleTemplate,
+    roleTemplates: result.roleTemplates,
   };
 }
 

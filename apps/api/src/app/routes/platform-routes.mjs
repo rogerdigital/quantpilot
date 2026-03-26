@@ -31,11 +31,14 @@ import {
   getBrokerBindingRuntimeSnapshot,
   getUserAccountSnapshot,
   getUserProfileSnapshot,
+  getUserRoleTemplatesSnapshot,
   patchUserProfile,
   patchUserAccess,
   patchUserPreferences,
+  removeUserRoleTemplate,
   removeBrokerBinding,
   saveBrokerBinding,
+  saveUserRoleTemplate,
   setPrimaryBrokerBinding,
   syncBrokerBindingRuntime,
 } from '../../modules/user-account/service.mjs';
@@ -116,6 +119,11 @@ export async function handlePlatformRoutes(context) {
     return true;
   }
 
+  if (req.method === 'GET' && reqUrl.pathname === '/api/user-account/roles') {
+    writeJson(res, 200, getUserRoleTemplatesSnapshot());
+    return true;
+  }
+
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/profile') {
     if (!canWriteAccount()) {
       writeForbidden('account:write', 'update the account profile');
@@ -148,6 +156,28 @@ export async function handlePlatformRoutes(context) {
     }
     const body = await readJsonBody(req);
     writeJson(res, 200, patchUserAccess(body));
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/roles') {
+    if (!canWriteAccount()) {
+      writeForbidden('account:write', 'save role templates');
+      return true;
+    }
+    const body = await readJsonBody(req);
+    const result = saveUserRoleTemplate(body);
+    writeJson(res, result.ok ? 200 : 400, result);
+    return true;
+  }
+
+  if (req.method === 'DELETE' && reqUrl.pathname.startsWith('/api/user-account/roles/')) {
+    if (!canWriteAccount()) {
+      writeForbidden('account:write', 'delete role templates');
+      return true;
+    }
+    const roleId = reqUrl.pathname.split('/').at(-1);
+    const result = removeUserRoleTemplate(roleId);
+    writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
 

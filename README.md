@@ -190,6 +190,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - Agent sessions can now submit controlled action handoffs from completed analyses, and request approval outcomes are linked back into session detail and operator timeline contracts.
 - The Overview page consumes backend `monitoring status`.
 - `user-account` now owns persisted `profile / preferences / access / broker bindings`.
+- `user-account` now persists role templates and access policies with `default permissions / grants / revokes / effective permissions`, instead of relying on demo-only role constants.
 - Account mutations and broker-binding changes are audited.
 - `auth/session` is now driven by persisted account-access policy instead of frontend-only demo constants.
 - The account domain has converged into a unified `account workspace` snapshot for profile, preferences, access, broker summary, role templates, and session state.
@@ -253,6 +254,8 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 
 ### Stage 6: Productionization And Professionalization
 
+- The first productionization step is in place: control-plane storage now has `file / db` adapter foundations.
+- Access policy foundations now persist role templates and effective permission overlays, which prepares the platform for fuller RBAC and multi-user boundaries.
 - Upgrade database, cache, object storage, logging, alerting, and deployment infrastructure.
 - Complete tenancy, permissions, subscriptions, observability, backup/recovery, and operator tooling.
 - Add live-run stability metrics, replay, failure drills, and release workflows.

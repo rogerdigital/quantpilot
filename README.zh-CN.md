@@ -186,6 +186,7 @@ quantpilot/
 - `risk middleware policy actions` 已开始形成：Risk Runbook 现在不只是给出聚焦建议，还能在风险页直接执行 policy action，把 operator history、risk-policy event、控制面通知和关联 risk incident triage 一起写入同一条中台处置链路。
 - Overview 首页已开始消费后端 `monitoring status` 摘要，可直接观察 `broker / market / worker / workflow / queues` 运行态。
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
+- `user-account` 现已进一步持久化 `role templates / access policies`，支持 `default permissions / grants / revokes / effective permissions` 的正式权限叠加模型，不再停留在 demo 角色常量。
 - 账户写操作和券商绑定变更已经进入 audit records，基础对象变更具备最小留痕能力。
 - `auth/session` 已改为由持久化账户访问策略驱动，前后端对 `strategy:write / risk:review / execution:approve / account:write` 的权限判断已经开始收敛。
 - 账户域已进一步收敛为统一 `account workspace` 快照：设置页现在消费同一份 `profile / preferences / access / broker summary / role templates / session` 结构化数据，并在保存账户、权限或默认券商绑定后自动刷新当前会话。
@@ -256,6 +257,8 @@ quantpilot/
 
 ### 阶段 6：生产化与专业化
 
+- 阶段 6 的第一步已落地：control-plane storage 已具备 `file / db` 两类 adapter foundation。
+- 权限基础也已前进一步：role template 与 access policy 现已正式持久化，为后续更完整的 RBAC 和多用户边界做准备。
 - 完成数据库、缓存、对象存储、日志监控、告警通道和部署体系升级。
 - 补齐租户、权限、订阅、可观测性、备份恢复和运维工具链。
 - 建立实盘运行所需的稳定性指标、回放能力、故障演练和发布流程。

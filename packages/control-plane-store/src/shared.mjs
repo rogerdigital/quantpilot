@@ -549,46 +549,99 @@ export function createUserPreferences(payload = {}) {
   };
 }
 
+function listUniquePermissions(items = []) {
+  return [...new Set(items.map((item) => String(item || '').trim()).filter(Boolean))];
+}
+
 export function listUserRoleTemplates() {
   return [
     {
       id: 'admin',
       label: 'Admin',
       summary: 'Full control over account settings, strategy changes, risk reviews, and execution approvals.',
-      defaultPermissions: getDefaultPermissionsForRole('admin'),
+      defaultPermissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+      system: true,
     },
     {
       id: 'operator',
       label: 'Operator',
       summary: 'Can run the platform, manage strategies, and review risk without account administration.',
-      defaultPermissions: getDefaultPermissionsForRole('operator'),
+      defaultPermissions: ['dashboard:read', 'strategy:write', 'risk:review'],
+      system: true,
+    },
+    {
+      id: 'risk-reviewer',
+      label: 'Risk Reviewer',
+      summary: 'Focused risk-review role for reviewing risk posture, agent approvals, and guarded execution gates.',
+      defaultPermissions: ['dashboard:read', 'risk:review'],
+      system: true,
+    },
+    {
+      id: 'execution-approver',
+      label: 'Execution Approver',
+      summary: 'Focused execution role for reviewing and controlling guarded execution actions.',
+      defaultPermissions: ['dashboard:read', 'execution:approve'],
+      system: true,
     },
     {
       id: 'viewer',
       label: 'Viewer',
       summary: 'Read-only access to dashboards and investigation context.',
-      defaultPermissions: getDefaultPermissionsForRole('viewer'),
+      defaultPermissions: ['dashboard:read'],
+      system: true,
     },
-  ];
+  ].map((template) => ({
+    ...template,
+    defaultPermissions: listUniquePermissions(template.defaultPermissions),
+  }));
 }
 
-export function getDefaultPermissionsForRole(role = 'viewer') {
-  const permissionMap = {
-    admin: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
-    operator: ['dashboard:read', 'strategy:write', 'risk:review'],
-    viewer: ['dashboard:read'],
+export function createUserRoleTemplateEntry(payload = {}, existingTemplates = listUserRoleTemplates()) {
+  const existing = existingTemplates.find((item) => item.id === payload.id) || null;
+  const inferredPermissions = Array.isArray(payload.defaultPermissions) && payload.defaultPermissions.length
+    ? payload.defaultPermissions
+    : (existing?.defaultPermissions || ['dashboard:read']);
+
+  return {
+    id: payload.id || existing?.id || 'custom-role',
+    label: payload.label || existing?.label || 'Custom Role',
+    summary: payload.summary || existing?.summary || 'Custom access role template.',
+    defaultPermissions: listUniquePermissions(inferredPermissions),
+    system: payload.system ?? existing?.system ?? false,
   };
-  return permissionMap[role] || permissionMap.viewer;
 }
 
-export function createUserAccessPolicy(payload = {}) {
+export function getDefaultPermissionsForRole(role = 'viewer', roleTemplates = listUserRoleTemplates()) {
+  const template = roleTemplates.find((item) => item.id === role) || roleTemplates.find((item) => item.id === 'viewer');
+  return listUniquePermissions(template?.defaultPermissions || ['dashboard:read']);
+}
+
+export function createUserAccessPolicy(payload = {}, roleTemplates = listUserRoleTemplates()) {
   const role = payload.role || 'admin';
+  const defaultPermissions = getDefaultPermissionsForRole(role, roleTemplates);
+  const explicitPermissions = Array.isArray(payload.permissions) && payload.permissions.length
+    ? listUniquePermissions(payload.permissions)
+    : null;
+  const grants = explicitPermissions
+    ? explicitPermissions.filter((item) => !defaultPermissions.includes(item))
+    : listUniquePermissions(payload.grants || []);
+  const revokes = explicitPermissions
+    ? defaultPermissions.filter((item) => !explicitPermissions.includes(item))
+    : listUniquePermissions(payload.revokes || []);
+  const effectivePermissions = explicitPermissions || listUniquePermissions([
+    ...defaultPermissions.filter((item) => !revokes.includes(item)),
+    ...grants,
+  ]);
+
   return {
     role,
     status: payload.status || 'active',
-    permissions: Array.isArray(payload.permissions) && payload.permissions.length
-      ? [...new Set(payload.permissions.map((item) => String(item).trim()).filter(Boolean))]
-      : getDefaultPermissionsForRole(role),
+    permissions: effectivePermissions,
+    grants,
+    revokes,
+    defaultPermissions,
+    effectivePermissions,
+    roleTemplateId: payload.roleTemplateId || role,
   };
 }
 
