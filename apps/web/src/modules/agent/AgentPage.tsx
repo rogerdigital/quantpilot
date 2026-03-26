@@ -23,22 +23,34 @@ const promptSuggestions = {
 export default function AgentPage() {
   const { state, session } = useTradingSystem();
   const { locale } = useLocale();
-  const { tools, workbench, sessionDetail, selectedSessionId, loading, running, error, selectSession, runPrompt } = useAgentTools();
+  const { tools, workbench, sessionDetail, selectedSessionId, loading, running, requestingAction, error, selectSession, runPrompt, requestAction } = useAgentTools();
   const [prompt, setPrompt] = useState(promptSuggestions[locale][0]);
 
   const summary = workbench?.summary;
   const latestExplanation = sessionDetail?.latestAnalysisRun?.explanation || null;
+  const latestActionRequest = sessionDetail?.latestActionRequest || null;
   const recentSessions = Array.isArray(workbench?.queues.recentSessions) ? workbench?.queues.recentSessions : [];
   const pendingRequests = Array.isArray(workbench?.queues.pendingActionRequests) ? workbench?.queues.pendingActionRequests : [];
   const recentExplanations = Array.isArray(workbench?.recentExplanations) ? workbench.recentExplanations : [];
   const timeline = Array.isArray(sessionDetail?.timeline) ? sessionDetail.timeline : [];
   const runbook = Array.isArray(workbench?.runbook) ? workbench.runbook : [];
+  const canRequestAction = Boolean(
+    sessionDetail?.session.id
+    && sessionDetail?.latestPlan?.requiresApproval
+    && sessionDetail?.latestPlan?.status === 'completed'
+    && sessionDetail?.latestAnalysisRun?.status === 'completed'
+    && latestActionRequest?.status !== 'pending_review',
+  );
 
   const submitPrompt = async () => {
     const result = await runPrompt(prompt, session?.user.id);
     if (result?.session?.prompt) {
       setPrompt(result.session.prompt);
     }
+  };
+
+  const submitActionRequest = async () => {
+    await requestAction(session?.user.id);
   };
 
   return (
@@ -127,6 +139,25 @@ export default function AgentPage() {
                 <button type="button" onClick={submitPrompt} disabled={running || !prompt.trim()}>{running ? (locale === 'zh' ? '运行中...' : 'Running...') : (locale === 'zh' ? '运行分析' : 'Run')}</button>
               </div>
             </div>
+            <div className="focus-row">
+              <div className="symbol-cell">
+                <strong>{locale === 'zh' ? '受控交接' : 'Controlled Handoff'}</strong>
+                <span>
+                  {latestActionRequest?.status === 'pending_review'
+                    ? (locale === 'zh' ? '当前会话已经有待审批的 action request。' : 'This session already has a pending action request.')
+                    : (locale === 'zh'
+                      ? '当解释链路完成且 plan 需要审批时，可以把下一步建议正式提交为 action request。'
+                      : 'Once analysis is complete and the plan requires approval, the recommended next step can be submitted as a formal action request.')}
+                </span>
+              </div>
+              <div className="focus-metric">
+                <button type="button" onClick={submitActionRequest} disabled={!canRequestAction || requestingAction}>
+                  {requestingAction
+                    ? (locale === 'zh' ? '提交中...' : 'Submitting...')
+                    : (locale === 'zh' ? '提交审批' : 'Request Approval')}
+                </button>
+              </div>
+            </div>
           </div>
         </article>
 
@@ -209,6 +240,20 @@ export default function AgentPage() {
               <div className="symbol-cell">
                 <strong>{locale === 'zh' ? '下一步' : 'Recommended Next Step'}</strong>
                 <span>{latestExplanation?.recommendedNextStep || '--'}</span>
+              </div>
+            </div>
+            <div className="focus-row">
+              <div className="symbol-cell">
+                <strong>{locale === 'zh' ? '动作请求' : 'Action Request'}</strong>
+                <span>{latestActionRequest?.summary || (locale === 'zh' ? '当前会话还没有提交 action request。' : 'No action request has been submitted for this session yet.')}</span>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                <strong>{latestActionRequest?.status || '--'}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '审批' : 'Approval'}</span>
+                <strong>{latestActionRequest?.approvalState || '--'}</strong>
               </div>
             </div>
           </div>

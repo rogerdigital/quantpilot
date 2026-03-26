@@ -34,11 +34,13 @@ function buildSessionTimeline(session, options = {}) {
   const actionRequests = controlPlaneRuntime.listAgentActionRequests(limit * 4);
 
   const relatedRequestIds = actionRequests
-    .filter((item) => item.id === session.latestActionRequestId || (
-      session.latestIntent?.targetId
-      && item.targetId === session.latestIntent.targetId
-      && item.requestedBy === session.requestedBy
-    ))
+    .filter((item) => item.id === session.latestActionRequestId
+      || item.metadata?.agentSessionId === session.id
+      || (
+        session.latestIntent?.targetId
+        && item.targetId === session.latestIntent.targetId
+        && item.requestedBy === session.requestedBy
+      ))
     .map((item) => item.id);
 
   const items = [
@@ -270,11 +272,13 @@ export function getAgentSessionLinkedArtifacts(sessionId, options = {}) {
 
   const limit = parseLimit(options.limit, 20);
   const requests = controlPlaneRuntime.listAgentActionRequests(limit * 4)
-    .filter((item) => item.id === session.latestActionRequestId || (
-      session.latestIntent?.targetId
-      && item.targetId === session.latestIntent.targetId
-      && item.requestedBy === session.requestedBy
-    ))
+    .filter((item) => item.id === session.latestActionRequestId
+      || item.metadata?.agentSessionId === session.id
+      || (
+        session.latestIntent?.targetId
+        && item.targetId === session.latestIntent.targetId
+        && item.requestedBy === session.requestedBy
+      ))
     .slice(0, limit);
   const notifications = controlPlaneRuntime.listNotifications(limit * 4)
     .filter((item) => requests.some((request) => request.id === item.metadata?.agentActionRequestId))

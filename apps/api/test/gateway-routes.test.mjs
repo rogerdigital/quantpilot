@@ -1408,6 +1408,92 @@ test('POST /api/agent/action-requests queues an agent action request workflow', 
   assert.equal(response.json.workflow.workflowId, 'task-orchestrator.agent-action-request');
 });
 
+test('POST /api/agent/sessions/:id/action-requests queues a controlled handoff from a completed analysis', async () => {
+  const session = context.agentSessions.appendAgentSession({
+    title: 'Prepare execution handoff',
+    prompt: 'Generate the execution plan before tomorrow open for ema-cross-us.',
+    requestedBy: 'operator-demo',
+    status: 'completed',
+    latestIntent: {
+      kind: 'request_execution_prep',
+      summary: 'Prepare execution review.',
+      targetType: 'strategy',
+      targetId: 'ema-cross-us',
+      urgency: 'normal',
+      requiresApproval: true,
+      requestedMode: 'prepare_action',
+      metadata: {},
+    },
+  });
+  const plan = context.agentPlans.appendAgentPlan({
+    sessionId: session.id,
+    status: 'completed',
+    summary: 'Read strategy, backtest, and execution posture before requesting action.',
+    requiresApproval: true,
+    requestedBy: 'operator-demo',
+    steps: [
+      {
+        kind: 'read',
+        title: 'Load strategy context',
+        status: 'completed',
+        toolName: 'strategy.catalog.list',
+        description: 'Read strategy posture.',
+        outputSummary: 'Strategy loaded.',
+        metadata: {},
+      },
+      {
+        kind: 'request_action',
+        title: 'Prepare handoff',
+        status: 'completed',
+        toolName: '',
+        description: 'Prepare controlled action handoff.',
+        outputSummary: 'Ready for controlled action handoff.',
+        metadata: {
+          proposedActionRequestType: 'prepare_execution_plan',
+        },
+      },
+    ],
+    metadata: {},
+  });
+  const run = context.agentAnalysisRuns.appendAgentAnalysisRun({
+    sessionId: session.id,
+    planId: plan.id,
+    status: 'completed',
+    summary: 'Execution readiness can move to controlled approval.',
+    conclusion: 'Execution readiness can move to controlled approval.',
+    requestedBy: 'operator-demo',
+    toolCalls: [],
+    evidence: [],
+    explanation: {
+      thesis: 'Execution readiness can move to controlled approval.',
+      rationale: ['Research posture is available.', 'No conflicting execution plan was found.'],
+      warnings: [],
+      recommendedNextStep: 'Submit a controlled execution-plan request for operator approval.',
+    },
+    metadata: {},
+    completedAt: new Date().toISOString(),
+  });
+  context.agentSessions.updateAgentSession(session.id, {
+    latestPlanId: plan.id,
+    latestAnalysisRunId: run.id,
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/agent/sessions/${session.id}/action-requests`,
+    body: {
+      requestedBy: 'operator-demo',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.handoff.requestType, 'prepare_execution_plan');
+  assert.equal(response.json.session.status, 'waiting_approval');
+  assert.equal(response.json.workflow.workflowId, 'task-orchestrator.agent-action-request');
+  assert.equal(context.workflows.getWorkflowRun(response.json.workflow.id).payload.metadata.agentSessionId, session.id);
+});
+
 test('POST /api/agent/action-requests rejects unsupported request types', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
@@ -1515,6 +1601,54 @@ test('POST /api/agent/action-requests/approve queues downstream workflow only af
   assert.equal(approveResponse.statusCode, 200);
   assert.equal(approveResponse.json.request.status, 'approved');
   assert.equal(approveResponse.json.workflow.workflowId, 'task-orchestrator.strategy-execution');
+});
+
+test('POST /api/agent/action-requests/:id/approve links the approved request back to the session', async () => {
+  const session = context.agentSessions.appendAgentSession({
+    title: 'Linked agent session',
+    prompt: 'Prepare execution approval.',
+    requestedBy: 'operator-demo',
+    status: 'waiting_approval',
+    latestIntent: {
+      kind: 'request_execution_prep',
+      summary: 'Prepare execution review.',
+      targetType: 'strategy',
+      targetId: 'ema-cross-us',
+      urgency: 'normal',
+      requiresApproval: true,
+      requestedMode: 'prepare_action',
+      metadata: {},
+    },
+  });
+  const request = context.agentActionRequests.appendAgentActionRequest({
+    requestType: 'prepare_execution_plan',
+    targetId: 'ema-cross-us',
+    status: 'pending_review',
+    approvalState: 'required',
+    riskStatus: 'approved',
+    summary: 'Pending review',
+    rationale: 'Strategy score improved.',
+    requestedBy: 'agent',
+    metadata: {
+      agentSessionId: session.id,
+    },
+  });
+
+  const approveResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/agent/action-requests/${request.id}/approve`,
+    body: {
+      approvedBy: 'risk-operator',
+      mode: 'paper',
+      capital: 125000,
+    },
+  });
+
+  const updatedSession = context.agentSessions.getAgentSession(session.id);
+  assert.equal(approveResponse.statusCode, 200);
+  assert.equal(approveResponse.json.request.status, 'approved');
+  assert.equal(updatedSession.latestActionRequestId, request.id);
+  assert.equal(updatedSession.status, 'completed');
 });
 
 test('POST /api/agent/action-requests/reject marks the request as rejected', async () => {

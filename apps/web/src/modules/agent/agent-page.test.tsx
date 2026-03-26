@@ -82,6 +82,18 @@ describe('AgentPage', () => {
             recommendedNextStep: 'Review the risk console.',
           },
         },
+        latestActionRequest: {
+          id: 'request-1',
+          requestType: 'prepare_execution_plan',
+          targetId: 'ema-cross-us',
+          status: 'pending_review',
+          approvalState: 'required',
+          riskStatus: 'review',
+          summary: 'Review pending agent request.',
+          rationale: 'Risk review is still required.',
+          requestedBy: 'agent',
+          metadata: {},
+        },
         timeline: [
           { id: 'timeline-1', lane: 'operator', title: 'Approved agent request', detail: 'Operator approved the request.', actor: 'risk-operator' },
         ],
@@ -89,9 +101,11 @@ describe('AgentPage', () => {
       selectedSessionId: 'agent-session-1',
       loading: false,
       running: false,
+      requestingAction: false,
       error: '',
       selectSession: () => undefined,
       runPrompt: () => Promise.resolve(null),
+      requestAction: () => Promise.resolve(null),
     });
 
     const html = renderToStaticMarkup(<AgentPage />);
@@ -102,5 +116,6 @@ describe('AgentPage', () => {
     expect(html).toContain('Operator Timeline');
     expect(html).toContain('Risk posture is elevated.');
     expect(html).toContain('Review pending agent requests');
+    expect(html).toContain('Action Request');
   });
 });

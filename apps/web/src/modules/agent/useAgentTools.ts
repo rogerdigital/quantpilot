@@ -2,7 +2,16 @@ import { useEffect, useState } from 'react';
 import { ApiPermissionError } from '../../app/api/http.ts';
 import { formatMissingPermission } from '../permissions/permissionCopy.ts';
 import type { AgentToolDefinition } from '@shared-types/trading.ts';
-import { fetchAgentSessionDetail, fetchAgentTools, fetchAgentWorkbench, runAgentAnalysis, type AgentSessionDetailPayload, type AgentWorkbenchPayload } from './agentTools.service.ts';
+import {
+  createAgentSessionActionRequest,
+  fetchAgentSessionDetail,
+  fetchAgentTools,
+  fetchAgentWorkbench,
+  runAgentAnalysis,
+  type AgentSessionDetailPayload,
+  type AgentSessionActionRequestPayload,
+  type AgentWorkbenchPayload,
+} from './agentTools.service.ts';
 
 type AgentToolsState = {
   tools: AgentToolDefinition[];
@@ -11,6 +20,7 @@ type AgentToolsState = {
   selectedSessionId: string;
   loading: boolean;
   running: boolean;
+  requestingAction: boolean;
   error: string;
 };
 
@@ -22,6 +32,7 @@ export function useAgentTools() {
     selectedSessionId: '',
     loading: true,
     running: false,
+    requestingAction: false,
     error: '',
   });
 
@@ -131,10 +142,41 @@ export function useAgentTools() {
     }
   };
 
+  const requestAction = async (requestedBy?: string): Promise<AgentSessionActionRequestPayload | null> => {
+    const sessionId = state.selectedSessionId || state.sessionDetail?.session.id || '';
+    if (!sessionId) return null;
+
+    setState((current) => ({
+      ...current,
+      requestingAction: true,
+      error: '',
+    }));
+
+    try {
+      const result = await createAgentSessionActionRequest(sessionId, { requestedBy });
+      await load(sessionId);
+      setState((current) => ({
+        ...current,
+        requestingAction: false,
+      }));
+      return result;
+    } catch (error) {
+      setState((current) => ({
+        ...current,
+        requestingAction: false,
+        error: error instanceof ApiPermissionError && error.missingPermission
+          ? `${formatMissingPermission('en', error.missingPermission)}.`
+          : (error instanceof Error ? error.message : 'unknown error'),
+      }));
+      return null;
+    }
+  };
+
   return {
     ...state,
     refresh: () => load(state.selectedSessionId),
     selectSession,
     runPrompt,
+    requestAction,
   };
 }

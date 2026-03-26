@@ -110,6 +110,18 @@ export type AgentSessionDetailPayload = {
       source: string;
     }>;
   } | null;
+  latestActionRequest: {
+    id: string;
+    requestType: string;
+    targetId: string;
+    status: string;
+    approvalState: string;
+    riskStatus: string;
+    summary: string;
+    rationale: string;
+    requestedBy: string;
+    metadata: Record<string, unknown>;
+  } | null;
   linkedRequests: Array<Record<string, unknown>>;
   linkedNotifications: Array<Record<string, unknown>>;
   linkedOperatorActions: Array<Record<string, unknown>>;
@@ -138,6 +150,23 @@ export type AgentAnalysisRunPayload = {
   };
   plan: NonNullable<AgentSessionDetailPayload['latestPlan']>;
   run: NonNullable<AgentSessionDetailPayload['latestAnalysisRun']>;
+};
+
+export type AgentSessionActionRequestPayload = {
+  ok: boolean;
+  session: AgentSessionDetailPayload['session'];
+  workflow: {
+    id: string;
+    workflowId: string;
+    status: string;
+  };
+  handoff: {
+    requestType: string;
+    targetId: string;
+    targetType: string;
+    summary: string;
+    rationale: string;
+  };
 };
 
 export async function fetchAgentTools(): Promise<{ ok: boolean; tools: AgentToolDefinition[] }> {
@@ -177,6 +206,18 @@ export async function runAgentAnalysis(payload: {
   requestedBy?: string;
 }): Promise<AgentAnalysisRunPayload> {
   return fetchJson('/api/agent/analysis-runs', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function createAgentSessionActionRequest(sessionId: string, payload: {
+  requestedBy?: string;
+  summary?: string;
+  rationale?: string;
+} = {}): Promise<AgentSessionActionRequestPayload> {
+  return fetchJson(`/api/agent/sessions/${sessionId}/action-requests`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),

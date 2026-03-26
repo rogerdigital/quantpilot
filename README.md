@@ -184,10 +184,10 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - `risk scheduler linkage` now gives both consoles a shared linkage snapshot so the same scheduler window, risk events, incidents, cycle drift, and notifications can be reviewed through one middleware context instead of two disconnected boards.
 - `scheduler orchestration actions` now turn scheduler runbook items into real control-plane operations: operator actions, scheduler ticks, cycle records, and scheduler incident triage are written together from one scheduler action API and notifications-console workflow.
 - `risk middleware policy actions` now turn the risk runbook into real policy operations: the risk console can execute reviewed policy actions that write operator history, append risk-policy events, notify the control plane, and triage linked risk incidents from the same workbench.
-- Stage 5 foundation has started: the control plane now has formal contracts for `agent session / intent / plan / analysis run`, so the next Agent work can build on persisted collaboration state instead of frontend-only prompt scaffolding.
-- Agent intent parsing and planning now have formal backend contracts: prompts can be parsed into persisted intents and session-linked plans before any tool routing or action-request handoff is attempted.
-- Agent tool routing and analysis execution are now connected to those contracts: a session can execute its read-only tool steps, persist an `analysis run`, and expose structured evidence and explanation outputs for later workbench consumption.
-- Agent now exposes a backend `workbench` view with recent explanations, pending action requests, and operator timeline context so the frontend can grow from a demo page into a real collaboration console.
+- Agent collaboration now has formal control-plane contracts for `session / intent / plan / analysis run / action request`, rather than frontend-only prompt scaffolding.
+- Agent prompts now move through persisted `intent parsing -> planning -> read-only analysis -> explanation` contracts before any downstream handoff is attempted.
+- Agent now exposes a backend `workbench` view with recent explanations, pending action requests, and operator timeline context so the frontend can operate as a real collaboration console.
+- Agent sessions can now submit controlled action handoffs from completed analyses, and request approval outcomes are linked back into session detail and operator timeline contracts.
 - The Overview page consumes backend `monitoring status`.
 - `user-account` now owns persisted `profile / preferences / access / broker bindings`.
 - Account mutations and broker-binding changes are audited.
@@ -245,11 +245,11 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - Stage 4 delivered `Risk Governance Workbench`, `Scheduler Operations Workbench`, `Risk Scheduler Linkage`, `Scheduler Orchestration Actions`, and `Risk Middleware Policy Actions`.
 - The middleware loop now forms a unified chain: `risk/scheduler snapshot -> linkage -> runbook -> reviewed action -> operator history / notification / incident triage`.
 
-### Stage 5: Controlled Agent Collaboration
+### Stage 5: Controlled Agent Collaboration (Closed)
 
-- Implement `intent parser / planner / tool router / analysis engine / explanation engine / approval controller`.
-- Start with read-only analysis and explanation, then expand into controlled action requests.
-- Keep every agent action inside audit, risk, approval, and execution guardrails.
+- Stage 5 closeout definition, non-goals, and Stage 6 entry conditions live in [docs/architecture/stage-5-closeout.md](./docs/architecture/stage-5-closeout.md).
+- Stage 5 delivered `Agent Contracts`, `Intent Parsing And Planning`, `Analysis Runs`, `Agent Workbench`, and `Controlled Action Handoffs`.
+- The agent loop now forms a unified chain: `prompt -> intent -> plan -> analysis -> explanation -> action request -> approval -> downstream workflow`.
 
 ### Stage 6: Productionization And Professionalization
 

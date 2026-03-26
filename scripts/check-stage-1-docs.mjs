@@ -5,6 +5,7 @@ const stage1CloseoutPath = new URL('../docs/architecture/stage-1-closeout.md', i
 const stage2CloseoutPath = new URL('../docs/architecture/stage-2-closeout.md', import.meta.url);
 const stage3CloseoutPath = new URL('../docs/architecture/stage-3-closeout.md', import.meta.url);
 const stage4CloseoutPath = new URL('../docs/architecture/stage-4-closeout.md', import.meta.url);
+const stage5CloseoutPath = new URL('../docs/architecture/stage-5-closeout.md', import.meta.url);
 const readmePath = new URL('../README.md', import.meta.url);
 const structurePath = new URL('../docs/architecture/project-structure.md', import.meta.url);
 
@@ -16,6 +17,7 @@ const stage1Closeout = readText(stage1CloseoutPath);
 const stage2Closeout = readText(stage2CloseoutPath);
 const stage3Closeout = readText(stage3CloseoutPath);
 const stage4Closeout = readText(stage4CloseoutPath);
+const stage5Closeout = readText(stage5CloseoutPath);
 const readme = readText(readmePath);
 const structure = readText(structurePath);
 
@@ -51,6 +53,14 @@ const requiredStage4Sections = [
   '## 验证基线',
 ];
 
+const requiredStage5Sections = [
+  '## 目标',
+  '## 完成定义',
+  '## 明确非目标',
+  '## 进入阶段 6 的前置条件',
+  '## 验证基线',
+];
+
 for (const section of requiredStage1Sections) {
   assert.ok(stage1Closeout.includes(section), `missing stage 1 closeout section: ${section}`);
 }
@@ -65,6 +75,10 @@ for (const section of requiredStage3Sections) {
 
 for (const section of requiredStage4Sections) {
   assert.ok(stage4Closeout.includes(section), `missing stage 4 closeout section: ${section}`);
+}
+
+for (const section of requiredStage5Sections) {
+  assert.ok(stage5Closeout.includes(section), `missing stage 5 closeout section: ${section}`);
 }
 
 assert.ok(
@@ -83,6 +97,10 @@ assert.ok(
   readme.includes('docs/architecture/stage-4-closeout.md'),
   'README.md must reference the stage 4 closeout document',
 );
+assert.ok(
+  readme.includes('docs/architecture/stage-5-closeout.md'),
+  'README.md must reference the stage 5 closeout document',
+);
 
 assert.ok(
   structure.includes('stage-1-closeout.md'),
@@ -99,6 +117,10 @@ assert.ok(
 assert.ok(
   structure.includes('stage-4-closeout.md'),
   'project-structure.md must reference the stage 4 closeout document',
+);
+assert.ok(
+  structure.includes('stage-5-closeout.md'),
+  'project-structure.md must reference the stage 5 closeout document',
 );
 
 console.log('stage documentation links are in sync');

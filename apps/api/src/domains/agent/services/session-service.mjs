@@ -22,6 +22,7 @@ export function getAgentSessionDetail(sessionId) {
 
   const latestPlan = session.latestPlanId ? controlPlaneRuntime.getAgentPlan(session.latestPlanId) : null;
   const latestAnalysisRun = session.latestAnalysisRunId ? controlPlaneRuntime.getAgentAnalysisRun(session.latestAnalysisRunId) : null;
+  const latestActionRequest = session.latestActionRequestId ? controlPlaneRuntime.getAgentActionRequest(session.latestActionRequestId) : null;
   const plans = controlPlaneRuntime.listAgentPlans(20, { sessionId });
   const analysisRuns = controlPlaneRuntime.listAgentAnalysisRuns(20, { sessionId });
   const timeline = getAgentOperatorTimeline(sessionId, { limit: 20 }).timeline;
@@ -32,6 +33,7 @@ export function getAgentSessionDetail(sessionId) {
     session,
     latestPlan,
     latestAnalysisRun,
+    latestActionRequest,
     plans,
     analysisRuns,
     linkedRequests: linked.requests,

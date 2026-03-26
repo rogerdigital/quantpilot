@@ -112,19 +112,20 @@ quantpilot/
 
 ## 研发迭代阶段
 
-### 当前阶段：阶段 1、阶段 2、阶段 3、阶段 4 已收官，进入阶段 5 准备
+### 当前阶段：阶段 1、阶段 2、阶段 3、阶段 4、阶段 5 已收官，进入阶段 6 准备
 
-当前仓库已经完成阶段 1 的平台底座产品化、阶段 2 的研究与策略闭环、阶段 3 的执行闭环与交易中台，以及阶段 4 的风险与调度中台深化，并进入阶段 5 的准备期：
+当前仓库已经完成阶段 1 的平台底座产品化、阶段 2 的研究与策略闭环、阶段 3 的执行闭环与交易中台、阶段 4 的风险与调度中台深化，以及阶段 5 的 Agent 受控协作落地，并进入阶段 6 的准备期：
 
 1. `auth / user-account / scheduler / notification / audit / task-orchestrator / incident / operations / risk workbench` 这批基础模块已具备稳定服务边界。
 2. `research task / backtest result / research evaluation / research report / governance / replay / execution handoff` 这批研究对象已具备稳定服务边界。
 3. `execution lifecycle / broker events / reconciliation / compensation / triage` 与 `risk / scheduler linkage / reviewed actions` 已形成稳定中台契约。
-4. 下一阶段重点将转向 Agent 受控协作，而不是继续返工平台底座、研究骨架、执行主链路或风险/调度中台骨架。
+4. 下一阶段重点将转向数据库、权限、可观测性和可运营性，而不是继续返工平台底座、研究骨架、执行主链路、风险/调度中台或 Agent 最小闭环。
 
 阶段 1 的收官标准已经单独整理为 [stage-1-closeout.md](./stage-1-closeout.md)，后续判断是否进入阶段 2 以该文档为准。
 阶段 2 的收官标准已经单独整理为 [stage-2-closeout.md](./stage-2-closeout.md)，后续判断是否进入阶段 3 以该文档为准。
 阶段 3 的收官标准已经单独整理为 [stage-3-closeout.md](./stage-3-closeout.md)，后续判断是否进入阶段 4 以该文档为准。
 阶段 4 的收官标准已经单独整理为 [stage-4-closeout.md](./stage-4-closeout.md)，后续判断是否进入阶段 5 以该文档为准。
+阶段 5 的收官标准已经单独整理为 [stage-5-closeout.md](./stage-5-closeout.md)，后续判断是否进入阶段 6 以该文档为准。
 
 ### 阶段 2 研究与策略闭环
 
@@ -144,15 +145,12 @@ quantpilot/
 2. 调度侧已形成 `Scheduler Operations Workbench` 与 `Scheduler Orchestration Actions`，可围绕 scheduler windows、cycle drift、notifications 和 incidents 做统一编排。
 3. Risk 与 scheduler 现已共享 linkage 中台上下文，可围绕同一条 scheduler window、risk event、incident 和 notification 做统一排查与处置。
 
-### 阶段 5 Agent 受控协作
+### 阶段 5 Agent 受控协作（已收官）
 
-1. 将 Agent 接入限制在 tool layer、分析解释和受控动作请求之内。
-2. 建立意图解析、任务规划、工具路由、结果解释和审批控制链路。
-3. 确保 Agent 永远不绕过风险和执行边界。
-4. 先在控制面沉淀 `session / intent / plan / analysis run` 基础合同，再向上扩展 planner、workbench 和审批流。
-5. 当前应优先把 `POST /api/agent/intent` 和 `POST /api/agent/plans` 做成稳定后端合同，再让前端 workbench 只消费这些结构化结果。
-6. 在此基础上继续补齐 `POST /api/agent/analysis-runs` 与 session detail 合同，让 Agent 的只读分析结果具备正式留痕和可回放能力。
-7. 下一层应继续围绕 `GET /api/agent/workbench` 与 session timeline 聚合 explanation、request queue、audit、notification 和 operator action，而不是在前端重新拼这些轨迹。
+1. Agent 现已稳定落在 `session / intent / plan / analysis run / action request` 正式合同内。
+2. Agent workbench 已具备 `prompt studio / recent sessions / explanation detail / pending requests / operator timeline / runbook` 协作界面。
+3. 完成的 analysis session 现已可通过 `controlled handoff` 正式提交 action request，并继续走 risk、approval 和 downstream workflow contracts。
+4. Agent 的建议、请求、审批和留痕已稳定沉淀到 audit、notification、operator action 和 session timeline。
 
 ### 阶段 6 生产化与专业化
 
@@ -162,8 +160,7 @@ quantpilot/
 
 ## 当前阶段的具体建议
 
-1. 以阶段 1 到阶段 4 已稳定的 contracts 为前提，先建设 Agent 只读分析、解释和受控动作请求，不新增绕过执行与风控的平行链路。
-2. 把 `intent parser / planner / tool router / explanation engine / approval controller` 作为正式后端契约推进，而不是仅在前端对话层堆逻辑。
-3. 让 Agent 消费现有 `research / execution / risk / scheduler / incidents / notifications` 的稳定 workbench 和 detail 数据，而不是自己重新拼状态。
-4. 把 Agent 产生的建议、计划、动作请求和审批结果继续沉淀到 audit、notification、incident 和 operator action 历史里。
-5. 在阶段 5 推进过程中，持续用基线测试守住阶段 1 到阶段 4 已关闭阶段的合同稳定性。
+1. 以阶段 1 到阶段 5 已稳定的 contracts 为前提，开始推进数据库、权限、缓存、可观测性和运维能力，不返工 Agent 的最小协作闭环。
+2. 继续让 Agent 消费现有 `research / execution / risk / scheduler / incidents / notifications` 的稳定 workbench 和 detail 数据，不新增绕过中台的平行链路。
+3. 把更高自主性能力留到后续阶段，在此之前继续守住 `risk / approval / execution` guardrails。
+4. 在阶段 6 推进过程中，持续用基线测试守住阶段 1 到阶段 5 已关闭阶段的合同稳定性。

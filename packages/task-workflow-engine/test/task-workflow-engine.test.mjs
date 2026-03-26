@@ -160,6 +160,49 @@ test('queued workflow dispatcher executes agent action request workflows', async
   assert.equal(context.listAgentActionRequests()[0].approvalState, 'required');
 });
 
+test('queued agent action request workflows link persisted requests back to agent sessions', async () => {
+  const context = createEngineContext();
+  const session = context.recordAgentSession({
+    id: 'agent-session-engine-link',
+    title: 'Link action request back to session',
+    prompt: 'Prepare execution approval for ema-cross-us.',
+    requestedBy: 'engine-test',
+    status: 'completed',
+    latestIntent: {
+      kind: 'request_execution_prep',
+      summary: 'Prepare execution review.',
+      targetType: 'strategy',
+      targetId: 'ema-cross-us',
+      urgency: 'normal',
+      requiresApproval: true,
+      requestedMode: 'prepare_action',
+      metadata: {},
+    },
+  });
+  context.enqueueWorkflowRun({
+    workflowId: 'task-orchestrator.agent-action-request',
+    status: 'queued',
+    payload: {
+      requestType: 'prepare_execution_plan',
+      targetId: 'ema-cross-us',
+      summary: 'Agent requests execution plan review.',
+      rationale: 'Score has improved.',
+      requestedBy: 'agent',
+      metadata: {
+        agentSessionId: session.id,
+      },
+    },
+  });
+  const claimed = context.claimQueuedWorkflowRuns({ worker: 'engine-worker' });
+
+  const result = await executeQueuedWorkflow(claimed.workflows[0], context);
+  const updatedSession = context.getAgentSession(session.id);
+
+  assert.equal(result.ok, true);
+  assert.equal(updatedSession.latestActionRequestId, context.listAgentActionRequests()[0].id);
+  assert.equal(updatedSession.status, 'waiting_approval');
+});
+
 test('queued workflow dispatcher executes backtest workflows and refreshes research summary', async () => {
   const context = createEngineContext();
   context.enqueueWorkflowRun({

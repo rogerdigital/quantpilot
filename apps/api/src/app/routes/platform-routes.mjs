@@ -1,5 +1,6 @@
 import {
   approveAgentActionRequest,
+  createSessionActionRequest,
   listAgentActionRequests,
   queueAgentActionRequest,
   rejectAgentActionRequest,
@@ -280,6 +281,18 @@ export async function handlePlatformRoutes(context) {
     const sessionId = reqUrl.pathname.split('/').at(-1);
     const result = getAgentSessionDetail(sessionId);
     writeJson(res, result.ok ? 200 : 404, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname.endsWith('/action-requests') && reqUrl.pathname.startsWith('/api/agent/sessions/')) {
+    if (!hasPermission('strategy:write')) {
+      writeForbidden('strategy:write', 'create agent session action requests');
+      return true;
+    }
+    const sessionId = reqUrl.pathname.split('/').at(-2);
+    const body = await readJsonBody(req);
+    const result = createSessionActionRequest(sessionId, body);
+    writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
 

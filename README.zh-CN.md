@@ -192,6 +192,7 @@ quantpilot/
 - `broker bindings` 已补齐健康状态与待处理摘要，能区分 `healthy / degraded / attention / idle`，并汇总默认绑定、连接数、待处理绑定和最近同步时间。
 - 权限护栏已开始统一：后端 `403` 现会返回结构化权限说明与帮助信息，前端关键页面改为复用同一套 permission copy，设置、策略、回测、执行、风控和研究面板的缺权限提示与只读反馈已开始收口。
 - Settings、Risk、Execution、Agent 等前端页面已经接入权限禁用、页面级拦截反馈和结构化 API 错误解释。
+- Agent 完整分析会话现在已经可以正式提交受控 action request，并把审批结果、operator history 和 session timeline 串成一条可回放的受控交接链路。
 
 ### 当前边界
 
@@ -247,12 +248,11 @@ quantpilot/
 - 阶段 4 已完成 `Risk Governance Workbench`、`Scheduler Operations Workbench`、`Risk Scheduler Linkage`、`Scheduler Orchestration Actions` 和 `Risk Middleware Policy Actions`。
 - 风险与调度中台现已形成 `risk/scheduler snapshot -> linkage -> runbook -> reviewed action -> operator history / notification / incident triage` 的统一链路。
 
-### 阶段 5：Agent 受控协作落地
+### 阶段 5：Agent 受控协作落地（已收官）
 
-- 按架构文档落地 `intent parser / planner / tool router / analysis engine / explanation engine / approval controller`。
-- 先建设只读分析、解释和建议能力，再开放受控动作请求。
-- 所有 Agent 动作都必须走审计、风控、审批和执行 guardrail。
-- 让 Agent 成为高层任务协作者，而不是绕过平台规则的捷径。
+- 阶段 5 的收官定义、非目标和阶段 6 入口条件已单独整理到 [docs/architecture/stage-5-closeout.md](./docs/architecture/stage-5-closeout.md)。
+- 阶段 5 已完成 `Agent Contracts`、`Intent Parsing And Planning`、`Analysis Runs`、`Agent Workbench` 和 `Controlled Action Handoffs`。
+- Agent 协作链路现已形成 `prompt -> intent -> plan -> analysis -> explanation -> action request -> approval -> downstream workflow` 的统一闭环。
 
 ### 阶段 6：生产化与专业化
 
@@ -363,12 +363,11 @@ npm run verify
 
 ## 当前研发重点
 
-当前已完成“阶段 1 / 阶段 2 / 阶段 3 / 阶段 4”，并开始转向“阶段 5：Agent 受控协作落地”，优先级如下：
+当前已完成“阶段 1 / 阶段 2 / 阶段 3 / 阶段 4 / 阶段 5”，并开始转向“阶段 6：生产化与专业化”，优先级如下：
 
-1. 在已经稳定的 research、execution、risk、scheduler 和 incident 中台契约之上，建设统一的 `agent collaboration workbench`。
-2. 把 `intent parsing / planner / tool routing / explanation` 变成明确的后端契约，而不再只是前端对话层能力。
-3. 保持所有 Agent 请求都落在既有的 audit、risk、approval、execution 和 control-plane 边界内，不新增平行动作通道。
-4. 在 Agent 能力推进过程中，持续守住阶段 1 到阶段 4 的账户、incident、research hub、execution workbench、risk middleware、scheduler workbench 和 linkage 契约稳定性。
-5. 在进入更高自主性之前，先把只读分析和受控动作请求闭环做稳。
+1. 在已经稳定的 research、execution、risk、scheduler、incident 和 agent collaboration 契约之上，推进数据库、权限、缓存和可观测性能力。
+2. 保持所有 Agent 请求继续落在既有的 audit、risk、approval、execution 和 control-plane 边界内，不为生产化建设引入绕过式通道。
+3. 在生产化推进过程中，持续守住阶段 1 到阶段 5 的账户、incident、research hub、execution workbench、risk middleware、scheduler workbench、linkage 和 agent collaboration 契约稳定性。
+4. 在更高自主性能力进入规划之前，先把现有受控 handoff、审批和下游 workflow 链路做稳。
 
 研发节奏保持为“设计对齐 -> 小步实现 -> 自动化验证 -> 再推进下一层能力”。

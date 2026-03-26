@@ -544,10 +544,22 @@ async function executeAgentActionRequestWorkflow(payload, context, options = {})
       rationale: payload.rationale || '',
       requestedBy: payload.requestedBy || context.getOperatorName(),
       metadata: {
+        ...(payload.metadata || {}),
         channel: 'agent',
         reasons: gate.reasons,
       },
     });
+
+    if (payload.metadata?.agentSessionId && typeof context.updateAgentSession === 'function') {
+      context.updateAgentSession(payload.metadata.agentSessionId, {
+        status: request.status === 'pending_review' ? 'waiting_approval' : 'completed',
+        latestActionRequestId: request.id,
+        metadata: {
+          actionRequestQueuedAt: request.createdAt,
+          actionRequestWorkflowId: workflow.id,
+        },
+      });
+    }
 
     const persistedWorkflow = completeWorkflow(context, workflow.id, {
       steps: [
