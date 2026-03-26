@@ -1,0 +1,106 @@
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it, vi } from 'vitest';
+import AgentPage from './AgentPage.tsx';
+
+const mockUseAgentTools = vi.fn();
+
+vi.mock('../../store/trading-system/TradingSystemProvider.tsx', () => ({
+  useTradingSystem: () => ({
+    state: {
+      marketClock: '2026-03-26 10:00',
+      riskLevel: 'REVIEW',
+    },
+    session: {
+      user: {
+        id: 'operator-demo',
+      },
+    },
+  }),
+}));
+
+vi.mock('../../pages/console/i18n.tsx', async () => {
+  const actual = await vi.importActual<typeof import('../../pages/console/i18n.tsx')>('../../pages/console/i18n.tsx');
+  return {
+    ...actual,
+    useLocale: () => ({ locale: 'en' as const }),
+  };
+});
+
+vi.mock('../../pages/console/components/ConsoleChrome.tsx', () => ({
+  SectionHeader: () => <div>SectionHeader</div>,
+  TopMeta: () => <div>TopMeta</div>,
+}));
+
+vi.mock('./useAgentTools.ts', () => ({
+  useAgentTools: () => mockUseAgentTools(),
+}));
+
+describe('AgentPage', () => {
+  it('renders the collaboration workbench with prompt studio and timeline', () => {
+    mockUseAgentTools.mockReturnValue({
+      tools: [
+        { name: 'risk.events.list', description: 'Read risk events', category: 'risk', access: 'read' },
+      ],
+      workbench: {
+        summary: {
+          runningSessions: 1,
+          pendingActionRequests: 2,
+          completedSessions: 4,
+        },
+        queues: {
+          recentSessions: [
+            { id: 'agent-session-1', title: 'Review risk posture', prompt: 'Explain the latest risk posture.', status: 'completed' },
+          ],
+          pendingActionRequests: [
+            { id: 'request-1', requestType: 'prepare_execution_plan', summary: 'Pending review', approvalState: 'required', riskStatus: 'review' },
+          ],
+        },
+        runbook: [
+          { key: 'review-pending-agent-requests', title: 'Review pending agent requests', detail: 'Pending requests need review.', priority: 'now' },
+        ],
+        recentExplanations: [
+          { sessionId: 'agent-session-1', analysisRunId: 'analysis-1', thesis: 'Risk posture is elevated.', recommendedNextStep: 'Review risk console.', warningCount: 1 },
+        ],
+      },
+      sessionDetail: {
+        session: {
+          id: 'agent-session-1',
+          status: 'completed',
+          latestIntent: {
+            kind: 'request_risk_explanation',
+          },
+        },
+        latestPlan: {
+          status: 'completed',
+        },
+        latestAnalysisRun: {
+          summary: 'Risk posture summary.',
+          explanation: {
+            thesis: 'Risk posture is elevated.',
+            rationale: ['Recent risk events remain active.'],
+            warnings: ['Do not bypass review.'],
+            recommendedNextStep: 'Review the risk console.',
+          },
+        },
+        timeline: [
+          { id: 'timeline-1', lane: 'operator', title: 'Approved agent request', detail: 'Operator approved the request.', actor: 'risk-operator' },
+        ],
+      },
+      selectedSessionId: 'agent-session-1',
+      loading: false,
+      running: false,
+      error: '',
+      selectSession: () => undefined,
+      runPrompt: () => Promise.resolve(null),
+    });
+
+    const html = renderToStaticMarkup(<AgentPage />);
+
+    expect(html).toContain('Prompt Studio');
+    expect(html).toContain('Recent Sessions');
+    expect(html).toContain('Pending Requests');
+    expect(html).toContain('Operator Timeline');
+    expect(html).toContain('Risk posture is elevated.');
+    expect(html).toContain('Review pending agent requests');
+  });
+});
