@@ -4,3 +4,4 @@ export * from '../../domains/agent/services/intent-service.mjs';
 export * from '../../domains/agent/services/planning-service.mjs';
 export * from '../../domains/agent/services/analysis-service.mjs';
 export * from '../../domains/agent/services/session-service.mjs';
+export * from '../../domains/agent/services/workbench-service.mjs';

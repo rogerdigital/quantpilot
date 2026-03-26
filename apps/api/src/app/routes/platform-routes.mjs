@@ -8,6 +8,7 @@ import { runAgentAnalysis } from '../../domains/agent/services/analysis-service.
 import { parseAgentIntent } from '../../domains/agent/services/intent-service.mjs';
 import { createAgentPlan } from '../../domains/agent/services/planning-service.mjs';
 import { getAgentSessionDetail, listAgentSessionsSnapshot } from '../../domains/agent/services/session-service.mjs';
+import { getAgentOperatorTimeline, getAgentWorkbench } from '../../domains/agent/services/workbench-service.mjs';
 import { listAgentTools, executeAgentTool } from '../../domains/agent/services/tools-service.mjs';
 import { getBacktestSummary } from '../../domains/backtest/services/summary-service.mjs';
 import { getBacktestResultDetail, getBacktestResultSummary, listBacktestResults } from '../../domains/backtest/services/results-service.mjs';
@@ -254,6 +255,24 @@ export async function handlePlatformRoutes(context) {
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/agent/sessions') {
     writeJson(res, 200, listAgentSessionsSnapshot(Number(reqUrl.searchParams.get('limit') || 20)));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/agent/workbench') {
+    writeJson(res, 200, getAgentWorkbench({
+      limit: reqUrl.searchParams.get('limit'),
+      hours: reqUrl.searchParams.get('hours'),
+    }));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname.endsWith('/timeline') && reqUrl.pathname.startsWith('/api/agent/sessions/')) {
+    const sessionId = reqUrl.pathname.split('/').at(-2);
+    const result = getAgentOperatorTimeline(sessionId, {
+      limit: reqUrl.searchParams.get('limit'),
+      hours: reqUrl.searchParams.get('hours'),
+    });
+    writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
 

@@ -88,6 +88,12 @@ export function approveAgentActionRequest(requestId, payload = {}) {
     title: `Approved agent request ${request.requestType}`,
     detail: `Agent request ${request.id} was approved${downstreamWorkflow ? ' and downstream workflow was queued' : ''}.`,
     level: 'info',
+    metadata: {
+      agentActionRequestId: request.id,
+      requestType: request.requestType,
+      targetId: request.targetId,
+      downstreamWorkflowId: downstreamWorkflow?.id || '',
+    },
   });
 
   return {
@@ -121,6 +127,11 @@ export function rejectAgentActionRequest(requestId, payload = {}) {
     title: `Rejected agent request ${request.requestType}`,
     detail: payload.reason || `Agent request ${request.id} was rejected.`,
     level: 'warn',
+    metadata: {
+      agentActionRequestId: request.id,
+      requestType: request.requestType,
+      targetId: request.targetId,
+    },
   });
 
   return {

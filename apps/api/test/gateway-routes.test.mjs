@@ -1304,6 +1304,92 @@ test('GET /api/agent/sessions and detail expose persisted plans and analysis run
   assert.equal(Array.isArray(detailResponse.json.analysisRuns), true);
 });
 
+test('GET /api/agent/workbench returns explanation queues and operator trail', async () => {
+  const createResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/analysis-runs',
+    body: {
+      prompt: 'Explain the latest risk posture for ema-cross-us.',
+      requestedBy: 'operator-demo',
+    },
+  });
+
+  const request = context.agentActionRequests.appendAgentActionRequest({
+    requestType: 'prepare_execution_plan',
+    targetId: 'ema-cross-us',
+    status: 'pending_review',
+    approvalState: 'required',
+    riskStatus: 'review',
+    summary: 'Pending execution prep review.',
+    rationale: 'Agent recommends a controlled execution-prep handoff.',
+    requestedBy: 'agent',
+  });
+  context.agentSessions.updateAgentSession(createResponse.json.session.id, {
+    latestActionRequestId: request.id,
+  });
+
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/agent/workbench?limit=10',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.summary.sessions >= 1, true);
+  assert.equal(response.json.summary.pendingActionRequests >= 1, true);
+  assert.equal(Array.isArray(response.json.recentExplanations), true);
+  assert.equal(response.json.recentExplanations.some((item) => item.analysisRunId === createResponse.json.run.id), true);
+  assert.equal(response.json.queues.pendingActionRequests.some((item) => item.id === request.id), true);
+  assert.equal(Array.isArray(response.json.operatorTimeline), true);
+});
+
+test('GET /api/agent/sessions/:id/timeline returns linked operator events', async () => {
+  const analysisResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/analysis-runs',
+    body: {
+      prompt: 'Prepare execution for ema-cross-us and explain whether it is still gated.',
+      requestedBy: 'operator-demo',
+    },
+  });
+  const request = context.agentActionRequests.appendAgentActionRequest({
+    requestType: 'prepare_execution_plan',
+    targetId: 'ema-cross-us',
+    status: 'pending_review',
+    approvalState: 'required',
+    riskStatus: 'approved',
+    summary: 'Pending execution prep review.',
+    rationale: 'Execution prep should stay gated.',
+    requestedBy: 'agent',
+  });
+  context.agentSessions.updateAgentSession(analysisResponse.json.session.id, {
+    latestActionRequestId: request.id,
+  });
+  await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: `/api/agent/action-requests/${request.id}/approve`,
+    body: {
+      approvedBy: 'risk-operator',
+      mode: 'paper',
+      capital: 100000,
+    },
+  });
+
+  const timelineResponse = await invokeGatewayRoute(handler, {
+    path: `/api/agent/sessions/${analysisResponse.json.session.id}/timeline?limit=10`,
+  });
+  const detailResponse = await invokeGatewayRoute(handler, {
+    path: `/api/agent/sessions/${analysisResponse.json.session.id}`,
+  });
+
+  assert.equal(timelineResponse.statusCode, 200);
+  assert.equal(timelineResponse.json.ok, true);
+  assert.equal(timelineResponse.json.timeline.some((item) => item.lane === 'operator' && item.title.includes('Approved agent request')), true);
+  assert.equal(timelineResponse.json.timeline.some((item) => item.lane === 'audit' && item.title.includes('Agent analysis')), true);
+  assert.equal(detailResponse.statusCode, 200);
+  assert.equal(Array.isArray(detailResponse.json.timeline), true);
+  assert.equal(detailResponse.json.linkedOperatorActions.some((item) => item.metadata?.agentActionRequestId === request.id), true);
+});
+
 test('POST /api/agent/action-requests queues an agent action request workflow', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
