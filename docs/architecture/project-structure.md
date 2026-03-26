@@ -151,6 +151,7 @@ quantpilot/
 3. 确保 Agent 永远不绕过风险和执行边界。
 4. 先在控制面沉淀 `session / intent / plan / analysis run` 基础合同，再向上扩展 planner、workbench 和审批流。
 5. 当前应优先把 `POST /api/agent/intent` 和 `POST /api/agent/plans` 做成稳定后端合同，再让前端 workbench 只消费这些结构化结果。
+6. 在此基础上继续补齐 `POST /api/agent/analysis-runs` 与 session detail 合同，让 Agent 的只读分析结果具备正式留痕和可回放能力。
 
 ### 阶段 6 生产化与专业化
 

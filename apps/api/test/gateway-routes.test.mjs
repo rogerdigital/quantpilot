@@ -1254,6 +1254,56 @@ test('POST /api/agent/plans creates a persisted plan with structured steps', asy
   assert.equal(context.agentSessions.getAgentSession(response.json.session.id).latestPlanId, response.json.plan.id);
 });
 
+test('POST /api/agent/analysis-runs executes a planned read-only analysis and persists the run', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/analysis-runs',
+    body: {
+      prompt: 'Prepare execution for ema-cross-us and explain whether anything is still blocking it.',
+      requestedBy: 'operator-demo',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.intent.kind, 'request_execution_prep');
+  assert.equal(response.json.plan.status, 'completed');
+  assert.equal(response.json.run.status, 'completed');
+  assert.equal(response.json.run.toolCalls.some((item) => item.tool === 'strategy.catalog.list'), true);
+  assert.equal(response.json.run.evidence.length >= 1, true);
+  assert.equal(context.agentAnalysisRuns.getAgentAnalysisRun(response.json.run.id).planId, response.json.plan.id);
+  assert.equal(context.agentSessions.getAgentSession(response.json.session.id).latestAnalysisRunId, response.json.run.id);
+});
+
+test('GET /api/agent/sessions and detail expose persisted plans and analysis runs', async () => {
+  const createResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/analysis-runs',
+    body: {
+      prompt: 'Explain the latest risk posture for ema-cross-us.',
+      requestedBy: 'operator-demo',
+    },
+  });
+
+  const listResponse = await invokeGatewayRoute(handler, {
+    path: '/api/agent/sessions?limit=5',
+  });
+  const detailResponse = await invokeGatewayRoute(handler, {
+    path: `/api/agent/sessions/${createResponse.json.session.id}`,
+  });
+
+  assert.equal(listResponse.statusCode, 200);
+  assert.equal(listResponse.json.ok, true);
+  assert.equal(listResponse.json.sessions.some((item) => item.id === createResponse.json.session.id), true);
+  assert.equal(detailResponse.statusCode, 200);
+  assert.equal(detailResponse.json.ok, true);
+  assert.equal(detailResponse.json.session.id, createResponse.json.session.id);
+  assert.equal(detailResponse.json.latestPlan.id, createResponse.json.plan.id);
+  assert.equal(detailResponse.json.latestAnalysisRun.id, createResponse.json.run.id);
+  assert.equal(Array.isArray(detailResponse.json.plans), true);
+  assert.equal(Array.isArray(detailResponse.json.analysisRuns), true);
+});
+
 test('POST /api/agent/action-requests queues an agent action request workflow', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',

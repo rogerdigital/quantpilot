@@ -186,6 +186,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - `risk middleware policy actions` now turn the risk runbook into real policy operations: the risk console can execute reviewed policy actions that write operator history, append risk-policy events, notify the control plane, and triage linked risk incidents from the same workbench.
 - Stage 5 foundation has started: the control plane now has formal contracts for `agent session / intent / plan / analysis run`, so the next Agent work can build on persisted collaboration state instead of frontend-only prompt scaffolding.
 - Agent intent parsing and planning now have formal backend contracts: prompts can be parsed into persisted intents and session-linked plans before any tool routing or action-request handoff is attempted.
+- Agent tool routing and analysis execution are now connected to those contracts: a session can execute its read-only tool steps, persist an `analysis run`, and expose structured evidence and explanation outputs for later workbench consumption.
 - The Overview page consumes backend `monitoring status`.
 - `user-account` now owns persisted `profile / preferences / access / broker bindings`.
 - Account mutations and broker-binding changes are audited.

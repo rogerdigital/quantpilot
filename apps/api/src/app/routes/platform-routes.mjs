@@ -4,8 +4,10 @@ import {
   queueAgentActionRequest,
   rejectAgentActionRequest,
 } from '../../domains/agent/services/action-request-service.mjs';
+import { runAgentAnalysis } from '../../domains/agent/services/analysis-service.mjs';
 import { parseAgentIntent } from '../../domains/agent/services/intent-service.mjs';
 import { createAgentPlan } from '../../domains/agent/services/planning-service.mjs';
+import { getAgentSessionDetail, listAgentSessionsSnapshot } from '../../domains/agent/services/session-service.mjs';
 import { listAgentTools, executeAgentTool } from '../../domains/agent/services/tools-service.mjs';
 import { getBacktestSummary } from '../../domains/backtest/services/summary-service.mjs';
 import { getBacktestResultDetail, getBacktestResultSummary, listBacktestResults } from '../../domains/backtest/services/results-service.mjs';
@@ -240,6 +242,25 @@ export async function handlePlatformRoutes(context) {
     const body = await readJsonBody(req);
     const result = createAgentPlan(body);
     writeJson(res, result.ok ? 200 : 400, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/agent/analysis-runs') {
+    const body = await readJsonBody(req);
+    const result = runAgentAnalysis(body);
+    writeJson(res, result.ok ? 200 : 400, result);
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/agent/sessions') {
+    writeJson(res, 200, listAgentSessionsSnapshot(Number(reqUrl.searchParams.get('limit') || 20)));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/agent/sessions/')) {
+    const sessionId = reqUrl.pathname.split('/').at(-1);
+    const result = getAgentSessionDetail(sessionId);
+    writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
 
