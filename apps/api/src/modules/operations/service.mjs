@@ -46,10 +46,19 @@ function buildRunbookEntries(input) {
   if (input.queuePressure > 0) {
     entries.push({
       key: 'drain-queues',
-      priority: input.queuePressure >= 5 ? 'now' : 'next',
+      priority: input.queueBacklogStatus === 'critical' || input.queuePressure >= 5 ? 'now' : 'next',
       title: 'Drain queue backlog',
       detail: 'Pending notification, risk scan, or agent review work is building up in the control plane.',
       count: input.queuePressure,
+    });
+  }
+  if (input.retryScheduledWorkflows > 0) {
+    entries.push({
+      key: 'review-retry-posture',
+      priority: input.retryScheduledWorkflows >= 3 ? 'now' : 'next',
+      title: 'Review retry posture',
+      detail: 'Retry-scheduled workflows are building up and should be checked for repeated failures or blocked dependencies.',
+      count: input.retryScheduledWorkflows,
     });
   }
   if (input.criticalIncidents > 0) {
@@ -88,6 +97,15 @@ function buildRunbookEntries(input) {
       count: input.schedulerAttention,
     });
   }
+  if (input.staleWorkers > 0) {
+    entries.push({
+      key: 'refresh-worker-capacity',
+      priority: 'now',
+      title: 'Refresh worker capacity',
+      detail: 'One or more workers have stale heartbeats and may be failing to keep up with queue demand.',
+      count: input.staleWorkers,
+    });
+  }
   if (input.controlPlaneTrail > 0) {
     entries.push({
       key: 'follow-control-plane-trail',
@@ -99,6 +117,42 @@ function buildRunbookEntries(input) {
   }
 
   return entries;
+}
+
+function buildObservabilitySummary(monitoring) {
+  const queueStatus = monitoring.services.queues.backlogStatus;
+  const staleWorkers = monitoring.services.worker.staleWorkers;
+  const failureRate = monitoring.services.workflows.failureRate;
+
+  if (queueStatus === 'critical') {
+    return {
+      posture: 'critical',
+      headline: 'Queue backlog needs immediate intervention.',
+      detail: `The control plane is carrying ${monitoring.services.queues.totalPending} pending queue items and ${monitoring.services.queues.retryScheduledWorkflows} retry-scheduled workflows.`,
+    };
+  }
+
+  if (staleWorkers > 0 || monitoring.services.worker.status === 'critical') {
+    return {
+      posture: 'critical',
+      headline: 'Worker freshness is outside the safe window.',
+      detail: `${staleWorkers} workers are stale and the latest heartbeat lag is ${monitoring.services.worker.lagSeconds ?? 'unknown'} seconds.`,
+    };
+  }
+
+  if (failureRate > 0 || monitoring.services.workflows.retryScheduled > 0) {
+    return {
+      posture: monitoring.services.workflows.status === 'critical' ? 'critical' : 'warn',
+      headline: 'Workflow reliability needs review.',
+      detail: `Workflow failure rate is ${Math.round(failureRate * 100)}% with ${monitoring.services.workflows.retryScheduled} retry-scheduled runs.`,
+    };
+  }
+
+  return {
+    posture: 'healthy',
+    headline: 'Worker, workflow, and queue posture are stable.',
+    detail: 'Recent worker heartbeats, workflow completions, and queue depth are all within the normal operating envelope.',
+  };
 }
 
 export async function getOperationsWorkbench(options = {}) {
@@ -139,11 +193,10 @@ export async function getOperationsWorkbench(options = {}) {
   const warnSignals = monitoringAlerts.filter((item) => item.level === 'warn').length
     + ackOverdueIncidents.length
     + countBy(notifications, (item) => item.level === 'warn');
-  const queuePressure = monitoring.services.queues.pendingNotificationJobs
-    + monitoring.services.queues.pendingRiskScanJobs
-    + monitoring.services.queues.pendingAgentReviews;
+  const queuePressure = monitoring.services.queues.totalPending;
   const controlPlaneTrail = countBy(notifications, (item) => item.source === 'control-plane' || item.source === 'workflow-control')
     + countBy(auditRecords, (item) => item.type === 'workflow' || item.type === 'execution-plan' || item.type === 'agent-action-request');
+  const observability = buildObservabilitySummary(monitoring);
 
   return {
     ok: true,
@@ -157,6 +210,21 @@ export async function getOperationsWorkbench(options = {}) {
       staleIncidents: staleIncidents.length,
       unassignedIncidents: unassignedIncidents.length,
       schedulerAttention: schedulerAttention.length,
+      queueBacklogStatus: monitoring.services.queues.backlogStatus,
+      retryScheduledWorkflows: monitoring.services.queues.retryScheduledWorkflows,
+      staleWorkers: monitoring.services.worker.staleWorkers,
+      activeWorkers: monitoring.services.worker.activeWorkers,
+      workflowFailureRate: monitoring.services.workflows.failureRate,
+    },
+    observability: {
+      posture: observability.posture,
+      headline: observability.headline,
+      detail: observability.detail,
+      queueBacklogStatus: monitoring.services.queues.backlogStatus,
+      oldestQueuedAgeSeconds: monitoring.services.workflows.oldestQueuedAgeSeconds,
+      oldestRetryAgeSeconds: monitoring.services.workflows.oldestRetryAgeSeconds,
+      lastCompletedWorkflowAt: monitoring.services.workflows.lastCompletedAt,
+      workerLagSeconds: monitoring.services.worker.lagSeconds,
     },
     lanes: [
       {
@@ -210,7 +278,10 @@ export async function getOperationsWorkbench(options = {}) {
       controlPlaneTrail,
       criticalIncidents: criticalIncidents.length,
       queuePressure,
+      queueBacklogStatus: monitoring.services.queues.backlogStatus,
+      retryScheduledWorkflows: monitoring.services.queues.retryScheduledWorkflows,
       schedulerAttention: schedulerAttention.length,
+      staleWorkers: monitoring.services.worker.staleWorkers,
       staleIncidents: staleIncidents.length,
       unassignedIncidents: unassignedIncidents.length,
     }),

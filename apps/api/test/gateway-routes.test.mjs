@@ -3271,6 +3271,9 @@ test('GET /api/health exposes gateway module status', async () => {
 
 test('GET /api/monitoring/status returns runtime health and queue summary', async () => {
   const nowIso = new Date().toISOString();
+  const completedIso = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+  const retryIso = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const staleHeartbeatIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   context.marketProviders.updateMarketProviderStatus({
     provider: 'alpaca',
     connected: true,
@@ -3289,6 +3292,26 @@ test('GET /api/monitoring/status returns runtime health and queue summary', asyn
     startedAt: nowIso,
     updatedAt: nowIso,
     createdAt: nowIso,
+  });
+  context.workflows.appendWorkflowRun({
+    id: 'workflow-monitoring-completed',
+    workflowId: 'task-orchestrator.research-report',
+    status: 'completed',
+    actor: 'api-test',
+    trigger: 'worker',
+    startedAt: completedIso,
+    updatedAt: completedIso,
+    createdAt: completedIso,
+  });
+  context.workflows.appendWorkflowRun({
+    id: 'workflow-monitoring-retry',
+    workflowId: 'task-orchestrator.state-run',
+    status: 'retry_scheduled',
+    actor: 'api-test',
+    trigger: 'api',
+    nextRunAt: retryIso,
+    updatedAt: retryIso,
+    createdAt: retryIso,
   });
   context.agentActionRequests.appendAgentActionRequest({
     id: 'agent-review-monitoring',
@@ -3324,6 +3347,12 @@ test('GET /api/monitoring/status returns runtime health and queue summary', asyn
     createdAt: nowIso,
   });
   context.workerHeartbeats.recordWorkerHeartbeat({
+    id: 'worker-heartbeat-monitoring-stale',
+    worker: 'quantpilot-task-worker-backup',
+    summary: 'stale worker heartbeat',
+    createdAt: staleHeartbeatIso,
+  });
+  context.workerHeartbeats.recordWorkerHeartbeat({
     id: 'worker-heartbeat-monitoring',
     worker: 'quantpilot-task-worker',
     summary: 'worker heartbeat',
@@ -3350,12 +3379,25 @@ test('GET /api/monitoring/status returns runtime health and queue summary', asyn
   assert.equal(response.json.services.market.status, 'healthy');
   assert.equal(response.json.services.worker.status, 'healthy');
   assert.equal(response.json.services.worker.latestHeartbeat.id, 'worker-heartbeat-monitoring');
+  assert.equal(response.json.services.worker.activeWorkers >= 2, true);
+  assert.equal(response.json.services.worker.staleWorkers >= 1, true);
+  assert.equal(response.json.services.worker.latestHeartbeatAt, nowIso);
   assert.equal(response.json.services.workflows.failed >= 1, true);
+  assert.equal(response.json.services.workflows.total >= 3, true);
+  assert.equal(response.json.services.workflows.active >= 1, true);
+  assert.equal(response.json.services.workflows.oldestRetryAgeSeconds !== null, true);
+  assert.equal(typeof response.json.services.workflows.lastCompletedAt, 'string');
+  assert.equal(response.json.services.workflows.lastFailedAt, nowIso);
+  assert.equal(response.json.services.workflows.failureRate > 0, true);
   assert.equal(response.json.services.queues.pendingNotificationJobs >= 1, true);
   assert.equal(response.json.services.queues.pendingRiskScanJobs >= 1, true);
   assert.equal(response.json.services.queues.pendingAgentReviews >= 1, true);
+  assert.equal(response.json.services.queues.retryScheduledWorkflows >= 1, true);
+  assert.equal(response.json.services.queues.totalPending >= 4, true);
+  assert.equal(response.json.services.queues.backlogStatus, 'critical');
   assert.equal(response.json.services.risk.riskOff >= 1, true);
   assert.equal(response.json.alerts.some((item) => item.source === 'workflow' && item.level === 'critical'), true);
+  assert.equal(response.json.alerts.some((item) => item.source === 'queue' && item.level === 'critical'), true);
   assert.equal(response.json.recent.latestWorkerHeartbeat.id, 'worker-heartbeat-monitoring');
   assert.equal(response.json.recent.latestSchedulerTick.id, 'scheduler-monitoring-tick');
 });
@@ -3427,6 +3469,8 @@ test('GET /api/monitoring/snapshots and alerts return persisted monitoring histo
 
 test('GET /api/operations/workbench returns unified operations overview', async () => {
   const nowIso = new Date().toISOString();
+  const completedIso = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+  const retryIso = new Date(Date.now() - 40 * 60 * 1000).toISOString();
   context.marketProviders.updateMarketProviderStatus({
     provider: 'alpaca',
     connected: false,
@@ -3440,6 +3484,31 @@ test('GET /api/operations/workbench returns unified operations overview', async 
     worker: 'quantpilot-task-worker',
     summary: 'worker heartbeat',
     createdAt: nowIso,
+  });
+  context.workerHeartbeats.recordWorkerHeartbeat({
+    id: 'worker-heartbeat-operations-stale',
+    worker: 'quantpilot-task-worker-backup',
+    summary: 'stale worker heartbeat',
+    createdAt: new Date(Date.now() - 70 * 60 * 1000).toISOString(),
+  });
+  context.workflows.appendWorkflowRun({
+    id: 'operations-workflow-retry',
+    workflowId: 'task-orchestrator.agent-action-request',
+    status: 'retry_scheduled',
+    actor: 'api-test',
+    trigger: 'worker',
+    nextRunAt: retryIso,
+    updatedAt: retryIso,
+    createdAt: retryIso,
+  });
+  context.workflows.appendWorkflowRun({
+    id: 'operations-workflow-completed',
+    workflowId: 'task-orchestrator.research-report',
+    status: 'completed',
+    actor: 'api-test',
+    trigger: 'worker',
+    updatedAt: completedIso,
+    createdAt: completedIso,
   });
   context.notifications.appendNotification({
     id: 'operations-notification',
@@ -3501,9 +3570,21 @@ test('GET /api/operations/workbench returns unified operations overview', async 
   assert.equal(response.json.ok, true);
   assert.equal(typeof response.json.summary.criticalSignals, 'number');
   assert.equal(response.json.summary.openIncidents >= 1, true);
+  assert.equal(typeof response.json.summary.retryScheduledWorkflows, 'number');
+  assert.equal(typeof response.json.summary.activeWorkers, 'number');
+  assert.equal(typeof response.json.summary.staleWorkers, 'number');
+  assert.equal(typeof response.json.summary.workflowFailureRate, 'number');
+  assert.equal(typeof response.json.summary.queueBacklogStatus, 'string');
+  assert.equal(typeof response.json.observability.posture, 'string');
+  assert.equal(typeof response.json.observability.headline, 'string');
+  assert.equal(typeof response.json.observability.detail, 'string');
+  assert.equal(typeof response.json.observability.queueBacklogStatus, 'string');
+  assert.equal(response.json.observability.oldestRetryAgeSeconds !== null, true);
+  assert.equal(typeof response.json.observability.lastCompletedWorkflowAt, 'string');
   assert.equal(response.json.lanes.some((item) => item.key === 'monitoring'), true);
   assert.equal(response.json.lanes.some((item) => item.key === 'incidents'), true);
   assert.equal(response.json.runbook.some((item) => item.key === 'stabilize-connectivity'), true);
+  assert.equal(response.json.runbook.some((item) => item.key === 'review-retry-posture'), true);
   assert.equal(response.json.runbook.some((item) => item.key === 'triage-critical-incidents'), true);
   assert.equal(response.json.recent.incident.id, 'operations-incident');
   assert.equal(typeof response.json.recent.notification.title, 'string');

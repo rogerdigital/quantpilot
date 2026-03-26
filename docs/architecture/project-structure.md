@@ -158,8 +158,9 @@ quantpilot/
 2. 账户域现已正式持久化 role template 与 access policy，权限不再只由 demo 常量驱动，而是支持默认权限、额外授予和显式移除。
 3. 账户域现已补上 tenant / workspace foundation：session、account workspace、workspace memberships 与 current workspace 切换都已形成正式合同。
 4. 新的 control-plane 写入会自动附带当前 tenant / workspace scope metadata，为后续真正的多工作区过滤和隔离做准备。
-5. 接下来继续推进数据库、缓存、对象存储、日志监控、部署体系、租户边界、备份恢复和运维工具链。
-6. 以稳定性、可观测性和可运营性为目标推进实盘级平台建设。
+5. monitoring 与 operations workbench 现已补齐 worker freshness、workflow retry posture、queue backlog posture 和 observability summary，为值守与运维界面提供统一运行姿态。
+6. 接下来继续推进数据库、缓存、对象存储、日志监控、部署体系、租户边界、备份恢复和运维工具链。
+7. 以稳定性、可观测性和可运营性为目标推进实盘级平台建设。
 
 ## 当前阶段的具体建议
 

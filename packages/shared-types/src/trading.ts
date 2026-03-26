@@ -1476,21 +1476,34 @@ export type MonitoringStatusSnapshot = {
       message: string;
       lagSeconds: number | null;
       latestHeartbeat: WorkerHeartbeatRecord | null;
+      activeWorkers: number;
+      staleWorkers: number;
+      latestHeartbeatAt: string;
     };
     workflows: {
       status: string;
+      total: number;
+      active: number;
       queued: number;
       running: number;
       retryScheduled: number;
       failed: number;
       completed: number;
       canceled: number;
+      oldestQueuedAgeSeconds: number | null;
+      oldestRetryAgeSeconds: number | null;
+      lastCompletedAt: string;
+      lastFailedAt: string;
+      failureRate: number;
     };
     queues: {
       status: string;
       pendingNotificationJobs: number;
       pendingRiskScanJobs: number;
       pendingAgentReviews: number;
+      retryScheduledWorkflows: number;
+      totalPending: number;
+      backlogStatus: 'healthy' | 'warn' | 'critical';
     };
     risk: {
       status: string;
@@ -1569,10 +1582,25 @@ export type OperationsWorkbenchResponse = {
     criticalSignals: number;
     warnSignals: number;
     queuePressure: number;
+    queueBacklogStatus: 'healthy' | 'warn' | 'critical';
     openIncidents: number;
     staleIncidents: number;
     unassignedIncidents: number;
     schedulerAttention: number;
+    retryScheduledWorkflows: number;
+    staleWorkers: number;
+    activeWorkers: number;
+    workflowFailureRate: number;
+  };
+  observability: {
+    posture: 'healthy' | 'warn' | 'critical';
+    headline: string;
+    detail: string;
+    queueBacklogStatus: 'healthy' | 'warn' | 'critical';
+    oldestQueuedAgeSeconds: number | null;
+    oldestRetryAgeSeconds: number | null;
+    lastCompletedWorkflowAt: string;
+    workerLagSeconds: number | null;
   };
   lanes: Array<{
     key: 'monitoring' | 'incidents' | 'scheduler' | 'connectivity' | 'control-plane';

@@ -19,6 +19,44 @@ function countBy(items, predicate) {
   return items.reduce((count, item) => (predicate(item) ? count + 1 : count), 0);
 }
 
+function listUniqueWorkers(heartbeats) {
+  return [...new Set(heartbeats.map((item) => item.worker).filter(Boolean))];
+}
+
+function findLatestTimestamp(items, field) {
+  let latestIso = '';
+  let latestValue = -Infinity;
+  for (const item of items) {
+    const iso = toIsoString(item?.[field]);
+    if (!iso) continue;
+    const value = Date.parse(iso);
+    if (!Number.isFinite(value) || value <= latestValue) continue;
+    latestValue = value;
+    latestIso = iso;
+  }
+  return latestIso || null;
+}
+
+function findOldestAgeSeconds(items, nowIso, fields = []) {
+  let oldestAge = null;
+  for (const item of items) {
+    const timestamps = fields
+      .map((field) => item?.[field])
+      .map((value) => getAgeSeconds(value, nowIso))
+      .filter((value) => value !== null);
+    if (!timestamps.length) continue;
+    const candidate = Math.max(...timestamps);
+    if (oldestAge === null || candidate > oldestAge) oldestAge = candidate;
+  }
+  return oldestAge;
+}
+
+function buildQueueBacklogStatus(totalPending, retryScheduledWorkflows) {
+  if (retryScheduledWorkflows > 0 || totalPending >= 10) return 'critical';
+  if (totalPending > 0) return 'warn';
+  return 'healthy';
+}
+
 function buildWorkflowCounts(workflows) {
   return {
     queued: countBy(workflows, (item) => item.status === 'queued'),
@@ -106,6 +144,29 @@ export async function getMonitoringStatus(options = {}) {
   const nowIso = toIsoString(options.now || new Date()) || new Date().toISOString();
   const workflows = controlPlaneRuntime.listWorkflowRuns(120);
   const workflowCounts = buildWorkflowCounts(workflows);
+  const totalWorkflows = workflows.length;
+  const activeWorkflows = workflowCounts.queued + workflowCounts.running + workflowCounts.retryScheduled;
+  const oldestQueuedAgeSeconds = findOldestAgeSeconds(
+    workflows.filter((item) => item.status === 'queued'),
+    nowIso,
+    ['createdAt', 'updatedAt', 'startedAt'],
+  );
+  const oldestRetryAgeSeconds = findOldestAgeSeconds(
+    workflows.filter((item) => item.status === 'retry_scheduled'),
+    nowIso,
+    ['nextRunAt', 'updatedAt', 'failedAt', 'createdAt'],
+  );
+  const lastCompletedAt = findLatestTimestamp(
+    workflows.filter((item) => item.status === 'completed'),
+    'updatedAt',
+  );
+  const lastFailedAt = findLatestTimestamp(
+    workflows.filter((item) => item.status === 'failed'),
+    'updatedAt',
+  );
+  const failureRate = totalWorkflows > 0
+    ? Number((workflowCounts.failed / totalWorkflows).toFixed(4))
+    : 0;
   const notifications = controlPlaneRuntime.listNotifications(20);
   const notificationJobs = controlPlaneRuntime.listNotificationJobs(120);
   const pendingNotificationJobs = countBy(notificationJobs, (item) => item.status === 'pending');
@@ -116,6 +177,13 @@ export async function getMonitoringStatus(options = {}) {
   const agentActionRequests = controlPlaneRuntime.listAgentActionRequests(120);
   const pendingAgentReviews = countBy(agentActionRequests, (item) => item.status === 'pending_review');
   const latestWorkerHeartbeat = controlPlaneRuntime.getLatestWorkerHeartbeat();
+  const recentWorkerHeartbeats = controlPlaneRuntime.listWorkerHeartbeats(120);
+  const activeWorkers = listUniqueWorkers(recentWorkerHeartbeats).length;
+  const staleWorkers = listUniqueWorkers(recentWorkerHeartbeats.filter((item) => {
+    const ageSeconds = getAgeSeconds(item.createdAt, nowIso);
+    return ageSeconds !== null && ageSeconds > 45 * 60;
+  })).length;
+  const latestHeartbeatAt = findLatestTimestamp(recentWorkerHeartbeats, 'createdAt');
   const schedulerTicks = controlPlaneRuntime.listSchedulerTicks(10);
   const latestSchedulerTick = schedulerTicks[0] || null;
   const worker = resolveWorkerStatus(latestWorkerHeartbeat, nowIso);
@@ -139,7 +207,10 @@ export async function getMonitoringStatus(options = {}) {
   const riskStatus = riskCounts.riskOff > 0
     ? 'critical'
     : (riskCounts.approvalRequired > 0 || riskCounts.connectivityDegraded > 0 ? 'warn' : 'healthy');
-  const queueStatus = pendingNotificationJobs > 0 || pendingRiskScanJobs > 0 || pendingAgentReviews > 0 ? 'warn' : 'healthy';
+  const retryScheduledWorkflows = workflowCounts.retryScheduled;
+  const totalPending = pendingNotificationJobs + pendingRiskScanJobs + pendingAgentReviews + retryScheduledWorkflows;
+  const backlogStatus = buildQueueBacklogStatus(totalPending, retryScheduledWorkflows);
+  const queueStatus = backlogStatus === 'critical' ? 'critical' : backlogStatus;
 
   const status = deriveOverallStatus([
     brokerStatus,
@@ -198,11 +269,11 @@ export async function getMonitoringStatus(options = {}) {
       message: `${riskCounts.approvalRequired} risk events still require manual review.`,
     });
   }
-  if (pendingNotificationJobs > 0 || pendingRiskScanJobs > 0 || pendingAgentReviews > 0) {
+  if (totalPending > 0) {
     alerts.push({
-      level: 'warn',
+      level: backlogStatus === 'critical' ? 'critical' : 'warn',
       source: 'queue',
-      message: `${pendingNotificationJobs} notification jobs, ${pendingRiskScanJobs} risk scan jobs, and ${pendingAgentReviews} agent reviews are still pending.`,
+      message: `${pendingNotificationJobs} notification jobs, ${pendingRiskScanJobs} risk scan jobs, ${pendingAgentReviews} agent reviews, and ${retryScheduledWorkflows} retry-scheduled workflows are still pending.`,
     });
   }
 
@@ -229,16 +300,29 @@ export async function getMonitoringStatus(options = {}) {
         message: worker.message,
         lagSeconds: worker.lagSeconds,
         latestHeartbeat: worker.latestHeartbeat,
+        activeWorkers,
+        staleWorkers,
+        latestHeartbeatAt,
       },
       workflows: {
         status: workflowStatus,
         ...workflowCounts,
+        total: totalWorkflows,
+        active: activeWorkflows,
+        oldestQueuedAgeSeconds,
+        oldestRetryAgeSeconds,
+        lastCompletedAt,
+        lastFailedAt,
+        failureRate,
       },
       queues: {
         status: queueStatus,
         pendingNotificationJobs,
         pendingRiskScanJobs,
         pendingAgentReviews,
+        retryScheduledWorkflows,
+        totalPending,
+        backlogStatus,
       },
       risk: {
         status: riskStatus,

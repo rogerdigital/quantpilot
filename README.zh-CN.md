@@ -143,13 +143,13 @@ quantpilot/
 - monorepo 基础结构已经稳定，`web / api / worker / packages/*` 已拆分。
 - 前端控制台已经覆盖 `dashboard / market / strategies / backtest / risk / execution / agent / notifications / settings`。
 - 后端已具备最小控制面能力，包括 `auth / audit / notification / risk / scheduler / task-orchestrator / strategy / backtest / agent` 等模块骨架。
-- `monitoring` 模块已进入原型阶段，后端现可输出 `broker / market / worker / workflow / risk / queues` 的运行态摘要接口。
+- `monitoring` 模块已进入原型阶段，后端现可输出 `broker / market / worker / workflow / risk / queues` 的运行态摘要接口，并补上 workflow retry posture、queue backlog posture 与 worker freshness 指标。
 - worker 现会周期性落库 `monitoring snapshots / alerts` 历史，通知中心和后续运维视图已具备可追踪的监控数据来源。
 - 通知中心已从单纯观察面板推进到可追踪的 `incident / investigation` 控制台，支持把监控告警、控制面通知、审计、风控、工作流和执行计划升级为 incident，并联动证据时间线、处置活动流、对象检查器和响应检查单。
 - incident 队列已具备 `summary / owner load / source mix / aging / bulk actions`，支持按负责人和未指派视角管理事件队列，并批量指派负责人、推进状态、追加处置备注。
 - incident 控制台已进一步补齐运营态能力：summary 现在会输出 `ack overdue / blocked tasks / owner hotspots / next actions`，详情页会展示 `response posture / handoff / next step`，并支持批量归我、备注并收尾等更完整的处置动作。
 - 通知中心中的 control-plane feed 已开始统一成 `boards + context + feed detail` 模式：monitoring、notifications、audit、operator actions 和 scheduler 都会先给出板块摘要和当前筛选上下文，再下钻到各自列表。
-- 平台现已提供统一的 `operations workbench` 聚合快照：后端会把 monitoring、incident、scheduler、connectivity 和 control-plane trail 汇总成一份运维摘要，通知中心据此展示 runbook、运维泳道和最近运维信号。
+- 平台现已提供统一的 `operations workbench` 聚合快照：后端会把 monitoring、incident、scheduler、connectivity 和 control-plane trail 汇总成一份运维摘要，并补上 worker lag、queue backlog、workflow reliability 的 observability posture，通知中心据此展示 runbook、运维泳道和最近运维信号。
 - Risk Console 已切到统一 `risk workbench` 聚合快照：后端现会把风险事件、执行复核、研究复核、风险 incident 和 broker live 暴露汇总成一份风险工作台摘要，风险页不再只依赖前端 runtime 拼装态。
 - worker 已接管通知分发、风险扫描、调度 tick、workflow maintenance 和 workflow execution。
 - 共享运行时已经拆分到 `trading-engine / control-plane-runtime / task-workflow-engine / shared-types`。
@@ -261,6 +261,7 @@ quantpilot/
 - 阶段 6 的第一步已落地：control-plane storage 已具备 `file / db` 两类 adapter foundation。
 - 权限基础也已前进一步：role template 与 access policy 现已正式持久化，为后续更完整的 RBAC 和多用户边界做准备。
 - workspace 与 tenant foundation 也已落地：账户工作区已正式持久化，新的控制面写入会自动带上当前 scope metadata，为后续真正的隔离与过滤打底。
+- monitoring 与 operations workbench 现已补齐 worker freshness、workflow retry posture、queue backlog posture 和 observability summary 字段，为值守与运维面板提供统一运行姿态。
 - 完成数据库、缓存、对象存储、日志监控、告警通道和部署体系升级。
 - 补齐租户、权限、订阅、可观测性、备份恢复和运维工具链。
 - 建立实盘运行所需的稳定性指标、回放能力、故障演练和发布流程。

@@ -143,13 +143,13 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - The monorepo split across `web / api / worker / packages/*` is stable.
 - The frontend console already covers `dashboard / market / strategies / backtest / risk / execution / agent / notifications / settings`.
 - The backend already has the minimum platform-control surface, including `auth / audit / notification / risk / scheduler / task-orchestrator / strategy / backtest / agent`.
-- `monitoring` is in prototype-plus mode, with backend summaries for `broker / market / worker / workflow / risk / queues`.
+- `monitoring` is in prototype-plus mode, with backend summaries for `broker / market / worker / workflow / risk / queues`, including workflow retry posture, queue backlog posture, and worker freshness metrics.
 - Workers persist `monitoring snapshots / alerts`, so the notifications console and operations views have traceable monitoring history.
 - The notifications center has evolved into an `incident / investigation` console with evidence timelines, response activity, object inspection, and response checklists.
 - Incident queues support `summary / owner load / source mix / aging / bulk actions`, including assignment, state transitions, and response notes.
 - The incident console already exposes operational posture such as `ack overdue / blocked tasks / owner hotspots / next actions / handoff / next step`.
 - Control-plane feeds in notifications are converging on a unified `boards + context + feed detail` interaction pattern.
-- The platform now ships an `operations workbench` snapshot that aggregates monitoring, incidents, scheduler, connectivity, and control-plane trails.
+- The platform now ships an `operations workbench` snapshot that aggregates monitoring, incidents, scheduler, connectivity, and control-plane trails, plus observability posture for worker lag, queue backlog, and workflow reliability.
 - Risk Console now consumes a unified `risk workbench` snapshot instead of relying on frontend-assembled runtime state.
 - Workers now handle notification dispatch, risk scans, scheduler ticks, workflow maintenance, and workflow execution.
 - Shared runtime logic has been split into `trading-engine / control-plane-runtime / task-workflow-engine / shared-types`.
@@ -258,6 +258,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - The first productionization step is in place: control-plane storage now has `file / db` adapter foundations.
 - Access policy foundations now persist role templates and effective permission overlays, which prepares the platform for fuller RBAC and multi-user boundaries.
 - Workspace and tenant foundations now persist account workspaces and stamp current scope metadata into new control-plane writes, which prepares later isolation and filtering work.
+- Monitoring and operations workbench now expose worker freshness, workflow retry posture, queue backlog posture, and observability summary fields for operator triage.
 - Upgrade database, cache, object storage, logging, alerting, and deployment infrastructure.
 - Complete tenancy, permissions, subscriptions, observability, backup/recovery, and operator tooling.
 - Add live-run stability metrics, replay, failure drills, and release workflows.
