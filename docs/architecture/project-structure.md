@@ -161,7 +161,8 @@ quantpilot/
 4. 新的 control-plane 写入会自动附带当前 tenant / workspace scope metadata，为后续真正的多工作区过滤和隔离做准备。
 5. monitoring 与 operations workbench 已补齐 worker freshness、workflow retry posture、queue backlog posture 和 observability summary，为值守与运维界面提供统一运行姿态。
 6. control-plane maintenance 已具备 backup export、restore dry run、integrity check 和 workflow retry repair，并提供 API 与 CLI 双入口。
-7. 阶段 6 baseline tests 与 closeout 文档已把 production readiness contracts 正式纳入验收基线。
+7. `docs/deployment.md` 与 `check:runtime-env` 已把环境变量、adapter 选择、启动顺序、backup/restore 和 readiness checklist 收敛为统一运行基线。
+8. 阶段 6 baseline tests 与 closeout 文档已把 production readiness contracts 正式纳入验收基线。
 
 ## 当前阶段的具体建议
 

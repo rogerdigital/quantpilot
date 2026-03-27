@@ -4,7 +4,7 @@
 
 ## 配置入口
 
-- [runtime.ts](../apps/web/src/services/config/runtime.ts)
+- [runtime.ts](../apps/web/src/app/config/runtime.ts)
 - [.env.example](../.env.example)
 - [main.mjs](../apps/api/src/main.mjs)
 - [alpaca.mjs](../apps/api/src/gateways/alpaca.mjs)
@@ -134,5 +134,11 @@ VITE_BROKER_HTTP_URL=/api/broker
 3. 如果使用 Alpaca，写入 Alpaca Key/Secret；如果使用自定义 broker，写入 `BROKER_UPSTREAM_URL` 与服务端密钥
 4. 启动网关：`npm run gateway`
 5. 启动前端：`npm start`
+
+启动前建议先执行一次：
+
+```bash
+npm run check:runtime-env -- --env-file .env
+```
 
 开发环境下，Vite 会把 `/api/*` 代理到 `http://127.0.0.1:8787`。

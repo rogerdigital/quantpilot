@@ -313,6 +313,7 @@ npm install
 npm run dev
 npm run gateway
 npm run worker
+npm run check:runtime-env
 npm run typecheck
 npm run test:control-plane
 npm run test:runtime
@@ -323,6 +324,8 @@ npm run verify
 ```
 
 安装依赖后会自动把仓库的 git hooks 指到 `.githooks`。当前默认启用了 `pre-push` 校验，会在推送前执行一次 `npm run verify`，避免仅在 CI 才暴露 `typecheck` 或生产构建错误。
+
+部署、恢复与启动约束说明现已集中整理在 [docs/deployment.md](docs/deployment.md)。如果准备启动真实 gateway 配置，建议先执行 `npm run check:runtime-env -- --env-file .env`，确认 adapter、provider 和关键环境变量的组合都合法。
 
 默认端口：
 
@@ -335,13 +338,16 @@ npm run verify
 
 1. workspace 完整性检查
 2. lockfile 同步检查
-3. control-plane tests
-4. runtime tests
-5. task-workflow-engine tests
-6. api tests
-7. worker tests
-8. web typecheck
-9. web build
+3. stage-doc 一致性检查
+4. runtime-env 检查
+5. control-plane tests
+6. runtime tests
+7. task-workflow-engine tests
+8. api tests
+9. worker tests
+10. web tests
+11. web typecheck
+12. web build
 
 ## 关键入口
 

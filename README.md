@@ -310,6 +310,7 @@ npm install
 npm run dev
 npm run gateway
 npm run worker
+npm run check:runtime-env
 npm run typecheck
 npm run test:control-plane
 npm run test:runtime
@@ -320,6 +321,8 @@ npm run verify
 ```
 
 After dependency installation, repository git hooks are automatically pointed at `.githooks`. The default setup enables `pre-push`, which runs `npm run verify` before a push so typecheck or production-build failures do not wait until CI.
+
+Deployment and recovery guidance now lives in [docs/deployment.md](docs/deployment.md). Before starting a real gateway profile, run `npm run check:runtime-env -- --env-file .env` to validate the env contract against the supported adapters and provider combinations.
 
 Default ports:
 
@@ -333,14 +336,15 @@ Default ports:
 1. workspace integrity checks
 2. lockfile sync checks
 3. stage-doc consistency checks
-4. control-plane tests
-5. runtime tests
-6. task-workflow-engine tests
-7. API tests
-8. worker tests
-9. web tests
-10. web typecheck
-11. web build
+4. runtime-env checks
+5. control-plane tests
+6. runtime tests
+7. task-workflow-engine tests
+8. API tests
+9. worker tests
+10. web tests
+11. web typecheck
+12. web build
 
 ## Key Entry Points
 
