@@ -234,6 +234,8 @@ After dependency installation, repository git hooks are automatically pointed at
 
 Primary operator and deployment documentation:
 
+- [Contributing Guide](./CONTRIBUTING.md)
+- [Operations Handbook](./docs/operations-handbook.md)
 - [Deployment Guide](./docs/deployment.md)
 - [Control-Plane Migration Runbook](./docs/control-plane-migrations.md)
 - [Project Structure](./docs/architecture/project-structure.md)

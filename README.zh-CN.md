@@ -234,6 +234,8 @@ npm run verify
 
 主要运维与部署文档：
 
+- [协作指南](./CONTRIBUTING.md)
+- [Operations Handbook](./docs/operations-handbook.md)
 - [部署指南](./docs/deployment.md)
 - [Control-Plane Migration Runbook](./docs/control-plane-migrations.md)
 - [项目结构说明](./docs/architecture/project-structure.md)
