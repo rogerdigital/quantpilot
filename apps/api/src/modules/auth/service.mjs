@@ -2,11 +2,15 @@ import { getUserAccount } from '../../../../../packages/control-plane-runtime/sr
 
 export function getSession() {
   const account = getUserAccount();
-  const permissions = account.access?.status === 'active'
-    ? (account.access.effectivePermissions || account.access.permissions || [])
-    : [];
   const defaultBrokerBinding = account.brokerBindings.find((binding) => binding.isDefault) || account.brokerBindings[0] || null;
   const currentWorkspace = account.currentWorkspace || account.workspaces?.find((workspace) => workspace.isCurrent) || null;
+  const accountPermissions = account.access?.status === 'active'
+    ? (account.access.effectivePermissions || account.access.permissions || [])
+    : [];
+  const workspacePermissions = Array.isArray(currentWorkspace?.effectivePermissions) ? currentWorkspace.effectivePermissions : [];
+  const permissions = workspacePermissions.length
+    ? accountPermissions.filter((item) => workspacePermissions.includes(item))
+    : accountPermissions;
 
   return {
     ok: true,

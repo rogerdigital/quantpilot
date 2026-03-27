@@ -157,7 +157,7 @@ quantpilot/
 
 1. control-plane storage 已具备 `file / db` adapter foundation，后续数据库化迁移可以在既有仓储合同内推进。
 2. 账户域已正式持久化 role template 与 access policy，权限不再只由 demo 常量驱动，而是支持默认权限、额外授予和显式移除。
-3. 账户域已补上 tenant / workspace foundation：session、account workspace、workspace memberships 与 current workspace 切换都已形成正式合同。
+3. 账户域已补上 tenant / workspace foundation：session、account workspace、workspace memberships、workspace-level `role + grants + revokes` 与 current workspace 切换都已形成正式合同。
 4. 新的 control-plane 写入会自动附带当前 tenant / workspace scope metadata，为后续真正的多工作区过滤和隔离做准备。
 5. monitoring 与 operations workbench 已补齐 worker freshness、workflow retry posture、queue backlog posture 和 observability summary，为值守与运维界面提供统一运行姿态。
 6. control-plane maintenance 已具备 backup export、restore dry run、integrity check 和 workflow retry repair，并提供 API 与 CLI 双入口。

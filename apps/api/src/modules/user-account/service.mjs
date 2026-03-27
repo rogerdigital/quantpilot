@@ -192,6 +192,8 @@ export function saveWorkspace(payload = {}) {
       workspaceId: workspace.id,
       tenantId: workspace.tenantId,
       role: workspace.role,
+      grants: workspace.grants || [],
+      revokes: workspace.revokes || [],
       status: workspace.status,
       isDefault: workspace.isDefault,
     },
@@ -222,6 +224,7 @@ export function selectCurrentWorkspace(workspaceId) {
       workspaceId: workspace.id,
       tenantId: workspace.tenantId,
       role: workspace.role,
+      effectivePermissions: workspace.effectivePermissions || [],
     },
   );
 

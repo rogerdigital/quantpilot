@@ -1022,6 +1022,8 @@ test('POST /api/user-account/workspaces and /current persist workspace scope sel
       label: 'Live Operations',
       description: 'Workspace for live trading operations.',
       role: 'execution-approver',
+      grants: ['risk:review'],
+      revokes: ['execution:approve'],
     },
   });
 
@@ -1040,7 +1042,11 @@ test('POST /api/user-account/workspaces and /current persist workspace scope sel
   assert.equal(selectResponse.statusCode, 200);
   assert.equal(selectResponse.json.ok, true);
   assert.equal(selectResponse.json.currentWorkspace.id, 'workspace-live-ops');
+  assert.equal(selectResponse.json.currentWorkspace.effectivePermissions.includes('risk:review'), true);
+  assert.equal(selectResponse.json.currentWorkspace.effectivePermissions.includes('execution:approve'), false);
   assert.equal(selectResponse.json.session.user.workspaceId, 'workspace-live-ops');
+  assert.equal(selectResponse.json.session.user.permissions.includes('risk:review'), true);
+  assert.equal(selectResponse.json.session.user.permissions.includes('execution:approve'), false);
   assert.equal(selectResponse.json.workspaces.find((item) => item.id === 'workspace-live-ops').isCurrent, true);
 
   const auditResponse = await invokeGatewayRoute(handler, {

@@ -23,6 +23,13 @@ function diffPermissions(base = [], compare = []) {
   };
 }
 
+function intersectPermissions(base = [], scope = []) {
+  const baseList = listUnique(base);
+  const scopeList = listUnique(scope);
+  if (!scopeList.length) return baseList;
+  return baseList.filter((item) => scopeList.includes(item));
+}
+
 function mergeWorkspaces(rawWorkspaces = [], tenant = createTenantEntry()) {
   const defaultWorkspaces = [
     createWorkspaceEntry({
@@ -219,14 +226,18 @@ export function createUserAccountRepository(store) {
   }
 
   function getAccessSummary(snapshot = readSnapshot(), sessionPermissions = null) {
+    const currentWorkspace = snapshot.currentWorkspace || snapshot.workspaces.find((item) => item.id === snapshot.currentWorkspaceId) || null;
     const roleTemplate = snapshot.roleTemplates.find((item) => item.id === snapshot.access.role) || null;
     const defaultPermissions = getDefaultPermissionsForRole(snapshot.access.role, snapshot.roleTemplates);
     const effectivePermissions = snapshot.access.status === 'active'
       ? listUnique(snapshot.access.effectivePermissions || snapshot.access.permissions)
       : [];
+    const workspacePermissions = listUnique(currentWorkspace?.effectivePermissions || []);
+    const workspaceDefaultPermissions = listUnique(currentWorkspace?.defaultPermissions || []);
+    const scopedPermissions = currentWorkspace ? intersectPermissions(effectivePermissions, workspacePermissions) : effectivePermissions;
     const accessDelta = diffPermissions(defaultPermissions, effectivePermissions);
-    const sessionList = Array.isArray(sessionPermissions) ? listUnique(sessionPermissions) : effectivePermissions;
-    const sessionDelta = diffPermissions(effectivePermissions, sessionList);
+    const sessionList = Array.isArray(sessionPermissions) ? listUnique(sessionPermissions) : scopedPermissions;
+    const sessionDelta = diffPermissions(scopedPermissions, sessionList);
 
     return {
       role: snapshot.access.role,
@@ -234,8 +245,15 @@ export function createUserAccountRepository(store) {
       status: snapshot.access.status,
       defaultPermissions,
       effectivePermissions,
+      workspaceRole: currentWorkspace?.role || '',
+      workspaceLabel: currentWorkspace?.label || '',
+      workspaceDefaultPermissions,
+      workspaceEffectivePermissions: workspacePermissions,
+      scopedPermissions,
       grants: listUnique(snapshot.access.grants || []),
       revokes: listUnique(snapshot.access.revokes || []),
+      workspaceGrants: listUnique(currentWorkspace?.grants || []),
+      workspaceRevokes: listUnique(currentWorkspace?.revokes || []),
       addedPermissions: accessDelta.added,
       removedPermissions: accessDelta.removed,
       sessionPermissions: sessionList,
@@ -400,6 +418,7 @@ export function createUserAccountRepository(store) {
         ...snapshot,
         profile,
         access,
+        currentWorkspace: snapshot.currentWorkspace,
       }).access;
     },
     upsertRoleTemplate(payload = {}) {

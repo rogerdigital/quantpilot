@@ -193,6 +193,7 @@ The platform skeleton is stable, the minimum control-plane loop is working, the 
 - `user-account` now owns persisted `profile / preferences / access / broker bindings`.
 - `user-account` now persists role templates and access policies with `default permissions / grants / revokes / effective permissions`, instead of relying on demo-only role constants.
 - `tenant / workspace` foundations are now formalized in the account domain, including workspace memberships, current-workspace session context, and controlled workspace switching.
+- Workspace memberships now support `role + grants + revokes`, and session permissions are resolved inside the current workspace instead of blindly reusing the global account policy everywhere.
 - Account mutations and broker-binding changes are audited.
 - `auth/session` is now driven by persisted account-access policy instead of frontend-only demo constants.
 - The account domain has converged into a unified `account workspace` snapshot for profile, preferences, access, broker summary, role templates, and session state.

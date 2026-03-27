@@ -239,8 +239,8 @@ export async function handlePlatformRoutes(context) {
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/workspaces/current') {
-    if (!canWriteAccount()) {
-      writeForbidden('account:write', 'switch workspaces');
+    if (!hasPermission('dashboard:read')) {
+      writeForbidden('dashboard:read', 'switch workspaces');
       return true;
     }
     const body = await readJsonBody(req);

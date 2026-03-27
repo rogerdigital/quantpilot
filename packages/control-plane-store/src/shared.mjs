@@ -546,13 +546,28 @@ export function createTenantEntry(payload = {}) {
 }
 
 export function createWorkspaceEntry(payload = {}, tenant = createTenantEntry()) {
+  const role = payload.role || 'admin';
+  const defaultPermissions = getDefaultPermissionsForRole(role);
+  const grants = listUniquePermissions(payload.grants || payload.permissionGrants || []);
+  const revokes = listUniquePermissions(payload.revokes || payload.permissionRevokes || []);
+  const explicitPermissions = Array.isArray(payload.permissions) && payload.permissions.length
+    ? listUniquePermissions(payload.permissions)
+    : null;
+  const effectivePermissions = explicitPermissions || listUniquePermissions([
+    ...defaultPermissions.filter((item) => !revokes.includes(item)),
+    ...grants,
+  ]);
   return {
     id: payload.id || 'workspace-operations',
     tenantId: payload.tenantId || tenant.id,
     key: payload.key || 'operations',
     label: payload.label || 'Operations',
     description: payload.description || 'Default platform operations workspace.',
-    role: payload.role || 'admin',
+    role,
+    grants,
+    revokes,
+    defaultPermissions,
+    effectivePermissions,
     status: payload.status || 'active',
     isDefault: payload.isDefault !== false,
     isCurrent: Boolean(payload.isCurrent),

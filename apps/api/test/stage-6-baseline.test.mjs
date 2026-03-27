@@ -60,6 +60,7 @@ function seedStage6ProductionizationState() {
     label: 'Stage 6 Live Ops',
     description: 'Workspace for stage 6 productionization baseline checks.',
     role: 'execution-approver',
+    grants: ['operations:maintain', 'account:write'],
   });
   context.userAccount.setCurrentWorkspace('workspace-stage6-live');
   context.workflows.appendWorkflowRun({

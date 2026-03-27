@@ -244,14 +244,23 @@ test('user account repository persists tenant workspaces and current workspace s
     label: 'Live Operations',
     description: 'Workspace for live trading operations.',
     role: 'execution-approver',
+    grants: ['risk:review'],
+    revokes: ['execution:approve'],
   });
   const currentWorkspace = context.userAccount.setCurrentWorkspace('workspace-live-ops');
+  const accessSummary = context.userAccount.getAccessSummary();
 
   assert.equal(workspace.id, 'workspace-live-ops');
   assert.equal(context.userAccount.getTenant().id, 'tenant-quantpilot-labs');
   assert.equal(context.userAccount.listWorkspaces().some((item) => item.id === 'workspace-live-ops'), true);
   assert.equal(currentWorkspace.id, 'workspace-live-ops');
   assert.equal(context.userAccount.getCurrentWorkspace().role, 'execution-approver');
+  assert.equal(currentWorkspace.grants.includes('risk:review'), true);
+  assert.equal(currentWorkspace.effectivePermissions.includes('risk:review'), true);
+  assert.equal(currentWorkspace.effectivePermissions.includes('execution:approve'), false);
+  assert.equal(accessSummary.workspaceRole, 'execution-approver');
+  assert.equal(accessSummary.scopedPermissions.includes('risk:review'), true);
+  assert.equal(accessSummary.scopedPermissions.includes('execution:approve'), false);
 });
 
 test('execution runtime repository persists runtime events and broker snapshots', () => {

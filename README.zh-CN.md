@@ -189,6 +189,7 @@ quantpilot/
 - `user-account` 已开始承载真实的 `profile / preferences / access / broker bindings` 持久化模型，不再只依赖前端静态配置。
 - `user-account` 现已进一步持久化 `role templates / access policies`，支持 `default permissions / grants / revokes / effective permissions` 的正式权限叠加模型，不再停留在 demo 角色常量。
 - 账户域现已补上正式的 `tenant / workspace` foundation，支持 workspace memberships、current workspace session 上下文以及受控 workspace 切换。
+- workspace membership 现已支持 `role + grants + revokes`，当前 session 权限会在全局 access policy 之外继续受当前 workspace 约束，而不是在所有 workspace 中复用同一份权限集。
 - 账户写操作和券商绑定变更已经进入 audit records，基础对象变更具备最小留痕能力。
 - `auth/session` 已改为由持久化账户访问策略驱动，前后端对 `strategy:write / risk:review / execution:approve / account:write` 的权限判断已经开始收敛。
 - 账户域已进一步收敛为统一 `account workspace` 快照：设置页现在消费同一份 `profile / preferences / access / broker summary / role templates / session` 结构化数据，并在保存账户、权限或默认券商绑定后自动刷新当前会话。
