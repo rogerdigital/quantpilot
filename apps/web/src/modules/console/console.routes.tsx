@@ -1,15 +1,16 @@
 import type { AppLocale } from '@shared-types/trading.ts';
-import type { ReactElement } from 'react';
-import AgentPage from '../agent/AgentPage.tsx';
-import DashboardPage from './pages/DashboardPage.tsx';
-import ExecutionPage from './pages/ExecutionPage.tsx';
-import MarketPage from './pages/MarketPage.tsx';
-import SettingsPage from './pages/SettingsPage.tsx';
-import NotificationsPage from '../notifications/NotificationsPage.tsx';
-import BacktestPage from '../research/BacktestPage.tsx';
-import StrategiesPage from '../research/StrategiesPage.tsx';
-import RiskPage from '../risk/RiskPage.tsx';
+import { Suspense, lazy, type ReactElement } from 'react';
 import { copy, type ConsolePageKey } from './console.i18n.tsx';
+
+const AgentPage = lazy(() => import('../agent/AgentPage.tsx'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage.tsx'));
+const ExecutionPage = lazy(() => import('./pages/ExecutionPage.tsx'));
+const MarketPage = lazy(() => import('./pages/MarketPage.tsx'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage.tsx'));
+const NotificationsPage = lazy(() => import('../notifications/NotificationsPage.tsx'));
+const BacktestPage = lazy(() => import('../research/BacktestPage.tsx'));
+const StrategiesPage = lazy(() => import('../research/StrategiesPage.tsx'));
+const RiskPage = lazy(() => import('../risk/RiskPage.tsx'));
 
 type ConsoleNavKey =
   | 'dashboard'
@@ -31,6 +32,14 @@ export type ConsoleRouteDefinition = {
   element: ReactElement;
 };
 
+function renderLazyRoute(element: ReactElement) {
+  return (
+    <Suspense fallback={<div style={{ padding: '2rem', color: '#6f6257' }}>Loading workspace...</div>}>
+      {element}
+    </Suspense>
+  );
+}
+
 export const CONSOLE_ROUTES: ConsoleRouteDefinition[] = [
   {
     id: 'dashboard',
@@ -38,14 +47,14 @@ export const CONSOLE_ROUTES: ConsoleRouteDefinition[] = [
     path: '/dashboard',
     aliases: ['/', '/overview'],
     includeInSidebar: true,
-    element: <DashboardPage />,
+    element: renderLazyRoute(<DashboardPage />),
   },
   {
     id: 'market',
     pageKey: 'market',
     path: '/market',
     includeInSidebar: true,
-    element: <MarketPage />,
+    element: renderLazyRoute(<MarketPage />),
   },
   {
     id: 'strategies',
@@ -53,14 +62,14 @@ export const CONSOLE_ROUTES: ConsoleRouteDefinition[] = [
     path: '/strategies',
     aliases: ['/signals', '/strategy'],
     includeInSidebar: true,
-    element: <StrategiesPage />,
+    element: renderLazyRoute(<StrategiesPage />),
   },
   {
     id: 'backtest',
     pageKey: 'backtest',
     path: '/backtest',
     includeInSidebar: true,
-    element: <BacktestPage />,
+    element: renderLazyRoute(<BacktestPage />),
   },
   {
     id: 'risk',
@@ -68,7 +77,7 @@ export const CONSOLE_ROUTES: ConsoleRouteDefinition[] = [
     path: '/risk',
     aliases: ['/portfolio', '/accounts'],
     includeInSidebar: true,
-    element: <RiskPage />,
+    element: renderLazyRoute(<RiskPage />),
   },
   {
     id: 'execution',
@@ -76,7 +85,7 @@ export const CONSOLE_ROUTES: ConsoleRouteDefinition[] = [
     path: '/execution',
     aliases: ['/orders'],
     includeInSidebar: true,
-    element: <ExecutionPage />,
+    element: renderLazyRoute(<ExecutionPage />),
   },
   {
     id: 'agent',
@@ -84,21 +93,21 @@ export const CONSOLE_ROUTES: ConsoleRouteDefinition[] = [
     path: '/agent',
     aliases: ['/analysis'],
     includeInSidebar: true,
-    element: <AgentPage />,
+    element: renderLazyRoute(<AgentPage />),
   },
   {
     id: 'notifications',
     pageKey: 'notifications',
     path: '/notifications',
     includeInSidebar: true,
-    element: <NotificationsPage />,
+    element: renderLazyRoute(<NotificationsPage />),
   },
   {
     id: 'settings',
     pageKey: 'settings',
     path: '/settings',
     includeInSidebar: true,
-    element: <SettingsPage />,
+    element: renderLazyRoute(<SettingsPage />),
   },
 ];
 

@@ -53,7 +53,12 @@ test.after(() => {
 });
 
 function seedResearchChain() {
-  const createdAt = '2026-03-20T09:00:00.000Z';
+  const nowMs = Date.now();
+  const createdAt = new Date(nowMs - 2 * 24 * 60 * 60 * 1000).toISOString();
+  const workflowCompletedAt = new Date(nowMs - (2 * 24 * 60 * 60 * 1000) + 5 * 60 * 1000).toISOString();
+  const evaluationCreatedAt = new Date(nowMs - (2 * 24 * 60 * 60 * 1000) + 8 * 60 * 1000).toISOString();
+  const reportCreatedAt = new Date(nowMs - (2 * 24 * 60 * 60 * 1000) + 10 * 60 * 1000).toISOString();
+  const governanceActionAt = new Date(nowMs - (2 * 24 * 60 * 60 * 1000) + 12 * 60 * 1000).toISOString();
   context.strategyCatalog.upsertStrategy({
     id: 'stage2-strategy',
     name: 'Stage 2 Research Strategy',
@@ -89,8 +94,8 @@ function seedResearchChain() {
     status: 'completed',
     actor: 'research-lead',
     createdAt,
-    updatedAt: '2026-03-20T09:05:00.000Z',
-    completedAt: '2026-03-20T09:05:00.000Z',
+    updatedAt: workflowCompletedAt,
+    completedAt: workflowCompletedAt,
     title: 'Stage 2 backtest workflow',
     summary: 'Research workflow completed.',
   });
@@ -102,7 +107,7 @@ function seedResearchChain() {
     status: 'completed',
     windowLabel: '2024-01-01 -> 2026-03-01',
     startedAt: createdAt,
-    completedAt: '2026-03-20T09:05:00.000Z',
+    completedAt: workflowCompletedAt,
     annualizedReturnPct: 23.4,
     maxDrawdownPct: 7.1,
     sharpe: 1.84,
@@ -111,7 +116,7 @@ function seedResearchChain() {
     summary: 'Baseline research run completed.',
     requestedBy: 'research-lead',
     createdAt,
-    updatedAt: '2026-03-20T09:05:00.000Z',
+    updatedAt: workflowCompletedAt,
   });
   context.researchTasks.appendResearchTask({
     id: 'stage2-task',
@@ -125,7 +130,7 @@ function seedResearchChain() {
     runId: 'stage2-run',
     windowLabel: '2024-01-01 -> 2026-03-01',
     createdAt,
-    updatedAt: '2026-03-20T09:05:00.000Z',
+    updatedAt: workflowCompletedAt,
   });
   context.backtestResults.appendBacktestResult({
     id: 'stage2-result',
@@ -137,7 +142,7 @@ function seedResearchChain() {
     status: 'completed',
     stage: 'reviewed',
     version: 2,
-    generatedAt: '2026-03-20T09:05:00.000Z',
+    generatedAt: workflowCompletedAt,
     summary: 'Reviewed research result is ready for execution preparation.',
     annualizedReturnPct: 23.4,
     maxDrawdownPct: 7.1,
@@ -159,7 +164,7 @@ function seedResearchChain() {
     recommendedAction: 'prepare_execution',
     summary: 'Research package is approved for execution preparation.',
     actor: 'research-lead',
-    createdAt: '2026-03-20T09:08:00.000Z',
+    createdAt: evaluationCreatedAt,
   });
   context.researchReports.appendResearchReport({
     id: 'stage2-report',
@@ -176,8 +181,8 @@ function seedResearchChain() {
     promotionCall: 'Promote to execution preparation.',
     executionPreparation: 'Paper execution handoff is recommended.',
     riskNotes: 'No blocking risk concerns remain.',
-    createdAt: '2026-03-20T09:10:00.000Z',
-    updatedAt: '2026-03-20T09:10:00.000Z',
+    createdAt: reportCreatedAt,
+    updatedAt: reportCreatedAt,
   });
   context.operatorActions.appendOperatorAction({
     id: 'stage2-governance-action',
@@ -187,7 +192,7 @@ function seedResearchChain() {
     actor: 'research-lead',
     title: 'Research governance: set champion',
     level: 'info',
-    createdAt: '2026-03-20T09:12:00.000Z',
+    createdAt: governanceActionAt,
     metadata: {
       primaryId: 'stage2-strategy',
       action: 'set_champion',
