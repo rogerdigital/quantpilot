@@ -4,6 +4,7 @@ import {
   createControlPlaneStore,
   exportControlPlaneBackup,
   getControlPlaneIntegrityReport,
+  runControlPlaneMigrations,
   restoreControlPlaneBackup,
 } from '../packages/control-plane-store/src/index.mjs';
 import { createControlPlaneRuntime } from '../packages/control-plane-runtime/src/index.mjs';
@@ -89,6 +90,14 @@ async function main() {
       ok: true,
       ...result,
     });
+    return;
+  }
+
+  if (command === 'migrate') {
+    printJson(runControlPlaneMigrations(store, {
+      targetVersion: options.target ? Number(options.target) : undefined,
+      startedAt: options.now || new Date().toISOString(),
+    }));
     return;
   }
 

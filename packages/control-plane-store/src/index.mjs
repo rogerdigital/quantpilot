@@ -5,6 +5,7 @@ export {
   createControlPlaneStorageAdapter,
   createControlPlaneStore,
   controlPlaneStore,
+  getControlPlanePersistenceStatus,
   getControlPlaneStorageConfig,
   listSupportedControlPlaneAdapters,
 } from './store.mjs';
@@ -12,6 +13,7 @@ export {
   CONTROL_PLANE_FILE_MANIFEST,
   exportControlPlaneBackup,
   getControlPlaneIntegrityReport,
+  runControlPlaneMigrations,
   restoreControlPlaneBackup,
 } from './maintenance.mjs';
 export { createAgentActionRequestRepository } from './repositories/agent-action-request-repo.mjs';

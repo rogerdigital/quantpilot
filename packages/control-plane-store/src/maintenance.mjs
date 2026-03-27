@@ -7,6 +7,22 @@ function getAdapterMetadata(store) {
   };
 }
 
+function getPersistenceStatus(store) {
+  if (store?.describePersistence) {
+    return store.describePersistence();
+  }
+  return {
+    adapter: getAdapterMetadata(store),
+    manifest: null,
+    migrationPlan: {
+      pending: [],
+      upToDate: true,
+      currentVersion: null,
+      targetVersion: null,
+    },
+  };
+}
+
 function cloneValue(value) {
   return value === undefined ? undefined : structuredClone(value);
 }
@@ -100,6 +116,7 @@ export const CONTROL_PLANE_FILE_MANIFEST = [
 export function exportControlPlaneBackup(store, options = {}) {
   const generatedAt = options.generatedAt || new Date().toISOString();
   const adapter = getAdapterMetadata(store);
+  const persistence = getPersistenceStatus(store);
   const data = {};
   const files = CONTROL_PLANE_FILE_MANIFEST.map((descriptor) => {
     const value = readFileValue(store, descriptor);
@@ -112,6 +129,7 @@ export function exportControlPlaneBackup(store, options = {}) {
     version: 1,
     generatedAt,
     adapter,
+    persistence,
     files,
     data,
   };
@@ -155,6 +173,7 @@ export function restoreControlPlaneBackup(store, input = {}, options = {}) {
 
 export function getControlPlaneIntegrityReport(store, options = {}) {
   const generatedAt = options.generatedAt || new Date().toISOString();
+  const persistence = getPersistenceStatus(store);
   const issues = [];
   let totalRecords = 0;
   let collectionFiles = 0;
@@ -264,6 +283,7 @@ export function getControlPlaneIntegrityReport(store, options = {}) {
       ? 'critical'
       : (issues.length ? 'warn' : 'healthy'),
     adapter: getAdapterMetadata(store),
+    persistence,
     files,
     issues,
     summary: {
@@ -281,4 +301,17 @@ export function getControlPlaneIntegrityReport(store, options = {}) {
       pendingAgentReviews,
     },
   };
+}
+
+export function runControlPlaneMigrations(store, options = {}) {
+  if (!store?.applyMigrations) {
+    return {
+      ok: true,
+      adapter: getAdapterMetadata(store),
+      appliedSteps: [],
+      manifest: null,
+      targetVersion: null,
+    };
+  }
+  return store.applyMigrations(options);
 }

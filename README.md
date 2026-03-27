@@ -297,7 +297,7 @@ Persistence for notifications, risk events, scheduler ticks, audit records, work
 
 ### `packages/db`
 
-Low-level storage abstraction. It now provides `file` and `db` control-plane adapter foundations so the current runtime can stay file-backed while later work migrates repositories toward a fuller database-backed path.
+Low-level storage abstraction. It now provides `file` and `db` control-plane adapter foundations, plus schema-manifest and migration contracts for the embedded db path, so the current runtime can stay file-backed while later work migrates repositories toward a fuller database-backed path.
 
 ### `packages/shared-types`
 

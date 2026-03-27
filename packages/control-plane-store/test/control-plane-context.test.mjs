@@ -4,8 +4,8 @@ import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { createControlPlaneContext } from '../src/context.mjs';
-import { exportControlPlaneBackup, getControlPlaneIntegrityReport, restoreControlPlaneBackup } from '../src/maintenance.mjs';
-import { createControlPlaneStore, listSupportedControlPlaneAdapters } from '../src/store.mjs';
+import { exportControlPlaneBackup, getControlPlaneIntegrityReport, restoreControlPlaneBackup, runControlPlaneMigrations } from '../src/maintenance.mjs';
+import { createControlPlaneStore, getControlPlanePersistenceStatus, listSupportedControlPlaneAdapters } from '../src/store.mjs';
 import { createMemoryStore } from './helpers/memory-store.mjs';
 
 test.after(() => {
@@ -30,6 +30,8 @@ test('control plane store exposes supported storage adapters and metadata', () =
   assert.equal(dbStore.adapter.kind, 'db');
   assert.equal(fileStore.adapter.persistence, 'filesystem-json');
   assert.equal(dbStore.adapter.persistence, 'embedded-json-db');
+  assert.equal(fileStore.readAdapterManifest().schemaVersion >= 1, true);
+  assert.equal(dbStore.readAdapterManifest().schemaVersion >= 1, true);
 });
 
 test('control plane context persists repository contracts through the db adapter foundation', () => {
@@ -64,6 +66,33 @@ test('control plane context persists repository contracts through the db adapter
     assert.equal(context.storageAdapter.kind, 'db');
     assert.equal(context.agentSessions.getAgentSession(session.id).id, session.id);
     assert.equal(context.workflows.getWorkflowRun(workflow.id).id, workflow.id);
+  } finally {
+    rmSync(join(process.cwd(), '.quantpilot-runtime-db', namespace), { recursive: true, force: true });
+  }
+});
+
+test('control plane db adapter exposes persistence status and migration contracts', () => {
+  const namespace = `cp-store-db-persistence-${randomUUID()}`;
+  const store = createControlPlaneStore({
+    namespace,
+    adapter: 'db',
+  });
+
+  try {
+    const persistence = getControlPlanePersistenceStatus({
+      namespace,
+      adapter: 'db',
+    });
+    const plan = store.getMigrationPlan();
+    const result = runControlPlaneMigrations(store);
+
+    assert.equal(persistence.adapter.kind, 'db');
+    assert.equal(persistence.manifest.schemaVersion >= 1, true);
+    assert.equal(Array.isArray(persistence.manifest.migrations), true);
+    assert.equal(plan.upToDate, true);
+    assert.equal(Array.isArray(plan.pending), true);
+    assert.equal(result.ok, true);
+    assert.equal(result.manifest.schemaVersion >= 1, true);
   } finally {
     rmSync(join(process.cwd(), '.quantpilot-runtime-db', namespace), { recursive: true, force: true });
   }
@@ -699,9 +728,11 @@ test('control plane maintenance exports backups, validates integrity, and restor
   const integrity = getControlPlaneIntegrityReport(store);
 
   assert.equal(backup.ok, true);
+  assert.equal(typeof backup.persistence?.migrationPlan?.upToDate, 'boolean');
   assert.equal(backup.files.some((item) => item.filename === 'notifications.json'), true);
   assert.equal(backup.data['notifications.json'][0].id, 'maintenance-notification');
   assert.equal(integrity.ok, true);
+  assert.equal(typeof integrity.persistence?.migrationPlan?.upToDate, 'boolean');
   assert.equal(integrity.summary.retryScheduledWorkflows, 1);
   assert.equal(integrity.status, 'healthy');
 

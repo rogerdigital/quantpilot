@@ -84,7 +84,7 @@ quantpilot/
 - `packages/shared-types/src/`
   - 共享类型层，承接前端、API 和后续 worker 的统一领域模型。
 - `packages/db/src/`
-  - 底层存储接口层，当前提供 `collection store`、`kv store` 以及 `file / db` 两类 control-plane adapter foundation；`control-plane-store` 已可在保持 file 默认实现的前提下切换到 db adapter 骨架，为后续数据库迁移打底。
+  - 底层存储接口层，当前提供 `collection store`、`kv store` 以及 `file / db` 两类 control-plane adapter foundation；embedded db path 现已补上 schema manifest 与 migration contracts，`control-plane-store` 可在保持 file 默认实现的前提下切换到 db adapter 并显式管理版本基线。
 - `packages/control-plane-store/src/`
   - 控制面持久化层，当前已拆成 `context + repositories/* + shared + store` 结构，承载 notification outbox、risk scan outbox、已分发通知事件、风险事件流、scheduler ticks、audit records、cycle records、workflow runs 和 operator actions，并通过统一 storage adapter 入口为 API 与 worker 提供跨进程共享状态。
 - `packages/control-plane-store/test/`
