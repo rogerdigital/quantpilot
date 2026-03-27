@@ -326,7 +326,7 @@ npm run verify
 
 安装依赖后会自动把仓库的 git hooks 指到 `.githooks`。当前默认启用了 `pre-push` 校验，会在推送前执行一次 `npm run verify`，避免仅在 CI 才暴露 `typecheck` 或生产构建错误。
 
-部署、恢复与启动约束说明现已集中整理在 [docs/deployment.md](docs/deployment.md)。如果准备启动真实 gateway 配置，建议先执行 `npm run check:runtime-env -- --env-file .env`，确认 adapter、provider 和关键环境变量的组合都合法。
+部署、恢复与启动约束说明现已集中整理在 [docs/deployment.md](docs/deployment.md)。如果涉及 adapter 切换、migration planning、restore posture 或 repair sequencing，也请同时参考 [docs/control-plane-migrations.md](docs/control-plane-migrations.md)。如果准备启动真实 gateway 配置，建议先执行 `npm run check:runtime-env -- --env-file .env`，确认 adapter、provider 和关键环境变量的组合都合法。
 
 默认端口：
 

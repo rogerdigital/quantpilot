@@ -163,6 +163,7 @@ quantpilot/
 6. control-plane maintenance 已具备 backup export、restore dry run、integrity check 和 workflow retry repair，并提供 API 与 CLI 双入口。
 7. `docs/deployment.md` 与 `check:runtime-env` 已把环境变量、adapter 选择、启动顺序、backup/restore 和 readiness checklist 收敛为统一运行基线。
 8. 阶段 6 baseline tests 与 closeout 文档已把 production readiness contracts 正式纳入验收基线。
+9. `docs/control-plane-migrations.md` 已把 adapter 切换、migration planning、backup-before-migrate、rollback posture 和 repair sequencing 收敛成单独 runbook。
 
 ## 当前阶段的具体建议
 

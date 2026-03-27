@@ -323,7 +323,7 @@ npm run verify
 
 After dependency installation, repository git hooks are automatically pointed at `.githooks`. The default setup enables `pre-push`, which runs `npm run verify` before a push so typecheck or production-build failures do not wait until CI.
 
-Deployment and recovery guidance now lives in [docs/deployment.md](docs/deployment.md). Before starting a real gateway profile, run `npm run check:runtime-env -- --env-file .env` to validate the env contract against the supported adapters and provider combinations.
+Deployment and recovery guidance now lives in [docs/deployment.md](docs/deployment.md). For adapter cutovers, migration planning, restore posture, or repair sequencing, also use [docs/control-plane-migrations.md](docs/control-plane-migrations.md). Before starting a real gateway profile, run `npm run check:runtime-env -- --env-file .env` to validate the env contract against the supported adapters and provider combinations.
 
 Default ports:
 

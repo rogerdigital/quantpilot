@@ -193,6 +193,13 @@ npm run control-plane:maintenance -- repair-workflows --limit 20
 npm run control-plane:maintenance -- check --adapter db
 ```
 
+如果你准备做 adapter 切换、真实 migrate 演练、restore 回退或者 repair 决策，建议同时阅读 [control-plane-migrations.md](./control-plane-migrations.md)。这份 runbook 额外补齐了：
+
+- `file -> db` 与 `db -> file` 的切换顺序
+- migrate 前必须先做 backup 与 dry-run restore 的原因
+- 何时应该优先 restore，何时只需要 repair-workflows
+- degraded posture 下的停止条件与 rollback posture
+
 推荐恢复顺序：
 
 1. 先执行 `check`
@@ -201,6 +208,33 @@ npm run control-plane:maintenance -- check --adapter db
 4. 如果启用了 `db` adapter foundation，先执行一次 `migrate`
 5. 确认后再执行正式 `restore`
 6. 如有 workflow retry backlog，再执行 `repair-workflows`
+
+### 迁移规划建议
+
+如果是计划内迁移而不是故障恢复，推荐把动作拆成四个阶段：
+
+1. `observe`
+   - 先看 `/api/operations/maintenance` 或前端 persistence posture
+   - 记录当前 schema version、target version 和 pending migrations
+2. `protect`
+   - 导出 backup
+   - 用同一份 backup 执行 `restore --dry-run`
+3. `change`
+   - 仅执行一种写动作：`migrate` 或 `restore`
+   - 不要把 `migrate + restore + repair` 混在一步里
+4. `stabilize`
+   - 再次 `check`
+   - 如确有 retry backlog，再执行 `repair-workflows`
+   - 最后重跑 `npm run verify`
+
+### 回退姿态
+
+如果 migrate 或 adapter 切换后 posture 变成 degraded，不建议继续追加 repair。更安全的顺序是：
+
+1. 先保留当前现场 backup
+2. 用已知可用备份执行 `restore --dry-run`
+3. 再决定是否执行正式 `restore`
+4. 待 posture 回到可读状态后，再处理 workflow retry backlog
 
 ## Readiness Checklist
 
@@ -213,3 +247,4 @@ npm run control-plane:maintenance -- check --adapter db
 5. control-plane backup 已成功导出并验证过一次 dry-run restore
 6. worker、gateway、frontend 端口没有冲突
 7. 静态站点已配置前端路由回退到 `index.html`
+8. 如果涉及 control-plane migrate 或 adapter 切换，已按 [control-plane-migrations.md](./control-plane-migrations.md) 走完 planning / backup / dry-run / verification 顺序
