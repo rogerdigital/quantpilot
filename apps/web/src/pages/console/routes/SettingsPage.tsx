@@ -4,6 +4,7 @@ import {
   ApiPermissionError,
   deleteBrokerBinding,
   fetchBrokerBindingRuntime,
+  fetchOperationsMaintenance,
   fetchUserAccount,
   saveBrokerBinding,
   setDefaultBrokerBinding,
@@ -13,6 +14,7 @@ import {
   updateUserAccountProfile,
 } from '../../../app/api/controlPlane.ts';
 import { useMarketProviderStatus } from '../../../hooks/useMarketProviderStatus.ts';
+import { buildPersistenceApiExamples, buildPersistenceCliCommands, derivePersistencePostureFromMaintenance, translatePersistencePosture } from '../../../modules/operations/persistencePosture.ts';
 import {
   formatActionGuardNotice,
   formatPermissionDisabled,
@@ -23,7 +25,7 @@ import { useTradingSystem } from '../../../store/trading-system/TradingSystemPro
 import { SectionHeader } from '../components/ConsoleChrome.tsx';
 import { copy, useLocale } from '../i18n.tsx';
 import { connectionLabel, fmtDateTime, modeTone, translateMode, translateProviderLabel, translateRuntimeText } from '../utils.ts';
-import type { UserAccountSnapshot, UserBrokerBinding, UserBrokerBindingRuntimeSnapshot } from '@shared-types/trading.ts';
+import type { OperationsMaintenanceResponse, UserAccountSnapshot, UserBrokerBinding, UserBrokerBindingRuntimeSnapshot } from '@shared-types/trading.ts';
 
 function toPermissionList(value: string) {
   return value.split(',').map((item) => item.trim()).filter(Boolean);
@@ -79,16 +81,81 @@ export function WorkspaceAccessScopePanel({
   );
 }
 
+export function PersistenceMigrationPanel({
+  locale,
+  canInspectMaintenance,
+  maintenance,
+}: {
+  locale: 'zh' | 'en';
+  canInspectMaintenance: boolean;
+  maintenance: OperationsMaintenanceResponse | null;
+}) {
+  const persistence = derivePersistencePostureFromMaintenance(maintenance);
+  const cliExamples = buildPersistenceCliCommands(persistence.adapter.kind || 'db');
+  const apiExamples = buildPersistenceApiExamples();
+  const latestMigrationLabel = persistence.latestMigration?.id || (locale === 'zh' ? '无' : 'none');
+
+  return (
+    <article className="panel" id="persistence-migration">
+      <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '持久化与迁移' : 'Persistence & Migration'}</div><div className="panel-copy">{locale === 'zh' ? '展示当前控制面后端、schema 版本、迁移差异和建议的维护路径。' : 'Review the active control-plane backend, schema version, migration gap, and the recommended maintenance path.'}</div></div><div className={`panel-badge ${persistence.posture === 'healthy' ? 'badge-success' : persistence.posture === 'attention' ? 'badge-warn' : 'badge-danger'}`}>{translatePersistencePosture(locale, persistence.posture)}</div></div>
+      {!canInspectMaintenance ? (
+        <div className="status-copy">{locale === 'zh' ? '当前会话没有 operations:maintain 权限，因此这里只显示只读维护说明。' : 'The active session does not have operations:maintain permission, so this panel only shows read-only maintenance guidance.'}</div>
+      ) : null}
+      <div className="policy-card policy-card-inline">
+        <div className="policy-row"><span>{locale === 'zh' ? 'Adapter' : 'Adapter'}</span><strong>{persistence.adapter.label}</strong></div>
+        <div className="policy-row"><span>{locale === 'zh' ? '存储模型' : 'Storage Model'}</span><strong>{persistence.storageModel}</strong></div>
+        <div className="policy-row"><span>{locale === 'zh' ? 'Schema 版本' : 'Schema Version'}</span><strong>{String(persistence.schemaVersion ?? '--')}</strong></div>
+        <div className="policy-row"><span>{locale === 'zh' ? '当前 -> 目标' : 'Current -> Target'}</span><strong>{persistence.currentVersion !== null && persistence.targetVersion !== null ? `${persistence.currentVersion} → ${persistence.targetVersion}` : '--'}</strong></div>
+        <div className="policy-row"><span>{locale === 'zh' ? '待迁移数量' : 'Pending Migrations'}</span><strong>{persistence.pendingCount}</strong></div>
+        <div className="policy-row"><span>{locale === 'zh' ? '已对齐' : 'Up To Date'}</span><strong>{persistence.upToDate ? (locale === 'zh' ? '是' : 'yes') : (locale === 'zh' ? '否' : 'no')}</strong></div>
+        <div className="policy-row"><span>{locale === 'zh' ? '最近迁移' : 'Latest Migration'}</span><strong>{latestMigrationLabel}</strong></div>
+      </div>
+      <div className="status-copy">{persistence.headline}</div>
+      <div className="status-copy">{persistence.detail}</div>
+      <div className="status-copy">{persistence.recommendedAction}</div>
+      <div className="panel-subtitle">{locale === 'zh' ? '建议入口' : 'Recommended Entry Points'}</div>
+      <div className="settings-chip-row">
+        <a className="settings-chip active" href={persistence.links.maintenance}>{locale === 'zh' ? '跳到运维工作台' : 'Open Operations Workbench'}</a>
+        <a className="settings-chip" href={persistence.links.settings}>{locale === 'zh' ? '定位当前面板' : 'Link To This Panel'}</a>
+      </div>
+      <div className="panel-subtitle">{locale === 'zh' ? 'CLI 建议' : 'CLI Guidance'}</div>
+      <div className="focus-list focus-list-terminal">
+        {cliExamples.map((item) => (
+          <div className="focus-row focus-row-wide" key={item}>
+            <div className="symbol-cell">
+              <strong>{locale === 'zh' ? '命令' : 'Command'}</strong>
+              <span>{item}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="panel-subtitle">{locale === 'zh' ? 'API 建议' : 'API Guidance'}</div>
+      <div className="focus-list focus-list-terminal">
+        {apiExamples.map((item) => (
+          <div className="focus-row focus-row-wide" key={item}>
+            <div className="symbol-cell">
+              <strong>API</strong>
+              <span>{item}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
 export function SettingsPage() {
   const { locale } = useLocale();
   const { state, session, refreshSession, hasPermission, actionGuardNotice, setMode, updateToggle } = useTradingSystem();
   const location = useLocation();
   const canWriteAccount = hasPermission('account:write');
+  const canInspectMaintenance = hasPermission('operations:maintain');
   const canWriteStrategy = hasPermission('strategy:write');
   const canReviewRisk = hasPermission('risk:review');
   const canApproveExecution = hasPermission('execution:approve');
   const [account, setAccount] = useState<UserAccountSnapshot | null>(null);
   const [bindingRuntime, setBindingRuntime] = useState<UserBrokerBindingRuntimeSnapshot | null>(null);
+  const [maintenance, setMaintenance] = useState<OperationsMaintenanceResponse | null>(null);
   const [profileForm, setProfileForm] = useState({
     name: '',
     email: '',
@@ -178,14 +245,17 @@ export function SettingsPage() {
   }
 
   async function loadAccountWorkspace() {
-    const [accountSnapshot, runtimeSnapshot] = await Promise.all([
+    const [accountSnapshot, runtimeSnapshot, maintenanceSnapshot] = await Promise.all([
       fetchUserAccount(),
       fetchBrokerBindingRuntime().catch(() => null),
+      canInspectMaintenance ? fetchOperationsMaintenance({ limit: 10 }).catch(() => null) : Promise.resolve(null),
     ]);
     syncAccountState(accountSnapshot, runtimeSnapshot);
+    setMaintenance(maintenanceSnapshot);
     return {
       accountSnapshot,
       runtimeSnapshot,
+      maintenanceSnapshot,
     };
   }
 
@@ -539,6 +609,12 @@ export function SettingsPage() {
           currentWorkspace={currentWorkspace}
           accessSummary={accessSummary}
           sessionPermissions={session?.user.permissions || []}
+        />
+
+        <PersistenceMigrationPanel
+          locale={locale}
+          canInspectMaintenance={canInspectMaintenance}
+          maintenance={maintenance}
         />
 
         <article className="panel" id="policy">

@@ -135,6 +135,9 @@ test('stage 6 baseline exposes backup, restore dry-run, workflow repair, and obs
   assert.equal(workbench.json.ok, true);
   assert.equal(typeof workbench.json.observability.posture, 'string');
   assert.equal(typeof workbench.json.summary.queueBacklogStatus, 'string');
+  assert.equal(typeof workbench.json.persistence.posture, 'string');
+  assert.equal(typeof workbench.json.persistence.pendingCount, 'number');
+  assert.equal(typeof workbench.json.persistence.links.maintenance, 'string');
 
   assert.equal(backup.statusCode, 200);
   assert.equal(backup.json.ok, true);

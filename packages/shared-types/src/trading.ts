@@ -1585,6 +1585,121 @@ export type MonitoringSnapshotsResponse = {
   snapshots: MonitoringSnapshotRecord[];
 };
 
+export type ControlPlaneAdapterSnapshot = {
+  kind: string;
+  label: string;
+  namespace: string;
+  persistence?: string;
+};
+
+export type ControlPlaneMigrationRecord = {
+  id: string;
+  appliedAt?: string;
+  fromVersion?: number | null;
+  toVersion?: number | null;
+};
+
+export type ControlPlanePendingMigration = {
+  id: string;
+  fromVersion?: number | null;
+  toVersion?: number | null;
+};
+
+export type ControlPlanePersistenceSnapshot = {
+  adapter: ControlPlaneAdapterSnapshot;
+  manifest: {
+    schemaVersion: number | null;
+    persistence?: string;
+    storageModel?: string;
+    initializedAt?: string;
+    updatedAt?: string;
+    migrations: ControlPlaneMigrationRecord[];
+  } | null;
+  migrationPlan: {
+    adapter?: ControlPlaneAdapterSnapshot;
+    currentVersion: number | null;
+    targetVersion: number | null;
+    pending: ControlPlanePendingMigration[];
+    upToDate: boolean;
+  };
+};
+
+export type OperationsMaintenanceResponse = {
+  ok: boolean;
+  generatedAt: string;
+  storageAdapter: ControlPlaneAdapterSnapshot;
+  integrity: {
+    ok: boolean;
+    generatedAt: string;
+    status: string;
+    adapter: ControlPlaneAdapterSnapshot;
+    persistence: ControlPlanePersistenceSnapshot;
+    files: Array<{
+      filename: string;
+      label: string;
+      kind: string;
+      keyCount?: number;
+      recordCount?: number;
+    }>;
+    issues: Array<{
+      level: string;
+      code: string;
+      filename: string;
+      message: string;
+      metadata?: Record<string, unknown>;
+    }>;
+    summary: {
+      fileCount: number;
+      collectionFiles: number;
+      objectFiles: number;
+      totalRecords: number;
+      duplicateIdCount: number;
+      missingIdCount: number;
+      malformedRecordCount: number;
+      retryScheduledWorkflows: number;
+      failedWorkflows: number;
+      pendingNotificationJobs: number;
+      pendingRiskScanJobs: number;
+      pendingAgentReviews: number;
+    };
+  };
+  backlog: {
+    pendingNotificationJobs: number;
+    pendingRiskScanJobs: number;
+    pendingAgentReviews: number;
+    retryScheduledWorkflows: number;
+    failedWorkflows: number;
+    totalPending: number;
+    backlogStatus: string;
+  };
+  recentFailedWorkflows: WorkflowRunRecord[];
+  recentRetryScheduledWorkflows: WorkflowRunRecord[];
+  supportedRepairs: Array<{
+    key: string;
+    label: string;
+    detail: string;
+  }>;
+};
+
+export type OperationsPersistencePosture = {
+  posture: 'healthy' | 'attention' | 'degraded';
+  headline: string;
+  detail: string;
+  adapter: ControlPlaneAdapterSnapshot;
+  storageModel: string;
+  schemaVersion: number | null;
+  currentVersion: number | null;
+  targetVersion: number | null;
+  pendingCount: number;
+  upToDate: boolean;
+  recommendedAction: string;
+  latestMigration: ControlPlaneMigrationRecord | null;
+  links: {
+    maintenance: string;
+    settings: string;
+  };
+};
+
 export type OperationsWorkbenchResponse = {
   ok: boolean;
   generatedAt: string;
@@ -1613,6 +1728,7 @@ export type OperationsWorkbenchResponse = {
     lastCompletedWorkflowAt: string;
     workerLagSeconds: number | null;
   };
+  persistence: OperationsPersistencePosture;
   lanes: Array<{
     key: 'monitoring' | 'incidents' | 'scheduler' | 'connectivity' | 'control-plane';
     title: string;

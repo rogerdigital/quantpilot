@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { IncidentActivityRecord, IncidentEvidenceItem, SchedulerOrchestrationActionResponse, SchedulerRunbookActionKey } from '@shared-types/trading.ts';
+import type { IncidentActivityRecord, IncidentEvidenceItem, OperationsPersistencePosture, SchedulerOrchestrationActionResponse, SchedulerRunbookActionKey } from '@shared-types/trading.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
@@ -20,6 +20,7 @@ import { useRiskEventsFeed } from '../../modules/notifications/useRiskEventsFeed
 import { useSchedulerWorkbench } from '../../modules/notifications/useSchedulerWorkbench.ts';
 import { useSchedulerTicksFeed } from '../../modules/notifications/useSchedulerTicksFeed.ts';
 import { useWorkflowRunsFeed } from '../../modules/notifications/useWorkflowRunsFeed.ts';
+import { buildPersistenceApiExamples, buildPersistenceCliCommands, translatePersistencePosture } from '../../modules/operations/persistencePosture.ts';
 import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
 import { ActivityLog } from '../console/components/ConsoleTables.tsx';
 import { InspectionSelectableRow } from '../console/components/InspectionPanels.tsx';
@@ -247,6 +248,79 @@ function translateRunbookKey(locale: string, key: 'stabilize-connectivity' | 'dr
   if (key === 'clear-stale-incidents') return 'Clear stale incidents';
   if (key === 'review-scheduler-attention') return 'Review scheduler attention';
   return 'Follow control-plane trail';
+}
+
+export function OperationsPersistencePanel({
+  locale,
+  persistence,
+}: {
+  locale: 'zh' | 'en';
+  persistence: OperationsPersistencePosture;
+}) {
+  const cliExamples = buildPersistenceCliCommands(persistence.adapter.kind || 'db');
+  const apiExamples = buildPersistenceApiExamples();
+
+  return (
+    <>
+      <div className="panel-subtitle">{locale === 'zh' ? '持久化状态' : 'Persistence Posture'}</div>
+      <div className="focus-list focus-list-terminal">
+        <div className="focus-row focus-row-wide">
+          <div className="symbol-cell">
+            <strong>{persistence.headline}</strong>
+            <span>{persistence.detail}</span>
+          </div>
+          <div className="focus-metric">
+            <span>{locale === 'zh' ? '姿态' : 'Posture'}</span>
+            <strong>{translatePersistencePosture(locale, persistence.posture)}</strong>
+          </div>
+          <div className="focus-metric">
+            <span>{locale === 'zh' ? '待迁移' : 'Pending'}</span>
+            <strong>{persistence.pendingCount}</strong>
+          </div>
+        </div>
+        <div className="focus-row focus-row-wide">
+          <div className="symbol-cell">
+            <strong>{locale === 'zh' ? '后端摘要' : 'Backend Summary'}</strong>
+            <span>{persistence.adapter.label} · {persistence.storageModel}</span>
+          </div>
+          <div className="focus-metric">
+            <span>{locale === 'zh' ? 'Schema' : 'Schema'}</span>
+            <strong>{String(persistence.schemaVersion ?? '--')}</strong>
+          </div>
+          <div className="focus-metric">
+            <span>{locale === 'zh' ? '当前 -> 目标' : 'Current -> Target'}</span>
+            <strong>{persistence.currentVersion !== null && persistence.targetVersion !== null ? `${persistence.currentVersion} → ${persistence.targetVersion}` : '--'}</strong>
+          </div>
+        </div>
+        <div className="focus-row focus-row-wide">
+          <div className="symbol-cell">
+            <strong>{locale === 'zh' ? '下一步建议' : 'Recommended Action'}</strong>
+            <span>{persistence.recommendedAction}</span>
+          </div>
+          <div className="settings-chip-row">
+            <a className="settings-chip active" href={persistence.links.maintenance}>{locale === 'zh' ? '跳到运维锚点' : 'Open Ops Anchor'}</a>
+            <a className="settings-chip" href={persistence.links.settings}>{locale === 'zh' ? '打开设置细节' : 'Open Settings Detail'}</a>
+          </div>
+        </div>
+        {cliExamples.map((item) => (
+          <div className="focus-row focus-row-wide" key={item}>
+            <div className="symbol-cell">
+              <strong>{locale === 'zh' ? 'CLI' : 'CLI'}</strong>
+              <span>{item}</span>
+            </div>
+          </div>
+        ))}
+        {apiExamples.map((item) => (
+          <div className="focus-row focus-row-wide" key={item}>
+            <div className="symbol-cell">
+              <strong>API</strong>
+              <span>{item}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
 }
 
 function NotificationsPage() {
@@ -1669,7 +1743,7 @@ function NotificationsPage() {
       ]} />
 
       <section className="panel-grid">
-        <article className="panel">
+        <article className="panel" id="operations-workbench">
           <div className="panel-head">
             <div>
               <div className="panel-title">{locale === 'zh' ? '焦点路由' : 'Focus Router'}</div>
@@ -2846,6 +2920,7 @@ function NotificationsPage() {
               </button>
             ))}
           </div>
+          <OperationsPersistencePanel locale={locale} persistence={operationsWorkbench.persistence} />
           <div className="panel-subtitle">{locale === 'zh' ? '最近运维信号' : 'Recent Operations Signals'}</div>
           <div className="focus-list focus-list-terminal">
             {!operationsRecentItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有新的运维信号。' : 'No recent operations signals are available.'}</div> : null}

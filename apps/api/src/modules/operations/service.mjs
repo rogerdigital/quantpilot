@@ -1,5 +1,6 @@
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
 import { getMonitoringStatus } from '../monitoring/service.mjs';
+import { getOperationsMaintenanceSnapshot } from './maintenance-service.mjs';
 import { isSchedulerAttentionStatus } from '../scheduler/service.mjs';
 
 const ACK_OVERDUE_HOURS = 1;
@@ -155,10 +156,78 @@ function buildObservabilitySummary(monitoring) {
   };
 }
 
+function buildPersistenceSummary(maintenance) {
+  const persistence = maintenance?.integrity?.persistence || {
+    adapter: maintenance?.storageAdapter || {
+      kind: 'custom',
+      label: 'Custom Store',
+      namespace: 'control-plane',
+    },
+    manifest: null,
+    migrationPlan: {
+      currentVersion: null,
+      targetVersion: null,
+      pending: [],
+      upToDate: true,
+    },
+  };
+  const manifest = persistence.manifest || null;
+  const migrationPlan = persistence.migrationPlan || {
+    currentVersion: null,
+    targetVersion: null,
+    pending: [],
+    upToDate: true,
+  };
+  const latestMigration = Array.isArray(manifest?.migrations) && manifest.migrations.length
+    ? manifest.migrations[manifest.migrations.length - 1]
+    : null;
+  const pendingCount = Array.isArray(migrationPlan.pending) ? migrationPlan.pending.length : 0;
+  const storageModel = manifest?.storageModel || manifest?.persistence || maintenance?.storageAdapter?.persistence || 'filesystem-json';
+  const hasReadablePlan = migrationPlan.currentVersion !== null && migrationPlan.targetVersion !== null;
+  let posture = 'healthy';
+  let headline = 'Persistence posture is current.';
+  let detail = `The ${storageModel} backend is aligned with schema version ${manifest?.schemaVersion ?? 'unknown'}.`;
+  let recommendedAction = 'Continue monitoring.';
+
+  if (!manifest || !hasReadablePlan) {
+    posture = 'degraded';
+    headline = 'Persistence metadata needs inspection.';
+    detail = 'Manifest or migration planning data is incomplete, so maintenance posture should be reviewed before making changes.';
+    recommendedAction = 'Inspect maintenance posture before making changes.';
+  } else if (!migrationPlan.upToDate || pendingCount > 0) {
+    posture = 'attention';
+    headline = 'Migration follow-up recommended.';
+    detail = `The ${storageModel} backend is readable, but ${pendingCount} migrations are still pending between versions ${migrationPlan.currentVersion} and ${migrationPlan.targetVersion}.`;
+    recommendedAction = 'Back up before applying migrations.';
+  }
+
+  return {
+    posture,
+    headline,
+    detail,
+    adapter: persistence.adapter || maintenance.storageAdapter,
+    storageModel,
+    schemaVersion: manifest?.schemaVersion ?? null,
+    currentVersion: migrationPlan.currentVersion ?? null,
+    targetVersion: migrationPlan.targetVersion ?? null,
+    pendingCount,
+    upToDate: Boolean(migrationPlan.upToDate && pendingCount === 0),
+    recommendedAction,
+    latestMigration,
+    links: {
+      maintenance: '/notifications#operations-workbench',
+      settings: '/settings#persistence-migration',
+    },
+  };
+}
+
 export async function getOperationsWorkbench(options = {}) {
   const limit = parseLimit(options.limit, 120);
   const since = resolveSince(options.hours);
-  const monitoring = await getMonitoringStatus(options);
+  const [monitoring, maintenance] = await Promise.all([
+    getMonitoringStatus(options),
+    getOperationsMaintenanceSnapshot(options),
+  ]);
   const incidents = controlPlaneRuntime.listIncidents(limit, {
     since,
   });
@@ -226,6 +295,7 @@ export async function getOperationsWorkbench(options = {}) {
       lastCompletedWorkflowAt: monitoring.services.workflows.lastCompletedAt,
       workerLagSeconds: monitoring.services.worker.lagSeconds,
     },
+    persistence: buildPersistenceSummary(maintenance),
     lanes: [
       {
         key: 'monitoring',

@@ -3631,6 +3631,18 @@ test('GET /api/operations/workbench returns unified operations overview', async 
   assert.equal(typeof response.json.observability.queueBacklogStatus, 'string');
   assert.equal(response.json.observability.oldestRetryAgeSeconds !== null, true);
   assert.equal(typeof response.json.observability.lastCompletedWorkflowAt, 'string');
+  assert.equal(typeof response.json.persistence.posture, 'string');
+  assert.equal(typeof response.json.persistence.adapter.kind, 'string');
+  assert.equal(typeof response.json.persistence.storageModel, 'string');
+  assert.equal(typeof response.json.persistence.schemaVersion, 'number');
+  assert.equal(typeof response.json.persistence.currentVersion, 'number');
+  assert.equal(typeof response.json.persistence.targetVersion, 'number');
+  assert.equal(typeof response.json.persistence.pendingCount, 'number');
+  assert.equal(typeof response.json.persistence.upToDate, 'boolean');
+  assert.equal(typeof response.json.persistence.headline, 'string');
+  assert.equal(typeof response.json.persistence.recommendedAction, 'string');
+  assert.equal(typeof response.json.persistence.links.settings, 'string');
+  assert.equal(typeof response.json.persistence.links.maintenance, 'string');
   assert.equal(response.json.lanes.some((item) => item.key === 'monitoring'), true);
   assert.equal(response.json.lanes.some((item) => item.key === 'incidents'), true);
   assert.equal(response.json.runbook.some((item) => item.key === 'stabilize-connectivity'), true);

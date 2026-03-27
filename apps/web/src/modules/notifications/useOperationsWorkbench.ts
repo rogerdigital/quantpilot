@@ -30,6 +30,28 @@ const EMPTY_WORKBENCH: OperationsWorkbenchResponse = {
     lastCompletedWorkflowAt: null,
     workerLagSeconds: null,
   },
+  persistence: {
+    posture: 'healthy',
+    headline: '',
+    detail: '',
+    adapter: {
+      kind: 'file',
+      label: 'JSON File Store',
+      namespace: 'control-plane',
+    },
+    storageModel: 'filesystem-json',
+    schemaVersion: null,
+    currentVersion: null,
+    targetVersion: null,
+    pendingCount: 0,
+    upToDate: true,
+    recommendedAction: '',
+    latestMigration: null,
+    links: {
+      maintenance: '/notifications#operations-workbench',
+      settings: '/settings#persistence-migration',
+    },
+  },
   lanes: [],
   runbook: [],
   recent: {

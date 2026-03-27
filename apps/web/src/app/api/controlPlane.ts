@@ -16,6 +16,7 @@ import type {
   UserAccountProfileSnapshot,
   MonitoringStatusSnapshot,
   OperationsWorkbenchResponse,
+  OperationsMaintenanceResponse,
   RiskWorkbenchResponse,
   RiskPolicyActionResponse,
   SchedulerWorkbenchResponse,
@@ -693,6 +694,17 @@ export async function fetchOperationsWorkbench(options: { hours?: number | null;
   }
   const query = params.toString();
   return fetchJson(`/api/operations/workbench${query ? `?${query}` : ''}`, {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export async function fetchOperationsMaintenance(options: { limit?: number } = {}): Promise<OperationsMaintenanceResponse> {
+  const params = new URLSearchParams();
+  if (typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0) {
+    params.set('limit', String(options.limit));
+  }
+  const query = params.toString();
+  return fetchJson(`/api/operations/maintenance${query ? `?${query}` : ''}`, {
     headers: { Accept: 'application/json' },
   });
 }
