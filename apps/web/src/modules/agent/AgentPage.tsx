@@ -23,7 +23,7 @@ const promptSuggestions = {
 export default function AgentPage() {
   const { state, session } = useTradingSystem();
   const { locale } = useLocale();
-  const { tools, workbench, sessionDetail, selectedSessionId, loading, running, requestingAction, error, selectSession, runPrompt, requestAction } = useAgentTools();
+  const { tools, workbench, sessionDetail, selectedSessionId, loading, running, requestingAction, error, selectSession, runPrompt, requestAction, refresh } = useAgentTools();
   const [prompt, setPrompt] = useState(promptSuggestions[locale][0]);
 
   const summary = workbench?.summary;
@@ -34,6 +34,8 @@ export default function AgentPage() {
   const recentExplanations = Array.isArray(workbench?.recentExplanations) ? workbench.recentExplanations : [];
   const timeline = Array.isArray(sessionDetail?.timeline) ? sessionDetail.timeline : [];
   const runbook = Array.isArray(workbench?.runbook) ? workbench.runbook : [];
+  const latestRationale = Array.isArray(latestExplanation?.rationale) ? latestExplanation.rationale : [];
+  const latestWarnings = Array.isArray(latestExplanation?.warnings) ? latestExplanation.warnings : [];
   const canRequestAction = Boolean(
     sessionDetail?.session.id
     && sessionDetail?.latestPlan?.requiresApproval
@@ -75,7 +77,15 @@ export default function AgentPage() {
             {locale === 'zh'
               ? '这里现在已经是正式的 Agent 协作工作台：会话、解释、待审批请求和 operator trail 都来自后端 workbench 聚合，不再只是工具演示页。'
               : 'This is now a real Agent collaboration workbench: sessions, explanations, pending requests, and the operator trail all come from backend workbench aggregation instead of a simple tool demo.'}
-        </div>
+          </div>
+          <div className="settings-chip-row">
+            <button type="button" className="inline-link" onClick={() => refresh()} disabled={loading || running || requestingAction}>
+              {loading ? (locale === 'zh' ? '刷新中...' : 'Refreshing...') : (locale === 'zh' ? '刷新工作台' : 'Refresh Workbench')}
+            </button>
+            <a className="settings-chip" href="#agent-sessions">{locale === 'zh' ? '最近会话' : 'Recent Sessions'}</a>
+            <a className="settings-chip" href="#agent-explanation">{locale === 'zh' ? '解释详情' : 'Explanation Detail'}</a>
+            <a className="settings-chip" href="#agent-timeline">{locale === 'zh' ? '轨迹时间线' : 'Operator Timeline'}</a>
+          </div>
         </div>
         <div className="hero-card">
           <div className="card-eyebrow">{locale === 'zh' ? 'Latest Explanation' : 'Latest Explanation'}</div>
@@ -130,10 +140,18 @@ export default function AgentPage() {
                 </div>
               </div>
             ))}
+            {error ? (
+              <div className="focus-row">
+                <div className="symbol-cell">
+                  <strong>{locale === 'zh' ? '工作台提示' : 'Workbench Alert'}</strong>
+                  <span>{error}</span>
+                </div>
+              </div>
+            ) : null}
             <div className="focus-row">
               <div className="symbol-cell">
                 <strong>{locale === 'zh' ? '提交分析' : 'Run Analysis'}</strong>
-                <span>{error || (locale === 'zh' ? '只会执行白名单只读工具，不会直接写 execution 或 workflow。' : 'This only runs allowlisted read-only tools and never writes execution or workflow state directly.')}</span>
+                <span>{locale === 'zh' ? '只会执行白名单只读工具，不会直接写 execution 或 workflow。' : 'This only runs allowlisted read-only tools and never writes execution or workflow state directly.'}</span>
               </div>
               <div className="focus-metric">
                 <button type="button" onClick={submitPrompt} disabled={running || !prompt.trim()}>{running ? (locale === 'zh' ? '运行中...' : 'Running...') : (locale === 'zh' ? '运行分析' : 'Run')}</button>
@@ -161,8 +179,8 @@ export default function AgentPage() {
           </div>
         </article>
 
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Recent Sessions' : 'Recent Sessions'}</div><div className="panel-copy">{locale === 'zh' ? '查看最近的 agent 会话，并切换到对应的详细解释和 timeline。' : 'Review recent agent sessions and switch into their explanation and timeline detail.'}</div></div><div className="panel-badge badge-info">{recentSessions.length}</div></div>
+        <article className="panel" id="agent-sessions">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Recent Sessions' : 'Recent Sessions'}</div><div className="panel-copy">{locale === 'zh' ? '查看最近的 agent 会话，并切换到对应的详细解释和 timeline。' : 'Review recent agent sessions and switch into their explanation and timeline detail.'}</div></div><div className="settings-chip-row"><button type="button" className="inline-link" onClick={() => refresh()} disabled={loading || running || requestingAction}>{locale === 'zh' ? '刷新' : 'Refresh'}</button><div className="panel-badge badge-info">{recentSessions.length}</div></div></div>
           <div className="focus-list focus-list-terminal">
             {loading && !recentSessions.length ? <div className="empty-cell">{locale === 'zh' ? '正在加载 Agent 工作台...' : 'Loading agent workbench...'}</div> : null}
             {!loading && !recentSessions.length ? <div className="empty-cell">{locale === 'zh' ? '当前还没有 agent 会话。' : 'No agent sessions have been recorded yet.'}</div> : null}
@@ -211,7 +229,7 @@ export default function AgentPage() {
       </section>
 
       <section className="panel-grid panel-grid-wide">
-        <article className="panel">
+        <article className="panel" id="agent-explanation">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Explanation Detail' : 'Explanation Detail'}</div><div className="panel-copy">{locale === 'zh' ? '这里显示选中会话的最新 thesis、理由、警告和下一步建议。' : 'Review the selected session thesis, rationale, warnings, and recommended next step here.'}</div></div><div className={`panel-badge ${latestExplanation?.warnings?.length ? 'badge-warn' : 'badge-info'}`}>{latestExplanation?.warnings?.length ?? 0}</div></div>
           <div className="focus-list">
             <div className="focus-row">
@@ -220,7 +238,7 @@ export default function AgentPage() {
                 <span>{sessionDetail?.latestAnalysisRun?.summary || (locale === 'zh' ? '运行一次分析后，这里会显示结构化结论。' : 'Run an analysis to surface a structured conclusion here.')}</span>
               </div>
             </div>
-            {(latestExplanation?.rationale || []).map((item) => (
+            {latestRationale.map((item) => (
               <div className="focus-row" key={item}>
                 <div className="symbol-cell">
                   <strong>{locale === 'zh' ? '理由' : 'Rationale'}</strong>
@@ -228,7 +246,15 @@ export default function AgentPage() {
                 </div>
               </div>
             ))}
-            {(latestExplanation?.warnings || []).map((item) => (
+            {!latestRationale.length ? (
+              <div className="focus-row">
+                <div className="symbol-cell">
+                  <strong>{locale === 'zh' ? '理由' : 'Rationale'}</strong>
+                  <span>{locale === 'zh' ? '当前解释还没有额外的理由条目。' : 'No additional rationale items are available for this explanation yet.'}</span>
+                </div>
+              </div>
+            ) : null}
+            {latestWarnings.map((item) => (
               <div className="focus-row" key={item}>
                 <div className="symbol-cell">
                   <strong>{locale === 'zh' ? '警告' : 'Warning'}</strong>
@@ -236,6 +262,14 @@ export default function AgentPage() {
                 </div>
               </div>
             ))}
+            {!latestWarnings.length ? (
+              <div className="focus-row">
+                <div className="symbol-cell">
+                  <strong>{locale === 'zh' ? '警告' : 'Warning'}</strong>
+                  <span>{locale === 'zh' ? '当前解释还没有新的警告条目。' : 'No warning items have been raised for this explanation yet.'}</span>
+                </div>
+              </div>
+            ) : null}
             <div className="focus-row">
               <div className="symbol-cell">
                 <strong>{locale === 'zh' ? '下一步' : 'Recommended Next Step'}</strong>
@@ -259,7 +293,7 @@ export default function AgentPage() {
           </div>
         </article>
 
-        <article className="panel">
+        <article className="panel" id="agent-timeline">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Operator Timeline' : 'Operator Timeline'}</div><div className="panel-copy">{locale === 'zh' ? '把 session 相关的 audit、request、notification 和 operator action 串成一条可回放轨迹。' : 'Replay the session audit, request, notification, and operator-action trail in one place.'}</div></div><div className="panel-badge badge-info">{timeline.length}</div></div>
           <div className="focus-list focus-list-terminal">
             {!timeline.length ? <div className="empty-cell">{locale === 'zh' ? '当前会话还没有轨迹记录。' : 'This session does not have a timeline yet.'}</div> : null}
@@ -285,6 +319,7 @@ export default function AgentPage() {
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Tool Allowlist' : 'Tool Allowlist'}</div><div className="panel-copy">{locale === 'zh' ? 'Agent 工作台仍然只会调用这些白名单只读工具，不会直接写 execution 或 workflow。' : 'The workbench still only invokes these allowlisted read-only tools and never writes execution or workflow state directly.'}</div></div><div className="panel-badge badge-info">{tools.length}</div></div>
           <div className="focus-list">
+            {!tools.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有可用的白名单工具。' : 'No allowlisted tools are available right now.'}</div> : null}
             {tools.map((tool) => (
               <div className="focus-row" key={tool.name}>
                 <div className="symbol-cell">

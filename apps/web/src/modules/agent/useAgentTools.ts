@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ApiPermissionError } from '../../app/api/http.ts';
+import { useLocale } from '../../pages/console/i18n.tsx';
 import { formatMissingPermission } from '../permissions/permissionCopy.ts';
 import type { AgentToolDefinition } from '@shared-types/trading.ts';
 import {
@@ -25,6 +26,7 @@ type AgentToolsState = {
 };
 
 export function useAgentTools() {
+  const { locale } = useLocale();
   const [state, setState] = useState<AgentToolsState>({
     tools: [],
     workbench: null,
@@ -35,6 +37,12 @@ export function useAgentTools() {
     requestingAction: false,
     error: '',
   });
+
+  const formatAgentError = (error: unknown) => (
+    error instanceof ApiPermissionError && error.missingPermission
+      ? `${formatMissingPermission(locale, error.missingPermission)}.`
+      : (error instanceof Error ? error.message : 'unknown error')
+  );
 
   const load = async (sessionId = '') => {
     const [toolList, workbench] = await Promise.all([
@@ -73,9 +81,7 @@ export function useAgentTools() {
         workbench: null,
         sessionDetail: null,
         loading: false,
-        error: error instanceof ApiPermissionError && error.missingPermission
-          ? `${formatMissingPermission('en', error.missingPermission)}.`
-          : (error instanceof Error ? error.message : 'unknown error'),
+        error: formatAgentError(error),
       }));
     });
 
@@ -104,7 +110,7 @@ export function useAgentTools() {
       setState((current) => ({
         ...current,
         loading: false,
-        error: error instanceof Error ? error.message : 'unknown error',
+        error: formatAgentError(error),
       }));
     }
   };
@@ -134,9 +140,7 @@ export function useAgentTools() {
       setState((current) => ({
         ...current,
         running: false,
-        error: error instanceof ApiPermissionError && error.missingPermission
-          ? `${formatMissingPermission('en', error.missingPermission)}.`
-          : (error instanceof Error ? error.message : 'unknown error'),
+        error: formatAgentError(error),
       }));
       return null;
     }
@@ -164,9 +168,7 @@ export function useAgentTools() {
       setState((current) => ({
         ...current,
         requestingAction: false,
-        error: error instanceof ApiPermissionError && error.missingPermission
-          ? `${formatMissingPermission('en', error.missingPermission)}.`
-          : (error instanceof Error ? error.message : 'unknown error'),
+        error: formatAgentError(error),
       }));
       return null;
     }
