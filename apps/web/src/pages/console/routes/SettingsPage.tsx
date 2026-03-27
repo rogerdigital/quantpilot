@@ -45,6 +45,40 @@ function translateBindingHealth(locale: 'zh' | 'en', status = 'idle') {
   return locale === 'zh' ? (zhMap[status] || status) : (enMap[status] || status);
 }
 
+export function WorkspaceAccessScopePanel({
+  locale,
+  currentWorkspace,
+  accessSummary,
+  sessionPermissions,
+}: {
+  locale: 'zh' | 'en';
+  currentWorkspace: UserAccountSnapshot['currentWorkspace'];
+  accessSummary: UserAccountSnapshot['accessSummary'] | null | undefined;
+  sessionPermissions: string[];
+}) {
+  const workspacePermissionFallback = locale === 'zh' ? '无' : 'none';
+
+  return (
+    <article className="panel" id="workspace-access-scope">
+      <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '当前 Workspace 权限作用域' : 'Current Workspace Access Scope'}</div><div className="panel-copy">{locale === 'zh' ? '展示当前 workspace 的角色、权限扩展和会话最终生效范围。' : 'Review the active workspace role, permission overrides, and the final session scope applied in this workspace.'}</div></div><div className="panel-badge badge-info">{currentWorkspace?.key || 'workspace'}</div></div>
+      <div className="policy-card policy-card-inline">
+        <div className="policy-row"><span>{locale === 'zh' ? '当前 Workspace' : 'Current Workspace'}</span><strong>{currentWorkspace?.label || '--'}</strong></div>
+        <div className="policy-row"><span>{locale === 'zh' ? 'Workspace 角色' : 'Workspace Role'}</span><strong>{accessSummary?.workspaceRole || currentWorkspace?.role || '--'}</strong></div>
+        <div className="policy-row"><span>{locale === 'zh' ? '模板权限' : 'Template Permissions'}</span><strong>{accessSummary?.workspaceDefaultPermissions?.join(', ') || currentWorkspace?.defaultPermissions?.join(', ') || workspacePermissionFallback}</strong></div>
+        <div className="policy-row"><span>{locale === 'zh' ? 'Workspace 有效权限' : 'Workspace Effective Permissions'}</span><strong>{accessSummary?.workspaceEffectivePermissions?.join(', ') || currentWorkspace?.effectivePermissions?.join(', ') || workspacePermissionFallback}</strong></div>
+        <div className="policy-row"><span>{locale === 'zh' ? '权限扩展' : 'Workspace Grants'}</span><strong>{accessSummary?.workspaceGrants?.join(', ') || currentWorkspace?.grants?.join(', ') || workspacePermissionFallback}</strong></div>
+        <div className="policy-row"><span>{locale === 'zh' ? '权限移除' : 'Workspace Revokes'}</span><strong>{accessSummary?.workspaceRevokes?.join(', ') || currentWorkspace?.revokes?.join(', ') || workspacePermissionFallback}</strong></div>
+        <div className="policy-row"><span>{locale === 'zh' ? '当前会话作用域' : 'Scoped Session Permissions'}</span><strong>{accessSummary?.scopedPermissions?.join(', ') || sessionPermissions.join(', ') || 'dashboard:read'}</strong></div>
+      </div>
+      <div className="status-copy">
+        {locale === 'zh'
+          ? '最终会话权限会同时受全局账户访问策略和当前 workspace 权限作用域约束。'
+          : 'Final session permissions are constrained by both the global account access policy and the active workspace scope.'}
+      </div>
+    </article>
+  );
+}
+
 export function SettingsPage() {
   const { locale } = useLocale();
   const { state, session, refreshSession, hasPermission, actionGuardNotice, setMode, updateToggle } = useTradingSystem();
@@ -104,6 +138,7 @@ export function SettingsPage() {
   const selectedRoleTemplate = account?.roleTemplates.find((item) => item.id === accessForm.role) || null;
   const selectedPermissions = toPermissionList(accessForm.permissions);
   const accessSummary = account?.accessSummary;
+  const currentWorkspace = account?.currentWorkspace || null;
 
   function syncBindingForm(binding?: UserBrokerBinding | null, bindingCount = bindings.length) {
     setBindingForm({
@@ -498,6 +533,13 @@ export function SettingsPage() {
             <div className="status-copy">{saveState.access}</div>
           </div>
         </article>
+
+        <WorkspaceAccessScopePanel
+          locale={locale}
+          currentWorkspace={currentWorkspace}
+          accessSummary={accessSummary}
+          sessionPermissions={session?.user.permissions || []}
+        />
 
         <article className="panel" id="policy">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].labels.policy}</div><div className="panel-copy">{copy[locale].terms.policyCopy}</div></div><div className="panel-badge badge-warn">POLICY</div></div>

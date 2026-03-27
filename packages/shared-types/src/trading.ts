@@ -194,6 +194,10 @@ export type WorkspaceRecord = {
   label: string;
   description: string;
   role: string;
+  grants?: string[];
+  revokes?: string[];
+  defaultPermissions?: string[];
+  effectivePermissions?: string[];
   status: 'active' | 'archived';
   isDefault: boolean;
   isCurrent: boolean;
@@ -301,8 +305,15 @@ export type UserAccountProfileSnapshot = {
     status: string;
     defaultPermissions: string[];
     effectivePermissions: string[];
+    workspaceRole?: string;
+    workspaceLabel?: string;
+    workspaceDefaultPermissions?: string[];
+    workspaceEffectivePermissions?: string[];
+    scopedPermissions?: string[];
     grants?: string[];
     revokes?: string[];
+    workspaceGrants?: string[];
+    workspaceRevokes?: string[];
     addedPermissions: string[];
     removedPermissions: string[];
     sessionPermissions: string[];
