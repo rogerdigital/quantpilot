@@ -20,6 +20,104 @@ const promptSuggestions = {
   ],
 };
 
+function buildAgentConversation({
+  locale,
+  prompt,
+  sessionStatus,
+  intentKind,
+  planStatus,
+  running,
+  error,
+  thesis,
+  summary,
+  rationale,
+  warnings,
+  recommendedNextStep,
+  actionRequestSummary,
+  actionRequestStatus,
+}: {
+  locale: 'zh' | 'en';
+  prompt: string;
+  sessionStatus: string;
+  intentKind: string;
+  planStatus: string;
+  running: boolean;
+  error: string;
+  thesis: string;
+  summary: string;
+  rationale: string[];
+  warnings: string[];
+  recommendedNextStep: string;
+  actionRequestSummary: string;
+  actionRequestStatus: string;
+}) {
+  const messages = [];
+  messages.push({
+    key: 'system-session',
+    role: 'system',
+    label: locale === 'zh' ? '系统' : 'System',
+    body: locale === 'zh'
+      ? `当前会话状态：${sessionStatus || '未选择'}；最近 intent：${intentKind || '--'}；plan：${planStatus || '--'}。`
+      : `Current session status: ${sessionStatus || 'unselected'}; latest intent: ${intentKind || '--'}; plan: ${planStatus || '--'}.`,
+    tone: 'muted',
+  });
+
+  if (prompt.trim()) {
+    messages.push({
+      key: 'user-prompt',
+      role: 'user',
+      label: locale === 'zh' ? '你' : 'You',
+      body: prompt.trim(),
+      tone: 'default',
+    });
+  }
+
+  if (running) {
+    messages.push({
+      key: 'assistant-running',
+      role: 'assistant',
+      label: locale === 'zh' ? 'Agent' : 'Agent',
+      body: locale === 'zh'
+        ? '正在解析意图、生成计划，并串行执行白名单只读工具。'
+        : 'Parsing intent, creating a plan, and running allowlisted read-only tools.',
+      tone: 'muted',
+    });
+  }
+
+  if (thesis || summary || rationale.length || warnings.length || recommendedNextStep || actionRequestSummary) {
+    const body = [
+      thesis ? thesis : (locale === 'zh' ? '本轮分析已经完成。' : 'This analysis run has completed.'),
+      summary ? summary : null,
+      rationale.length ? `${locale === 'zh' ? '理由' : 'Rationale'}: ${rationale.join(' ')}` : null,
+      warnings.length ? `${locale === 'zh' ? '警告' : 'Warnings'}: ${warnings.join(' ')}` : null,
+      recommendedNextStep ? `${locale === 'zh' ? '下一步' : 'Next step'}: ${recommendedNextStep}` : null,
+      actionRequestSummary
+        ? `${locale === 'zh' ? '审批请求' : 'Action request'}: ${actionRequestSummary} (${actionRequestStatus || '--'})`
+        : null,
+    ].filter(Boolean).join(' ');
+
+    messages.push({
+      key: 'assistant-summary',
+      role: 'assistant',
+      label: locale === 'zh' ? 'Agent' : 'Agent',
+      body,
+      tone: warnings.length ? 'warn' : 'default',
+    });
+  }
+
+  if (error) {
+    messages.push({
+      key: 'system-error',
+      role: 'system',
+      label: locale === 'zh' ? '工作台提示' : 'Workbench Alert',
+      body: error,
+      tone: 'warn',
+    });
+  }
+
+  return messages;
+}
+
 export default function AgentPage() {
   const { state, session } = useTradingSystem();
   const { locale } = useLocale();
@@ -36,6 +134,22 @@ export default function AgentPage() {
   const runbook = Array.isArray(workbench?.runbook) ? workbench.runbook : [];
   const latestRationale = Array.isArray(latestExplanation?.rationale) ? latestExplanation.rationale : [];
   const latestWarnings = Array.isArray(latestExplanation?.warnings) ? latestExplanation.warnings : [];
+  const conversation = buildAgentConversation({
+    locale,
+    prompt,
+    sessionStatus: sessionDetail?.session.status || '',
+    intentKind: sessionDetail?.session.latestIntent.kind || '',
+    planStatus: sessionDetail?.latestPlan?.status || '',
+    running,
+    error,
+    thesis: latestExplanation?.thesis || '',
+    summary: sessionDetail?.latestAnalysisRun?.summary || '',
+    rationale: latestRationale,
+    warnings: latestWarnings,
+    recommendedNextStep: latestExplanation?.recommendedNextStep || '',
+    actionRequestSummary: latestActionRequest?.summary || '',
+    actionRequestStatus: latestActionRequest?.status || '',
+  });
   const canRequestAction = Boolean(
     sessionDetail?.session.id
     && sessionDetail?.latestPlan?.requiresApproval
@@ -100,63 +214,76 @@ export default function AgentPage() {
 
       <section className="panel-grid panel-grid-wide">
         <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Prompt Studio' : 'Prompt Studio'}</div><div className="panel-copy">{locale === 'zh' ? '从这里发起新的 Agent 分析，系统会自动解析 intent、生成 plan，并执行只读分析链路。' : 'Start a new Agent analysis here. The backend will parse intent, create a plan, and run the read-only analysis path.'}</div></div><div className={`panel-badge ${running ? 'badge-warn' : 'badge-info'}`}>{running ? 'RUNNING' : 'READY'}</div></div>
-          <label className="field-label" htmlFor="agent-prompt-input">{locale === 'zh' ? '分析请求' : 'Analysis Prompt'}</label>
-          <textarea
-            id="agent-prompt-input"
-            className="detail-textarea"
-            value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
-          />
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Agent Chat' : 'Agent Chat'}</div><div className="panel-copy">{locale === 'zh' ? '先以对话方式提出分析请求，再把解释、警告和审批建议沉淀到右侧工作台。' : 'Start with a chat-style request, then let the structured explanation, warnings, and approval handoff settle into the workbench on the right.'}</div></div><div className={`panel-badge ${running ? 'badge-warn' : 'badge-info'}`}>{running ? 'RUNNING' : 'READY'}</div></div>
+          <div className="agent-chat-shell">
+            <div className="agent-chat-transcript">
+              {!conversation.length ? (
+                <div className="empty-cell">{locale === 'zh' ? '当前还没有消息，先向 Agent 提一个分析问题。' : 'There are no messages yet. Start by asking the Agent for an analysis.'}</div>
+              ) : null}
+              {conversation.map((message) => (
+                <div className={`agent-chat-message agent-chat-${message.role} agent-chat-${message.tone}`} key={message.key}>
+                  <div className="agent-chat-meta">
+                    <span>{message.label}</span>
+                    <span>{message.role.toUpperCase()}</span>
+                  </div>
+                  <div className="agent-chat-body">{message.body}</div>
+                </div>
+              ))}
+            </div>
+            <div className="agent-chat-sidecar">
+              <div className="focus-list">
+                <div className="focus-row">
+                  <div className="symbol-cell">
+                    <strong>{locale === 'zh' ? '会话状态' : 'Session Status'}</strong>
+                    <span>{sessionDetail?.session.status || (locale === 'zh' ? '尚未选择会话' : 'No session selected yet')}</span>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? 'Intent' : 'Intent'}</span>
+                    <strong>{sessionDetail?.session.latestIntent.kind || '--'}</strong>
+                  </div>
+                  <div className="focus-metric">
+                    <span>{locale === 'zh' ? 'Plan' : 'Plan'}</span>
+                    <strong>{sessionDetail?.latestPlan?.status || '--'}</strong>
+                  </div>
+                </div>
+                <div className="focus-row">
+                  <div className="symbol-cell">
+                    <strong>{locale === 'zh' ? '快捷提示' : 'Prompt Suggestions'}</strong>
+                    <span>{locale === 'zh' ? '点击任意建议，把它放进消息框后直接发送。' : 'Use any suggestion to populate the composer and send it straight into the analysis flow.'}</span>
+                  </div>
+                </div>
+                {promptSuggestions[locale].map((item) => (
+                  <div className="focus-row" key={item}>
+                    <div className="symbol-cell">
+                      <strong>{locale === 'zh' ? 'Prompt' : 'Prompt'}</strong>
+                      <span>{item}</span>
+                    </div>
+                    <div className="focus-metric">
+                      <button type="button" className="inline-link" onClick={() => setPrompt(item)}>{locale === 'zh' ? '填入' : 'Use'}</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <label className="field-label" htmlFor="agent-prompt-input">{locale === 'zh' ? '发给 Agent 的消息' : 'Message To Agent'}</label>
+          <div className="agent-chat-composer">
+            <textarea
+              id="agent-prompt-input"
+              className="detail-textarea agent-chat-textarea"
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+            />
+            <div className="agent-chat-composer-actions">
+              <div className="status-copy">
+                {locale === 'zh'
+                  ? '发送后会进入 intent -> plan -> read-only analysis 流程，并把结果写回当前会话。'
+                  : 'Sending a message enters the intent -> plan -> read-only analysis flow and writes the result back into the current session.'}
+              </div>
+              <button type="button" onClick={submitPrompt} disabled={running || !prompt.trim()}>{running ? (locale === 'zh' ? '运行中...' : 'Running...') : (locale === 'zh' ? '发送并分析' : 'Send And Analyze')}</button>
+            </div>
+          </div>
           <div className="focus-list">
-            <div className="focus-row">
-              <div className="symbol-cell">
-                <strong>{locale === 'zh' ? '会话状态' : 'Session Status'}</strong>
-                <span>{sessionDetail?.session.status || (locale === 'zh' ? '尚未选择会话' : 'No session selected yet')}</span>
-              </div>
-              <div className="focus-metric">
-                <span>{locale === 'zh' ? 'Intent' : 'Intent'}</span>
-                <strong>{sessionDetail?.session.latestIntent.kind || '--'}</strong>
-              </div>
-              <div className="focus-metric">
-                <span>{locale === 'zh' ? 'Plan' : 'Plan'}</span>
-                <strong>{sessionDetail?.latestPlan?.status || '--'}</strong>
-              </div>
-            </div>
-            <div className="focus-row">
-              <div className="symbol-cell">
-                <strong>{locale === 'zh' ? '快捷提示' : 'Prompt Suggestions'}</strong>
-                <span>{locale === 'zh' ? '点击即可填入编辑框，然后运行分析。' : 'Click any suggestion to populate the editor and run the analysis.'}</span>
-              </div>
-            </div>
-            {promptSuggestions[locale].map((item) => (
-              <div className="focus-row" key={item}>
-                <div className="symbol-cell">
-                  <strong>{locale === 'zh' ? 'Prompt' : 'Prompt'}</strong>
-                  <span>{item}</span>
-                </div>
-                <div className="focus-metric">
-                  <button type="button" className="inline-link" onClick={() => setPrompt(item)}>{locale === 'zh' ? '填入' : 'Use'}</button>
-                </div>
-              </div>
-            ))}
-            {error ? (
-              <div className="focus-row">
-                <div className="symbol-cell">
-                  <strong>{locale === 'zh' ? '工作台提示' : 'Workbench Alert'}</strong>
-                  <span>{error}</span>
-                </div>
-              </div>
-            ) : null}
-            <div className="focus-row">
-              <div className="symbol-cell">
-                <strong>{locale === 'zh' ? '提交分析' : 'Run Analysis'}</strong>
-                <span>{locale === 'zh' ? '只会执行白名单只读工具，不会直接写 execution 或 workflow。' : 'This only runs allowlisted read-only tools and never writes execution or workflow state directly.'}</span>
-              </div>
-              <div className="focus-metric">
-                <button type="button" onClick={submitPrompt} disabled={running || !prompt.trim()}>{running ? (locale === 'zh' ? '运行中...' : 'Running...') : (locale === 'zh' ? '运行分析' : 'Run')}</button>
-              </div>
-            </div>
             <div className="focus-row">
               <div className="symbol-cell">
                 <strong>{locale === 'zh' ? '受控交接' : 'Controlled Handoff'}</strong>

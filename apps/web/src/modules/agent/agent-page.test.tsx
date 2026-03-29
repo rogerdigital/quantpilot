@@ -36,7 +36,7 @@ vi.mock('./useAgentTools.ts', () => ({
 }));
 
 describe('AgentPage', () => {
-  it('renders the collaboration workbench with prompt studio and timeline', () => {
+  it('renders the collaboration workbench with chat shell and timeline', () => {
     mockUseAgentTools.mockReturnValue({
       tools: [
         { name: 'risk.events.list', description: 'Read risk events', category: 'risk', access: 'read' },
@@ -111,7 +111,11 @@ describe('AgentPage', () => {
 
     const html = renderToStaticMarkup(<AgentPage />);
 
-    expect(html).toContain('Prompt Studio');
+    expect(html).toContain('Agent Chat');
+    expect(html).toContain('Message To Agent');
+    expect(html).toContain('Send And Analyze');
+    expect(html).toContain('You');
+    expect(html).toContain('Agent');
     expect(html).toContain('Refresh Workbench');
     expect(html).toContain('Recent Sessions');
     expect(html).toContain('Pending Requests');
@@ -177,6 +181,7 @@ describe('AgentPage', () => {
 
     expect(html).toContain('Workbench Alert');
     expect(html).toContain('Missing permission: agent:read.');
+    expect(html).toContain('Message To Agent');
     expect(html).toContain('No additional rationale items are available for this explanation yet.');
     expect(html).toContain('No warning items have been raised for this explanation yet.');
     expect(html).toContain('No allowlisted tools are available right now.');
