@@ -205,6 +205,19 @@ export function runAgentAnalysis(payload = {}) {
     if (!step.toolName) {
       return step;
     }
+    controlPlaneRuntime.recordAgentSessionMessage({
+      sessionId: session.id,
+      role: 'system',
+      kind: 'analysis_status',
+      title: 'Reading tool context',
+      body: `Reading ${step.title}.`,
+      requestedBy: payload.requestedBy || session.requestedBy || 'agent',
+      metadata: {
+        agentPlanId: plan.id,
+        planStepId: step.id,
+        toolName: step.toolName,
+      },
+    });
     const result = executeAgentTool({
       tool: step.toolName,
       args: resolveToolArgs(step, intent),
@@ -219,6 +232,19 @@ export function runAgentAnalysis(payload = {}) {
         executedTool: result.tool,
       },
     };
+  });
+
+  controlPlaneRuntime.recordAgentSessionMessage({
+    sessionId: session.id,
+    role: 'system',
+    kind: 'analysis_status',
+    title: 'Summarizing findings',
+    body: 'Summarizing tool findings into a structured recommendation.',
+    requestedBy: payload.requestedBy || session.requestedBy || 'agent',
+    metadata: {
+      agentPlanId: plan.id,
+      toolCallCount: toolResults.length,
+    },
   });
 
   const narrative = buildAnalysisNarrative(intent, toolResults);
@@ -301,6 +327,21 @@ export function runAgentAnalysis(payload = {}) {
       agentAnalysisRunId: run.id,
       status: runStatus,
       toolCallCount: toolResults.length,
+    },
+  });
+  controlPlaneRuntime.recordAgentSessionMessage({
+    sessionId: session.id,
+    role: 'system',
+    kind: 'analysis_status',
+    title: plan.requiresApproval ? 'Ready for approval' : 'Analysis ready',
+    body: plan.requiresApproval
+      ? 'Ready for approval once the operator requests a controlled handoff.'
+      : 'Analysis ready for the next follow-up question or read-only review.',
+    requestedBy: payload.requestedBy || session.requestedBy || 'agent',
+    metadata: {
+      agentPlanId: plan.id,
+      agentAnalysisRunId: run.id,
+      requiresApproval: plan.requiresApproval,
     },
   });
 

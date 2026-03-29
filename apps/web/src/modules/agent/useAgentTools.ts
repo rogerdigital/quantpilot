@@ -4,11 +4,15 @@ import { useLocale } from '../../pages/console/i18n.tsx';
 import { formatMissingPermission } from '../permissions/permissionCopy.ts';
 import type { AgentToolDefinition } from '@shared-types/trading.ts';
 import {
+  createAgentIntent,
+  createAgentPlan,
   createAgentSessionActionRequest,
   fetchAgentSessionDetail,
   fetchAgentTools,
   fetchAgentWorkbench,
   runAgentAnalysis,
+  type AgentIntentPayload,
+  type AgentPlanPayload,
   type AgentSessionDetailPayload,
   type AgentSessionActionRequestPayload,
   type AgentWorkbenchPayload,
@@ -43,6 +47,27 @@ export function useAgentTools() {
       ? `${formatMissingPermission(locale, error.missingPermission)}.`
       : (error instanceof Error ? error.message : 'unknown error')
   );
+
+  const createTransientMessage = (kind: string, body: string) => ({
+    id: `local-${kind}-${Date.now()}`,
+    role: 'system',
+    kind,
+    title: body,
+    body,
+    requestedBy: 'agent',
+    createdAt: new Date().toISOString(),
+    metadata: {
+      transient: true,
+    },
+  });
+
+  const withTransientMessage = (detail: AgentSessionDetailPayload | null, body: string): AgentSessionDetailPayload | null => {
+    if (!detail) return detail;
+    return {
+      ...detail,
+      messages: [createTransientMessage('analysis_status', body), ...detail.messages],
+    };
+  };
 
   const load = async (sessionId = '') => {
     const [toolList, workbench] = await Promise.all([
@@ -126,11 +151,37 @@ export function useAgentTools() {
     }));
 
     try {
-      const result = await runAgentAnalysis({
+      const intentResult: AgentIntentPayload = await createAgentIntent({
         prompt: trimmed,
         requestedBy,
+        sessionId: state.selectedSessionId || undefined,
       });
-      await load(result.session.id);
+      const intentDetail = await fetchAgentSessionDetail(intentResult.session.id);
+      setState((current) => ({
+        ...current,
+        selectedSessionId: intentResult.session.id,
+        sessionDetail: withTransientMessage(intentDetail, locale === 'zh' ? '正在规划下一步。' : 'Planning next steps.'),
+      }));
+
+      const planResult: AgentPlanPayload = await createAgentPlan({
+        sessionId: intentResult.session.id,
+        requestedBy,
+        intent: intentResult.intent,
+      });
+      const plannedDetail = await fetchAgentSessionDetail(intentResult.session.id);
+      setState((current) => ({
+        ...current,
+        selectedSessionId: intentResult.session.id,
+        sessionDetail: withTransientMessage(plannedDetail, locale === 'zh' ? '正在读取工具和收集证据。' : 'Reading tools and collecting evidence.'),
+      }));
+
+      const result = await runAgentAnalysis({
+        prompt: trimmed,
+        sessionId: intentResult.session.id,
+        planId: planResult.plan.id,
+        requestedBy,
+      });
+      await load(intentResult.session.id);
       setState((current) => ({
         ...current,
         running: false,

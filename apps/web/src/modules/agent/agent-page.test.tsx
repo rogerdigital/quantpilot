@@ -97,6 +97,11 @@ describe('AgentPage', () => {
         timeline: [
           { id: 'timeline-1', lane: 'operator', title: 'Approved agent request', detail: 'Operator approved the request.', actor: 'risk-operator' },
         ],
+        messages: [
+          { id: 'msg-0', role: 'user', kind: 'prompt', title: 'Prompt', body: 'Explain the latest risk posture.', requestedBy: 'operator-demo', createdAt: '2026-03-26T09:59:00.000Z', metadata: {} },
+          { id: 'msg-1', role: 'system', kind: 'analysis_status', title: 'Summarizing findings', body: 'Summarizing tool findings into a structured recommendation.', requestedBy: 'agent', createdAt: '2026-03-26T10:00:00.000Z', metadata: {} },
+          { id: 'msg-2', role: 'assistant', kind: 'analysis_result', title: 'Risk posture is elevated.', body: 'Risk posture is elevated. Review the risk console.', requestedBy: 'agent', createdAt: '2026-03-26T10:01:00.000Z', metadata: {} },
+        ],
       },
       selectedSessionId: 'agent-session-1',
       loading: false,
@@ -116,6 +121,7 @@ describe('AgentPage', () => {
     expect(html).toContain('Send And Analyze');
     expect(html).toContain('You');
     expect(html).toContain('Agent');
+    expect(html).toContain('Summarizing tool findings into a structured recommendation.');
     expect(html).toContain('Refresh Workbench');
     expect(html).toContain('Recent Sessions');
     expect(html).toContain('Pending Requests');
@@ -165,6 +171,7 @@ describe('AgentPage', () => {
         },
         latestActionRequest: null,
         timeline: [],
+        messages: [],
       },
       selectedSessionId: 'agent-session-2',
       loading: false,

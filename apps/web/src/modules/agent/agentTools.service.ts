@@ -162,6 +162,19 @@ export type AgentAnalysisRunPayload = {
   run: NonNullable<AgentSessionDetailPayload['latestAnalysisRun']>;
 };
 
+export type AgentIntentPayload = {
+  ok: boolean;
+  session: AgentSessionDetailPayload['session'];
+  intent: AgentAnalysisRunPayload['intent'];
+};
+
+export type AgentPlanPayload = {
+  ok: boolean;
+  session: AgentSessionDetailPayload['session'];
+  intent: AgentAnalysisRunPayload['intent'];
+  plan: NonNullable<AgentSessionDetailPayload['latestPlan']>;
+};
+
 export type AgentSessionActionRequestPayload = {
   ok: boolean;
   session: AgentSessionDetailPayload['session'];
@@ -211,8 +224,34 @@ export async function fetchAgentSessionDetail(sessionId: string): Promise<AgentS
   });
 }
 
+export async function createAgentIntent(payload: {
+  prompt: string;
+  requestedBy?: string;
+  sessionId?: string;
+}): Promise<AgentIntentPayload> {
+  return fetchJson('/api/agent/intent', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function createAgentPlan(payload: {
+  sessionId: string;
+  requestedBy?: string;
+  intent?: AgentAnalysisRunPayload['intent'];
+}): Promise<AgentPlanPayload> {
+  return fetchJson('/api/agent/plans', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function runAgentAnalysis(payload: {
   prompt: string;
+  sessionId?: string;
+  planId?: string;
   requestedBy?: string;
 }): Promise<AgentAnalysisRunPayload> {
   return fetchJson('/api/agent/analysis-runs', {
