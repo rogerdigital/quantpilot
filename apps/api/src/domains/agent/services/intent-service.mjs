@@ -239,6 +239,32 @@ export function parseAgentIntent(payload = {}) {
       },
     });
 
+  controlPlaneRuntime.recordAgentSessionMessage({
+    sessionId: session.id,
+    role: 'user',
+    kind: 'prompt',
+    title: 'Analysis request',
+    body: prompt,
+    requestedBy,
+    metadata: {
+      source: 'agent-intent-parser',
+    },
+  });
+  controlPlaneRuntime.recordAgentSessionMessage({
+    sessionId: session.id,
+    role: 'system',
+    kind: 'intent',
+    title: 'Intent parsed',
+    body: intent.summary,
+    requestedBy,
+    metadata: {
+      intentKind: intent.kind,
+      targetType: intent.targetType,
+      targetId: intent.targetId,
+      requestedMode: intent.requestedMode,
+    },
+  });
+
   return {
     ok: true,
     session,

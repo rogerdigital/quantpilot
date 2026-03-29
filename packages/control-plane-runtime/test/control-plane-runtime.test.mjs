@@ -366,15 +366,29 @@ test('control plane runtime records agent collaboration sessions, plans, and ana
       recommendedNextStep: 'Create an agent action request for execution prep.',
     },
   });
+  const message = runtime.recordAgentSessionMessage({
+    sessionId: session.id,
+    role: 'assistant',
+    kind: 'analysis_result',
+    title: 'Execution readiness summary',
+    body: 'Execution prep is reasonable but still gated.',
+    requestedBy: 'agent',
+    metadata: {
+      agentPlanId: plan.id,
+      agentAnalysisRunId: run.id,
+    },
+  });
 
   assert.equal(runtime.listAgentSessions()[0].id, session.id);
   assert.equal(runtime.getLatestAgentPlanForSession(session.id).id, plan.id);
   assert.equal(runtime.getLatestAgentAnalysisRunForSession(session.id).id, run.id);
   assert.equal(runtime.getAgentSession(session.id).latestPlanId, plan.id);
   assert.equal(runtime.getAgentSession(session.id).latestAnalysisRunId, run.id);
+  assert.equal(runtime.listAgentSessionMessages(session.id, 10)[0].id, message.id);
   assert.equal(runtime.listAuditRecords().some((item) => item.type === 'agent-session'), true);
   assert.equal(runtime.listAuditRecords().some((item) => item.type === 'agent-plan'), true);
   assert.equal(runtime.listAuditRecords().some((item) => item.type === 'agent-analysis-run'), true);
+  assert.equal(runtime.listAuditRecords().some((item) => item.type === 'agent-message'), true);
 });
 
 test('control plane runtime persists workflow runs through start and complete transitions', () => {

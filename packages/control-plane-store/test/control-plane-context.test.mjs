@@ -434,6 +434,18 @@ test('agent collaboration repositories persist sessions, plans, and analysis run
       recommendedNextStep: 'Escalate to the risk console before preparing execution.',
     },
   });
+  const message = context.agentSessionMessages.appendAgentSessionMessage({
+    id: 'agent-message-1',
+    sessionId: session.id,
+    role: 'assistant',
+    kind: 'analysis_result',
+    title: 'Risk posture summary',
+    body: 'Risk posture is elevated.',
+    requestedBy: 'agent',
+    metadata: {
+      agentAnalysisRunId: run.id,
+    },
+  });
 
   const updatedSession = context.agentSessions.updateAgentSession(session.id, {
     latestPlanId: plan.id,
@@ -444,6 +456,7 @@ test('agent collaboration repositories persist sessions, plans, and analysis run
   assert.equal(context.agentSessions.listAgentSessions(5)[0].id, session.id);
   assert.equal(context.agentPlans.getLatestAgentPlanForSession(session.id).id, plan.id);
   assert.equal(context.agentAnalysisRuns.getLatestAgentAnalysisRunForSession(session.id).id, run.id);
+  assert.equal(context.agentSessionMessages.listAgentSessionMessages(session.id, 5)[0].id, message.id);
   assert.equal(updatedSession.latestAnalysisRunId, run.id);
   assert.equal(updatedSession.status, 'completed');
 });

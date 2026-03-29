@@ -1424,6 +1424,9 @@ test('GET /api/agent/sessions and detail expose persisted plans and analysis run
   assert.equal(detailResponse.json.latestAnalysisRun.id, createResponse.json.run.id);
   assert.equal(Array.isArray(detailResponse.json.plans), true);
   assert.equal(Array.isArray(detailResponse.json.analysisRuns), true);
+  assert.equal(Array.isArray(detailResponse.json.messages), true);
+  assert.equal(detailResponse.json.messages.some((item) => item.role === 'user' && item.kind === 'prompt'), true);
+  assert.equal(detailResponse.json.messages.some((item) => item.role === 'assistant' && item.kind === 'analysis_result'), true);
 });
 
 test('GET /api/agent/sessions respects the current workspace scope by default', async () => {

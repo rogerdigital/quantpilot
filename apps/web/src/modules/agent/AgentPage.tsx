@@ -23,6 +23,7 @@ const promptSuggestions = {
 function buildAgentConversation({
   locale,
   prompt,
+  messages,
   sessionStatus,
   intentKind,
   planStatus,
@@ -38,6 +39,13 @@ function buildAgentConversation({
 }: {
   locale: 'zh' | 'en';
   prompt: string;
+  messages: Array<{
+    id: string;
+    role: string;
+    kind: string;
+    title: string;
+    body: string;
+  }>;
   sessionStatus: string;
   intentKind: string;
   planStatus: string;
@@ -51,8 +59,22 @@ function buildAgentConversation({
   actionRequestSummary: string;
   actionRequestStatus: string;
 }) {
-  const messages = [];
-  messages.push({
+  if (Array.isArray(messages) && messages.length) {
+    return messages.map((message) => ({
+      key: message.id,
+      role: message.role === 'user' || message.role === 'assistant' ? message.role : 'system',
+      label: message.role === 'user'
+        ? (locale === 'zh' ? '你' : 'You')
+        : message.role === 'assistant'
+          ? 'Agent'
+          : (locale === 'zh' ? '系统' : 'System'),
+      body: message.body || message.title,
+      tone: message.kind === 'approval_note' ? 'warn' : 'default',
+    }));
+  }
+
+  const fallbackMessages = [];
+  fallbackMessages.push({
     key: 'system-session',
     role: 'system',
     label: locale === 'zh' ? '系统' : 'System',
@@ -63,7 +85,7 @@ function buildAgentConversation({
   });
 
   if (prompt.trim()) {
-    messages.push({
+    fallbackMessages.push({
       key: 'user-prompt',
       role: 'user',
       label: locale === 'zh' ? '你' : 'You',
@@ -73,7 +95,7 @@ function buildAgentConversation({
   }
 
   if (running) {
-    messages.push({
+    fallbackMessages.push({
       key: 'assistant-running',
       role: 'assistant',
       label: locale === 'zh' ? 'Agent' : 'Agent',
@@ -96,7 +118,7 @@ function buildAgentConversation({
         : null,
     ].filter(Boolean).join(' ');
 
-    messages.push({
+    fallbackMessages.push({
       key: 'assistant-summary',
       role: 'assistant',
       label: locale === 'zh' ? 'Agent' : 'Agent',
@@ -106,7 +128,7 @@ function buildAgentConversation({
   }
 
   if (error) {
-    messages.push({
+    fallbackMessages.push({
       key: 'system-error',
       role: 'system',
       label: locale === 'zh' ? '工作台提示' : 'Workbench Alert',
@@ -115,7 +137,7 @@ function buildAgentConversation({
     });
   }
 
-  return messages;
+  return fallbackMessages;
 }
 
 export default function AgentPage() {
@@ -137,6 +159,7 @@ export default function AgentPage() {
   const conversation = buildAgentConversation({
     locale,
     prompt,
+    messages: Array.isArray(sessionDetail?.messages) ? sessionDetail.messages : [],
     sessionStatus: sessionDetail?.session.status || '',
     intentKind: sessionDetail?.session.latestIntent.kind || '',
     planStatus: sessionDetail?.latestPlan?.status || '',

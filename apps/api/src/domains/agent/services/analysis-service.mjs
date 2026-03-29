@@ -183,6 +183,18 @@ export function runAgentAnalysis(payload = {}) {
   controlPlaneRuntime.updateAgentSession(session.id, {
     status: 'running',
   });
+  controlPlaneRuntime.recordAgentSessionMessage({
+    sessionId: session.id,
+    role: 'system',
+    kind: 'analysis_status',
+    title: 'Analysis started',
+    body: 'Intent parsed and plan execution started against allowlisted read-only tools.',
+    requestedBy: payload.requestedBy || session.requestedBy || 'agent',
+    metadata: {
+      agentPlanId: plan.id,
+      status: 'running',
+    },
+  });
   controlPlaneRuntime.updateAgentPlan(plan.id, {
     status: 'running',
     steps: runningSteps,
@@ -270,6 +282,25 @@ export function runAgentAnalysis(payload = {}) {
     latestAnalysisRunId: run.id,
     metadata: {
       latestAnalysisCompletedAt: completedAt,
+    },
+  });
+  controlPlaneRuntime.recordAgentSessionMessage({
+    sessionId: session.id,
+    role: 'assistant',
+    kind: 'analysis_result',
+    title: narrative.explanation.thesis || 'Analysis completed',
+    body: [
+      narrative.summary || '',
+      ...(Array.isArray(narrative.explanation?.rationale) ? narrative.explanation.rationale : []),
+      ...(Array.isArray(narrative.explanation?.warnings) ? narrative.explanation.warnings : []),
+      narrative.explanation?.recommendedNextStep ? `Next step: ${narrative.explanation.recommendedNextStep}` : '',
+    ].filter(Boolean).join(' '),
+    requestedBy: payload.requestedBy || session.requestedBy || 'agent',
+    metadata: {
+      agentPlanId: plan.id,
+      agentAnalysisRunId: run.id,
+      status: runStatus,
+      toolCallCount: toolResults.length,
     },
   });
 

@@ -363,6 +363,20 @@ export function createAgentSessionEntry(payload = {}) {
   };
 }
 
+export function createAgentSessionMessageEntry(payload = {}) {
+  return {
+    id: payload.id || `agent-message-${randomUUID()}`,
+    sessionId: payload.sessionId || '',
+    role: payload.role || 'system',
+    kind: payload.kind || 'system_note',
+    title: payload.title || 'Agent message',
+    body: payload.body || '',
+    requestedBy: payload.requestedBy || 'agent',
+    createdAt: payload.createdAt || new Date().toISOString(),
+    metadata: payload.metadata || {},
+  };
+}
+
 export function createAgentPlanEntry(payload = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {

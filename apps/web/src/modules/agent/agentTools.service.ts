@@ -122,6 +122,16 @@ export type AgentSessionDetailPayload = {
     requestedBy: string;
     metadata: Record<string, unknown>;
   } | null;
+  messages: Array<{
+    id: string;
+    role: string;
+    kind: string;
+    title: string;
+    body: string;
+    requestedBy: string;
+    createdAt: string;
+    metadata: Record<string, unknown>;
+  }>;
   linkedRequests: Array<Record<string, unknown>>;
   linkedNotifications: Array<Record<string, unknown>>;
   linkedOperatorActions: Array<Record<string, unknown>>;

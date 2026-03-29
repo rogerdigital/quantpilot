@@ -1242,6 +1242,15 @@ export type AgentToolExecutionResult = {
 };
 
 export type AgentSessionStatus = 'draft' | 'ready' | 'running' | 'waiting_approval' | 'completed' | 'failed';
+export type AgentMessageRole = 'system' | 'user' | 'assistant';
+export type AgentMessageKind =
+  | 'prompt'
+  | 'intent'
+  | 'plan'
+  | 'analysis_status'
+  | 'analysis_result'
+  | 'approval_note'
+  | 'system_note';
 
 export type AgentIntentKind =
   | 'unknown'
@@ -1321,6 +1330,18 @@ export type AgentAnalysisRunRecord = {
   createdAt: string;
   updatedAt: string;
   completedAt: string;
+};
+
+export type AgentSessionMessageRecord = {
+  id: string;
+  sessionId: string;
+  role: AgentMessageRole;
+  kind: AgentMessageKind;
+  title: string;
+  body: string;
+  requestedBy: string;
+  createdAt: string;
+  metadata: Record<string, unknown>;
 };
 
 export type AgentSessionRecord = {

@@ -259,6 +259,20 @@ export function createAgentPlan(payload = {}) {
       planCreatedAt: plan.createdAt,
     },
   });
+  controlPlaneRuntime.recordAgentSessionMessage({
+    sessionId: session.id,
+    role: 'assistant',
+    kind: 'plan',
+    title: 'Plan prepared',
+    body: buildPlanSummary(intent),
+    requestedBy: payload.requestedBy || session.requestedBy || 'agent',
+    metadata: {
+      agentPlanId: plan.id,
+      requiresApproval: plan.requiresApproval,
+      stepCount: plan.steps.length,
+      intentKind: intent.kind,
+    },
+  });
 
   return {
     ok: true,

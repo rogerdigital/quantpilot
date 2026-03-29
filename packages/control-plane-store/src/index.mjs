@@ -19,6 +19,7 @@ export {
 export { createAgentActionRequestRepository } from './repositories/agent-action-request-repo.mjs';
 export { createAgentAnalysisRunRepository } from './repositories/agent-analysis-run-repo.mjs';
 export { createAgentPlanRepository } from './repositories/agent-plan-repo.mjs';
+export { createAgentSessionMessageRepository } from './repositories/agent-session-message-repo.mjs';
 export { createAgentSessionRepository } from './repositories/agent-session-repo.mjs';
 export { createAuditRepository } from './repositories/audit-repo.mjs';
 export { createBacktestRunRepository } from './repositories/backtest-run-repo.mjs';
@@ -58,6 +59,8 @@ export const listAgentSessions = (...args) => controlPlaneContext.agentSessions.
 export const getAgentSession = (...args) => controlPlaneContext.agentSessions.getAgentSession(...args);
 export const appendAgentSession = (...args) => controlPlaneContext.agentSessions.appendAgentSession(...args);
 export const updateAgentSession = (...args) => controlPlaneContext.agentSessions.updateAgentSession(...args);
+export const listAgentSessionMessages = (...args) => controlPlaneContext.agentSessionMessages.listAgentSessionMessages(...args);
+export const appendAgentSessionMessage = (...args) => controlPlaneContext.agentSessionMessages.appendAgentSessionMessage(...args);
 export const listBacktestRuns = (...args) => controlPlaneContext.backtestRuns.listBacktestRuns(...args);
 export const getBacktestRun = (...args) => controlPlaneContext.backtestRuns.getBacktestRun(...args);
 export const findBacktestRunByWorkflowRunId = (...args) => controlPlaneContext.backtestRuns.findBacktestRunByWorkflowRunId(...args);

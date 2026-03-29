@@ -128,6 +128,30 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     updateAgentSession(sessionId, patch = {}) {
       return context.agentSessions.updateAgentSession(sessionId, patch);
     },
+    listAgentSessionMessages(sessionId, limit = 100, filter = {}) {
+      return context.agentSessionMessages.listAgentSessionMessages(sessionId, limit, withScopedFilter(filter));
+    },
+    appendAgentSessionMessage(payload = {}) {
+      return context.agentSessionMessages.appendAgentSessionMessage(withScopeMetadata(payload));
+    },
+    recordAgentSessionMessage(payload = {}) {
+      const message = context.agentSessionMessages.appendAgentSessionMessage(withScopeMetadata(payload));
+
+      context.audit.appendAuditRecord({
+        type: 'agent-message',
+        actor: message.requestedBy,
+        title: `Agent message recorded`,
+        detail: message.title || message.body || 'Agent session message persisted.',
+        metadata: withScopeMetaRecord({
+          agentSessionId: message.sessionId,
+          agentMessageId: message.id,
+          role: message.role,
+          kind: message.kind,
+        }),
+      });
+
+      return message;
+    },
     listAgentPlans(limit = 50, filter = {}) {
       return context.agentPlans.listAgentPlans(limit, withScopedFilter(filter));
     },

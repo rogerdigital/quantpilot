@@ -220,6 +220,20 @@ export function createSessionActionRequest(sessionId, payload = {}) {
       pendingActionRequestedAt: new Date().toISOString(),
     },
   });
+  controlPlaneRuntime.recordAgentSessionMessage({
+    sessionId: session.id,
+    role: 'assistant',
+    kind: 'approval_note',
+    title: 'Approval requested',
+    body: summary,
+    requestedBy: payload.requestedBy || session.requestedBy || 'agent',
+    metadata: {
+      requestType,
+      targetId: target.targetId,
+      targetType: target.targetType,
+      workflowRunId: workflowResult.workflow.id,
+    },
+  });
 
   return {
     ok: true,
@@ -279,6 +293,18 @@ export function approveAgentActionRequest(requestId, payload = {}) {
         actionRequestApprovedBy: payload.approvedBy || 'operator',
       },
     });
+    controlPlaneRuntime.recordAgentSessionMessage({
+      sessionId: request.metadata.agentSessionId,
+      role: 'system',
+      kind: 'approval_note',
+      title: 'Action request approved',
+      body: `Request ${request.requestType} was approved by ${payload.approvedBy || 'operator'}.`,
+      requestedBy: payload.approvedBy || 'operator',
+      metadata: {
+        agentActionRequestId: request.id,
+        downstreamWorkflowId: downstreamWorkflow?.id || '',
+      },
+    });
   }
 
   controlPlaneRuntime.recordOperatorAction({
@@ -328,6 +354,17 @@ export function rejectAgentActionRequest(requestId, payload = {}) {
         actionRequestRejectedAt: new Date().toISOString(),
         actionRequestRejectedBy: payload.rejectedBy || 'operator',
         actionRequestRejectionReason: payload.reason || '',
+      },
+    });
+    controlPlaneRuntime.recordAgentSessionMessage({
+      sessionId: request.metadata.agentSessionId,
+      role: 'system',
+      kind: 'approval_note',
+      title: 'Action request rejected',
+      body: payload.reason || `Request ${request.requestType} was rejected by ${payload.rejectedBy || 'operator'}.`,
+      requestedBy: payload.rejectedBy || 'operator',
+      metadata: {
+        agentActionRequestId: request.id,
       },
     });
   }
