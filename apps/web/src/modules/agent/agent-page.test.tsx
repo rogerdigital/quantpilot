@@ -72,8 +72,20 @@ describe('AgentPage', () => {
         },
         latestPlan: {
           status: 'completed',
+          steps: [
+            {
+              id: 'step-1',
+              kind: 'tool_call',
+              title: 'Read risk events',
+              status: 'completed',
+              toolName: 'risk.events.list',
+              description: 'Read current risk events.',
+              outputSummary: 'One active event found.',
+            },
+          ],
         },
         latestAnalysisRun: {
+          status: 'completed',
           summary: 'Risk posture summary.',
           explanation: {
             thesis: 'Risk posture is elevated.',
@@ -81,6 +93,14 @@ describe('AgentPage', () => {
             warnings: ['Do not bypass review.'],
             recommendedNextStep: 'Review the risk console.',
           },
+          evidence: [
+            {
+              id: 'evidence-1',
+              title: 'Primary evidence',
+              summary: 'An active risk event remains open.',
+              source: 'risk.events.list',
+            },
+          ],
         },
         latestActionRequest: {
           id: 'request-1',
@@ -116,12 +136,18 @@ describe('AgentPage', () => {
 
     const html = renderToStaticMarkup(<AgentPage />);
 
-    expect(html).toContain('Agent Chat');
+    expect(html).toContain('Agent Dialogue');
+    expect(html).toContain('Conversation Thread');
+    expect(html).toContain('Session Pulse');
+    expect(html).toContain('Plan Ladder');
+    expect(html).toContain('Evidence Snapshot');
     expect(html).toContain('Message To Agent');
     expect(html).toContain('Send And Analyze');
     expect(html).toContain('You');
     expect(html).toContain('Agent');
     expect(html).toContain('Summarizing tool findings into a structured recommendation.');
+    expect(html).toContain('Read risk events');
+    expect(html).toContain('Primary evidence');
     expect(html).toContain('Refresh Workbench');
     expect(html).toContain('Recent Sessions');
     expect(html).toContain('Pending Requests');
@@ -159,8 +185,10 @@ describe('AgentPage', () => {
         },
         latestPlan: {
           status: 'planned',
+          steps: [],
         },
         latestAnalysisRun: {
+          status: 'pending',
           summary: '',
           explanation: {
             thesis: '',
@@ -168,6 +196,7 @@ describe('AgentPage', () => {
             warnings: [],
             recommendedNextStep: '',
           },
+          evidence: [],
         },
         latestActionRequest: null,
         timeline: [],
@@ -189,6 +218,8 @@ describe('AgentPage', () => {
     expect(html).toContain('Workbench Alert');
     expect(html).toContain('Missing permission: agent:read.');
     expect(html).toContain('Message To Agent');
+    expect(html).toContain('No plan steps have been recorded for this session yet.');
+    expect(html).toContain('No evidence snapshot is available for this analysis yet.');
     expect(html).toContain('No additional rationale items are available for this explanation yet.');
     expect(html).toContain('No warning items have been raised for this explanation yet.');
     expect(html).toContain('No allowlisted tools are available right now.');

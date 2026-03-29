@@ -156,6 +156,8 @@ export default function AgentPage() {
   const runbook = Array.isArray(workbench?.runbook) ? workbench.runbook : [];
   const latestRationale = Array.isArray(latestExplanation?.rationale) ? latestExplanation.rationale : [];
   const latestWarnings = Array.isArray(latestExplanation?.warnings) ? latestExplanation.warnings : [];
+  const planSteps = Array.isArray(sessionDetail?.latestPlan?.steps) ? sessionDetail.latestPlan.steps : [];
+  const evidence = Array.isArray(sessionDetail?.latestAnalysisRun?.evidence) ? sessionDetail.latestAnalysisRun.evidence : [];
   const conversation = buildAgentConversation({
     locale,
     prompt,
@@ -236,96 +238,190 @@ export default function AgentPage() {
       </section>
 
       <section className="panel-grid panel-grid-wide">
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Agent Chat' : 'Agent Chat'}</div><div className="panel-copy">{locale === 'zh' ? '先以对话方式提出分析请求，再把解释、警告和审批建议沉淀到右侧工作台。' : 'Start with a chat-style request, then let the structured explanation, warnings, and approval handoff settle into the workbench on the right.'}</div></div><div className={`panel-badge ${running ? 'badge-warn' : 'badge-info'}`}>{running ? 'RUNNING' : 'READY'}</div></div>
-          <div className="agent-chat-shell">
-            <div className="agent-chat-transcript">
-              {!conversation.length ? (
-                <div className="empty-cell">{locale === 'zh' ? '当前还没有消息，先向 Agent 提一个分析问题。' : 'There are no messages yet. Start by asking the Agent for an analysis.'}</div>
-              ) : null}
-              {conversation.map((message) => (
-                <div className={`agent-chat-message agent-chat-${message.role} agent-chat-${message.tone}`} key={message.key}>
-                  <div className="agent-chat-meta">
-                    <span>{message.label}</span>
-                    <span>{message.role.toUpperCase()}</span>
-                  </div>
-                  <div className="agent-chat-body">{message.body}</div>
-                </div>
-              ))}
-            </div>
-            <div className="agent-chat-sidecar">
-              <div className="focus-list">
-                <div className="focus-row">
-                  <div className="symbol-cell">
-                    <strong>{locale === 'zh' ? '会话状态' : 'Session Status'}</strong>
-                    <span>{sessionDetail?.session.status || (locale === 'zh' ? '尚未选择会话' : 'No session selected yet')}</span>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? 'Intent' : 'Intent'}</span>
-                    <strong>{sessionDetail?.session.latestIntent.kind || '--'}</strong>
-                  </div>
-                  <div className="focus-metric">
-                    <span>{locale === 'zh' ? 'Plan' : 'Plan'}</span>
-                    <strong>{sessionDetail?.latestPlan?.status || '--'}</strong>
+        <article className="panel agent-dual-view-panel">
+          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Agent Dialogue' : 'Agent Dialogue'}</div><div className="panel-copy">{locale === 'zh' ? '左侧保持连续对话，右侧固定展示当前会话洞察、计划步骤和受控交接，让聊天和运营工作台同时成立。' : 'Keep the running conversation on the left while the right rail stays anchored on session insight, plan steps, and controlled handoff.'}</div></div><div className={`panel-badge ${running ? 'badge-warn' : 'badge-info'}`}>{running ? 'RUNNING' : 'READY'}</div></div>
+          <div className="agent-dual-view">
+            <div className="agent-dialogue-stage">
+              <div className="agent-stage-header">
+                <div>
+                  <div className="card-eyebrow">{locale === 'zh' ? 'Conversation Thread' : 'Conversation Thread'}</div>
+                  <div className="mini-copy">
+                    {locale === 'zh'
+                      ? '把每一次请求、规划、读取工具和最终解释都沉淀成连续线程。'
+                      : 'Capture every request, planning step, tool read, and final explanation as one continuous thread.'}
                   </div>
                 </div>
-                <div className="focus-row">
-                  <div className="symbol-cell">
-                    <strong>{locale === 'zh' ? '快捷提示' : 'Prompt Suggestions'}</strong>
-                    <span>{locale === 'zh' ? '点击任意建议，把它放进消息框后直接发送。' : 'Use any suggestion to populate the composer and send it straight into the analysis flow.'}</span>
-                  </div>
+                <div className="agent-stage-pills">
+                  <span className="settings-chip">{sessionDetail?.session.status || (locale === 'zh' ? '未选择会话' : 'No session')}</span>
+                  <span className="settings-chip">{sessionDetail?.session.latestIntent.kind || '--'}</span>
                 </div>
-                {promptSuggestions[locale].map((item) => (
-                  <div className="focus-row" key={item}>
-                    <div className="symbol-cell">
-                      <strong>{locale === 'zh' ? 'Prompt' : 'Prompt'}</strong>
-                      <span>{item}</span>
+              </div>
+              <div className="agent-chat-transcript">
+                {!conversation.length ? (
+                  <div className="empty-cell">{locale === 'zh' ? '当前还没有消息，先向 Agent 提一个分析问题。' : 'There are no messages yet. Start by asking the Agent for an analysis.'}</div>
+                ) : null}
+                {conversation.map((message) => (
+                  <div className={`agent-chat-message agent-chat-${message.role} agent-chat-${message.tone}`} key={message.key}>
+                    <div className="agent-chat-meta">
+                      <span>{message.label}</span>
+                      <span>{message.role.toUpperCase()}</span>
                     </div>
-                    <div className="focus-metric">
-                      <button type="button" className="inline-link" onClick={() => setPrompt(item)}>{locale === 'zh' ? '填入' : 'Use'}</button>
-                    </div>
+                    <div className="agent-chat-body">{message.body}</div>
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
-          <label className="field-label" htmlFor="agent-prompt-input">{locale === 'zh' ? '发给 Agent 的消息' : 'Message To Agent'}</label>
-          <div className="agent-chat-composer">
-            <textarea
-              id="agent-prompt-input"
-              className="detail-textarea agent-chat-textarea"
-              value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
-            />
-            <div className="agent-chat-composer-actions">
-              <div className="status-copy">
-                {locale === 'zh'
-                  ? '发送后会进入 intent -> plan -> read-only analysis 流程，并把结果写回当前会话。'
-                  : 'Sending a message enters the intent -> plan -> read-only analysis flow and writes the result back into the current session.'}
-              </div>
-              <button type="button" onClick={submitPrompt} disabled={running || !prompt.trim()}>{running ? (locale === 'zh' ? '运行中...' : 'Running...') : (locale === 'zh' ? '发送并分析' : 'Send And Analyze')}</button>
-            </div>
-          </div>
-          <div className="focus-list">
-            <div className="focus-row">
-              <div className="symbol-cell">
-                <strong>{locale === 'zh' ? '受控交接' : 'Controlled Handoff'}</strong>
-                <span>
-                  {latestActionRequest?.status === 'pending_review'
-                    ? (locale === 'zh' ? '当前会话已经有待审批的 action request。' : 'This session already has a pending action request.')
-                    : (locale === 'zh'
-                      ? '当解释链路完成且 plan 需要审批时，可以把下一步建议正式提交为 action request。'
-                      : 'Once analysis is complete and the plan requires approval, the recommended next step can be submitted as a formal action request.')}
-                </span>
-              </div>
-              <div className="focus-metric">
-                <button type="button" onClick={submitActionRequest} disabled={!canRequestAction || requestingAction}>
-                  {requestingAction
-                    ? (locale === 'zh' ? '提交中...' : 'Submitting...')
-                    : (locale === 'zh' ? '提交审批' : 'Request Approval')}
-                </button>
+              <label className="field-label" htmlFor="agent-prompt-input">{locale === 'zh' ? '发给 Agent 的消息' : 'Message To Agent'}</label>
+              <div className="agent-chat-composer">
+                <textarea
+                  id="agent-prompt-input"
+                  className="detail-textarea agent-chat-textarea"
+                  value={prompt}
+                  onChange={(event) => setPrompt(event.target.value)}
+                />
+                <div className="agent-chat-composer-actions">
+                  <div className="status-copy">
+                    {locale === 'zh'
+                      ? '发送后会进入 intent -> plan -> read-only analysis 流程，并把结果写回当前会话。'
+                      : 'Sending a message enters the intent -> plan -> read-only analysis flow and writes the result back into the current session.'}
+                  </div>
+                  <button type="button" onClick={submitPrompt} disabled={running || !prompt.trim()}>{running ? (locale === 'zh' ? '运行中...' : 'Running...') : (locale === 'zh' ? '发送并分析' : 'Send And Analyze')}</button>
+                </div>
               </div>
             </div>
+
+            <aside className="agent-insight-rail">
+              <div className="agent-insight-card">
+                <div className="agent-insight-header">
+                  <div>
+                    <div className="card-eyebrow">{locale === 'zh' ? 'Session Pulse' : 'Session Pulse'}</div>
+                    <div className="mini-copy">
+                      {locale === 'zh'
+                        ? '快速查看当前会话是否已经完成规划、分析和审批准备。'
+                        : 'Scan whether this session is ready across planning, analysis, and approval handoff.'}
+                    </div>
+                  </div>
+                  <span className={`panel-badge ${canRequestAction ? 'badge-warn' : 'badge-info'}`}>{canRequestAction ? (locale === 'zh' ? '可审批' : 'APPROVABLE') : (locale === 'zh' ? '跟进中' : 'IN FLIGHT')}</span>
+                </div>
+                <div className="agent-pulse-grid">
+                  <div className="agent-pulse-item">
+                    <span>{locale === 'zh' ? '会话' : 'Session'}</span>
+                    <strong>{sessionDetail?.session.status || '--'}</strong>
+                  </div>
+                  <div className="agent-pulse-item">
+                    <span>{locale === 'zh' ? 'Intent' : 'Intent'}</span>
+                    <strong>{sessionDetail?.session.latestIntent.kind || '--'}</strong>
+                  </div>
+                  <div className="agent-pulse-item">
+                    <span>{locale === 'zh' ? 'Plan' : 'Plan'}</span>
+                    <strong>{sessionDetail?.latestPlan?.status || '--'}</strong>
+                  </div>
+                  <div className="agent-pulse-item">
+                    <span>{locale === 'zh' ? 'Analysis' : 'Analysis'}</span>
+                    <strong>{sessionDetail?.latestAnalysisRun?.status || '--'}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="agent-insight-card">
+                <div className="agent-insight-header">
+                  <div>
+                    <div className="card-eyebrow">{locale === 'zh' ? 'Plan Ladder' : 'Plan Ladder'}</div>
+                    <div className="mini-copy">
+                      {locale === 'zh'
+                        ? '把当前会话的计划步骤和证据读取节奏固定在右侧。'
+                        : 'Keep the current plan steps and evidence rhythm fixed in the right rail.'}
+                    </div>
+                  </div>
+                </div>
+                <div className="agent-step-stack">
+                  {!planSteps.length ? (
+                    <div className="empty-cell">{locale === 'zh' ? '当前会话还没有计划步骤。' : 'No plan steps have been recorded for this session yet.'}</div>
+                  ) : null}
+                  {planSteps.slice(0, 4).map((step) => (
+                    <div className="agent-step-card" key={step.id}>
+                      <div className="agent-step-top">
+                        <strong>{step.title}</strong>
+                        <span>{step.status || '--'}</span>
+                      </div>
+                      <div className="agent-step-copy">{step.description || step.outputSummary || step.toolName || '--'}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="agent-insight-card">
+                <div className="agent-insight-header">
+                  <div>
+                    <div className="card-eyebrow">{locale === 'zh' ? 'Evidence Snapshot' : 'Evidence Snapshot'}</div>
+                    <div className="mini-copy">
+                      {locale === 'zh'
+                        ? '把最近的重要证据摘要固定出来，方便在聊天过程中随时对照。'
+                        : 'Pin the most important evidence summaries so operators can compare them against the conversation.'}
+                    </div>
+                  </div>
+                </div>
+                <div className="agent-step-stack">
+                  {!evidence.length ? (
+                    <div className="empty-cell">{locale === 'zh' ? '当前分析还没有证据摘要。' : 'No evidence snapshot is available for this analysis yet.'}</div>
+                  ) : null}
+                  {evidence.slice(0, 3).map((item) => (
+                    <div className="agent-step-card" key={item.id}>
+                      <div className="agent-step-top">
+                        <strong>{item.title}</strong>
+                        <span>{item.source}</span>
+                      </div>
+                      <div className="agent-step-copy">{item.summary}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="agent-insight-card">
+                <div className="agent-insight-header">
+                  <div>
+                    <div className="card-eyebrow">{locale === 'zh' ? 'Controlled Handoff' : 'Controlled Handoff'}</div>
+                    <div className="mini-copy">
+                      {latestActionRequest?.status === 'pending_review'
+                        ? (locale === 'zh' ? '当前会话已经有待审批的 action request。' : 'This session already has a pending action request.')
+                        : (locale === 'zh'
+                          ? '当解释链路完成且 plan 需要审批时，可以把下一步建议正式提交为 action request。'
+                          : 'Once analysis is complete and the plan requires approval, the recommended next step can be submitted as a formal action request.')}
+                    </div>
+                  </div>
+                  <span className="settings-chip">{latestActionRequest?.status || '--'}</span>
+                </div>
+                <div className="agent-handoff-actions">
+                  <button type="button" onClick={submitActionRequest} disabled={!canRequestAction || requestingAction}>
+                    {requestingAction
+                      ? (locale === 'zh' ? '提交中...' : 'Submitting...')
+                      : (locale === 'zh' ? '提交审批' : 'Request Approval')}
+                  </button>
+                  <div className="settings-chip-row">
+                    <a className="settings-chip" href="#agent-explanation">{locale === 'zh' ? '查看解释' : 'View Explanation'}</a>
+                    <a className="settings-chip" href="#agent-timeline">{locale === 'zh' ? '查看时间线' : 'View Timeline'}</a>
+                    <a className="settings-chip" href="#agent-sessions">{locale === 'zh' ? '切换会话' : 'Switch Session'}</a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="agent-insight-card">
+                <div className="agent-insight-header">
+                  <div>
+                    <div className="card-eyebrow">{locale === 'zh' ? 'Prompt Suggestions' : 'Prompt Suggestions'}</div>
+                    <div className="mini-copy">
+                      {locale === 'zh' ? '点击建议可直接填入 composer。' : 'Use any suggestion to populate the composer instantly.'}
+                    </div>
+                  </div>
+                </div>
+                <div className="agent-suggestion-list">
+                  {promptSuggestions[locale].map((item) => (
+                    <button type="button" className="agent-suggestion-button" key={item} onClick={() => setPrompt(item)}>
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </aside>
           </div>
         </article>
 
