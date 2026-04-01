@@ -277,7 +277,7 @@ export function ExecutionPage() {
         ]} />
       </header>
 
-      <section className="panel-grid">
+      <section className="panel-grid panel-grid-wide">
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.executionLog}</div><div className="panel-copy">{locale === 'zh' ? '按时间逆序查看最新系统执行记录。' : 'Review the latest execution records in reverse chronological order.'}</div></div><div className="panel-badge badge-info">EXECUTION</div></div>
           <ActivityLog />
@@ -301,7 +301,7 @@ export function ExecutionPage() {
         </article>
       </section>
 
-      <section className="panel-grid">
+      <section className="panel-grid panel-grid-wide">
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '执行生命周期总览' : 'Execution Lifecycle Summary'}</div><div className="panel-copy">{locale === 'zh' ? '把待审批、已提交、已成交和阻塞的执行计划压缩成一块执行中台总览。' : 'Compress awaiting approval, submitted, filled, and blocked plans into one execution-lifecycle overview.'}</div></div><div className="panel-badge badge-info">{workbenchSummary?.totalPlans ?? ledgerEntries.length}</div></div>
           <div className="status-stack">
@@ -473,7 +473,7 @@ export function ExecutionPage() {
         </article>
       </section>
 
-      <section className="panel-grid">
+      <section className="panel-grid panel-grid-wide">
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '批量处置工具栏' : 'Bulk Queue Actions'}</div><div className="panel-copy">{locale === 'zh' ? '从审批、重试、补偿和 incident 队列一键选取执行计划，并批量执行处置动作。' : 'Select execution plans from approvals, retries, compensation, and incident queues, then run bulk actions from one toolbar.'}</div></div><div className="panel-badge badge-info">{selectedPlanCount}</div></div>
           <div className="focus-list">
@@ -712,7 +712,7 @@ export function ExecutionPage() {
         </article>
       </section>
 
-      <section className="panel-grid">
+      <section className="panel-grid panel-grid-wide">
         <InspectionPanel
           title={executionDetailInspection.title}
           copy={executionDetailInspection.copy}

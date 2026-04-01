@@ -30,7 +30,7 @@ export function UniverseTable() {
           {rows.map((stock) => {
             const pct = (stock.price / stock.prevClose - 1) * 100;
             return (
-              <tr key={stock.symbol}>
+              <tr className="table-row-hover" key={stock.symbol}>
                 <td><div className="symbol-cell"><strong>{stock.symbol}</strong><span>{stock.name}</span></div></td>
                 <td>{stock.price.toFixed(2)}</td>
                 <td className={pct >= 0 ? 'text-up' : 'text-down'}>{fmtPct(pct)}</td>
@@ -57,7 +57,7 @@ export function PositionsTable({ accountKey }: { accountKey: 'paper' | 'live' })
         <thead><tr><th>{copy[locale].terms.symbol}</th><th>{copy[locale].labels.positions}</th><th>{copy[locale].terms.avgCost}</th><th>{copy[locale].terms.marketValue}</th><th>{copy[locale].terms.unrealizedPnl}</th></tr></thead>
         <tbody>
           {rows.length ? rows.map((row) => (
-            <tr key={`${accountKey}-${row.symbol}`}>
+            <tr className="table-row-hover" key={`${accountKey}-${row.symbol}`}>
               <td><div className="symbol-cell"><strong>{row.symbol}</strong><span>{row.name}</span></div></td>
               <td>{row.shares}</td>
               <td>{row.avgCost.toFixed(2)}</td>
@@ -83,7 +83,7 @@ export function BrokerSnapshotPositionsTable({ positions }: { positions: BrokerP
         <thead><tr><th>{copy[locale].terms.symbol}</th><th>{copy[locale].labels.positions}</th><th>{copy[locale].terms.avgCost}</th><th>{copy[locale].terms.marketValue}</th><th>{locale === 'zh' ? '来源' : 'Source'}</th></tr></thead>
         <tbody>
           {rows.length ? rows.map((row) => (
-            <tr key={`broker-${row.symbol}`}>
+            <tr className="table-row-hover" key={`broker-${row.symbol}`}>
               <td><div className="symbol-cell"><strong>{row.symbol}</strong><span>{locale === 'zh' ? '后端快照' : 'Backend snapshot'}</span></div></td>
               <td>{row.qty}</td>
               <td>{row.avgCost.toFixed(2)}</td>
@@ -110,7 +110,7 @@ export function OrdersTable({ accountKey }: { accountKey: 'paper' | 'live' }) {
         <thead><tr><th>{copy[locale].terms.side}</th><th>{copy[locale].terms.symbol}</th><th>{copy[locale].terms.qty}</th><th>{copy[locale].terms.fill}</th><th>{copy[locale].labels.status}</th><th>{copy[locale].terms.time}</th><th>{copy[locale].terms.action}</th></tr></thead>
         <tbody>
           {rows.length ? rows.map((order, index) => (
-            <tr key={`${accountKey}-${order.symbol}-${order.side}-${index}`}>
+            <tr className="table-row-hover" key={`${accountKey}-${order.symbol}-${order.side}-${index}`}>
               <td className={order.side === 'BUY' ? 'text-up' : 'text-down'}>{translateSide(locale, order.side)}</td>
               <td>{order.symbol}</td>
               <td>{order.qty}</td>
@@ -153,7 +153,7 @@ export function ApprovalQueueTable({
         <thead><tr><th>{copy[locale].terms.side}</th><th>{copy[locale].terms.symbol}</th><th>{copy[locale].terms.qty}</th><th>{copy[locale].terms.fill}</th><th>{copy[locale].labels.status}</th><th>{copy[locale].terms.time}</th><th>{copy[locale].terms.action}</th></tr></thead>
         <tbody>
           {rows.length ? rows.map((order, index) => (
-            <tr key={`${order.clientOrderId || order.symbol}-${index}`}>
+            <tr className="table-row-hover" key={`${order.clientOrderId || order.symbol}-${index}`}>
               <td className={order.side === 'BUY' ? 'text-up' : 'text-down'}>{translateSide(locale, order.side)}</td>
               <td>{order.symbol}</td>
               <td>{order.qty}</td>

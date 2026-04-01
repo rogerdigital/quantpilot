@@ -145,13 +145,16 @@ function Sidebar() {
         </div>
       </div>
 
-      <nav className="nav-stack">
-        {routes.map((route) => (
-          <NavLink key={route.path} to={route.path} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
-            {copy[locale].nav[route.id]}
-          </NavLink>
-        ))}
-      </nav>
+      <div className="sidebar-block">
+        <div className="sidebar-label">{copy[locale].labels.tacticalRoutes}</div>
+        <nav className="nav-stack">
+          {routes.map((route) => (
+            <NavLink key={route.path} to={route.path} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+              {copy[locale].nav[route.id]}
+            </NavLink>
+          ))}
+        </nav>
+      </div>
     </aside>
   );
 }
@@ -186,6 +189,7 @@ function GlobalToolbar() {
   return (
     <div className="global-toolbar">
       <div className="toolbar-copy">
+        <div className="toolbar-kicker">{copy[locale].labels.commandDeck}</div>
         <div className="toolbar-title">{copy[locale].product}</div>
         <div className="toolbar-sub">{`${translateEngineStatus(locale, state.engineStatus)} · ${translateMode(locale, state.mode)} · ${state.marketClock || '--:--:--'}`}</div>
       </div>

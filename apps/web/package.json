@@ -6,6 +6,7 @@
     "dev": "vite --config vite.config.ts --host 0.0.0.0 --port 8080",
     "build": "vite build --config vite.config.ts",
     "preview": "vite preview --config vite.config.ts --host 0.0.0.0 --port 8080",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:styles": "vitest run src/app/styles/style.test.ts --environment node"
   }
 }

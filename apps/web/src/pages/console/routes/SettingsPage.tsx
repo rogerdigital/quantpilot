@@ -451,7 +451,7 @@ export function SettingsPage() {
         </div>
       </section>
 
-      <section className="panel-grid">
+      <section className="panel-grid panel-grid-wide">
         <article className="panel" id="system-mode">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].labels.systemMode}</div><div className="panel-copy">{copy[locale].terms.systemModeCopy}</div></div><div className={`panel-badge badge-${modeTone(state.mode)}`}>{translateMode(locale, state.mode)}</div></div>
           <div className="mode-stack">
@@ -481,7 +481,7 @@ export function SettingsPage() {
         </article>
       </section>
 
-      <section className="panel-grid">
+      <section className="panel-grid panel-grid-wide">
         <article className="panel" id="account-profile">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? '账户档案' : 'Account Profile'}</div><div className="panel-copy">{locale === 'zh' ? '现在由统一账户快照驱动，并会在保存后刷新当前会话。' : 'The profile is now driven by a unified account snapshot and refreshes the active session after saves.'}</div></div><div className="panel-badge badge-info">ACCOUNT</div></div>
           <div className="policy-card policy-card-inline">

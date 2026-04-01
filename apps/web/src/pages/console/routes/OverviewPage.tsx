@@ -83,95 +83,143 @@ export function OverviewPage() {
 
       <section className="overview-hero-grid">
         <article className="hero-card hero-card-primary overview-command-card">
-          <div className="card-eyebrow">Command Deck</div>
-          <div className="overview-command-head">
-            <div>
-              <div className="overview-command-title">{copy[locale].slogans.commandCenter}</div>
-              <div className="overview-command-copy">{translateRuntimeText(locale, state.routeCopy)}</div>
+          <div className="overview-command-frame">
+            <div className="card-eyebrow">{copy[locale].overview.commandDeckEyebrow}</div>
+            <div className="overview-command-head">
+              <div>
+                <div className="overview-command-title">{copy[locale].slogans.commandCenter}</div>
+                <div className="overview-command-copy">{translateRuntimeText(locale, state.routeCopy)}</div>
+              </div>
+              <div className={`status-chip status-chip-large tone-${riskTone(state.riskLevel)}`}><span className="status-dot" aria-hidden="true" />{translateRiskLevel(locale, state.riskLevel)}</div>
             </div>
-            <div className={`status-chip status-chip-large tone-${riskTone(state.riskLevel)}`}><span className="status-dot" aria-hidden="true" />{translateRiskLevel(locale, state.riskLevel)}</div>
-          </div>
-          <div className="hero-headline">
-            <div className="hero-value">{fmtCurrency(totalNav)}</div>
-            <div className={`hero-change ${totalPnlPct >= 0 ? 'text-up' : 'text-down'}`}>{fmtPct(totalPnlPct)}</div>
-          </div>
-          <div className="overview-command-strip">
-            <div className="overview-stat">
-              <span>{copy[locale].terms.paperNav}</span>
-              <strong>{fmtCurrency(paper.nav)}</strong>
+            <div className="overview-command-core">
+              <div className="overview-command-summary">
+                <div className="hero-headline">
+                  <div className="hero-value">{fmtCurrency(totalNav)}</div>
+                  <div className={`hero-change ${totalPnlPct >= 0 ? 'text-up' : 'text-down'}`}>{fmtPct(totalPnlPct)}</div>
+                </div>
+                <div className="overview-command-note">
+                  <span>{copy[locale].terms.tradeDecision}</span>
+                  <strong>{translateRuntimeText(locale, state.decisionSummary)}</strong>
+                  <p>{translateRuntimeText(locale, state.decisionCopy)}</p>
+                </div>
+              </div>
+              <div className="overview-command-aside">
+                <div className="overview-brief-card">
+                  <span>{copy[locale].terms.latestDecision}</span>
+                  <strong>{strongestSignal}</strong>
+                </div>
+                <div className="overview-brief-card">
+                  <span>{copy[locale].terms.pendingApprovals}</span>
+                  <strong>{pendingApprovals}</strong>
+                </div>
+                <div className="overview-brief-card">
+                  <span>{copy[locale].overview.openLiveOrders}</span>
+                  <strong>{openLiveOrders}</strong>
+                </div>
+              </div>
             </div>
-            <div className="overview-stat">
-              <span>{copy[locale].terms.liveMirror}</span>
-              <strong>{fmtCurrency(liveMirrorNav)}</strong>
-            </div>
-            <div className="overview-stat">
-              <span>{copy[locale].terms.signalSummary}</span>
-              <strong>{buyCount} / {sellCount}</strong>
-            </div>
-            <div className="overview-stat">
-              <span>{copy[locale].terms.latestDecision}</span>
-              <strong>{strongestSignal}</strong>
+            <div className="overview-command-strip">
+              <div className="overview-stat">
+                <span>{copy[locale].terms.paperNav}</span>
+                <strong>{fmtCurrency(paper.nav)}</strong>
+              </div>
+              <div className="overview-stat">
+                <span>{copy[locale].terms.liveMirror}</span>
+                <strong>{fmtCurrency(liveMirrorNav)}</strong>
+              </div>
+              <div className="overview-stat">
+                <span>{copy[locale].terms.signalSummary}</span>
+                <strong>{buyCount} / {sellCount}</strong>
+              </div>
+              <div className="overview-stat">
+                <span>{copy[locale].terms.activityToday}</span>
+                <strong>{state.activityLog.length}</strong>
+              </div>
             </div>
           </div>
         </article>
 
         <article className="hero-card overview-kpi-card">
-          <div className="card-eyebrow">Exposure</div>
+          <div className="card-eyebrow">{copy[locale].overview.exposureEyebrow}</div>
+          <div className="overview-kpi-title">{copy[locale].overview.exposureTitle}</div>
           <div className="mini-metric">{positionCount}</div>
           <div className="mini-copy">{copy[locale].labels.positions}</div>
           <div className="overview-kpi-grid">
             <div><span>{copy[locale].labels.paper}</span><strong>{paper.exposure.toFixed(1)}%</strong></div>
             <div><span>{copy[locale].labels.live}</span><strong>{live.exposure.toFixed(1)}%</strong></div>
           </div>
+          <div className="overview-kpi-note">{copy[locale].overview.exposureNote}</div>
         </article>
 
         <article className="hero-card overview-kpi-card">
-          <div className="card-eyebrow">Workflow</div>
+          <div className="card-eyebrow">{copy[locale].overview.workflowEyebrow}</div>
+          <div className="overview-kpi-title">{copy[locale].overview.workflowTitle}</div>
           <div className="mini-metric">{openLiveOrders}</div>
-          <div className="mini-copy">{locale === 'zh' ? '未完成实盘订单' : 'Open live orders'}</div>
+          <div className="mini-copy">{copy[locale].overview.openLiveOrders}</div>
           <div className="overview-kpi-grid">
             <div><span>{copy[locale].terms.activityToday}</span><strong>{state.activityLog.length}</strong></div>
             <div><span>{copy[locale].terms.pendingApprovals}</span><strong>{pendingApprovals}</strong></div>
           </div>
+          <div className="overview-kpi-note">{copy[locale].overview.workflowNote}</div>
         </article>
       </section>
 
       <section className="panel-grid panel-grid-terminal overview-desk-grid">
         <article className="panel overview-primary-panel">
-          <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.equityCurve}</div><div className="panel-copy">{locale === 'zh' ? '用一个主图盯盘总资产变化，并将信号、仓位和执行后果收敛到同一观察面。' : 'Use one primary chart to track consolidated NAV, then read signal, exposure, and execution impact from the same desk.'}</div></div><div className="panel-badge badge-ok">LIVE DESK</div></div>
-          <ChartCanvas kind="equity" />
-          <div className="overview-inline-metrics">
-            <div className="overview-inline-metric"><span>{copy[locale].labels.marketState}</span><strong>{connectionLabel(locale, marketConnected, marketDegraded)}</strong></div>
-            <div className="overview-inline-metric"><span>{copy[locale].labels.brokerState}</span><strong>{connectionLabel(locale, brokerConnected, false, true)}</strong></div>
-            <div className="overview-inline-metric"><span>{copy[locale].terms.tradeDecision}</span><strong>{translateRuntimeText(locale, state.decisionSummary)}</strong></div>
+          <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.equityCurve}</div><div className="panel-copy">{locale === 'zh' ? '用一个主图盯盘总资产变化，并将信号、仓位和执行后果收敛到同一观察面。' : 'Use one primary chart to track consolidated NAV, then read signal, exposure, and execution impact from the same desk.'}</div></div><div className="panel-badge badge-ok">{copy[locale].overview.liveDeskBadge}</div></div>
+          <div className="overview-panel-flow">
+            <ChartCanvas kind="equity" />
+            <div className="overview-inline-metrics">
+              <div className="overview-inline-metric"><span>{copy[locale].labels.marketState}</span><strong>{connectionLabel(locale, marketConnected, marketDegraded)}</strong></div>
+              <div className="overview-inline-metric"><span>{copy[locale].labels.brokerState}</span><strong>{connectionLabel(locale, brokerConnected, false, true)}</strong></div>
+              <div className="overview-inline-metric"><span>{copy[locale].terms.tradeDecision}</span><strong>{translateRuntimeText(locale, state.decisionSummary)}</strong></div>
+            </div>
+            <div className="overview-primary-note">
+              <span>{copy[locale].overview.deskBrief}</span>
+              <strong>{translateRuntimeText(locale, state.routeCopy)}</strong>
+              <p>{translateRuntimeText(locale, state.decisionCopy)}</p>
+            </div>
           </div>
         </article>
         <article className="panel overview-side-panel">
-          <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.executionSummary}</div><div className="panel-copy">{locale === 'zh' ? '把模式、风控、接入与最新动作压缩成一个侧边监控面板。' : 'Compress mode, risk, connectivity, and the latest action into one desk-side monitor.'}</div></div><div className="panel-badge badge-muted">OPS</div></div>
+          <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.executionSummary}</div><div className="panel-copy">{locale === 'zh' ? '把模式、风控、接入与最新动作压缩成一个侧边监控面板。' : 'Compress mode, risk, connectivity, and the latest action into one desk-side monitor.'}</div></div><div className="panel-badge badge-muted">{copy[locale].overview.opsBadge}</div></div>
           <div className="status-stack">
-            <div className="status-row"><span>{locale === 'zh' ? '系统健康' : 'System health'}</span><strong className={`status-chip tone-${monitoringTone(monitoringStatus?.status)}`}>{monitoringLoading ? (locale === 'zh' ? '加载中' : 'Loading') : translateMonitoringStatus(locale, monitoringStatus?.status)}</strong></div>
-            <button type="button" className="status-row status-row-button" onClick={() => goToSettings('switches')}><span>{copy[locale].labels.autoTrade}</span><strong className={`status-chip tone-${toggleTone(state.toggles.autoTrade)}`}>{state.toggles.autoTrade ? copy[locale].labels.enabled : copy[locale].labels.disabled}</strong></button>
-            <button type="button" className="status-row status-row-button" onClick={() => goToSettings('switches')}><span>{copy[locale].labels.allowLive}</span><strong className={`status-chip tone-${toggleTone(state.toggles.liveTrade)}`}>{state.toggles.liveTrade ? copy[locale].labels.enabled : copy[locale].labels.disabled}</strong></button>
-            <button type="button" className="status-row status-row-button" onClick={() => goToSettings('switches')}><span>{copy[locale].labels.manualApproval}</span><strong className={`status-chip tone-${toggleTone(state.toggles.manualApproval)}`}>{state.toggles.manualApproval ? copy[locale].labels.enabled : copy[locale].labels.disabled}</strong></button>
-            <div className="status-row"><span>{copy[locale].labels.positions}</span><strong>{positionCount}</strong></div>
-            <div className="status-row"><span>{copy[locale].terms.activityToday}</span><strong>{state.activityLog.length}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? 'Worker 心跳' : 'Worker heartbeat'}</span><strong>{monitoringWorkerLag === null || monitoringWorkerLag === undefined ? '--' : `${monitoringWorkerLag}s`}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? 'Workflow 积压' : 'Workflow backlog'}</span><strong>{monitoringWorkflowBacklog}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '待处理队列' : 'Pending queues'}</span><strong>{monitoringQueueBacklog}</strong></div>
-            <button type="button" className="status-row status-row-button" onClick={() => goToSettings('integrations')}><span>{copy[locale].labels.marketState}</span><strong className={`status-chip tone-${integrationTone(marketConnected, marketDegraded)}`}>{connectionLabel(locale, marketConnected, marketDegraded)}</strong></button>
-            <button type="button" className="status-row status-row-button" onClick={() => goToSettings('integrations')}><span>{copy[locale].labels.brokerState}</span><strong className={`status-chip tone-${integrationTone(brokerConnected, false, true)}`}>{connectionLabel(locale, brokerConnected, false, true)}</strong></button>
-            <div className="status-copy">{monitoringAlert ? `${locale === 'zh' ? '当前告警' : 'Current alert'}: ${monitoringAlert.message}` : (locale === 'zh' ? '当前没有新的监控告警。' : 'No monitoring alerts right now.')}</div>
-            <div className="status-copy">{monitoringUpdatedAt ? `${locale === 'zh' ? '监控更新时间' : 'Monitoring updated'}: ${fmtDateTime(monitoringUpdatedAt, locale)}` : (locale === 'zh' ? '监控摘要尚未返回。' : 'Monitoring summary has not returned yet.')}</div>
-            <div className="status-copy">{translateRuntimeText(locale, state.decisionCopy)}</div>
-            <div className="status-copy">{state.activityLog[0] ? `${locale === 'zh' ? '最新动作' : 'Latest action'}: ${translateRuntimeText(locale, state.activityLog[0].title)}` : translateRuntimeText(locale, '当前没有新的执行记录。')}</div>
+            <div className="panel-subtitle">{copy[locale].overview.autonomyControls}</div>
+            <div className="overview-ops-cluster">
+              <button type="button" className="status-row status-row-button" onClick={() => goToSettings('switches')}><span>{copy[locale].labels.autoTrade}</span><strong className={`status-chip tone-${toggleTone(state.toggles.autoTrade)}`}>{state.toggles.autoTrade ? copy[locale].labels.enabled : copy[locale].labels.disabled}</strong></button>
+              <button type="button" className="status-row status-row-button" onClick={() => goToSettings('switches')}><span>{copy[locale].labels.allowLive}</span><strong className={`status-chip tone-${toggleTone(state.toggles.liveTrade)}`}>{state.toggles.liveTrade ? copy[locale].labels.enabled : copy[locale].labels.disabled}</strong></button>
+              <button type="button" className="status-row status-row-button" onClick={() => goToSettings('switches')}><span>{copy[locale].labels.manualApproval}</span><strong className={`status-chip tone-${toggleTone(state.toggles.manualApproval)}`}>{state.toggles.manualApproval ? copy[locale].labels.enabled : copy[locale].labels.disabled}</strong></button>
+            </div>
+            <div className="panel-subtitle">{copy[locale].overview.systemPulse}</div>
+            <div className="overview-ops-cluster">
+              <div className="status-row"><span>{locale === 'zh' ? '系统健康' : 'System health'}</span><strong className={`status-chip tone-${monitoringTone(monitoringStatus?.status)}`}>{monitoringLoading ? (locale === 'zh' ? '加载中' : 'Loading') : translateMonitoringStatus(locale, monitoringStatus?.status)}</strong></div>
+              <div className="status-row"><span>{copy[locale].labels.positions}</span><strong>{positionCount}</strong></div>
+              <div className="status-row"><span>{copy[locale].terms.activityToday}</span><strong>{state.activityLog.length}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? 'Worker 心跳' : 'Worker heartbeat'}</span><strong>{monitoringWorkerLag === null || monitoringWorkerLag === undefined ? '--' : `${monitoringWorkerLag}s`}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? 'Workflow 积压' : 'Workflow backlog'}</span><strong>{monitoringWorkflowBacklog}</strong></div>
+              <div className="status-row"><span>{locale === 'zh' ? '待处理队列' : 'Pending queues'}</span><strong>{monitoringQueueBacklog}</strong></div>
+            </div>
+            <div className="panel-subtitle">{copy[locale].overview.connectivity}</div>
+            <div className="overview-ops-cluster">
+              <button type="button" className="status-row status-row-button" onClick={() => goToSettings('integrations')}><span>{copy[locale].labels.marketState}</span><strong className={`status-chip tone-${integrationTone(marketConnected, marketDegraded)}`}>{connectionLabel(locale, marketConnected, marketDegraded)}</strong></button>
+              <button type="button" className="status-row status-row-button" onClick={() => goToSettings('integrations')}><span>{copy[locale].labels.brokerState}</span><strong className={`status-chip tone-${integrationTone(brokerConnected, false, true)}`}>{connectionLabel(locale, brokerConnected, false, true)}</strong></button>
+            </div>
+            <div className="panel-subtitle">{copy[locale].overview.deskNotes}</div>
+            <div className="overview-ops-cluster">
+              <div className="status-copy">{monitoringAlert ? `${locale === 'zh' ? '当前告警' : 'Current alert'}: ${monitoringAlert.message}` : (locale === 'zh' ? '当前没有新的监控告警。' : 'No monitoring alerts right now.')}</div>
+              <div className="status-copy">{monitoringUpdatedAt ? `${locale === 'zh' ? '监控更新时间' : 'Monitoring updated'}: ${fmtDateTime(monitoringUpdatedAt, locale)}` : (locale === 'zh' ? '监控摘要尚未返回。' : 'Monitoring summary has not returned yet.')}</div>
+              <div className="status-copy">{translateRuntimeText(locale, state.decisionCopy)}</div>
+              <div className="status-copy">{state.activityLog[0] ? `${locale === 'zh' ? '最新动作' : 'Latest action'}: ${translateRuntimeText(locale, state.activityLog[0].title)}` : translateRuntimeText(locale, '当前没有新的执行记录。')}</div>
+            </div>
           </div>
         </article>
       </section>
 
       <section className="panel-grid panel-grid-terminal-bottom overview-blotter-grid">
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.focusList}</div><div className="panel-copy">{locale === 'zh' ? '像交易员的 watchlist 一样，只保留最值得人工复核的机会。' : 'Keep a trader-style watchlist with only the opportunities worth immediate review.'}</div></div><div className="panel-badge badge-muted">WATCHLIST</div></div>
-          <div className="focus-list focus-list-terminal">
+        <article className="panel overview-blotter-card">
+          <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.focusList}</div><div className="panel-copy">{locale === 'zh' ? '像交易员的 watchlist 一样，只保留最值得人工复核的机会。' : 'Keep a trader-style watchlist with only the opportunities worth immediate review.'}</div></div><div className="panel-badge badge-muted">{copy[locale].overview.watchlistBadge}</div></div>
+          <div className="focus-list focus-list-terminal overview-blotter-list">
             {topSignals.map((stock) => {
               const pct = (stock.price / stock.prevClose - 1) * 100;
               return (
@@ -194,9 +242,9 @@ export function OverviewPage() {
             })}
           </div>
         </article>
-        <article className="panel">
+        <article className="panel overview-blotter-card">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.recentOrders}</div><div className="panel-copy">{locale === 'zh' ? '首页保留精简 blotter，只看最新委托、账户归属和状态变化。' : 'Keep a compact blotter on the home desk to review the latest order flow and status changes.'}</div></div><div className="panel-badge badge-info">{recentOrders.length || 0} {copy[locale].labels.orders}</div></div>
-          <div className="focus-list focus-list-terminal">
+          <div className="focus-list focus-list-terminal overview-blotter-list">
             {recentOrders.length ? recentOrders.map((order, index) => (
               <div className="focus-row" key={`${order.id || order.symbol}-${index}`}>
                 <div className="symbol-cell">

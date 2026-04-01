@@ -92,7 +92,7 @@ export function InspectionSelectableRow({ leadTitle, leadCopy, metrics, actions 
       {actions ? (
         <div className="focus-metric">
           <span>Actions</span>
-          {actions}
+          <div className="inspection-actions">{actions}</div>
         </div>
       ) : null}
     </div>
