@@ -53,7 +53,7 @@ test.after(() => {
 });
 
 function seedRiskSchedulerMiddleware() {
-  const nowIso = '2026-03-25T01:30:00.000Z';
+  const nowIso = new Date().toISOString();
   context.risk.appendRiskEvent({
     id: 'stage4-risk-off',
     title: 'Stage 4 risk-off',
