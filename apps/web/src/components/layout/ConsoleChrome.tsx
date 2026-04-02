@@ -48,7 +48,7 @@ export function ChartCanvas({ kind }: { kind: 'equity' | 'signal' }) {
     ctx.clearRect(0, 0, width, height);
 
     const pad = { l: 46, r: 18, t: 18, b: 28 };
-    ctx.strokeStyle = 'rgba(116, 161, 255, 0.08)';
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.06)';
     for (let i = 0; i <= 4; i += 1) {
       const y = pad.t + i / 4 * (height - pad.t - pad.b);
       ctx.beginPath();
@@ -70,8 +70,8 @@ export function ChartCanvas({ kind }: { kind: 'equity' | 'signal' }) {
       const toY = (value: number) => pad.t + (1 - (value - min) / Math.max(max - min, 1)) * chartH;
 
       ([
-        [paper, '#41f0c2', copy[locale].labels.paper],
-        [live, '#5f8dff', copy[locale].labels.live],
+        [paper, '#00e5ff', copy[locale].labels.paper],
+        [live, '#ffd740', copy[locale].labels.live],
       ] as const).forEach(([series, color, label]) => {
         ctx.beginPath();
         ctx.moveTo(toX(0, series.length), toY(series[0].value));
@@ -82,7 +82,7 @@ export function ChartCanvas({ kind }: { kind: 'equity' | 'signal' }) {
         const last = series.at(-1);
         if (!last) return;
         ctx.fillStyle = color;
-        ctx.font = '11px "Space Grotesk", sans-serif';
+        ctx.font = '11px "JetBrains Mono", monospace';
         ctx.fillText(label, width - pad.r - 70, toY(last.value) - 10);
       });
       return;
@@ -93,9 +93,9 @@ export function ChartCanvas({ kind }: { kind: 'equity' | 'signal' }) {
       counts[stock.signal] += 1;
     });
     const items = [
-      ['BUY', '#59f28f'],
-      ['HOLD', '#f2c45c'],
-      ['SELL', '#ff6b7c'],
+      ['BUY', '#00e676'],
+      ['HOLD', '#ffd740'],
+      ['SELL', '#ff1744'],
     ] as const;
     const max = Math.max(...Object.values(counts), 1);
     const chartW = width - pad.l - pad.r;
@@ -107,8 +107,8 @@ export function ChartCanvas({ kind }: { kind: 'equity' | 'signal' }) {
       const y = height - pad.b - h;
       ctx.fillStyle = color;
       ctx.fillRect(x, y, barW, h);
-      ctx.fillStyle = 'rgba(208,226,255,0.72)';
-      ctx.font = '11px "Space Grotesk", sans-serif';
+      ctx.fillStyle = 'rgba(232, 237, 244, 0.72)';
+      ctx.font = '11px "JetBrains Mono", monospace';
       ctx.textAlign = 'center';
       ctx.fillText(translateSignal(locale, label), x + barW / 2, height - 10);
       ctx.fillText(String(counts[label]), x + barW / 2, y - 8);

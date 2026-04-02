@@ -284,7 +284,7 @@ export default function AgentPage() {
                       ? '发送后会进入 intent -> plan -> read-only analysis 流程，并把结果写回当前会话。'
                       : 'Sending a message enters the intent -> plan -> read-only analysis flow and writes the result back into the current session.'}
                   </div>
-                  <button type="button" onClick={submitPrompt} disabled={running || !prompt.trim()}>{running ? (locale === 'zh' ? '运行中...' : 'Running...') : (locale === 'zh' ? '发送并分析' : 'Send And Analyze')}</button>
+                  <button type="button" className="settings-button" onClick={submitPrompt} disabled={running || !prompt.trim()}>{running ? (locale === 'zh' ? '运行中...' : 'Running...') : (locale === 'zh' ? '发送并分析' : 'Send And Analyze')}</button>
                 </div>
               </div>
             </div>
@@ -391,7 +391,7 @@ export default function AgentPage() {
                   <span className="settings-chip">{latestActionRequest?.status || '--'}</span>
                 </div>
                 <div className="agent-handoff-actions">
-                  <button type="button" onClick={submitActionRequest} disabled={!canRequestAction || requestingAction}>
+                  <button type="button" className="settings-button" onClick={submitActionRequest} disabled={!canRequestAction || requestingAction}>
                     {requestingAction
                       ? (locale === 'zh' ? '提交中...' : 'Submitting...')
                       : (locale === 'zh' ? '提交审批' : 'Request Approval')}
