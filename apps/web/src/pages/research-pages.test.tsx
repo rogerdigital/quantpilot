@@ -53,16 +53,16 @@ vi.mock('../store/trading-system/TradingSystemProvider.tsx', () => ({
   }),
 }));
 
-vi.mock('../pages/console/i18n.tsx', async () => {
-  const actual = await vi.importActual<typeof import('../pages/console/i18n.tsx')>('../pages/console/i18n.tsx');
+vi.mock('../modules/console/console.i18n.tsx', async () => {
+  const actual = await vi.importActual<typeof import('../modules/console/console.i18n.tsx')>('../modules/console/console.i18n.tsx');
   return {
     ...actual,
     useLocale: () => ({ locale: 'en' as const }),
   };
 });
 
-vi.mock('../pages/console/hooks.ts', async () => {
-  const actual = await vi.importActual<typeof import('../pages/console/hooks.ts')>('../pages/console/hooks.ts');
+vi.mock('../modules/console/console.hooks.ts', async () => {
+  const actual = await vi.importActual<typeof import('../modules/console/console.hooks.ts')>('../modules/console/console.hooks.ts');
   return {
     ...actual,
     useSettingsNavigation: () => () => undefined,
@@ -117,13 +117,13 @@ vi.mock('../modules/research/useResearchNavigationContext.ts', () => ({
   }),
 }));
 
-vi.mock('./console/components/ConsoleChrome.tsx', () => ({
+vi.mock('../components/layout/ConsoleChrome.tsx', () => ({
   ChartCanvas: ({ kind }: { kind: string }) => <div>{kind}</div>,
   SectionHeader: ({ title, copy }: { title: string; copy: string }) => <div>{title}{copy}</div>,
   TopMeta: () => <div>TopMeta</div>,
 }));
 
-vi.mock('./console/components/ConsoleTables.tsx', () => ({
+vi.mock('../components/business/ConsoleTables.tsx', () => ({
   UniverseTable: () => <div>UniverseTable</div>,
   ActivityLog: () => <div>ActivityLog</div>,
   ApprovalQueueTable: () => <div>ApprovalQueueTable</div>,

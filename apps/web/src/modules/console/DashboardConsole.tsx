@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { TradingSystemProvider } from '../../store/trading-system/TradingSystemProvider.tsx';
-import { Layout } from '../../pages/console/components/ConsoleChrome.tsx';
-import { LocaleProvider } from '../../pages/console/i18n.tsx';
+import { Layout } from '../../components/layout/ConsoleChrome.tsx';
+import { LocaleProvider } from './console.i18n.tsx';
 import { listConsoleRoutes } from './console.routes.tsx';
 
 export default function DashboardConsole() {

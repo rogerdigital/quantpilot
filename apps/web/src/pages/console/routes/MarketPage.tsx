@@ -1,10 +1,10 @@
 import { useMarketProviderStatus } from '../../../hooks/useMarketProviderStatus.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
-import { ChartCanvas, SectionHeader } from '../components/ConsoleChrome.tsx';
-import { UniverseTable } from '../components/ConsoleTables.tsx';
-import { onShortcutKeyDown, useSettingsNavigation } from '../hooks.ts';
-import { copy, useLocale } from '../i18n.tsx';
-import { connectionLabel, fmtDateTime, integrationTone, translateMode, translateProviderLabel, translateRuntimeText } from '../utils.ts';
+import { ChartCanvas, SectionHeader } from '../../../components/layout/ConsoleChrome.tsx';
+import { UniverseTable } from '../../../components/business/ConsoleTables.tsx';
+import { onShortcutKeyDown, useSettingsNavigation } from '../../../modules/console/console.hooks.ts';
+import { copy, useLocale } from '../../../modules/console/console.i18n.tsx';
+import { connectionLabel, fmtDateTime, integrationTone, translateMode, translateProviderLabel, translateRuntimeText } from '../../../modules/console/console.utils.ts';
 
 export function MarketPage() {
   const { state } = useTradingSystem();

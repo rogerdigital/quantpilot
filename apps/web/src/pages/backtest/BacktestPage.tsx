@@ -28,11 +28,11 @@ import { useBacktestRunDetail } from '../../modules/research/useBacktestRunDetai
 import { useBacktestDetailPanels } from '../../modules/research/useBacktestDetailPanels.ts';
 import { useResearchWorkspaceData } from '../../modules/research/useResearchWorkspaceData.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
-import { ChartCanvas, SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
+import { ChartCanvas, SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
 import { InspectionEmpty, InspectionListPanel, InspectionMetricsRow, InspectionPanel, InspectionSelectableRow, InspectionStatus } from '../console/components/InspectionPanels.tsx';
-import { useSummary } from '../console/hooks.ts';
-import { copy, useLocale } from '../console/i18n.tsx';
-import { fmtPct, translateMode, translateRiskLevel, translateRuntimeText } from '../console/utils.ts';
+import { useSummary } from '../../modules/console/console.hooks.ts';
+import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
+import { fmtPct, translateMode, translateRiskLevel, translateRuntimeText } from '../../modules/console/console.utils.ts';
 
 function fmtDateTime(value: string, locale: 'zh' | 'en') {
   if (!value) return '--';

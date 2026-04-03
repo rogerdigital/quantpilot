@@ -2,9 +2,9 @@ import { useTradingSystem } from '../../../store/trading-system/TradingSystemPro
 import { useLatestBrokerSnapshot } from '../../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../../hooks/useMarketProviderStatus.ts';
 import { useMonitoringStatus } from '../../../hooks/useMonitoringStatus.ts';
-import { useSettingsNavigation, useSummary } from '../hooks.ts';
-import { copy, useLocale } from '../i18n.tsx';
-import { ChartCanvas, TopMeta } from '../components/ConsoleChrome.tsx';
+import { useSettingsNavigation, useSummary } from '../../../modules/console/console.hooks.ts';
+import { copy, useLocale } from '../../../modules/console/console.i18n.tsx';
+import { ChartCanvas, TopMeta } from '../../../components/layout/ConsoleChrome.tsx';
 import {
   connectionLabel,
   fmtCurrency,
@@ -23,7 +23,7 @@ import {
   translateSignal,
   translateSide,
   monitoringTone,
-} from '../utils.ts';
+} from '../../../modules/console/console.utils.ts';
 
 export function OverviewPage() {
   const { state } = useTradingSystem();

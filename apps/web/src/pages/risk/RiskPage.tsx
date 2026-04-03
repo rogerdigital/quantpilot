@@ -6,12 +6,12 @@ import { useTradingSystem } from '../../store/trading-system/TradingSystemProvid
 import { formatActionGuardNotice } from '../../modules/permissions/permissionCopy.ts';
 import { runRiskPolicyAction } from '../../app/api/controlPlane.ts';
 import { useRiskWorkbench } from '../../modules/risk/useRiskWorkbench.ts';
-import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
-import { ApprovalQueueTable, BrokerSnapshotPositionsTable, PositionsTable } from '../console/components/ConsoleTables.tsx';
+import { SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
+import { ApprovalQueueTable, BrokerSnapshotPositionsTable, PositionsTable } from '../../components/business/ConsoleTables.tsx';
 import { InspectionEmpty, InspectionPanel, InspectionSelectableRow } from '../console/components/InspectionPanels.tsx';
-import { useSummary } from '../console/hooks.ts';
-import { copy, useLocale } from '../console/i18n.tsx';
-import { fmtCurrency, fmtDateTime, integrationTone, riskTone } from '../console/utils.ts';
+import { useSummary } from '../../modules/console/console.hooks.ts';
+import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
+import { fmtCurrency, fmtDateTime, integrationTone, riskTone } from '../../modules/console/console.utils.ts';
 
 function RiskPage() {
   const { state, approveLiveIntent, rejectLiveIntent, hasPermission, actionGuardNotice } = useTradingSystem();

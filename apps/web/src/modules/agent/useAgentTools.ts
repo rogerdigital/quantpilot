@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ApiPermissionError } from '../../app/api/http.ts';
-import { useLocale } from '../../pages/console/i18n.tsx';
+import { useLocale } from '../console/console.i18n.tsx';
 import { formatMissingPermission } from '../permissions/permissionCopy.ts';
 import type { AgentToolDefinition } from '@shared-types/trading.ts';
 import {

@@ -22,9 +22,9 @@ import {
   formatPermissionReadOnly,
 } from '../../../modules/permissions/permissionCopy.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
-import { SectionHeader } from '../components/ConsoleChrome.tsx';
-import { copy, useLocale } from '../i18n.tsx';
-import { connectionLabel, fmtDateTime, modeTone, translateMode, translateProviderLabel, translateRuntimeText } from '../utils.ts';
+import { SectionHeader } from '../../../components/layout/ConsoleChrome.tsx';
+import { copy, useLocale } from '../../../modules/console/console.i18n.tsx';
+import { connectionLabel, fmtDateTime, modeTone, translateMode, translateProviderLabel, translateRuntimeText } from '../../../modules/console/console.utils.ts';
 import type { OperationsMaintenanceResponse, UserAccountSnapshot, UserBrokerBinding, UserBrokerBindingRuntimeSnapshot } from '@shared-types/trading.ts';
 
 function toPermissionList(value: string) {

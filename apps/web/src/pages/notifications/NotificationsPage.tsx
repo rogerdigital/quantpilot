@@ -21,11 +21,11 @@ import { useSchedulerWorkbench } from '../../modules/notifications/useSchedulerW
 import { useSchedulerTicksFeed } from '../../modules/notifications/useSchedulerTicksFeed.ts';
 import { useWorkflowRunsFeed } from '../../modules/notifications/useWorkflowRunsFeed.ts';
 import { buildPersistenceApiExamples, buildPersistenceCliCommands, translatePersistencePosture } from '../../modules/operations/persistencePosture.ts';
-import { SectionHeader, TopMeta } from '../console/components/ConsoleChrome.tsx';
-import { ActivityLog } from '../console/components/ConsoleTables.tsx';
+import { SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
+import { ActivityLog } from '../../components/business/ConsoleTables.tsx';
 import { InspectionSelectableRow } from '../console/components/InspectionPanels.tsx';
-import { copy, useLocale } from '../console/i18n.tsx';
-import { connectionLabel, fmtDateTime, monitoringTone, translateMonitoringStatus, translateProviderLabel } from '../console/utils.ts';
+import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
+import { connectionLabel, fmtDateTime, monitoringTone, translateMonitoringStatus, translateProviderLabel } from '../../modules/console/console.utils.ts';
 
 const MONITORING_TIME_WINDOWS = [
   { key: '1h', hours: 1 },

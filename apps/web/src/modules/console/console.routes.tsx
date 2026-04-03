@@ -3,14 +3,14 @@ import { Suspense, lazy, type ReactElement } from 'react';
 import { copy, type ConsolePageKey } from './console.i18n.tsx';
 
 const AgentPage = lazy(() => import('../agent/AgentPage.tsx'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage.tsx'));
-const ExecutionPage = lazy(() => import('./pages/ExecutionPage.tsx'));
-const MarketPage = lazy(() => import('./pages/MarketPage.tsx'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage.tsx'));
-const NotificationsPage = lazy(() => import('../notifications/NotificationsPage.tsx'));
-const BacktestPage = lazy(() => import('../research/BacktestPage.tsx'));
-const StrategiesPage = lazy(() => import('../research/StrategiesPage.tsx'));
-const RiskPage = lazy(() => import('../risk/RiskPage.tsx'));
+const DashboardPage = lazy(() => import('../../pages/console/routes/OverviewPage.tsx').then(m => ({ default: m.OverviewPage })));
+const ExecutionPage = lazy(() => import('../../pages/console/routes/ExecutionPage.tsx').then(m => ({ default: m.ExecutionPage })));
+const MarketPage = lazy(() => import('../../pages/console/routes/MarketPage.tsx').then(m => ({ default: m.MarketPage })));
+const SettingsPage = lazy(() => import('../../pages/console/routes/SettingsPage.tsx').then(m => ({ default: m.SettingsPage })));
+const NotificationsPage = lazy(() => import('../../pages/notifications/NotificationsPage.tsx'));
+const BacktestPage = lazy(() => import('../../pages/backtest/BacktestPage.tsx'));
+const StrategiesPage = lazy(() => import('../../pages/strategies/StrategiesPage.tsx'));
+const RiskPage = lazy(() => import('../../pages/risk/RiskPage.tsx'));
 
 type ConsoleNavKey =
   | 'dashboard'

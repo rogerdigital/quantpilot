@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
-import { SectionHeader, TopMeta } from '../../pages/console/components/ConsoleChrome.tsx';
-import { copy, useLocale } from '../../pages/console/i18n.tsx';
-import { translateRiskLevel } from '../../pages/console/utils.ts';
+import { SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
+import { copy, useLocale } from '../console/console.i18n.tsx';
+import { translateRiskLevel } from '../console/console.utils.ts';
 import { useAgentTools } from './useAgentTools.ts';
 
 const promptSuggestions = {

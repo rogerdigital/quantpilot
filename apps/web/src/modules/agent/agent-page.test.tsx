@@ -18,15 +18,15 @@ vi.mock('../../store/trading-system/TradingSystemProvider.tsx', () => ({
   }),
 }));
 
-vi.mock('../../pages/console/i18n.tsx', async () => {
-  const actual = await vi.importActual<typeof import('../../pages/console/i18n.tsx')>('../../pages/console/i18n.tsx');
+vi.mock('../console/console.i18n.tsx', async () => {
+  const actual = await vi.importActual<typeof import('../console/console.i18n.tsx')>('../console/console.i18n.tsx');
   return {
     ...actual,
     useLocale: () => ({ locale: 'en' as const }),
   };
 });
 
-vi.mock('../../pages/console/components/ConsoleChrome.tsx', () => ({
+vi.mock('../../components/layout/ConsoleChrome.tsx', () => ({
   SectionHeader: () => <div>SectionHeader</div>,
   TopMeta: () => <div>TopMeta</div>,
 }));
