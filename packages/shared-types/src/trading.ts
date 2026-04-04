@@ -1387,11 +1387,11 @@ export type AgentAuthorityState = {
   mode: AgentAuthorityMode;
   reason: string;
   updatedAt: string;
-  accountId?: string | null;
-  strategyId?: string | null;
-  actionType?: string | null;
-  latestEvent?: AgentAuthorityEventRecord | null;
-  policy?: AgentPolicyRecord | null;
+  accountId?: string;
+  strategyId?: string;
+  actionType?: string;
+  latestEvent?: AgentAuthorityEventRecord;
+  policy?: AgentPolicyRecord;
 };
 
 export type AgentInstructionKind =
@@ -1405,9 +1405,9 @@ export type AgentDailyBiasState = {
   summary: string;
   updatedAt: string;
   instructions: AgentInstructionRecord[];
-  accountId?: string | null;
-  strategyId?: string | null;
-  actionType?: string | null;
+  accountId?: string;
+  strategyId?: string;
+  actionType?: string;
 };
 
 export type AgentDailyRunKind =
@@ -1453,8 +1453,8 @@ export type AgentDailyRunRecord = {
   kind: AgentDailyRunKind;
   status: 'queued' | 'running' | 'completed' | 'failed';
   trigger: 'schedule' | 'event';
-  accountId?: string | null;
-  strategyId?: string | null;
+  accountId?: string;
+  strategyId?: string;
   requestedBy: string;
   createdAt: string;
   updatedAt: string;
@@ -1469,11 +1469,11 @@ export type AgentAuthorityEventRecord = {
   nextMode: AgentAuthorityMode;
   reason: string;
   createdAt: string;
-  accountId?: string | null;
-  strategyId?: string | null;
-  actionType?: string | null;
-  sessionId?: string | null;
-  policyId?: string | null;
+  accountId?: string;
+  strategyId?: string;
+  actionType?: string;
+  sessionId?: string;
+  policyId?: string;
   metadata: Record<string, unknown>;
 };
 
