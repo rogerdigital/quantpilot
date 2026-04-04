@@ -13,7 +13,7 @@ dist/
 .env.local
 .env.*.local
 
-# Editor / IDE
+# Editor / IDE / OS
 .vscode/
 .idea/
 *.swp
@@ -35,6 +35,3 @@ npm-debug.log*
 
 # Testing
 coverage/
-
-# OS
-.DS_Store
