@@ -22,7 +22,7 @@ VITE_BROKER_HTTP_URL=/api/broker
 
 ## 行情 Provider
 
-[marketData.ts](../apps/web/src/services/providers/marketData.ts) 当前支持：
+[marketData.ts](../apps/web/src/app/providers/marketData.ts) 当前支持：
 
 - `simulated`
 - `custom-http`
@@ -53,7 +53,7 @@ VITE_BROKER_HTTP_URL=/api/broker
 
 ## Broker Provider
 
-[broker.ts](../apps/web/src/services/providers/broker.ts) 当前支持：
+[broker.ts](../apps/web/src/app/providers/broker.ts) 当前支持：
 
 - `simulated`
 - `custom-http`

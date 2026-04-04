@@ -27,7 +27,8 @@ quantpilot/
 │       │   ├── app/
 │       │   ├── data/
 │       │   ├── pages/
-│       │   ├── services/
+│       │   ├── hooks/
+│       │   ├── modules/
 │       │   └── store/
 │       ├── index.html
 │       ├── package.json
@@ -67,8 +68,8 @@ quantpilot/
   - 前端页面层，已对齐 `dashboard / market / strategies / backtest / risk / execution / agent / notifications / settings`。
 - `apps/web/src/store/`
   - 前端状态层，`TradingSystemProvider.tsx` 负责向后端提交当前状态并消费新状态，`core/` 目录下主要保留对共享 runtime 的类型化封装。
-- `apps/web/src/services/`
-  - 运行配置、provider 接入和控制面通信层，包括 market data、broker 与 control-plane service。
+- `apps/web/src/app/` 与 `apps/web/src/hooks/`
+  - 前端运行配置、provider 接入、控制面通信与共享数据拉取层，包括 runtime config、market data、broker、HTTP API 与轮询 hooks。
 - `apps/api/src/`
   - 后端入口和平台底座骨架，当前包括 app、gateway、最小控制面服务和模块注册层。
 - `apps/api/test/`
