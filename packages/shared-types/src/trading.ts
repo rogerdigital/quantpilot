@@ -1376,6 +1376,82 @@ export type AgentActionRequest = {
   updatedAt: string;
 };
 
+export type AgentAuthorityMode =
+  | 'full_auto'
+  | 'bounded_auto'
+  | 'ask_first'
+  | 'manual_only'
+  | 'stopped';
+
+export type AgentInstructionKind =
+  | 'conversation'
+  | 'daily_bias'
+  | 'market_intel'
+  | 'watch_focus'
+  | 'strategy_change_request';
+
+export type AgentDailyRunKind =
+  | 'pre_market'
+  | 'intraday_monitor'
+  | 'post_market'
+  | 'operator_update'
+  | 'risk_event'
+  | 'execution_event'
+  | 'market_event';
+
+export type AgentPolicyRecord = {
+  id: string;
+  accountId: string;
+  strategyId: string;
+  actionType: string;
+  environment: 'paper' | 'live' | 'all';
+  authority: AgentAuthorityMode;
+  singleActionMaxNotional: number;
+  singleActionMaxEquityPct: number;
+  strategyExposureMaxPct: number;
+  dailyAutoActionLimit: number;
+  dailyLossLimitPct: number;
+  maxDrawdownLimitPct: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AgentInstructionRecord = {
+  id: string;
+  sessionId: string;
+  kind: AgentInstructionKind;
+  title: string;
+  body: string;
+  requestedBy: string;
+  activeUntil: string;
+  createdAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type AgentDailyRunRecord = {
+  id: string;
+  kind: AgentDailyRunKind;
+  status: 'queued' | 'running' | 'completed' | 'failed';
+  trigger: 'schedule' | 'event';
+  accountId: string;
+  strategyId: string;
+  requestedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type AgentAuthorityEventRecord = {
+  id: string;
+  severity: 'info' | 'warn' | 'critical';
+  eventType: 'downgraded' | 'stopped' | 'restored' | 'blocked';
+  previousMode: AgentAuthorityMode;
+  nextMode: AgentAuthorityMode;
+  reason: string;
+  createdAt: string;
+  metadata: Record<string, unknown>;
+};
+
 export type ControlPlaneResolution = {
   ok: boolean;
   cycle: {
