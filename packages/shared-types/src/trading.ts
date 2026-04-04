@@ -1386,7 +1386,7 @@ export type AgentAuthorityMode =
 export type AgentAuthorityState = {
   mode: AgentAuthorityMode;
   reason: string;
-  updatedAt: string;
+  updatedAt?: string;
   accountId?: string;
   strategyId?: string;
   actionType?: string;
@@ -1402,8 +1402,8 @@ export type AgentInstructionKind =
   | 'strategy_change_request';
 
 export type AgentDailyBiasState = {
-  summary: string;
-  updatedAt: string;
+  summary?: string;
+  updatedAt?: string;
   instructions: AgentInstructionRecord[];
   accountId?: string;
   strategyId?: string;
@@ -1475,6 +1475,13 @@ export type AgentAuthorityEventRecord = {
   sessionId?: string;
   policyId?: string;
   metadata: Record<string, unknown>;
+};
+
+export type AgentWorkbenchGovernanceSnapshot = {
+  authorityState: AgentAuthorityState;
+  dailyBias: AgentDailyBiasState;
+  dailyRuns: AgentDailyRunRecord[];
+  authorityEvents: AgentAuthorityEventRecord[];
 };
 
 export type ControlPlaneResolution = {
