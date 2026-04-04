@@ -440,6 +440,87 @@ export function createAgentAnalysisRunEntry(payload = {}) {
   };
 }
 
+function toFiniteNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function resolveEndOfDayIso(reference = new Date()) {
+  const endOfDay = new Date(reference);
+  endOfDay.setUTCHours(23, 59, 59, 999);
+  return endOfDay.toISOString();
+}
+
+export function createAgentPolicyEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `agent-policy-${randomUUID()}`,
+    accountId: payload.accountId || 'all',
+    strategyId: payload.strategyId || 'all',
+    actionType: payload.actionType || 'all',
+    environment: payload.environment || 'all',
+    authority: payload.authority || 'manual_only',
+    singleActionMaxNotional: toFiniteNumber(payload.singleActionMaxNotional, 0),
+    singleActionMaxEquityPct: toFiniteNumber(payload.singleActionMaxEquityPct, 0),
+    strategyExposureMaxPct: toFiniteNumber(payload.strategyExposureMaxPct, 0),
+    dailyAutoActionLimit: toFiniteNumber(payload.dailyAutoActionLimit, 0),
+    dailyLossLimitPct: toFiniteNumber(payload.dailyLossLimitPct, 0),
+    maxDrawdownLimitPct: toFiniteNumber(payload.maxDrawdownLimitPct, 0),
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+  };
+}
+
+export function createAgentInstructionEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `agent-instruction-${randomUUID()}`,
+    sessionId: payload.sessionId || '',
+    kind: payload.kind || 'conversation',
+    title: payload.title || 'Agent instruction',
+    body: payload.body || '',
+    requestedBy: payload.requestedBy || 'operator',
+    activeUntil: payload.activeUntil || resolveEndOfDayIso(now),
+    createdAt: now,
+    metadata: payload.metadata || {},
+  };
+}
+
+export function createAgentDailyRunEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `agent-daily-run-${randomUUID()}`,
+    kind: payload.kind || 'pre_market',
+    status: payload.status || 'queued',
+    trigger: payload.trigger || 'schedule',
+    requestedBy: payload.requestedBy || 'system',
+    createdAt: now,
+    updatedAt: payload.updatedAt || now,
+    metadata: payload.metadata || {},
+    ...(payload.accountId ? { accountId: payload.accountId } : {}),
+    ...(payload.strategyId ? { strategyId: payload.strategyId } : {}),
+  };
+}
+
+export function createAgentAuthorityEventEntry(payload = {}) {
+  const now = payload.createdAt || new Date().toISOString();
+  return {
+    id: payload.id || `agent-authority-event-${randomUUID()}`,
+    severity: payload.severity || 'info',
+    eventType: payload.eventType || 'blocked',
+    previousMode: payload.previousMode || 'manual_only',
+    nextMode: payload.nextMode || 'manual_only',
+    reason: payload.reason || '',
+    createdAt: now,
+    metadata: payload.metadata || {},
+    ...(payload.accountId ? { accountId: payload.accountId } : {}),
+    ...(payload.strategyId ? { strategyId: payload.strategyId } : {}),
+    ...(payload.actionType ? { actionType: payload.actionType } : {}),
+    ...(payload.sessionId ? { sessionId: payload.sessionId } : {}),
+    ...(payload.policyId ? { policyId: payload.policyId } : {}),
+  };
+}
+
 export function createResearchTaskEntry(payload = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {

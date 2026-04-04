@@ -1,6 +1,10 @@
 import { createAuditRepository } from './repositories/audit-repo.mjs';
 import { createAgentActionRequestRepository } from './repositories/agent-action-request-repo.mjs';
 import { createAgentAnalysisRunRepository } from './repositories/agent-analysis-run-repo.mjs';
+import { createAgentAuthorityEventRepository } from './repositories/agent-authority-event-repo.mjs';
+import { createAgentDailyRunRepository } from './repositories/agent-daily-run-repo.mjs';
+import { createAgentInstructionRepository } from './repositories/agent-instruction-repo.mjs';
+import { createAgentPolicyRepository } from './repositories/agent-policy-repo.mjs';
 import { createAgentPlanRepository } from './repositories/agent-plan-repo.mjs';
 import { createAgentSessionMessageRepository } from './repositories/agent-session-message-repo.mjs';
 import { createAgentSessionRepository } from './repositories/agent-session-repo.mjs';
@@ -37,6 +41,10 @@ export function createControlPlaneContext(store = controlPlaneStore) {
     }),
     agentActionRequests: createAgentActionRequestRepository(store),
     agentAnalysisRuns: createAgentAnalysisRunRepository(store),
+    agentAuthorityEvent: createAgentAuthorityEventRepository(store),
+    agentDailyRun: createAgentDailyRunRepository(store),
+    agentInstruction: createAgentInstructionRepository(store),
+    agentPolicy: createAgentPolicyRepository(store),
     agentPlans: createAgentPlanRepository(store),
     agentSessionMessages: createAgentSessionMessageRepository(store),
     agentSessions: createAgentSessionRepository(store),

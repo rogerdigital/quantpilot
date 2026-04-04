@@ -98,6 +98,77 @@ test('control plane db adapter exposes persistence status and migration contract
   }
 });
 
+test('control plane context exposes agent governance repositories', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+
+  assert.equal(typeof context.agentPolicy.list, 'function');
+  assert.equal(typeof context.agentPolicy.get, 'function');
+  assert.equal(typeof context.agentPolicy.upsert, 'function');
+  assert.equal(typeof context.agentInstruction.list, 'function');
+  assert.equal(typeof context.agentInstruction.get, 'function');
+  assert.equal(typeof context.agentInstruction.upsert, 'function');
+  assert.equal(typeof context.agentDailyRun.list, 'function');
+  assert.equal(typeof context.agentDailyRun.get, 'function');
+  assert.equal(typeof context.agentDailyRun.upsert, 'function');
+  assert.equal(typeof context.agentAuthorityEvent.list, 'function');
+  assert.equal(typeof context.agentAuthorityEvent.get, 'function');
+  assert.equal(typeof context.agentAuthorityEvent.upsert, 'function');
+
+  const policy = context.agentPolicy.upsert({
+    id: 'policy-live-enter',
+    accountId: 'live-main',
+    strategyId: 'trend-following',
+    actionType: 'enter',
+    environment: 'live',
+    authority: 'bounded_auto',
+    singleActionMaxNotional: 2500,
+    singleActionMaxEquityPct: 0.05,
+    strategyExposureMaxPct: 0.2,
+    dailyAutoActionLimit: 4,
+    dailyLossLimitPct: 1.5,
+    maxDrawdownLimitPct: 5,
+  });
+  const instruction = context.agentInstruction.upsert({
+    id: 'instruction-daily-bias',
+    sessionId: 'session-1',
+    kind: 'daily_bias',
+    title: 'Trade lighter today',
+    body: 'Prefer fewer new entries and keep stops tight.',
+    requestedBy: 'operator-demo',
+    activeUntil: '2026-04-05T23:59:59.000Z',
+  });
+  const dailyRun = context.agentDailyRun.upsert({
+    id: 'daily-run-pre-market',
+    kind: 'pre_market',
+    status: 'queued',
+    trigger: 'schedule',
+    accountId: 'live-main',
+    strategyId: 'trend-following',
+    requestedBy: 'system',
+  });
+  const authorityEvent = context.agentAuthorityEvent.upsert({
+    id: 'authority-event-downgrade',
+    severity: 'warn',
+    eventType: 'downgraded',
+    previousMode: 'full_auto',
+    nextMode: 'ask_first',
+    reason: 'daily drawdown threshold reached',
+    accountId: 'live-main',
+    strategyId: 'trend-following',
+    actionType: 'enter',
+    policyId: policy.id,
+  });
+
+  assert.equal(context.agentPolicy.get(policy.id).authority, 'bounded_auto');
+  assert.equal(context.agentPolicy.list(10, { accountId: 'live-main' })[0].id, policy.id);
+  assert.equal(context.agentInstruction.get(instruction.id).kind, 'daily_bias');
+  assert.equal(context.agentInstruction.list(10, { sessionId: 'session-1', activeOnly: true })[0].id, instruction.id);
+  assert.equal(context.agentDailyRun.get(dailyRun.id).kind, 'pre_market');
+  assert.equal(context.agentDailyRun.list(10, { accountId: 'live-main', kind: 'pre_market' })[0].id, dailyRun.id);
+  assert.equal(context.agentAuthorityEvent.get(authorityEvent.id).nextMode, 'ask_first');
+  assert.equal(context.agentAuthorityEvent.list(10, { policyId: policy.id })[0].id, authorityEvent.id);
+});
+
 test('notification repository dispatches queued notifications', () => {
   const context = createControlPlaneContext(createMemoryStore());
   context.notifications.enqueueNotification({
