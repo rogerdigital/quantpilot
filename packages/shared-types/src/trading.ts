@@ -1385,8 +1385,7 @@ export type AgentAuthorityMode =
 
 export type AgentAuthorityState = {
   mode: AgentAuthorityMode;
-  label: string;
-  detail: string;
+  reason: string;
   updatedAt: string;
   accountId?: string | null;
   strategyId?: string | null;
@@ -1406,7 +1405,6 @@ export type AgentDailyBiasState = {
   summary: string;
   updatedAt: string;
   instructions: AgentInstructionRecord[];
-  activeInstructionIds?: string[];
   accountId?: string | null;
   strategyId?: string | null;
   actionType?: string | null;
