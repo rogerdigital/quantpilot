@@ -1403,7 +1403,7 @@ export type AgentInstructionKind =
 
 export type AgentDailyBiasState = {
   summary?: string;
-  updatedAt?: string;
+  updatedAt: string;
   instructions: AgentInstructionRecord[];
   accountId?: string;
   strategyId?: string;
