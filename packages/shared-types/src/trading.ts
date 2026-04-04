@@ -1383,12 +1383,34 @@ export type AgentAuthorityMode =
   | 'manual_only'
   | 'stopped';
 
+export type AgentAuthorityState = {
+  mode: AgentAuthorityMode;
+  label: string;
+  detail: string;
+  updatedAt: string;
+  accountId?: string | null;
+  strategyId?: string | null;
+  actionType?: string | null;
+  latestEvent?: AgentAuthorityEventRecord | null;
+  policy?: AgentPolicyRecord | null;
+};
+
 export type AgentInstructionKind =
   | 'conversation'
   | 'daily_bias'
   | 'market_intel'
   | 'watch_focus'
   | 'strategy_change_request';
+
+export type AgentDailyBiasState = {
+  summary: string;
+  updatedAt: string;
+  instructions: AgentInstructionRecord[];
+  activeInstructionIds?: string[];
+  accountId?: string | null;
+  strategyId?: string | null;
+  actionType?: string | null;
+};
 
 export type AgentDailyRunKind =
   | 'pre_market'
@@ -1433,8 +1455,8 @@ export type AgentDailyRunRecord = {
   kind: AgentDailyRunKind;
   status: 'queued' | 'running' | 'completed' | 'failed';
   trigger: 'schedule' | 'event';
-  accountId: string;
-  strategyId: string;
+  accountId?: string | null;
+  strategyId?: string | null;
   requestedBy: string;
   createdAt: string;
   updatedAt: string;
@@ -1449,6 +1471,11 @@ export type AgentAuthorityEventRecord = {
   nextMode: AgentAuthorityMode;
   reason: string;
   createdAt: string;
+  accountId?: string | null;
+  strategyId?: string | null;
+  actionType?: string | null;
+  sessionId?: string | null;
+  policyId?: string | null;
   metadata: Record<string, unknown>;
 };
 

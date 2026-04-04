@@ -59,6 +59,7 @@ test('stage 7 baseline exposes agent governance contracts', async () => {
   });
 
   assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
   assert.equal(typeof response.json.authorityState.mode, 'string');
   assert.equal(Array.isArray(response.json.dailyBias.instructions), true);
   assert.equal(Array.isArray(response.json.authorityEvents), true);
