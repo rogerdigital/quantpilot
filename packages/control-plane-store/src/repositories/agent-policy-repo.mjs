@@ -43,6 +43,14 @@ function persistPolicy(store, payload = {}) {
   return entry;
 }
 
+function appendPolicy(store, payload = {}) {
+  const records = store.readCollection(FILENAME);
+  const entry = createAgentPolicyEntry(payload);
+  records.unshift(entry);
+  trimAndSave(store, FILENAME, records, 120);
+  return entry;
+}
+
 export function createAgentPolicyRepository(store) {
   return {
     list(limit = 50, filter = {}) {
@@ -57,7 +65,7 @@ export function createAgentPolicyRepository(store) {
       return persistPolicy(store, payload);
     },
     append(payload = {}) {
-      return persistPolicy(store, payload);
+      return appendPolicy(store, payload);
     },
     update(policyId, patch = {}) {
       const current = store.readCollection(FILENAME).find((item) => item.id === policyId);

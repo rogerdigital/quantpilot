@@ -169,6 +169,61 @@ test('control plane context exposes agent governance repositories', () => {
   assert.equal(context.agentAuthorityEvent.list(10, { policyId: policy.id })[0].id, authorityEvent.id);
 });
 
+test('agent governance repositories keep append semantics immutable and same-day instructions active', () => {
+  const context = createControlPlaneContext(createMemoryStore());
+
+  const appendedInstruction = context.agentInstruction.append({
+    id: 'instruction-repeatable',
+    sessionId: 'session-append',
+    kind: 'daily_bias',
+    title: 'Stay selective',
+    body: 'Reduce opening size for new positions.',
+    requestedBy: 'operator-demo',
+    createdAt: '2026-04-05T10:15:00.000Z',
+  });
+  const appendedInstructionAgain = context.agentInstruction.append({
+    id: 'instruction-repeatable',
+    sessionId: 'session-append',
+    kind: 'market_intel',
+    title: 'Late update',
+    body: 'News flow changed during the day.',
+    requestedBy: 'operator-demo',
+    createdAt: '2026-04-05T15:45:00.000Z',
+  });
+  const instructionHistory = context.agentInstruction.list(10, { sessionId: 'session-append' });
+
+  const firstEvent = context.agentAuthorityEvent.append({
+    id: 'authority-event-repeatable',
+    severity: 'warn',
+    eventType: 'downgraded',
+    previousMode: 'bounded_auto',
+    nextMode: 'ask_first',
+    reason: 'Initial downgrade',
+    createdAt: '2026-04-05T10:00:00.000Z',
+  });
+  const secondEvent = context.agentAuthorityEvent.append({
+    id: 'authority-event-repeatable',
+    severity: 'critical',
+    eventType: 'stopped',
+    previousMode: 'ask_first',
+    nextMode: 'stopped',
+    reason: 'Escalated stop',
+    createdAt: '2026-04-05T11:00:00.000Z',
+  });
+  const eventHistory = context.agentAuthorityEvent.list(10);
+
+  assert.equal(instructionHistory.length, 2);
+  assert.equal(instructionHistory[0].kind, 'market_intel');
+  assert.equal(instructionHistory[1].kind, 'daily_bias');
+  assert.equal(context.agentInstruction.get(appendedInstruction.id).body, appendedInstructionAgain.body);
+  assert.equal(appendedInstruction.activeUntil.startsWith('2026-04-05T'), true);
+  assert.equal(firstEvent.reason, 'Initial downgrade');
+  assert.equal(secondEvent.reason, 'Escalated stop');
+  assert.equal(eventHistory.length, 2);
+  assert.equal(eventHistory[0].eventType, 'stopped');
+  assert.equal(eventHistory[1].eventType, 'downgraded');
+});
+
 test('notification repository dispatches queued notifications', () => {
   const context = createControlPlaneContext(createMemoryStore());
   context.notifications.enqueueNotification({

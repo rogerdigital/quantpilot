@@ -44,6 +44,14 @@ function persistAuthorityEvent(store, payload = {}) {
   return entry;
 }
 
+function appendAuthorityEvent(store, payload = {}) {
+  const records = store.readCollection(FILENAME);
+  const entry = createAgentAuthorityEventEntry(payload);
+  records.unshift(entry);
+  trimAndSave(store, FILENAME, records, 240);
+  return entry;
+}
+
 export function createAgentAuthorityEventRepository(store) {
   return {
     list(limit = 50, filter = {}) {
@@ -58,7 +66,7 @@ export function createAgentAuthorityEventRepository(store) {
       return persistAuthorityEvent(store, payload);
     },
     append(payload = {}) {
-      return persistAuthorityEvent(store, payload);
+      return appendAuthorityEvent(store, payload);
     },
     update(eventId, patch = {}) {
       const current = store.readCollection(FILENAME).find((item) => item.id === eventId);

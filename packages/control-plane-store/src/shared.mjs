@@ -447,7 +447,7 @@ function toFiniteNumber(value, fallback = 0) {
 
 function resolveEndOfDayIso(reference = new Date()) {
   const endOfDay = new Date(reference);
-  endOfDay.setUTCHours(23, 59, 59, 999);
+  endOfDay.setHours(23, 59, 59, 999);
   return endOfDay.toISOString();
 }
 

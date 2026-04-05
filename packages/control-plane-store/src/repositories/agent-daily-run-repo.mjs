@@ -44,6 +44,14 @@ function persistDailyRun(store, payload = {}) {
   return entry;
 }
 
+function appendDailyRun(store, payload = {}) {
+  const records = store.readCollection(FILENAME);
+  const entry = createAgentDailyRunEntry(payload);
+  records.unshift(entry);
+  trimAndSave(store, FILENAME, records, 240);
+  return entry;
+}
+
 export function createAgentDailyRunRepository(store) {
   return {
     list(limit = 50, filter = {}) {
@@ -58,7 +66,7 @@ export function createAgentDailyRunRepository(store) {
       return persistDailyRun(store, payload);
     },
     append(payload = {}) {
-      return persistDailyRun(store, payload);
+      return appendDailyRun(store, payload);
     },
     update(runId, patch = {}) {
       const current = store.readCollection(FILENAME).find((item) => item.id === runId);

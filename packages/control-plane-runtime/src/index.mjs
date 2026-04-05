@@ -98,6 +98,75 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     return context.executionPlans.updateExecutionPlan(existing.id, patch);
   }
 
+  function buildAgentAuthorityState(options = {}) {
+    const policyFilter = withScopedFilter({
+      accountId: options.accountId,
+      strategyId: options.strategyId,
+      actionType: options.actionType,
+      environment: options.environment,
+    });
+    const eventFilter = withScopedFilter({
+      accountId: options.accountId,
+      strategyId: options.strategyId,
+      actionType: options.actionType,
+      sessionId: options.sessionId,
+      policyId: options.policyId,
+    });
+    const latestPolicy = context.agentPolicy.listAgentPolicies(1, policyFilter)[0] || null;
+    const latestEvent = context.agentAuthorityEvent.listAgentAuthorityEvents(1, eventFilter)[0] || null;
+    const now = new Date().toISOString();
+
+    if (latestEvent) {
+      return {
+        mode: latestEvent.nextMode,
+        reason: latestEvent.reason || 'Recent authority event recorded.',
+        updatedAt: latestEvent.createdAt || now,
+        policy: latestPolicy,
+        latestEvent,
+      };
+    }
+
+    if (latestPolicy) {
+      return {
+        mode: latestPolicy.authority,
+        reason: 'Derived from the latest active policy.',
+        updatedAt: latestPolicy.updatedAt || latestPolicy.createdAt || now,
+        policy: latestPolicy,
+        latestEvent: null,
+      };
+    }
+
+    return {
+      mode: 'manual_only',
+      reason: 'No agent governance policy configured.',
+      updatedAt: now,
+      policy: null,
+      latestEvent: null,
+    };
+  }
+
+  function buildAgentDailyBiasState(options = {}) {
+    const activeAt = options.activeAt || new Date().toISOString();
+    const instructionFilter = withScopedFilter({
+      sessionId: options.sessionId,
+      requestedBy: options.requestedBy,
+      kind: options.kind,
+      activeOnly: true,
+      activeAt,
+    });
+    const instructions = context.agentInstruction.listAgentInstructions(
+      Number.isFinite(options.instructionLimit) ? options.instructionLimit : 20,
+      instructionFilter,
+    );
+    const latestInstruction = instructions[0] || null;
+
+    return {
+      instructions,
+      summary: latestInstruction?.title || (instructions.length > 0 ? `${instructions.length} active instructions` : 'No active daily bias instructions.'),
+      updatedAt: latestInstruction?.createdAt || activeAt,
+    };
+  }
+
   return {
     listAgentSessions(limit = 50, filter = {}) {
       return context.agentSessions.listAgentSessions(limit, withScopedFilter(filter));
@@ -272,6 +341,92 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     },
     updateAgentActionRequest(requestId, patch = {}) {
       return context.agentActionRequests.updateAgentActionRequest(requestId, patch);
+    },
+    listAgentPolicies(limit = 50, filter = {}) {
+      return context.agentPolicy.listAgentPolicies(limit, withScopedFilter(filter));
+    },
+    getAgentPolicy(policyId) {
+      return isVisibleInCurrentScope(context.agentPolicy.getAgentPolicy(policyId));
+    },
+    appendAgentPolicy(payload = {}) {
+      return context.agentPolicy.appendAgentPolicy(withScopeMetadata(payload));
+    },
+    saveAgentPolicy(payload = {}) {
+      return context.agentPolicy.upsertAgentPolicy(withScopeMetadata(payload));
+    },
+    recordAgentPolicy(payload = {}) {
+      return this.saveAgentPolicy(payload);
+    },
+    updateAgentPolicy(policyId, patch = {}) {
+      return context.agentPolicy.updateAgentPolicy(policyId, patch);
+    },
+    listAgentInstructions(limit = 50, filter = {}) {
+      return context.agentInstruction.listAgentInstructions(limit, withScopedFilter(filter));
+    },
+    getAgentInstruction(instructionId) {
+      return isVisibleInCurrentScope(context.agentInstruction.getAgentInstruction(instructionId));
+    },
+    appendAgentInstruction(payload = {}) {
+      return context.agentInstruction.appendAgentInstruction(withScopeMetadata(payload));
+    },
+    recordAgentInstruction(payload = {}) {
+      return context.agentInstruction.appendAgentInstruction(withScopeMetadata(payload));
+    },
+    updateAgentInstruction(instructionId, patch = {}) {
+      return context.agentInstruction.updateAgentInstruction(instructionId, patch);
+    },
+    listAgentDailyRuns(limit = 50, filter = {}) {
+      return context.agentDailyRun.listAgentDailyRuns(limit, withScopedFilter(filter));
+    },
+    getAgentDailyRun(runId) {
+      return isVisibleInCurrentScope(context.agentDailyRun.getAgentDailyRun(runId));
+    },
+    appendAgentDailyRun(payload = {}) {
+      return context.agentDailyRun.appendAgentDailyRun(withScopeMetadata(payload));
+    },
+    recordAgentDailyRun(payload = {}) {
+      return context.agentDailyRun.appendAgentDailyRun(withScopeMetadata(payload));
+    },
+    updateAgentDailyRun(runId, patch = {}) {
+      return context.agentDailyRun.updateAgentDailyRun(runId, patch);
+    },
+    listAgentAuthorityEvents(limit = 50, filter = {}) {
+      return context.agentAuthorityEvent.listAgentAuthorityEvents(limit, withScopedFilter(filter));
+    },
+    getAgentAuthorityEvent(eventId) {
+      return isVisibleInCurrentScope(context.agentAuthorityEvent.getAgentAuthorityEvent(eventId));
+    },
+    appendAgentAuthorityEvent(payload = {}) {
+      return context.agentAuthorityEvent.appendAgentAuthorityEvent(withScopeMetadata(payload));
+    },
+    recordAgentAuthorityEvent(payload = {}) {
+      return context.agentAuthorityEvent.appendAgentAuthorityEvent(withScopeMetadata(payload));
+    },
+    updateAgentAuthorityEvent(eventId, patch = {}) {
+      return context.agentAuthorityEvent.updateAgentAuthorityEvent(eventId, patch);
+    },
+    getAgentGovernanceSnapshot(options = {}) {
+      const eventLimit = Number.isFinite(options.eventLimit) ? options.eventLimit : 20;
+      const runLimit = Number.isFinite(options.runLimit) ? options.runLimit : 20;
+      const authorityEvents = this.listAgentAuthorityEvents(eventLimit, {
+        accountId: options.accountId,
+        strategyId: options.strategyId,
+        actionType: options.actionType,
+        sessionId: options.sessionId,
+        policyId: options.policyId,
+      });
+      const dailyRuns = this.listAgentDailyRuns(runLimit, {
+        accountId: options.accountId,
+        strategyId: options.strategyId,
+        requestedBy: options.requestedBy,
+      });
+
+      return {
+        authorityState: buildAgentAuthorityState(options),
+        dailyBias: buildAgentDailyBiasState(options),
+        authorityEvents,
+        dailyRuns,
+      };
     },
     listBacktestRuns(limit = 100, filter = {}) {
       return context.backtestRuns.listBacktestRuns(limit, filter);
@@ -1058,6 +1213,28 @@ export const deleteBrokerBinding = (...args) => controlPlaneRuntime.deleteBroker
 export const listExecutionRuntimeEvents = (...args) => controlPlaneRuntime.listExecutionRuntimeEvents(...args);
 export const listBrokerAccountSnapshots = (...args) => controlPlaneRuntime.listBrokerAccountSnapshots(...args);
 export const listBrokerExecutionEvents = (...args) => controlPlaneRuntime.listBrokerExecutionEvents(...args);
+export const listAgentPolicies = (...args) => controlPlaneRuntime.listAgentPolicies(...args);
+export const getAgentPolicy = (...args) => controlPlaneRuntime.getAgentPolicy(...args);
+export const appendAgentPolicy = (...args) => controlPlaneRuntime.appendAgentPolicy(...args);
+export const saveAgentPolicy = (...args) => controlPlaneRuntime.saveAgentPolicy(...args);
+export const recordAgentPolicy = (...args) => controlPlaneRuntime.recordAgentPolicy(...args);
+export const updateAgentPolicy = (...args) => controlPlaneRuntime.updateAgentPolicy(...args);
+export const listAgentInstructions = (...args) => controlPlaneRuntime.listAgentInstructions(...args);
+export const getAgentInstruction = (...args) => controlPlaneRuntime.getAgentInstruction(...args);
+export const appendAgentInstruction = (...args) => controlPlaneRuntime.appendAgentInstruction(...args);
+export const recordAgentInstruction = (...args) => controlPlaneRuntime.recordAgentInstruction(...args);
+export const updateAgentInstruction = (...args) => controlPlaneRuntime.updateAgentInstruction(...args);
+export const listAgentDailyRuns = (...args) => controlPlaneRuntime.listAgentDailyRuns(...args);
+export const getAgentDailyRun = (...args) => controlPlaneRuntime.getAgentDailyRun(...args);
+export const appendAgentDailyRun = (...args) => controlPlaneRuntime.appendAgentDailyRun(...args);
+export const recordAgentDailyRun = (...args) => controlPlaneRuntime.recordAgentDailyRun(...args);
+export const updateAgentDailyRun = (...args) => controlPlaneRuntime.updateAgentDailyRun(...args);
+export const listAgentAuthorityEvents = (...args) => controlPlaneRuntime.listAgentAuthorityEvents(...args);
+export const getAgentAuthorityEvent = (...args) => controlPlaneRuntime.getAgentAuthorityEvent(...args);
+export const appendAgentAuthorityEvent = (...args) => controlPlaneRuntime.appendAgentAuthorityEvent(...args);
+export const recordAgentAuthorityEvent = (...args) => controlPlaneRuntime.recordAgentAuthorityEvent(...args);
+export const updateAgentAuthorityEvent = (...args) => controlPlaneRuntime.updateAgentAuthorityEvent(...args);
+export const getAgentGovernanceSnapshot = (...args) => controlPlaneRuntime.getAgentGovernanceSnapshot(...args);
 export const listExecutionRuns = (...args) => controlPlaneRuntime.listExecutionRuns(...args);
 export const getExecutionRun = (...args) => controlPlaneRuntime.getExecutionRun(...args);
 export const getExecutionRunByPlanId = (...args) => controlPlaneRuntime.getExecutionRunByPlanId(...args);
@@ -1128,4 +1305,3 @@ export { refreshBacktestSummary } from '../../../apps/api/src/domains/backtest/s
 export { assessAgentActionRequestRisk, assessExecutionCandidate } from '../../../apps/api/src/domains/risk/services/assessment-service.mjs';
 export { buildStrategyExecutionCandidate } from '../../../apps/api/src/domains/strategy/services/execution-candidate-service.mjs';
 export { recordAgentActionRequest } from '../../../apps/api/src/domains/agent/services/action-request-service.mjs';
-

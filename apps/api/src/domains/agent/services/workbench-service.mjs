@@ -156,6 +156,11 @@ export function getAgentWorkbench(options = {}) {
   const sessions = controlPlaneRuntime.listAgentSessions(limit * 3);
   const runs = controlPlaneRuntime.listAgentAnalysisRuns(limit * 3);
   const requests = controlPlaneRuntime.listAgentActionRequests(limit * 3);
+  const governance = controlPlaneRuntime.getAgentGovernanceSnapshot({
+    eventLimit: limit,
+    instructionLimit: limit,
+    runLimit: limit,
+  });
   const notifications = controlPlaneRuntime.listNotifications(limit * 4)
     .filter((item) => item.source === 'agent-control' || item.metadata?.agentActionRequestId);
   const auditRecords = controlPlaneRuntime.listAuditRecords(limit * 6)
@@ -176,6 +181,10 @@ export function getAgentWorkbench(options = {}) {
     ok: true,
     asOf: summary.latestUpdatedAt,
     summary,
+    authorityState: governance.authorityState,
+    dailyBias: governance.dailyBias,
+    authorityEvents: governance.authorityEvents,
+    dailyRuns: governance.dailyRuns,
     lanes: [
       {
         key: 'sessions',

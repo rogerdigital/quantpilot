@@ -25,6 +25,170 @@ test('control plane runtime delegates notification and audit operations', () => 
   assert.equal(runtime.listAuditRecords()[0].metadata.tenantId, 'tenant-quantpilot-labs');
 });
 
+test('control plane runtime persists governance records without overwriting append history', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  const policy = runtime.saveAgentPolicy({
+    id: 'agent-policy-paper-enter',
+    accountId: 'paper-main',
+    strategyId: 'trend-following',
+    actionType: 'enter',
+    environment: 'paper',
+    authority: 'bounded_auto',
+    singleActionMaxNotional: 2500,
+    singleActionMaxEquityPct: 0.05,
+    strategyExposureMaxPct: 0.2,
+    dailyAutoActionLimit: 4,
+    dailyLossLimitPct: 1.5,
+    maxDrawdownLimitPct: 5,
+  });
+  const policyUpdated = runtime.saveAgentPolicy({
+    id: policy.id,
+    accountId: policy.accountId,
+    strategyId: policy.strategyId,
+    actionType: policy.actionType,
+    environment: policy.environment,
+    authority: 'ask_first',
+    singleActionMaxNotional: 1800,
+    singleActionMaxEquityPct: 0.04,
+    strategyExposureMaxPct: 0.16,
+    dailyAutoActionLimit: 2,
+    dailyLossLimitPct: 1,
+    maxDrawdownLimitPct: 3,
+  });
+
+  const instructionFirst = runtime.recordAgentInstruction({
+    id: 'agent-instruction-daily-bias',
+    sessionId: 'session-1',
+    kind: 'daily_bias',
+    title: 'Trade lighter today',
+    body: 'Prefer fewer new entries and keep stops tight.',
+    requestedBy: 'operator-demo',
+  });
+  const instructionSecond = runtime.recordAgentInstruction({
+    id: instructionFirst.id,
+    sessionId: 'session-1',
+    kind: 'daily_bias',
+    title: 'Trade even lighter today',
+    body: 'Stay cautious on new entries.',
+    requestedBy: 'operator-demo',
+  });
+
+  const dailyRunFirst = runtime.recordAgentDailyRun({
+    id: 'agent-daily-run-pre-market',
+    kind: 'pre_market',
+    status: 'queued',
+    trigger: 'schedule',
+    accountId: 'paper-main',
+    strategyId: 'trend-following',
+    requestedBy: 'system',
+  });
+  const dailyRunSecond = runtime.recordAgentDailyRun({
+    id: dailyRunFirst.id,
+    kind: 'pre_market',
+    status: 'running',
+    trigger: 'schedule',
+    accountId: 'paper-main',
+    strategyId: 'trend-following',
+    requestedBy: 'system',
+  });
+
+  const authorityEventFirst = runtime.recordAgentAuthorityEvent({
+    id: 'agent-authority-event-downgrade',
+    severity: 'warn',
+    eventType: 'downgraded',
+    previousMode: 'full_auto',
+    nextMode: 'ask_first',
+    reason: 'daily drawdown threshold reached',
+    accountId: 'paper-main',
+    strategyId: 'trend-following',
+    actionType: 'enter',
+    policyId: policy.id,
+  });
+  const authorityEventSecond = runtime.recordAgentAuthorityEvent({
+    id: authorityEventFirst.id,
+    severity: 'warn',
+    eventType: 'downgraded',
+    previousMode: 'ask_first',
+    nextMode: 'manual_only',
+    reason: 'operator requested tighter controls',
+    accountId: 'paper-main',
+    strategyId: 'trend-following',
+    actionType: 'enter',
+    policyId: policy.id,
+  });
+
+  assert.equal(policyUpdated.authority, 'ask_first');
+  assert.equal(runtime.listAgentPolicies(10, { accountId: 'paper-main' }).length, 1);
+  assert.equal(runtime.listAgentPolicies(10, { accountId: 'paper-main' })[0].authority, 'ask_first');
+  assert.equal(runtime.listAgentInstructions(10, { sessionId: 'session-1' }).length, 2);
+  assert.equal(runtime.listAgentDailyRuns(10, { accountId: 'paper-main' }).length, 2);
+  assert.equal(runtime.listAgentAuthorityEvents(10, { policyId: policy.id }).length, 2);
+  assert.equal(runtime.listAgentAuthorityEvents(10, { policyId: policy.id })[0].reason, 'operator requested tighter controls');
+  assert.equal(authorityEventSecond.nextMode, 'manual_only');
+});
+
+test('control plane runtime exposes a governance snapshot for the agent workbench', () => {
+  const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
+
+  runtime.saveAgentPolicy({
+    id: 'agent-policy-live-enter',
+    accountId: 'live-main',
+    strategyId: 'trend-following',
+    actionType: 'enter',
+    environment: 'live',
+    authority: 'bounded_auto',
+    singleActionMaxNotional: 2500,
+    singleActionMaxEquityPct: 0.05,
+    strategyExposureMaxPct: 0.2,
+    dailyAutoActionLimit: 4,
+    dailyLossLimitPct: 1.5,
+    maxDrawdownLimitPct: 5,
+  });
+  runtime.recordAgentInstruction({
+    id: 'agent-instruction-daily-bias',
+    sessionId: 'session-1',
+    kind: 'daily_bias',
+    title: 'Trade lighter today',
+    body: 'Prefer fewer new entries and keep stops tight.',
+    requestedBy: 'operator-demo',
+  });
+  runtime.recordAgentDailyRun({
+    id: 'agent-daily-run-pre-market',
+    kind: 'pre_market',
+    status: 'queued',
+    trigger: 'schedule',
+    accountId: 'live-main',
+    strategyId: 'trend-following',
+    requestedBy: 'system',
+  });
+  runtime.recordAgentAuthorityEvent({
+    id: 'agent-authority-event-downgrade',
+    severity: 'warn',
+    eventType: 'downgraded',
+    previousMode: 'full_auto',
+    nextMode: 'ask_first',
+    reason: 'daily drawdown threshold reached',
+    accountId: 'live-main',
+    strategyId: 'trend-following',
+    actionType: 'enter',
+    policyId: 'agent-policy-live-enter',
+  });
+
+  const snapshot = runtime.getAgentGovernanceSnapshot({
+    accountId: 'live-main',
+    strategyId: 'trend-following',
+  });
+
+  assert.equal(typeof snapshot.authorityState.mode, 'string');
+  assert.equal(typeof snapshot.authorityState.reason, 'string');
+  assert.equal(typeof snapshot.dailyBias.updatedAt, 'string');
+  assert.equal(Array.isArray(snapshot.dailyBias.instructions), true);
+  assert.equal(Array.isArray(snapshot.authorityEvents), true);
+  assert.equal(Array.isArray(snapshot.dailyRuns), true);
+  assert.equal(snapshot.authorityState.policy.id, 'agent-policy-live-enter');
+});
+
 test('control plane runtime stamps current workspace scope into new records', () => {
   const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
 

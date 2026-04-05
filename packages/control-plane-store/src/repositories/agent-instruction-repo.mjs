@@ -50,6 +50,14 @@ function persistInstruction(store, payload = {}) {
   return entry;
 }
 
+function appendInstruction(store, payload = {}) {
+  const records = store.readCollection(FILENAME);
+  const entry = createAgentInstructionEntry(payload);
+  records.unshift(entry);
+  trimAndSave(store, FILENAME, records, 240);
+  return entry;
+}
+
 export function createAgentInstructionRepository(store) {
   return {
     list(limit = 50, filter = {}) {
@@ -64,7 +72,7 @@ export function createAgentInstructionRepository(store) {
       return persistInstruction(store, payload);
     },
     append(payload = {}) {
-      return persistInstruction(store, payload);
+      return appendInstruction(store, payload);
     },
     update(instructionId, patch = {}) {
       const current = store.readCollection(FILENAME).find((item) => item.id === instructionId);
