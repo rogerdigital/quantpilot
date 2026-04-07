@@ -481,34 +481,42 @@ body::after {
   animation: pulse-glow 2.8s ease-in-out infinite;
 }
 
+/* Segmented control container */
 .mode-stack {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+  display: inline-flex;
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(2, 6, 18, 0.8);
+  padding: 3px;
+  gap: 3px;
 }
 
+/* Segmented control item */
 .mode-pill {
-  border: 1px solid var(--line);
-  background: rgba(10, 20, 40, 0.8);
-  color: var(--text);
-  border-radius: var(--radius);
-  padding: 9px 20px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted-strong);
+  border-radius: calc(var(--radius) - 1px);
+  padding: 8px 22px;
   cursor: pointer;
   font: 600 12px/1 var(--font-data);
   letter-spacing: 0.1em;
-  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  text-transform: uppercase;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  white-space: nowrap;
 }
 
 .mode-pill:hover {
-  border-color: rgba(0, 212, 255, 0.2);
-  box-shadow: 0 0 12px rgba(0, 212, 255, 0.08);
+  color: var(--text);
+  background: rgba(0, 212, 255, 0.05);
 }
 
 .mode-pill.active {
-  border-color: rgba(0, 212, 255, 0.36);
-  background: rgba(0, 212, 255, 0.08);
-  box-shadow: 0 0 14px rgba(0, 212, 255, 0.1);
+  border-color: rgba(0, 212, 255, 0.28);
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--text-strong);
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.12), inset 0 1px 0 rgba(0, 212, 255, 0.1);
 }
 
 .route-card,
