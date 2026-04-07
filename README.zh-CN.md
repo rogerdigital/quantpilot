@@ -258,6 +258,7 @@ npm run verify
 - [Stage 4 Closeout](./docs/architecture/stage-4-closeout.md)
 - [Stage 5 Closeout](./docs/architecture/stage-5-closeout.md)
 - [Stage 6 Closeout](./docs/architecture/stage-6-closeout.md)
+- [Stage 7 Closeout](./docs/architecture/stage-7-closeout.md)
 
 这些文档定义了已经关闭的能力边界，以及当前仍由 `verify` 持续守护的基线预期。
 

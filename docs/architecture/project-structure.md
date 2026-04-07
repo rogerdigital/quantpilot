@@ -113,14 +113,15 @@ quantpilot/
 
 ## 研发迭代阶段
 
-### 当前阶段：阶段 1 到阶段 6 已收官
+### 当前阶段：阶段 1 到阶段 7 已收官
 
-当前仓库已经完成阶段 1 的平台底座产品化、阶段 2 的研究与策略闭环、阶段 3 的执行闭环与交易中台、阶段 4 的风险与调度中台深化、阶段 5 的 Agent 受控协作落地，以及阶段 6 的生产化与专业化基线：
+当前仓库已经完成阶段 1 的平台底座产品化、阶段 2 的研究与策略闭环、阶段 3 的执行闭环与交易中台、阶段 4 的风险与调度中台深化、阶段 5 的 Agent 受控协作落地、阶段 6 的生产化与专业化基线，以及阶段 7 的 Agent 治理骨架（P0）：
 
 1. `auth / user-account / scheduler / notification / audit / task-orchestrator / incident / operations / risk workbench` 这批基础模块已具备稳定服务边界。
 2. `research task / backtest result / research evaluation / research report / governance / replay / execution handoff` 这批研究对象已具备稳定服务边界。
 3. `execution lifecycle / broker events / reconciliation / compensation / triage` 与 `risk / scheduler linkage / reviewed actions` 已形成稳定中台契约。
-4. 下一阶段重点将转向数据库、权限、可观测性和可运营性，而不是继续返工平台底座、研究骨架、执行主链路、风险/调度中台或 Agent 最小闭环。
+4. `agent policy / agent instruction / agent daily run / agent authority event` 已形成阶段 7 P0 治理骨架契约：authority 模式可由策略驱动并经 risk/anomaly 条件降级，daily bias 指令每日生效，daily run 混合触发并通过 worker 执行。
+5. 下一阶段重点将转向真实 Agent autonomy 扩展（P1/P2）、数据库升级、权限与可观测性深化。
 
 阶段 1 的收官标准已经单独整理为 [stage-1-closeout.md](./stage-1-closeout.md)，后续判断是否进入阶段 2 以该文档为准。
 阶段 2 的收官标准已经单独整理为 [stage-2-closeout.md](./stage-2-closeout.md)，后续判断是否进入阶段 3 以该文档为准。
@@ -128,6 +129,7 @@ quantpilot/
 阶段 4 的收官标准已经单独整理为 [stage-4-closeout.md](./stage-4-closeout.md)，后续判断是否进入阶段 5 以该文档为准。
 阶段 5 的收官标准已经单独整理为 [stage-5-closeout.md](./stage-5-closeout.md)，后续判断是否进入阶段 6 以该文档为准。
 阶段 6 的收官标准已经单独整理为 [stage-6-closeout.md](./stage-6-closeout.md)，后续判断是否继续进入更高阶平台化扩展以前者为准。
+阶段 7 的收官标准已经单独整理为 [stage-7-closeout.md](./stage-7-closeout.md)，后续判断是否进入 Agent 自主扩展 P1 以该文档为准。
 
 ### 阶段 2 研究与策略闭环
 

@@ -189,6 +189,31 @@ GET /api/monitoring/snapshots
 GET /api/monitoring/alerts
 ```
 
+## Agent Governance API Routes (Stage 7 P0)
+
+Routes added in stage 7 for Agent trading governance:
+
+```http
+# Read current authority mode (includes risk/anomaly override)
+GET /api/agent/authority?accountId=paper-main&strategyId=all&actionType=all&environment=paper&riskMode=healthy&anomalyMode=healthy
+
+# Save an authority policy (creates or updates)
+POST /api/agent/policies
+{ "accountId": "paper-main", "strategyId": "all", "actionType": "all", "environment": "paper", "authority": "ask_first" }
+
+# Create a daily bias instruction (active until end of today)
+POST /api/agent/instructions
+{ "kind": "daily_bias", "title": "Trade lighter today", "body": "Prefer fewer new entries.", "requestedBy": "operator-demo" }
+
+# Governance snapshot also available via workbench (authorityState, dailyBias, authorityEvents, dailyRuns)
+GET /api/agent/workbench
+```
+
+Authority mode ladder (most-restrictive-wins across all matching policies):
+`full_auto` → `bounded_auto` → `ask_first` → `manual_only` → `stopped`
+
+`risk_off` or critical anomaly forces `stopped`; warn anomaly forces at least `ask_first`.
+
 ## Related Documents
 
 - [README.md](../README.md)

@@ -258,6 +258,7 @@ The staged delivery roadmap is closed. The stage documents remain as architectur
 - [Stage 4 Closeout](./docs/architecture/stage-4-closeout.md)
 - [Stage 5 Closeout](./docs/architecture/stage-5-closeout.md)
 - [Stage 6 Closeout](./docs/architecture/stage-6-closeout.md)
+- [Stage 7 Closeout](./docs/architecture/stage-7-closeout.md)
 
 These documents define the closed capability boundaries and the baseline expectations still enforced by `verify`.
 
