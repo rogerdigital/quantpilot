@@ -27,6 +27,7 @@ vi.mock('../console/console.i18n.tsx', async () => {
 });
 
 vi.mock('../../components/layout/ConsoleChrome.tsx', () => ({
+  EmptyState: ({ message }: { message: string }) => <div>{message}</div>,
   SectionHeader: () => <div>SectionHeader</div>,
   TopMeta: () => <div>TopMeta</div>,
 }));
