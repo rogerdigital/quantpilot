@@ -557,7 +557,7 @@ export default function AgentPage() {
                 key: 'explanation',
                 label: locale === 'zh' ? 'Explanation' : 'Explanation',
                 content: (
-                  <div className="focus-list panel-body panel-body-md">
+                  <div className="focus-list panel-body panel-body-lg">
                     <div className="focus-row">
                       <div className="symbol-cell">
                         <strong>{latestExplanation?.thesis || (locale === 'zh' ? '等待解释结果' : 'Waiting for explanation')}</strong>
