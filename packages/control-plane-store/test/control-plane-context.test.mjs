@@ -135,7 +135,6 @@ test('control plane context exposes agent governance repositories', () => {
     title: 'Trade lighter today',
     body: 'Prefer fewer new entries and keep stops tight.',
     requestedBy: 'operator-demo',
-    activeUntil: '2026-04-05T23:59:59.000Z',
   });
   const dailyRun = context.agentDailyRun.upsert({
     id: 'daily-run-pre-market',
