@@ -49,6 +49,25 @@ export type AgentWorkbenchPayload = {
     actor: string;
     at: string;
   }>;
+  authorityState: {
+    mode: string;
+    reason: string;
+    policies: Array<Record<string, unknown>>;
+  } | null;
+  dailyBias: {
+    instructions: Array<{
+      id: string;
+      kind: string;
+      title: string;
+      body: string;
+      requestedBy: string;
+      activeUntil: string;
+      createdAt: string;
+    }>;
+    latestUpdatedAt: string;
+  } | null;
+  authorityEvents: Array<Record<string, unknown>>;
+  dailyRuns: Array<Record<string, unknown>>;
 };
 
 export type AgentSessionDetailPayload = {

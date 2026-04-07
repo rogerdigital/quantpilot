@@ -147,6 +147,8 @@ export default function AgentPage() {
   const [prompt, setPrompt] = useState(promptSuggestions[locale][0]);
 
   const summary = workbench?.summary;
+  const authorityState = workbench?.authorityState || null;
+  const dailyBiasInstructions = Array.isArray(workbench?.dailyBias?.instructions) ? workbench.dailyBias.instructions : [];
   const latestExplanation = sessionDetail?.latestAnalysisRun?.explanation || null;
   const latestActionRequest = sessionDetail?.latestActionRequest || null;
   const recentSessions = Array.isArray(workbench?.queues.recentSessions) ? workbench?.queues.recentSessions : [];
@@ -235,6 +237,66 @@ export default function AgentPage() {
               : (latestExplanation?.recommendedNextStep || 'Run a new analysis to surface a structured explanation and the recommended next action here.')}
           </div>
         </div>
+      </section>
+
+      <section className="panel-grid panel-grid-wide" id="agent-governance">
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? 'Agent Governance' : 'Agent Governance'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '查看当前 Agent 授权模式（Authority Mode）和今日运营指令（Daily Bias），确保 Agent 行为在人工监督范围内。'
+                  : 'Review the current Agent authority mode and active daily bias instructions to keep Agent behaviour within human-supervised bounds.'}
+              </div>
+            </div>
+            <span className={`panel-badge ${authorityState?.mode === 'stopped' ? 'badge-warn' : 'badge-info'}`}>
+              {authorityState?.mode || 'manual_only'}
+            </span>
+          </div>
+          <div className="focus-list">
+            <div className="focus-row">
+              <div className="symbol-cell">
+                <strong>{locale === 'zh' ? 'Authority Mode' : 'Authority Mode'}</strong>
+                <span>{authorityState?.reason || (locale === 'zh' ? '尚未配置 Agent 治理策略。' : 'No agent governance policy configured.')}</span>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '模式' : 'Mode'}</span>
+                <strong>{authorityState?.mode || 'manual_only'}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '策略数' : 'Policies'}</span>
+                <strong>{authorityState?.policies?.length ?? 0}</strong>
+              </div>
+            </div>
+            <div className="focus-row">
+              <div className="symbol-cell">
+                <strong>{locale === 'zh' ? 'Daily Bias' : 'Daily Bias'}</strong>
+                <span>
+                  {dailyBiasInstructions.length
+                    ? (locale === 'zh' ? `${dailyBiasInstructions.length} 条活跃的今日运营指令正在影响本次会话。` : `${dailyBiasInstructions.length} active daily bias instruction${dailyBiasInstructions.length > 1 ? 's' : ''} affecting this session.`)
+                    : (locale === 'zh' ? '当前没有活跃的今日运营指令。' : 'No active daily bias instructions for this session.')}
+                </span>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '条数' : 'Count'}</span>
+                <strong>{dailyBiasInstructions.length}</strong>
+              </div>
+            </div>
+            {dailyBiasInstructions.map((item) => (
+              <div className="focus-row" key={item.id}>
+                <div className="symbol-cell">
+                  <strong>{item.title}</strong>
+                  <span>{item.body}</span>
+                </div>
+                <div className="focus-metric">
+                  <span>{locale === 'zh' ? '有效至' : 'Active Until'}</span>
+                  <strong>{item.activeUntil ? item.activeUntil.slice(0, 10) : '--'}</strong>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
       </section>
 
       <section className="panel-grid panel-grid-wide">
