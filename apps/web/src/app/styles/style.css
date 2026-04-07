@@ -1919,9 +1919,12 @@ h1 {
   margin-bottom: 18px;
 }
 
+.agent-dialogue-section {
+  margin-top: 28px;
+}
+
 .agent-dual-view-panel {
   overflow: hidden;
-  grid-column: 1 / -1;
 }
 
 .agent-dual-view {

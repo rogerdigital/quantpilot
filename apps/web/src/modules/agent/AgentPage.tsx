@@ -299,7 +299,7 @@ export default function AgentPage() {
         </article>
       </section>
 
-      <section className="panel-grid panel-grid-wide">
+      <section className="agent-dialogue-section">
         <article className="panel agent-dual-view-panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Agent Dialogue' : 'Agent Dialogue'}</div><div className="panel-copy">{locale === 'zh' ? '左侧保持连续对话，右侧固定展示当前会话洞察、计划步骤和受控交接，让聊天和运营工作台同时成立。' : 'Keep the running conversation on the left while the right rail stays anchored on session insight, plan steps, and controlled handoff.'}</div></div><div className={`panel-badge ${running ? 'badge-warn' : 'badge-info'}`}>{running ? 'RUNNING' : 'READY'}</div></div>
           <div className="agent-dual-view">
@@ -486,8 +486,10 @@ export default function AgentPage() {
             </aside>
           </div>
         </article>
+      </section>
 
-        <article className="panel" id="agent-sessions">
+      <section className="panel-grid" id="agent-sessions">
+        <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Recent Sessions' : 'Recent Sessions'}</div><div className="panel-copy">{locale === 'zh' ? '查看最近的 agent 会话，并切换到对应的详细解释和 timeline。' : 'Review recent agent sessions and switch into their explanation and timeline detail.'}</div></div><div className="settings-chip-row"><button type="button" className="inline-link" onClick={() => refresh()} disabled={loading || running || requestingAction}>{locale === 'zh' ? '刷新' : 'Refresh'}</button><div className="panel-badge badge-info">{recentSessions.length}</div></div></div>
           <div className="focus-list focus-list-terminal">
             {loading && !recentSessions.length ? <div className="empty-cell">{locale === 'zh' ? '正在加载 Agent 工作台...' : 'Loading agent workbench...'}</div> : null}
@@ -536,8 +538,8 @@ export default function AgentPage() {
         </article>
       </section>
 
-      <section className="panel-grid panel-grid-wide">
-        <article className="panel" id="agent-explanation">
+      <section className="panel-grid" id="agent-explanation">
+        <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Explanation Detail' : 'Explanation Detail'}</div><div className="panel-copy">{locale === 'zh' ? '这里显示选中会话的最新 thesis、理由、警告和下一步建议。' : 'Review the selected session thesis, rationale, warnings, and recommended next step here.'}</div></div><div className={`panel-badge ${latestExplanation?.warnings?.length ? 'badge-warn' : 'badge-info'}`}>{latestExplanation?.warnings?.length ?? 0}</div></div>
           <div className="focus-list">
             <div className="focus-row">
