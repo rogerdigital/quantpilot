@@ -482,9 +482,10 @@ body::after {
 }
 
 .mode-stack {
-  display: grid;
+  display: flex;
   gap: 8px;
   margin-top: 10px;
+  flex-wrap: wrap;
 }
 
 .mode-pill {
@@ -492,7 +493,7 @@ body::after {
   background: rgba(10, 20, 40, 0.8);
   color: var(--text);
   border-radius: var(--radius);
-  padding: 10px 12px;
+  padding: 9px 20px;
   cursor: pointer;
   font: 600 12px/1 var(--font-data);
   letter-spacing: 0.1em;
@@ -659,7 +660,8 @@ body::after {
 }
 
 .agent-chat-textarea {
-  min-height: 132px;
+  min-height: 120px;
+  resize: vertical;
 }
 
 .settings-actions {
@@ -824,6 +826,9 @@ body::after {
   position: relative;
   isolation: isolate;
   padding: 20px 24px 40px;
+  max-width: 1480px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .main-panel::before {
@@ -1275,14 +1280,14 @@ h1 {
   display: grid;
   grid-template-columns: 1.9fr 1fr 1fr;
   gap: 16px;
-  margin-top: 22px;
+  margin-top: 28px;
 }
 
 .overview-hero-grid {
   display: grid;
   grid-template-columns: 1.8fr 0.8fr 0.8fr;
   gap: 16px;
-  margin-top: 22px;
+  margin-top: 28px;
 }
 
 .hero-grid.two-up {
@@ -1299,6 +1304,7 @@ h1 {
 
 .hero-card {
   padding: 22px 22px 20px;
+  min-height: 120px;
 }
 
 .overview-command-card {
@@ -1726,7 +1732,7 @@ h1 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
-  margin-top: 20px;
+  margin-top: 28px;
 }
 
 /* Staggered entrance for panel grid */
@@ -1742,6 +1748,11 @@ h1 {
 
 .panel-grid-wide > * {
   min-width: 0;
+}
+
+/* Single-panel wide sections fill full width */
+.panel-grid-wide > .panel:only-child {
+  grid-column: 1 / -1;
 }
 
 .panel-grid-terminal {
@@ -1910,12 +1921,14 @@ h1 {
 
 .agent-dual-view-panel {
   overflow: hidden;
+  grid-column: 1 / -1;
 }
 
 .agent-dual-view {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.92fr);
-  gap: 18px;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  gap: 20px;
+  align-items: start;
 }
 
 .agent-dialogue-stage {
@@ -1930,9 +1943,9 @@ h1 {
   gap: 18px;
   align-items: flex-start;
   padding: 14px 16px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(0, 212, 255, 0.12);
   border-radius: var(--radius);
-  background: rgba(8, 18, 38, 0.85);
+  background: rgba(0, 212, 255, 0.03);
   transition: border-color 160ms ease;
 }
 
@@ -2105,12 +2118,18 @@ h1 {
 .agent-chat-transcript {
   display: grid;
   gap: 12px;
-  min-height: 340px;
-  border: 1px solid var(--line);
+  min-height: 200px;
+  max-height: 560px;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 212, 255, 0.16);
   border-radius: var(--radius-lg);
-  background: rgba(1, 3, 10, 0.7);
-  padding: 18px;
+  background: rgba(1, 3, 10, 0.92);
+  padding: 20px;
   animation: fade-in 200ms ease;
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.5),
+    0 0 28px rgba(0, 212, 255, 0.06),
+    0 0 0 1px rgba(0, 212, 255, 0.04);
 }
 
 .agent-chat-sidecar {
@@ -2135,15 +2154,18 @@ h1 {
 
 .agent-chat-user {
   justify-self: end;
-  background: rgba(0, 212, 255, 0.04);
+  background: rgba(0, 212, 255, 0.06);
+  border-color: rgba(0, 212, 255, 0.18);
   border-left: 2px solid var(--accent);
-  box-shadow: inset -4px 0 20px rgba(0, 212, 255, 0.04);
+  box-shadow: inset -4px 0 20px rgba(0, 212, 255, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .agent-chat-assistant {
   justify-self: start;
-  background: rgba(255, 183, 0, 0.03);
+  background: rgba(255, 183, 0, 0.04);
+  border-color: rgba(255, 183, 0, 0.12);
   border-left: 2px solid var(--accent-2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .agent-chat-system {
@@ -2183,6 +2205,10 @@ h1 {
 .agent-chat-composer {
   display: grid;
   gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(0, 212, 255, 0.1);
+  border-radius: var(--radius-lg);
+  background: rgba(4, 10, 24, 0.8);
 }
 
 .agent-chat-composer-actions {
