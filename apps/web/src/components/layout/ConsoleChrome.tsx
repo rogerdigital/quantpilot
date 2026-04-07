@@ -359,6 +359,22 @@ function GlobalToolbar() {
   );
 }
 
+export type EmptyStateProps = {
+  icon?: string;
+  message: string;
+  detail?: string;
+};
+
+export function EmptyState({ icon, message, detail }: EmptyStateProps) {
+  return (
+    <div className="empty-state">
+      {icon ? <span className="empty-state-icon">{icon}</span> : null}
+      <span className="empty-state-message">{message}</span>
+      {detail ? <span className="empty-state-detail">{detail}</span> : null}
+    </div>
+  );
+}
+
 export function Layout() {
   const location = useLocation();
   const { locale } = useLocale();
