@@ -1741,6 +1741,7 @@ h1 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-top: 28px;
+  align-items: start;
 }
 
 /* Staggered entrance for panel grid */
@@ -1769,6 +1770,65 @@ h1 {
 
 .panel-grid-terminal-bottom {
   grid-template-columns: 1.1fr 0.9fr;
+}
+
+/* ============================================================
+   PANEL BODY — fixed-height scrollable content zones
+   Use panel-body-sm / md / lg on the inner content container
+   inside a .panel to constrain height and enable overflow scroll
+   ============================================================ */
+
+.panel-body {
+  overflow-y: auto;
+  width: 100%;
+}
+
+.panel-body-sm {
+  height: 220px;
+}
+
+.panel-body-md {
+  height: 360px;
+}
+
+.panel-body-lg {
+  height: 520px;
+}
+
+/* ============================================================
+   EMPTY STATE — intentional empty panel placeholder
+   ============================================================ */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 24px;
+  text-align: center;
+  height: 100%;
+  min-height: 160px;
+  color: var(--muted);
+}
+
+.empty-state-icon {
+  font-size: 28px;
+  opacity: 0.45;
+  line-height: 1;
+}
+
+.empty-state-message {
+  font: 600 13px/1.4 var(--font-ui);
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+.empty-state-detail {
+  font: 400 12px/1.5 var(--font-ui);
+  color: var(--muted);
+  opacity: 0.7;
+  max-width: 260px;
 }
 
 .overview-desk-grid {
