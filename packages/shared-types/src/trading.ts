@@ -1363,7 +1363,14 @@ export type AgentSessionRecord = {
 export type AgentActionRequest = {
   id: string;
   workflowRunId: string;
-  requestType: 'prepare_execution_plan' | 'explain_risk' | 'review_backtest';
+  requestType:
+    | 'prepare_execution_plan'
+    | 'explain_risk'
+    | 'review_backtest'
+    | 'agent_trim'
+    | 'agent_exit'
+    | 'agent_cancel'
+    | 'agent_risk_reduce';
   targetId: string;
   status: 'submitted' | 'pending_review' | 'approved' | 'rejected';
   approvalState: 'pending' | 'required' | 'approved' | 'rejected' | 'not_required';
@@ -1452,7 +1459,7 @@ export type AgentDailyRunRecord = {
   id: string;
   kind: AgentDailyRunKind;
   status: 'queued' | 'running' | 'completed' | 'failed';
-  trigger: 'schedule' | 'event';
+  trigger: 'schedule' | 'event' | 'manual';
   accountId?: string;
   strategyId?: string;
   requestedBy: string;
@@ -1464,7 +1471,7 @@ export type AgentDailyRunRecord = {
 export type AgentAuthorityEventRecord = {
   id: string;
   severity: 'info' | 'warn' | 'critical';
-  eventType: 'downgraded' | 'stopped' | 'restored' | 'blocked';
+  eventType: 'downgraded' | 'stopped' | 'restored' | 'blocked' | 'risk_triggered';
   previousMode: AgentAuthorityMode;
   nextMode: AgentAuthorityMode;
   reason: string;

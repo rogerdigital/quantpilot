@@ -64,6 +64,176 @@ function buildMockBacktestMetrics(strategy, runId) {
   };
 }
 
+// =========================================================
+// Agent Daily Run helpers
+// =========================================================
+
+function buildPreMarketBrief(context, payload) {
+  const snapshot = typeof context.getAgentGovernanceSnapshot === 'function'
+    ? context.getAgentGovernanceSnapshot()
+    : {};
+  const authorityMode = snapshot.authorityState?.mode || 'manual_only';
+  const instructions = typeof context.listAgentInstructions === 'function'
+    ? context.listAgentInstructions(20, { activeOnly: true })
+    : [];
+  const recentRiskEvents = typeof context.listRiskEvents === 'function'
+    ? context.listRiskEvents(10)
+    : [];
+  const criticalRiskCount = recentRiskEvents.filter(
+    (e) => e.level === 'critical' || e.status === 'risk-off',
+  ).length;
+  const recentRuns = typeof context.listAgentDailyRuns === 'function'
+    ? context.listAgentDailyRuns(5, { kind: 'pre_market', status: 'completed' })
+    : [];
+
+  const lines = [
+    `Authority mode: ${authorityMode}`,
+    `Active instructions: ${instructions.length}`,
+    `Recent critical risk events: ${criticalRiskCount}`,
+    instructions.length > 0
+      ? `Daily bias: ${instructions[0].title}`
+      : 'No active daily bias instructions.',
+    recentRuns.length > 0
+      ? `Last pre-market run: ${recentRuns[0].createdAt}`
+      : 'No previous pre-market run found.',
+  ];
+
+  return {
+    briefContent: lines.join(' | '),
+    authorityMode,
+    instructionCount: instructions.length,
+    criticalRiskCount,
+    recentRunCount: recentRuns.length,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+function runIntradayMonitorCheck(context, payload, existingRun) {
+  const alreadyProcessed = Array.isArray(existingRun?.metadata?.processedRiskEventIds)
+    ? existingRun.metadata.processedRiskEventIds
+    : [];
+
+  const recentRiskEvents = typeof context.listRiskEvents === 'function'
+    ? context.listRiskEvents(20)
+    : [];
+
+  const newCritical = recentRiskEvents.filter(
+    (e) => !alreadyProcessed.includes(e.id) && (e.level === 'critical' || e.status === 'risk-off'),
+  );
+
+  const blockedPlans = typeof context.listExecutionPlans === 'function'
+    ? context.listExecutionPlans(20, { lifecycleStatus: 'blocked' })
+    : [];
+
+  const snapshot = typeof context.getAgentGovernanceSnapshot === 'function'
+    ? context.getAgentGovernanceSnapshot()
+    : {};
+  const currentMode = snapshot.authorityState?.mode || 'manual_only';
+
+  const actionsApplied = [];
+  const processedIds = [...alreadyProcessed];
+
+  for (const event of newCritical) {
+    processedIds.push(event.id);
+    if (currentMode !== 'stopped' && typeof context.recordAgentAuthorityEvent === 'function') {
+      context.recordAgentAuthorityEvent({
+        severity: 'critical',
+        eventType: 'risk_triggered',
+        previousMode: currentMode,
+        nextMode: 'stopped',
+        reason: `Intraday monitor: critical risk event detected.`,
+        accountId: payload.accountId,
+        strategyId: payload.strategyId,
+        metadata: { riskEventId: event.id, source: 'intraday-monitor' },
+      });
+      if (typeof context.notifications?.enqueueNotification === 'function') {
+        context.notifications.enqueueNotification({
+          level: 'critical',
+          source: 'agent-governance',
+          title: 'Agent authority downgraded by intraday monitor',
+          message: `Authority stopped due to critical risk event.`,
+          metadata: { riskEventId: event.id, previousMode: currentMode, nextMode: 'stopped' },
+        });
+      }
+      actionsApplied.push({ action: 'authority_downgraded', riskEventId: event.id });
+    }
+  }
+
+  if (blockedPlans.length > 0 && typeof context.notifications?.enqueueNotification === 'function') {
+    context.notifications.enqueueNotification({
+      level: 'warn',
+      source: 'agent-governance',
+      title: `${blockedPlans.length} execution plan(s) are blocked`,
+      message: 'Operator review required before these plans can proceed.',
+      metadata: { blockedPlanCount: blockedPlans.length, source: 'intraday-monitor' },
+    });
+  }
+
+  return {
+    processedRiskEventIds: processedIds,
+    newCriticalEventCount: newCritical.length,
+    blockedPlanCount: blockedPlans.length,
+    actionsApplied,
+    checkedAt: new Date().toISOString(),
+  };
+}
+
+function buildPostMarketRecap(context, payload) {
+  const today = new Date().toISOString().slice(0, 10);
+  const since = `${today}T00:00:00.000Z`;
+
+  const todayRuns = typeof context.listAgentDailyRuns === 'function'
+    ? context.listAgentDailyRuns(50, { since })
+    : [];
+  const authorityEvents = typeof context.listAgentAuthorityEvents === 'function'
+    ? context.listAgentAuthorityEvents(20, { since })
+    : [];
+  const allRequests = typeof context.listAgentActionRequests === 'function'
+    ? context.listAgentActionRequests(20)
+    : [];
+
+  const completedRuns = todayRuns.filter((r) => r.status === 'completed').length;
+  const failedRuns = todayRuns.filter((r) => r.status === 'failed').length;
+  const downgrades = authorityEvents.filter(
+    (e) => e.eventType === 'downgraded' || e.eventType === 'stopped' || e.eventType === 'risk_triggered',
+  ).length;
+  const pendingRequests = allRequests.filter((r) => r.status === 'pending_review').length;
+
+  const recap = [
+    `Daily runs completed: ${completedRuns}, failed: ${failedRuns}.`,
+    `Authority events today: ${authorityEvents.length} (${downgrades} downgrade(s)).`,
+    `Pending action requests: ${pendingRequests}.`,
+  ].join(' ');
+
+  const latestEvent = authorityEvents[0];
+  if (
+    latestEvent
+    && (latestEvent.eventType === 'risk_triggered' || latestEvent.eventType === 'stopped')
+    && typeof context.recordAgentAuthorityEvent === 'function'
+  ) {
+    context.recordAgentAuthorityEvent({
+      severity: 'info',
+      eventType: 'restored',
+      previousMode: latestEvent.nextMode,
+      nextMode: 'manual_only',
+      reason: 'Post-market recap: authority reset to manual_only for the next session.',
+      accountId: payload.accountId,
+      strategyId: payload.strategyId,
+      metadata: { source: 'post-market-recap', triggerRunId: payload.runId },
+    });
+  }
+
+  return {
+    recap,
+    completedRunCount: completedRuns,
+    failedRunCount: failedRuns,
+    authorityEventCount: authorityEvents.length,
+    downgradeCount: downgrades,
+    pendingActionRequestCount: pendingRequests,
+    recapGeneratedAt: new Date().toISOString(),
+  };
+}
+
 function syncBacktestResearchTask(context, run, patch = {}) {
   if (!run || typeof context.upsertResearchTask !== 'function') return null;
   return context.upsertResearchTask({
@@ -1008,29 +1178,90 @@ export async function executeQueuedWorkflow(workflowRun, context) {
     });
   }
   if (workflowRun.workflowId === 'task-orchestrator.agent-daily-run') {
-    const { runId, kind = 'pre_market' } = workflowRun.payload || {};
-    if (runId && typeof context.updateAgentDailyRun === 'function') {
-      context.updateAgentDailyRun(runId, { status: 'running', updatedAt: new Date().toISOString() });
+    const { runId, kind = 'pre_market', accountId, strategyId, requestedBy } = workflowRun.payload || {};
+    const now = new Date().toISOString();
+
+    try {
+      if (runId && typeof context.updateAgentDailyRun === 'function') {
+        context.updateAgentDailyRun(runId, { status: 'running', updatedAt: now });
+      }
+
+      let resultMetadata = {};
+
+      if (kind === 'pre_market') {
+        resultMetadata = buildPreMarketBrief(context, { accountId, strategyId });
+        if (typeof context.audit?.appendAuditRecord === 'function') {
+          context.audit.appendAuditRecord({
+            type: 'agent-daily-run',
+            actor: requestedBy || 'system',
+            title: 'Pre-market brief generated',
+            detail: resultMetadata.briefContent,
+            metadata: { runId, kind, authorityMode: resultMetadata.authorityMode, instructionCount: resultMetadata.instructionCount },
+          });
+        }
+
+      } else if (kind === 'intraday_monitor') {
+        const previousRuns = typeof context.listAgentDailyRuns === 'function'
+          ? context.listAgentDailyRuns(5, { kind: 'intraday_monitor', status: 'completed' })
+          : [];
+        const lastCompletedRun = previousRuns.find((r) => r.id !== runId) || null;
+        resultMetadata = runIntradayMonitorCheck(context, { accountId, strategyId }, lastCompletedRun);
+        if (typeof context.audit?.appendAuditRecord === 'function') {
+          context.audit.appendAuditRecord({
+            type: 'agent-daily-run',
+            actor: requestedBy || 'system',
+            title: 'Intraday monitor check completed',
+            detail: `Processed ${resultMetadata.newCriticalEventCount} new critical event(s), ${resultMetadata.blockedPlanCount} blocked plan(s).`,
+            metadata: { runId, kind, actionsApplied: resultMetadata.actionsApplied.length },
+          });
+        }
+
+      } else if (kind === 'post_market') {
+        resultMetadata = buildPostMarketRecap(context, { accountId, strategyId, runId });
+        if (typeof context.audit?.appendAuditRecord === 'function') {
+          context.audit.appendAuditRecord({
+            type: 'agent-daily-run',
+            actor: requestedBy || 'system',
+            title: 'Post-market recap generated',
+            detail: resultMetadata.recap,
+            metadata: { runId, kind, completedRunCount: resultMetadata.completedRunCount, downgradeCount: resultMetadata.downgradeCount },
+          });
+        }
+
+      } else {
+        resultMetadata = {
+          kind,
+          note: `P1 placeholder for kind '${kind}'. Full implementation in P2.`,
+          processedAt: now,
+        };
+      }
+
+      if (runId && typeof context.updateAgentDailyRun === 'function') {
+        context.updateAgentDailyRun(runId, { status: 'completed', updatedAt: now, metadata: resultMetadata });
+      }
+
+      return {
+        ok: true,
+        workflow: completeWorkflow(context, workflowRun.id, {
+          steps: [
+            { key: 'mark-run-running', status: 'completed' },
+            { key: `execute-${kind}`, status: 'completed' },
+            { key: 'persist-result', status: 'completed' },
+          ],
+          result: { ok: true, kind, runId, ...resultMetadata },
+        }),
+      };
+
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'agent daily run workflow failed';
+      if (runId && typeof context.updateAgentDailyRun === 'function') {
+        context.updateAgentDailyRun(runId, { status: 'failed', updatedAt: now, metadata: { error: errMsg } });
+      }
+      return {
+        ok: false,
+        workflow: failWorkflow(context, workflowRun.id, errMsg),
+      };
     }
-    if (typeof context.recordAgentAuthorityEvent === 'function') {
-      context.recordAgentAuthorityEvent({
-        severity: 'info',
-        eventType: 'restored',
-        previousMode: 'manual_only',
-        nextMode: 'manual_only',
-        reason: `Agent daily run ${kind} started.`,
-      });
-    }
-    if (runId && typeof context.updateAgentDailyRun === 'function') {
-      context.updateAgentDailyRun(runId, { status: 'completed', updatedAt: new Date().toISOString() });
-    }
-    return {
-      ok: true,
-      workflow: completeWorkflow(context, workflowRun.id, {
-        steps: [{ key: 'agent-daily-run', status: 'completed' }],
-        result: { ok: true, kind, runId },
-      }),
-    };
   }
   if (workflowRun.workflowId === 'task-orchestrator.manual-review') {
     return {

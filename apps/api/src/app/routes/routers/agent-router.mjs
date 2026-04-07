@@ -15,6 +15,7 @@ import { resolveAgentAuthority, saveAgentPolicy } from '../../../domains/agent/s
 import { getAgentSessionDetail, listAgentSessionsSnapshot } from '../../../domains/agent/services/session-service.mjs';
 import { getAgentOperatorTimeline, getAgentWorkbench } from '../../../domains/agent/services/workbench-service.mjs';
 import { listAgentTools, executeAgentTool } from '../../../domains/agent/services/tools-service.mjs';
+import { queueAgentDailyRun, listAgentDailyRuns } from '../../../domains/agent/services/runtime-service.mjs';
 
 export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);
@@ -143,6 +144,19 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
     const body = await readJsonBody(req);
     const result = rejectAgentActionRequest(requestId, body);
     writeJson(res, result.ok ? 200 : 404, result);
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/agent/daily-runs') {
+    if (!hasPermission('strategy:write')) { writeForbidden('strategy:write', 'queue agent daily runs'); return true; }
+    const body = await readJsonBody(req);
+    writeJson(res, 200, queueAgentDailyRun(body || {}));
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/agent/daily-runs') {
+    const limit = Number(reqUrl.searchParams.get('limit') || 20);
+    writeJson(res, 200, listAgentDailyRuns(limit));
     return true;
   }
 

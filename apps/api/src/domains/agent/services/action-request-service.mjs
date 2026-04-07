@@ -9,6 +9,10 @@ const ALLOWED_AGENT_REQUEST_TYPES = new Set([
   'prepare_execution_plan',
   'explain_risk',
   'review_backtest',
+  'agent_trim',
+  'agent_exit',
+  'agent_cancel',
+  'agent_risk_reduce',
 ]);
 
 export function listAgentActionRequests(limit = 50) {
@@ -272,6 +276,22 @@ export function approveAgentActionRequest(requestId, payload = {}) {
         requestedBy: request.requestedBy,
       },
       maxAttempts: 3,
+    });
+  }
+
+  const AGENT_DIRECT_ACTION_TYPES = ['agent_trim', 'agent_exit', 'agent_cancel', 'agent_risk_reduce'];
+  if (AGENT_DIRECT_ACTION_TYPES.includes(request.requestType)) {
+    controlPlaneRuntime.recordOperatorAction({
+      type: 'agent-action-approved',
+      actor: payload.approvedBy || 'operator',
+      title: `Approved agent ${request.requestType}`,
+      detail: `Agent ${request.requestType} approved. Downstream execution pending P2.`,
+      level: 'info',
+      metadata: {
+        agentActionRequestId: request.id,
+        requestType: request.requestType,
+        targetId: request.targetId,
+      },
     });
   }
 

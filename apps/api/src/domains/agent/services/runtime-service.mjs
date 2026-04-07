@@ -4,6 +4,13 @@ export function queueAgentDailyRun(payload = {}) {
   return controlPlaneRuntime.queueAgentDailyRun(payload);
 }
 
+export function listAgentDailyRuns(limit = 20) {
+  return {
+    ok: true,
+    runs: controlPlaneRuntime.listAgentDailyRuns(limit),
+  };
+}
+
 export function runAgentDailyCycle(payload = {}) {
   const run = controlPlaneRuntime.appendAgentDailyRun({
     ...payload,

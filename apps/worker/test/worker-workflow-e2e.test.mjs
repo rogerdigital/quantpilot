@@ -446,3 +446,162 @@ test('queued agent daily run workflow records a completed pre-market run', async
   const updated = runtime.getAgentDailyRun(run.id);
   assert.equal(updated.status, 'completed');
 });
+
+test('pre_market workflow writes brief content to run metadata', async () => {
+  const { run, workflow } = runtime.queueAgentDailyRun({
+    kind: 'pre_market',
+    trigger: 'schedule',
+    accountId: 'paper-main',
+    strategyId: 'trend',
+    requestedBy: 'system',
+  });
+
+  assert.equal(run.status, 'queued');
+  assert.equal(workflow.status, 'queued');
+
+  await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
+      ...options,
+      now: CLAIM_NOW,
+      workflowId: 'task-orchestrator.agent-daily-run',
+    }),
+    executeWorkflow: executeQueuedWorkflow,
+    context: createWorkerContext(),
+  });
+
+  const updated = runtime.getAgentDailyRun(run.id);
+  assert.equal(updated.status, 'completed');
+  assert.equal(typeof updated.metadata.briefContent, 'string');
+  assert.equal(typeof updated.metadata.authorityMode, 'string');
+  assert.equal(typeof updated.metadata.instructionCount, 'number');
+});
+
+test('intraday_monitor workflow records authority downgrade on critical risk event', async () => {
+  runtime.appendRiskEvent({
+    level: 'critical',
+    status: 'risk-off',
+    title: 'Test critical event for intraday monitor',
+    source: 'test',
+    metadata: { test: true },
+  });
+
+  const { run, workflow } = runtime.queueAgentDailyRun({
+    kind: 'intraday_monitor',
+    trigger: 'schedule',
+    accountId: 'paper-main',
+    strategyId: 'trend',
+    requestedBy: 'system',
+  });
+
+  assert.equal(run.status, 'queued');
+  assert.equal(workflow.status, 'queued');
+
+  await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
+      ...options,
+      now: CLAIM_NOW,
+      workflowId: 'task-orchestrator.agent-daily-run',
+    }),
+    executeWorkflow: executeQueuedWorkflow,
+    context: createWorkerContext(),
+  });
+
+  const updated = runtime.getAgentDailyRun(run.id);
+  assert.equal(updated.status, 'completed');
+  assert.equal(typeof updated.metadata.newCriticalEventCount, 'number');
+  assert.equal(updated.metadata.newCriticalEventCount >= 1, true);
+  assert.ok(Array.isArray(updated.metadata.processedRiskEventIds));
+  assert.ok(updated.metadata.processedRiskEventIds.length >= 1);
+
+  const authorityEvents = runtime.listAgentAuthorityEvents(5);
+  const riskTriggered = authorityEvents.find((e) => e.eventType === 'risk_triggered');
+  assert.ok(riskTriggered, 'expected a risk_triggered authority event');
+  assert.equal(riskTriggered.nextMode, 'stopped');
+});
+
+test('intraday_monitor does not reprocess already-handled risk events', async () => {
+  const { run: firstRun } = runtime.queueAgentDailyRun({
+    kind: 'intraday_monitor',
+    trigger: 'schedule',
+    accountId: 'paper-main',
+    strategyId: 'trend',
+    requestedBy: 'system',
+  });
+
+  await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
+      ...options,
+      now: CLAIM_NOW,
+      workflowId: 'task-orchestrator.agent-daily-run',
+    }),
+    executeWorkflow: executeQueuedWorkflow,
+    context: createWorkerContext(),
+  });
+
+  const firstUpdated = runtime.getAgentDailyRun(firstRun.id);
+  assert.equal(firstUpdated.status, 'completed');
+
+  // Second run without adding any new risk events — should not process anything new
+  const { run: secondRun } = runtime.queueAgentDailyRun({
+    kind: 'intraday_monitor',
+    trigger: 'schedule',
+    accountId: 'paper-main',
+    strategyId: 'trend',
+    requestedBy: 'system',
+  });
+
+  await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
+      ...options,
+      now: CLAIM_NOW,
+      workflowId: 'task-orchestrator.agent-daily-run',
+    }),
+    executeWorkflow: executeQueuedWorkflow,
+    context: createWorkerContext(),
+  });
+
+  const secondUpdated = runtime.getAgentDailyRun(secondRun.id);
+  assert.equal(secondUpdated.status, 'completed');
+  assert.equal(secondUpdated.metadata.newCriticalEventCount, 0);
+});
+
+test('post_market workflow generates recap and resets authority after risk downgrade', async () => {
+  runtime.recordAgentAuthorityEvent({
+    severity: 'critical',
+    eventType: 'risk_triggered',
+    previousMode: 'ask_first',
+    nextMode: 'stopped',
+    reason: 'Test: simulate risk downgrade before post-market recap.',
+  });
+
+  const { run, workflow } = runtime.queueAgentDailyRun({
+    kind: 'post_market',
+    trigger: 'schedule',
+    accountId: 'paper-main',
+    strategyId: 'trend',
+    requestedBy: 'system',
+  });
+
+  assert.equal(run.status, 'queued');
+  assert.equal(workflow.status, 'queued');
+
+  await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
+      ...options,
+      now: CLAIM_NOW,
+      workflowId: 'task-orchestrator.agent-daily-run',
+    }),
+    executeWorkflow: executeQueuedWorkflow,
+    context: createWorkerContext(),
+  });
+
+  const updated = runtime.getAgentDailyRun(run.id);
+  assert.equal(updated.status, 'completed');
+  assert.equal(typeof updated.metadata.recap, 'string');
+  assert.ok(updated.metadata.recap.length > 0);
+
+  const authorityEvents = runtime.listAgentAuthorityEvents(5);
+  const restored = authorityEvents.find((e) => e.eventType === 'restored');
+  assert.ok(restored, 'expected a restored authority event after post_market recap');
+  assert.equal(restored.nextMode, 'manual_only');
+});
