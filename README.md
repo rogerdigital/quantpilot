@@ -10,7 +10,7 @@ QuantPilot is not a production live-trading system. It is a platform skeleton an
 
 - A multi-workbench web console for dashboard, market, strategy, backtest, risk, execution, agent, notifications, and settings workflows
 - An API gateway for account, auth, research, execution, risk, scheduler, incident, operations, and agent contracts
-- Background workers for notification dispatch, risk scans, scheduler ticks, workflow maintenance, monitoring scans, and queued workflow execution
+- Background workers for notification dispatch, risk scans, scheduler ticks, workflow maintenance, monitoring scans, queued workflow execution, and agent daily run operational loops
 - Shared runtime packages for trading logic, control-plane fanout, workflow execution, and frontend/backend type contracts
 - Control-plane persistence with `file` and `db` adapter foundations, maintenance tooling, schema manifests, and migration contracts
 - Verification baselines that protect closed roadmap contracts across platform, research, execution, risk, scheduler, agent, and production-readiness surfaces
@@ -22,7 +22,7 @@ QuantPilot is designed around four platform-level operating loops:
 - Research loop: strategy catalog, backtest runs, evaluations, reports, governance, and execution handoff
 - Execution loop: execution plans, broker-event ingestion, reconciliation, compensation, recovery, and incident linkage
 - Middleware loop: risk workbench, scheduler workbench, linkage context, reviewed actions, and control-plane fanout
-- Agent loop: prompt, intent, plan, read-only analysis, explanation, controlled handoff, approval, and downstream workflow routing
+- Agent loop: prompt, intent, plan, read-only analysis, explanation, controlled handoff, approval, downstream workflow routing, and daily run operational cycles (pre-market brief, intraday monitor, post-market recap)
 
 The platform also includes account scope, workspace-aware permissions, monitoring, incident response, maintenance tooling, and deployment-facing verification.
 
@@ -150,9 +150,11 @@ quantpilot/
 
 ### Agent Collaboration
 
-- Persisted `session / intent / plan / analysis run / action request` contracts
+- Persisted `session / intent / plan / analysis run / action request / daily run` contracts
 - Backend-driven workbench aggregation
 - Controlled action handoffs that stay inside approval and risk boundaries
+- Daily run operational loop: pre-market brief, intraday monitoring with authority downgrade, and post-market recap with authority reset
+- Ask-first queue for agent-initiated actions: trim, exit, cancel, and risk-reduce
 
 ### Operations And Control Plane
 

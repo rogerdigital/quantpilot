@@ -10,7 +10,7 @@ QuantPilot 不是一个可直接用于实盘的生产交易系统。它当前定
 
 - 一个覆盖 dashboard、market、strategy、backtest、risk、execution、agent、notifications 和 settings 的多工作台前端控制台
 - 一套覆盖 account、auth、research、execution、risk、scheduler、incident、operations 与 agent 合同的 API 网关
-- 负责通知分发、风险扫描、调度 tick、workflow maintenance、monitoring scan 与排队工作流执行的后台 worker
+- 负责通知分发、风险扫描、调度 tick、workflow maintenance、monitoring scan、排队工作流执行以及 Agent 每日运营循环执行的后台 worker
 - 用于交易逻辑、控制面 fanout、工作流执行和前后端共享类型的公共运行时包
 - 具备 `file` 与 `db` adapter foundation、维护工具、schema manifest 和 migration contract 的控制面持久化层
 - 用于保护平台、研究、执行、风险、调度、Agent 与生产化基线合同的自动化验证体系
@@ -22,7 +22,7 @@ QuantPilot 当前围绕四条平台级运行主链路组织能力：
 - 研究链路：strategy catalog、backtest runs、evaluation、report、governance 和 execution handoff
 - 执行链路：execution plan、broker event ingestion、reconciliation、compensation、recovery 和 incident linkage
 - 中间件链路：risk workbench、scheduler workbench、linkage context、reviewed action 和 control-plane fanout
-- Agent 链路：prompt、intent、plan、read-only analysis、explanation、controlled handoff、approval 和 downstream workflow routing
+- Agent 链路：prompt、intent、plan、read-only analysis、explanation、controlled handoff、approval、downstream workflow routing，以及每日运营循环（盘前 brief、盘中监控、盘后复盘）
 
 此外，平台还包括 account scope、workspace-aware permissions、monitoring、incident response、maintenance tooling 以及面向部署的验证与运行约束。
 
@@ -150,9 +150,11 @@ quantpilot/
 
 ### Agent 协作
 
-- 持久化的 `session / intent / plan / analysis run / action request` 合同
+- 持久化的 `session / intent / plan / analysis run / action request / daily run` 合同
 - 由后端聚合驱动的 Agent workbench
 - 保持在审批与风控边界内的 controlled action handoff
+- 每日运营循环：盘前 brief（权限状态 + 指令摘要）、盘中监控（critical risk event 自动降级 + 通知，防重复处理）、盘后复盘（当日汇总 + authority 重置至 manual_only）
+- 主动提请队列（ask-first）：支持 trim、exit、cancel、risk_reduce 四种 Agent 发起动作，operator approve 后记录 operator_action（P2 对接真实执行）
 
 ### 运维与控制面
 
