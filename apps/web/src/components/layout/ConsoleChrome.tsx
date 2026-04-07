@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
@@ -354,6 +354,43 @@ function GlobalToolbar() {
             </div>
           ) : null}
         </div>
+      </div>
+    </div>
+  );
+}
+
+export type TabPanelTab = {
+  key: string;
+  label: string;
+  content: ReactNode;
+};
+
+export type TabPanelProps = {
+  tabs: TabPanelTab[];
+  defaultTab?: string;
+};
+
+export function TabPanel({ tabs, defaultTab }: TabPanelProps) {
+  const [active, setActive] = useState(defaultTab ?? tabs[0]?.key ?? '');
+  const current = tabs.find((t) => t.key === active) ?? tabs[0];
+  return (
+    <div className="tab-panel">
+      <div className="tab-panel-bar" role="tablist">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            role="tab"
+            aria-selected={t.key === active}
+            className={`tab-panel-tab${t.key === active ? ' active' : ''}`}
+            onClick={() => setActive(t.key)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="tab-panel-content" role="tabpanel">
+        {current?.content ?? null}
       </div>
     </div>
   );

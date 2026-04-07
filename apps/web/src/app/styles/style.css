@@ -1831,6 +1831,53 @@ h1 {
   max-width: 260px;
 }
 
+/* ============================================================
+   TAB PANEL — tabbed panel container with bar + content zone
+   ============================================================ */
+
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.tab-panel-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.tab-panel-tab {
+  padding: 10px 18px;
+  font: 600 11px/1 var(--font-ui);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease;
+  white-space: nowrap;
+  margin-bottom: -1px;
+}
+
+.tab-panel-tab:hover {
+  color: var(--text);
+}
+
+.tab-panel-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.tab-panel-content {
+  flex: 1;
+  min-height: 0;
+}
+
 .overview-desk-grid {
   grid-template-columns: 1.65fr 0.95fr;
 }
