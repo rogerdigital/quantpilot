@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { PersistenceMigrationPanel, WorkspaceAccessScopePanel } from './console/routes/SettingsPage.tsx';
+import { AgentGovernanceSettingsPanel, PersistenceMigrationPanel, WorkspaceAccessScopePanel } from './console/routes/SettingsPage.tsx';
 
 describe('WorkspaceAccessScopePanel', () => {
   it('renders workspace role, overrides, and scoped permissions', () => {
@@ -162,5 +162,81 @@ describe('WorkspaceAccessScopePanel', () => {
     expect(html).toContain('Pending Migrations');
     expect(html).toContain('npm run control-plane:maintenance -- migrate --adapter db');
     expect(html).toContain('GET /api/operations/maintenance');
+  });
+});
+
+describe('AgentGovernanceSettingsPanel', () => {
+  it('renders authority mode and policy list', () => {
+    const html = renderToStaticMarkup(
+      <AgentGovernanceSettingsPanel
+        locale="en"
+        authorityState={{
+          mode: 'bounded_auto',
+          reason: 'Derived from 2 matching policy records.',
+          policies: [
+            {
+              id: 'policy-1',
+              accountId: 'paper-main',
+              strategyId: 'all',
+              actionType: 'all',
+              environment: 'paper',
+              authority: 'bounded_auto',
+              createdAt: '2026-04-07T08:00:00.000Z',
+              updatedAt: '2026-04-07T08:00:00.000Z',
+            },
+            {
+              id: 'policy-2',
+              accountId: 'all',
+              strategyId: 'ema-cross',
+              actionType: 'trade',
+              environment: 'paper',
+              authority: 'ask_first',
+              createdAt: '2026-04-07T08:01:00.000Z',
+              updatedAt: '2026-04-07T08:01:00.000Z',
+            },
+          ],
+        }}
+        dailyBias={{
+          instructions: [
+            {
+              id: 'instruction-1',
+              kind: 'daily_bias',
+              title: 'Trade lighter today',
+              body: 'Prefer fewer new entries and keep stops tight.',
+              requestedBy: 'operator-demo',
+              activeUntil: '2026-04-07T23:59:59.000Z',
+              createdAt: '2026-04-07T08:30:00.000Z',
+            },
+          ],
+          latestUpdatedAt: '2026-04-07T08:30:00.000Z',
+        }}
+      />,
+    );
+
+    expect(html).toContain('Agent Governance Settings');
+    expect(html).toContain('Authority Mode');
+    expect(html).toContain('bounded_auto');
+    expect(html).toContain('Derived from 2 matching policy records.');
+    expect(html).toContain('Active Policies');
+    expect(html).toContain('paper-main');
+    expect(html).toContain('ema-cross');
+    expect(html).toContain('Daily Bias Instructions');
+    expect(html).toContain('Trade lighter today');
+    expect(html).toContain('Prefer fewer new entries and keep stops tight.');
+  });
+
+  it('renders fallback when no policies or daily bias are configured', () => {
+    const html = renderToStaticMarkup(
+      <AgentGovernanceSettingsPanel
+        locale="en"
+        authorityState={null}
+        dailyBias={null}
+      />,
+    );
+
+    expect(html).toContain('Agent Governance Settings');
+    expect(html).toContain('manual_only');
+    expect(html).toContain('No agent governance policy configured.');
+    expect(html).toContain('No active daily bias instructions.');
   });
 });

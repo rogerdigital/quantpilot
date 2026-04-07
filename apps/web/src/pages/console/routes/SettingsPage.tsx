@@ -13,6 +13,7 @@ import {
   updateUserAccountPreferences,
   updateUserAccountProfile,
 } from '../../../app/api/controlPlane.ts';
+import { fetchAgentWorkbench, type AgentWorkbenchPayload } from '../../../modules/agent/agentTools.service.ts';
 import { useMarketProviderStatus } from '../../../hooks/useMarketProviderStatus.ts';
 import { buildPersistenceApiExamples, buildPersistenceCliCommands, derivePersistencePostureFromMaintenance, translatePersistencePosture } from '../../../modules/operations/persistencePosture.ts';
 import {
@@ -144,6 +145,108 @@ export function PersistenceMigrationPanel({
   );
 }
 
+type AgentAuthorityStateShape = {
+  mode: string;
+  reason: string;
+  policies: Array<Record<string, unknown>>;
+} | null;
+
+type AgentDailyBiasShape = {
+  instructions: Array<{
+    id: string;
+    kind: string;
+    title: string;
+    body: string;
+    requestedBy: string;
+    activeUntil: string;
+    createdAt: string;
+  }>;
+  latestUpdatedAt: string;
+} | null;
+
+export function AgentGovernanceSettingsPanel({
+  locale,
+  authorityState,
+  dailyBias,
+}: {
+  locale: 'zh' | 'en';
+  authorityState: AgentAuthorityStateShape;
+  dailyBias: AgentDailyBiasShape;
+}) {
+  const instructions = Array.isArray(dailyBias?.instructions) ? dailyBias!.instructions : [];
+  const policies = Array.isArray(authorityState?.policies) ? authorityState!.policies : [];
+
+  return (
+    <article className="panel" id="agent-governance-settings">
+      <div className="panel-head">
+        <div>
+          <div className="panel-title">{locale === 'zh' ? 'Agent 治理设置' : 'Agent Governance Settings'}</div>
+          <div className="panel-copy">
+            {locale === 'zh'
+              ? '查看并管理 Agent 授权模式（Authority Mode）和今日运营指令（Daily Bias）。授权策略通过 API 或 Agent 工作台进行配置。'
+              : 'Review and manage the Agent authority mode and active daily bias. Authority policies are configured via the API or the Agent workbench.'}
+          </div>
+        </div>
+        <span className={`panel-badge ${authorityState?.mode === 'stopped' ? 'badge-warn' : 'badge-info'}`}>
+          {authorityState?.mode || 'manual_only'}
+        </span>
+      </div>
+      <div className="policy-card policy-card-inline">
+        <div className="policy-row">
+          <span>{locale === 'zh' ? 'Authority Mode' : 'Authority Mode'}</span>
+          <strong>{authorityState?.mode || 'manual_only'}</strong>
+        </div>
+        <div className="policy-row">
+          <span>{locale === 'zh' ? '策略依据' : 'Policy Basis'}</span>
+          <strong>{authorityState?.reason || (locale === 'zh' ? '尚未配置 Agent 治理策略。' : 'No agent governance policy configured.')}</strong>
+        </div>
+        <div className="policy-row">
+          <span>{locale === 'zh' ? '策略数' : 'Active Policies'}</span>
+          <strong>{policies.length}</strong>
+        </div>
+        <div className="policy-row">
+          <span>{locale === 'zh' ? '今日运营指令' : 'Daily Bias Instructions'}</span>
+          <strong>{instructions.length}</strong>
+        </div>
+      </div>
+      {policies.length > 0 ? (
+        <div className="focus-list">
+          {policies.map((policy) => (
+            <div className="focus-row" key={String(policy.id || '')}>
+              <div className="symbol-cell">
+                <strong>{String(policy.accountId || 'all')}</strong>
+                <span>{`${String(policy.strategyId || 'all')} / ${String(policy.actionType || 'all')} / ${String(policy.environment || 'all')}`}</span>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '授权' : 'Authority'}</span>
+                <strong>{String(policy.authority || '--')}</strong>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {instructions.length > 0 ? (
+        <div className="focus-list">
+          {instructions.map((item) => (
+            <div className="focus-row" key={item.id}>
+              <div className="symbol-cell">
+                <strong>{item.title}</strong>
+                <span>{item.body}</span>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? '有效至' : 'Active Until'}</span>
+                <strong>{item.activeUntil ? item.activeUntil.slice(0, 10) : '--'}</strong>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="status-copy">{locale === 'zh' ? '当前没有活跃的今日运营指令。' : 'No active daily bias instructions.'}</div>
+      )}
+    </article>
+  );
+}
+
 export function SettingsPage() {
   const { locale } = useLocale();
   const { state, session, refreshSession, hasPermission, actionGuardNotice, setMode, updateToggle } = useTradingSystem();
@@ -156,6 +259,7 @@ export function SettingsPage() {
   const [account, setAccount] = useState<UserAccountSnapshot | null>(null);
   const [bindingRuntime, setBindingRuntime] = useState<UserBrokerBindingRuntimeSnapshot | null>(null);
   const [maintenance, setMaintenance] = useState<OperationsMaintenanceResponse | null>(null);
+  const [governanceWorkbench, setGovernanceWorkbench] = useState<AgentWorkbenchPayload | null>(null);
   const [profileForm, setProfileForm] = useState({
     name: '',
     email: '',
@@ -245,13 +349,15 @@ export function SettingsPage() {
   }
 
   async function loadAccountWorkspace() {
-    const [accountSnapshot, runtimeSnapshot, maintenanceSnapshot] = await Promise.all([
+    const [accountSnapshot, runtimeSnapshot, maintenanceSnapshot, agentWorkbenchSnapshot] = await Promise.all([
       fetchUserAccount(),
       fetchBrokerBindingRuntime().catch(() => null),
       canInspectMaintenance ? fetchOperationsMaintenance({ limit: 10 }).catch(() => null) : Promise.resolve(null),
+      fetchAgentWorkbench().catch(() => null),
     ]);
     syncAccountState(accountSnapshot, runtimeSnapshot);
     setMaintenance(maintenanceSnapshot);
+    setGovernanceWorkbench(agentWorkbenchSnapshot);
     return {
       accountSnapshot,
       runtimeSnapshot,
@@ -615,6 +721,12 @@ export function SettingsPage() {
           locale={locale}
           canInspectMaintenance={canInspectMaintenance}
           maintenance={maintenance}
+        />
+
+        <AgentGovernanceSettingsPanel
+          locale={locale}
+          authorityState={governanceWorkbench?.authorityState || null}
+          dailyBias={governanceWorkbench?.dailyBias || null}
         />
 
         <article className="panel" id="policy">
