@@ -1007,6 +1007,31 @@ export async function executeQueuedWorkflow(workflowRun, context) {
       actor: 'workflow-worker',
     });
   }
+  if (workflowRun.workflowId === 'task-orchestrator.agent-daily-run') {
+    const { runId, kind = 'pre_market' } = workflowRun.payload || {};
+    if (runId && typeof context.updateAgentDailyRun === 'function') {
+      context.updateAgentDailyRun(runId, { status: 'running', updatedAt: new Date().toISOString() });
+    }
+    if (typeof context.recordAgentAuthorityEvent === 'function') {
+      context.recordAgentAuthorityEvent({
+        severity: 'info',
+        eventType: 'restored',
+        previousMode: 'manual_only',
+        nextMode: 'manual_only',
+        reason: `Agent daily run ${kind} started.`,
+      });
+    }
+    if (runId && typeof context.updateAgentDailyRun === 'function') {
+      context.updateAgentDailyRun(runId, { status: 'completed', updatedAt: new Date().toISOString() });
+    }
+    return {
+      ok: true,
+      workflow: completeWorkflow(context, workflowRun.id, {
+        steps: [{ key: 'agent-daily-run', status: 'completed' }],
+        result: { ok: true, kind, runId },
+      }),
+    };
+  }
   if (workflowRun.workflowId === 'task-orchestrator.manual-review') {
     return {
       ok: true,

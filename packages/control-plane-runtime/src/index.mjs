@@ -390,6 +390,27 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     updateAgentDailyRun(runId, patch = {}) {
       return context.agentDailyRun.updateAgentDailyRun(runId, patch);
     },
+    queueAgentDailyRun(payload = {}) {
+      const run = this.appendAgentDailyRun({
+        ...payload,
+        status: 'queued',
+      });
+      const workflow = this.enqueueWorkflowRun({
+        workflowId: 'task-orchestrator.agent-daily-run',
+        workflowType: 'task-orchestrator',
+        actor: payload.requestedBy || 'system',
+        trigger: payload.trigger || 'schedule',
+        payload: {
+          runId: run.id,
+          kind: run.kind,
+          accountId: run.accountId,
+          strategyId: run.strategyId,
+          requestedBy: run.requestedBy,
+        },
+        maxAttempts: 2,
+      });
+      return { ok: true, run, workflow };
+    },
     listAgentAuthorityEvents(limit = 50, filter = {}) {
       return context.agentAuthorityEvent.listAgentAuthorityEvents(limit, withScopedFilter(filter));
     },
@@ -1229,6 +1250,7 @@ export const getAgentDailyRun = (...args) => controlPlaneRuntime.getAgentDailyRu
 export const appendAgentDailyRun = (...args) => controlPlaneRuntime.appendAgentDailyRun(...args);
 export const recordAgentDailyRun = (...args) => controlPlaneRuntime.recordAgentDailyRun(...args);
 export const updateAgentDailyRun = (...args) => controlPlaneRuntime.updateAgentDailyRun(...args);
+export const queueAgentDailyRun = (...args) => controlPlaneRuntime.queueAgentDailyRun(...args);
 export const listAgentAuthorityEvents = (...args) => controlPlaneRuntime.listAgentAuthorityEvents(...args);
 export const getAgentAuthorityEvent = (...args) => controlPlaneRuntime.getAgentAuthorityEvent(...args);
 export const appendAgentAuthorityEvent = (...args) => controlPlaneRuntime.appendAgentAuthorityEvent(...args);

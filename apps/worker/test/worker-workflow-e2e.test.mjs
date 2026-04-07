@@ -417,3 +417,32 @@ test('queued backtest workflow persists research run and summary through worker 
   assert.equal(context.backtestResults.getLatestBacktestResultForRun(queued.json.run.id) !== null, true);
   assert.equal(context.researchSummary.getResearchSummary().completedRuns >= 1, true);
 });
+
+test('queued agent daily run workflow records a completed pre-market run', async () => {
+  const { run, workflow } = runtime.queueAgentDailyRun({
+    kind: 'pre_market',
+    trigger: 'schedule',
+    accountId: 'paper-main',
+    strategyId: 'trend',
+    requestedBy: 'system',
+  });
+
+  assert.equal(run.status, 'queued');
+  assert.equal(workflow.status, 'queued');
+
+  const execution = await runWorkflowExecutionTask(workerConfig, {
+    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
+      ...options,
+      now: CLAIM_NOW,
+      workflowId: 'task-orchestrator.agent-daily-run',
+    }),
+    executeWorkflow: executeQueuedWorkflow,
+    context: createWorkerContext(),
+  });
+
+  assert.equal(execution.claimedCount, 1);
+  assert.equal(execution.executions[0].ok, true);
+
+  const updated = runtime.getAgentDailyRun(run.id);
+  assert.equal(updated.status, 'completed');
+});
