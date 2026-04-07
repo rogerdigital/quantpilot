@@ -219,7 +219,7 @@ export function OverviewPage() {
       <section className="panel-grid panel-grid-terminal-bottom overview-blotter-grid">
         <article className="panel overview-blotter-card">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.focusList}</div><div className="panel-copy">{locale === 'zh' ? '像交易员的 watchlist 一样，只保留最值得人工复核的机会。' : 'Keep a trader-style watchlist with only the opportunities worth immediate review.'}</div></div><div className="panel-badge badge-muted">{copy[locale].overview.watchlistBadge}</div></div>
-          <div className="focus-list focus-list-terminal overview-blotter-list">
+          <div className="focus-list focus-list-terminal overview-blotter-list panel-body panel-body-sm">
             {topSignals.map((stock) => {
               const pct = (stock.price / stock.prevClose - 1) * 100;
               return (
@@ -244,7 +244,7 @@ export function OverviewPage() {
         </article>
         <article className="panel overview-blotter-card">
           <div className="panel-head"><div><div className="panel-title">{copy[locale].terms.recentOrders}</div><div className="panel-copy">{locale === 'zh' ? '首页保留精简 blotter，只看最新委托、账户归属和状态变化。' : 'Keep a compact blotter on the home desk to review the latest order flow and status changes.'}</div></div><div className="panel-badge badge-info">{recentOrders.length || 0} {copy[locale].labels.orders}</div></div>
-          <div className="focus-list focus-list-terminal overview-blotter-list">
+          <div className="focus-list focus-list-terminal overview-blotter-list panel-body panel-body-sm">
             {recentOrders.length ? recentOrders.map((order, index) => (
               <div className="focus-row" key={`${order.id || order.symbol}-${index}`}>
                 <div className="symbol-cell">
