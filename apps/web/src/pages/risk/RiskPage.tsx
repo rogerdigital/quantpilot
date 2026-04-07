@@ -6,7 +6,7 @@ import { useTradingSystem } from '../../store/trading-system/TradingSystemProvid
 import { formatActionGuardNotice } from '../../modules/permissions/permissionCopy.ts';
 import { runRiskPolicyAction } from '../../app/api/controlPlane.ts';
 import { useRiskWorkbench } from '../../modules/risk/useRiskWorkbench.ts';
-import { SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
+import { EmptyState, SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
 import { ApprovalQueueTable, BrokerSnapshotPositionsTable, PositionsTable } from '../../components/business/ConsoleTables.tsx';
 import { InspectionEmpty, InspectionPanel, InspectionSelectableRow } from '../console/components/InspectionPanels.tsx';
 import { useSummary } from '../../modules/console/console.hooks.ts';
@@ -245,7 +245,7 @@ function RiskPage() {
                 actions={<button type="button" className="inline-action" onClick={() => openIncident(incident.id)}>{locale === 'zh' ? '打开排查台' : 'Open Investigation'}</button>}
               />
             ))}
-            {!workbench.reviewQueue.executionPlans.length && !workbench.reviewQueue.backtestRuns.length && !workbench.reviewQueue.incidents.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有服务端复核队列项。' : 'No server-backed review items are waiting right now.'}</div> : null}
+            {!workbench.reviewQueue.executionPlans.length && !workbench.reviewQueue.backtestRuns.length && !workbench.reviewQueue.incidents.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前没有服务端复核队列项。' : 'No server-backed review items are waiting right now.'} /> : null}
           </div>
         </article>
         <article className="panel">
@@ -269,7 +269,7 @@ function RiskPage() {
                 </div>
               </div>
             ))}
-            {!workbench.runbook.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有额外的 risk runbook 动作。' : 'No extra risk runbook actions are queued right now.'}</div> : null}
+            {!workbench.runbook.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前没有额外的 risk runbook 动作。' : 'No extra risk runbook actions are queued right now.'} /> : null}
             {actionGuardNotice?.permission === 'risk:review' ? <div className="status-copy">{formatActionGuardNotice(locale, actionGuardNotice)}</div> : null}
           </div>
         </article>
@@ -297,7 +297,7 @@ function RiskPage() {
                 </button>
               </div>
             ))}
-            {!workbench.linkage.runbook.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有额外的 risk/scheduler linkage 动作。' : 'No extra risk/scheduler linkage actions are queued right now.'}</div> : null}
+            {!workbench.linkage.runbook.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前没有额外的 risk/scheduler linkage 动作。' : 'No extra risk/scheduler linkage actions are queued right now.'} /> : null}
           </div>
         </article>
       </section>
@@ -333,7 +333,7 @@ function RiskPage() {
                 <div className="status-copy">{selectedSchedulerTick.message}</div>
               </div>
             ) : null}
-            {!workbench.reviewQueue.schedulerTicks.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有 scheduler attention。' : 'No scheduler attention items are queued right now.'}</div> : null}
+            {!workbench.reviewQueue.schedulerTicks.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前没有 scheduler attention。' : 'No scheduler attention items are queued right now.'} /> : null}
           </div>
         </article>
         <article className="panel">

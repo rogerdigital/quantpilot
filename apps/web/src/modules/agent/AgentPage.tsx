@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
-import { SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
+import { EmptyState, SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
 import { copy, useLocale } from '../console/console.i18n.tsx';
 import { translateRiskLevel } from '../console/console.utils.ts';
 import { useAgentTools } from './useAgentTools.ts';
@@ -320,7 +320,7 @@ export default function AgentPage() {
               </div>
               <div className="agent-chat-transcript">
                 {!conversation.length ? (
-                  <div className="empty-cell">{locale === 'zh' ? '当前还没有消息，先向 Agent 提一个分析问题。' : 'There are no messages yet. Start by asking the Agent for an analysis.'}</div>
+                  <EmptyState icon="💬" message={locale === 'zh' ? '当前还没有消息，先向 Agent 提一个分析问题。' : 'There are no messages yet. Start by asking the Agent for an analysis.'} />
                 ) : null}
                 {conversation.map((message) => (
                   <div className={`agent-chat-message agent-chat-${message.role} agent-chat-${message.tone}`} key={message.key}>
@@ -397,7 +397,7 @@ export default function AgentPage() {
                 </div>
                 <div className="agent-step-stack">
                   {!planSteps.length ? (
-                    <div className="empty-cell">{locale === 'zh' ? '当前会话还没有计划步骤。' : 'No plan steps have been recorded for this session yet.'}</div>
+                    <EmptyState icon="📋" message={locale === 'zh' ? '当前会话还没有计划步骤。' : 'No plan steps have been recorded for this session yet.'} />
                   ) : null}
                   {planSteps.slice(0, 4).map((step) => (
                     <div className="agent-step-card" key={step.id}>
@@ -424,7 +424,7 @@ export default function AgentPage() {
                 </div>
                 <div className="agent-step-stack">
                   {!evidence.length ? (
-                    <div className="empty-cell">{locale === 'zh' ? '当前分析还没有证据摘要。' : 'No evidence snapshot is available for this analysis yet.'}</div>
+                    <EmptyState icon="🔍" message={locale === 'zh' ? '当前分析还没有证据摘要。' : 'No evidence snapshot is available for this analysis yet.'} />
                   ) : null}
                   {evidence.slice(0, 3).map((item) => (
                     <div className="agent-step-card" key={item.id}>
@@ -492,8 +492,8 @@ export default function AgentPage() {
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Recent Sessions' : 'Recent Sessions'}</div><div className="panel-copy">{locale === 'zh' ? '查看最近的 agent 会话，并切换到对应的详细解释和 timeline。' : 'Review recent agent sessions and switch into their explanation and timeline detail.'}</div></div><div className="settings-chip-row"><button type="button" className="inline-link" onClick={() => refresh()} disabled={loading || running || requestingAction}>{locale === 'zh' ? '刷新' : 'Refresh'}</button><div className="panel-badge badge-info">{recentSessions.length}</div></div></div>
           <div className="focus-list focus-list-terminal">
-            {loading && !recentSessions.length ? <div className="empty-cell">{locale === 'zh' ? '正在加载 Agent 工作台...' : 'Loading agent workbench...'}</div> : null}
-            {!loading && !recentSessions.length ? <div className="empty-cell">{locale === 'zh' ? '当前还没有 agent 会话。' : 'No agent sessions have been recorded yet.'}</div> : null}
+            {loading && !recentSessions.length ? <EmptyState message={locale === 'zh' ? '正在加载 Agent 工作台...' : 'Loading agent workbench...'} /> : null}
+            {!loading && !recentSessions.length ? <EmptyState icon="🤖" message={locale === 'zh' ? '当前还没有 agent 会话。' : 'No agent sessions have been recorded yet.'} /> : null}
             {recentSessions.map((item) => (
               <div className="focus-row" key={String(item.id)}>
                 <div className="symbol-cell">
@@ -517,7 +517,7 @@ export default function AgentPage() {
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Pending Requests' : 'Pending Requests'}</div><div className="panel-copy">{locale === 'zh' ? '这里显示等待人工 review 的 agent action requests，方便从分析工作台切换到审批上下文。' : 'These are the agent action requests still waiting for manual review, so operators can pivot from analysis into approval context.'}</div></div><div className={`panel-badge ${pendingRequests.length ? 'badge-warn' : 'badge-muted'}`}>{pendingRequests.length}</div></div>
           <div className="focus-list focus-list-terminal">
-            {!pendingRequests.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有待审批的 agent 请求。' : 'There are no pending agent requests right now.'}</div> : null}
+            {!pendingRequests.length ? <EmptyState icon="✅" message={locale === 'zh' ? '当前没有待审批的 agent 请求。' : 'There are no pending agent requests right now.'} /> : null}
             {pendingRequests.map((item) => (
               <div className="focus-row" key={String(item.id)}>
                 <div className="symbol-cell">
@@ -606,7 +606,7 @@ export default function AgentPage() {
         <article className="panel" id="agent-timeline">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Operator Timeline' : 'Operator Timeline'}</div><div className="panel-copy">{locale === 'zh' ? '把 session 相关的 audit、request、notification 和 operator action 串成一条可回放轨迹。' : 'Replay the session audit, request, notification, and operator-action trail in one place.'}</div></div><div className="panel-badge badge-info">{timeline.length}</div></div>
           <div className="focus-list focus-list-terminal">
-            {!timeline.length ? <div className="empty-cell">{locale === 'zh' ? '当前会话还没有轨迹记录。' : 'This session does not have a timeline yet.'}</div> : null}
+            {!timeline.length ? <EmptyState icon="📅" message={locale === 'zh' ? '当前会话还没有轨迹记录。' : 'This session does not have a timeline yet.'} /> : null}
             {timeline.map((item) => (
               <div className="focus-row" key={item.id}>
                 <div className="symbol-cell">
@@ -629,7 +629,7 @@ export default function AgentPage() {
         <article className="panel">
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Tool Allowlist' : 'Tool Allowlist'}</div><div className="panel-copy">{locale === 'zh' ? 'Agent 工作台仍然只会调用这些白名单只读工具，不会直接写 execution 或 workflow。' : 'The workbench still only invokes these allowlisted read-only tools and never writes execution or workflow state directly.'}</div></div><div className="panel-badge badge-info">{tools.length}</div></div>
           <div className="focus-list">
-            {!tools.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有可用的白名单工具。' : 'No allowlisted tools are available right now.'}</div> : null}
+            {!tools.length ? <EmptyState icon="🔧" message={locale === 'zh' ? '当前没有可用的白名单工具。' : 'No allowlisted tools are available right now.'} /> : null}
             {tools.map((tool) => (
               <div className="focus-row" key={tool.name}>
                 <div className="symbol-cell">
@@ -681,7 +681,7 @@ export default function AgentPage() {
                 </div>
               </div>
             ))}
-            {!runbook.length && !recentExplanations.length ? <div className="empty-cell">{locale === 'zh' ? '工作台还没有形成 runbook 或 explanation 摘要。' : 'The workbench does not have a runbook or explanation summary yet.'}</div> : null}
+            {!runbook.length && !recentExplanations.length ? <EmptyState icon="📖" message={locale === 'zh' ? '工作台还没有形成 runbook 或 explanation 摘要。' : 'The workbench does not have a runbook or explanation summary yet.'} /> : null}
           </div>
         </article>
       </section>

@@ -4,7 +4,7 @@ import { useMarketProviderStatus } from '../../../hooks/useMarketProviderStatus.
 import { useMonitoringStatus } from '../../../hooks/useMonitoringStatus.ts';
 import { useSettingsNavigation, useSummary } from '../../../modules/console/console.hooks.ts';
 import { copy, useLocale } from '../../../modules/console/console.i18n.tsx';
-import { ChartCanvas, TopMeta } from '../../../components/layout/ConsoleChrome.tsx';
+import { ChartCanvas, EmptyState, TopMeta } from '../../../components/layout/ConsoleChrome.tsx';
 import {
   connectionLabel,
   fmtCurrency,
@@ -261,7 +261,7 @@ export function OverviewPage() {
                 </div>
                 <span className="table-note">{fmtDateTime(order.updatedAt || order.submittedAt, locale)}</span>
               </div>
-            )) : <div className="empty-cell">{copy[locale].terms.noOrders}</div>}
+            )) : <EmptyState message={copy[locale].terms.noOrders} />}
           </div>
         </article>
       </section>

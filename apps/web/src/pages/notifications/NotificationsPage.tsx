@@ -21,7 +21,7 @@ import { useSchedulerWorkbench } from '../../modules/notifications/useSchedulerW
 import { useSchedulerTicksFeed } from '../../modules/notifications/useSchedulerTicksFeed.ts';
 import { useWorkflowRunsFeed } from '../../modules/notifications/useWorkflowRunsFeed.ts';
 import { buildPersistenceApiExamples, buildPersistenceCliCommands, translatePersistencePosture } from '../../modules/operations/persistencePosture.ts';
-import { SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
+import { EmptyState, SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
 import { ActivityLog } from '../../components/business/ConsoleTables.tsx';
 import { InspectionSelectableRow } from '../console/components/InspectionPanels.tsx';
 import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
@@ -1781,7 +1781,7 @@ function NotificationsPage() {
             <div className="panel-badge badge-info">{investigationTimeline.length}</div>
           </div>
           <div className="focus-list focus-list-terminal">
-            {!investigationTimeline.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有可用于排查的时间线事件' : 'No investigation timeline entries are available right now.'}</div> : null}
+            {!investigationTimeline.length ? <EmptyState icon="📅" message={locale === 'zh' ? '当前没有可用于排查的时间线事件' : 'No investigation timeline entries are available right now.'} /> : null}
             {investigationTimeline.map((item) => (
               <button type="button" className="focus-row status-row-button" key={item.id} onClick={() => focusTimelineItem(item)}>
                 <div className="symbol-cell">
@@ -1848,7 +1848,7 @@ function NotificationsPage() {
           </div>
           <div className="panel-subtitle">{locale === 'zh' ? '运营视角' : 'Operational Lenses'}</div>
           <div className="focus-list focus-list-terminal">
-            {!incidentOperationalLenses.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有额外的 incident 运营热点。' : 'No additional incident hotspots are active right now.'}</div> : null}
+            {!incidentOperationalLenses.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前没有额外的 incident 运营热点。' : 'No additional incident hotspots are active right now.'} /> : null}
             {incidentOperationalLenses.map((item) => (
               <button type="button" className="focus-row status-row-button" key={item.id} onClick={item.onClick}>
                 <div className="symbol-cell">
@@ -1864,7 +1864,7 @@ function NotificationsPage() {
           </div>
           <div className="panel-subtitle">{locale === 'zh' ? '下一步动作分布' : 'Next Action Mix'}</div>
           <div className="focus-list focus-list-terminal">
-            {!incidentPriorityActions.length ? <div className="empty-cell">{locale === 'zh' ? '当前所有 incident 都处于可跟进状态。' : 'All visible incidents already have a usable next step.'}</div> : null}
+            {!incidentPriorityActions.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前所有 incident 都处于可跟进状态。' : 'All visible incidents already have a usable next step.'} /> : null}
             {incidentPriorityActions.map((item) => (
               <button
                 type="button"
@@ -1891,7 +1891,7 @@ function NotificationsPage() {
           </div>
           <div className="panel-subtitle">{locale === 'zh' ? '负责人与负载' : 'Owner Load'}</div>
           <div className="focus-list focus-list-terminal">
-            {!incidentSummary.byOwner.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有可显示的负责人负载' : 'No owner workload is available yet.'}</div> : null}
+            {!incidentSummary.byOwner.length ? <EmptyState icon="👥" message={locale === 'zh' ? '当前没有可显示的负责人负载' : 'No owner workload is available yet.'} /> : null}
             {incidentSummary.byOwner.map((item) => (
               <button
                 type="button"
@@ -2148,8 +2148,8 @@ function NotificationsPage() {
             </button>
           </div>
           <div className="focus-list focus-list-terminal">
-            {incidentsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载事件...' : 'Loading incidents...'}</div> : null}
-            {!incidentsLoading && !incidentItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前还没有升级为 incident 的事件' : 'No incidents have been opened yet.'}</div> : null}
+            {incidentsLoading ? <EmptyState message={locale === 'zh' ? '正在加载事件...' : 'Loading incidents...'} /> : null}
+            {!incidentsLoading && !incidentItems.length ? <EmptyState icon="🔔" message={locale === 'zh' ? '当前还没有升级为 incident 的事件' : 'No incidents have been opened yet.'} /> : null}
             {!incidentsLoading ? incidentItems.map((item) => (
               <div className="focus-row focus-row-wide" key={item.id}>
                 <div className="symbol-cell">
@@ -2216,10 +2216,10 @@ function NotificationsPage() {
             <div className={`panel-badge ${selectedIncident ? 'badge-info' : 'muted'}`}>{selectedIncident ? selectedIncident.status : '--'}</div>
           </div>
           {!selectedIncidentId ? (
-            <div className="empty-cell">{locale === 'zh' ? '从上方事件队列选择一条 incident，或在告警/通知/审计面板里直接升级创建。' : 'Select an incident from the queue above, or escalate one from the alert, notification, or audit panels below.'}</div>
+            <EmptyState icon="👆" message={locale === 'zh' ? '从上方事件队列选择一条 incident，或在告警/通知/审计面板里直接升级创建。' : 'Select an incident from the queue above, or escalate one from the alert, notification, or audit panels below.'} />
           ) : null}
           {selectedIncidentId && incidentDetailLoading ? (
-            <div className="empty-cell">{locale === 'zh' ? '正在加载事件详情...' : 'Loading incident detail...'}</div>
+            <EmptyState message={locale === 'zh' ? '正在加载事件详情...' : 'Loading incident detail...'} />
           ) : null}
           {selectedIncident ? (
             <>
@@ -2392,7 +2392,7 @@ function NotificationsPage() {
                 </button>
               </div>
               <div className="focus-list focus-list-terminal">
-                {!selectedIncidentTasks.items.length ? <div className="empty-cell">{locale === 'zh' ? '这条 incident 还没有处置任务' : 'No incident playbook tasks have been created yet.'}</div> : null}
+                {!selectedIncidentTasks.items.length ? <EmptyState icon="📋" message={locale === 'zh' ? '这条 incident 还没有处置任务' : 'No incident playbook tasks have been created yet.'} /> : null}
                 {selectedIncidentTasks.items.map((task) => (
                   <div className="focus-row focus-row-wide" key={task.id}>
                     <div className="symbol-cell">
@@ -2482,7 +2482,7 @@ function NotificationsPage() {
               </div>
               <div className="panel-subtitle">{locale === 'zh' ? '关联证据时间线' : 'Related Evidence Timeline'}</div>
               <div className="focus-list focus-list-terminal">
-                {!selectedIncidentEvidence.timeline.length ? <div className="empty-cell">{locale === 'zh' ? '当前还没有自动聚合到关联证据' : 'No related evidence has been aggregated yet.'}</div> : null}
+                {!selectedIncidentEvidence.timeline.length ? <EmptyState icon="🔍" message={locale === 'zh' ? '当前还没有自动聚合到关联证据' : 'No related evidence has been aggregated yet.'} /> : null}
                 {selectedIncidentEvidence.timeline.map((item) => (
                   <button type="button" className="focus-row focus-row-wide status-row-button" key={`${item.kind}:${item.id}`} onClick={() => focusIncidentEvidenceItem(item)}>
                     <div className="symbol-cell">
@@ -2510,7 +2510,7 @@ function NotificationsPage() {
               </div>
               <div className="panel-subtitle">{locale === 'zh' ? '排查记录' : 'Investigation Notes'}</div>
               <div className="focus-list focus-list-terminal">
-                {!selectedIncidentNotes.length ? <div className="empty-cell">{locale === 'zh' ? '这条 incident 还没有追加记录' : 'This incident does not have investigation notes yet.'}</div> : null}
+                {!selectedIncidentNotes.length ? <EmptyState icon="📝" message={locale === 'zh' ? '这条 incident 还没有追加记录' : 'This incident does not have investigation notes yet.'} /> : null}
                 {selectedIncidentNotes.map((note) => (
                   <div className="focus-row" key={note.id}>
                     <div className="symbol-cell">
@@ -2544,7 +2544,7 @@ function NotificationsPage() {
                 </div>
               </div>
               <div className="focus-list focus-list-terminal">
-                {!selectedIncidentActivity.timeline.length ? <div className="empty-cell">{locale === 'zh' ? '这条 incident 还没有活动流记录' : 'No response activity has been recorded for this incident yet.'}</div> : null}
+                {!selectedIncidentActivity.timeline.length ? <EmptyState icon="📊" message={locale === 'zh' ? '这条 incident 还没有活动流记录' : 'No response activity has been recorded for this incident yet.'} /> : null}
                 {selectedIncidentActivity.timeline.map((item) => (
                   <button type="button" className="focus-row focus-row-wide status-row-button" key={item.id} onClick={() => focusIncidentActivityItem(item)}>
                     <div className="symbol-cell">
@@ -2605,10 +2605,10 @@ function NotificationsPage() {
             <div className={`panel-badge ${selectedArtifact ? 'badge-info' : 'muted'}`}>{selectedArtifact ? translateEvidenceKind(locale, selectedArtifact.kind) : '--'}</div>
           </div>
           {!selectedArtifact ? (
-            <div className="empty-cell">{locale === 'zh' ? '先在上面的关联证据时间线里选择一条证据。' : 'Select an evidence item from the related evidence timeline above first.'}</div>
+            <EmptyState icon="👆" message={locale === 'zh' ? '先在上面的关联证据时间线里选择一条证据。' : 'Select an evidence item from the related evidence timeline above first.'} />
           ) : null}
           {selectedArtifact && artifactInspector.loading ? (
-            <div className="empty-cell">{locale === 'zh' ? '正在加载对象详情...' : 'Loading artifact detail...'}</div>
+            <EmptyState message={locale === 'zh' ? '正在加载对象详情...' : 'Loading artifact detail...'} />
           ) : null}
           {selectedArtifact ? (
             <>
@@ -2653,7 +2653,7 @@ function NotificationsPage() {
                         </div>
                       </div>
                     ))}
-                    {!artifactInspector.workflow?.steps?.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有步骤详情。' : 'No workflow steps are available.'}</div> : null}
+                    {!artifactInspector.workflow?.steps?.length ? <EmptyState icon="📋" message={locale === 'zh' ? '当前没有步骤详情。' : 'No workflow steps are available.'} /> : null}
                   </div>
                   {(artifactInspector.workflow?.payload || artifactInspector.workflow?.result || artifactInspector.workflow?.error) ? (
                     <>
@@ -2722,7 +2722,7 @@ function NotificationsPage() {
                         </div>
                       </div>
                     ))}
-                    {!artifactInspector.executionPlan?.orders?.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有订单明细。' : 'No execution orders are available.'}</div> : null}
+                    {!artifactInspector.executionPlan?.orders?.length ? <EmptyState icon="📋" message={locale === 'zh' ? '当前没有订单明细。' : 'No execution orders are available.'} /> : null}
                   </div>
                   {artifactInspector.latestRuntime ? (
                     <div className="status-copy">
@@ -2902,7 +2902,7 @@ function NotificationsPage() {
           </div>
           <div className="panel-subtitle">{locale === 'zh' ? '运维 Runbook' : 'Operations Runbook'}</div>
           <div className="focus-list focus-list-terminal">
-            {!operationsWorkbench.runbook.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有需要额外推进的运维动作。' : 'No extra operations actions are queued right now.'}</div> : null}
+            {!operationsWorkbench.runbook.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前没有需要额外推进的运维动作。' : 'No extra operations actions are queued right now.'} /> : null}
             {operationsWorkbench.runbook.map((item) => (
               <button type="button" className="focus-row focus-row-wide status-row-button" key={item.key} onClick={() => focusOperationsRunbook(item.key)}>
                 <div className="symbol-cell">
@@ -2923,7 +2923,7 @@ function NotificationsPage() {
           <OperationsPersistencePanel locale={locale} persistence={operationsWorkbench.persistence} />
           <div className="panel-subtitle">{locale === 'zh' ? '最近运维信号' : 'Recent Operations Signals'}</div>
           <div className="focus-list focus-list-terminal">
-            {!operationsRecentItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有新的运维信号。' : 'No recent operations signals are available.'}</div> : null}
+            {!operationsRecentItems.length ? <EmptyState icon="📡" message={locale === 'zh' ? '当前没有新的运维信号。' : 'No recent operations signals are available.'} /> : null}
             {operationsRecentItems.map((item) => (
               <button type="button" className="focus-row status-row-button" key={item.id} onClick={item.onClick}>
                 <div className="symbol-cell">
@@ -3144,8 +3144,8 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {monitoringAlertsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载监控告警...' : 'Loading monitoring alerts...'}</div> : null}
-            {!monitoringAlertsLoading && !monitoringAlertItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有监控告警' : 'No monitoring alerts match the current filters.'}</div> : null}
+            {monitoringAlertsLoading ? <EmptyState message={locale === 'zh' ? '正在加载监控告警...' : 'Loading monitoring alerts...'} /> : null}
+            {!monitoringAlertsLoading && !monitoringAlertItems.length ? <EmptyState icon="🔔" message={locale === 'zh' ? '当前筛选条件下没有监控告警' : 'No monitoring alerts match the current filters.'} /> : null}
             {!monitoringAlertsLoading ? monitoringAlertItems.map((item) => (
               <div className="focus-row" key={item.id}>
                 <div className="symbol-cell">
@@ -3239,8 +3239,8 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {monitoringSnapshotsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载监控快照...' : 'Loading monitoring snapshots...'}</div> : null}
-            {!monitoringSnapshotsLoading && !monitoringSnapshotItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有监控快照' : 'No monitoring snapshots match the current filters.'}</div> : null}
+            {monitoringSnapshotsLoading ? <EmptyState message={locale === 'zh' ? '正在加载监控快照...' : 'Loading monitoring snapshots...'} /> : null}
+            {!monitoringSnapshotsLoading && !monitoringSnapshotItems.length ? <EmptyState icon="📸" message={locale === 'zh' ? '当前筛选条件下没有监控快照' : 'No monitoring snapshots match the current filters.'} /> : null}
             {!monitoringSnapshotsLoading ? monitoringSnapshotItems.map((item) => (
               <button
                 type="button"
@@ -3329,8 +3329,8 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {actionLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载操作动作...' : 'Loading operator actions...'}</div> : null}
-            {!actionLoading && !actionItems.length ? <div className="empty-cell">{locale === 'zh' ? '暂无操作动作' : 'No operator actions yet.'}</div> : null}
+            {actionLoading ? <EmptyState message={locale === 'zh' ? '正在加载操作动作...' : 'Loading operator actions...'} /> : null}
+            {!actionLoading && !actionItems.length ? <EmptyState icon="🎮" message={locale === 'zh' ? '暂无操作动作' : 'No operator actions yet.'} /> : null}
             {!actionLoading ? actionItems.map((item) => (
               <div className="focus-row" key={item.id}>
                 <button type="button" className="focus-main-button" onClick={() => focusOperatorActionItem(item.level)}>
@@ -3447,8 +3447,8 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {loading ? <div className="empty-cell">{locale === 'zh' ? '正在加载通知...' : 'Loading notifications...'}</div> : null}
-            {!loading && !items.length ? <div className="empty-cell">{locale === 'zh' ? '暂无控制面通知' : 'No control-plane notifications yet.'}</div> : null}
+            {loading ? <EmptyState message={locale === 'zh' ? '正在加载通知...' : 'Loading notifications...'} /> : null}
+            {!loading && !items.length ? <EmptyState icon="🔔" message={locale === 'zh' ? '暂无控制面通知' : 'No control-plane notifications yet.'} /> : null}
             {!loading ? items.map((item) => (
               <div className="focus-row" key={item.id}>
                 <button type="button" className="focus-main-button" onClick={() => focusNotificationItem(item.source)}>
@@ -3597,8 +3597,8 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {auditLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载审计记录...' : 'Loading audit records...'}</div> : null}
-            {!auditLoading && !auditItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有审计记录' : 'No audit records match the current filters.'}</div> : null}
+            {auditLoading ? <EmptyState message={locale === 'zh' ? '正在加载审计记录...' : 'Loading audit records...'} /> : null}
+            {!auditLoading && !auditItems.length ? <EmptyState icon="📋" message={locale === 'zh' ? '当前筛选条件下没有审计记录' : 'No audit records match the current filters.'} /> : null}
             {!auditLoading ? auditItems.map((item) => (
               <div className="focus-row" key={item.id}>
                 <button type="button" className="focus-main-button" onClick={() => focusAuditItem(item.type)}>
@@ -3705,7 +3705,7 @@ function NotificationsPage() {
             ) : null}
           </div>
           <div className="focus-list">
-            {schedulerWorkbenchLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载调度工作台...' : 'Loading scheduler workbench...'}</div> : null}
+            {schedulerWorkbenchLoading ? <EmptyState message={locale === 'zh' ? '正在加载调度工作台...' : 'Loading scheduler workbench...'} /> : null}
             {!schedulerWorkbenchLoading ? schedulerWorkbench.lanes.map((lane) => (
               <div className="focus-row" key={lane.key}>
                 <button type="button" className="focus-main-button" onClick={() => focusSchedulerWorkbenchLane(lane.key)}>
@@ -3784,7 +3784,7 @@ function NotificationsPage() {
                 </button>
               </div>
             ))}
-            {!schedulerWorkbench.linkage.runbook.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有额外的 risk/scheduler linkage 动作。' : 'No extra risk/scheduler linkage actions are queued right now.'}</div> : null}
+            {!schedulerWorkbench.linkage.runbook.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前没有额外的 risk/scheduler linkage 动作。' : 'No extra risk/scheduler linkage actions are queued right now.'} /> : null}
             {schedulerWorkbench.linkage.queue.riskEvents.slice(0, 2).map((item) => (
               <InspectionSelectableRow
                 key={item.id}
@@ -3843,7 +3843,7 @@ function NotificationsPage() {
                 </div>
               </div>
             ))}
-            {!schedulerWorkbench.runbook.length ? <div className="empty-cell">{locale === 'zh' ? '当前没有额外的 scheduler runbook 动作。' : 'No extra scheduler runbook actions are queued right now.'}</div> : null}
+            {!schedulerWorkbench.runbook.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前没有额外的 scheduler runbook 动作。' : 'No extra scheduler runbook actions are queued right now.'} /> : null}
             {schedulerWorkbench.queue.attentionTicks.slice(0, 2).map((item) => (
               <InspectionSelectableRow
                 key={item.id}
@@ -3921,8 +3921,8 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {schedulerLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载调度节拍...' : 'Loading scheduler ticks...'}</div> : null}
-            {!schedulerLoading && !schedulerItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有调度节拍' : 'No scheduler ticks match the current filters.'}</div> : null}
+            {schedulerLoading ? <EmptyState message={locale === 'zh' ? '正在加载调度节拍...' : 'Loading scheduler ticks...'} /> : null}
+            {!schedulerLoading && !schedulerItems.length ? <EmptyState icon="⏱" message={locale === 'zh' ? '当前筛选条件下没有调度节拍' : 'No scheduler ticks match the current filters.'} /> : null}
             {!schedulerLoading ? schedulerItems.map((item) => (
               <div className="focus-row" key={item.id}>
                 <button type="button" className="focus-main-button" onClick={() => focusSchedulerItem(item.phase)}>
@@ -3999,8 +3999,8 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {riskEventsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载风控事件...' : 'Loading risk events...'}</div> : null}
-            {!riskEventsLoading && !riskEventItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有风控事件' : 'No risk events match the current filters.'}</div> : null}
+            {riskEventsLoading ? <EmptyState message={locale === 'zh' ? '正在加载风控事件...' : 'Loading risk events...'} /> : null}
+            {!riskEventsLoading && !riskEventItems.length ? <EmptyState icon="🛡" message={locale === 'zh' ? '当前筛选条件下没有风控事件' : 'No risk events match the current filters.'} /> : null}
             {!riskEventsLoading ? riskEventItems.map((item) => (
               <div className="focus-row" key={item.id}>
                 <button type="button" className="focus-main-button" onClick={() => focusRiskEventItem(item.status, item.level)}>
@@ -4061,8 +4061,8 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {workflowRunsLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载工作流...' : 'Loading workflow runs...'}</div> : null}
-            {!workflowRunsLoading && !workflowRunItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有工作流记录' : 'No workflow runs match the current filters.'}</div> : null}
+            {workflowRunsLoading ? <EmptyState message={locale === 'zh' ? '正在加载工作流...' : 'Loading workflow runs...'} /> : null}
+            {!workflowRunsLoading && !workflowRunItems.length ? <EmptyState icon="⚙️" message={locale === 'zh' ? '当前筛选条件下没有工作流记录' : 'No workflow runs match the current filters.'} /> : null}
             {!workflowRunsLoading ? workflowRunItems.map((item) => (
               <div className="focus-row" key={item.id}>
                 <button type="button" className="focus-main-button" onClick={() => focusWorkflowRunItem(item.status)}>
@@ -4123,8 +4123,8 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {executionLedgerLoading ? <div className="empty-cell">{locale === 'zh' ? '正在加载执行计划...' : 'Loading execution plans...'}</div> : null}
-            {!executionLedgerLoading && !executionLedgerItems.length ? <div className="empty-cell">{locale === 'zh' ? '当前筛选条件下没有执行计划' : 'No execution plans match the current filters.'}</div> : null}
+            {executionLedgerLoading ? <EmptyState message={locale === 'zh' ? '正在加载执行计划...' : 'Loading execution plans...'} /> : null}
+            {!executionLedgerLoading && !executionLedgerItems.length ? <EmptyState icon="📈" message={locale === 'zh' ? '当前筛选条件下没有执行计划' : 'No execution plans match the current filters.'} /> : null}
             {!executionLedgerLoading ? executionLedgerItems.map((item) => (
               <div className="focus-row" key={item.plan.id}>
                 <button type="button" className="focus-main-button" onClick={() => focusExecutionPlanItem(item.plan.status === 'blocked' ? 'blocked' : item.plan.riskStatus)}>
