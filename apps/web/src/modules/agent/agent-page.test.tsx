@@ -29,6 +29,9 @@ vi.mock('../console/console.i18n.tsx', async () => {
 vi.mock('../../components/layout/ConsoleChrome.tsx', () => ({
   EmptyState: ({ message }: { message: string }) => <div>{message}</div>,
   SectionHeader: () => <div>SectionHeader</div>,
+  TabPanel: ({ tabs }: { tabs: Array<{ key: string; label: string; content: import('react').ReactNode }> }) => (
+    <div>{tabs.map(t => <div key={t.key}><span>{t.label}</span><div>{t.content}</div></div>)}</div>
+  ),
   TopMeta: () => <div>TopMeta</div>,
 }));
 
@@ -151,10 +154,9 @@ describe('AgentPage', () => {
     expect(html).toContain('Primary evidence');
     expect(html).toContain('Refresh Workbench');
     expect(html).toContain('Recent Sessions');
-    expect(html).toContain('Pending Requests');
+    expect(html).toContain('Pending (');
     expect(html).toContain('Operator Timeline');
     expect(html).toContain('Risk posture is elevated.');
-    expect(html).toContain('Review pending agent requests');
     expect(html).toContain('Action Request');
     expect(html).toContain('#agent-explanation');
     expect(html).toContain('#agent-timeline');

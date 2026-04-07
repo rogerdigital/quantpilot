@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
-import { EmptyState, SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
+import { SectionHeader, TabPanel, TopMeta, EmptyState } from '../../components/layout/ConsoleChrome.tsx';
 import { copy, useLocale } from '../console/console.i18n.tsx';
 import { translateRiskLevel } from '../console/console.utils.ts';
 import { useAgentTools } from './useAgentTools.ts';
@@ -488,201 +488,227 @@ export default function AgentPage() {
         </article>
       </section>
 
-      <section className="panel-grid" id="agent-sessions">
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Recent Sessions' : 'Recent Sessions'}</div><div className="panel-copy">{locale === 'zh' ? '查看最近的 agent 会话，并切换到对应的详细解释和 timeline。' : 'Review recent agent sessions and switch into their explanation and timeline detail.'}</div></div><div className="settings-chip-row"><button type="button" className="inline-link" onClick={() => refresh()} disabled={loading || running || requestingAction}>{locale === 'zh' ? '刷新' : 'Refresh'}</button><div className="panel-badge badge-info">{recentSessions.length}</div></div></div>
-          <div className="focus-list focus-list-terminal panel-body panel-body-md">
-            {loading && !recentSessions.length ? <EmptyState message={locale === 'zh' ? '正在加载 Agent 工作台...' : 'Loading agent workbench...'} /> : null}
-            {!loading && !recentSessions.length ? <EmptyState icon="🤖" message={locale === 'zh' ? '当前还没有 agent 会话。' : 'No agent sessions have been recorded yet.'} /> : null}
-            {recentSessions.map((item) => (
-              <div className="focus-row" key={String(item.id)}>
-                <div className="symbol-cell">
-                  <strong>{String(item.title || item.id)}</strong>
-                  <span>{String(item.prompt || '--')}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                  <strong>{String(item.status || '--')}</strong>
-                </div>
-                <div className="focus-metric">
-                  <button type="button" className="inline-link" onClick={() => selectSession(String(item.id || ''))}>
-                    {selectedSessionId === String(item.id || '') ? (locale === 'zh' ? '已选中' : 'Selected') : (locale === 'zh' ? '查看' : 'Open')}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Pending Requests' : 'Pending Requests'}</div><div className="panel-copy">{locale === 'zh' ? '这里显示等待人工 review 的 agent action requests，方便从分析工作台切换到审批上下文。' : 'These are the agent action requests still waiting for manual review, so operators can pivot from analysis into approval context.'}</div></div><div className={`panel-badge ${pendingRequests.length ? 'badge-warn' : 'badge-muted'}`}>{pendingRequests.length}</div></div>
-          <div className="focus-list focus-list-terminal panel-body panel-body-md">
-            {!pendingRequests.length ? <EmptyState icon="✅" message={locale === 'zh' ? '当前没有待审批的 agent 请求。' : 'There are no pending agent requests right now.'} /> : null}
-            {pendingRequests.map((item) => (
-              <div className="focus-row" key={String(item.id)}>
-                <div className="symbol-cell">
-                  <strong>{String(item.requestType || '--')}</strong>
-                  <span>{String(item.summary || '--')}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '审批' : 'Approval'}</span>
-                  <strong>{String(item.approvalState || '--')}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '风险' : 'Risk'}</span>
-                  <strong>{String(item.riskStatus || '--')}</strong>
-                </div>
-              </div>
-            ))}
-          </div>
+      <section className="panel-grid-wide panel-grid" id="agent-sessions">
+        <article className="panel" style={{gridColumn: '1 / -1'}}>
+          <TabPanel
+            tabs={[
+              {
+                key: 'sessions',
+                label: locale === 'zh' ? 'Recent Sessions' : 'Recent Sessions',
+                content: (
+                  <div className="focus-list focus-list-terminal panel-body panel-body-md">
+                    {loading && !recentSessions.length ? <EmptyState message={locale === 'zh' ? '正在加载 Agent 工作台...' : 'Loading agent workbench...'} /> : null}
+                    {!loading && !recentSessions.length ? <EmptyState icon="🤖" message={locale === 'zh' ? '当前还没有 agent 会话。' : 'No agent sessions have been recorded yet.'} /> : null}
+                    {recentSessions.map((item) => (
+                      <div className="focus-row" key={String(item.id)}>
+                        <div className="symbol-cell">
+                          <strong>{String(item.title || item.id)}</strong>
+                          <span>{String(item.prompt || '--')}</span>
+                        </div>
+                        <div className="focus-metric">
+                          <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                          <strong>{String(item.status || '--')}</strong>
+                        </div>
+                        <div className="focus-metric">
+                          <button type="button" className="inline-link" onClick={() => selectSession(String(item.id || ''))}>
+                            {selectedSessionId === String(item.id || '') ? (locale === 'zh' ? '已选中' : 'Selected') : (locale === 'zh' ? '查看' : 'Open')}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ),
+              },
+              {
+                key: 'pending',
+                label: locale === 'zh' ? `Pending (${pendingRequests.length})` : `Pending (${pendingRequests.length})`,
+                content: (
+                  <div className="focus-list focus-list-terminal panel-body panel-body-md">
+                    {!pendingRequests.length ? <EmptyState icon="✅" message={locale === 'zh' ? '当前没有待审批的 agent 请求。' : 'There are no pending agent requests right now.'} /> : null}
+                    {pendingRequests.map((item) => (
+                      <div className="focus-row" key={String(item.id)}>
+                        <div className="symbol-cell">
+                          <strong>{String(item.requestType || '--')}</strong>
+                          <span>{String(item.summary || '--')}</span>
+                        </div>
+                        <div className="focus-metric">
+                          <span>{locale === 'zh' ? '审批' : 'Approval'}</span>
+                          <strong>{String(item.approvalState || '--')}</strong>
+                        </div>
+                        <div className="focus-metric">
+                          <span>{locale === 'zh' ? '风险' : 'Risk'}</span>
+                          <strong>{String(item.riskStatus || '--')}</strong>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ),
+              },
+            ]}
+          />
         </article>
       </section>
 
-      <section className="panel-grid" id="agent-explanation">
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Explanation Detail' : 'Explanation Detail'}</div><div className="panel-copy">{locale === 'zh' ? '这里显示选中会话的最新 thesis、理由、警告和下一步建议。' : 'Review the selected session thesis, rationale, warnings, and recommended next step here.'}</div></div><div className={`panel-badge ${latestExplanation?.warnings?.length ? 'badge-warn' : 'badge-info'}`}>{latestExplanation?.warnings?.length ?? 0}</div></div>
-          <div className="focus-list panel-body panel-body-md">
-            <div className="focus-row">
-              <div className="symbol-cell">
-                <strong>{latestExplanation?.thesis || (locale === 'zh' ? '等待解释结果' : 'Waiting for explanation')}</strong>
-                <span>{sessionDetail?.latestAnalysisRun?.summary || (locale === 'zh' ? '运行一次分析后，这里会显示结构化结论。' : 'Run an analysis to surface a structured conclusion here.')}</span>
-              </div>
-            </div>
-            {latestRationale.map((item) => (
-              <div className="focus-row" key={item}>
-                <div className="symbol-cell">
-                  <strong>{locale === 'zh' ? '理由' : 'Rationale'}</strong>
-                  <span>{item}</span>
-                </div>
-              </div>
-            ))}
-            {!latestRationale.length ? (
-              <div className="focus-row">
-                <div className="symbol-cell">
-                  <strong>{locale === 'zh' ? '理由' : 'Rationale'}</strong>
-                  <span>{locale === 'zh' ? '当前解释还没有额外的理由条目。' : 'No additional rationale items are available for this explanation yet.'}</span>
-                </div>
-              </div>
-            ) : null}
-            {latestWarnings.map((item) => (
-              <div className="focus-row" key={item}>
-                <div className="symbol-cell">
-                  <strong>{locale === 'zh' ? '警告' : 'Warning'}</strong>
-                  <span>{item}</span>
-                </div>
-              </div>
-            ))}
-            {!latestWarnings.length ? (
-              <div className="focus-row">
-                <div className="symbol-cell">
-                  <strong>{locale === 'zh' ? '警告' : 'Warning'}</strong>
-                  <span>{locale === 'zh' ? '当前解释还没有新的警告条目。' : 'No warning items have been raised for this explanation yet.'}</span>
-                </div>
-              </div>
-            ) : null}
-            <div className="focus-row">
-              <div className="symbol-cell">
-                <strong>{locale === 'zh' ? '下一步' : 'Recommended Next Step'}</strong>
-                <span>{latestExplanation?.recommendedNextStep || '--'}</span>
-              </div>
-            </div>
-            <div className="focus-row">
-              <div className="symbol-cell">
-                <strong>{locale === 'zh' ? '动作请求' : 'Action Request'}</strong>
-                <span>{latestActionRequest?.summary || (locale === 'zh' ? '当前会话还没有提交 action request。' : 'No action request has been submitted for this session yet.')}</span>
-              </div>
-              <div className="focus-metric">
-                <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                <strong>{latestActionRequest?.status || '--'}</strong>
-              </div>
-              <div className="focus-metric">
-                <span>{locale === 'zh' ? '审批' : 'Approval'}</span>
-                <strong>{latestActionRequest?.approvalState || '--'}</strong>
-              </div>
-            </div>
-          </div>
-        </article>
-
-        <article className="panel" id="agent-timeline">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Operator Timeline' : 'Operator Timeline'}</div><div className="panel-copy">{locale === 'zh' ? '把 session 相关的 audit、request、notification 和 operator action 串成一条可回放轨迹。' : 'Replay the session audit, request, notification, and operator-action trail in one place.'}</div></div><div className="panel-badge badge-info">{timeline.length}</div></div>
-          <div className="focus-list focus-list-terminal panel-body panel-body-md">
-            {!timeline.length ? <EmptyState icon="📅" message={locale === 'zh' ? '当前会话还没有轨迹记录。' : 'This session does not have a timeline yet.'} /> : null}
-            {timeline.map((item) => (
-              <div className="focus-row" key={item.id}>
-                <div className="symbol-cell">
-                  <strong>{item.title}</strong>
-                  <span>{item.detail}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '轨道' : 'Lane'}</span>
-                  <strong>{item.lane}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '执行者' : 'Actor'}</span>
-                  <strong>{item.actor || '--'}</strong>
-                </div>
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Tool Allowlist' : 'Tool Allowlist'}</div><div className="panel-copy">{locale === 'zh' ? 'Agent 工作台仍然只会调用这些白名单只读工具，不会直接写 execution 或 workflow。' : 'The workbench still only invokes these allowlisted read-only tools and never writes execution or workflow state directly.'}</div></div><div className="panel-badge badge-info">{tools.length}</div></div>
-          <div className="focus-list panel-body panel-body-md">
-            {!tools.length ? <EmptyState icon="🔧" message={locale === 'zh' ? '当前没有可用的白名单工具。' : 'No allowlisted tools are available right now.'} /> : null}
-            {tools.map((tool) => (
-              <div className="focus-row" key={tool.name}>
-                <div className="symbol-cell">
-                  <strong>{tool.name}</strong>
-                  <span>{tool.description}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '分类' : 'Category'}</span>
-                  <strong>{tool.category}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '权限' : 'Access'}</span>
-                  <strong>{tool.access}</strong>
-                </div>
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <article className="panel">
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Runbook And Recent Explanations' : 'Runbook And Recent Explanations'}</div><div className="panel-copy">{locale === 'zh' ? '先看 workbench runbook，再回看最近的 explanation 摘要。' : 'Use the workbench runbook to prioritize work, then review the latest explanation summaries.'}</div></div><div className="panel-badge badge-info">{runbook.length + recentExplanations.length}</div></div>
-          <div className="focus-list panel-body panel-body-md">
-            {runbook.map((item) => (
-              <div className="focus-row" key={item.key}>
-                <div className="symbol-cell">
-                  <strong>{item.title}</strong>
-                  <span>{item.detail}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '优先级' : 'Priority'}</span>
-                  <strong>{item.priority}</strong>
-                </div>
-              </div>
-            ))}
-            {recentExplanations.map((item) => (
-              <div className="focus-row" key={item.analysisRunId}>
-                <div className="symbol-cell">
-                  <strong>{item.thesis}</strong>
-                  <span>{item.recommendedNextStep}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '警告' : 'Warnings'}</span>
-                  <strong>{item.warningCount}</strong>
-                </div>
-                <div className="focus-metric">
-                  <button type="button" className="inline-link" onClick={() => selectSession(item.sessionId)}>
-                    {locale === 'zh' ? '查看会话' : 'Open Session'}
-                  </button>
-                </div>
-              </div>
-            ))}
-            {!runbook.length && !recentExplanations.length ? <EmptyState icon="📖" message={locale === 'zh' ? '工作台还没有形成 runbook 或 explanation 摘要。' : 'The workbench does not have a runbook or explanation summary yet.'} /> : null}
-          </div>
+      <section className="panel-grid-wide panel-grid" id="agent-explanation">
+        <article className="panel" style={{gridColumn: '1 / -1'}}>
+          <TabPanel
+            tabs={[
+              {
+                key: 'explanation',
+                label: locale === 'zh' ? 'Explanation' : 'Explanation',
+                content: (
+                  <div className="focus-list panel-body panel-body-md">
+                    <div className="focus-row">
+                      <div className="symbol-cell">
+                        <strong>{latestExplanation?.thesis || (locale === 'zh' ? '等待解释结果' : 'Waiting for explanation')}</strong>
+                        <span>{sessionDetail?.latestAnalysisRun?.summary || (locale === 'zh' ? '运行一次分析后，这里会显示结构化结论。' : 'Run an analysis to surface a structured conclusion here.')}</span>
+                      </div>
+                    </div>
+                    {latestRationale.map((item) => (
+                      <div className="focus-row" key={item}>
+                        <div className="symbol-cell">
+                          <strong>{locale === 'zh' ? '理由' : 'Rationale'}</strong>
+                          <span>{item}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {!latestRationale.length ? (
+                      <div className="focus-row">
+                        <div className="symbol-cell">
+                          <strong>{locale === 'zh' ? '理由' : 'Rationale'}</strong>
+                          <span>{locale === 'zh' ? '当前解释还没有额外的理由条目。' : 'No additional rationale items are available for this explanation yet.'}</span>
+                        </div>
+                      </div>
+                    ) : null}
+                    {latestWarnings.map((item) => (
+                      <div className="focus-row" key={item}>
+                        <div className="symbol-cell">
+                          <strong>{locale === 'zh' ? '警告' : 'Warning'}</strong>
+                          <span>{item}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {!latestWarnings.length ? (
+                      <div className="focus-row">
+                        <div className="symbol-cell">
+                          <strong>{locale === 'zh' ? '警告' : 'Warning'}</strong>
+                          <span>{locale === 'zh' ? '当前解释还没有新的警告条目。' : 'No warning items have been raised for this explanation yet.'}</span>
+                        </div>
+                      </div>
+                    ) : null}
+                    <div className="focus-row">
+                      <div className="symbol-cell">
+                        <strong>{locale === 'zh' ? '下一步' : 'Recommended Next Step'}</strong>
+                        <span>{latestExplanation?.recommendedNextStep || '--'}</span>
+                      </div>
+                    </div>
+                    <div className="focus-row">
+                      <div className="symbol-cell">
+                        <strong>{locale === 'zh' ? '动作请求' : 'Action Request'}</strong>
+                        <span>{latestActionRequest?.summary || (locale === 'zh' ? '当前会话还没有提交 action request。' : 'No action request has been submitted for this session yet.')}</span>
+                      </div>
+                      <div className="focus-metric">
+                        <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                        <strong>{latestActionRequest?.status || '--'}</strong>
+                      </div>
+                      <div className="focus-metric">
+                        <span>{locale === 'zh' ? '审批' : 'Approval'}</span>
+                        <strong>{latestActionRequest?.approvalState || '--'}</strong>
+                      </div>
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                key: 'timeline',
+                label: locale === 'zh' ? `Timeline (${timeline.length})` : `Timeline (${timeline.length})`,
+                content: (
+                  <div className="focus-list focus-list-terminal panel-body panel-body-md">
+                    {!timeline.length ? <EmptyState icon="📅" message={locale === 'zh' ? '当前会话还没有轨迹记录。' : 'This session does not have a timeline yet.'} /> : null}
+                    {timeline.map((item) => (
+                      <div className="focus-row" key={item.id}>
+                        <div className="symbol-cell">
+                          <strong>{item.title}</strong>
+                          <span>{item.detail}</span>
+                        </div>
+                        <div className="focus-metric">
+                          <span>{locale === 'zh' ? '轨道' : 'Lane'}</span>
+                          <strong>{item.lane}</strong>
+                        </div>
+                        <div className="focus-metric">
+                          <span>{locale === 'zh' ? '执行者' : 'Actor'}</span>
+                          <strong>{item.actor || '--'}</strong>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ),
+              },
+              {
+                key: 'tools',
+                label: locale === 'zh' ? `Tools (${tools.length})` : `Tools (${tools.length})`,
+                content: (
+                  <div className="focus-list panel-body panel-body-md">
+                    {!tools.length ? <EmptyState icon="🔧" message={locale === 'zh' ? '当前没有可用的白名单工具。' : 'No allowlisted tools are available right now.'} /> : null}
+                    {tools.map((tool) => (
+                      <div className="focus-row" key={tool.name}>
+                        <div className="symbol-cell">
+                          <strong>{tool.name}</strong>
+                          <span>{tool.description}</span>
+                        </div>
+                        <div className="focus-metric">
+                          <span>{locale === 'zh' ? '分类' : 'Category'}</span>
+                          <strong>{tool.category}</strong>
+                        </div>
+                        <div className="focus-metric">
+                          <span>{locale === 'zh' ? '权限' : 'Access'}</span>
+                          <strong>{tool.access}</strong>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ),
+              },
+              {
+                key: 'runbook',
+                label: locale === 'zh' ? `Runbook (${runbook.length + recentExplanations.length})` : `Runbook (${runbook.length + recentExplanations.length})`,
+                content: (
+                  <div className="focus-list panel-body panel-body-md">
+                    {runbook.map((item) => (
+                      <div className="focus-row" key={item.key}>
+                        <div className="symbol-cell">
+                          <strong>{item.title}</strong>
+                          <span>{item.detail}</span>
+                        </div>
+                        <div className="focus-metric">
+                          <span>{locale === 'zh' ? '优先级' : 'Priority'}</span>
+                          <strong>{item.priority}</strong>
+                        </div>
+                      </div>
+                    ))}
+                    {recentExplanations.map((item) => (
+                      <div className="focus-row" key={item.analysisRunId}>
+                        <div className="symbol-cell">
+                          <strong>{item.thesis}</strong>
+                          <span>{item.recommendedNextStep}</span>
+                        </div>
+                        <div className="focus-metric">
+                          <span>{locale === 'zh' ? '警告' : 'Warnings'}</span>
+                          <strong>{item.warningCount}</strong>
+                        </div>
+                        <div className="focus-metric">
+                          <button type="button" className="inline-link" onClick={() => selectSession(item.sessionId)}>
+                            {locale === 'zh' ? '查看会话' : 'Open Session'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {!runbook.length && !recentExplanations.length ? <EmptyState icon="📖" message={locale === 'zh' ? '工作台还没有形成 runbook 或 explanation 摘要。' : 'The workbench does not have a runbook or explanation summary yet.'} /> : null}
+                  </div>
+                ),
+              },
+            ]}
+          />
         </article>
       </section>
     </>

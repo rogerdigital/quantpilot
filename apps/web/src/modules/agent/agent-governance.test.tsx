@@ -27,6 +27,7 @@ vi.mock('../console/console.i18n.tsx', async () => {
 vi.mock('../../components/layout/ConsoleChrome.tsx', () => ({
   EmptyState: ({ message }: { message: string }) => <div>{message}</div>,
   SectionHeader: () => <div>SectionHeader</div>,
+  TabPanel: ({ tabs }: { tabs: Array<{ key: string; label: string; content: unknown }> }) => <div>{tabs.map(t => <div key={t.key}>{t.label}</div>)}</div>,
   TopMeta: () => <div>TopMeta</div>,
 }));
 
