@@ -8,14 +8,40 @@ import {
   rejectAgentActionRequest,
 } from '../../../domains/agent/services/action-request-service.mjs';
 import { runAgentAnalysis } from '../../../domains/agent/services/analysis-service.mjs';
+import { createAgentInstruction } from '../../../domains/agent/services/instruction-service.mjs';
 import { parseAgentIntent } from '../../../domains/agent/services/intent-service.mjs';
 import { createAgentPlan } from '../../../domains/agent/services/planning-service.mjs';
+import { resolveAgentAuthority, saveAgentPolicy } from '../../../domains/agent/services/policy-service.mjs';
 import { getAgentSessionDetail, listAgentSessionsSnapshot } from '../../../domains/agent/services/session-service.mjs';
 import { getAgentOperatorTimeline, getAgentWorkbench } from '../../../domains/agent/services/workbench-service.mjs';
 import { listAgentTools, executeAgentTool } from '../../../domains/agent/services/tools-service.mjs';
 
 export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/agent/authority') {
+    writeJson(res, 200, resolveAgentAuthority({
+      accountId: reqUrl.searchParams.get('accountId') || 'all',
+      strategyId: reqUrl.searchParams.get('strategyId') || 'all',
+      actionType: reqUrl.searchParams.get('actionType') || 'all',
+      environment: reqUrl.searchParams.get('environment') || 'paper',
+      riskMode: reqUrl.searchParams.get('riskMode') || 'healthy',
+      anomalyMode: reqUrl.searchParams.get('anomalyMode') || 'healthy',
+    }));
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/agent/policies') {
+    const body = await readJsonBody(req);
+    writeJson(res, 200, saveAgentPolicy(body || {}));
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/agent/instructions') {
+    const body = await readJsonBody(req);
+    writeJson(res, 200, createAgentInstruction(body || {}));
+    return true;
+  }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/agent/tools') {
     writeJson(res, 200, listAgentTools());

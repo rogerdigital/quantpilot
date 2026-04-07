@@ -1,6 +1,7 @@
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
 import { createAgentPlan } from './planning-service.mjs';
 import { executeAgentTool } from './tools-service.mjs';
+import { listActiveAgentInstructions } from './instruction-service.mjs';
 
 function summarizeToolData(tool, data = {}) {
   switch (tool) {
@@ -248,6 +249,16 @@ export function runAgentAnalysis(payload = {}) {
   });
 
   const narrative = buildAnalysisNarrative(intent, toolResults);
+
+  const dailyBias = listActiveAgentInstructions({ sessionId: session.id, kind: 'daily_bias' });
+  const biasSummary = dailyBias.map((item) => item.body).join(' ');
+  if (Array.isArray(narrative.explanation?.rationale)) {
+    narrative.explanation.rationale.push(
+      biasSummary
+        ? `Current daily bias: ${biasSummary}`
+        : 'No active daily bias is affecting this session.',
+    );
+  }
   const finalizedSteps = completedSteps.map((step) => {
     if (step.kind === 'explain') {
       return {

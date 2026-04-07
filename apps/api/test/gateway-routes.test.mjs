@@ -4387,3 +4387,54 @@ test('POST /api/task-orchestrator/workflows/:id/cancel requires execution:approv
     permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
   });
 });
+
+test('POST /api/agent/instructions records a daily bias instruction', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/instructions',
+    body: { sessionId: 'session-governance-1', kind: 'daily_bias', title: 'Conservative bias', body: 'Trade smaller today.' },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.instruction.kind, 'daily_bias');
+  assert.equal(response.json.instruction.title, 'Conservative bias');
+});
+
+test('GET /api/agent/authority resolves the most restrictive mode', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/agent/authority?accountId=paper-main&strategyId=trend&actionType=enter&environment=paper',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(typeof response.json.mode, 'string');
+  assert.equal(typeof response.json.reason, 'string');
+  assert.equal(Array.isArray(response.json.policies), true);
+});
+
+test('POST /api/agent/policies saves a policy and GET /api/agent/authority reflects it', async () => {
+  const saveResponse = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/agent/policies',
+    body: {
+      id: 'policy-gateway-bounded',
+      accountId: 'paper-bounded',
+      strategyId: 'trend-bounded',
+      actionType: 'enter',
+      environment: 'paper',
+      authority: 'bounded_auto',
+    },
+  });
+
+  assert.equal(saveResponse.statusCode, 200);
+  assert.equal(saveResponse.json.ok, true);
+  assert.equal(saveResponse.json.policy.authority, 'bounded_auto');
+
+  const authResponse = await invokeGatewayRoute(handler, {
+    path: '/api/agent/authority?accountId=paper-bounded&strategyId=trend-bounded&actionType=enter&environment=paper',
+  });
+
+  assert.equal(authResponse.statusCode, 200);
+  assert.equal(authResponse.json.mode, 'bounded_auto');
+});
