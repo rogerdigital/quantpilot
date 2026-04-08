@@ -2,6 +2,47 @@
    OBSIDIAN QUANTUM TERMINAL — QuantPilot Design System v3
    ============================================================ */
 
+/*
+ * TABLE OF CONTENTS
+ * -----------------
+ * [SHARED] DESIGN TOKENS        — CSS custom properties (colors, fonts, shadows, geometry)
+ * [SHARED] KEYFRAMES            — Global animation definitions
+ * [SHARED] BASE                 — Reset, body, scrollbar, app background
+ * [SHARED] APP SHELL            — Root layout grid (app-shell)
+ * [SHARED] SIDEBAR              — Left navigation sidebar
+ * [PAGE: Settings] SETTINGS FORMS — settings-form-grid, settings-field, settings-button etc.
+ * [SHARED] MAIN PANEL           — main-panel, main-panel-inner, panel-header
+ * [SHARED] GLOBAL TOOLBAR       — toolbar, tool-btn
+ * [SHARED] LOCALE SWITCHER      — locale-toggle
+ * [SHARED] TOPBAR / PAGE HEADER — topbar, page-header, breadcrumb
+ * [SHARED] CARDS & PANELS       — panel, card, surface primitives
+ * [SHARED] GRID LAYOUTS         — data-grid, grid helpers
+ * [SHARED] SHORTCUT & INTERACTIVE SURFACES
+ * [SHARED] HERO CARD            — hero-card primary command center
+ * [SHARED] METRICS GRID         — metrics-grid, metric-cell
+ * [SHARED] TERMINAL STRIP       — terminal-strip, terminal-row
+ * [SHARED] STATUS CHIPS         — status-chip, signal badges
+ * [SHARED] PANEL GRID           — panel-grid
+ * [SHARED] PANEL BODY           — panel-body fixed-height scrollable zones
+ * [SHARED] EMPTY STATE          — empty-state placeholder
+ * [SHARED] TAB PANEL            — tab-panel, tab-bar, tab-content
+ * [SHARED] STATUS STACK & ROWS  — status-stack, status-row
+ * [SHARED] FOCUS LIST           — focus-list
+ * [PAGE: Agent] AGENT CHAT      — agent-chat-shell, agent-dual-view, agent-insight-* etc.
+ * [SHARED] FOCUS ROWS           — focus-row primitives
+ * [SHARED] INSPECTION PANELS    — inspection-panel
+ * [SHARED] TABLES               — data tables
+ * [SHARED] SIGNAL & ORDER CHIPS — signal-chip, order-chip
+ * [SHARED] INLINE ACTIONS       — inline-action, action-row
+ * [SHARED] LOG LIST             — log-list, log-entry
+ * [SHARED] CANVAS               — canvas-wrap
+ * [SHARED] RESPONSIVE           — media queries
+ *
+ * Migration notes:
+ *   Sections tagged [PAGE: X] are candidates for extraction to X.module.css (phase H).
+ *   Sections tagged [SHARED] are kept here as global primitives.
+ */
+
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 /* ============================================================
@@ -585,7 +626,9 @@ body::after {
 }
 
 /* ============================================================
-   SETTINGS FORMS
+   SETTINGS FORMS  [PAGE: Settings]
+   — settings-form-grid, settings-field, settings-button etc.
+   — Candidate for extraction to SettingsPage.module.css (phase H-6)
    ============================================================ */
 
 .settings-form-grid {
@@ -2023,7 +2066,9 @@ h1 {
 }
 
 /* ============================================================
-   AGENT CHAT
+   AGENT CHAT  [PAGE: Agent]
+   — agent-chat-shell, agent-dual-view, agent-insight-*, agent-step-* etc.
+   — Candidate for extraction to AgentPage.module.css (phase H-1)
    ============================================================ */
 
 .agent-chat-shell {
