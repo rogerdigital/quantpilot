@@ -3,50 +3,59 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-const stylePath = fileURLToPath(new URL("./style.css", import.meta.url));
+const stylesDir = new URL("./", import.meta.url);
+const read = (name: string) => readFileSync(fileURLToPath(new URL(name, stylesDir)), "utf8");
+
+const theme = read("theme.css.ts");
+const animations = read("animations.css.ts");
+const layout = read("layout.css.ts");
+const panels = read("panels.css.ts");
+const chips = read("chips.css.ts");
+const tables = read("tables.css.ts");
+const settings = read("settings.css.ts");
+
 const consoleI18nPath = fileURLToPath(new URL("../../modules/console/console.i18n.tsx", import.meta.url));
-const style = readFileSync(stylePath, "utf8");
 const consoleI18n = readFileSync(consoleI18nPath, "utf8");
 
 describe("command-deck theme stylesheet", () => {
   it("includes the core theme tokens and animation hook", () => {
-    expect(style).toContain("--bg-canvas");
-    expect(style).toContain("--panel-frame");
-    expect(style).toContain("--accent-live");
-    expect(style).toContain("--text-strong");
-    expect(style).toContain("--font-display");
-    expect(style).toContain("@keyframes panel-enter");
+    expect(theme).toContain("--bg-canvas");
+    expect(theme).toContain("--panel-frame");
+    expect(theme).toContain("--accent-live");
+    expect(theme).toContain("--text-strong");
+    expect(theme).toContain("--font-display");
+    expect(animations).toContain("panelEnter");
   });
 
   it("includes the upgraded shell framing selectors", () => {
-    expect(style).toContain(".app-shell::before");
-    expect(style).toContain(".sidebar::after");
-    expect(style).toContain(".toolbar-pill");
-    expect(style).toContain(".main-panel::before");
-    expect(style).toContain(".topbar {");
-    expect(style).toContain(".topbar::before");
+    expect(layout).toContain(".app-shell::before");
+    expect(layout).toContain(".sidebar::after");
+    expect(layout).toContain(".toolbar-pill");
+    expect(layout).toContain(".main-panel::before");
+    expect(layout).toContain("'.topbar'");
+    expect(layout).toContain(".topbar::before");
   });
 
   it("includes shared data-surface selectors for tables, logs, and inspection rows", () => {
-    expect(style).toContain(".table-wrap table");
-    expect(style).toContain(".table-row-hover");
-    expect(style).toContain(".log-item");
-    expect(style).toContain(".inspection-actions");
-    expect(style).toContain(".focus-row::before");
+    expect(tables).toContain(".table-wrap table");
+    expect(tables).toContain(".table-row-hover");
+    expect(tables).toContain(".log-item");
+    expect(tables).toContain(".inspection-actions");
+    expect(tables).toContain(".focus-row::before");
   });
 
   it("includes overview-specific command deck selectors", () => {
-    expect(style).toContain(".overview-command-card");
-    expect(style).toContain(".overview-kpi-card");
-    expect(style).toContain(".overview-blotter-grid");
-    expect(style).toContain(".hero-card-primary::after");
+    expect(panels).toContain(".overview-command-card");
+    expect(panels).toContain(".overview-kpi-card");
+    expect(panels).toContain(".overview-blotter-grid");
+    expect(panels).toContain(".hero-card-primary::after");
   });
 
   it("keeps route harmonization selectors wired into the priority console pages", () => {
-    expect(style).toContain(".shortcut-surface");
-    expect(style).toContain(".policy-card-inline");
-    expect(style).toContain(".settings-chip-row");
-    expect(style).toContain(".panel-grid-wide");
+    expect(panels).toContain(".shortcut-surface");
+    expect(settings).toContain(".policy-card-inline");
+    expect(settings).toContain(".settings-chip-row");
+    expect(panels).toContain(".panel-grid-wide");
   });
 
   it("keeps shared command-deck copy centralized", () => {
