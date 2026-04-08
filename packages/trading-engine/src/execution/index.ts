@@ -1,9 +1,9 @@
-import { OPEN_ORDER_STATUSES } from '../core/constants.mjs';
+import { OPEN_ORDER_STATUSES } from '../core/constants.js';
 import {
   createOrderRecord,
   logEvent,
   prependOrder,
-} from '../core/shared.mjs';
+} from '../core/shared.js';
 
 function createRemoteIntent(state, side, symbol, qty, price, tag) {
   const seq = state.orderSeq;

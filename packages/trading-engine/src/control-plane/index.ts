@@ -1,13 +1,13 @@
-import { applyBrokerSnapshot, applyRemoteOrderSubmissions } from '../execution/index.mjs';
-import { applyQuotePatch, updateTicker } from '../market/index.mjs';
-import { riskOffIfNeeded } from '../risk/index.mjs';
+import { applyBrokerSnapshot, applyRemoteOrderSubmissions } from '../execution/index.js';
+import { applyQuotePatch, updateTicker } from '../market/index.js';
+import { riskOffIfNeeded } from '../risk/index.js';
 import {
   chinaNow,
   cloneState,
   computeAccount,
   logEvent,
-} from '../core/shared.mjs';
-import { executeStrategy } from '../strategy/index.mjs';
+} from '../core/shared.js';
+import { executeStrategy } from '../strategy/index.js';
 
 export function applyControlPlaneResolution(state, resolution) {
   const previousCycleId = state.controlPlane.lastCycleId;

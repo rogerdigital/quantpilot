@@ -3,8 +3,8 @@ import {
   buildRemoteSellIntent,
   buyPosition,
   sellPosition,
-} from '../execution/index.mjs';
-import { reserveIntentOnShadowAccount } from '../core/shared.mjs';
+} from '../execution/index.js';
+import { reserveIntentOnShadowAccount } from '../core/shared.js';
 
 export function executeStrategy(state, brokerSupportsRemoteExecution) {
   const ranked = state.stockStates.slice().sort((a, b) => b.score - a.score);

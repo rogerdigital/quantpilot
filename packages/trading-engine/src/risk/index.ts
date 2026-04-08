@@ -1,4 +1,4 @@
-import { buildRemoteSellIntent, sellPosition } from '../execution/index.mjs';
+import { buildRemoteSellIntent, sellPosition } from '../execution/index.js';
 
 export function riskOffIfNeeded(state, brokerSupportsRemoteExecution) {
   const liveRiskIntents = [];

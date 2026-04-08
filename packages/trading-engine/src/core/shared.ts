@@ -1,4 +1,4 @@
-import { INITIAL_SERIES_LENGTH } from './constants.mjs';
+import { INITIAL_SERIES_LENGTH } from './constants.js';
 
 export function chinaNow() {
   const parts = new Intl.DateTimeFormat('zh-CN', {
