@@ -1,0 +1,323 @@
+/* ============================================================
+   ConsoleChrome — Layout CSS Module
+   Extracted from global style.css (phase G-2).
+   Classes in this file are scoped to ConsoleChrome and its
+   private sub-components: Layout, Sidebar, GlobalToolbar.
+   ============================================================ */
+
+/* ── APP SHELL ──────────────────────────────────────────── */
+
+.app-shell {
+  position: relative;
+  isolation: isolate;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  gap: 0;
+  padding: 0;
+}
+
+.app-shell::before {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: -80px;
+  height: 80px;
+  z-index: 9998;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 212, 255, 0.022) 50%,
+    transparent 100%
+  );
+  animation: scan-sweep 16s linear infinite;
+}
+
+/* ── MAIN PANEL ─────────────────────────────────────────── */
+
+.main-panel {
+  position: relative;
+  isolation: isolate;
+  padding: 20px 24px 40px;
+  max-width: 1480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.main-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: transparent;
+}
+
+/* ── SIDEBAR ────────────────────────────────────────────── */
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  min-height: 100vh;
+  padding: 24px 16px;
+  border-right: 1px solid var(--line);
+  background: linear-gradient(
+    180deg,
+    rgba(6, 14, 32, 0.99) 0%,
+    rgba(4, 9, 22, 0.99) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 212, 255, 0.65) 25%,
+    rgba(255, 183, 0, 0.35) 55%,
+    rgba(139, 92, 246, 0.25) 75%,
+    transparent
+  );
+  animation: gradient-flow 5s linear infinite;
+  pointer-events: none;
+}
+
+.sidebar::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.06), transparent 70%);
+  pointer-events: none;
+}
+
+.brand {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+  animation: slide-right 400ms ease 100ms both;
+}
+
+.brand-mark {
+  width: 20px;
+  height: 20px;
+  margin-top: 3px;
+  border-radius: 0;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  background: conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+  box-shadow: var(--glow-cyan);
+  animation: diamond-spin 10s linear infinite;
+  flex-shrink: 0;
+  transition: animation-duration 300ms;
+}
+
+.brand-mark:hover {
+  animation-duration: 2s;
+}
+
+.brand-name {
+  color: var(--text-strong);
+  font: 700 20px/1 var(--font-data);
+  letter-spacing: 0.02em;
+  animation: fade-in 500ms ease 200ms both;
+}
+
+.brand-sub {
+  margin-top: 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  color: var(--muted-strong);
+}
+
+.sidebar-block {
+  margin-bottom: 18px;
+  padding: 13px 12px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(10, 20, 44, 0.85), rgba(6, 12, 28, 0.9));
+  transition: border-color 180ms ease;
+}
+
+.sidebar-block:hover {
+  border-color: rgba(40, 120, 220, 0.2);
+}
+
+.sidebar-label {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 10px;
+  font-family: var(--font-data);
+}
+
+.nav-stack {
+  display: grid;
+  gap: 2px;
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+/* ── GLOBAL TOOLBAR ─────────────────────────────────────── */
+
+.global-toolbar {
+  position: relative;
+  z-index: 40;
+  overflow: visible;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 22px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(6, 14, 32, 0.98), rgba(4, 9, 22, 0.99));
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+  animation: panel-enter 250ms ease both;
+}
+
+.global-toolbar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.25), rgba(255, 183, 0, 0.12), transparent);
+  pointer-events: none;
+}
+
+.toolbar-copy {
+  display: grid;
+  gap: 3px;
+}
+
+.toolbar-kicker {
+  color: var(--muted);
+  font: 500 10px/1 var(--font-data);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.toolbar-title {
+  font: 700 15px/1 var(--font-data);
+  letter-spacing: 0.01em;
+}
+
+.toolbar-sub {
+  color: var(--muted);
+  font-size: 12px;
+  font-family: var(--font-data);
+  letter-spacing: 0.04em;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ── TOPBAR META (top-right KPI cards) ──────────────────── */
+
+.topbar-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(112px, 1fr));
+  gap: 10px;
+  min-width: 360px;
+}
+
+.meta-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-panel);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+  padding: 14px 16px;
+}
+
+.meta-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.06) 55%, transparent);
+  pointer-events: none;
+}
+
+.meta-label {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 10px;
+  font-family: var(--font-data);
+}
+
+.meta-value {
+  margin-top: 8px;
+  font: 700 18px/1 var(--font-data);
+  letter-spacing: -0.02em;
+  animation: tick-up 300ms ease 200ms both;
+}
+
+.meta-value-accent {
+  color: var(--accent);
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.25);
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    min-height: auto;
+    position: relative;
+    top: 0;
+  }
+
+  .global-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .toolbar-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .topbar-meta {
+    min-width: 0;
+  }
+
+  .main-panel {
+    padding: 16px;
+  }
+}

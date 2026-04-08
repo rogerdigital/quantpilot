@@ -6,6 +6,7 @@ import { useSettingsNavigation } from '../../modules/console/console.hooks.ts';
 import { copy, type ConsolePageKey, useLocale } from '../../modules/console/console.i18n.tsx';
 import { getConsoleDocumentTitle, listSidebarRoutes } from '../../modules/console/console.routes.tsx';
 import { connectionLabel, integrationTone, translateEngineStatus, translateMode, translateSignal } from '../../modules/console/console.utils.ts';
+import styles from './ConsoleChrome.module.css';
 
 export type TopMetaItem = {
   label: string;
@@ -227,11 +228,11 @@ export function ChartCanvas({ kind }: { kind: 'equity' | 'signal' }) {
 
 export function TopMeta({ items }: { items: TopMetaItem[] }) {
   return (
-    <div className="topbar-meta">
+    <div className={styles['topbar-meta']}>
       {items.map((item) => (
-        <div className="meta-card" key={item.label}>
-          <div className="meta-label">{item.label}</div>
-          <div className={`meta-value${item.accent ? ' accent' : ''}`}>{item.value}</div>
+        <div className={styles['meta-card']} key={item.label}>
+          <div className={styles['meta-label']}>{item.label}</div>
+          <div className={`${styles['meta-value']}${item.accent ? ` ${styles['meta-value-accent']}` : ''}`}>{item.value}</div>
         </div>
       ))}
     </div>
@@ -243,18 +244,18 @@ function Sidebar() {
   const routes = listSidebarRoutes();
 
   return (
-    <aside className="sidebar">
-      <div className="brand">
-        <div className="brand-mark" />
+    <aside className={styles.sidebar}>
+      <div className={styles.brand}>
+        <div className={styles['brand-mark']} />
         <div>
-          <div className="brand-name">{copy[locale].product}</div>
-          <div className="brand-sub">{copy[locale].tagline}</div>
+          <div className={styles['brand-name']}>{copy[locale].product}</div>
+          <div className={styles['brand-sub']}>{copy[locale].tagline}</div>
         </div>
       </div>
 
-      <div className="sidebar-block">
-        <div className="sidebar-label">{copy[locale].labels.tacticalRoutes}</div>
-        <nav className="nav-stack">
+      <div className={styles['sidebar-block']}>
+        <div className={styles['sidebar-label']}>{copy[locale].labels.tacticalRoutes}</div>
+        <nav className={styles['nav-stack']}>
           {routes.map((route) => (
             <NavLink key={route.path} to={route.path} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
               {copy[locale].nav[route.id]}
@@ -294,13 +295,13 @@ function GlobalToolbar() {
   }, [localeOpen]);
 
   return (
-    <div className="global-toolbar">
-      <div className="toolbar-copy">
-        <div className="toolbar-kicker">{copy[locale].labels.commandDeck}</div>
-        <div className="toolbar-title">{copy[locale].product}</div>
-        <div className="toolbar-sub">{`${translateEngineStatus(locale, state.engineStatus)} · ${translateMode(locale, state.mode)} · ${state.marketClock || '--:--:--'}`}</div>
+    <div className={styles['global-toolbar']}>
+      <div className={styles['toolbar-copy']}>
+        <div className={styles['toolbar-kicker']}>{copy[locale].labels.commandDeck}</div>
+        <div className={styles['toolbar-title']}>{copy[locale].product}</div>
+        <div className={styles['toolbar-sub']}>{`${translateEngineStatus(locale, state.engineStatus)} · ${translateMode(locale, state.mode)} · ${state.marketClock || '--:--:--'}`}</div>
       </div>
-      <div className="toolbar-actions">
+      <div className={styles['toolbar-actions']}>
         <button type="button" className={`toolbar-pill toolbar-pill-button tone-${integrationTone(marketConnected, marketDegraded)}`} onClick={() => goToSettings('integrations')}>
           <span className="toolbar-pill-main">
             <span className="status-dot" aria-hidden="true" />
@@ -421,9 +422,9 @@ export function Layout() {
   }, [locale, location.pathname]);
 
   return (
-    <div className="app-shell">
+    <div className={styles['app-shell']}>
       <Sidebar />
-      <main className="main-panel">
+      <main className={styles['main-panel']}>
         <GlobalToolbar />
         <Outlet />
       </main>
