@@ -1,4 +1,4 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 
 export function listWorkflows(limit = 50) {
   return controlPlaneRuntime.listWorkflowRuns(limit);

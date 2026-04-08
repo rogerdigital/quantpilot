@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { invokeGatewayRoute } from './helpers/invoke-gateway.mjs';
-import { createTradingState } from './helpers/create-trading-state.mjs';
+import { invokeGatewayRoute } from './helpers/invoke-gateway.js';
+import { createTradingState } from './helpers/create-trading-state.js';
 
 const namespace = `control-plane-api-test-${randomUUID()}`;
 process.env.QUANTPILOT_CONTROL_PLANE_NAMESPACE = namespace;
@@ -42,9 +42,9 @@ const fakeMarketSnapshot = {
 };
 
 const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] = await Promise.all([
-  import('../src/gateways/alpaca.mjs'),
-  import('../../../packages/control-plane-store/src/context.mjs'),
-  import('../../../packages/control-plane-store/src/store.mjs'),
+  import('../src/gateways/alpaca.js'),
+  import('../../../packages/control-plane-store/src/context.js'),
+  import('../../../packages/control-plane-store/src/store.js'),
 ]);
 
 const handler = createGatewayHandler({

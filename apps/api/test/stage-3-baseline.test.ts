@@ -3,15 +3,15 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { invokeGatewayRoute } from './helpers/invoke-gateway.mjs';
+import { invokeGatewayRoute } from './helpers/invoke-gateway.js';
 
 const namespace = `stage-3-baseline-test-${randomUUID()}`;
 process.env.QUANTPILOT_CONTROL_PLANE_NAMESPACE = namespace;
 
 const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] = await Promise.all([
-  import('../src/gateways/alpaca.mjs'),
-  import('../../../packages/control-plane-store/src/context.mjs'),
-  import('../../../packages/control-plane-store/src/store.mjs'),
+  import('../src/gateways/alpaca.js'),
+  import('../../../packages/control-plane-store/src/context.js'),
+  import('../../../packages/control-plane-store/src/store.js'),
 ]);
 
 const handler = createGatewayHandler({
