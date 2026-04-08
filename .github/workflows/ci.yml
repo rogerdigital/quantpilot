@@ -20,14 +20,14 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Check workspace integrity
         run: npm run check:workspaces
 
       - name: Check lockfile sync
         run: npm run check:lockfile
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Type check
         run: npm run typecheck
