@@ -1,4 +1,4 @@
-import { recordMonitoringStatusSnapshot } from '../../../api/src/modules/monitoring/service.mjs';
+import { recordMonitoringStatusSnapshot } from '../../../api/src/modules/monitoring/service.js';
 
 export async function runMonitoringScanTask(config, dependencies = {}) {
   const scanMonitoring = dependencies.recordMonitoringSnapshot || recordMonitoringStatusSnapshot;

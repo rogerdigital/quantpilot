@@ -6,8 +6,8 @@ import {
   assessExecutionCandidate,
   buildStrategyExecutionCandidate,
   recordAgentActionRequest,
-} from '../../../../packages/control-plane-runtime/src/index.mjs';
-import { executeQueuedWorkflow } from '../../../../packages/task-workflow-engine/src/index.mjs';
+} from '../../../../packages/control-plane-runtime/src/index.js';
+import { executeQueuedWorkflow } from '../../../../packages/task-workflow-engine/src/index.js';
 
 function createWorkerExecutionContext() {
   return {

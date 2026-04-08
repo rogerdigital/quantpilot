@@ -1,11 +1,11 @@
-import { readWorkerConfig } from '../config.mjs';
-import { runHeartbeatTask } from '../tasks/heartbeat-task.mjs';
-import { runMonitoringScanTask } from '../tasks/monitoring-scan-task.mjs';
-import { runNotificationDispatchTask } from '../tasks/notification-dispatch-task.mjs';
-import { runRiskScanTask } from '../tasks/risk-scan-task.mjs';
-import { runSchedulerTickTask } from '../tasks/scheduler-tick-task.mjs';
-import { runWorkflowExecutionTask } from '../tasks/workflow-execution-task.mjs';
-import { runWorkflowMaintenanceTask } from '../tasks/workflow-maintenance-task.mjs';
+import { readWorkerConfig } from '../config.js';
+import { runHeartbeatTask } from '../tasks/heartbeat-task.js';
+import { runMonitoringScanTask } from '../tasks/monitoring-scan-task.js';
+import { runNotificationDispatchTask } from '../tasks/notification-dispatch-task.js';
+import { runRiskScanTask } from '../tasks/risk-scan-task.js';
+import { runSchedulerTickTask } from '../tasks/scheduler-tick-task.js';
+import { runWorkflowExecutionTask } from '../tasks/workflow-execution-task.js';
+import { runWorkflowMaintenanceTask } from '../tasks/workflow-maintenance-task.js';
 
 async function runTick(config) {
   const results = [

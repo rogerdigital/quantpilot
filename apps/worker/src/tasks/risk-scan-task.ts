@@ -1,4 +1,4 @@
-import { controlPlaneRuntime } from '../../../../packages/control-plane-runtime/src/index.mjs';
+import { controlPlaneRuntime } from '../../../../packages/control-plane-runtime/src/index.js';
 
 export async function runRiskScanTask(config, dependencies = {}) {
   const flushRiskScans = dependencies.flushQueuedRiskScans || controlPlaneRuntime.dispatchPendingRiskScans;
