@@ -13,12 +13,12 @@
 
 | Layer | Tech |
 |-------|------|
-| Language | TypeScript (ES2022) + plain `.mjs` (backend) |
+| Language | TypeScript (ES2022)，前后端全量 `.ts` |
 | Frontend | React 18, react-router-dom v6 |
-| Bundler | Vite 5 (`@vitejs/plugin-react`) |
+| Bundler | Vite 5 (`@vitejs/plugin-react` + `@vanilla-extract/vite-plugin`) |
 | Test | Vitest (web), `node --test` (backend) |
 | Module | ESM (`"type": "module"` 全局) |
-| Styling | 单一全局 CSS (`apps/web/src/app/styles/style.css`)，无 CSS-in-JS / Tailwind |
+| Styling | Vanilla Extract (`.css.ts`)，无任何 `.css` 文件 |
 | Fonts | Sora (UI) + JetBrains Mono (data) |
 | Deploy | Vercel (SPA rewrites) |
 | CI | GitHub Actions (Ubuntu, Node 22) |
@@ -28,7 +28,7 @@
 
 ```
 apps/
-├── api/        @quantpilot/api      API 网关 (Node.js .mjs)
+├── api/        @quantpilot/api      API 网关 (Node.js .ts)
 ├── web/        @quantpilot/web      React SPA (Vite)
 │   └── src/
 │       ├── app/         App shell、全局样式
@@ -39,7 +39,7 @@ apps/
 │       ├── services/    API 服务层
 │       ├── store/       状态管理 (TradingSystemProvider)
 │       └── hooks/       React hooks
-└── worker/     @quantpilot/worker   后台 Worker (Node.js .mjs)
+└── worker/     @quantpilot/worker   后台 Worker (Node.js .ts)
 
 packages/
 ├── control-plane-runtime/    运行时上下文
@@ -84,12 +84,12 @@ npm run verify           # 完整验证 (所有检查 + 所有测试 + typecheck
 - **模块**: ESM imports/exports
 - **TypeScript**: `strict: false`, `target: ES2022`, `moduleResolution: Bundler`
 - **JSX**: `react-jsx` 自动转换，无需手动 import React
-- **CSS**: 所有样式通过 CSS custom properties + 类名，无组件级样式文件
+- **CSS**: 所有样式使用 Vanilla Extract (`.css.ts`)；`globalStyle` 用于全局类名，`style()` 用于组件级作用域
 - **i18n**: `LocaleProvider` 提供 zh/en 双语，`copy[locale]` 模式访问文案
 
 ## Important Guardrails
 
-- 所有 CSS 改动只在 `apps/web/src/app/styles/style.css` 中进行，保持类名稳定
+- 样式改动在对应的 `.css.ts` 文件中进行（`apps/web/src/app/styles/` 或组件同目录），不引入任何 `.css` 文件
 - Canvas 图表颜色硬编码在 `ConsoleChrome.tsx` 的 `ChartCanvas` 中
 - `.env` / `.env.local` 不提交，参考 `.env.example`
 - 测试中避免硬编码时间戳，使用 `new Date().toISOString()` 防止日期漂移
