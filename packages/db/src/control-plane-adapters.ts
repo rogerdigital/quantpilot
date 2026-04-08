@@ -1,8 +1,8 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createCollectionStore } from './collection-store.mjs';
-import { ensureDirectory, readJsonFile, writeJsonFile } from './filesystem.mjs';
-import { createKeyValueStore } from './kv-store.mjs';
+import { createCollectionStore } from './collection-store.js';
+import { ensureDirectory, readJsonFile, writeJsonFile } from './filesystem.js';
+import { createKeyValueStore } from './kv-store.js';
 
 const packageDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(packageDir, '..', '..', '..');

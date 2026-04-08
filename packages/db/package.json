@@ -2,8 +2,8 @@
   "name": "@quantpilot/db",
   "private": true,
   "type": "module",
-  "main": "./src/index.mjs",
+  "main": "./src/index.js",
   "exports": {
-    ".": "./src/index.mjs"
+    ".": "./src/index.js"
   }
 }
