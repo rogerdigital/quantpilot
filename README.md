@@ -93,7 +93,7 @@ Primary locations:
 - `packages/trading-engine/src/risk`
 - `apps/api/src/domains/risk`
 - `apps/api/src/modules/risk`
-- `apps/worker/src/tasks/risk-scan-task.mjs`
+- `apps/worker/src/tasks/risk-scan-task.ts`
 
 ### 7. Execution Layer
 
@@ -104,7 +104,7 @@ Primary locations:
 - `packages/trading-engine/src/execution`
 - `apps/api/src/domains/execution`
 - `apps/api/src/modules/execution`
-- `apps/api/src/gateways/alpaca.mjs`
+- `apps/api/src/gateways/alpaca.ts`
 
 ## Repository Layout
 
@@ -269,13 +269,13 @@ These documents define the closed capability boundaries and the baseline expecta
 - `apps/web/src/app/App.tsx`
 - `apps/web/src/pages/console/DashboardConsole.tsx`
 - `apps/web/src/store/trading-system/TradingSystemProvider.tsx`
-- `apps/api/src/main.mjs`
-- `apps/api/src/app/index.mjs`
-- `apps/worker/src/main.mjs`
-- `packages/trading-engine/src/runtime.mjs`
-- `packages/control-plane-runtime/src/index.mjs`
-- `packages/control-plane-store/src/index.mjs`
-- `packages/task-workflow-engine/src/index.mjs`
+- `apps/api/src/main.ts`
+- `apps/api/src/app/index.ts`
+- `apps/worker/src/main.ts`
+- `packages/trading-engine/src/runtime.ts`
+- `packages/control-plane-runtime/src/index.ts`
+- `packages/control-plane-store/src/index.ts`
+- `packages/task-workflow-engine/src/index.ts`
 
 ## Safety Boundaries
 
