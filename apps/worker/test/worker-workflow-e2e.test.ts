@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { invokeGatewayRoute } from '../../api/test/helpers/invoke-gateway.mjs';
-import { createTradingState } from '../../api/test/helpers/create-trading-state.mjs';
+import { invokeGatewayRoute } from '../../api/test/helpers/invoke-gateway.js';
+import { createTradingState } from '../../api/test/helpers/create-trading-state.js';
 
 const namespace = `worker-workflow-e2e-${randomUUID()}`;
 process.env.QUANTPILOT_CONTROL_PLANE_NAMESPACE = namespace;
@@ -24,19 +24,19 @@ const [
   { assessAgentActionRequestRisk, assessExecutionCandidate },
   { buildStrategyExecutionCandidate },
 ] = await Promise.all([
-  import('../../api/src/gateways/alpaca.mjs'),
-  import('../src/tasks/workflow-execution-task.mjs'),
-  import('../src/tasks/risk-scan-task.mjs'),
-  import('../src/tasks/workflow-maintenance-task.mjs'),
-  import('../../../packages/task-workflow-engine/src/index.mjs'),
-  import('../../../packages/control-plane-store/src/context.mjs'),
-  import('../../../packages/control-plane-store/src/store.mjs'),
-  import('../../../packages/control-plane-runtime/src/index.mjs'),
-  import('../../api/src/domains/backtest/services/summary-service.mjs'),
-  import('../../api/src/modules/agent/service.mjs'),
-  import('../../api/src/modules/execution/service.mjs'),
-  import('../../api/src/modules/risk/service.mjs'),
-  import('../../api/src/modules/strategy/service.mjs'),
+  import('../../api/src/gateways/alpaca.js'),
+  import('../src/tasks/workflow-execution-task.js'),
+  import('../src/tasks/risk-scan-task.js'),
+  import('../src/tasks/workflow-maintenance-task.js'),
+  import('../../../packages/task-workflow-engine/src/index.js'),
+  import('../../../packages/control-plane-store/src/context.js'),
+  import('../../../packages/control-plane-store/src/store.js'),
+  import('../../../packages/control-plane-runtime/src/index.js'),
+  import('../../api/src/domains/backtest/services/summary-service.js'),
+  import('../../api/src/modules/agent/service.js'),
+  import('../../api/src/modules/execution/service.js'),
+  import('../../api/src/modules/risk/service.js'),
+  import('../../api/src/modules/strategy/service.js'),
 ]);
 
 const workerConfig = {

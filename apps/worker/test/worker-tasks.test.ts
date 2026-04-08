@@ -1,15 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createControlPlaneContext } from '../../../packages/control-plane-store/src/context.mjs';
-import { createControlPlaneRuntime } from '../../../packages/control-plane-runtime/src/index.mjs';
-import { createMemoryStore } from '../../../packages/control-plane-store/test/helpers/memory-store.mjs';
-import { runHeartbeatTask } from '../src/tasks/heartbeat-task.mjs';
-import { runMonitoringScanTask } from '../src/tasks/monitoring-scan-task.mjs';
-import { runNotificationDispatchTask } from '../src/tasks/notification-dispatch-task.mjs';
-import { runRiskScanTask } from '../src/tasks/risk-scan-task.mjs';
-import { runSchedulerTickTask } from '../src/tasks/scheduler-tick-task.mjs';
-import { runWorkflowExecutionTask } from '../src/tasks/workflow-execution-task.mjs';
-import { runWorkflowMaintenanceTask } from '../src/tasks/workflow-maintenance-task.mjs';
+import { createControlPlaneContext } from '../../../packages/control-plane-store/src/context.js';
+import { createControlPlaneRuntime } from '../../../packages/control-plane-runtime/src/index.js';
+import { createMemoryStore } from '../../../packages/control-plane-store/test/helpers/memory-store.js';
+import { runHeartbeatTask } from '../src/tasks/heartbeat-task.js';
+import { runMonitoringScanTask } from '../src/tasks/monitoring-scan-task.js';
+import { runNotificationDispatchTask } from '../src/tasks/notification-dispatch-task.js';
+import { runRiskScanTask } from '../src/tasks/risk-scan-task.js';
+import { runSchedulerTickTask } from '../src/tasks/scheduler-tick-task.js';
+import { runWorkflowExecutionTask } from '../src/tasks/workflow-execution-task.js';
+import { runWorkflowMaintenanceTask } from '../src/tasks/workflow-maintenance-task.js';
 
 const workerConfig = {
   name: 'worker-test',
