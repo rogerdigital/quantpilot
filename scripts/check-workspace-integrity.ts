@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { listWorkspacePackages, readJson } from './workspace-utils.mjs';
+import { listWorkspacePackages, readJson } from './workspace-utils.js';
 
 const repoRoot = process.cwd();
 const packageJsonPath = join(repoRoot, 'package.json');

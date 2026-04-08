@@ -4,7 +4,7 @@ import {
   computeAccount,
   logEvent,
   DEFAULT_ENGINE_CONFIG,
-} from '../../../../packages/trading-engine/src/runtime.mjs';
+} from '../../../../packages/trading-engine/src/runtime.js';
 
 export function createTradingState() {
   const stockStates = createInitialStockStates(DEFAULT_ENGINE_CONFIG);

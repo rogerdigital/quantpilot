@@ -6,9 +6,9 @@ import {
   getControlPlaneIntegrityReport,
   runControlPlaneMigrations,
   restoreControlPlaneBackup,
-} from '../packages/control-plane-store/src/index.mjs';
-import { createControlPlaneRuntime } from '../packages/control-plane-runtime/src/index.mjs';
-import { createControlPlaneContext } from '../packages/control-plane-store/src/context.mjs';
+} from '../packages/control-plane-store/src/index.js';
+import { createControlPlaneRuntime } from '../packages/control-plane-runtime/src/index.js';
+import { createControlPlaneContext } from '../packages/control-plane-store/src/context.js';
 
 function parseArgs(argv) {
   const [command = 'check', ...rest] = argv;
