@@ -1,12 +1,13 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 
 const appRoot = new URL('./', import.meta.url).pathname;
 const sharedTypesRoot = new URL('../../packages/shared-types/src/', import.meta.url).pathname;
 
 export default defineConfig({
   root: appRoot,
-  plugins: [react()],
+  plugins: [react(), vanillaExtractPlugin()],
   resolve: {
     alias: {
       '@shared-types': sharedTypesRoot,
