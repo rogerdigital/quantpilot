@@ -17,9 +17,9 @@ import {
   updateUserAccess,
   updateUserPreferences,
   upsertBrokerBinding,
-} from '../../../../../packages/control-plane-runtime/src/index.mjs';
-import { appendAuditRecord } from '../audit/service.mjs';
-import { getSession } from '../auth/service.mjs';
+} from '../../../../../packages/control-plane-runtime/src/index.js';
+import { appendAuditRecord } from '../audit/service.js';
+import { getSession } from '../auth/service.js';
 
 function recordAccountAuditEvent(type, title, detail, metadata = {}) {
   const account = getUserAccount();

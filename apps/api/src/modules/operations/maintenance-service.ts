@@ -1,13 +1,13 @@
-import { controlPlaneContext } from '../../../../../packages/control-plane-store/src/context.mjs';
+import { controlPlaneContext } from '../../../../../packages/control-plane-store/src/context.js';
 import {
   exportControlPlaneBackup,
   getControlPlaneIntegrityReport,
   restoreControlPlaneBackup,
-} from '../../../../../packages/control-plane-store/src/index.mjs';
-import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
-import { appendAuditRecord } from '../audit/service.mjs';
-import { getSession } from '../auth/service.mjs';
-import { getMonitoringStatus } from '../monitoring/service.mjs';
+} from '../../../../../packages/control-plane-store/src/index.js';
+import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
+import { appendAuditRecord } from '../audit/service.js';
+import { getSession } from '../auth/service.js';
+import { getMonitoringStatus } from '../monitoring/service.js';
 
 function toPositiveLimit(value, fallback) {
   const parsed = Number(value);

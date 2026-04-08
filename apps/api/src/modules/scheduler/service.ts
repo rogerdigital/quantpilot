@@ -1,5 +1,5 @@
-import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
-import { getRiskSchedulerLinkage } from '../../domains/risk/services/risk-scheduler-linkage-service.mjs';
+import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
+import { getRiskSchedulerLinkage } from '../../domains/risk/services/risk-scheduler-linkage-service.js';
 
 const SCHEDULER_RUNBOOK_KEYS = new Set([
   'review-current-window',

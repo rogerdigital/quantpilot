@@ -1,7 +1,7 @@
-import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
-import { getMonitoringStatus } from '../monitoring/service.mjs';
-import { getOperationsMaintenanceSnapshot } from './maintenance-service.mjs';
-import { isSchedulerAttentionStatus } from '../scheduler/service.mjs';
+import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
+import { getMonitoringStatus } from '../monitoring/service.js';
+import { getOperationsMaintenanceSnapshot } from './maintenance-service.js';
+import { isSchedulerAttentionStatus } from '../scheduler/service.js';
 
 const ACK_OVERDUE_HOURS = 1;
 const STALE_HOURS = 24;

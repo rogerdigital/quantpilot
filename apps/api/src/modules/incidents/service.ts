@@ -1,4 +1,4 @@
-import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
+import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
 
 const ACK_OVERDUE_HOURS = 1;
 const STALE_HOURS = 24;

@@ -1,4 +1,4 @@
-import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.mjs';
+import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);
