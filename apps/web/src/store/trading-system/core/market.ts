@@ -1,5 +1,5 @@
 import type { StockState } from '@shared-types/trading.ts';
-import { createInitialStockStates as sharedCreateInitialStockStates, createTickerState as sharedCreateTickerState, applyQuotePatch as sharedApplyQuotePatch, scoreStock as sharedScoreStock, updateTicker as sharedUpdateTicker } from '../../../../../../packages/trading-engine/src/runtime.mjs';
+import { createInitialStockStates as sharedCreateInitialStockStates, createTickerState as sharedCreateTickerState, applyQuotePatch as sharedApplyQuotePatch, scoreStock as sharedScoreStock, updateTicker as sharedUpdateTicker } from '../../../../../../packages/trading-engine/src/runtime.js';
 import { APP_CONFIG } from './config.ts';
 
 export function createTickerState(ticker: StockState, index: number): StockState {

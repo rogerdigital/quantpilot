@@ -1,7 +1,7 @@
 import { runtimeConfig } from '../../../app/config/runtime.ts';
 import type { BrokerProvider, MarketDataProvider, TradingState } from '@shared-types/trading.ts';
 import { APP_CONFIG } from './config.ts';
-import { createInitialStockStates } from '../../../../../../packages/trading-engine/src/runtime.mjs';
+import { createInitialStockStates } from '../../../../../../packages/trading-engine/src/runtime.js';
 import { computeAccount, createAccount, logEvent } from './shared.ts';
 
 function initialState(): TradingState {

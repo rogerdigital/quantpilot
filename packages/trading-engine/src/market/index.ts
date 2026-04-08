@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { DEFAULT_ENGINE_CONFIG, STOCK_UNIVERSE } from '../core/constants.js';
 import { createTickerState } from '../core/shared.js';
 

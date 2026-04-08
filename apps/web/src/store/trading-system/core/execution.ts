@@ -6,7 +6,7 @@ import {
   buildRemoteSellIntent as sharedBuildRemoteSellIntent,
   buyPosition as sharedBuyPosition,
   sellPosition as sharedSellPosition,
-} from '../../../../../../packages/trading-engine/src/runtime.mjs';
+} from '../../../../../../packages/trading-engine/src/runtime.js';
 
 export function buyPosition(account: AccountState, stock: StockState, ratio: number, tag: string, state: TradingState): BrokerOrder | null {
   return sharedBuyPosition(account, stock, ratio, tag, state);

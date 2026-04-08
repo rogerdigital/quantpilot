@@ -8,7 +8,7 @@ import {
   logEvent as sharedLogEvent,
   prependOrder as sharedPrependOrder,
   reserveIntentOnShadowAccount as sharedReserveIntentOnShadowAccount,
-} from '../../../../../../packages/trading-engine/src/runtime.mjs';
+} from '../../../../../../packages/trading-engine/src/runtime.js';
 
 export function createAccount(id: string, label: string, cash: number, holdings: Record<string, { shares: number; avgCost: number }>): AccountState {
   return sharedCreateAccount(id, label, cash, holdings);

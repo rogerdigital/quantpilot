@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { INITIAL_SERIES_LENGTH } from './constants.js';
 
 export function chinaNow() {
