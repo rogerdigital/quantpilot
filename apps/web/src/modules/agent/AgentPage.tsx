@@ -4,6 +4,7 @@ import { SectionHeader, TabPanel, TopMeta, EmptyState } from '../../components/l
 import { copy, useLocale } from '../console/console.i18n.tsx';
 import { translateRiskLevel } from '../console/console.utils.ts';
 import { useAgentTools } from './useAgentTools.ts';
+import styles from './AgentPage.module.css';
 
 const promptSuggestions = {
   zh: [
@@ -299,12 +300,12 @@ export default function AgentPage() {
         </article>
       </section>
 
-      <section className="agent-dialogue-section">
-        <article className="panel agent-dual-view-panel">
+      <section className={styles["agent-dialogue-section"]}>
+        <article className={`panel ${styles["agent-dual-view-panel"]}`}>
           <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Agent Dialogue' : 'Agent Dialogue'}</div><div className="panel-copy">{locale === 'zh' ? '左侧保持连续对话，右侧固定展示当前会话洞察、计划步骤和受控交接，让聊天和运营工作台同时成立。' : 'Keep the running conversation on the left while the right rail stays anchored on session insight, plan steps, and controlled handoff.'}</div></div><div className={`panel-badge ${running ? 'badge-warn' : 'badge-info'}`}>{running ? 'RUNNING' : 'READY'}</div></div>
-          <div className="agent-dual-view">
-            <div className="agent-dialogue-stage">
-              <div className="agent-stage-header">
+          <div className={styles["agent-dual-view"]}>
+            <div className={styles["agent-dialogue-stage"]}>
+              <div className={styles["agent-stage-header"]}>
                 <div>
                   <div className="card-eyebrow">{locale === 'zh' ? 'Conversation Thread' : 'Conversation Thread'}</div>
                   <div className="mini-copy">
@@ -313,34 +314,34 @@ export default function AgentPage() {
                       : 'Capture every request, planning step, tool read, and final explanation as one continuous thread.'}
                   </div>
                 </div>
-                <div className="agent-stage-pills">
+                <div className={styles["agent-stage-pills"]}>
                   <span className="settings-chip">{sessionDetail?.session.status || (locale === 'zh' ? '未选择会话' : 'No session')}</span>
                   <span className="settings-chip">{sessionDetail?.session.latestIntent.kind || '--'}</span>
                 </div>
               </div>
-              <div className="agent-chat-transcript">
+              <div className={styles["agent-chat-transcript"]}>
                 {!conversation.length ? (
                   <EmptyState icon="💬" message={locale === 'zh' ? '当前还没有消息，先向 Agent 提一个分析问题。' : 'There are no messages yet. Start by asking the Agent for an analysis.'} />
                 ) : null}
                 {conversation.map((message) => (
-                  <div className={`agent-chat-message agent-chat-${message.role} agent-chat-${message.tone}`} key={message.key}>
-                    <div className="agent-chat-meta">
+                  <div className={`${styles["agent-chat-message"]} ${styles["agent-chat-" + message.role]} ${styles["agent-chat-" + message.tone]}`} key={message.key}>
+                    <div className={styles["agent-chat-meta"]}>
                       <span>{message.label}</span>
                       <span>{message.role.toUpperCase()}</span>
                     </div>
-                    <div className="agent-chat-body">{message.body}</div>
+                    <div className={styles["agent-chat-body"]}>{message.body}</div>
                   </div>
                 ))}
               </div>
               <label className="field-label" htmlFor="agent-prompt-input">{locale === 'zh' ? '发给 Agent 的消息' : 'Message To Agent'}</label>
-              <div className="agent-chat-composer">
+              <div className={styles["agent-chat-composer"]}>
                 <textarea
                   id="agent-prompt-input"
-                  className="detail-textarea agent-chat-textarea"
+                  className={`detail-textarea ${styles["agent-chat-textarea"]}`}
                   value={prompt}
                   onChange={(event) => setPrompt(event.target.value)}
                 />
-                <div className="agent-chat-composer-actions">
+                <div className={styles["agent-chat-composer-actions"]}>
                   <div className="status-copy">
                     {locale === 'zh'
                       ? '发送后会进入 intent -> plan -> read-only analysis 流程，并把结果写回当前会话。'
@@ -351,9 +352,9 @@ export default function AgentPage() {
               </div>
             </div>
 
-            <aside className="agent-insight-rail">
-              <div className="agent-insight-card">
-                <div className="agent-insight-header">
+            <aside className={styles["agent-insight-rail"]}>
+              <div className={styles["agent-insight-card"]}>
+                <div className={styles["agent-insight-header"]}>
                   <div>
                     <div className="card-eyebrow">{locale === 'zh' ? 'Session Pulse' : 'Session Pulse'}</div>
                     <div className="mini-copy">
@@ -364,28 +365,28 @@ export default function AgentPage() {
                   </div>
                   <span className={`panel-badge ${canRequestAction ? 'badge-warn' : 'badge-info'}`}>{canRequestAction ? (locale === 'zh' ? '可审批' : 'APPROVABLE') : (locale === 'zh' ? '跟进中' : 'IN FLIGHT')}</span>
                 </div>
-                <div className="agent-pulse-grid">
-                  <div className="agent-pulse-item">
+                <div className={styles["agent-pulse-grid"]}>
+                  <div className={styles["agent-pulse-item"]}>
                     <span>{locale === 'zh' ? '会话' : 'Session'}</span>
                     <strong>{sessionDetail?.session.status || '--'}</strong>
                   </div>
-                  <div className="agent-pulse-item">
+                  <div className={styles["agent-pulse-item"]}>
                     <span>{locale === 'zh' ? 'Intent' : 'Intent'}</span>
                     <strong>{sessionDetail?.session.latestIntent.kind || '--'}</strong>
                   </div>
-                  <div className="agent-pulse-item">
+                  <div className={styles["agent-pulse-item"]}>
                     <span>{locale === 'zh' ? 'Plan' : 'Plan'}</span>
                     <strong>{sessionDetail?.latestPlan?.status || '--'}</strong>
                   </div>
-                  <div className="agent-pulse-item">
+                  <div className={styles["agent-pulse-item"]}>
                     <span>{locale === 'zh' ? 'Analysis' : 'Analysis'}</span>
                     <strong>{sessionDetail?.latestAnalysisRun?.status || '--'}</strong>
                   </div>
                 </div>
               </div>
 
-              <div className="agent-insight-card">
-                <div className="agent-insight-header">
+              <div className={styles["agent-insight-card"]}>
+                <div className={styles["agent-insight-header"]}>
                   <div>
                     <div className="card-eyebrow">{locale === 'zh' ? 'Plan Ladder' : 'Plan Ladder'}</div>
                     <div className="mini-copy">
@@ -395,24 +396,24 @@ export default function AgentPage() {
                     </div>
                   </div>
                 </div>
-                <div className="agent-step-stack">
+                <div className={styles["agent-step-stack"]}>
                   {!planSteps.length ? (
                     <EmptyState icon="📋" message={locale === 'zh' ? '当前会话还没有计划步骤。' : 'No plan steps have been recorded for this session yet.'} />
                   ) : null}
                   {planSteps.slice(0, 4).map((step) => (
-                    <div className="agent-step-card" key={step.id}>
-                      <div className="agent-step-top">
+                    <div className={styles["agent-step-card"]} key={step.id}>
+                      <div className={styles["agent-step-top"]}>
                         <strong>{step.title}</strong>
                         <span>{step.status || '--'}</span>
                       </div>
-                      <div className="agent-step-copy">{step.description || step.outputSummary || step.toolName || '--'}</div>
+                      <div className={styles["agent-step-copy"]}>{step.description || step.outputSummary || step.toolName || '--'}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="agent-insight-card">
-                <div className="agent-insight-header">
+              <div className={styles["agent-insight-card"]}>
+                <div className={styles["agent-insight-header"]}>
                   <div>
                     <div className="card-eyebrow">{locale === 'zh' ? 'Evidence Snapshot' : 'Evidence Snapshot'}</div>
                     <div className="mini-copy">
@@ -422,24 +423,24 @@ export default function AgentPage() {
                     </div>
                   </div>
                 </div>
-                <div className="agent-step-stack">
+                <div className={styles["agent-step-stack"]}>
                   {!evidence.length ? (
                     <EmptyState icon="🔍" message={locale === 'zh' ? '当前分析还没有证据摘要。' : 'No evidence snapshot is available for this analysis yet.'} />
                   ) : null}
                   {evidence.slice(0, 3).map((item) => (
-                    <div className="agent-step-card" key={item.id}>
-                      <div className="agent-step-top">
+                    <div className={styles["agent-step-card"]} key={item.id}>
+                      <div className={styles["agent-step-top"]}>
                         <strong>{item.title}</strong>
                         <span>{item.source}</span>
                       </div>
-                      <div className="agent-step-copy">{item.summary}</div>
+                      <div className={styles["agent-step-copy"]}>{item.summary}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="agent-insight-card">
-                <div className="agent-insight-header">
+              <div className={styles["agent-insight-card"]}>
+                <div className={styles["agent-insight-header"]}>
                   <div>
                     <div className="card-eyebrow">{locale === 'zh' ? 'Controlled Handoff' : 'Controlled Handoff'}</div>
                     <div className="mini-copy">
@@ -452,7 +453,7 @@ export default function AgentPage() {
                   </div>
                   <span className="settings-chip">{latestActionRequest?.status || '--'}</span>
                 </div>
-                <div className="agent-handoff-actions">
+                <div className={styles["agent-handoff-actions"]}>
                   <button type="button" className="settings-button" onClick={submitActionRequest} disabled={!canRequestAction || requestingAction}>
                     {requestingAction
                       ? (locale === 'zh' ? '提交中...' : 'Submitting...')
@@ -466,8 +467,8 @@ export default function AgentPage() {
                 </div>
               </div>
 
-              <div className="agent-insight-card">
-                <div className="agent-insight-header">
+              <div className={styles["agent-insight-card"]}>
+                <div className={styles["agent-insight-header"]}>
                   <div>
                     <div className="card-eyebrow">{locale === 'zh' ? 'Prompt Suggestions' : 'Prompt Suggestions'}</div>
                     <div className="mini-copy">
@@ -475,9 +476,9 @@ export default function AgentPage() {
                     </div>
                   </div>
                 </div>
-                <div className="agent-suggestion-list">
+                <div className={styles["agent-suggestion-list"]}>
                   {promptSuggestions[locale].map((item) => (
-                    <button type="button" className="agent-suggestion-button" key={item} onClick={() => setPrompt(item)}>
+                    <button type="button" className={styles["agent-suggestion-button"]} key={item} onClick={() => setPrompt(item)}>
                       {item}
                     </button>
                   ))}

@@ -1,0 +1,357 @@
+/* ============================================================
+   AgentPage — CSS Module
+   Extracted from global style.css [PAGE: Agent] section (phase H-1).
+   Contains only agent-specific classes; shared primitives
+   (panel, hero-card, focus-row, panel-grid etc.) remain global.
+   ============================================================ */
+
+/* ── AGENT LAYOUT ───────────────────────────────────────── */
+
+.agent-dialogue-section {
+  margin-top: 28px;
+}
+
+.agent-dual-view-panel {
+  overflow: hidden;
+}
+
+.agent-dual-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.agent-dialogue-stage {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 680px;
+}
+
+/* ── AGENT STAGE HEADER ─────────────────────────────────── */
+
+.agent-stage-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 1px solid rgba(0, 212, 255, 0.12);
+  border-radius: var(--radius);
+  background: rgba(0, 212, 255, 0.03);
+  transition: border-color 160ms ease;
+  flex-shrink: 0;
+  margin-bottom: 12px;
+}
+
+.agent-stage-header:hover {
+  border-color: rgba(40, 120, 220, 0.2);
+}
+
+.agent-stage-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ── AGENT INSIGHT RAIL ─────────────────────────────────── */
+
+.agent-insight-rail {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  overflow-y: auto;
+  max-height: 680px;
+}
+
+.agent-insight-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(8, 18, 38, 0.85);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.agent-insight-card:hover {
+  border-color: rgba(40, 120, 220, 0.2);
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.05);
+}
+
+.agent-insight-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+/* ── AGENT PULSE GRID ───────────────────────────────────── */
+
+.agent-pulse-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.agent-pulse-item {
+  display: grid;
+  gap: 4px;
+  padding: 12px 13px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: rgba(2, 6, 18, 0.75);
+  transition: border-color 150ms ease;
+}
+
+.agent-pulse-item:hover {
+  border-color: rgba(40, 120, 220, 0.22);
+}
+
+.agent-pulse-item span {
+  color: var(--muted);
+  font: 600 10px/1 var(--font-data);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.agent-pulse-item strong {
+  font: 600 13px/1 var(--font-data);
+  color: var(--text);
+  animation: tick-up 200ms ease 100ms both;
+}
+
+/* ── AGENT STEP STACK ───────────────────────────────────── */
+
+.agent-step-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.agent-step-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px 13px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: rgba(2, 6, 18, 0.75);
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.agent-step-card:hover {
+  border-color: rgba(40, 120, 220, 0.22);
+  background: rgba(0, 212, 255, 0.02);
+}
+
+.agent-step-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.agent-step-top span {
+  color: var(--muted);
+  font: 600 10px/1 var(--font-data);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.agent-step-copy {
+  color: var(--muted-strong);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ── AGENT HANDOFF & SUGGESTIONS ────────────────────────── */
+
+.agent-handoff-actions {
+  display: grid;
+  gap: 12px;
+}
+
+.agent-suggestion-list {
+  display: grid;
+  gap: 8px;
+}
+
+.agent-suggestion-button {
+  width: 100%;
+  text-align: left;
+  padding: 12px 13px 12px 15px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: rgba(2, 6, 18, 0.75);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease, transform 120ms ease;
+}
+
+.agent-suggestion-button::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 150ms ease;
+}
+
+.agent-suggestion-button:hover {
+  border-color: rgba(0, 212, 255, 0.22);
+  box-shadow: 0 0 14px rgba(0, 212, 255, 0.08);
+  background: rgba(0, 212, 255, 0.03);
+  transform: translateX(3px);
+}
+
+.agent-suggestion-button:hover::before {
+  transform: scaleY(1);
+}
+
+.agent-suggestion-button:active {
+  transform: translateX(2px) scale(0.99);
+}
+
+/* ── AGENT CHAT TRANSCRIPT ──────────────────────────────── */
+
+.agent-chat-transcript {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 212, 255, 0.16);
+  border-radius: var(--radius-lg);
+  background: rgba(1, 3, 10, 0.92);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fade-in 200ms ease;
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.5),
+    0 0 28px rgba(0, 212, 255, 0.06),
+    0 0 0 1px rgba(0, 212, 255, 0.04);
+}
+
+.agent-chat-sidecar {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(8, 18, 38, 0.85);
+  padding: 14px;
+}
+
+.agent-chat-message {
+  max-width: min(92%, 680px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  animation: fade-up 200ms ease both;
+  transition: border-color 150ms ease;
+}
+
+.agent-chat-message:hover {
+  border-color: rgba(40, 120, 220, 0.22);
+}
+
+.agent-chat-user {
+  justify-self: end;
+  background: rgba(0, 212, 255, 0.06);
+  border-color: rgba(0, 212, 255, 0.18);
+  border-left: 2px solid var(--accent);
+  box-shadow: inset -4px 0 20px rgba(0, 212, 255, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.agent-chat-assistant {
+  justify-self: start;
+  background: rgba(255, 183, 0, 0.04);
+  border-color: rgba(255, 183, 0, 0.12);
+  border-left: 2px solid var(--accent-2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.agent-chat-system {
+  justify-self: center;
+  width: 100%;
+  max-width: none;
+  background: rgba(8, 18, 38, 0.8);
+  border-left: 2px solid var(--muted);
+}
+
+.agent-chat-muted {
+  border-color: var(--line);
+}
+
+.agent-chat-warn {
+  border-color: rgba(255, 183, 0, 0.2);
+  border-left: 2px solid var(--hold);
+}
+
+.agent-chat-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font: 11px/1 var(--font-data);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.agent-chat-body {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* ── AGENT CHAT COMPOSER ────────────────────────────────── */
+
+.agent-chat-composer {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(0, 212, 255, 0.1);
+  border-radius: var(--radius-lg);
+  background: rgba(4, 10, 24, 0.8);
+  flex-shrink: 0;
+  margin-top: 12px;
+}
+
+.agent-chat-composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.agent-chat-textarea {
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(2, 6, 18, 0.85);
+  color: var(--text);
+  font: 14px/1.6 var(--font-ui);
+  resize: vertical;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.agent-chat-textarea:focus {
+  border-color: rgba(0, 212, 255, 0.32);
+  box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.06);
+}
+
+/* Label flush above composer inside flex dialogue stage */
+.agent-dialogue-stage > .field-label {
+  flex-shrink: 0;
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
