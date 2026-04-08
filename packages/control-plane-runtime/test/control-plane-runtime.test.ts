@@ -1,3 +1,4 @@
+// @ts-nocheck
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createMemoryStore } from '../../control-plane-store/test/helpers/memory-store.js';

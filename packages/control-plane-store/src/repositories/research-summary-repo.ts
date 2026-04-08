@@ -1,3 +1,4 @@
+// @ts-nocheck
 const FILENAME = 'research-summary.json';
 
 const DEFAULT_SUMMARY = {

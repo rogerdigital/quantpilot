@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createNotificationEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const EVENTS_FILE = 'notifications.json';

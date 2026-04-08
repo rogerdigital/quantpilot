@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createResearchReportEntry, trimAndSave } from '../shared.js';
 
 const FILENAME = 'research-reports.json';

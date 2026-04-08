@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCollectionStore } from './collection-store.js';

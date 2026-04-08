@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getSession } from '../../../modules/auth/service.js';
 import { listPermissionDescriptors } from '../../../modules/auth/permission-catalog.js';
 

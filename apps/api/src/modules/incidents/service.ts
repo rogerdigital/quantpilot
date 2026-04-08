@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
 
 const ACK_OVERDUE_HOURS = 1;

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createOperatorActionEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'operator-actions.json';

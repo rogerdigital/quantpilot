@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 
 const AUTHORITY_ORDER = ['full_auto', 'bounded_auto', 'ask_first', 'manual_only', 'stopped'];

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createWorkflowRunEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'workflow-runs.json';

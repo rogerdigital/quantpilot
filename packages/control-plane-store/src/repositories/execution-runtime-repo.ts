@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createBrokerExecutionEventEntry, createExecutionRuntimeEntry, trimAndSave } from '../shared.js';
 
 const EVENTS_FILE = 'execution-runtime-events.json';

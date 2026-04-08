@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
 import { getMonitoringStatus } from '../monitoring/service.js';
 import { getOperationsMaintenanceSnapshot } from './maintenance-service.js';

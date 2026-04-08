@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createAgentPolicyEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-policies.json';

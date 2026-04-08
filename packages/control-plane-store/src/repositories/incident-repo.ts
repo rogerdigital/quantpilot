@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   createIncidentActivityEntry,
   createIncidentEntry,

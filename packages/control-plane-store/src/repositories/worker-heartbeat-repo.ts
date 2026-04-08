@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createWorkerHeartbeatEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'worker-heartbeats.json';

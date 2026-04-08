@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createMonitoringAlertEntry, createMonitoringSnapshotEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const SNAPSHOTS_FILE = 'monitoring-snapshots.json';

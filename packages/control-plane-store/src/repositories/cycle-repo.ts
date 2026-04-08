@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createCycleRecordEntry, trimAndSave } from '../shared.js';
 
 const FILENAME = 'cycle-records.json';

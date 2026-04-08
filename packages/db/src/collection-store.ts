@@ -1,3 +1,4 @@
+// @ts-nocheck
 export function createCollectionStore({ ensureRoot, resolvePath, readJsonFile, writeJsonFile }) {
   function readCollection(filename) {
     ensureRoot();

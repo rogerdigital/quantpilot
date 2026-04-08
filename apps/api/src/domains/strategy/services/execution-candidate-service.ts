@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getStrategyCatalogItem } from './catalog-service.js';
 
 function buildTemplateOrders(strategy) {

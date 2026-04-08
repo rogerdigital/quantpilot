@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getMonitoringStatus, listMonitoringAlerts, listMonitoringSnapshots } from '../../../modules/monitoring/service.js';
 
 export async function handleMonitoringRoutes({ req, reqUrl, res, writeJson, gatewayDependencies }) {

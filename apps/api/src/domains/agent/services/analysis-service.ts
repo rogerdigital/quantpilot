@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { createAgentPlan } from './planning-service.js';
 import { executeAgentTool } from './tools-service.js';

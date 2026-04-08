@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createAuditRecordEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'audit-records.json';

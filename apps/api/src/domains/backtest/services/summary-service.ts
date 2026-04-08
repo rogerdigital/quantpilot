@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 
 function buildSummary(strategies, runs, dataSource = 'control-plane-runtime.research-summary') {

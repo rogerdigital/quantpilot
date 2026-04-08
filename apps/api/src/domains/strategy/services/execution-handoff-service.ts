@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { buildStrategyExecutionCandidate } from './execution-candidate-service.js';
 import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';

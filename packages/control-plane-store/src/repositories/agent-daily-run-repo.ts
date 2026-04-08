@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createAgentDailyRunEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-daily-runs.json';

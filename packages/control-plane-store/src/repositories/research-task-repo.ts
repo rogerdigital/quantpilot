@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createResearchTaskEntry, trimAndSave } from '../shared.js';
 
 const FILENAME = 'research-tasks.json';

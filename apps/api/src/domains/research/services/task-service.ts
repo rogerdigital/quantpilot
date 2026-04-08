@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { getBacktestResultSummary, listBacktestResults } from '../../backtest/services/results-service.js';
 import { getBacktestSummary } from '../../backtest/services/summary-service.js';

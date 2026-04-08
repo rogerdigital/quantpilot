@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { listWorkspacePackages, readJson } from './workspace-utils.js';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';

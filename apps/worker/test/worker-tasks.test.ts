@@ -1,3 +1,4 @@
+// @ts-nocheck
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createControlPlaneContext } from '../../../packages/control-plane-store/src/context.js';

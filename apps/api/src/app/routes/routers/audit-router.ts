@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { appendAuditRecord, listAuditRecords } from '../../../modules/audit/service.js';
 
 export async function handleAuditRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {

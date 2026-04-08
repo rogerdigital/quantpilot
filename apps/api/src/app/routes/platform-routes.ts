@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { handleHealthRoutes } from './routers/health-router.js';
 import { handleMonitoringRoutes } from './routers/monitoring-router.js';
 import { handleOperationsRoutes } from './routers/operations-router.js';

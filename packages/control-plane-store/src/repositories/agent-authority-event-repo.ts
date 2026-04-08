@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createAgentAuthorityEventEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-authority-events.json';

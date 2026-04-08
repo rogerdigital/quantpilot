@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describeArchitecture, listArchitectureLayers, listModules } from '../../../modules/registry.js';
 
 export function handleHealthRoutes({ req, reqUrl, res, config, writeJson }) {

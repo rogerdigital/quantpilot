@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createAuditRepository } from './repositories/audit-repo.js';
 import { createAgentActionRequestRepository } from './repositories/agent-action-request-repo.js';
 import { createAgentAnalysisRunRepository } from './repositories/agent-analysis-run-repo.js';

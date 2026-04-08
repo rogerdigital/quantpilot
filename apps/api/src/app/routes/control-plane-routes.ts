@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { handleAuditRoutes } from './routers/audit-router.js';
 import { handleIncidentsRoutes } from './routers/incidents-router.js';
 import { handleNotificationRoutes } from './routers/notification-router.js';

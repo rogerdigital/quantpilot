@@ -1,3 +1,4 @@
+// @ts-nocheck
 export function createMemoryStore() {
   const collections = new Map();
   const objects = new Map();

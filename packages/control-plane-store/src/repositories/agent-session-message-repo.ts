@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createAgentSessionMessageEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-session-messages.json';

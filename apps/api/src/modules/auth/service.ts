@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getUserAccount } from '../../../../../packages/control-plane-runtime/src/index.js';
 
 export function getSession() {

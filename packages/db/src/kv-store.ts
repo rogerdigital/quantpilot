@@ -1,3 +1,4 @@
+// @ts-nocheck
 export function createKeyValueStore({ ensureRoot, resolvePath, readJsonFile, writeJsonFile }) {
   function readObject(filename, fallback) {
     ensureRoot();

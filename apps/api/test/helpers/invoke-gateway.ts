@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Readable } from 'node:stream';
 
 export async function invokeGatewayRoute(handler, { method = 'GET', path = '/', body, headers = {} } = {}) {

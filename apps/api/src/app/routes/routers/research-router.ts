@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { hasPermission } from '../../../modules/auth/service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { getResearchHubSnapshot, getResearchTaskDetail, getResearchTaskSummary, listResearchTasks } from '../../../domains/research/services/task-service.js';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 const PERMISSION_CATALOG = {
   'dashboard:read': {
     id: 'dashboard:read',

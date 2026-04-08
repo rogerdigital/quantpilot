@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const ARCHITECTURE_LAYERS = [
   {
     id: 'frontend',

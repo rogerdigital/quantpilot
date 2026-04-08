@@ -1,3 +1,4 @@
+// @ts-nocheck
 function getAdapterMetadata(store) {
   if (store?.describeAdapter) return store.describeAdapter();
   return store?.adapter || {

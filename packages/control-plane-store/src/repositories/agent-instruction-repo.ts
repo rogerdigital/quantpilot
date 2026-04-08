@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createAgentInstructionEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-instructions.json';

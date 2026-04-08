@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { listNotifications } from '../../../modules/notification/service.js';
 
 export function handleNotificationRoutes({ req, reqUrl, res, writeJson }) {

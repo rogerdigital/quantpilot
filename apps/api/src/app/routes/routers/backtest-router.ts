@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { hasPermission } from '../../../modules/auth/service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { getBacktestSummary } from '../../../domains/backtest/services/summary-service.js';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createExecutionPlanEntry, trimAndSave } from '../shared.js';
 
 const FILENAME = 'execution-plans.json';

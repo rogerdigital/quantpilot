@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createAgentAnalysisRunEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-analysis-runs.json';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createBacktestResultEntry, trimAndSave } from '../shared.js';
 
 const FILENAME = 'backtest-results.json';

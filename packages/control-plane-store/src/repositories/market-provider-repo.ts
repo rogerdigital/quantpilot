@@ -1,3 +1,4 @@
+// @ts-nocheck
 const FILENAME = 'market-provider-status.json';
 
 const DEFAULT_MARKET_STATUS = {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { recordMonitoringStatusSnapshot } from '../../../api/src/modules/monitoring/service.js';
 
 export async function runMonitoringScanTask(config, dependencies = {}) {

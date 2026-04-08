@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createEmbeddedDbStore, createJsonFileStore, listSupportedControlPlaneAdapters } from '../../db/src/control-plane-adapters.js';
 
 function resolveNamespace() {

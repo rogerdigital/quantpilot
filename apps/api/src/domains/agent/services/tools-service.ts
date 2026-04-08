@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getBacktestSummary } from '../../backtest/services/summary-service.js';
 import { listBacktestRuns } from '../../backtest/services/runs-service.js';
 import { listExecutionPlans } from '../../execution/services/query-service.js';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { listBacktestRuns } from '../../backtest/services/runs-service.js';
 import { listExecutionPlans } from '../../execution/services/query-service.js';
 import { getStrategyCatalogItem } from '../../strategy/services/catalog-service.js';

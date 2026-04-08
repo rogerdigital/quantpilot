@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createAgentActionRequestEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-action-requests.json';

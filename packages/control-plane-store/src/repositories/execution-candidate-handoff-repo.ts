@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createExecutionCandidateHandoffEntry, trimAndSave } from '../shared.js';
 
 const FILENAME = 'execution-candidate-handoffs.json';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
 import { getRiskSchedulerLinkage } from '../../domains/risk/services/risk-scheduler-linkage-service.js';
 

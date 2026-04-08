@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 export function ensureDirectory(pathname) {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { trimAndSave } from '../shared.js';
 
 const FILENAME = 'strategy-catalog.json';

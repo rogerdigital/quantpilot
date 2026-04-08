@@ -4,8 +4,10 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": false,
+    "noImplicitAny": true,
     "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true
-  }
+  },
+  "exclude": ["apps/web", "node_modules"]
 }

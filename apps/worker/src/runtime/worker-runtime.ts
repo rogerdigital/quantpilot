@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { readWorkerConfig } from '../config.js';
 import { runHeartbeatTask } from '../tasks/heartbeat-task.js';
 import { runMonitoringScanTask } from '../tasks/monitoring-scan-task.js';

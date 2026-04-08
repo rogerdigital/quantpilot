@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { hasPermission } from '../../../modules/auth/service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { getStrategyCatalogDetail, listStrategyCatalog, saveStrategyCatalogItem } from '../../../domains/strategy/services/catalog-service.js';

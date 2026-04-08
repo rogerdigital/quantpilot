@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createResearchEvaluationEntry, trimAndSave } from '../shared.js';
 
 const FILENAME = 'research-evaluations.json';

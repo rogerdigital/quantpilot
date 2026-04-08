@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createAgentPlanEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-plans.json';

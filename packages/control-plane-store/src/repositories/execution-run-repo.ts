@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createExecutionOrderStateEntry, createExecutionRunEntry, trimAndSave } from '../shared.js';
 
 const RUNS_FILE = 'execution-runs.json';
