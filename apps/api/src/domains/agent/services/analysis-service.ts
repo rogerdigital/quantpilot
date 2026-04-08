@@ -1,7 +1,7 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { createAgentPlan } from './planning-service.mjs';
-import { executeAgentTool } from './tools-service.mjs';
-import { listActiveAgentInstructions } from './instruction-service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { createAgentPlan } from './planning-service.js';
+import { executeAgentTool } from './tools-service.js';
+import { listActiveAgentInstructions } from './instruction-service.js';
 
 function summarizeToolData(tool, data = {}) {
   switch (tool) {

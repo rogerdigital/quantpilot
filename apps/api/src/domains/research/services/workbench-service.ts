@@ -1,7 +1,7 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { listStrategyCatalog } from '../../strategy/services/catalog-service.mjs';
-import { createBacktestRun } from '../../backtest/services/runs-service.mjs';
-import { evaluateBacktestRun, promoteStrategyFromEvaluation } from './evaluation-service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { listStrategyCatalog } from '../../strategy/services/catalog-service.js';
+import { createBacktestRun } from '../../backtest/services/runs-service.js';
+import { evaluateBacktestRun, promoteStrategyFromEvaluation } from './evaluation-service.js';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);

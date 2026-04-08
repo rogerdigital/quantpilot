@@ -1,5 +1,5 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { buildExecutionExceptionPolicy, listLinkedExecutionIncidents } from './exception-policy-service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { buildExecutionExceptionPolicy, listLinkedExecutionIncidents } from './exception-policy-service.js';
 
 function groupBySymbol(items = [], qtySelector = () => 0) {
   return items.reduce((acc, item) => {

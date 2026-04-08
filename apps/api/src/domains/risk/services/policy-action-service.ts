@@ -1,5 +1,5 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { getRiskWorkbench } from './workbench-service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { getRiskWorkbench } from './workbench-service.js';
 
 const RISK_POLICY_ACTION_KEYS = new Set([
   'review-risk-off',

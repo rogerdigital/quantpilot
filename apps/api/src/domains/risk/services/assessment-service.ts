@@ -1,7 +1,7 @@
-import { listBacktestRuns } from '../../backtest/services/runs-service.mjs';
-import { listExecutionPlans } from '../../execution/services/query-service.mjs';
-import { getStrategyCatalogItem } from '../../strategy/services/catalog-service.mjs';
-import { listRiskEvents } from './feed-service.mjs';
+import { listBacktestRuns } from '../../backtest/services/runs-service.js';
+import { listExecutionPlans } from '../../execution/services/query-service.js';
+import { getStrategyCatalogItem } from '../../strategy/services/catalog-service.js';
+import { listRiskEvents } from './feed-service.js';
 
 export function assessExecutionCandidate(candidate) {
   const needsReview = candidate.mode === 'live'

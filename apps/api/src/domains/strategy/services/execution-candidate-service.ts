@@ -1,4 +1,4 @@
-import { getStrategyCatalogItem } from './catalog-service.mjs';
+import { getStrategyCatalogItem } from './catalog-service.js';
 
 function buildTemplateOrders(strategy) {
   if (strategy.family === 'trend') {

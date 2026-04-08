@@ -1,5 +1,5 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { getAgentOperatorTimeline, getAgentSessionLinkedArtifacts } from './workbench-service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { getAgentOperatorTimeline, getAgentSessionLinkedArtifacts } from './workbench-service.js';
 
 export function listAgentSessionsSnapshot(limit = 20) {
   const sessions = controlPlaneRuntime.listAgentSessions(limit);

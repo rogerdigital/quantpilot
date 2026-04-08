@@ -1,12 +1,12 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { getBacktestResultSummary, listBacktestResults } from '../../backtest/services/results-service.mjs';
-import { getBacktestSummary } from '../../backtest/services/summary-service.mjs';
-import { listBacktestRuns } from '../../backtest/services/runs-service.mjs';
-import { listStrategyCatalog } from '../../strategy/services/catalog-service.mjs';
-import { getResearchEvaluationSummary, listResearchEvaluations } from './evaluation-service.mjs';
-import { listExecutionCandidateHandoffs } from '../../strategy/services/execution-handoff-service.mjs';
-import { getResearchReportSummary, listResearchReports } from './report-service.mjs';
-import { getResearchGovernanceActionSummary, getResearchWorkbenchSnapshot, listResearchGovernanceActions } from './workbench-service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { getBacktestResultSummary, listBacktestResults } from '../../backtest/services/results-service.js';
+import { getBacktestSummary } from '../../backtest/services/summary-service.js';
+import { listBacktestRuns } from '../../backtest/services/runs-service.js';
+import { listStrategyCatalog } from '../../strategy/services/catalog-service.js';
+import { getResearchEvaluationSummary, listResearchEvaluations } from './evaluation-service.js';
+import { listExecutionCandidateHandoffs } from '../../strategy/services/execution-handoff-service.js';
+import { getResearchReportSummary, listResearchReports } from './report-service.js';
+import { getResearchGovernanceActionSummary, getResearchWorkbenchSnapshot, listResearchGovernanceActions } from './workbench-service.js';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);

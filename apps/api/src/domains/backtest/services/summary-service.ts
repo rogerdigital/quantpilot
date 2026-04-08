@@ -1,4 +1,4 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 
 function buildSummary(strategies, runs, dataSource = 'control-plane-runtime.research-summary') {
   const completedRuns = runs.filter((run) => run.status === 'completed');

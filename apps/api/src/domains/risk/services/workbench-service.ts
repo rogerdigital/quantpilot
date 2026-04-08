@@ -1,6 +1,6 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { isSchedulerAttentionStatus } from '../../../modules/scheduler/service.mjs';
-import { getRiskSchedulerLinkage } from './risk-scheduler-linkage-service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { isSchedulerAttentionStatus } from '../../../modules/scheduler/service.js';
+import { getRiskSchedulerLinkage } from './risk-scheduler-linkage-service.js';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);

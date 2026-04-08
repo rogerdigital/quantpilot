@@ -1,5 +1,5 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { isSchedulerAttentionStatus } from '../../../modules/scheduler/service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { isSchedulerAttentionStatus } from '../../../modules/scheduler/service.js';
 
 function parseTimestamp(value) {
   const parsed = Date.parse(value || '');

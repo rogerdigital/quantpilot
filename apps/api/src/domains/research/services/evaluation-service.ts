@@ -1,9 +1,9 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { refreshBacktestSummary } from '../../backtest/services/summary-service.mjs';
-import { buildStrategyExecutionCandidate } from '../../strategy/services/execution-candidate-service.mjs';
-import { getStrategyCatalogDetail, getStrategyCatalogItem } from '../../strategy/services/catalog-service.mjs';
-import { assessExecutionCandidate } from '../../risk/services/assessment-service.mjs';
-import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { refreshBacktestSummary } from '../../backtest/services/summary-service.js';
+import { buildStrategyExecutionCandidate } from '../../strategy/services/execution-candidate-service.js';
+import { getStrategyCatalogDetail, getStrategyCatalogItem } from '../../strategy/services/catalog-service.js';
+import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';
+import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.js';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);

@@ -1,7 +1,7 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.mjs';
-import { getStrategyCatalogItem } from '../../strategy/services/catalog-service.mjs';
-import { refreshBacktestSummary } from './summary-service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.js';
+import { getStrategyCatalogItem } from '../../strategy/services/catalog-service.js';
+import { refreshBacktestSummary } from './summary-service.js';
 
 function buildBacktestResultFromRun(run, patch = {}) {
   if (!run || !run.completedAt) return null;

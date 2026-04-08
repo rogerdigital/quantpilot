@@ -1,7 +1,7 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { buildStrategyExecutionCandidate } from './execution-candidate-service.mjs';
-import { assessExecutionCandidate } from '../../risk/services/assessment-service.mjs';
-import { refreshBacktestSummary } from '../../backtest/services/summary-service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { buildStrategyExecutionCandidate } from './execution-candidate-service.js';
+import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';
+import { refreshBacktestSummary } from '../../backtest/services/summary-service.js';
 
 function buildPromotionReadiness(strategy, latestResult) {
   if (!strategy) return null;

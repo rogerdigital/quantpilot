@@ -1,4 +1,4 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 
 export function queueAgentDailyRun(payload = {}) {
   return controlPlaneRuntime.queueAgentDailyRun(payload);

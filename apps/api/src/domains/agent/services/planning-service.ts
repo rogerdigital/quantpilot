@@ -1,5 +1,5 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { parseAgentIntent } from './intent-service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { parseAgentIntent } from './intent-service.js';
 
 function buildPlanSteps(intent = {}) {
   switch (intent.kind) {

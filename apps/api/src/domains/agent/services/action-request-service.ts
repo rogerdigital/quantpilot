@@ -1,9 +1,9 @@
-import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.mjs';
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { listBacktestRuns } from '../../backtest/services/runs-service.mjs';
-import { listExecutionPlans } from '../../execution/services/query-service.mjs';
-import { listRiskEvents } from '../../risk/services/feed-service.mjs';
-import { listStrategyCatalog } from '../../strategy/services/catalog-service.mjs';
+import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.js';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { listBacktestRuns } from '../../backtest/services/runs-service.js';
+import { listExecutionPlans } from '../../execution/services/query-service.js';
+import { listRiskEvents } from '../../risk/services/feed-service.js';
+import { listStrategyCatalog } from '../../strategy/services/catalog-service.js';
 
 const ALLOWED_AGENT_REQUEST_TYPES = new Set([
   'prepare_execution_plan',

@@ -1,8 +1,8 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { buildStrategyExecutionCandidate } from './execution-candidate-service.mjs';
-import { assessExecutionCandidate } from '../../risk/services/assessment-service.mjs';
-import { getStrategyCatalogDetail } from './catalog-service.mjs';
-import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.mjs';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { buildStrategyExecutionCandidate } from './execution-candidate-service.js';
+import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';
+import { getStrategyCatalogDetail } from './catalog-service.js';
+import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.js';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);
