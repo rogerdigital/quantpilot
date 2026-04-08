@@ -2,7 +2,7 @@ import {
   advanceLocalState,
   applyControlPlaneResolution,
   buildCyclePayload,
-} from '../../trading-engine/src/runtime.mjs';
+} from '../../trading-engine/src/runtime.js';
 
 function startWorkflow(context, payload) {
   if (typeof context.startWorkflow === 'function') {

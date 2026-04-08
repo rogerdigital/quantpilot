@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createControlPlaneContext } from '../../control-plane-store/src/context.mjs';
-import { createMemoryStore } from '../../control-plane-store/test/helpers/memory-store.mjs';
-import { createControlPlaneRuntime } from '../../control-plane-runtime/src/index.mjs';
-import { createTradingState } from '../../../apps/api/test/helpers/create-trading-state.mjs';
-import { assessAgentActionRequestRisk, assessExecutionCandidate } from '../../../apps/api/src/modules/risk/service.mjs';
-import { buildStrategyExecutionCandidate } from '../../../apps/api/src/modules/strategy/service.mjs';
-import { executeCycleWorkflow, executeQueuedWorkflow, executeStateWorkflow } from '../src/index.mjs';
+import { createControlPlaneContext } from '../../control-plane-store/src/context.js';
+import { createMemoryStore } from '../../control-plane-store/test/helpers/memory-store.js';
+import { createControlPlaneRuntime } from '../../control-plane-runtime/src/index.js';
+import { createTradingState } from '../../../apps/api/test/helpers/create-trading-state.js';
+import { assessAgentActionRequestRisk, assessExecutionCandidate } from '../../../apps/api/src/modules/risk/service.js';
+import { buildStrategyExecutionCandidate } from '../../../apps/api/src/modules/strategy/service.js';
+import { executeCycleWorkflow, executeQueuedWorkflow, executeStateWorkflow } from '../src/index.js';
 
 function refreshSummaryForRuntime(runtime) {
   const strategies = runtime.listStrategyCatalog();
