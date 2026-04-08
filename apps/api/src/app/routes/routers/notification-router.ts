@@ -1,4 +1,4 @@
-import { listNotifications } from '../../../modules/notification/service.mjs';
+import { listNotifications } from '../../../modules/notification/service.js';
 
 export function handleNotificationRoutes({ req, reqUrl, res, writeJson }) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/notification/events') {

@@ -1,9 +1,9 @@
-import { hasPermission } from '../../../modules/auth/service.mjs';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.mjs';
-import { getBacktestSummary } from '../../../domains/backtest/services/summary-service.mjs';
-import { getBacktestResultDetail, getBacktestResultSummary, listBacktestResults } from '../../../domains/backtest/services/results-service.mjs';
-import { createBacktestRun, getBacktestRunDetail, listBacktestRuns, reviewBacktestRun } from '../../../domains/backtest/services/runs-service.mjs';
-import { evaluateBacktestRun } from '../../../domains/research/services/evaluation-service.mjs';
+import { hasPermission } from '../../../modules/auth/service.js';
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
+import { getBacktestSummary } from '../../../domains/backtest/services/summary-service.js';
+import { getBacktestResultDetail, getBacktestResultSummary, listBacktestResults } from '../../../domains/backtest/services/results-service.js';
+import { createBacktestRun, getBacktestRunDetail, listBacktestRuns, reviewBacktestRun } from '../../../domains/backtest/services/runs-service.js';
+import { evaluateBacktestRun } from '../../../domains/research/services/evaluation-service.js';
 
 export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);

@@ -1,6 +1,6 @@
-import { hasPermission } from '../../../modules/auth/service.mjs';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.mjs';
-import { getSchedulerWorkbench, listSchedulerTicks, runSchedulerOrchestrationAction } from '../../../modules/scheduler/service.mjs';
+import { hasPermission } from '../../../modules/auth/service.js';
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
+import { getSchedulerWorkbench, listSchedulerTicks, runSchedulerOrchestrationAction } from '../../../modules/scheduler/service.js';
 
 export async function handleSchedulerRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);

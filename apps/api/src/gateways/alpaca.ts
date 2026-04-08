@@ -1,8 +1,8 @@
 import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { handleControlPlaneRoutes } from '../app/routes/control-plane-routes.mjs';
-import { handlePlatformRoutes } from '../app/routes/platform-routes.mjs';
+import { handleControlPlaneRoutes } from '../app/routes/control-plane-routes.js';
+import { handlePlatformRoutes } from '../app/routes/platform-routes.js';
 
 function loadEnvFile(pathname) {
   if (!existsSync(pathname)) return;

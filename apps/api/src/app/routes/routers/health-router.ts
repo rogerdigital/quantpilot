@@ -1,4 +1,4 @@
-import { describeArchitecture, listArchitectureLayers, listModules } from '../../../modules/registry.mjs';
+import { describeArchitecture, listArchitectureLayers, listModules } from '../../../modules/registry.js';
 
 export function handleHealthRoutes({ req, reqUrl, res, config, writeJson }) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/health') {

@@ -1,5 +1,5 @@
-import { hasPermission } from '../../../modules/auth/service.mjs';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.mjs';
+import { hasPermission } from '../../../modules/auth/service.js';
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import {
   getExecutionPlanDetail,
   getExecutionWorkbench,
@@ -9,7 +9,7 @@ import {
   listExecutionLedger,
   listExecutionPlans,
   listExecutionRuntimeEvents,
-} from '../../../domains/execution/services/query-service.mjs';
+} from '../../../domains/execution/services/query-service.js';
 import {
   approveExecutionPlan,
   bulkOperateExecutionPlans,
@@ -20,7 +20,7 @@ import {
   recoverExecutionPlan,
   settleExecutionPlan,
   syncExecutionPlan,
-} from '../../../domains/execution/services/lifecycle-service.mjs';
+} from '../../../domains/execution/services/lifecycle-service.js';
 
 export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);

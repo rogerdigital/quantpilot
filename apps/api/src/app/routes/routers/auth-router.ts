@@ -1,5 +1,5 @@
-import { getSession } from '../../../modules/auth/service.mjs';
-import { listPermissionDescriptors } from '../../../modules/auth/permission-catalog.mjs';
+import { getSession } from '../../../modules/auth/service.js';
+import { listPermissionDescriptors } from '../../../modules/auth/permission-catalog.js';
 
 export function handleAuthRoutes({ req, reqUrl, res, writeJson }) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/auth/session') {

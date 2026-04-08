@@ -1,9 +1,9 @@
-import { hasPermission } from '../../../modules/auth/service.mjs';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.mjs';
-import { getStrategyCatalogDetail, listStrategyCatalog, saveStrategyCatalogItem } from '../../../domains/strategy/services/catalog-service.mjs';
-import { createExecutionCandidateHandoff, listExecutionCandidateHandoffs, queueExecutionCandidateHandoff } from '../../../domains/strategy/services/execution-handoff-service.mjs';
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.mjs';
-import { promoteStrategyFromEvaluation } from '../../../domains/research/services/evaluation-service.mjs';
+import { hasPermission } from '../../../modules/auth/service.js';
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
+import { getStrategyCatalogDetail, listStrategyCatalog, saveStrategyCatalogItem } from '../../../domains/strategy/services/catalog-service.js';
+import { createExecutionCandidateHandoff, listExecutionCandidateHandoffs, queueExecutionCandidateHandoff } from '../../../domains/strategy/services/execution-handoff-service.js';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { promoteStrategyFromEvaluation } from '../../../domains/research/services/evaluation-service.js';
 
 export async function handleStrategyRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);

@@ -1,9 +1,9 @@
-import { hasPermission } from '../../../modules/auth/service.mjs';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.mjs';
-import { getResearchHubSnapshot, getResearchTaskDetail, getResearchTaskSummary, listResearchTasks } from '../../../domains/research/services/task-service.mjs';
-import { getResearchEvaluationSummary, listResearchEvaluations } from '../../../domains/research/services/evaluation-service.mjs';
-import { getResearchReportSummary, listResearchReports } from '../../../domains/research/services/report-service.mjs';
-import { getResearchWorkbenchSnapshot, listResearchGovernanceActions, runResearchGovernanceAction } from '../../../domains/research/services/workbench-service.mjs';
+import { hasPermission } from '../../../modules/auth/service.js';
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
+import { getResearchHubSnapshot, getResearchTaskDetail, getResearchTaskSummary, listResearchTasks } from '../../../domains/research/services/task-service.js';
+import { getResearchEvaluationSummary, listResearchEvaluations } from '../../../domains/research/services/evaluation-service.js';
+import { getResearchReportSummary, listResearchReports } from '../../../domains/research/services/report-service.js';
+import { getResearchWorkbenchSnapshot, listResearchGovernanceActions, runResearchGovernanceAction } from '../../../domains/research/services/workbench-service.js';
 
 export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);

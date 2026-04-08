@@ -1,5 +1,5 @@
-import { hasPermission } from '../../../modules/auth/service.mjs';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.mjs';
+import { hasPermission } from '../../../modules/auth/service.js';
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import {
   getBrokerBindingsSnapshot,
   getBrokerBindingRuntimeSnapshot,
@@ -18,7 +18,7 @@ import {
   selectCurrentWorkspace,
   setPrimaryBrokerBinding,
   syncBrokerBindingRuntime,
-} from '../../../modules/user-account/service.mjs';
+} from '../../../modules/user-account/service.js';
 
 export async function handleUserAccountRoutes({ req, reqUrl, res, readJsonBody, writeJson, gatewayDependencies }) {
   const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);

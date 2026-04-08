@@ -1,16 +1,16 @@
-import { hasPermission } from '../../../modules/auth/service.mjs';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.mjs';
-import { runCycle } from '../../../control-plane/task-orchestrator/cycle-runner.mjs';
-import { runStateCycle } from '../../../control-plane/task-orchestrator/state-runner.mjs';
+import { hasPermission } from '../../../modules/auth/service.js';
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
+import { runCycle } from '../../../control-plane/task-orchestrator/cycle-runner.js';
+import { runStateCycle } from '../../../control-plane/task-orchestrator/state-runner.js';
 import {
   cancelWorkflow,
   getWorkflow,
   listWorkflows,
   queueWorkflow,
   resumeWorkflow,
-} from '../../../control-plane/task-orchestrator/services/workflow-service.mjs';
-import { listActions, recordAction } from '../../../control-plane/task-orchestrator/services/action-service.mjs';
-import { listCycles, recordCycleRun } from '../../../control-plane/task-orchestrator/services/cycle-service.mjs';
+} from '../../../control-plane/task-orchestrator/services/workflow-service.js';
+import { listActions, recordAction } from '../../../control-plane/task-orchestrator/services/action-service.js';
+import { listCycles, recordCycleRun } from '../../../control-plane/task-orchestrator/services/cycle-service.js';
 
 export async function handleTaskOrchestratorRoutes({ req, reqUrl, res, readJsonBody, writeJson, gatewayDependencies }) {
   const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);

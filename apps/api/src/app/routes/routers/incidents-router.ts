@@ -1,4 +1,4 @@
-import { appendIncidentNote, appendIncidentTask, bulkUpdateIncidents, createIncident, getIncidentDetail, getIncidentSummary, listIncidents, updateIncident, updateIncidentTask } from '../../../modules/incidents/service.mjs';
+import { appendIncidentNote, appendIncidentTask, bulkUpdateIncidents, createIncident, getIncidentDetail, getIncidentSummary, listIncidents, updateIncident, updateIncidentTask } from '../../../modules/incidents/service.js';
 
 export async function handleIncidentsRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/incidents') {

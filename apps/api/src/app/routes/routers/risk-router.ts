@@ -1,8 +1,8 @@
-import { hasPermission } from '../../../modules/auth/service.mjs';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.mjs';
-import { getRiskEvent, listRiskEvents } from '../../../domains/risk/services/feed-service.mjs';
-import { runRiskPolicyAction } from '../../../domains/risk/services/policy-action-service.mjs';
-import { getRiskWorkbench } from '../../../domains/risk/services/workbench-service.mjs';
+import { hasPermission } from '../../../modules/auth/service.js';
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
+import { getRiskEvent, listRiskEvents } from '../../../domains/risk/services/feed-service.js';
+import { runRiskPolicyAction } from '../../../domains/risk/services/policy-action-service.js';
+import { getRiskWorkbench } from '../../../domains/risk/services/workbench-service.js';
 
 export async function handleRiskRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);

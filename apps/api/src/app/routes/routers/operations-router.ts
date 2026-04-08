@@ -1,12 +1,12 @@
-import { hasPermission } from '../../../modules/auth/service.mjs';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.mjs';
+import { hasPermission } from '../../../modules/auth/service.js';
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import {
   createOperationsMaintenanceBackup,
   getOperationsMaintenanceSnapshot,
   releaseWorkflowMaintenanceBacklog,
   restoreOperationsMaintenanceBackup,
-} from '../../../modules/operations/maintenance-service.mjs';
-import { getOperationsWorkbench } from '../../../modules/operations/service.mjs';
+} from '../../../modules/operations/maintenance-service.js';
+import { getOperationsWorkbench } from '../../../modules/operations/service.js';
 
 export async function handleOperationsRoutes({ req, reqUrl, res, readJsonBody, writeJson, gatewayDependencies }) {
   const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);

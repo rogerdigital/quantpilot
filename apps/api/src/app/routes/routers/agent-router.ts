@@ -1,21 +1,21 @@
-import { hasPermission } from '../../../modules/auth/service.mjs';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.mjs';
+import { hasPermission } from '../../../modules/auth/service.js';
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import {
   approveAgentActionRequest,
   createSessionActionRequest,
   listAgentActionRequests,
   queueAgentActionRequest,
   rejectAgentActionRequest,
-} from '../../../domains/agent/services/action-request-service.mjs';
-import { runAgentAnalysis } from '../../../domains/agent/services/analysis-service.mjs';
-import { createAgentInstruction } from '../../../domains/agent/services/instruction-service.mjs';
-import { parseAgentIntent } from '../../../domains/agent/services/intent-service.mjs';
-import { createAgentPlan } from '../../../domains/agent/services/planning-service.mjs';
-import { resolveAgentAuthority, saveAgentPolicy } from '../../../domains/agent/services/policy-service.mjs';
-import { getAgentSessionDetail, listAgentSessionsSnapshot } from '../../../domains/agent/services/session-service.mjs';
-import { getAgentOperatorTimeline, getAgentWorkbench } from '../../../domains/agent/services/workbench-service.mjs';
-import { listAgentTools, executeAgentTool } from '../../../domains/agent/services/tools-service.mjs';
-import { queueAgentDailyRun, listAgentDailyRuns } from '../../../domains/agent/services/runtime-service.mjs';
+} from '../../../domains/agent/services/action-request-service.js';
+import { runAgentAnalysis } from '../../../domains/agent/services/analysis-service.js';
+import { createAgentInstruction } from '../../../domains/agent/services/instruction-service.js';
+import { parseAgentIntent } from '../../../domains/agent/services/intent-service.js';
+import { createAgentPlan } from '../../../domains/agent/services/planning-service.js';
+import { resolveAgentAuthority, saveAgentPolicy } from '../../../domains/agent/services/policy-service.js';
+import { getAgentSessionDetail, listAgentSessionsSnapshot } from '../../../domains/agent/services/session-service.js';
+import { getAgentOperatorTimeline, getAgentWorkbench } from '../../../domains/agent/services/workbench-service.js';
+import { listAgentTools, executeAgentTool } from '../../../domains/agent/services/tools-service.js';
+import { queueAgentDailyRun, listAgentDailyRuns } from '../../../domains/agent/services/runtime-service.js';
 
 export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);

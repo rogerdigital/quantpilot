@@ -1,4 +1,4 @@
-import { appendAuditRecord, listAuditRecords } from '../../../modules/audit/service.mjs';
+import { appendAuditRecord, listAuditRecords } from '../../../modules/audit/service.js';
 
 export async function handleAuditRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/audit/records') {

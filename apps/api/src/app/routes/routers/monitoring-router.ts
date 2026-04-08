@@ -1,4 +1,4 @@
-import { getMonitoringStatus, listMonitoringAlerts, listMonitoringSnapshots } from '../../../modules/monitoring/service.mjs';
+import { getMonitoringStatus, listMonitoringAlerts, listMonitoringSnapshots } from '../../../modules/monitoring/service.js';
 
 export async function handleMonitoringRoutes({ req, reqUrl, res, writeJson, gatewayDependencies }) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/monitoring/status') {
