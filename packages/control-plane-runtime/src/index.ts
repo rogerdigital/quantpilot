@@ -1,4 +1,4 @@
-import { controlPlaneContext } from '../../control-plane-store/src/context.mjs';
+import { controlPlaneContext } from '../../control-plane-store/src/context.js';
 
 export function createControlPlaneRuntime(context = controlPlaneContext) {
   function getCurrentScope() {
@@ -1322,8 +1322,8 @@ export const listWorkflowRuns = (...args) => controlPlaneRuntime.listWorkflowRun
 export const getWorkflowRun = (...args) => controlPlaneRuntime.getWorkflowRun(...args);
 
 // Domain service re-exports for worker decoupling (no apps/api cross-imports needed)
-export { recordExecutionPlan } from '../../../apps/api/src/domains/execution/services/command-service.mjs';
-export { refreshBacktestSummary } from '../../../apps/api/src/domains/backtest/services/summary-service.mjs';
-export { assessAgentActionRequestRisk, assessExecutionCandidate } from '../../../apps/api/src/domains/risk/services/assessment-service.mjs';
-export { buildStrategyExecutionCandidate } from '../../../apps/api/src/domains/strategy/services/execution-candidate-service.mjs';
-export { recordAgentActionRequest } from '../../../apps/api/src/domains/agent/services/action-request-service.mjs';
+export { recordExecutionPlan } from '../../../apps/api/src/domains/execution/services/command-service.js';
+export { refreshBacktestSummary } from '../../../apps/api/src/domains/backtest/services/summary-service.js';
+export { assessAgentActionRequestRisk, assessExecutionCandidate } from '../../../apps/api/src/domains/risk/services/assessment-service.js';
+export { buildStrategyExecutionCandidate } from '../../../apps/api/src/domains/strategy/services/execution-candidate-service.js';
+export { recordAgentActionRequest } from '../../../apps/api/src/domains/agent/services/action-request-service.js';

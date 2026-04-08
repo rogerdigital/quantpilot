@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createMemoryStore } from '../../control-plane-store/test/helpers/memory-store.mjs';
-import { createControlPlaneContext } from '../../control-plane-store/src/context.mjs';
-import { createControlPlaneRuntime } from '../src/index.mjs';
+import { createMemoryStore } from '../../control-plane-store/test/helpers/memory-store.js';
+import { createControlPlaneContext } from '../../control-plane-store/src/context.js';
+import { createControlPlaneRuntime } from '../src/index.js';
 
 test('control plane runtime delegates notification and audit operations', () => {
   const runtime = createControlPlaneRuntime(createControlPlaneContext(createMemoryStore()));
