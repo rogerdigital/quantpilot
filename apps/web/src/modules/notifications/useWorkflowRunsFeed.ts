@@ -1,6 +1,6 @@
+import type { WorkflowRunRecord } from '@shared-types/trading.ts';
 import { useEffect, useState } from 'react';
 import { fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
-import type { WorkflowRunRecord } from '@shared-types/trading.ts';
 
 type WorkflowRunsFeedOptions = {
   refreshKey?: number;
@@ -10,10 +10,7 @@ type WorkflowRunsFeedOptions = {
 export function useWorkflowRunsFeed(options: WorkflowRunsFeedOptions = {}) {
   const [items, setItems] = useState<WorkflowRunRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const {
-    refreshKey = 0,
-    status = '',
-  } = options;
+  const { refreshKey = 0, status = '' } = options;
 
   useEffect(() => {
     let mounted = true;
@@ -21,8 +18,9 @@ export function useWorkflowRunsFeed(options: WorkflowRunsFeedOptions = {}) {
     fetchTaskWorkflows()
       .then((payload) => {
         if (!mounted) return;
-        const next = (Array.isArray(payload?.workflows) ? payload.workflows : [])
-          .filter((item) => !status || item.status === status);
+        const next = (Array.isArray(payload?.workflows) ? payload.workflows : []).filter(
+          (item) => !status || item.status === status
+        );
         setItems(next);
       })
       .catch(() => {

@@ -99,7 +99,11 @@ function main() {
   requirePositiveInteger(errors, values, 'GATEWAY_PORT');
   requirePositiveInteger(errors, values, 'VITE_REFRESH_MS');
   requireAllowed(errors, values, 'BROKER_ADAPTER', ['alpaca', 'custom-http']);
-  requireAllowed(errors, values, 'VITE_MARKET_DATA_PROVIDER', ['simulated', 'custom-http', 'alpaca']);
+  requireAllowed(errors, values, 'VITE_MARKET_DATA_PROVIDER', [
+    'simulated',
+    'custom-http',
+    'alpaca',
+  ]);
   requireAllowed(errors, values, 'VITE_BROKER_PROVIDER', ['simulated', 'custom-http', 'alpaca']);
   requireBooleanString(errors, values, 'ALPACA_USE_PAPER');
   requirePathPrefix(errors, values, 'VITE_ALPACA_PROXY_BASE');
@@ -110,7 +114,9 @@ function main() {
 
   if (values.VITE_MARKET_DATA_PROVIDER === 'custom-http' && !values.VITE_MARKET_DATA_HTTP_URL) {
     const target = templateMode ? warnings : errors;
-    target.push('VITE_MARKET_DATA_HTTP_URL should be set when VITE_MARKET_DATA_PROVIDER=custom-http');
+    target.push(
+      'VITE_MARKET_DATA_HTTP_URL should be set when VITE_MARKET_DATA_PROVIDER=custom-http'
+    );
   }
 
   if (values.VITE_BROKER_PROVIDER === 'custom-http' && !values.VITE_BROKER_HTTP_URL) {
@@ -119,13 +125,17 @@ function main() {
   }
 
   if (values.VITE_BROKER_PROVIDER === 'alpaca' && values.BROKER_ADAPTER === 'custom-http') {
-    warnings.push('VITE_BROKER_PROVIDER=alpaca usually expects BROKER_ADAPTER=alpaca on the gateway');
+    warnings.push(
+      'VITE_BROKER_PROVIDER=alpaca usually expects BROKER_ADAPTER=alpaca on the gateway'
+    );
   }
 
   if (values.BROKER_ADAPTER === 'alpaca') {
     if (templateMode) {
       if (!values.ALPACA_KEY_ID || !values.ALPACA_SECRET_KEY) {
-        warnings.push('ALPACA_KEY_ID and ALPACA_SECRET_KEY are blank in the template; fill them before paper/live gateway startup');
+        warnings.push(
+          'ALPACA_KEY_ID and ALPACA_SECRET_KEY are blank in the template; fill them before paper/live gateway startup'
+        );
       }
     } else {
       requireNonEmpty(errors, values, 'ALPACA_KEY_ID');
@@ -136,7 +146,9 @@ function main() {
   if (values.BROKER_ADAPTER === 'custom-http') {
     if (templateMode) {
       if (!values.BROKER_UPSTREAM_URL) {
-        warnings.push('BROKER_UPSTREAM_URL is blank in the template; fill it before custom-http gateway startup');
+        warnings.push(
+          'BROKER_UPSTREAM_URL is blank in the template; fill it before custom-http gateway startup'
+        );
       }
     } else {
       requireNonEmpty(errors, values, 'BROKER_UPSTREAM_URL');
@@ -149,7 +161,7 @@ function main() {
 
   if (errors.length) {
     console.error(`Runtime environment check failed for ${envPath}:`);
-    errors.forEach((item) => console.error(`- ${item}`));
+    for (const item of errors) console.error(`- ${item}`);
     process.exitCode = 1;
     return;
   }
@@ -157,7 +169,7 @@ function main() {
   console.info(`Runtime environment check passed for ${envPath}.`);
   if (warnings.length) {
     console.info('Warnings:');
-    warnings.forEach((item) => console.info(`- ${item}`));
+    for (const item of warnings) console.info(`- ${item}`);
   }
 }
 

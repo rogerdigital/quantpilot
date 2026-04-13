@@ -6,7 +6,8 @@ const FILENAME = 'agent-action-requests.json';
 export function createAgentActionRequestRepository(store) {
   return {
     listAgentActionRequests(limit = 50, filter = {}) {
-      return store.readCollection(FILENAME)
+      return store
+        .readCollection(FILENAME)
         .filter((item) => {
           if (!matchesScopeFilter(item, filter)) return false;
           if (filter.status && item.status !== filter.status) return false;

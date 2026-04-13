@@ -20,11 +20,7 @@ type AuditRecordsFeedOptions = {
 export function useAuditRecordsFeed(options: AuditRecordsFeedOptions = {}) {
   const [items, setItems] = useState<AuditRecordFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const {
-    hours = null,
-    limit = 50,
-    type = '',
-  } = options;
+  const { hours = null, limit = 50, type = '' } = options;
 
   useEffect(() => {
     let mounted = true;

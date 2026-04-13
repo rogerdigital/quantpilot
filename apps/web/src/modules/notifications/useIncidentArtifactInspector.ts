@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react';
 import type {
   ExecutionPlanDetailResponse,
   IncidentEvidenceItem,
   RiskEventDetailResponse,
   WorkflowRunDetailResponse,
 } from '@shared-types/trading.ts';
-import { fetchExecutionPlanDetail, fetchRiskEventDetail, fetchWorkflowRunDetail } from '../../app/api/controlPlane.ts';
+import { useEffect, useState } from 'react';
+import {
+  fetchExecutionPlanDetail,
+  fetchRiskEventDetail,
+  fetchWorkflowRunDetail,
+} from '../../app/api/controlPlane.ts';
 
 type ArtifactInspectorState = {
   executionPlan: ExecutionPlanDetailResponse['plan'];
@@ -21,10 +25,7 @@ const EMPTY_STATE: ArtifactInspectorState = {
   workflow: null,
 };
 
-export function useIncidentArtifactInspector(
-  item: IncidentEvidenceItem | null,
-  refreshKey = 0,
-) {
+export function useIncidentArtifactInspector(item: IncidentEvidenceItem | null, refreshKey = 0) {
   const [state, setState] = useState<ArtifactInspectorState>(EMPTY_STATE);
   const [loading, setLoading] = useState(false);
 
@@ -38,20 +39,40 @@ export function useIncidentArtifactInspector(
     let mounted = true;
     setLoading(true);
 
-    const workflowRunId = typeof item.metadata?.workflowRunId === 'string'
-      ? item.metadata.workflowRunId
-      : (item.kind === 'workflow-run' ? item.id : '');
-    const executionPlanId = typeof item.metadata?.executionPlanId === 'string'
-      ? item.metadata.executionPlanId
-      : (item.kind === 'execution-plan' ? item.id : '');
-    const riskEventId = typeof item.metadata?.riskEventId === 'string'
-      ? item.metadata.riskEventId
-      : (item.kind === 'risk-event' ? item.id : '');
+    const workflowRunId =
+      typeof item.metadata?.workflowRunId === 'string'
+        ? item.metadata.workflowRunId
+        : item.kind === 'workflow-run'
+          ? item.id
+          : '';
+    const executionPlanId =
+      typeof item.metadata?.executionPlanId === 'string'
+        ? item.metadata.executionPlanId
+        : item.kind === 'execution-plan'
+          ? item.id
+          : '';
+    const riskEventId =
+      typeof item.metadata?.riskEventId === 'string'
+        ? item.metadata.riskEventId
+        : item.kind === 'risk-event'
+          ? item.id
+          : '';
 
     Promise.all([
-      workflowRunId ? fetchWorkflowRunDetail(workflowRunId).catch(() => ({ ok: false, workflow: null })) : Promise.resolve({ ok: false, workflow: null }),
-      executionPlanId ? fetchExecutionPlanDetail(executionPlanId).catch(() => ({ ok: false, plan: null, workflow: null, latestRuntime: null })) : Promise.resolve({ ok: false, plan: null, workflow: null, latestRuntime: null }),
-      riskEventId ? fetchRiskEventDetail(riskEventId).catch(() => ({ ok: false, event: null })) : Promise.resolve({ ok: false, event: null }),
+      workflowRunId
+        ? fetchWorkflowRunDetail(workflowRunId).catch(() => ({ ok: false, workflow: null }))
+        : Promise.resolve({ ok: false, workflow: null }),
+      executionPlanId
+        ? fetchExecutionPlanDetail(executionPlanId).catch(() => ({
+            ok: false,
+            plan: null,
+            workflow: null,
+            latestRuntime: null,
+          }))
+        : Promise.resolve({ ok: false, plan: null, workflow: null, latestRuntime: null }),
+      riskEventId
+        ? fetchRiskEventDetail(riskEventId).catch(() => ({ ok: false, event: null }))
+        : Promise.resolve({ ok: false, event: null }),
     ])
       .then(([workflowResponse, executionResponse, riskResponse]) => {
         if (!mounted) return;

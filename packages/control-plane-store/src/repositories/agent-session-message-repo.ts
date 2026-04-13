@@ -6,7 +6,8 @@ const FILENAME = 'agent-session-messages.json';
 export function createAgentSessionMessageRepository(store) {
   return {
     listAgentSessionMessages(sessionId, limit = 100, filter = {}) {
-      return store.readCollection(FILENAME)
+      return store
+        .readCollection(FILENAME)
         .filter((item) => {
           if (sessionId && item.sessionId !== sessionId) return false;
           if (!matchesScopeFilter(item, filter)) return false;

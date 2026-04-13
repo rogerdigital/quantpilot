@@ -1,17 +1,33 @@
 // @ts-nocheck
-import test from 'node:test';
+
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
 import { createControlPlaneContext } from '../src/context.js';
-import { exportControlPlaneBackup, getControlPlaneIntegrityReport, restoreControlPlaneBackup, runControlPlaneMigrations } from '../src/maintenance.js';
-import { createControlPlaneStore, getControlPlanePersistenceStatus, listSupportedControlPlaneAdapters } from '../src/store.js';
+import {
+  exportControlPlaneBackup,
+  getControlPlaneIntegrityReport,
+  restoreControlPlaneBackup,
+  runControlPlaneMigrations,
+} from '../src/maintenance.js';
+import {
+  createControlPlaneStore,
+  getControlPlanePersistenceStatus,
+  listSupportedControlPlaneAdapters,
+} from '../src/store.js';
 import { createMemoryStore } from './helpers/memory-store.js';
 
 test.after(() => {
-  rmSync(join(process.cwd(), '.quantpilot-runtime', 'cp-store-test-file-adapter'), { recursive: true, force: true });
-  rmSync(join(process.cwd(), '.quantpilot-runtime-db', 'cp-store-test-db-adapter'), { recursive: true, force: true });
+  rmSync(join(process.cwd(), '.quantpilot-runtime', 'cp-store-test-file-adapter'), {
+    recursive: true,
+    force: true,
+  });
+  rmSync(join(process.cwd(), '.quantpilot-runtime-db', 'cp-store-test-db-adapter'), {
+    recursive: true,
+    force: true,
+  });
 });
 
 test('control plane store exposes supported storage adapters and metadata', () => {
@@ -25,8 +41,14 @@ test('control plane store exposes supported storage adapters and metadata', () =
   });
   const supported = listSupportedControlPlaneAdapters();
 
-  assert.equal(supported.some((item) => item.kind === 'file'), true);
-  assert.equal(supported.some((item) => item.kind === 'db'), true);
+  assert.equal(
+    supported.some((item) => item.kind === 'file'),
+    true
+  );
+  assert.equal(
+    supported.some((item) => item.kind === 'db'),
+    true
+  );
   assert.equal(fileStore.adapter.kind, 'file');
   assert.equal(dbStore.adapter.kind, 'db');
   assert.equal(fileStore.adapter.persistence, 'filesystem-json');
@@ -37,10 +59,12 @@ test('control plane store exposes supported storage adapters and metadata', () =
 
 test('control plane context persists repository contracts through the db adapter foundation', () => {
   const namespace = `cp-store-db-contract-${randomUUID()}`;
-  const context = createControlPlaneContext(createControlPlaneStore({
-    namespace,
-    adapter: 'db',
-  }));
+  const context = createControlPlaneContext(
+    createControlPlaneStore({
+      namespace,
+      adapter: 'db',
+    })
+  );
 
   try {
     const session = context.agentSessions.appendAgentSession({
@@ -68,7 +92,10 @@ test('control plane context persists repository contracts through the db adapter
     assert.equal(context.agentSessions.getAgentSession(session.id).id, session.id);
     assert.equal(context.workflows.getWorkflowRun(workflow.id).id, workflow.id);
   } finally {
-    rmSync(join(process.cwd(), '.quantpilot-runtime-db', namespace), { recursive: true, force: true });
+    rmSync(join(process.cwd(), '.quantpilot-runtime-db', namespace), {
+      recursive: true,
+      force: true,
+    });
   }
 });
 
@@ -95,7 +122,10 @@ test('control plane db adapter exposes persistence status and migration contract
     assert.equal(result.ok, true);
     assert.equal(result.manifest.schemaVersion >= 1, true);
   } finally {
-    rmSync(join(process.cwd(), '.quantpilot-runtime-db', namespace), { recursive: true, force: true });
+    rmSync(join(process.cwd(), '.quantpilot-runtime-db', namespace), {
+      recursive: true,
+      force: true,
+    });
   }
 });
 
@@ -162,11 +192,20 @@ test('control plane context exposes agent governance repositories', () => {
   assert.equal(context.agentPolicy.get(policy.id).authority, 'bounded_auto');
   assert.equal(context.agentPolicy.list(10, { accountId: 'live-main' })[0].id, policy.id);
   assert.equal(context.agentInstruction.get(instruction.id).kind, 'daily_bias');
-  assert.equal(context.agentInstruction.list(10, { sessionId: 'session-1', activeOnly: true })[0].id, instruction.id);
+  assert.equal(
+    context.agentInstruction.list(10, { sessionId: 'session-1', activeOnly: true })[0].id,
+    instruction.id
+  );
   assert.equal(context.agentDailyRun.get(dailyRun.id).kind, 'pre_market');
-  assert.equal(context.agentDailyRun.list(10, { accountId: 'live-main', kind: 'pre_market' })[0].id, dailyRun.id);
+  assert.equal(
+    context.agentDailyRun.list(10, { accountId: 'live-main', kind: 'pre_market' })[0].id,
+    dailyRun.id
+  );
   assert.equal(context.agentAuthorityEvent.get(authorityEvent.id).nextMode, 'ask_first');
-  assert.equal(context.agentAuthorityEvent.list(10, { policyId: policy.id })[0].id, authorityEvent.id);
+  assert.equal(
+    context.agentAuthorityEvent.list(10, { policyId: policy.id })[0].id,
+    authorityEvent.id
+  );
 });
 
 test('agent governance repositories keep append semantics immutable and same-day instructions active', () => {
@@ -215,7 +254,10 @@ test('agent governance repositories keep append semantics immutable and same-day
   assert.equal(instructionHistory.length, 2);
   assert.equal(instructionHistory[0].kind, 'market_intel');
   assert.equal(instructionHistory[1].kind, 'daily_bias');
-  assert.equal(context.agentInstruction.get(appendedInstruction.id).body, appendedInstructionAgain.body);
+  assert.equal(
+    context.agentInstruction.get(appendedInstruction.id).body,
+    appendedInstructionAgain.body
+  );
   assert.equal(appendedInstruction.activeUntil.startsWith('2026-04-05T'), true);
   assert.equal(firstEvent.reason, 'Initial downgrade');
   assert.equal(secondEvent.reason, 'Escalated stop');
@@ -321,14 +363,23 @@ test('user account repository persists profile preferences and broker bindings',
   assert.equal(initial.profile.id, 'operator-demo');
   assert.equal(initial.tenant.id, 'tenant-quantpilot-labs');
   assert.equal(initial.currentWorkspace.id, 'workspace-operations');
-  assert.equal(initial.workspaces.some((item) => item.id === 'workspace-research'), true);
+  assert.equal(
+    initial.workspaces.some((item) => item.id === 'workspace-research'),
+    true
+  );
   assert.equal(preferences.locale, 'en-US');
   assert.equal(binding.isDefault, true);
   assert.equal(binding.health.connected, true);
   assert.equal(binding.health.status, 'healthy');
   assert.equal(context.userAccount.listBrokerBindings()[0].id, 'broker-binding-live');
-  assert.equal(context.userAccount.listRoleTemplates().some((item) => item.id === 'operator'), true);
-  assert.equal(context.userAccount.listRoleTemplates().some((item) => item.id === 'risk-reviewer'), true);
+  assert.equal(
+    context.userAccount.listRoleTemplates().some((item) => item.id === 'operator'),
+    true
+  );
+  assert.equal(
+    context.userAccount.listRoleTemplates().some((item) => item.id === 'risk-reviewer'),
+    true
+  );
   const accessSummary = context.userAccount.getAccessSummary(['dashboard:read']);
   assert.equal(accessSummary.defaultPermissions.includes('execution:approve'), true);
   assert.equal(accessSummary.sessionRemovedPermissions.includes('execution:approve'), true);
@@ -353,7 +404,10 @@ test('user account repository persists role templates and resolves access policy
   const accessSummary = context.userAccount.getAccessSummary(['dashboard:read', 'risk:review']);
 
   assert.equal(roleTemplate.id, 'quant-analyst');
-  assert.equal(context.userAccount.listRoleTemplates().some((item) => item.id === 'quant-analyst'), true);
+  assert.equal(
+    context.userAccount.listRoleTemplates().some((item) => item.id === 'quant-analyst'),
+    true
+  );
   assert.equal(access.permissions.includes('dashboard:read'), true);
   assert.equal(access.permissions.includes('risk:review'), true);
   assert.equal(access.permissions.includes('strategy:write'), false);
@@ -378,7 +432,10 @@ test('user account repository persists tenant workspaces and current workspace s
 
   assert.equal(workspace.id, 'workspace-live-ops');
   assert.equal(context.userAccount.getTenant().id, 'tenant-quantpilot-labs');
-  assert.equal(context.userAccount.listWorkspaces().some((item) => item.id === 'workspace-live-ops'), true);
+  assert.equal(
+    context.userAccount.listWorkspaces().some((item) => item.id === 'workspace-live-ops'),
+    true
+  );
   assert.equal(currentWorkspace.id, 'workspace-live-ops');
   assert.equal(context.userAccount.getCurrentWorkspace().role, 'execution-approver');
   assert.equal(currentWorkspace.grants.includes('risk:review'), true);
@@ -446,10 +503,14 @@ test('incident repository persists incidents, filters them, and stores notes', (
     body: 'Worker restarted and backlog is draining.',
     createdAt: '2026-03-16T08:30:00.000Z',
   });
-  const task = context.incidents.updateIncidentTask('incident-1', context.incidents.listIncidentTasks('incident-1', 10)[0].id, {
-    owner: 'ops-b',
-    status: 'done',
-  });
+  const task = context.incidents.updateIncidentTask(
+    'incident-1',
+    context.incidents.listIncidentTasks('incident-1', 10)[0].id,
+    {
+      owner: 'ops-b',
+      status: 'done',
+    }
+  );
   const list = context.incidents.listIncidents(10, {
     severity: 'warn',
     source: 'monitoring',
@@ -468,11 +529,26 @@ test('incident repository persists incidents, filters them, and stores notes', (
   assert.equal(context.incidents.listIncidentNotes('incident-1', 10).length, 2);
   assert.equal(context.incidents.listIncidentTasks('incident-1', 10).length >= 5, true);
   const activity = context.incidents.listIncidentActivities('incident-1', 10);
-  assert.equal(activity.some((item) => item.kind === 'opened'), true);
-  assert.equal(activity.some((item) => item.kind === 'status-changed' && item.metadata.to === 'investigating'), true);
-  assert.equal(activity.some((item) => item.kind === 'owner-changed' && item.metadata.to === 'ops-b'), true);
-  assert.equal(activity.some((item) => item.kind === 'note-added'), true);
-  assert.equal(activity.some((item) => item.kind === 'task-updated'), true);
+  assert.equal(
+    activity.some((item) => item.kind === 'opened'),
+    true
+  );
+  assert.equal(
+    activity.some((item) => item.kind === 'status-changed' && item.metadata.to === 'investigating'),
+    true
+  );
+  assert.equal(
+    activity.some((item) => item.kind === 'owner-changed' && item.metadata.to === 'ops-b'),
+    true
+  );
+  assert.equal(
+    activity.some((item) => item.kind === 'note-added'),
+    true
+  );
+  assert.equal(
+    activity.some((item) => item.kind === 'task-updated'),
+    true
+  );
 });
 
 test('workflow repository persists and updates workflow runs through the injected context', () => {
@@ -581,8 +657,14 @@ test('agent collaboration repositories persist sessions, plans, and analysis run
 
   assert.equal(context.agentSessions.listAgentSessions(5)[0].id, session.id);
   assert.equal(context.agentPlans.getLatestAgentPlanForSession(session.id).id, plan.id);
-  assert.equal(context.agentAnalysisRuns.getLatestAgentAnalysisRunForSession(session.id).id, run.id);
-  assert.equal(context.agentSessionMessages.listAgentSessionMessages(session.id, 5)[0].id, message.id);
+  assert.equal(
+    context.agentAnalysisRuns.getLatestAgentAnalysisRunForSession(session.id).id,
+    run.id
+  );
+  assert.equal(
+    context.agentSessionMessages.listAgentSessionMessages(session.id, 5)[0].id,
+    message.id
+  );
   assert.equal(updatedSession.latestAnalysisRunId, run.id);
   assert.equal(updatedSession.status, 'completed');
 });
@@ -741,13 +823,21 @@ test('research evaluation repository stores verdict history per run and strategy
     createdAt: '2026-03-18T09:00:00.000Z',
   });
 
-  const history = context.researchEvaluations.listResearchEvaluations(10, { strategyId: 'strategy-1' });
+  const history = context.researchEvaluations.listResearchEvaluations(10, {
+    strategyId: 'strategy-1',
+  });
 
   assert.equal(first.id, 'research-eval-1');
   assert.equal(second.verdict, 'prepare_execution');
   assert.equal(history.length >= 2, true);
-  assert.equal(context.researchEvaluations.getLatestEvaluationForRun('run-1').verdict, 'prepare_execution');
-  assert.equal(context.researchEvaluations.getLatestEvaluationForStrategy('strategy-1').readiness, 'live');
+  assert.equal(
+    context.researchEvaluations.getLatestEvaluationForRun('run-1').verdict,
+    'prepare_execution'
+  );
+  assert.equal(
+    context.researchEvaluations.getLatestEvaluationForStrategy('strategy-1').readiness,
+    'live'
+  );
 });
 
 test('research report repository stores generated research assets per run and strategy', () => {
@@ -791,8 +881,14 @@ test('research report repository stores generated research assets per run and st
   assert.equal(first.id, 'research-report-1');
   assert.equal(second.verdict, 'prepare_execution');
   assert.equal(history.length >= 2, true);
-  assert.equal(context.researchReports.getLatestResearchReportForRun('run-1').verdict, 'prepare_execution');
-  assert.equal(context.researchReports.getLatestResearchReportForStrategy('strategy-1').readiness, 'live');
+  assert.equal(
+    context.researchReports.getLatestResearchReportForRun('run-1').verdict,
+    'prepare_execution'
+  );
+  assert.equal(
+    context.researchReports.getLatestResearchReportForStrategy('strategy-1').readiness,
+    'live'
+  );
 });
 
 test('workflow repository claims queued runs for execution', () => {
@@ -851,7 +947,10 @@ test('research repositories persist strategy catalog, backtest runs, summary, an
   });
 
   assert.equal(strategy.id, 'ema-cross-us');
-  assert.equal(context.backtestRuns.findBacktestRunByWorkflowRunId('workflow-backtest-1').id, run.id);
+  assert.equal(
+    context.backtestRuns.findBacktestRunByWorkflowRunId('workflow-backtest-1').id,
+    run.id
+  );
   assert.equal(updated.status, 'completed');
   assert.equal(summary.completedRuns, 2);
   assert.equal(marketStatus.connected, true);
@@ -877,7 +976,10 @@ test('control plane maintenance exports backups, validates integrity, and restor
 
   assert.equal(backup.ok, true);
   assert.equal(typeof backup.persistence?.migrationPlan?.upToDate, 'boolean');
-  assert.equal(backup.files.some((item) => item.filename === 'notifications.json'), true);
+  assert.equal(
+    backup.files.some((item) => item.filename === 'notifications.json'),
+    true
+  );
   assert.equal(backup.data['notifications.json'][0].id, 'maintenance-notification');
   assert.equal(integrity.ok, true);
   assert.equal(typeof integrity.persistence?.migrationPlan?.upToDate, 'boolean');

@@ -9,9 +9,10 @@ function rankAuthority(mode) {
 }
 
 function mostRestrictiveMode(modes) {
-  return modes.reduce((worst, mode) => (
-    rankAuthority(mode) > rankAuthority(worst) ? mode : worst
-  ), 'full_auto');
+  return modes.reduce(
+    (worst, mode) => (rankAuthority(mode) > rankAuthority(worst) ? mode : worst),
+    'full_auto'
+  );
 }
 
 export function saveAgentPolicy(payload = {}) {
@@ -27,21 +28,24 @@ export function resolveAgentAuthority({
   riskMode = 'healthy',
   anomalyMode = 'healthy',
 } = {}) {
-  const policies = controlPlaneRuntime.listAgentPolicies(200).filter((item) => (
-    (item.accountId === accountId || item.accountId === 'all')
-    && (item.strategyId === strategyId || item.strategyId === 'all')
-    && (item.actionType === actionType || item.actionType === 'all')
-    && (item.environment === environment || item.environment === 'all')
-  ));
+  const policies = controlPlaneRuntime
+    .listAgentPolicies(200)
+    .filter(
+      (item) =>
+        (item.accountId === accountId || item.accountId === 'all') &&
+        (item.strategyId === strategyId || item.strategyId === 'all') &&
+        (item.actionType === actionType || item.actionType === 'all') &&
+        (item.environment === environment || item.environment === 'all')
+    );
 
-  const baseMode = policies.length > 0
-    ? mostRestrictiveMode(policies.map((p) => p.authority))
-    : 'manual_only';
+  const baseMode =
+    policies.length > 0 ? mostRestrictiveMode(policies.map((p) => p.authority)) : 'manual_only';
 
   let effectiveMode = baseMode;
-  let reason = policies.length > 0
-    ? `Derived from ${policies.length} matching policy record${policies.length > 1 ? 's' : ''}.`
-    : 'No agent governance policy configured.';
+  let reason =
+    policies.length > 0
+      ? `Derived from ${policies.length} matching policy record${policies.length > 1 ? 's' : ''}.`
+      : 'No agent governance policy configured.';
 
   if (riskMode === 'risk_off' || anomalyMode === 'critical') {
     effectiveMode = 'stopped';

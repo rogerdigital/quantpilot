@@ -1,5 +1,9 @@
 // @ts-nocheck
-import { createBrokerExecutionEventEntry, createExecutionRuntimeEntry, trimAndSave } from '../shared.js';
+import {
+  createBrokerExecutionEventEntry,
+  createExecutionRuntimeEntry,
+  trimAndSave,
+} from '../shared.js';
 
 const EVENTS_FILE = 'execution-runtime-events.json';
 const SNAPSHOTS_FILE = 'broker-account-snapshots.json';
@@ -41,9 +45,11 @@ export function createExecutionRuntimeRepository(store) {
       return entry;
     },
     listBrokerExecutionEvents(limit = 50, filter = {}) {
-      return store.readCollection(BROKER_EVENTS_FILE)
+      return store
+        .readCollection(BROKER_EVENTS_FILE)
         .filter((item) => {
-          if (filter.executionPlanId && item.executionPlanId !== filter.executionPlanId) return false;
+          if (filter.executionPlanId && item.executionPlanId !== filter.executionPlanId)
+            return false;
           if (filter.executionRunId && item.executionRunId !== filter.executionRunId) return false;
           if (filter.symbol && item.symbol !== filter.symbol) return false;
           if (filter.eventType && item.eventType !== filter.eventType) return false;

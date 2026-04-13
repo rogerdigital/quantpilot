@@ -1,7 +1,7 @@
-import { runtimeConfig } from '../../../app/config/runtime.ts';
 import type { BrokerProvider, MarketDataProvider, TradingState } from '@shared-types/trading.ts';
-import { APP_CONFIG } from './config.ts';
 import { createInitialStockStates } from '../../../../../../packages/trading-engine/src/runtime.js';
+import { runtimeConfig } from '../../../app/config/runtime.ts';
+import { APP_CONFIG } from './config.ts';
 import { computeAccount, createAccount, logEvent } from './shared.ts';
 
 function initialState(): TradingState {
@@ -64,7 +64,10 @@ function initialState(): TradingState {
   };
 }
 
-export function createInitialState(providers: { marketData: MarketDataProvider; broker: BrokerProvider }) {
+export function createInitialState(providers: {
+  marketData: MarketDataProvider;
+  broker: BrokerProvider;
+}) {
   const base = initialState();
   base.integrationStatus.marketData.label = providers.marketData.label;
   base.integrationStatus.marketData.message = 'Waiting for the first market sync.';
@@ -72,6 +75,11 @@ export function createInitialState(providers: { marketData: MarketDataProvider; 
   base.integrationStatus.broker.message = 'Waiting for the first broker sync.';
   computeAccount(base.accounts.paper, base.stockStates);
   computeAccount(base.accounts.live, base.stockStates);
-  logEvent(base, 'info', 'System Started', 'The trading engine finished universe initialization and account loading.');
+  logEvent(
+    base,
+    'info',
+    'System Started',
+    'The trading engine finished universe initialization and account loading.'
+  );
   return base;
 }

@@ -24,7 +24,13 @@ export function getStrategyStatusConfig(options: {
   return {
     metrics: [
       { label: locale === 'zh' ? '策略总数' : 'Catalog size', value: catalogSize ?? '--' },
-      { label: locale === 'zh' ? '候选/晋级' : 'Candidate / promoted', value: candidateStrategies !== undefined ? `${candidateStrategies} / ${promotedCount}` : '-- / --' },
+      {
+        label: locale === 'zh' ? '候选/晋级' : 'Candidate / promoted',
+        value:
+          candidateStrategies !== undefined
+            ? `${candidateStrategies} / ${promotedCount}`
+            : '-- / --',
+      },
       { label: locale === 'zh' ? '执行路线' : 'Execution route', value: executionRoute },
     ],
     messages: [
@@ -32,7 +38,11 @@ export function getStrategyStatusConfig(options: {
         ? formatPermissionReadOnly(locale, 'strategy:write', '策略工作台', 'the strategy workspace')
         : null,
       loading ? (locale === 'zh' ? '正在同步策略注册表...' : 'Syncing strategy registry...') : null,
-      error ? (locale === 'zh' ? `策略服务不可用：${error}` : `Strategy service unavailable: ${error}`) : null,
+      error
+        ? locale === 'zh'
+          ? `策略服务不可用：${error}`
+          : `Strategy service unavailable: ${error}`
+        : null,
       locale === 'zh'
         ? '策略注册表已经切到后端事实源，运行时信号视图仅作为当下市场上下文。'
         : 'The strategy registry now comes from the backend source of truth, while runtime signals stay as contextual market state.',
@@ -86,7 +96,11 @@ export function getBacktestStatusConfig(options: {
       actionMessage || null,
       actionError || null,
       loading ? (locale === 'zh' ? '正在同步研究服务...' : 'Syncing research service...') : null,
-      error ? (locale === 'zh' ? `研究服务不可用：${error}` : `Research service unavailable: ${error}`) : null,
+      error
+        ? locale === 'zh'
+          ? `研究服务不可用：${error}`
+          : `Research service unavailable: ${error}`
+        : null,
     ],
   };
 }

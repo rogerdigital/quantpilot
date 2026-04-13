@@ -1,9 +1,10 @@
 // @ts-nocheck
-import test from 'node:test';
+
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
 import { invokeGatewayRoute } from './helpers/invoke-gateway.js';
 
 const namespace = `stage-1-baseline-test-${randomUUID()}`;
@@ -41,11 +42,12 @@ const fakeMarketSnapshot = {
   quotes: [],
 };
 
-const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] = await Promise.all([
-  import('../src/gateways/alpaca.js'),
-  import('../../../packages/control-plane-store/src/context.js'),
-  import('../../../packages/control-plane-store/src/store.js'),
-]);
+const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] =
+  await Promise.all([
+    import('../src/gateways/alpaca.js'),
+    import('../../../packages/control-plane-store/src/context.js'),
+    import('../../../packages/control-plane-store/src/store.js'),
+  ]);
 
 const handler = createGatewayHandler({
   getBrokerHealth: async () => fakeBrokerHealth,
@@ -87,8 +89,14 @@ test('stage 1 baseline exposes account workspace, session, and permission catalo
   assert.equal(permissions.statusCode, 200);
   assert.equal(permissions.json.ok, true);
   assert.equal(Array.isArray(permissions.json.permissions), true);
-  assert.equal(permissions.json.permissions.some((item) => item.id === 'account:write'), true);
-  assert.equal(permissions.json.permissions.some((item) => item.id === 'execution:approve'), true);
+  assert.equal(
+    permissions.json.permissions.some((item) => item.id === 'account:write'),
+    true
+  );
+  assert.equal(
+    permissions.json.permissions.some((item) => item.id === 'execution:approve'),
+    true
+  );
 });
 
 test('stage 1 baseline exposes incident console summary and detail contracts', async () => {
@@ -96,7 +104,9 @@ test('stage 1 baseline exposes incident console summary and detail contracts', a
     id: 'stage1-monitoring-snapshot',
     status: 'warn',
     generatedAt: '2026-03-18T09:00:00.000Z',
-    alerts: [{ id: 'alert-1', source: 'workflow', level: 'warn', message: 'workflow backlog rising' }],
+    alerts: [
+      { id: 'alert-1', source: 'workflow', level: 'warn', message: 'workflow backlog rising' },
+    ],
   });
   context.notifications.appendNotification({
     id: 'stage1-notification',
@@ -207,7 +217,16 @@ test('stage 1 baseline exposes operations workbench aggregation contracts', asyn
   assert.equal(Array.isArray(response.json.lanes), true);
   assert.equal(Array.isArray(response.json.runbook), true);
   assert.equal(typeof response.json.recent, 'object');
-  assert.equal(response.json.lanes.some((item) => item.key === 'monitoring'), true);
-  assert.equal(response.json.lanes.some((item) => item.key === 'incidents'), true);
-  assert.equal(response.json.runbook.some((item) => item.key === 'triage-critical-incidents'), true);
+  assert.equal(
+    response.json.lanes.some((item) => item.key === 'monitoring'),
+    true
+  );
+  assert.equal(
+    response.json.lanes.some((item) => item.key === 'incidents'),
+    true
+  );
+  assert.equal(
+    response.json.runbook.some((item) => item.key === 'triage-critical-incidents'),
+    true
+  );
 });

@@ -28,11 +28,11 @@ function persistAuthorityEvent(store, payload = {}) {
   const current = currentIndex >= 0 ? records[currentIndex] : null;
   const entry = current
     ? createAgentAuthorityEventEntry({
-      ...current,
-      ...payload,
-      id: current.id,
-      createdAt: current.createdAt,
-    })
+        ...current,
+        ...payload,
+        id: current.id,
+        createdAt: current.createdAt,
+      })
     : createAgentAuthorityEventEntry(payload);
 
   if (currentIndex >= 0) {
@@ -56,7 +56,8 @@ function appendAuthorityEvent(store, payload = {}) {
 export function createAgentAuthorityEventRepository(store) {
   return {
     list(limit = 50, filter = {}) {
-      return store.readCollection(FILENAME)
+      return store
+        .readCollection(FILENAME)
         .filter((item) => matchesAuthorityEventFilter(item, filter))
         .slice(0, limit);
     },

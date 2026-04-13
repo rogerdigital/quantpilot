@@ -33,43 +33,53 @@ function intersectPermissions(base = [], scope = []) {
 
 function mergeWorkspaces(rawWorkspaces = [], tenant = createTenantEntry()) {
   const defaultWorkspaces = [
-    createWorkspaceEntry({
-      id: 'workspace-operations',
-      key: 'operations',
-      label: 'Operations',
-      description: 'Default platform operations workspace.',
-      role: 'admin',
-      isDefault: true,
-      isCurrent: true,
-    }, tenant),
-    createWorkspaceEntry({
-      id: 'workspace-research',
-      key: 'research',
-      label: 'Research Lab',
-      description: 'Research and strategy iteration workspace.',
-      role: 'operator',
-      isDefault: false,
-      isCurrent: false,
-    }, tenant),
+    createWorkspaceEntry(
+      {
+        id: 'workspace-operations',
+        key: 'operations',
+        label: 'Operations',
+        description: 'Default platform operations workspace.',
+        role: 'admin',
+        isDefault: true,
+        isCurrent: true,
+      },
+      tenant
+    ),
+    createWorkspaceEntry(
+      {
+        id: 'workspace-research',
+        key: 'research',
+        label: 'Research Lab',
+        description: 'Research and strategy iteration workspace.',
+        role: 'operator',
+        isDefault: false,
+        isCurrent: false,
+      },
+      tenant
+    ),
   ];
   const map = new Map(defaultWorkspaces.map((workspace) => [workspace.id, workspace]));
 
   if (Array.isArray(rawWorkspaces)) {
     rawWorkspaces.forEach((workspace) => {
       const existing = map.get(workspace.id) || null;
-      const entry = createWorkspaceEntry({
-        ...existing,
-        ...workspace,
-      }, tenant);
+      const entry = createWorkspaceEntry(
+        {
+          ...existing,
+          ...workspace,
+        },
+        tenant
+      );
       map.set(entry.id, entry);
     });
   }
 
   const items = [...map.values()];
-  const currentWorkspaceId = items.find((workspace) => workspace.isCurrent)?.id
-    || items.find((workspace) => workspace.isDefault)?.id
-    || items[0]?.id
-    || '';
+  const currentWorkspaceId =
+    items.find((workspace) => workspace.isCurrent)?.id ||
+    items.find((workspace) => workspace.isDefault)?.id ||
+    items[0]?.id ||
+    '';
 
   return items.map((workspace, index) => ({
     ...workspace,
@@ -83,16 +93,13 @@ function toAccessPolicyInput(access = {}, patch = {}) {
   const next = {
     role: patch.role || access.role || 'admin',
     status: patch.status || access.status || 'active',
-    grants: Object.prototype.hasOwnProperty.call(patch, 'grants')
-      ? patch.grants
-      : (access.grants || []),
-    revokes: Object.prototype.hasOwnProperty.call(patch, 'revokes')
-      ? patch.revokes
-      : (access.revokes || []),
-    roleTemplateId: patch.roleTemplateId || access.roleTemplateId || patch.role || access.role || 'admin',
+    grants: Object.hasOwn(patch, 'grants') ? patch.grants : access.grants || [],
+    revokes: Object.hasOwn(patch, 'revokes') ? patch.revokes : access.revokes || [],
+    roleTemplateId:
+      patch.roleTemplateId || access.roleTemplateId || patch.role || access.role || 'admin',
   };
 
-  if (Object.prototype.hasOwnProperty.call(patch, 'permissions')) {
+  if (Object.hasOwn(patch, 'permissions')) {
     next.permissions = patch.permissions;
   }
 
@@ -126,10 +133,14 @@ function createDefaultAccountSnapshot() {
   return {
     profile,
     tenant,
-    currentWorkspaceId: workspaces.find((workspace) => workspace.isCurrent)?.id || workspaces[0]?.id || '',
-    access: createUserAccessPolicy({
-      role: profile.role,
-    }, roleTemplates),
+    currentWorkspaceId:
+      workspaces.find((workspace) => workspace.isCurrent)?.id || workspaces[0]?.id || '',
+    access: createUserAccessPolicy(
+      {
+        role: profile.role,
+      },
+      roleTemplates
+    ),
     preferences: createUserPreferences({
       locale: profile.locale,
       timezone: profile.timezone,
@@ -164,30 +175,37 @@ function normalizeSnapshot(snapshot = {}) {
     label: snapshot.tenant?.label || snapshot.profile?.organization || defaults.tenant.label,
   });
   const workspaces = mergeWorkspaces(snapshot.workspaces, tenant);
-  const currentWorkspaceId = workspaces.find((workspace) => workspace.isCurrent)?.id
-    || snapshot.currentWorkspaceId
-    || defaults.currentWorkspaceId;
+  const currentWorkspaceId =
+    workspaces.find((workspace) => workspace.isCurrent)?.id ||
+    snapshot.currentWorkspaceId ||
+    defaults.currentWorkspaceId;
   const roleTemplates = mergeRoleTemplates(snapshot.roleTemplates);
   const profile = createUserAccountProfile({
     ...defaults.profile,
     ...(snapshot.profile || {}),
   });
-  const access = createUserAccessPolicy({
-    role: profile.role,
-    ...(snapshot.access || {}),
-  }, roleTemplates);
+  const access = createUserAccessPolicy(
+    {
+      role: profile.role,
+      ...(snapshot.access || {}),
+    },
+    roleTemplates
+  );
   const preferences = createUserPreferences({
     ...defaults.preferences,
     ...(snapshot.preferences || {}),
     locale: snapshot.preferences?.locale || profile.locale,
     timezone: snapshot.preferences?.timezone || profile.timezone,
   });
-  const brokerBindings = Array.isArray(snapshot.brokerBindings) && snapshot.brokerBindings.length
-    ? snapshot.brokerBindings.map((binding, index) => createBrokerBindingEntry({
-      ...binding,
-      isDefault: index === 0 ? binding.isDefault !== false : Boolean(binding.isDefault),
-    }))
-    : defaults.brokerBindings;
+  const brokerBindings =
+    Array.isArray(snapshot.brokerBindings) && snapshot.brokerBindings.length
+      ? snapshot.brokerBindings.map((binding, index) =>
+          createBrokerBindingEntry({
+            ...binding,
+            isDefault: index === 0 ? binding.isDefault !== false : Boolean(binding.isDefault),
+          })
+        )
+      : defaults.brokerBindings;
   const hasDefault = brokerBindings.some((binding) => binding.isDefault);
   const normalizedBindings = brokerBindings.map((binding, index) => ({
     ...binding,
@@ -198,7 +216,8 @@ function normalizeSnapshot(snapshot = {}) {
     profile,
     tenant,
     currentWorkspaceId,
-    currentWorkspace: workspaces.find((workspace) => workspace.id === currentWorkspaceId) || workspaces[0] || null,
+    currentWorkspace:
+      workspaces.find((workspace) => workspace.id === currentWorkspaceId) || workspaces[0] || null,
     workspaces,
     access,
     preferences,
@@ -227,17 +246,29 @@ export function createUserAccountRepository(store) {
   }
 
   function getAccessSummary(snapshot = readSnapshot(), sessionPermissions = null) {
-    const currentWorkspace = snapshot.currentWorkspace || snapshot.workspaces.find((item) => item.id === snapshot.currentWorkspaceId) || null;
-    const roleTemplate = snapshot.roleTemplates.find((item) => item.id === snapshot.access.role) || null;
-    const defaultPermissions = getDefaultPermissionsForRole(snapshot.access.role, snapshot.roleTemplates);
-    const effectivePermissions = snapshot.access.status === 'active'
-      ? listUnique(snapshot.access.effectivePermissions || snapshot.access.permissions)
-      : [];
+    const currentWorkspace =
+      snapshot.currentWorkspace ||
+      snapshot.workspaces.find((item) => item.id === snapshot.currentWorkspaceId) ||
+      null;
+    const roleTemplate =
+      snapshot.roleTemplates.find((item) => item.id === snapshot.access.role) || null;
+    const defaultPermissions = getDefaultPermissionsForRole(
+      snapshot.access.role,
+      snapshot.roleTemplates
+    );
+    const effectivePermissions =
+      snapshot.access.status === 'active'
+        ? listUnique(snapshot.access.effectivePermissions || snapshot.access.permissions)
+        : [];
     const workspacePermissions = listUnique(currentWorkspace?.effectivePermissions || []);
     const workspaceDefaultPermissions = listUnique(currentWorkspace?.defaultPermissions || []);
-    const scopedPermissions = currentWorkspace ? intersectPermissions(effectivePermissions, workspacePermissions) : effectivePermissions;
+    const scopedPermissions = currentWorkspace
+      ? intersectPermissions(effectivePermissions, workspacePermissions)
+      : effectivePermissions;
     const accessDelta = diffPermissions(defaultPermissions, effectivePermissions);
-    const sessionList = Array.isArray(sessionPermissions) ? listUnique(sessionPermissions) : scopedPermissions;
+    const sessionList = Array.isArray(sessionPermissions)
+      ? listUnique(sessionPermissions)
+      : scopedPermissions;
     const sessionDelta = diffPermissions(scopedPermissions, sessionList);
 
     return {
@@ -277,11 +308,17 @@ export function createUserAccountRepository(store) {
       defaultProvider: defaultBinding?.provider || '',
       defaultStatus: defaultBinding?.status || 'disconnected',
       defaultHealthStatus: defaultBinding?.health?.status || 'idle',
-      lastSyncAt: bindings.map((binding) => binding.lastSyncAt).filter(Boolean).sort().at(0) ? bindings
+      lastSyncAt: bindings
         .map((binding) => binding.lastSyncAt)
         .filter(Boolean)
         .sort()
-        .at(-1) : '',
+        .at(0)
+        ? bindings
+            .map((binding) => binding.lastSyncAt)
+            .filter(Boolean)
+            .sort()
+            .at(-1)
+        : '',
     };
   }
 
@@ -318,7 +355,7 @@ export function createUserAccountRepository(store) {
         toAccessPolicyInput(snapshot.access, {
           role: profile.role,
         }),
-        snapshot.roleTemplates,
+        snapshot.roleTemplates
       );
       return writeSnapshot({
         ...snapshot,
@@ -326,7 +363,10 @@ export function createUserAccountRepository(store) {
         tenant,
         workspaces,
         currentWorkspaceId: snapshot.currentWorkspaceId,
-        currentWorkspace: workspaces.find((workspace) => workspace.id === snapshot.currentWorkspaceId) || workspaces[0] || null,
+        currentWorkspace:
+          workspaces.find((workspace) => workspace.id === snapshot.currentWorkspaceId) ||
+          workspaces[0] ||
+          null,
         access,
       }).profile;
     },
@@ -350,13 +390,14 @@ export function createUserAccountRepository(store) {
     },
     upsertWorkspace(payload = {}) {
       const snapshot = readSnapshot();
-      const workspaces = mergeWorkspaces([
-        ...snapshot.workspaces.filter((item) => item.id !== payload.id),
-        payload,
-      ], snapshot.tenant);
+      const workspaces = mergeWorkspaces(
+        [...snapshot.workspaces.filter((item) => item.id !== payload.id), payload],
+        snapshot.tenant
+      );
       const currentWorkspaceId = payload.isCurrent
-        ? (workspaces.find((workspace) => workspace.id === payload.id)?.id || snapshot.currentWorkspaceId)
-        : (workspaces.find((workspace) => workspace.isCurrent)?.id || snapshot.currentWorkspaceId);
+        ? workspaces.find((workspace) => workspace.id === payload.id)?.id ||
+          snapshot.currentWorkspaceId
+        : workspaces.find((workspace) => workspace.isCurrent)?.id || snapshot.currentWorkspaceId;
       const nextWorkspaces = workspaces.map((workspace) => ({
         ...workspace,
         isCurrent: workspace.id === currentWorkspaceId,
@@ -366,7 +407,10 @@ export function createUserAccountRepository(store) {
         ...snapshot,
         workspaces: nextWorkspaces,
         currentWorkspaceId,
-        currentWorkspace: nextWorkspaces.find((workspace) => workspace.id === currentWorkspaceId) || nextWorkspaces[0] || null,
+        currentWorkspace:
+          nextWorkspaces.find((workspace) => workspace.id === currentWorkspaceId) ||
+          nextWorkspaces[0] ||
+          null,
       });
 
       return nextWorkspaces.find((workspace) => workspace.id === payload.id) || null;
@@ -409,7 +453,7 @@ export function createUserAccountRepository(store) {
           ...patch,
           role: patch.role || snapshot.profile.role,
         }),
-        snapshot.roleTemplates,
+        snapshot.roleTemplates
       );
       const profile = createUserAccountProfile({
         ...snapshot.profile,
@@ -484,15 +528,21 @@ export function createUserAccountRepository(store) {
       const snapshot = readSnapshot();
       const bindings = [...snapshot.brokerBindings];
       const entry = createBrokerBindingEntry(payload);
-      const index = bindings.findIndex((binding) => binding.id === entry.id || (entry.accountId && binding.accountId === entry.accountId));
-      const nextBinding = index === -1 ? entry : {
-        ...bindings[index],
-        ...entry,
-        metadata: {
-          ...(bindings[index]?.metadata || {}),
-          ...(entry.metadata || {}),
-        },
-      };
+      const index = bindings.findIndex(
+        (binding) =>
+          binding.id === entry.id || (entry.accountId && binding.accountId === entry.accountId)
+      );
+      const nextBinding =
+        index === -1
+          ? entry
+          : {
+              ...bindings[index],
+              ...entry,
+              metadata: {
+                ...(bindings[index]?.metadata || {}),
+                ...(entry.metadata || {}),
+              },
+            };
 
       if (index === -1) {
         bindings.unshift(nextBinding);

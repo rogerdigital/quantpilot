@@ -21,7 +21,9 @@ export function ResearchStatusStack(props: {
         </div>
       ))}
       {messages.map((message, index) => (
-        <div key={index} className="status-copy">{message}</div>
+        <div key={index} className="status-copy">
+          {message}
+        </div>
       ))}
       {props.children}
     </div>

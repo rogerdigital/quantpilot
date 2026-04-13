@@ -1,10 +1,6 @@
 // @ts-nocheck
 import { OPEN_ORDER_STATUSES } from '../core/constants.js';
-import {
-  createOrderRecord,
-  logEvent,
-  prependOrder,
-} from '../core/shared.js';
+import { createOrderRecord, logEvent, prependOrder } from '../core/shared.js';
 
 function createRemoteIntent(state, side, symbol, qty, price, tag) {
   const seq = state.orderSeq;
@@ -20,9 +16,16 @@ function createRemoteIntent(state, side, symbol, qty, price, tag) {
 }
 
 function hasBlockingLiveOrder(state, symbol, side) {
-  return state.approvalQueue.some((order) => order.symbol === symbol && order.side === side)
-    || state.pendingLiveIntents.some((order) => order.symbol === symbol && order.side === side)
-    || state.accounts.live.orders.some((order) => order.symbol === symbol && order.side === side && OPEN_ORDER_STATUSES.has(String(order.status || '').toLowerCase()));
+  return (
+    state.approvalQueue.some((order) => order.symbol === symbol && order.side === side) ||
+    state.pendingLiveIntents.some((order) => order.symbol === symbol && order.side === side) ||
+    state.accounts.live.orders.some(
+      (order) =>
+        order.symbol === symbol &&
+        order.side === side &&
+        OPEN_ORDER_STATUSES.has(String(order.status || '').toLowerCase())
+    )
+  );
 }
 
 function syncRemoteOrders(state, orders) {
@@ -45,7 +48,12 @@ function syncRemoteOrders(state, orders) {
     };
     const previous = state.brokerOrderStatusMap[order.id];
     if (!previous) {
-      logEvent(state, 'info', `Broker received order ${order.symbol}`, `${order.side} ${order.qty} shares, status ${order.status}`);
+      logEvent(
+        state,
+        'info',
+        `Broker received order ${order.symbol}`,
+        `${order.side} ${order.qty} shares, status ${order.status}`
+      );
       return;
     }
     if (previous.status !== order.status || previous.filledQty !== order.filledQty) {
@@ -59,16 +67,26 @@ function syncRemoteOrders(state, orders) {
   });
   state.brokerOrderStatusMap = nextMap;
   state.accounts.live.orders = nextOrders.slice(0, 50);
-  state.approvalQueue = state.approvalQueue.filter((intent) => !nextOrders.some((order) => (
-    order.clientOrderId && intent.clientOrderId === order.clientOrderId
-  ) || (
-    order.symbol === intent.symbol && order.side === intent.side && OPEN_ORDER_STATUSES.has(String(order.status || '').toLowerCase())
-  )));
-  state.pendingLiveIntents = state.pendingLiveIntents.filter((intent) => !nextOrders.some((order) => (
-    order.clientOrderId && intent.clientOrderId === order.clientOrderId
-  ) || (
-    order.symbol === intent.symbol && order.side === intent.side && OPEN_ORDER_STATUSES.has(String(order.status || '').toLowerCase())
-  )));
+  state.approvalQueue = state.approvalQueue.filter(
+    (intent) =>
+      !nextOrders.some(
+        (order) =>
+          (order.clientOrderId && intent.clientOrderId === order.clientOrderId) ||
+          (order.symbol === intent.symbol &&
+            order.side === intent.side &&
+            OPEN_ORDER_STATUSES.has(String(order.status || '').toLowerCase()))
+      )
+  );
+  state.pendingLiveIntents = state.pendingLiveIntents.filter(
+    (intent) =>
+      !nextOrders.some(
+        (order) =>
+          (order.clientOrderId && intent.clientOrderId === order.clientOrderId) ||
+          (order.symbol === intent.symbol &&
+            order.side === intent.side &&
+            OPEN_ORDER_STATUSES.has(String(order.status || '').toLowerCase()))
+      )
+  );
 }
 
 export function buyPosition(account, stock, ratio, tag, state) {
@@ -88,11 +106,26 @@ export function buyPosition(account, stock, ratio, tag, state) {
   const totalCost = holding.avgCost * holding.shares + cost;
   holding.shares += shares;
   holding.avgCost = totalCost / holding.shares;
-  const order = createOrderRecord(state, account.id, 'BUY', stock.symbol, shares, stock.price, 'filled', tag, {
-    cancelable: false,
-  });
+  const order = createOrderRecord(
+    state,
+    account.id,
+    'BUY',
+    stock.symbol,
+    shares,
+    stock.price,
+    'filled',
+    tag,
+    {
+      cancelable: false,
+    }
+  );
   prependOrder(account, order);
-  logEvent(state, 'buy', `${tag} Buy ${stock.symbol}`, `${stock.name} ${shares} shares @ ${stock.price.toFixed(2)}`);
+  logEvent(
+    state,
+    'buy',
+    `${tag} Buy ${stock.symbol}`,
+    `${stock.name} ${shares} shares @ ${stock.price.toFixed(2)}`
+  );
   return order;
 }
 
@@ -102,7 +135,10 @@ export function sellPosition(account, stock, ratio, tag, state) {
     return null;
   }
   const lot = stock.lotSize || 1;
-  const shares = Math.floor(holding.shares * ratio / lot) * lot || Math.floor(holding.shares / lot) * lot || holding.shares;
+  const shares =
+    Math.floor((holding.shares * ratio) / lot) * lot ||
+    Math.floor(holding.shares / lot) * lot ||
+    holding.shares;
   const actualShares = Math.min(holding.shares, shares);
   if (actualShares <= 0) {
     return null;
@@ -114,11 +150,26 @@ export function sellPosition(account, stock, ratio, tag, state) {
   if (holding.shares <= 0) {
     delete account.holdings[stock.symbol];
   }
-  const order = createOrderRecord(state, account.id, 'SELL', stock.symbol, actualShares, stock.price, 'filled', tag, {
-    cancelable: false,
-  });
+  const order = createOrderRecord(
+    state,
+    account.id,
+    'SELL',
+    stock.symbol,
+    actualShares,
+    stock.price,
+    'filled',
+    tag,
+    {
+      cancelable: false,
+    }
+  );
   prependOrder(account, order);
-  logEvent(state, 'sell', `${tag} Sell ${stock.symbol}`, `${stock.name} ${actualShares} shares @ ${stock.price.toFixed(2)}`);
+  logEvent(
+    state,
+    'sell',
+    `${tag} Sell ${stock.symbol}`,
+    `${stock.name} ${actualShares} shares @ ${stock.price.toFixed(2)}`
+  );
   return order;
 }
 
@@ -143,16 +194,29 @@ export function buildRemoteSellIntent(state, account, stock, ratio, tag) {
     return null;
   }
   const qty = Math.max(Math.floor(holding.shares * ratio), 1);
-  return createRemoteIntent(state, 'SELL', stock.symbol, Math.min(holding.shares, qty), stock.price, tag);
+  return createRemoteIntent(
+    state,
+    'SELL',
+    stock.symbol,
+    Math.min(holding.shares, qty),
+    stock.price,
+    tag
+  );
 }
 
 export function applyRemoteOrderSubmissions(state, orders) {
   if (!orders?.length) {
     return;
   }
-  const acceptedClientOrderIds = new Set(orders.map((order) => order.clientOrderId).filter(Boolean));
-  state.pendingLiveIntents = state.pendingLiveIntents.filter((order) => !acceptedClientOrderIds.has(order.clientOrderId));
-  state.approvalQueue = state.approvalQueue.filter((order) => !acceptedClientOrderIds.has(order.clientOrderId));
+  const acceptedClientOrderIds = new Set(
+    orders.map((order) => order.clientOrderId).filter(Boolean)
+  );
+  state.pendingLiveIntents = state.pendingLiveIntents.filter(
+    (order) => !acceptedClientOrderIds.has(order.clientOrderId)
+  );
+  state.approvalQueue = state.approvalQueue.filter(
+    (order) => !acceptedClientOrderIds.has(order.clientOrderId)
+  );
   orders.forEach((order) => {
     const normalized = createOrderRecord(
       state,
@@ -185,7 +249,9 @@ export function applyBrokerSnapshot(state, snapshot) {
   const live = state.accounts.live;
   if (snapshot.account) {
     live.cash = Number.isFinite(snapshot.account.cash) ? snapshot.account.cash : live.cash;
-    live.buyingPower = Number.isFinite(snapshot.account.buyingPower) ? snapshot.account.buyingPower : live.cash;
+    live.buyingPower = Number.isFinite(snapshot.account.buyingPower)
+      ? snapshot.account.buyingPower
+      : live.cash;
   }
   if (Array.isArray(snapshot.positions)) {
     const nextHoldings = {};

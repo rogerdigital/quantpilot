@@ -1,6 +1,6 @@
+import type { MonitoringStatusSnapshot } from '@shared-types/trading.ts';
 import { useEffect, useState } from 'react';
 import { fetchMonitoringStatus } from '../app/api/controlPlane.ts';
-import type { MonitoringStatusSnapshot } from '@shared-types/trading.ts';
 
 export function useMonitoringStatus(refreshKey?: string) {
   const [status, setStatus] = useState<MonitoringStatusSnapshot | null>(null);

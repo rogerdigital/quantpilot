@@ -1,12 +1,20 @@
 import type { AppLocale } from '@shared-types/trading.ts';
-import { Suspense, lazy, type ReactElement } from 'react';
-import { copy, type ConsolePageKey } from './console.i18n.tsx';
+import { lazy, type ReactElement, Suspense } from 'react';
+import { type ConsolePageKey, copy } from './console.i18n.tsx';
 
 const AgentPage = lazy(() => import('../agent/AgentPage.tsx'));
-const DashboardPage = lazy(() => import('../../pages/console/routes/OverviewPage.tsx').then(m => ({ default: m.OverviewPage })));
-const ExecutionPage = lazy(() => import('../../pages/console/routes/ExecutionPage.tsx').then(m => ({ default: m.ExecutionPage })));
-const MarketPage = lazy(() => import('../../pages/console/routes/MarketPage.tsx').then(m => ({ default: m.MarketPage })));
-const SettingsPage = lazy(() => import('../../pages/console/routes/SettingsPage.tsx').then(m => ({ default: m.SettingsPage })));
+const DashboardPage = lazy(() =>
+  import('../../pages/console/routes/OverviewPage.tsx').then((m) => ({ default: m.OverviewPage }))
+);
+const ExecutionPage = lazy(() =>
+  import('../../pages/console/routes/ExecutionPage.tsx').then((m) => ({ default: m.ExecutionPage }))
+);
+const MarketPage = lazy(() =>
+  import('../../pages/console/routes/MarketPage.tsx').then((m) => ({ default: m.MarketPage }))
+);
+const SettingsPage = lazy(() =>
+  import('../../pages/console/routes/SettingsPage.tsx').then((m) => ({ default: m.SettingsPage }))
+);
 const NotificationsPage = lazy(() => import('../../pages/notifications/NotificationsPage.tsx'));
 const BacktestPage = lazy(() => import('../../pages/backtest/BacktestPage.tsx'));
 const StrategiesPage = lazy(() => import('../../pages/strategies/StrategiesPage.tsx'));
@@ -34,7 +42,9 @@ export type ConsoleRouteDefinition = {
 
 function renderLazyRoute(element: ReactElement) {
   return (
-    <Suspense fallback={<div style={{ padding: '2rem', color: '#6f6257' }}>Loading workspace...</div>}>
+    <Suspense
+      fallback={<div style={{ padding: '2rem', color: '#6f6257' }}>Loading workspace...</div>}
+    >
       {element}
     </Suspense>
   );
@@ -120,7 +130,9 @@ export function listSidebarRoutes() {
 }
 
 export function findConsoleRoute(pathname: string) {
-  return CONSOLE_ROUTES.find((route) => route.path === pathname || route.aliases?.includes(pathname));
+  return CONSOLE_ROUTES.find(
+    (route) => route.path === pathname || route.aliases?.includes(pathname)
+  );
 }
 
 export function getConsoleDocumentTitle(locale: AppLocale, pathname: string) {

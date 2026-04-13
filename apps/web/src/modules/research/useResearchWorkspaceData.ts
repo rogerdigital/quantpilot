@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import type { ExecutionLedgerEntry, WorkflowRunRecord } from '@shared-types/trading.ts';
+import { useEffect, useState } from 'react';
 import { fetchExecutionLedger, fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
 import { useAuditFeed } from '../audit/useAuditFeed.ts';
 import { useResearchHub } from './useResearchHub.ts';
@@ -33,7 +33,10 @@ export function useResearchWorkspaceData(options?: {
 
     const requests = includeWorkflows
       ? Promise.all([fetchExecutionLedger(), fetchTaskWorkflows()])
-      : Promise.all([fetchExecutionLedger(), Promise.resolve({ workflows: [] as WorkflowRunRecord[] })]);
+      : Promise.all([
+          fetchExecutionLedger(),
+          Promise.resolve({ workflows: [] as WorkflowRunRecord[] }),
+        ]);
 
     requests
       .then(([ledgerPayload, workflowPayload]) => {

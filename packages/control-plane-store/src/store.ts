@@ -1,12 +1,18 @@
 // @ts-nocheck
-import { createEmbeddedDbStore, createJsonFileStore, listSupportedControlPlaneAdapters } from '../../db/src/control-plane-adapters.js';
+import {
+  createEmbeddedDbStore,
+  createJsonFileStore,
+  listSupportedControlPlaneAdapters,
+} from '../../db/src/control-plane-adapters.js';
 
 function resolveNamespace() {
   return process.env.QUANTPILOT_CONTROL_PLANE_NAMESPACE || 'control-plane';
 }
 
 function resolveAdapterKind(input = '') {
-  const kind = String(input || process.env.QUANTPILOT_CONTROL_PLANE_ADAPTER || 'file').trim().toLowerCase();
+  const kind = String(input || process.env.QUANTPILOT_CONTROL_PLANE_ADAPTER || 'file')
+    .trim()
+    .toLowerCase();
   return kind === 'db' ? 'db' : 'file';
 }
 
@@ -50,4 +56,6 @@ export function getControlPlanePersistenceStatus(options = {}) {
 
 export { listSupportedControlPlaneAdapters };
 
-export const controlPlaneStore = createControlPlaneStorageAdapter({ namespace: resolveNamespace() });
+export const controlPlaneStore = createControlPlaneStorageAdapter({
+  namespace: resolveNamespace(),
+});

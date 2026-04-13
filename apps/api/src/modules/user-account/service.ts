@@ -1,23 +1,23 @@
 // @ts-nocheck
 import {
+  deleteBrokerBinding,
   deleteUserRoleTemplate,
   getBrokerBindingSummary,
   getCurrentWorkspace,
-  deleteBrokerBinding,
   getTenant,
-  getUserAccount,
   getUserAccessSummary,
+  getUserAccount,
   getUserRoleTemplate,
   listBrokerBindings,
   listWorkspaces,
   setCurrentWorkspace,
   setDefaultBrokerBinding,
-  upsertWorkspace,
-  upsertUserRoleTemplate,
-  updateUserProfile,
   updateUserAccess,
   updateUserPreferences,
+  updateUserProfile,
   upsertBrokerBinding,
+  upsertUserRoleTemplate,
+  upsertWorkspace,
 } from '../../../../../packages/control-plane-runtime/src/index.js';
 import { appendAuditRecord } from '../audit/service.js';
 import { getSession } from '../auth/service.js';
@@ -97,7 +97,7 @@ export function patchUserProfile(payload = {}) {
       userId: updated.id,
       email: updated.email,
       organization: updated.organization,
-    },
+    }
   );
   return {
     ok: true,
@@ -117,7 +117,7 @@ export function patchUserPreferences(payload = {}) {
       timezone: updated.timezone,
       defaultMode: updated.defaultMode,
       notificationChannels: updated.notificationChannels,
-    },
+    }
   );
   return {
     ok: true,
@@ -138,7 +138,7 @@ export function patchUserAccess(payload = {}) {
       permissions: updated.permissions,
       grants: updated.grants || [],
       revokes: updated.revokes || [],
-    },
+    }
   );
   return {
     ok: true,
@@ -166,7 +166,7 @@ export function saveUserRoleTemplate(payload = {}) {
       label: roleTemplate.label,
       defaultPermissions: roleTemplate.defaultPermissions,
       system: Boolean(roleTemplate.system),
-    },
+    }
   );
 
   return {
@@ -197,7 +197,7 @@ export function saveWorkspace(payload = {}) {
       revokes: workspace.revokes || [],
       status: workspace.status,
       isDefault: workspace.isDefault,
-    },
+    }
   );
 
   return {
@@ -226,7 +226,7 @@ export function selectCurrentWorkspace(workspaceId) {
       tenantId: workspace.tenantId,
       role: workspace.role,
       effectivePermissions: workspace.effectivePermissions || [],
-    },
+    }
   );
 
   return {
@@ -252,7 +252,7 @@ export function removeUserRoleTemplate(roleId) {
     {
       roleTemplateId: existing?.id || roleId,
       label: existing?.label || '',
-    },
+    }
   );
 
   return {
@@ -296,13 +296,15 @@ function buildBrokerRuntimeSnapshot(binding, health) {
 }
 
 export async function getBrokerBindingRuntimeSnapshot(getBrokerHealth) {
-  const binding = listBrokerBindings().find((item) => item.isDefault) || listBrokerBindings()[0] || null;
+  const binding =
+    listBrokerBindings().find((item) => item.isDefault) || listBrokerBindings()[0] || null;
   const health = await getBrokerHealth();
   return buildBrokerRuntimeSnapshot(binding, health);
 }
 
 export async function syncBrokerBindingRuntime(getBrokerHealth) {
-  const binding = listBrokerBindings().find((item) => item.isDefault) || listBrokerBindings()[0] || null;
+  const binding =
+    listBrokerBindings().find((item) => item.isDefault) || listBrokerBindings()[0] || null;
   const health = await getBrokerHealth();
   const runtimeSnapshot = buildBrokerRuntimeSnapshot(binding, health);
   if (!runtimeSnapshot.ok) {
@@ -316,12 +318,16 @@ export async function syncBrokerBindingRuntime(getBrokerHealth) {
     health: {
       status: runtimeSnapshot.runtime.mismatch
         ? 'attention'
-        : (runtimeSnapshot.runtime.connected ? 'healthy' : 'idle'),
+        : runtimeSnapshot.runtime.connected
+          ? 'healthy'
+          : 'idle',
       connected: runtimeSnapshot.runtime.connected,
       requiresAttention: runtimeSnapshot.runtime.mismatch,
       mismatch: runtimeSnapshot.runtime.mismatch,
       lastCheckedAt: runtimeSnapshot.runtime.lastCheckedAt,
-      lastError: runtimeSnapshot.runtime.mismatch ? 'binding provider does not match the active gateway adapter' : '',
+      lastError: runtimeSnapshot.runtime.mismatch
+        ? 'binding provider does not match the active gateway adapter'
+        : '',
     },
     metadata: {
       ...(runtimeSnapshot.binding.metadata || {}),
@@ -342,7 +348,7 @@ export async function syncBrokerBindingRuntime(getBrokerHealth) {
       adapter: runtimeSnapshot.runtime.adapter,
       connected: runtimeSnapshot.runtime.connected,
       mismatch: runtimeSnapshot.runtime.mismatch,
-    },
+    }
   );
 
   return {
@@ -371,7 +377,7 @@ export function saveBrokerBinding(payload = {}) {
       environment: binding.environment,
       isDefault: binding.isDefault,
       status: binding.status,
-    },
+    }
   );
   return {
     ok: true,
@@ -397,7 +403,7 @@ export function setPrimaryBrokerBinding(bindingId) {
       bindingId: binding.id,
       provider: binding.provider,
       environment: binding.environment,
-    },
+    }
   );
 
   return {
@@ -422,7 +428,7 @@ export function removeBrokerBinding(bindingId) {
       bindingId: result.binding.id,
       provider: result.binding.provider,
       environment: result.binding.environment,
-    },
+    }
   );
 
   return {

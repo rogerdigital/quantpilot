@@ -20,7 +20,13 @@ function parseTimestamp(value) {
 }
 
 function sortByRecency(items) {
-  return items.slice().sort((left, right) => parseTimestamp(right.updatedAt || right.createdAt) - parseTimestamp(left.updatedAt || left.createdAt));
+  return items
+    .slice()
+    .sort(
+      (left, right) =>
+        parseTimestamp(right.updatedAt || right.createdAt) -
+        parseTimestamp(left.updatedAt || left.createdAt)
+    );
 }
 
 function takeLatest(items, limit) {
@@ -71,7 +77,8 @@ function createRunbook(input) {
       key: 'inspect-live-exposure',
       priority: 'next',
       title: 'Inspect live exposure',
-      detail: 'Portfolio concentration or live exposure is approaching the current risk guardrails.',
+      detail:
+        'Portfolio concentration or live exposure is approaching the current risk guardrails.',
       count: Math.max(input.liveExposurePct >= 60 ? 1 : 0, input.concentrationPct >= 20 ? 1 : 0),
     });
   }
@@ -91,7 +98,8 @@ function createRunbook(input) {
       key: 'review-scheduler-drift',
       priority: 'next',
       title: 'Review scheduler drift',
-      detail: 'Scheduler attention items can affect pre-open, intraday, or post-close risk workflows.',
+      detail:
+        'Scheduler attention items can affect pre-open, intraday, or post-close risk workflows.',
       count: input.schedulerAttention,
     });
   }
@@ -101,7 +109,8 @@ function createRunbook(input) {
       key: 'check-compliance-alerts',
       priority: 'now',
       title: 'Check compliance alerts',
-      detail: 'Policy-linked risk signals or incidents indicate a compliance review is still pending.',
+      detail:
+        'Policy-linked risk signals or incidents indicate a compliance review is still pending.',
       count: input.complianceAlerts,
     });
   }
@@ -111,7 +120,8 @@ function createRunbook(input) {
       key: 'release-emergency-brake',
       priority: 'now',
       title: 'Review emergency brake',
-      detail: 'Blocked execution plans or active risk-off signals imply the emergency brake remains engaged.',
+      detail:
+        'Blocked execution plans or active risk-off signals imply the emergency brake remains engaged.',
       count: input.blockedExecutions + input.riskOffEvents,
     });
   }
@@ -124,29 +134,38 @@ function resolvePosture(input) {
     return {
       status: 'critical',
       title: 'Risk posture needs intervention',
-      detail: 'Blocked execution candidates, unresolved risk-off events, or critical risk incidents still need operator action.',
+      detail:
+        'Blocked execution candidates, unresolved risk-off events, or critical risk incidents still need operator action.',
     };
   }
 
-  if (input.approvalRequired > 0 || input.reviewBacktests > 0 || input.openRiskEvents > 0 || input.openRiskIncidents > 0) {
+  if (
+    input.approvalRequired > 0 ||
+    input.reviewBacktests > 0 ||
+    input.openRiskEvents > 0 ||
+    input.openRiskIncidents > 0
+  ) {
     return {
       status: 'warn',
       title: 'Risk posture requires review',
-      detail: 'Approval-required executions, review queues, or unresolved risk events remain in the operator path.',
+      detail:
+        'Approval-required executions, review queues, or unresolved risk events remain in the operator path.',
     };
   }
 
   return {
     status: 'healthy',
     title: 'Risk posture is stable',
-    detail: 'Risk scans, review queues, and live-side exposure are currently inside the active platform guardrails.',
+    detail:
+      'Risk scans, review queues, and live-side exposure are currently inside the active platform guardrails.',
   };
 }
 
 export function getRiskWorkbench(options = {}) {
   const limit = parseLimit(options.limit, 80);
   const since = resolveSince(options.hours);
-  const riskEvents = controlPlaneRuntime.listRiskEvents(200)
+  const riskEvents = controlPlaneRuntime
+    .listRiskEvents(200)
     .filter((item) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since));
   const executionPlans = controlPlaneRuntime.listExecutionPlans(120);
   const backtestRuns = controlPlaneRuntime.listBacktestRuns(120);
@@ -165,13 +184,20 @@ export function getRiskWorkbench(options = {}) {
     const message = `${item.title} ${item.message}`.toLowerCase();
     return message.includes('compliance') || message.includes('policy');
   });
-  const approvalRequiredPlans = executionPlans.filter((item) => item.approvalState === 'required' || item.riskStatus === 'review');
-  const blockedExecutionPlans = executionPlans.filter((item) => item.riskStatus === 'blocked' || item.status === 'blocked');
+  const approvalRequiredPlans = executionPlans.filter(
+    (item) => item.approvalState === 'required' || item.riskStatus === 'review'
+  );
+  const blockedExecutionPlans = executionPlans.filter(
+    (item) => item.riskStatus === 'blocked' || item.status === 'blocked'
+  );
   const reviewBacktests = backtestRuns.filter((item) => item.status === 'needs_review');
-  const riskIncidents = incidents.filter((item) => item.status !== 'resolved')
+  const riskIncidents = incidents
+    .filter((item) => item.status !== 'resolved')
     .filter((item) => item.source === 'risk' || item.metadata?.riskEventId);
   const criticalIncidents = riskIncidents.filter((item) => item.severity === 'critical');
-  const schedulerAttention = schedulerTicks.filter((item) => isSchedulerAttentionStatus(item.status));
+  const schedulerAttention = schedulerTicks.filter((item) =>
+    isSchedulerAttentionStatus(item.status)
+  );
   const exposure = getLiveExposure(brokerSnapshot);
   const emergencyActions = blockedExecutionPlans.length + riskOffEvents.length;
   const posture = resolvePosture({
@@ -209,7 +235,11 @@ export function getRiskWorkbench(options = {}) {
       {
         key: 'risk-events',
         title: 'Risk Events',
-        status: riskOffEvents.length ? 'critical' : (unresolvedRiskEvents.length ? 'warn' : 'healthy'),
+        status: riskOffEvents.length
+          ? 'critical'
+          : unresolvedRiskEvents.length
+            ? 'warn'
+            : 'healthy',
         detail: `${unresolvedRiskEvents.length} unresolved risk events with ${riskOffEvents.length} risk-off escalations.`,
         primaryCount: unresolvedRiskEvents.length,
         secondaryCount: riskOffEvents.length,
@@ -218,7 +248,11 @@ export function getRiskWorkbench(options = {}) {
       {
         key: 'execution-review',
         title: 'Execution Review',
-        status: blockedExecutionPlans.length ? 'critical' : (approvalRequiredPlans.length ? 'warn' : 'healthy'),
+        status: blockedExecutionPlans.length
+          ? 'critical'
+          : approvalRequiredPlans.length
+            ? 'warn'
+            : 'healthy',
         detail: `${approvalRequiredPlans.length} execution plans require manual review and ${blockedExecutionPlans.length} are blocked.`,
         primaryCount: approvalRequiredPlans.length,
         secondaryCount: blockedExecutionPlans.length,
@@ -236,7 +270,7 @@ export function getRiskWorkbench(options = {}) {
       {
         key: 'incidents',
         title: 'Risk Incidents',
-        status: criticalIncidents.length ? 'critical' : (riskIncidents.length ? 'warn' : 'healthy'),
+        status: criticalIncidents.length ? 'critical' : riskIncidents.length ? 'warn' : 'healthy',
         detail: `${riskIncidents.length} unresolved incidents are linked to the risk console path.`,
         primaryCount: riskIncidents.length,
         secondaryCount: criticalIncidents.length,
@@ -266,7 +300,8 @@ export function getRiskWorkbench(options = {}) {
         status: complianceAlerts.length ? 'warn' : 'healthy',
         detail: `${complianceAlerts.length} compliance or policy-linked alerts are still on the risk path.`,
         primaryCount: complianceAlerts.length,
-        secondaryCount: riskIncidents.filter((item) => (item.tags || []).includes('compliance')).length,
+        secondaryCount: riskIncidents.filter((item) => (item.tags || []).includes('compliance'))
+          .length,
         updatedAt: complianceAlerts[0]?.createdAt || riskIncidents[0]?.updatedAt || generatedAt,
       },
       {
@@ -276,12 +311,17 @@ export function getRiskWorkbench(options = {}) {
         detail: `${blockedExecutionPlans.length} blocked execution plans and ${riskOffEvents.length} risk-off signals influence the emergency posture.`,
         primaryCount: blockedExecutionPlans.length,
         secondaryCount: riskOffEvents.length,
-        updatedAt: blockedExecutionPlans[0]?.updatedAt || riskOffEvents[0]?.createdAt || generatedAt,
+        updatedAt:
+          blockedExecutionPlans[0]?.updatedAt || riskOffEvents[0]?.createdAt || generatedAt,
       },
       {
         key: 'scheduler',
         title: 'Scheduler Attention',
-        status: schedulerAttention.some((item) => item.status === 'critical') ? 'critical' : (schedulerAttention.length ? 'warn' : 'healthy'),
+        status: schedulerAttention.some((item) => item.status === 'critical')
+          ? 'critical'
+          : schedulerAttention.length
+            ? 'warn'
+            : 'healthy',
         detail: `${schedulerAttention.length} scheduler ticks need attention across the risk middleware path.`,
         primaryCount: schedulerAttention.length,
         secondaryCount: schedulerTicks.filter((item) => item.phase === 'INTRADAY').length,

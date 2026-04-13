@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
-import { InspectionEmpty, InspectionPanel } from '../../pages/console/components/InspectionPanels.tsx';
+import {
+  InspectionEmpty,
+  InspectionPanel,
+} from '../../pages/console/components/InspectionPanels.tsx';
 import { ResearchStatusStack } from './ResearchStatusStack.tsx';
 
 type StatusMetric = {

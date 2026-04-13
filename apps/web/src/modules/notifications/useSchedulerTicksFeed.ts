@@ -20,11 +20,7 @@ type SchedulerTicksFeedOptions = {
 export function useSchedulerTicksFeed(options: SchedulerTicksFeedOptions = {}) {
   const [items, setItems] = useState<SchedulerTickFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const {
-    hours = null,
-    limit = 50,
-    phase = '',
-  } = options;
+  const { hours = null, limit = 50, phase = '' } = options;
 
   useEffect(() => {
     let mounted = true;

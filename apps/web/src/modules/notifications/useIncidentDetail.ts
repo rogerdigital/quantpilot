@@ -1,7 +1,7 @@
+import type { IncidentDetailResponse } from '@shared-types/trading.ts';
 import { useEffect, useState } from 'react';
 import { fetchIncidentDetail } from '../../app/api/controlPlane.ts';
 import type { IncidentFeedItem } from './useIncidentsFeed.ts';
-import type { IncidentDetailResponse } from '@shared-types/trading.ts';
 
 export type IncidentNoteItem = {
   id: string;
@@ -73,7 +73,8 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
     },
     timeline: [],
   });
-  const [operations, setOperations] = useState<IncidentDetailResponse['operations']>(EMPTY_OPERATIONS);
+  const [operations, setOperations] =
+    useState<IncidentDetailResponse['operations']>(EMPTY_OPERATIONS);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -128,42 +129,48 @@ export function useIncidentDetail(incidentId: string, refreshKey = 0) {
         if (!mounted) return;
         setIncident(payload?.incident || null);
         setNotes(Array.isArray(payload?.notes) ? payload.notes : []);
-        setTasks(payload?.tasks || {
-          summary: {
-            total: 0,
-            pending: 0,
-            inProgress: 0,
-            done: 0,
-            blocked: 0,
-          },
-          items: [],
-        });
-        setActivity(payload?.activity || {
-          summary: {
-            total: 0,
-            notes: 0,
-            statusChanges: 0,
-            ownerChanges: 0,
-            severityChanges: 0,
-            latestAt: '',
-          },
-          timeline: [],
-        });
-        setEvidence(payload?.evidence || {
-          summary: {
-            total: 0,
-            linked: 0,
-            monitoringAlerts: 0,
-            notifications: 0,
-            audits: 0,
-            operatorActions: 0,
-            schedulerTicks: 0,
-            riskEvents: 0,
-            workflowRuns: 0,
-            executionPlans: 0,
-          },
-          timeline: [],
-        });
+        setTasks(
+          payload?.tasks || {
+            summary: {
+              total: 0,
+              pending: 0,
+              inProgress: 0,
+              done: 0,
+              blocked: 0,
+            },
+            items: [],
+          }
+        );
+        setActivity(
+          payload?.activity || {
+            summary: {
+              total: 0,
+              notes: 0,
+              statusChanges: 0,
+              ownerChanges: 0,
+              severityChanges: 0,
+              latestAt: '',
+            },
+            timeline: [],
+          }
+        );
+        setEvidence(
+          payload?.evidence || {
+            summary: {
+              total: 0,
+              linked: 0,
+              monitoringAlerts: 0,
+              notifications: 0,
+              audits: 0,
+              operatorActions: 0,
+              schedulerTicks: 0,
+              riskEvents: 0,
+              workflowRuns: 0,
+              executionPlans: 0,
+            },
+            timeline: [],
+          }
+        );
         setOperations(payload?.operations || EMPTY_OPERATIONS);
       })
       .catch(() => {

@@ -1,13 +1,9 @@
 // @ts-nocheck
+
+import { chinaNow, cloneState, computeAccount, logEvent } from '../core/shared.js';
 import { applyBrokerSnapshot, applyRemoteOrderSubmissions } from '../execution/index.js';
 import { applyQuotePatch, updateTicker } from '../market/index.js';
 import { riskOffIfNeeded } from '../risk/index.js';
-import {
-  chinaNow,
-  cloneState,
-  computeAccount,
-  logEvent,
-} from '../core/shared.js';
 import { executeStrategy } from '../strategy/index.js';
 
 export function applyControlPlaneResolution(state, resolution) {
@@ -16,13 +12,19 @@ export function applyControlPlaneResolution(state, resolution) {
     ...resolution.controlPlane,
   };
   state.integrationStatus.broker.connected = resolution.brokerHealth.connected;
-  state.integrationStatus.broker.message = resolution.brokerExecution.message || resolution.controlPlane.routeHint;
+  state.integrationStatus.broker.message =
+    resolution.brokerExecution.message || resolution.controlPlane.routeHint;
   if (resolution.controlPlane.routeHint) {
     state.routeCopy = resolution.controlPlane.routeHint;
   }
   applyRemoteOrderSubmissions(state, resolution.brokerExecution.submittedOrders || []);
   (resolution.brokerExecution.rejectedOrders || []).forEach((order) => {
-    logEvent(state, 'info', `Remote order rejected ${order.symbol}`, `${order.side} ${order.qty} shares were rejected by broker.`);
+    logEvent(
+      state,
+      'info',
+      `Remote order rejected ${order.symbol}`,
+      `${order.side} ${order.qty} shares were rejected by broker.`
+    );
   });
   applyBrokerSnapshot(state, resolution.brokerExecution.snapshot);
   computeAccount(state.accounts.paper, state.stockStates);
@@ -32,7 +34,8 @@ export function applyControlPlaneResolution(state, resolution) {
       state,
       'info',
       `Control plane synced cycle ${resolution.cycle.cycle}`,
-      resolution.controlPlane.routeHint || `Control plane status ${resolution.controlPlane.lastStatus}.`
+      resolution.controlPlane.routeHint ||
+        `Control plane status ${resolution.controlPlane.lastStatus}.`
     );
   }
 }
@@ -93,13 +96,25 @@ function reconcileLiveIntents(state, riskIntents, strategyIntents) {
   state.approvalQueue = Array.from(nextApprovalMap.values());
 }
 
-export function advanceLocalState(previousState, { marketSnapshot, brokerSupportsRemoteExecution }) {
+export function advanceLocalState(
+  previousState,
+  { marketSnapshot, brokerSupportsRemoteExecution }
+) {
   const state = cloneState(previousState);
   state.cycle += 1;
   const now = chinaNow();
   state.marketClock = `${now.date} ${now.time}`;
   state.engineStatus = state.mode === 'manual' ? 'MANUAL READY' : 'LIVE EXECUTION';
-  state.stockStates.forEach((stock, index) => updateTicker(stock, index, state.cycle, state.toggles.riskGuard, state.stockStates.length, state.config));
+  for (let index = 0; index < state.stockStates.length; index++) {
+    updateTicker(
+      state.stockStates[index],
+      index,
+      state.cycle,
+      state.toggles.riskGuard,
+      state.stockStates.length,
+      state.config
+    );
+  }
   state.integrationStatus.marketData = {
     provider: state.integrationStatus.marketData.provider,
     label: marketSnapshot.label || state.integrationStatus.marketData.label,

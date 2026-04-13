@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
-import { InspectionEmpty, InspectionListPanel } from '../../pages/console/components/InspectionPanels.tsx';
+import {
+  InspectionEmpty,
+  InspectionListPanel,
+} from '../../pages/console/components/InspectionPanels.tsx';
 
 export function ResearchCollectionPanel(props: {
   title: string;

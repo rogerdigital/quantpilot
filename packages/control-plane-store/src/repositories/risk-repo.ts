@@ -14,7 +14,8 @@ const NOTIFICATIONS_FILE = 'notifications.json';
 export function createRiskRepository(store) {
   return {
     listRiskEvents(limit = 50, filter = {}) {
-      return store.readCollection(EVENTS_FILE)
+      return store
+        .readCollection(EVENTS_FILE)
         .filter((item) => matchesScopeFilter(item, filter))
         .slice(0, limit);
     },
@@ -88,17 +89,19 @@ export function createRiskRepository(store) {
         events.unshift(event);
 
         if (scan.notify) {
-          notifications.unshift(createNotificationEntry({
-            level: scan.level,
-            title: event.title,
-            message: event.message,
-            source: 'risk-monitor',
-            metadata: {
-              riskEventId: event.id,
-              cycle: event.cycle,
-              status: event.status,
-            },
-          }));
+          notifications.unshift(
+            createNotificationEntry({
+              level: scan.level,
+              title: event.title,
+              message: event.message,
+              source: 'risk-monitor',
+              metadata: {
+                riskEventId: event.id,
+                cycle: event.cycle,
+                status: event.status,
+              },
+            })
+          );
         }
 
         dispatchedJobs.push({

@@ -1,11 +1,12 @@
 // @ts-nocheck
+
+import { reserveIntentOnShadowAccount } from '../core/shared.js';
 import {
   buildRemoteBuyIntent,
   buildRemoteSellIntent,
   buyPosition,
   sellPosition,
 } from '../execution/index.js';
-import { reserveIntentOnShadowAccount } from '../core/shared.js';
 
 export function executeStrategy(state, brokerSupportsRemoteExecution) {
   const ranked = state.stockStates.slice().sort((a, b) => b.score - a.score);
@@ -14,7 +15,7 @@ export function executeStrategy(state, brokerSupportsRemoteExecution) {
   const liveIntents = [];
   const liveShadow = structuredClone(state.accounts.live);
 
-  state.pendingLiveIntents.forEach((intent) => reserveIntentOnShadowAccount(liveShadow, intent));
+  for (const intent of state.pendingLiveIntents) reserveIntentOnShadowAccount(liveShadow, intent);
 
   state.decisionSummary = topBuy.length
     ? `Priority buys: ${topBuy.map((item) => item.symbol).join(' / ')}`
@@ -23,7 +24,9 @@ export function executeStrategy(state, brokerSupportsRemoteExecution) {
     ? `Trim alert: ${topSell.map((item) => item.symbol).join(' / ')}`
     : 'No high-risk positions under the sell threshold.';
   state.routeCopy = state.toggles.liveTrade
-    ? (brokerSupportsRemoteExecution ? 'Paper execution is active and remote live orders are submitted in sync.' : 'The system writes to both the paper and local live accounts.')
+    ? brokerSupportsRemoteExecution
+      ? 'Paper execution is active and remote live orders are submitted in sync.'
+      : 'The system writes to both the paper and local live accounts.'
     : 'Only the paper account is executing. Live execution is paused.';
 
   if (!state.toggles.autoTrade) {
@@ -37,13 +40,25 @@ export function executeStrategy(state, brokerSupportsRemoteExecution) {
       return;
     }
     if (brokerSupportsRemoteExecution) {
-      const liveIntent = buildRemoteBuyIntent(state, liveShadow, stock, weight * state.config.liveSyncRatio, 'Live Sandbox');
+      const liveIntent = buildRemoteBuyIntent(
+        state,
+        liveShadow,
+        stock,
+        weight * state.config.liveSyncRatio,
+        'Live Sandbox'
+      );
       if (liveIntent) {
         liveIntents.push(liveIntent);
         reserveIntentOnShadowAccount(liveShadow, liveIntent);
       }
     } else {
-      buyPosition(state.accounts.live, stock, weight * state.config.liveSyncRatio, 'Live Account', state);
+      buyPosition(
+        state.accounts.live,
+        stock,
+        weight * state.config.liveSyncRatio,
+        'Live Account',
+        state
+      );
     }
   });
 

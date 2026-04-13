@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import type { StrategyCatalogDetailSnapshot } from '@shared-types/trading.ts';
+import { useEffect, useState } from 'react';
 import { fetchStrategyCatalogItem } from './research.service.ts';
 
 type StrategyDetailState = {

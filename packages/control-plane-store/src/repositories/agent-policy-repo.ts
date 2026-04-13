@@ -26,12 +26,12 @@ function persistPolicy(store, payload = {}) {
   const current = currentIndex >= 0 ? records[currentIndex] : null;
   const entry = current
     ? createAgentPolicyEntry({
-      ...current,
-      ...payload,
-      id: current.id,
-      createdAt: current.createdAt,
-      updatedAt: new Date().toISOString(),
-    })
+        ...current,
+        ...payload,
+        id: current.id,
+        createdAt: current.createdAt,
+        updatedAt: new Date().toISOString(),
+      })
     : createAgentPolicyEntry(payload);
 
   if (currentIndex >= 0) {
@@ -55,7 +55,8 @@ function appendPolicy(store, payload = {}) {
 export function createAgentPolicyRepository(store) {
   return {
     list(limit = 50, filter = {}) {
-      return store.readCollection(FILENAME)
+      return store
+        .readCollection(FILENAME)
         .filter((item) => matchesPolicyFilter(item, filter))
         .slice(0, limit);
     },

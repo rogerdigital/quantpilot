@@ -34,11 +34,11 @@ function persistInstruction(store, payload = {}) {
   const current = currentIndex >= 0 ? records[currentIndex] : null;
   const entry = current
     ? createAgentInstructionEntry({
-      ...current,
-      ...payload,
-      id: current.id,
-      createdAt: current.createdAt,
-    })
+        ...current,
+        ...payload,
+        id: current.id,
+        createdAt: current.createdAt,
+      })
     : createAgentInstructionEntry(payload);
 
   if (currentIndex >= 0) {
@@ -62,7 +62,8 @@ function appendInstruction(store, payload = {}) {
 export function createAgentInstructionRepository(store) {
   return {
     list(limit = 50, filter = {}) {
-      return store.readCollection(FILENAME)
+      return store
+        .readCollection(FILENAME)
         .filter((item) => matchesInstructionFilter(item, filter))
         .slice(0, limit);
     },

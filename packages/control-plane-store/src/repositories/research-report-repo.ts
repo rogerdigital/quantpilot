@@ -15,10 +15,14 @@ const DEFAULT_RESEARCH_REPORTS = [
     title: 'US Trend Ema Cross promotion memo',
     verdict: 'promote',
     readiness: 'paper',
-    executiveSummary: 'The reviewed trend strategy remains strong enough to enter paper execution preparation.',
-    promotionCall: 'Promote the strategy from candidate to paper and retain the current benchmark envelope.',
-    executionPreparation: 'Paper execution can reuse the current order template and broker route assumptions.',
-    riskNotes: 'Drawdown remains within the current gate and Sharpe is above the paper promotion floor.',
+    executiveSummary:
+      'The reviewed trend strategy remains strong enough to enter paper execution preparation.',
+    promotionCall:
+      'Promote the strategy from candidate to paper and retain the current benchmark envelope.',
+    executionPreparation:
+      'Paper execution can reuse the current order template and broker route assumptions.',
+    riskNotes:
+      'Drawdown remains within the current gate and Sharpe is above the paper promotion floor.',
     createdAt: '2026-03-10T01:20:00.000Z',
     updatedAt: '2026-03-10T01:20:00.000Z',
     metadata: {
@@ -48,7 +52,12 @@ export function createResearchReportRepository(store) {
   }
 
   function writeReports(reports) {
-    trimAndSave(store, FILENAME, reports.map((entry) => createResearchReportEntry(entry)), 600);
+    trimAndSave(
+      store,
+      FILENAME,
+      reports.map((entry) => createResearchReportEntry(entry)),
+      600
+    );
   }
 
   return {

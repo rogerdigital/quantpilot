@@ -146,28 +146,28 @@ export async function getMonitoringStatus(options = {}) {
   const workflows = controlPlaneRuntime.listWorkflowRuns(120);
   const workflowCounts = buildWorkflowCounts(workflows);
   const totalWorkflows = workflows.length;
-  const activeWorkflows = workflowCounts.queued + workflowCounts.running + workflowCounts.retryScheduled;
+  const activeWorkflows =
+    workflowCounts.queued + workflowCounts.running + workflowCounts.retryScheduled;
   const oldestQueuedAgeSeconds = findOldestAgeSeconds(
     workflows.filter((item) => item.status === 'queued'),
     nowIso,
-    ['createdAt', 'updatedAt', 'startedAt'],
+    ['createdAt', 'updatedAt', 'startedAt']
   );
   const oldestRetryAgeSeconds = findOldestAgeSeconds(
     workflows.filter((item) => item.status === 'retry_scheduled'),
     nowIso,
-    ['nextRunAt', 'updatedAt', 'failedAt', 'createdAt'],
+    ['nextRunAt', 'updatedAt', 'failedAt', 'createdAt']
   );
   const lastCompletedAt = findLatestTimestamp(
     workflows.filter((item) => item.status === 'completed'),
-    'updatedAt',
+    'updatedAt'
   );
   const lastFailedAt = findLatestTimestamp(
     workflows.filter((item) => item.status === 'failed'),
-    'updatedAt',
+    'updatedAt'
   );
-  const failureRate = totalWorkflows > 0
-    ? Number((workflowCounts.failed / totalWorkflows).toFixed(4))
-    : 0;
+  const failureRate =
+    totalWorkflows > 0 ? Number((workflowCounts.failed / totalWorkflows).toFixed(4)) : 0;
   const notifications = controlPlaneRuntime.listNotifications(20);
   const notificationJobs = controlPlaneRuntime.listNotificationJobs(120);
   const pendingNotificationJobs = countBy(notificationJobs, (item) => item.status === 'pending');
@@ -176,25 +176,32 @@ export async function getMonitoringStatus(options = {}) {
   const riskScanJobs = controlPlaneRuntime.listRiskScanJobs(120);
   const pendingRiskScanJobs = countBy(riskScanJobs, (item) => item.status === 'pending');
   const agentActionRequests = controlPlaneRuntime.listAgentActionRequests(120);
-  const pendingAgentReviews = countBy(agentActionRequests, (item) => item.status === 'pending_review');
+  const pendingAgentReviews = countBy(
+    agentActionRequests,
+    (item) => item.status === 'pending_review'
+  );
   const latestWorkerHeartbeat = controlPlaneRuntime.getLatestWorkerHeartbeat();
   const recentWorkerHeartbeats = controlPlaneRuntime.listWorkerHeartbeats(120);
   const activeWorkers = listUniqueWorkers(recentWorkerHeartbeats).length;
-  const staleWorkers = listUniqueWorkers(recentWorkerHeartbeats.filter((item) => {
-    const ageSeconds = getAgeSeconds(item.createdAt, nowIso);
-    return ageSeconds !== null && ageSeconds > 45 * 60;
-  })).length;
+  const staleWorkers = listUniqueWorkers(
+    recentWorkerHeartbeats.filter((item) => {
+      const ageSeconds = getAgeSeconds(item.createdAt, nowIso);
+      return ageSeconds !== null && ageSeconds > 45 * 60;
+    })
+  ).length;
   const latestHeartbeatAt = findLatestTimestamp(recentWorkerHeartbeats, 'createdAt');
   const schedulerTicks = controlPlaneRuntime.listSchedulerTicks(10);
   const latestSchedulerTick = schedulerTicks[0] || null;
   const worker = resolveWorkerStatus(latestWorkerHeartbeat, nowIso);
   const market = controlPlaneRuntime.getMarketProviderStatus();
-  const broker = await (options.getBrokerHealth ? options.getBrokerHealth() : Promise.resolve({
-    adapter: 'unknown',
-    connected: false,
-    customBrokerConfigured: false,
-    alpacaConfigured: false,
-  }));
+  const broker = await (options.getBrokerHealth
+    ? options.getBrokerHealth()
+    : Promise.resolve({
+        adapter: 'unknown',
+        connected: false,
+        customBrokerConfigured: false,
+        alpacaConfigured: false,
+      }));
   const auditRecords = controlPlaneRuntime.listAuditRecords(20);
   const latestWorkflow = workflows[0] || null;
   const latestRiskEvent = riskEvents[0] || null;
@@ -202,14 +209,21 @@ export async function getMonitoringStatus(options = {}) {
 
   const brokerStatus = broker.connected ? 'healthy' : 'warn';
   const marketStatus = market.connected && !market.fallback ? 'healthy' : 'warn';
-  const workflowStatus = workflowCounts.failed > 0
-    ? 'critical'
-    : (workflowCounts.retryScheduled > 0 || workflowCounts.queued > 0 || workflowCounts.running > 0 ? 'warn' : 'healthy');
-  const riskStatus = riskCounts.riskOff > 0
-    ? 'critical'
-    : (riskCounts.approvalRequired > 0 || riskCounts.connectivityDegraded > 0 ? 'warn' : 'healthy');
+  const workflowStatus =
+    workflowCounts.failed > 0
+      ? 'critical'
+      : workflowCounts.retryScheduled > 0 || workflowCounts.queued > 0 || workflowCounts.running > 0
+        ? 'warn'
+        : 'healthy';
+  const riskStatus =
+    riskCounts.riskOff > 0
+      ? 'critical'
+      : riskCounts.approvalRequired > 0 || riskCounts.connectivityDegraded > 0
+        ? 'warn'
+        : 'healthy';
   const retryScheduledWorkflows = workflowCounts.retryScheduled;
-  const totalPending = pendingNotificationJobs + pendingRiskScanJobs + pendingAgentReviews + retryScheduledWorkflows;
+  const totalPending =
+    pendingNotificationJobs + pendingRiskScanJobs + pendingAgentReviews + retryScheduledWorkflows;
   const backlogStatus = buildQueueBacklogStatus(totalPending, retryScheduledWorkflows);
   const queueStatus = backlogStatus === 'critical' ? 'critical' : backlogStatus;
 

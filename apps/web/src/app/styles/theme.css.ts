@@ -44,8 +44,10 @@ globalStyle(':root', {
   /* Shadows */
   '--shadow': '0 24px 64px rgba(0, 0, 0, 0.75), 0 4px 16px rgba(0, 0, 0, 0.55)',
   '--shadow-soft': '0 8px 28px rgba(0, 0, 0, 0.5)',
-  '--shadow-panel': '0 2px 0 rgba(255, 255, 255, 0.025) inset, 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.3)',
-  '--shadow-panel-hover': '0 2px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 28px rgba(0, 212, 255, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.3)',
+  '--shadow-panel':
+    '0 2px 0 rgba(255, 255, 255, 0.025) inset, 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.3)',
+  '--shadow-panel-hover':
+    '0 2px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 28px rgba(0, 212, 255, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.3)',
 
   /* Glows */
   '--glow-cyan': '0 0 14px rgba(0, 212, 255, 0.55)',

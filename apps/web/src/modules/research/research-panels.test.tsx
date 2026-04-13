@@ -1,28 +1,43 @@
+import type { BacktestRunItem, StrategyCatalogItem } from '@shared-types/trading.ts';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import type { StrategyCatalogItem } from '@shared-types/trading.ts';
 import { BacktestCandidateStrategyRow } from './BacktestCandidateStrategyRow.tsx';
-import type { BacktestRunItem } from '@shared-types/trading.ts';
-import { ResearchActionBar, ResearchActionButton } from './ResearchActionBar.tsx';
 import { BacktestRunQueueRow } from './BacktestRunQueueRow.tsx';
+import { ResearchActionBar, ResearchActionButton } from './ResearchActionBar.tsx';
 import { ResearchAuditFeedRow } from './ResearchAuditFeedRow.tsx';
 import { ResearchCollectionPanel } from './ResearchCollectionPanel.tsx';
 import { ResearchDetailInspectionPanel } from './ResearchDetailInspectionPanel.tsx';
-import { ResearchExecutionPlanRow } from './ResearchExecutionPlanRow.tsx';
 import { ResearchEventInspectionPanel } from './ResearchEventInspectionPanel.tsx';
+import { ResearchExecutionPlanRow } from './ResearchExecutionPlanRow.tsx';
 import { ResearchRunSummaryRow } from './ResearchRunSummaryRow.tsx';
 import { ResearchStatusPanel } from './ResearchStatusPanel.tsx';
-import { StrategyCatalogRow } from './StrategyCatalogRow.tsx';
 import { ResearchTerminalPanel } from './ResearchTerminalPanel.tsx';
 import { ResearchTimelineEventRow } from './ResearchTimelineEventRow.tsx';
 import { ResearchVersionSnapshotRow } from './ResearchVersionSnapshotRow.tsx';
 import { ResearchWorkflowStepRow } from './ResearchWorkflowStepRow.tsx';
-import { getBacktestCollectionConfigs, getStrategyCollectionConfigs } from './researchCollectionConfigs.ts';
-import { getBacktestDetailInspectionConfig, getStrategyDetailInspectionConfig } from './researchDetailConfigs.ts';
-import { getStrategyTimelineActionLabel, getStrategyTimelineGuidance } from './researchEventInspection.tsx';
-import { getStrategyTimelineInspectionConfig, getWorkflowInspectionConfig, getWorkflowStepInspectionConfig } from './researchInspectionConfigs.ts';
+import {
+  getBacktestCollectionConfigs,
+  getStrategyCollectionConfigs,
+} from './researchCollectionConfigs.ts';
+import {
+  getBacktestDetailInspectionConfig,
+  getStrategyDetailInspectionConfig,
+} from './researchDetailConfigs.ts';
+import {
+  getStrategyTimelineActionLabel,
+  getStrategyTimelineGuidance,
+} from './researchEventInspection.tsx';
+import {
+  getStrategyTimelineInspectionConfig,
+  getWorkflowInspectionConfig,
+  getWorkflowStepInspectionConfig,
+} from './researchInspectionConfigs.ts';
 import { getBacktestStatusConfig, getStrategyStatusConfig } from './researchStatusConfigs.ts';
-import { getBacktestTerminalConfigs, getStrategyTerminalConfigs } from './researchTerminalConfigs.tsx';
+import {
+  getBacktestTerminalConfigs,
+  getStrategyTerminalConfigs,
+} from './researchTerminalConfigs.tsx';
+import { StrategyCatalogRow } from './StrategyCatalogRow.tsx';
 
 describe('research panel primitives', () => {
   it('renders status panel metrics and messages', () => {
@@ -36,7 +51,7 @@ describe('research panel primitives', () => {
           { label: 'Runs', value: 8 },
         ]}
         messages={['Synced']}
-      />,
+      />
     );
 
     expect(html).toContain('Summary');
@@ -55,7 +70,7 @@ describe('research panel primitives', () => {
         metrics={[{ label: 'Status', value: 'ready' }]}
       >
         <div>Hidden body</div>
-      </ResearchDetailInspectionPanel>,
+      </ResearchDetailInspectionPanel>
     );
 
     expect(html).toContain('Select a record first.');
@@ -76,7 +91,7 @@ describe('research panel primitives', () => {
         isEmpty={false}
       >
         <div>Should stay hidden while loading</div>
-      </ResearchCollectionPanel>,
+      </ResearchCollectionPanel>
     );
 
     expect(html).toContain('Loading rows...');
@@ -96,7 +111,7 @@ describe('research panel primitives', () => {
         detail="Detail message"
         guidance="Next step"
         actions={<button type="button">Open</button>}
-      />,
+      />
     );
 
     expect(html).toContain('Detail message');
@@ -114,7 +129,7 @@ describe('research panel primitives', () => {
         footer={<div>Footer block</div>}
       >
         <div>Row body</div>
-      </ResearchTerminalPanel>,
+      </ResearchTerminalPanel>
     );
 
     expect(html).toContain('Prelude block');
@@ -125,9 +140,13 @@ describe('research panel primitives', () => {
   it('renders shared research action bar buttons', () => {
     const html = renderToStaticMarkup(
       <ResearchActionBar>
-        <ResearchActionButton label="Open Strategy Detail" priority="primary" onClick={() => undefined} />
+        <ResearchActionButton
+          label="Open Strategy Detail"
+          priority="primary"
+          onClick={() => undefined}
+        />
         <ResearchActionButton label="Return to Strategy Timeline" onClick={() => undefined} />
-      </ResearchActionBar>,
+      </ResearchActionBar>
     );
 
     expect(html).toContain('Open Strategy Detail');
@@ -153,7 +172,7 @@ describe('research panel primitives', () => {
           { label: 'Workflow', value: 'wf-run-1' },
         ]}
         onInspect={() => undefined}
-      />,
+      />
     );
 
     expect(html).toContain('Review completed');
@@ -172,7 +191,7 @@ describe('research panel primitives', () => {
           { label: 'Return / Drawdown', value: '11.5% / 5.9%' },
           { label: 'Sharpe', value: '1.50' },
         ]}
-      />,
+      />
     );
 
     expect(html).toContain('03/13 08:30');
@@ -199,12 +218,7 @@ describe('research panel primitives', () => {
       completedAt: '2026-03-13T10:00:00.000Z',
     };
 
-    const html = renderToStaticMarkup(
-      <ResearchRunSummaryRow
-        locale="en"
-        run={run}
-      />,
-    );
+    const html = renderToStaticMarkup(<ResearchRunSummaryRow locale="en" run={run} />);
 
     expect(html).toContain('90D');
     expect(html).toContain('completed');
@@ -309,7 +323,7 @@ describe('research panel primitives', () => {
           ],
         }}
         onAction={() => undefined}
-      />,
+      />
     );
 
     expect(html).toContain('Paper orders ready');
@@ -331,7 +345,7 @@ describe('research panel primitives', () => {
           { label: 'Lane', value: 'Research' },
           { label: 'Time', value: '2026-03-13T12:00:00.000Z' },
         ]}
-      />,
+      />
     );
 
     expect(html).toContain('Queued run');
@@ -359,7 +373,7 @@ describe('research panel primitives', () => {
         eventType: 'run',
         detail: 'Backtest queued.',
       },
-      (value) => value,
+      (value) => value
     );
     const workflowConfig = getWorkflowInspectionConfig(
       'en',
@@ -387,7 +401,7 @@ describe('research panel primitives', () => {
         error: null,
         metadata: {},
       },
-      (value) => value,
+      (value) => value
     );
     const stepConfig = getWorkflowStepInspectionConfig(
       'en',
@@ -414,7 +428,7 @@ describe('research panel primitives', () => {
         error: null,
         metadata: {},
       },
-      { key: 'risk_review', status: 'completed' },
+      { key: 'risk_review', status: 'completed' }
     );
 
     expect(timelineConfig.metrics[0]?.value).toBe('Queued run');
@@ -467,7 +481,7 @@ describe('research panel primitives', () => {
           turnoverPct: 18,
           summary: 'Latest run',
         },
-      },
+      }
     );
     const backtestConfig = getBacktestDetailInspectionConfig(
       'en',
@@ -516,7 +530,7 @@ describe('research panel primitives', () => {
           summary: 'Candidate momentum strategy',
         },
       },
-      (value) => `${value.toFixed(1)}%`,
+      (value) => `${value.toFixed(1)}%`
     );
 
     expect(strategyConfig.metrics[0]?.value).toBe('Momentum');
@@ -622,7 +636,7 @@ describe('research panel primitives', () => {
         step={{ key: 'risk_review', status: 'completed' }}
         selectedStepKey="risk_review"
         onInspect={() => undefined}
-      />,
+      />
     );
 
     expect(html).toContain('risk_review');
@@ -657,7 +671,7 @@ describe('research panel primitives', () => {
         formatPercent={(value) => `${value.toFixed(1)}%`}
         onReview={() => undefined}
         onInspect={() => undefined}
-      />,
+      />
     );
 
     expect(html).toContain('Momentum');
@@ -689,7 +703,7 @@ describe('research panel primitives', () => {
         submittingStrategyId=""
         formatPercent={(value) => `${value.toFixed(1)}%`}
         onQueue={() => undefined}
-      />,
+      />
     );
 
     expect(html).toContain('Momentum');
@@ -726,7 +740,7 @@ describe('research panel primitives', () => {
         onPromote={() => undefined}
         onArchiveToggle={() => undefined}
         onInspect={() => undefined}
-      />,
+      />
     );
 
     expect(html).toContain('Reversion');

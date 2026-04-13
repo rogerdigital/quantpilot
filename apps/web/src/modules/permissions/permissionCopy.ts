@@ -22,8 +22,8 @@ const ACTION_LABELS: Record<string, { zh: string; en: string }> = {
 
 function getPermissionLabel(locale: 'zh' | 'en', permission = '') {
   return locale === 'zh'
-    ? (PERMISSION_LABELS[permission]?.zh || permission)
-    : (PERMISSION_LABELS[permission]?.en || permission);
+    ? PERMISSION_LABELS[permission]?.zh || permission
+    : PERMISSION_LABELS[permission]?.en || permission;
 }
 
 export function formatMissingPermission(locale: 'zh' | 'en', permission = '') {
@@ -37,7 +37,7 @@ export function formatPermissionDisabled(
   locale: 'zh' | 'en',
   permission: string,
   actionZh: string,
-  actionEn: string,
+  actionEn: string
 ) {
   return locale === 'zh'
     ? `${formatMissingPermission(locale, permission)}，不能${actionZh}。`
@@ -48,7 +48,7 @@ export function formatPermissionReadOnly(
   locale: 'zh' | 'en',
   permission: string,
   subjectZh: string,
-  subjectEn: string,
+  subjectEn: string
 ) {
   return locale === 'zh'
     ? `当前会话${formatMissingPermission(locale, permission)}，${subjectZh}已切换为只读。`
@@ -59,7 +59,7 @@ export function formatPermissionBlocked(
   locale: 'zh' | 'en',
   permission: string,
   actionZh: string,
-  actionEn: string,
+  actionEn: string
 ) {
   return locale === 'zh'
     ? `${actionZh}已被拦截：当前会话${formatMissingPermission(locale, permission)}。`
@@ -68,7 +68,7 @@ export function formatPermissionBlocked(
 
 export function formatActionGuardNotice(
   locale: 'zh' | 'en',
-  notice: { permission: string; action: string } | null,
+  notice: { permission: string; action: string } | null
 ) {
   if (!notice) return '';
   const actionCopy = ACTION_LABELS[notice.action];
@@ -79,7 +79,7 @@ export function formatActionGuardNotice(
     locale,
     notice.permission,
     '执行受控动作',
-    'perform the guarded action',
+    'perform the guarded action'
   );
 }
 
@@ -89,7 +89,7 @@ export function formatPermissionError(
   fallbackZh: string,
   fallbackEn: string,
   blockedZh = '操作',
-  blockedEn = 'Action',
+  blockedEn = 'Action'
 ) {
   if (error instanceof ApiPermissionError && error.missingPermission) {
     return locale === 'zh'

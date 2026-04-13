@@ -13,8 +13,12 @@ function buildSummary(strategies, runs, dataSource = 'control-plane-runtime.rese
   const averageReturnPct = completedRuns.length
     ? completedRuns.reduce((sum, run) => sum + run.annualizedReturnPct, 0) / completedRuns.length
     : 0;
-  const candidateStrategies = strategies.filter((item) => ['candidate', 'paper', 'live'].includes(item.status)).length;
-  const promotedStrategies = strategies.filter((item) => ['paper', 'live'].includes(item.status)).length;
+  const candidateStrategies = strategies.filter((item) =>
+    ['candidate', 'paper', 'live'].includes(item.status)
+  ).length;
+  const promotedStrategies = strategies.filter((item) =>
+    ['paper', 'live'].includes(item.status)
+  ).length;
 
   return {
     ok: true,

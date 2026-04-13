@@ -1,11 +1,13 @@
 // @ts-nocheck
 function getAdapterMetadata(store) {
   if (store?.describeAdapter) return store.describeAdapter();
-  return store?.adapter || {
-    kind: 'custom',
-    label: 'Custom Store',
-    namespace: 'control-plane',
-  };
+  return (
+    store?.adapter || {
+      kind: 'custom',
+      label: 'Custom Store',
+      namespace: 'control-plane',
+    }
+  );
 }
 
 function getPersistenceStatus(store) {
@@ -82,14 +84,30 @@ export const CONTROL_PLANE_FILE_MANIFEST = [
   { filename: 'audit-records.json', label: 'Audit Records', kind: 'collection' },
   { filename: 'backtest-results.json', label: 'Backtest Results', kind: 'collection' },
   { filename: 'backtest-runs.json', label: 'Backtest Runs', kind: 'collection' },
-  { filename: 'broker-account-snapshots.json', label: 'Broker Account Snapshots', kind: 'collection' },
-  { filename: 'broker-execution-events.json', label: 'Broker Execution Events', kind: 'collection' },
+  {
+    filename: 'broker-account-snapshots.json',
+    label: 'Broker Account Snapshots',
+    kind: 'collection',
+  },
+  {
+    filename: 'broker-execution-events.json',
+    label: 'Broker Execution Events',
+    kind: 'collection',
+  },
   { filename: 'cycle-records.json', label: 'Cycle Records', kind: 'collection' },
-  { filename: 'execution-candidate-handoffs.json', label: 'Execution Candidate Handoffs', kind: 'collection' },
+  {
+    filename: 'execution-candidate-handoffs.json',
+    label: 'Execution Candidate Handoffs',
+    kind: 'collection',
+  },
   { filename: 'execution-order-states.json', label: 'Execution Order States', kind: 'collection' },
   { filename: 'execution-plans.json', label: 'Execution Plans', kind: 'collection' },
   { filename: 'execution-runs.json', label: 'Execution Runs', kind: 'collection' },
-  { filename: 'execution-runtime-events.json', label: 'Execution Runtime Events', kind: 'collection' },
+  {
+    filename: 'execution-runtime-events.json',
+    label: 'Execution Runtime Events',
+    kind: 'collection',
+  },
   { filename: 'incident-activities.json', label: 'Incident Activities', kind: 'collection' },
   { filename: 'incident-notes.json', label: 'Incident Notes', kind: 'collection' },
   { filename: 'incident-tasks.json', label: 'Incident Tasks', kind: 'collection' },
@@ -144,7 +162,7 @@ export function restoreControlPlaneBackup(store, input = {}, options = {}) {
   const skippedFiles = [];
 
   for (const descriptor of CONTROL_PLANE_FILE_MANIFEST) {
-    if (!Object.prototype.hasOwnProperty.call(data, descriptor.filename)) continue;
+    if (!Object.hasOwn(data, descriptor.filename)) continue;
     const nextValue = normalizeFileValue(descriptor, data[descriptor.filename]);
     files.push(summarizeFileValue(descriptor, nextValue));
     if (dryRun) continue;
@@ -157,7 +175,9 @@ export function restoreControlPlaneBackup(store, input = {}, options = {}) {
 
   if (backup?.files && Array.isArray(backup.files)) {
     backup.files.forEach((item) => {
-      if (!CONTROL_PLANE_FILE_MANIFEST.some((descriptor) => descriptor.filename === item.filename)) {
+      if (
+        !CONTROL_PLANE_FILE_MANIFEST.some((descriptor) => descriptor.filename === item.filename)
+      ) {
         skippedFiles.push(item.filename);
       }
     });
@@ -190,12 +210,14 @@ export function getControlPlaneIntegrityReport(store, options = {}) {
     if (descriptor.kind === 'object') {
       objectFiles += 1;
       if (!value || typeof value !== 'object' || Array.isArray(value)) {
-        issues.push(buildIssue(
-          'critical',
-          'invalid-object-file',
-          descriptor.filename,
-          `${descriptor.label} is not stored as an object.`,
-        ));
+        issues.push(
+          buildIssue(
+            'critical',
+            'invalid-object-file',
+            descriptor.filename,
+            `${descriptor.label} is not stored as an object.`
+          )
+        );
       }
       return summary;
     }
@@ -204,12 +226,14 @@ export function getControlPlaneIntegrityReport(store, options = {}) {
     totalRecords += Array.isArray(value) ? value.length : 0;
     if (!Array.isArray(value)) {
       malformedRecordCount += 1;
-      issues.push(buildIssue(
-        'critical',
-        'invalid-collection-file',
-        descriptor.filename,
-        `${descriptor.label} is not stored as a collection.`,
-      ));
+      issues.push(
+        buildIssue(
+          'critical',
+          'invalid-collection-file',
+          descriptor.filename,
+          `${descriptor.label} is not stored as a collection.`
+        )
+      );
       return summary;
     }
 
@@ -217,35 +241,41 @@ export function getControlPlaneIntegrityReport(store, options = {}) {
     value.forEach((item, index) => {
       if (!item || typeof item !== 'object' || Array.isArray(item)) {
         malformedRecordCount += 1;
-        issues.push(buildIssue(
-          'warn',
-          'invalid-record-shape',
-          descriptor.filename,
-          `${descriptor.label} contains a non-object record.`,
-          { index },
-        ));
+        issues.push(
+          buildIssue(
+            'warn',
+            'invalid-record-shape',
+            descriptor.filename,
+            `${descriptor.label} contains a non-object record.`,
+            { index }
+          )
+        );
         return;
       }
       if (!item.id) {
         missingIdCount += 1;
-        issues.push(buildIssue(
-          'warn',
-          'missing-record-id',
-          descriptor.filename,
-          `${descriptor.label} contains a record without an id.`,
-          { index },
-        ));
+        issues.push(
+          buildIssue(
+            'warn',
+            'missing-record-id',
+            descriptor.filename,
+            `${descriptor.label} contains a record without an id.`,
+            { index }
+          )
+        );
         return;
       }
       if (seenIds.has(item.id)) {
         duplicateIdCount += 1;
-        issues.push(buildIssue(
-          'warn',
-          'duplicate-record-id',
-          descriptor.filename,
-          `${descriptor.label} contains duplicate id ${item.id}.`,
-          { id: item.id },
-        ));
+        issues.push(
+          buildIssue(
+            'warn',
+            'duplicate-record-id',
+            descriptor.filename,
+            `${descriptor.label} contains duplicate id ${item.id}.`,
+            { id: item.id }
+          )
+        );
         return;
       }
       seenIds.add(item.id);
@@ -256,19 +286,19 @@ export function getControlPlaneIntegrityReport(store, options = {}) {
 
   const workflows = normalizeFileValue(
     { kind: 'collection' },
-    readFileValue(store, { filename: 'workflow-runs.json', kind: 'collection' }),
+    readFileValue(store, { filename: 'workflow-runs.json', kind: 'collection' })
   );
   const notificationJobs = normalizeFileValue(
     { kind: 'collection' },
-    readFileValue(store, { filename: 'notification-outbox.json', kind: 'collection' }),
+    readFileValue(store, { filename: 'notification-outbox.json', kind: 'collection' })
   );
   const riskScanJobs = normalizeFileValue(
     { kind: 'collection' },
-    readFileValue(store, { filename: 'risk-scan-outbox.json', kind: 'collection' }),
+    readFileValue(store, { filename: 'risk-scan-outbox.json', kind: 'collection' })
   );
   const agentRequests = normalizeFileValue(
     { kind: 'collection' },
-    readFileValue(store, { filename: 'agent-action-requests.json', kind: 'collection' }),
+    readFileValue(store, { filename: 'agent-action-requests.json', kind: 'collection' })
   );
 
   const retryScheduledWorkflows = countBy(workflows, (item) => item.status === 'retry_scheduled');
@@ -282,7 +312,9 @@ export function getControlPlaneIntegrityReport(store, options = {}) {
     generatedAt,
     status: issues.some((item) => item.level === 'critical')
       ? 'critical'
-      : (issues.length ? 'warn' : 'healthy'),
+      : issues.length
+        ? 'warn'
+        : 'healthy',
     adapter: getAdapterMetadata(store),
     persistence,
     files,

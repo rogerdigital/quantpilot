@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
-import { listStrategyCatalog } from '../../strategy/services/catalog-service.js';
 import { createBacktestRun } from '../../backtest/services/runs-service.js';
+import { listStrategyCatalog } from '../../strategy/services/catalog-service.js';
 import { evaluateBacktestRun, promoteStrategyFromEvaluation } from './evaluation-service.js';
 
 function parseLimit(value, fallback) {
@@ -22,13 +22,21 @@ function classifyCoverage(latestResult, latestEvaluation, latestReport) {
       note: 'A fresh result version is still required.',
     };
   }
-  if (!latestEvaluation || new Date(latestEvaluation.createdAt).getTime() < new Date(latestResult.updatedAt || latestResult.generatedAt).getTime()) {
+  if (
+    !latestEvaluation ||
+    new Date(latestEvaluation.createdAt).getTime() <
+      new Date(latestResult.updatedAt || latestResult.generatedAt).getTime()
+  ) {
     return {
       coverage: 'evaluation_pending',
       note: 'The latest result has not been turned into a formal evaluation yet.',
     };
   }
-  if (!latestReport || new Date(latestReport.updatedAt || latestReport.createdAt).getTime() < new Date(latestEvaluation.createdAt).getTime()) {
+  if (
+    !latestReport ||
+    new Date(latestReport.updatedAt || latestReport.createdAt).getTime() <
+      new Date(latestEvaluation.createdAt).getTime()
+  ) {
     return {
       coverage: 'report_pending',
       note: 'A report asset is still pending for the latest evaluation.',
@@ -92,29 +100,29 @@ function resolveComparisonBand(item) {
   const championSharpeGap = item.championSharpeGap;
 
   if (
-    Number.isFinite(baselineReturnGap)
-    && Number.isFinite(baselineSharpeGap)
-    && Number.isFinite(baselineDrawdownGap)
-    && baselineReturnGap >= 0
-    && baselineSharpeGap >= 0
-    && baselineDrawdownGap >= -1.5
+    Number.isFinite(baselineReturnGap) &&
+    Number.isFinite(baselineSharpeGap) &&
+    Number.isFinite(baselineDrawdownGap) &&
+    baselineReturnGap >= 0 &&
+    baselineSharpeGap >= 0 &&
+    baselineDrawdownGap >= -1.5
   ) {
     return 'outperforming_baseline';
   }
 
   if (
-    Number.isFinite(championReturnGap)
-    && Number.isFinite(championSharpeGap)
-    && championReturnGap >= -2.5
-    && championSharpeGap >= -0.2
+    Number.isFinite(championReturnGap) &&
+    Number.isFinite(championSharpeGap) &&
+    championReturnGap >= -2.5 &&
+    championSharpeGap >= -0.2
   ) {
     return 'challenger';
   }
 
   if (
-    Number.isFinite(baselineReturnGap)
-    && Number.isFinite(baselineSharpeGap)
-    && (baselineReturnGap <= -3 || baselineSharpeGap <= -0.25)
+    Number.isFinite(baselineReturnGap) &&
+    Number.isFinite(baselineSharpeGap) &&
+    (baselineReturnGap <= -3 || baselineSharpeGap <= -0.25)
   ) {
     return 'trailing';
   }
@@ -146,7 +154,8 @@ function buildComparisonInsight(item) {
       strategyStatus: item.strategyStatus,
       comparisonBand: item.comparisonBand,
       headline: `${item.strategyName} anchors the baseline envelope.`,
-      detail: 'Use this strategy as the minimum acceptable research package for refreshes and challenger review.',
+      detail:
+        'Use this strategy as the minimum acceptable research package for refreshes and challenger review.',
       baselineReturnGapPct: item.baselineReturnGapPct,
       championReturnGapPct: item.championReturnGapPct,
       baselineSharpeGap: item.baselineSharpeGap,
@@ -162,7 +171,8 @@ function buildComparisonInsight(item) {
       strategyStatus: item.strategyStatus,
       comparisonBand: item.comparisonBand,
       headline: `${item.strategyName} is outperforming the baseline pack.`,
-      detail: 'Return, Sharpe, and drawdown are all within the current promotion envelope versus the baseline.',
+      detail:
+        'Return, Sharpe, and drawdown are all within the current promotion envelope versus the baseline.',
       baselineReturnGapPct: item.baselineReturnGapPct,
       championReturnGapPct: item.championReturnGapPct,
       baselineSharpeGap: item.baselineSharpeGap,
@@ -178,7 +188,8 @@ function buildComparisonInsight(item) {
       strategyStatus: item.strategyStatus,
       comparisonBand: item.comparisonBand,
       headline: `${item.strategyName} is closing in on the champion.`,
-      detail: 'Performance is near the current champion and should stay in the next comparison and promotion review cycle.',
+      detail:
+        'Performance is near the current champion and should stay in the next comparison and promotion review cycle.',
       baselineReturnGapPct: item.baselineReturnGapPct,
       championReturnGapPct: item.championReturnGapPct,
       baselineSharpeGap: item.baselineSharpeGap,
@@ -194,7 +205,8 @@ function buildComparisonInsight(item) {
       strategyStatus: item.strategyStatus,
       comparisonBand: item.comparisonBand,
       headline: `${item.strategyName} is trailing the baseline envelope.`,
-      detail: 'This strategy needs a refresh result, rework, or a narrower evaluation scope before promotion governance.',
+      detail:
+        'This strategy needs a refresh result, rework, or a narrower evaluation scope before promotion governance.',
       baselineReturnGapPct: item.baselineReturnGapPct,
       championReturnGapPct: item.championReturnGapPct,
       baselineSharpeGap: item.baselineSharpeGap,
@@ -209,7 +221,8 @@ function buildComparisonInsight(item) {
     strategyStatus: item.strategyStatus,
     comparisonBand: item.comparisonBand,
     headline: `${item.strategyName} is still forming its comparison package.`,
-    detail: 'The latest result set is incomplete or too fresh to classify against the baseline and champion ladder.',
+    detail:
+      'The latest result set is incomplete or too fresh to classify against the baseline and champion ladder.',
     baselineReturnGapPct: item.baselineReturnGapPct,
     championReturnGapPct: item.championReturnGapPct,
     baselineSharpeGap: item.baselineSharpeGap,
@@ -221,7 +234,8 @@ function buildComparisonInsight(item) {
 export function listResearchGovernanceActions(options = {}) {
   const limit = parseLimit(options.limit, 30);
   const since = resolveSince(options.hours);
-  const actions = controlPlaneRuntime.listOperatorActions(limit * 3, { since })
+  const actions = controlPlaneRuntime
+    .listOperatorActions(limit * 3, { since })
     .filter((item) => item.type?.startsWith('research-governance.'))
     .slice(0, limit);
 
@@ -308,7 +322,7 @@ export function runResearchGovernanceAction(payload = {}) {
         failures,
         successCount: successes.length,
         failuresCount: failures.length,
-      },
+      }
     );
     return { ok: true, action: actionRecord, successes, failures };
   }
@@ -320,7 +334,12 @@ export function runResearchGovernanceAction(payload = {}) {
         windowLabel: payload.windowLabel || '',
         requestedBy: actor,
       });
-      if (result.ok) successes.push({ strategyId, runId: result.run?.id || '', workflowRunId: result.workflow?.id || '' });
+      if (result.ok)
+        successes.push({
+          strategyId,
+          runId: result.run?.id || '',
+          workflowRunId: result.workflow?.id || '',
+        });
       else failures.push({ strategyId, error: result.message || result.error || 'unknown error' });
     });
     const actionRecord = recordGovernanceAction(
@@ -335,7 +354,7 @@ export function runResearchGovernanceAction(payload = {}) {
         failures,
         successCount: successes.length,
         failuresCount: failures.length,
-      },
+      }
     );
     return { ok: true, action: actionRecord, successes, failures };
   }
@@ -346,7 +365,12 @@ export function runResearchGovernanceAction(payload = {}) {
         actor,
         summary: payload.summary || `Governance workbench evaluated ${runId}.`,
       });
-      if (result.ok) successes.push({ runId, strategyId: result.run?.strategyId || '', verdict: result.evaluation?.verdict || '' });
+      if (result.ok)
+        successes.push({
+          runId,
+          strategyId: result.run?.strategyId || '',
+          verdict: result.evaluation?.verdict || '',
+        });
       else failures.push({ runId, error: result.message || result.error || 'unknown error' });
     });
     const actionRecord = recordGovernanceAction(
@@ -360,7 +384,7 @@ export function runResearchGovernanceAction(payload = {}) {
         failures,
         successCount: successes.length,
         failuresCount: failures.length,
-      },
+      }
     );
     return { ok: true, action: actionRecord, successes, failures };
   }
@@ -401,8 +425,10 @@ export function runResearchGovernanceAction(payload = {}) {
         ...strategy,
         baseline: action === 'set_baseline' ? true : strategy.baseline,
         champion: action === 'set_champion' ? true : strategy.champion,
-        baselineUpdatedAt: action === 'set_baseline' ? new Date().toISOString() : strategy.baselineUpdatedAt,
-        championUpdatedAt: action === 'set_champion' ? new Date().toISOString() : strategy.championUpdatedAt,
+        baselineUpdatedAt:
+          action === 'set_baseline' ? new Date().toISOString() : strategy.baselineUpdatedAt,
+        championUpdatedAt:
+          action === 'set_champion' ? new Date().toISOString() : strategy.championUpdatedAt,
         updatedBy: actor,
       });
       successes.push({
@@ -423,7 +449,7 @@ export function runResearchGovernanceAction(payload = {}) {
         failures,
         successCount: successes.length,
         failuresCount: failures.length,
-      },
+      }
     );
     return { ok: true, action: actionRecord, successes, failures };
   }
@@ -439,7 +465,9 @@ export function getResearchWorkbenchSnapshot(options = {}) {
   const limit = parseLimit(options.limit, 20);
   const since = resolveSince(options.hours);
   const strategyPayload = listStrategyCatalog();
-  const strategies = (strategyPayload.strategies || []).filter((strategy) => strategy.status !== 'archived');
+  const strategies = (strategyPayload.strategies || []).filter(
+    (strategy) => strategy.status !== 'archived'
+  );
   const results = controlPlaneRuntime.listBacktestResults(300, { since });
   const evaluations = controlPlaneRuntime.listResearchEvaluations(300, { since });
   const reports = controlPlaneRuntime.listResearchReports(300, { since });
@@ -450,17 +478,20 @@ export function getResearchWorkbenchSnapshot(options = {}) {
 
   const latestResultByStrategy = new Map();
   results.forEach((result) => {
-    if (!latestResultByStrategy.has(result.strategyId)) latestResultByStrategy.set(result.strategyId, result);
+    if (!latestResultByStrategy.has(result.strategyId))
+      latestResultByStrategy.set(result.strategyId, result);
   });
 
   const latestEvaluationByStrategy = new Map();
   evaluations.forEach((evaluation) => {
-    if (!latestEvaluationByStrategy.has(evaluation.strategyId)) latestEvaluationByStrategy.set(evaluation.strategyId, evaluation);
+    if (!latestEvaluationByStrategy.has(evaluation.strategyId))
+      latestEvaluationByStrategy.set(evaluation.strategyId, evaluation);
   });
 
   const latestReportByStrategy = new Map();
   reports.forEach((report) => {
-    if (!latestReportByStrategy.has(report.strategyId)) latestReportByStrategy.set(report.strategyId, report);
+    if (!latestReportByStrategy.has(report.strategyId))
+      latestReportByStrategy.set(report.strategyId, report);
   });
 
   const reportTaskByStrategy = new Map();
@@ -471,7 +502,9 @@ export function getResearchWorkbenchSnapshot(options = {}) {
   const summary = {
     totalStrategies: strategyPayload.strategies?.length || 0,
     activeStrategies: strategies.length,
-    candidateStrategies: strategies.filter((item) => item.status === 'candidate' || item.status === 'paper').length,
+    candidateStrategies: strategies.filter(
+      (item) => item.status === 'candidate' || item.status === 'paper'
+    ).length,
     readyToPromote: 0,
     readyForExecution: 0,
     waitingForReport: 0,
@@ -501,13 +534,14 @@ export function getResearchWorkbenchSnapshot(options = {}) {
     const latestReportTask = reportTaskByStrategy.get(strategy.id) || null;
     const currentCoverage = classifyCoverage(latestResult, latestEvaluation, latestReport);
     const laneKey = computeLane(latestResult, latestEvaluation, latestReport);
-    const latestTimestamp = latestReport?.updatedAt
-      || latestReport?.createdAt
-      || latestEvaluation?.createdAt
-      || latestResult?.updatedAt
-      || latestResult?.generatedAt
-      || strategy.updatedAt
-      || strategy.createdAt;
+    const latestTimestamp =
+      latestReport?.updatedAt ||
+      latestReport?.createdAt ||
+      latestEvaluation?.createdAt ||
+      latestResult?.updatedAt ||
+      latestResult?.generatedAt ||
+      strategy.updatedAt ||
+      strategy.createdAt;
 
     laneBuckets.get(laneKey).push(strategy.id);
     if (laneKey === 'ready-promote') summary.readyToPromote += 1;
@@ -532,7 +566,12 @@ export function getResearchWorkbenchSnapshot(options = {}) {
       reportVerdict: latestReport?.verdict || '--',
       readiness: latestEvaluation?.readiness || latestReport?.readiness || '--',
       recommendedAction: latestEvaluation?.recommendedAction || currentCoverage.note,
-      reportStatus: currentCoverage.coverage === 'full' ? 'ready' : (currentCoverage.coverage === 'report_pending' ? 'pending' : 'missing'),
+      reportStatus:
+        currentCoverage.coverage === 'full'
+          ? 'ready'
+          : currentCoverage.coverage === 'report_pending'
+            ? 'pending'
+            : 'missing',
       reportTaskStatus: latestReportTask?.status || '--',
       annualizedReturnPct: latestResult?.annualizedReturnPct ?? null,
       maxDrawdownPct: latestResult?.maxDrawdownPct ?? null,
@@ -601,12 +640,24 @@ export function getResearchWorkbenchSnapshot(options = {}) {
   const championEntry = comparisons.find((item) => item.champion) || null;
 
   const enrichedComparisons = comparisons.map((item) => {
-    const baselineReturnGapPct = baselineEntry ? subtractMetric(item.annualizedReturnPct, baselineEntry.annualizedReturnPct) : null;
-    const baselineSharpeGap = baselineEntry ? subtractMetric(item.sharpe, baselineEntry.sharpe) : null;
-    const baselineDrawdownGapPct = baselineEntry ? invertGap(item.maxDrawdownPct, baselineEntry.maxDrawdownPct) : null;
-    const championReturnGapPct = championEntry ? subtractMetric(item.annualizedReturnPct, championEntry.annualizedReturnPct) : null;
-    const championSharpeGap = championEntry ? subtractMetric(item.sharpe, championEntry.sharpe) : null;
-    const championDrawdownGapPct = championEntry ? invertGap(item.maxDrawdownPct, championEntry.maxDrawdownPct) : null;
+    const baselineReturnGapPct = baselineEntry
+      ? subtractMetric(item.annualizedReturnPct, baselineEntry.annualizedReturnPct)
+      : null;
+    const baselineSharpeGap = baselineEntry
+      ? subtractMetric(item.sharpe, baselineEntry.sharpe)
+      : null;
+    const baselineDrawdownGapPct = baselineEntry
+      ? invertGap(item.maxDrawdownPct, baselineEntry.maxDrawdownPct)
+      : null;
+    const championReturnGapPct = championEntry
+      ? subtractMetric(item.annualizedReturnPct, championEntry.annualizedReturnPct)
+      : null;
+    const championSharpeGap = championEntry
+      ? subtractMetric(item.sharpe, championEntry.sharpe)
+      : null;
+    const championDrawdownGapPct = championEntry
+      ? invertGap(item.maxDrawdownPct, championEntry.maxDrawdownPct)
+      : null;
     const enriched = {
       ...item,
       baselineReturnGapPct,
@@ -630,9 +681,12 @@ export function getResearchWorkbenchSnapshot(options = {}) {
     baselineUpdatedAt: baselineEntry?.updatedAt || '',
     championUpdatedAt: championEntry?.updatedAt || '',
     comparedStrategies: enrichedComparisons.filter((item) => item.resultVersion !== null).length,
-    outperformingBaseline: enrichedComparisons.filter((item) => item.comparisonBand === 'outperforming_baseline').length,
+    outperformingBaseline: enrichedComparisons.filter(
+      (item) => item.comparisonBand === 'outperforming_baseline'
+    ).length,
     nearChampion: enrichedComparisons.filter((item) => item.comparisonBand === 'challenger').length,
-    trailingBaseline: enrichedComparisons.filter((item) => item.comparisonBand === 'trailing').length,
+    trailingBaseline: enrichedComparisons.filter((item) => item.comparisonBand === 'trailing')
+      .length,
   };
 
   const comparisonInsights = enrichedComparisons
@@ -649,17 +703,24 @@ export function getResearchWorkbenchSnapshot(options = {}) {
     actionSummary,
     recentActions,
     promotionQueue: queue
-      .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime())
+      .sort(
+        (left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
+      )
       .slice(0, limit),
     comparisons: enrichedComparisons
-      .sort((left, right) => Number(right.champion) - Number(left.champion)
-        || Number(right.baseline) - Number(left.baseline)
-        || (right.excessReturnPct ?? -999) - (left.excessReturnPct ?? -999)
-        || (right.sharpe ?? -999) - (left.sharpe ?? -999))
+      .sort(
+        (left, right) =>
+          Number(right.champion) - Number(left.champion) ||
+          Number(right.baseline) - Number(left.baseline) ||
+          (right.excessReturnPct ?? -999) - (left.excessReturnPct ?? -999) ||
+          (right.sharpe ?? -999) - (left.sharpe ?? -999)
+      )
       .slice(0, limit),
     comparisonInsights,
     coverage: coverage
-      .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime())
+      .sort(
+        (left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
+      )
       .slice(0, limit),
   };
 }

@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react';
 
-export function ResearchActionBar(props: {
-  children: ReactNode;
-}) {
+export function ResearchActionBar(props: { children: ReactNode }) {
   return <div className="settings-actions">{props.children}</div>;
 }
 
@@ -14,7 +12,9 @@ export function ResearchActionButton(props: {
   return (
     <button
       type="button"
-      className={props.priority === 'primary' ? 'inline-action inline-action-approve' : 'inline-action'}
+      className={
+        props.priority === 'primary' ? 'inline-action inline-action-approve' : 'inline-action'
+      }
       onClick={props.onClick}
     >
       {props.label}

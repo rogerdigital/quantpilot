@@ -6,7 +6,9 @@ import { listRiskEvents } from '../../risk/services/feed-service.js';
 import { listStrategyCatalog } from '../../strategy/services/catalog-service.js';
 
 function normalizePrompt(prompt = '') {
-  return String(prompt || '').replace(/\s+/g, ' ').trim();
+  return String(prompt || '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function createSessionTitle(prompt) {
@@ -25,8 +27,11 @@ function findStrategyTarget(prompt, explicitTargetId = '') {
 
   const normalized = prompt.toLowerCase();
   const snapshot = listStrategyCatalog();
-  const matched = snapshot.strategies.find((item) => normalized.includes(item.id.toLowerCase())
-    || normalized.includes(String(item.name || '').toLowerCase()));
+  const matched = snapshot.strategies.find(
+    (item) =>
+      normalized.includes(item.id.toLowerCase()) ||
+      normalized.includes(String(item.name || '').toLowerCase())
+  );
   if (!matched) {
     return {
       targetType: 'unknown',
@@ -50,9 +55,12 @@ function findBacktestTarget(prompt, explicitTargetId = '') {
 
   const normalized = prompt.toLowerCase();
   const snapshot = listBacktestRuns();
-  const matched = snapshot.runs.find((item) => normalized.includes(item.id.toLowerCase())
-    || normalized.includes(String(item.strategyId || '').toLowerCase())
-    || normalized.includes(String(item.strategyName || '').toLowerCase()));
+  const matched = snapshot.runs.find(
+    (item) =>
+      normalized.includes(item.id.toLowerCase()) ||
+      normalized.includes(String(item.strategyId || '').toLowerCase()) ||
+      normalized.includes(String(item.strategyName || '').toLowerCase())
+  );
 
   return {
     targetType: matched ? 'backtest_run' : 'unknown',
@@ -75,9 +83,12 @@ function findExecutionTarget(prompt, explicitTargetId = '') {
 
   const normalized = prompt.toLowerCase();
   const plans = listExecutionPlans(30);
-  const matchedPlan = plans.find((item) => normalized.includes(item.id.toLowerCase())
-    || normalized.includes(String(item.strategyId || '').toLowerCase())
-    || normalized.includes(String(item.strategyName || '').toLowerCase()));
+  const matchedPlan = plans.find(
+    (item) =>
+      normalized.includes(item.id.toLowerCase()) ||
+      normalized.includes(String(item.strategyId || '').toLowerCase()) ||
+      normalized.includes(String(item.strategyName || '').toLowerCase())
+  );
   if (matchedPlan) {
     return {
       targetType: 'execution_plan',
@@ -101,9 +112,12 @@ function findRiskTarget(prompt, explicitTargetId = '') {
 
   const normalized = prompt.toLowerCase();
   const events = listRiskEvents(30);
-  const matched = events.find((item) => normalized.includes(item.id.toLowerCase())
-    || normalized.includes(String(item.title || '').toLowerCase())
-    || normalized.includes(String(item.message || '').toLowerCase()));
+  const matched = events.find(
+    (item) =>
+      normalized.includes(item.id.toLowerCase()) ||
+      normalized.includes(String(item.title || '').toLowerCase()) ||
+      normalized.includes(String(item.message || '').toLowerCase())
+  );
   if (matched) {
     return {
       targetType: 'risk_event',
@@ -141,11 +155,16 @@ function inferIntentFromPrompt(prompt, explicitTargetId = '') {
     };
   }
 
-  if (/(执行计划|execution plan|route|routing|下单|trade prep|prepare execution|执行准备|approve order)/.test(normalized)) {
+  if (
+    /(执行计划|execution plan|route|routing|下单|trade prep|prepare execution|执行准备|approve order)/.test(
+      normalized
+    )
+  ) {
     const target = findExecutionTarget(prompt, explicitTargetId);
     return {
       kind: 'request_execution_prep',
-      summary: 'Prepare an execution-readiness review that can later become a controlled action request.',
+      summary:
+        'Prepare an execution-readiness review that can later become a controlled action request.',
       targetType: target.targetType,
       targetId: target.targetId,
       urgency,
@@ -177,7 +196,8 @@ function inferIntentFromPrompt(prompt, explicitTargetId = '') {
   if (/(scheduler|schedule|盘前|盘后|window|tick|调度|runbook)/.test(normalized)) {
     return {
       kind: 'request_scheduler_action',
-      summary: 'Review scheduler posture and identify whether a controlled orchestration action is needed.',
+      summary:
+        'Review scheduler posture and identify whether a controlled orchestration action is needed.',
       targetType: explicitTargetId ? 'scheduler_window' : 'unknown',
       targetId: explicitTargetId || '',
       urgency,
@@ -215,30 +235,32 @@ export function parseAgentIntent(payload = {}) {
   }
 
   const requestedBy = payload.requestedBy || 'operator';
-  const existingSession = payload.sessionId ? controlPlaneRuntime.getAgentSession(payload.sessionId) : null;
+  const existingSession = payload.sessionId
+    ? controlPlaneRuntime.getAgentSession(payload.sessionId)
+    : null;
   const intent = inferIntentFromPrompt(prompt, payload.targetId || '');
 
   const session = existingSession
     ? controlPlaneRuntime.updateAgentSession(existingSession.id, {
-      prompt,
-      requestedBy,
-      title: existingSession.title || createSessionTitle(prompt),
-      status: 'ready',
-      latestIntent: intent,
-      metadata: {
-        intentParsedAt: new Date().toISOString(),
-      },
-    })
+        prompt,
+        requestedBy,
+        title: existingSession.title || createSessionTitle(prompt),
+        status: 'ready',
+        latestIntent: intent,
+        metadata: {
+          intentParsedAt: new Date().toISOString(),
+        },
+      })
     : controlPlaneRuntime.recordAgentSession({
-      title: createSessionTitle(prompt),
-      prompt,
-      requestedBy,
-      status: 'ready',
-      latestIntent: intent,
-      metadata: {
-        source: 'agent-intent-parser',
-      },
-    });
+        title: createSessionTitle(prompt),
+        prompt,
+        requestedBy,
+        status: 'ready',
+        latestIntent: intent,
+        metadata: {
+          source: 'agent-intent-parser',
+        },
+      });
 
   controlPlaneRuntime.recordAgentSessionMessage({
     sessionId: session.id,

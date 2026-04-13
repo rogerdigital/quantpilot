@@ -1,11 +1,12 @@
 // @ts-nocheck
-import test from 'node:test';
+
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { invokeGatewayRoute } from '../../api/test/helpers/invoke-gateway.js';
+import test from 'node:test';
 import { createTradingState } from '../../api/test/helpers/create-trading-state.js';
+import { invokeGatewayRoute } from '../../api/test/helpers/invoke-gateway.js';
 
 const namespace = `worker-workflow-e2e-${randomUUID()}`;
 process.env.QUANTPILOT_CONTROL_PLANE_NAMESPACE = namespace;
@@ -124,10 +125,11 @@ test('queued state workflow executes end-to-end through worker and persists down
   assert.equal(queued.json.workflow.status, 'queued');
 
   const execution = await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });
@@ -172,11 +174,12 @@ test('queued strategy execution workflow persists execution plan and downstream 
   assert.equal(queued.json.workflow.status, 'queued');
 
   const execution = await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-      workflowId: 'task-orchestrator.strategy-execution',
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+        workflowId: 'task-orchestrator.strategy-execution',
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });
@@ -193,7 +196,10 @@ test('queued strategy execution workflow persists execution plan and downstream 
   });
 
   assert.equal(riskDispatch.dispatchedCount >= 1, true);
-  assert.equal(context.risk.listRiskEvents().some((item) => item.source === 'risk-monitor'), true);
+  assert.equal(
+    context.risk.listRiskEvents().some((item) => item.source === 'risk-monitor'),
+    true
+  );
 });
 
 test('failed strategy execution workflow is scheduled for retry and re-queued by maintenance task', async () => {
@@ -211,24 +217,31 @@ test('failed strategy execution workflow is scheduled for retry and re-queued by
   assert.equal(queued.statusCode, 200);
 
   const execution = await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-      workflowId: 'task-orchestrator.strategy-execution',
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+        workflowId: 'task-orchestrator.strategy-execution',
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });
 
   assert.equal(execution.claimedCount, 1);
   assert.equal(execution.executions[0].workflow?.status, 'retry_scheduled');
-  assert.equal(context.notifications.listNotificationJobs().some((item) => item.payload.source === 'workflow-control'), true);
+  assert.equal(
+    context.notifications
+      .listNotificationJobs()
+      .some((item) => item.payload.source === 'workflow-control'),
+    true
+  );
 
   const maintenance = await runWorkflowMaintenanceTask(workerConfig, {
-    releaseScheduledWorkflows: (options) => runtime.releaseScheduledWorkflowRuns({
-      ...options,
-      now: RELEASE_NOW,
-    }),
+    releaseScheduledWorkflows: (options) =>
+      runtime.releaseScheduledWorkflowRuns({
+        ...options,
+        now: RELEASE_NOW,
+      }),
   });
 
   assert.equal(maintenance.releasedCount, 1);
@@ -253,11 +266,12 @@ test('queued agent action request workflow persists a review request without cha
   assert.equal(queued.json.workflow.workflowId, 'task-orchestrator.agent-action-request');
 
   const execution = await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-      workflowId: 'task-orchestrator.agent-action-request',
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+        workflowId: 'task-orchestrator.agent-action-request',
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });
@@ -265,9 +279,17 @@ test('queued agent action request workflow persists a review request without cha
   assert.equal(execution.claimedCount, 1);
   assert.equal(execution.executions[0].ok, true);
   assert.equal(context.agentActionRequests.listAgentActionRequests().length, 1);
-  assert.equal(context.agentActionRequests.listAgentActionRequests()[0].requestType, 'prepare_execution_plan');
+  assert.equal(
+    context.agentActionRequests.listAgentActionRequests()[0].requestType,
+    'prepare_execution_plan'
+  );
   assert.equal(context.executionPlans.listExecutionPlans().length, executionPlanCountBefore);
-  assert.equal(context.notifications.listNotificationJobs().some((item) => item.payload.source === 'agent-control'), true);
+  assert.equal(
+    context.notifications
+      .listNotificationJobs()
+      .some((item) => item.payload.source === 'agent-control'),
+    true
+  );
 });
 
 test('research evaluation queues a report workflow and worker execution persists a research report asset', async () => {
@@ -295,19 +317,30 @@ test('research evaluation queues a report workflow and worker execution persists
   assert.equal(evaluated.json.reportWorkflow.workflowId, 'task-orchestrator.research-report');
 
   const execution = await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-      workflowId: 'task-orchestrator.research-report',
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+        workflowId: 'task-orchestrator.research-report',
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });
 
   assert.equal(execution.claimedCount >= 1, true);
   assert.equal(execution.executions[0].ok, true);
-  assert.equal(context.researchReports.listResearchReports().some((item) => item.evaluationId === evaluated.json.evaluation.id), true);
-  assert.equal(context.researchTasks.listResearchTasks(20, { taskType: 'research-report' }).some((item) => item.status === 'completed'), true);
+  assert.equal(
+    context.researchReports
+      .listResearchReports()
+      .some((item) => item.evaluationId === evaluated.json.evaluation.id),
+    true
+  );
+  assert.equal(
+    context.researchTasks
+      .listResearchTasks(20, { taskType: 'research-report' })
+      .some((item) => item.status === 'completed'),
+    true
+  );
 });
 
 test('blocked agent action request is rejected by risk gate before approval stage', async () => {
@@ -324,11 +357,12 @@ test('blocked agent action request is rejected by risk gate before approval stag
   });
 
   const execution = await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-      workflowId: 'task-orchestrator.agent-action-request',
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+        workflowId: 'task-orchestrator.agent-action-request',
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });
@@ -340,7 +374,8 @@ test('blocked agent action request is rejected by risk gate before approval stag
 });
 
 test('approved agent action request is the only path that queues downstream strategy execution workflow', async () => {
-  const strategyWorkflowCountBefore = context.workflows.listWorkflowRuns()
+  const strategyWorkflowCountBefore = context.workflows
+    .listWorkflowRuns()
     .filter((item) => item.workflowId === 'task-orchestrator.strategy-execution').length;
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
@@ -355,20 +390,24 @@ test('approved agent action request is the only path that queues downstream stra
   });
 
   await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-      workflowId: 'task-orchestrator.agent-action-request',
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+        workflowId: 'task-orchestrator.agent-action-request',
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });
 
-  const request = context.agentActionRequests.listAgentActionRequests()
+  const request = context.agentActionRequests
+    .listAgentActionRequests()
     .find((item) => item.workflowRunId === queued.json.workflow.id);
   assert.equal(request.status, 'pending_review');
   assert.equal(
-    context.workflows.listWorkflowRuns().filter((item) => item.workflowId === 'task-orchestrator.strategy-execution').length,
+    context.workflows
+      .listWorkflowRuns()
+      .filter((item) => item.workflowId === 'task-orchestrator.strategy-execution').length,
     strategyWorkflowCountBefore
   );
 
@@ -382,7 +421,9 @@ test('approved agent action request is the only path that queues downstream stra
   assert.equal(approval.request.status, 'approved');
   assert.equal(approval.workflow.workflowId, 'task-orchestrator.strategy-execution');
   assert.equal(
-    context.workflows.listWorkflowRuns().filter((item) => item.workflowId === 'task-orchestrator.strategy-execution').length,
+    context.workflows
+      .listWorkflowRuns()
+      .filter((item) => item.workflowId === 'task-orchestrator.strategy-execution').length,
     strategyWorkflowCountBefore + 1
   );
 });
@@ -403,19 +444,27 @@ test('queued backtest workflow persists research run and summary through worker 
   assert.equal(queued.json.run.status, 'queued');
 
   const execution = await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-      workflowId: 'task-orchestrator.backtest-run',
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+        workflowId: 'task-orchestrator.backtest-run',
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });
 
   assert.equal(execution.claimedCount, 1);
   assert.equal(execution.executions[0].ok, true);
-  assert.equal(context.backtestRuns.findBacktestRunByWorkflowRunId(queued.json.workflow.id).status !== 'queued', true);
-  assert.equal(context.backtestResults.getLatestBacktestResultForRun(queued.json.run.id) !== null, true);
+  assert.equal(
+    context.backtestRuns.findBacktestRunByWorkflowRunId(queued.json.workflow.id).status !==
+      'queued',
+    true
+  );
+  assert.equal(
+    context.backtestResults.getLatestBacktestResultForRun(queued.json.run.id) !== null,
+    true
+  );
   assert.equal(context.researchSummary.getResearchSummary().completedRuns >= 1, true);
 });
 
@@ -432,11 +481,12 @@ test('queued agent daily run workflow records a completed pre-market run', async
   assert.equal(workflow.status, 'queued');
 
   const execution = await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-      workflowId: 'task-orchestrator.agent-daily-run',
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+        workflowId: 'task-orchestrator.agent-daily-run',
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });
@@ -461,11 +511,12 @@ test('pre_market workflow writes brief content to run metadata', async () => {
   assert.equal(workflow.status, 'queued');
 
   await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-      workflowId: 'task-orchestrator.agent-daily-run',
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+        workflowId: 'task-orchestrator.agent-daily-run',
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });
@@ -498,11 +549,12 @@ test('intraday_monitor workflow records authority downgrade on critical risk eve
   assert.equal(workflow.status, 'queued');
 
   await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-      workflowId: 'task-orchestrator.agent-daily-run',
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+        workflowId: 'task-orchestrator.agent-daily-run',
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });
@@ -530,11 +582,12 @@ test('intraday_monitor does not reprocess already-handled risk events', async ()
   });
 
   await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-      workflowId: 'task-orchestrator.agent-daily-run',
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+        workflowId: 'task-orchestrator.agent-daily-run',
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });
@@ -552,11 +605,12 @@ test('intraday_monitor does not reprocess already-handled risk events', async ()
   });
 
   await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-      workflowId: 'task-orchestrator.agent-daily-run',
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+        workflowId: 'task-orchestrator.agent-daily-run',
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });
@@ -587,11 +641,12 @@ test('post_market workflow generates recap and resets authority after risk downg
   assert.equal(workflow.status, 'queued');
 
   await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => runtime.claimQueuedWorkflowRuns({
-      ...options,
-      now: CLAIM_NOW,
-      workflowId: 'task-orchestrator.agent-daily-run',
-    }),
+    claimQueuedWorkflows: (options) =>
+      runtime.claimQueuedWorkflowRuns({
+        ...options,
+        now: CLAIM_NOW,
+        workflowId: 'task-orchestrator.agent-daily-run',
+      }),
     executeWorkflow: executeQueuedWorkflow,
     context: createWorkerContext(),
   });

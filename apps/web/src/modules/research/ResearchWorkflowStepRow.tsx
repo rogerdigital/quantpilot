@@ -16,7 +16,7 @@ export function ResearchWorkflowStepRow(props: {
         { label: locale === 'zh' ? '步骤' : 'Step', value: step.key },
         { label: locale === 'zh' ? '状态' : 'Status', value: step.status },
       ]}
-      actions={(
+      actions={
         <button
           type="button"
           className="inline-action"
@@ -24,10 +24,14 @@ export function ResearchWorkflowStepRow(props: {
           onClick={() => onInspect(step.key)}
         >
           {selected
-            ? (locale === 'zh' ? '已选中' : 'Selected')
-            : (locale === 'zh' ? '查看' : 'Inspect')}
+            ? locale === 'zh'
+              ? '已选中'
+              : 'Selected'
+            : locale === 'zh'
+              ? '查看'
+              : 'Inspect'}
         </button>
-      )}
+      }
     />
   );
 }

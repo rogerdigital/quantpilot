@@ -6,7 +6,8 @@ const FILENAME = 'agent-sessions.json';
 export function createAgentSessionRepository(store) {
   return {
     listAgentSessions(limit = 50, filter = {}) {
-      return store.readCollection(FILENAME)
+      return store
+        .readCollection(FILENAME)
         .filter((item) => {
           if (!matchesScopeFilter(item, filter)) return false;
           if (filter.status && item.status !== filter.status) return false;
@@ -35,12 +36,12 @@ export function createAgentSessionRepository(store) {
         ...patch,
         latestIntent: patch.latestIntent
           ? {
-            ...current.latestIntent,
-            ...patch.latestIntent,
-            metadata: patch.latestIntent.metadata
-              ? { ...current.latestIntent.metadata, ...patch.latestIntent.metadata }
-              : current.latestIntent.metadata,
-          }
+              ...current.latestIntent,
+              ...patch.latestIntent,
+              metadata: patch.latestIntent.metadata
+                ? { ...current.latestIntent.metadata, ...patch.latestIntent.metadata }
+                : current.latestIntent.metadata,
+            }
           : current.latestIntent,
         tags: Array.isArray(patch.tags) ? patch.tags : current.tags,
         metadata: patch.metadata ? { ...current.metadata, ...patch.metadata } : current.metadata,

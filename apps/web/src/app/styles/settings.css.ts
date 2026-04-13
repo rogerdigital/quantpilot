@@ -103,7 +103,8 @@ globalStyle('.settings-button', {
   font: '700 11px/1 var(--font-data)',
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
-  transition: 'border-color 150ms ease, box-shadow 150ms ease, transform 120ms ease, background 150ms ease',
+  transition:
+    'border-color 150ms ease, box-shadow 150ms ease, transform 120ms ease, background 150ms ease',
 } as any);
 
 globalStyle('.settings-button::after', {
@@ -167,7 +168,8 @@ globalStyle('.settings-inline-button', {
   font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.04em',
   textTransform: 'uppercase',
-  transition: 'border-color 140ms ease, box-shadow 140ms ease, color 140ms ease, transform 120ms ease',
+  transition:
+    'border-color 140ms ease, box-shadow 140ms ease, color 140ms ease, transform 120ms ease',
 } as any);
 
 globalStyle('.settings-inline-button:hover', {
@@ -211,7 +213,8 @@ globalStyle('.settings-chip', {
   font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.04em',
   textDecoration: 'none',
-  transition: 'border-color 140ms ease, background 140ms ease, color 140ms ease, box-shadow 140ms ease',
+  transition:
+    'border-color 140ms ease, background 140ms ease, color 140ms ease, box-shadow 140ms ease',
 } as any);
 
 globalStyle('.settings-chip:hover', {
@@ -409,7 +412,8 @@ globalStyle('.agent-suggestion-button', {
   cursor: 'pointer',
   position: 'relative',
   overflow: 'hidden',
-  transition: 'border-color 150ms ease, box-shadow 150ms ease, background 150ms ease, transform 120ms ease',
+  transition:
+    'border-color 150ms ease, box-shadow 150ms ease, background 150ms ease, transform 120ms ease',
 } as any);
 
 globalStyle('.agent-suggestion-button::before', {
@@ -452,7 +456,8 @@ globalStyle('.agent-chat-transcript', {
   flexDirection: 'column',
   gap: '12px',
   animation: 'fade-in 200ms ease',
-  boxShadow: 'inset 0 0 60px rgba(0, 0, 0, 0.5), 0 0 28px rgba(0, 212, 255, 0.06), 0 0 0 1px rgba(0, 212, 255, 0.04)',
+  boxShadow:
+    'inset 0 0 60px rgba(0, 0, 0, 0.5), 0 0 28px rgba(0, 212, 255, 0.06), 0 0 0 1px rgba(0, 212, 255, 0.04)',
 } as any);
 
 globalStyle('.agent-chat-sidecar', {

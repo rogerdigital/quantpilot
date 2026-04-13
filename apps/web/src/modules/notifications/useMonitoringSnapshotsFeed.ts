@@ -1,6 +1,6 @@
+import type { MonitoringSnapshotRecord } from '@shared-types/trading.ts';
 import { useEffect, useState } from 'react';
 import { fetchMonitoringSnapshots } from '../../app/api/controlPlane.ts';
-import type { MonitoringSnapshotRecord } from '@shared-types/trading.ts';
 
 type MonitoringSnapshotsFeedOptions = {
   hours?: number | null;
@@ -11,11 +11,7 @@ type MonitoringSnapshotsFeedOptions = {
 export function useMonitoringSnapshotsFeed(options: MonitoringSnapshotsFeedOptions = {}) {
   const [items, setItems] = useState<MonitoringSnapshotRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const {
-    hours = null,
-    limit = 50,
-    status = '',
-  } = options;
+  const { hours = null, limit = 50, status = '' } = options;
 
   useEffect(() => {
     let mounted = true;

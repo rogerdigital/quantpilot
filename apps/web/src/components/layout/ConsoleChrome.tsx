@@ -1,12 +1,43 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
-import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { useSettingsNavigation } from '../../modules/console/console.hooks.ts';
-import { copy, type ConsolePageKey, useLocale } from '../../modules/console/console.i18n.tsx';
-import { getConsoleDocumentTitle, listSidebarRoutes } from '../../modules/console/console.routes.tsx';
-import { connectionLabel, integrationTone, translateEngineStatus, translateMode, translateSignal } from '../../modules/console/console.utils.ts';
-import { appShell, mainPanel, sidebar, brand, brandMark, brandName, brandSub, sidebarBlock, sidebarLabel, navStack, globalToolbar, toolbarCopy, toolbarKicker, toolbarTitle, toolbarSub, toolbarActions, topbarMeta, metaCard, metaLabel, metaValue, metaValueAccent } from './ConsoleChrome.css.ts';
+import { type ConsolePageKey, copy, useLocale } from '../../modules/console/console.i18n.tsx';
+import {
+  getConsoleDocumentTitle,
+  listSidebarRoutes,
+} from '../../modules/console/console.routes.tsx';
+import {
+  connectionLabel,
+  integrationTone,
+  translateEngineStatus,
+  translateMode,
+  translateSignal,
+} from '../../modules/console/console.utils.ts';
+import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
+import {
+  appShell,
+  brand,
+  brandMark,
+  brandName,
+  brandSub,
+  globalToolbar,
+  mainPanel,
+  metaCard,
+  metaLabel,
+  metaValue,
+  metaValueAccent,
+  navStack,
+  sidebar,
+  sidebarBlock,
+  sidebarLabel,
+  toolbarActions,
+  toolbarCopy,
+  toolbarKicker,
+  toolbarSub,
+  toolbarTitle,
+  topbarMeta,
+} from './ConsoleChrome.css.ts';
 
 export type TopMetaItem = {
   label: string;
@@ -91,13 +122,16 @@ export function ChartCanvas({ kind }: { kind: 'equity' | 'signal' }) {
       const max = Math.max(...values) * 1.015;
       const chartW = width - pad.l - pad.r;
       const chartH = height - pad.t - pad.b;
-      const toX = (index: number, total: number) => pad.l + (index / Math.max(total - 1, 1)) * chartW;
+      const toX = (index: number, total: number) =>
+        pad.l + (index / Math.max(total - 1, 1)) * chartW;
       const toY = (value: number) => pad.t + (1 - (value - min) / Math.max(max - min, 1)) * chartH;
 
-      ([
-        [paper, '#00d4ff', 'rgba(0, 212, 255, 0.09)', copy[locale].labels.paper],
-        [live, '#ffb700', 'rgba(255, 183, 0, 0.07)', copy[locale].labels.live],
-      ] as const).forEach(([series, color, areaTopColor, label]) => {
+      (
+        [
+          [paper, '#00d4ff', 'rgba(0, 212, 255, 0.09)', copy[locale].labels.paper],
+          [live, '#ffb700', 'rgba(255, 183, 0, 0.07)', copy[locale].labels.live],
+        ] as const
+      ).forEach(([series, color, areaTopColor, label]) => {
         if (!series.length) return;
 
         // Area fill under the line
@@ -232,7 +266,9 @@ export function TopMeta({ items }: { items: TopMetaItem[] }) {
       {items.map((item) => (
         <div className={metaCard} key={item.label}>
           <div className={metaLabel}>{item.label}</div>
-          <div className={`${metaValue}${item.accent ? ` ${metaValueAccent}` : ''}`}>{item.value}</div>
+          <div className={`${metaValue}${item.accent ? ` ${metaValueAccent}` : ''}`}>
+            {item.value}
+          </div>
         </div>
       ))}
     </div>
@@ -257,7 +293,11 @@ function Sidebar() {
         <div className={sidebarLabel}>{copy[locale].labels.tacticalRoutes}</div>
         <nav className={navStack}>
           {routes.map((route) => (
-            <NavLink key={route.path} to={route.path} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+            <NavLink
+              key={route.path}
+              to={route.path}
+              className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+            >
               {copy[locale].nav[route.id]}
             </NavLink>
           ))}
@@ -299,22 +339,34 @@ function GlobalToolbar() {
       <div className={toolbarCopy}>
         <div className={toolbarKicker}>{copy[locale].labels.commandDeck}</div>
         <div className={toolbarTitle}>{copy[locale].product}</div>
-        <div className={toolbarSub}>{`${translateEngineStatus(locale, state.engineStatus)} · ${translateMode(locale, state.mode)} · ${state.marketClock || '--:--:--'}`}</div>
+        <div
+          className={toolbarSub}
+        >{`${translateEngineStatus(locale, state.engineStatus)} · ${translateMode(locale, state.mode)} · ${state.marketClock || '--:--:--'}`}</div>
       </div>
       <div className={toolbarActions}>
-        <button type="button" className={`toolbar-pill toolbar-pill-button tone-${integrationTone(marketConnected, marketDegraded)}`} onClick={() => goToSettings('integrations')}>
+        <button
+          type="button"
+          className={`toolbar-pill toolbar-pill-button tone-${integrationTone(marketConnected, marketDegraded)}`}
+          onClick={() => goToSettings('integrations')}
+        >
           <span className="toolbar-pill-main">
             <span className="status-dot" aria-hidden="true" />
             <span className="toolbar-pill-label">{copy[locale].labels.marketData}</span>
           </span>
           <strong>{connectionLabel(locale, marketConnected, marketDegraded)}</strong>
         </button>
-        <button type="button" className={`toolbar-pill toolbar-pill-button tone-${integrationTone(state.integrationStatus.broker.connected, false, true)}`} onClick={() => goToSettings('integrations')}>
+        <button
+          type="button"
+          className={`toolbar-pill toolbar-pill-button tone-${integrationTone(state.integrationStatus.broker.connected, false, true)}`}
+          onClick={() => goToSettings('integrations')}
+        >
           <span className="toolbar-pill-main">
             <span className="status-dot" aria-hidden="true" />
             <span className="toolbar-pill-label">{copy[locale].labels.broker}</span>
           </span>
-          <strong>{connectionLabel(locale, state.integrationStatus.broker.connected, false, true)}</strong>
+          <strong>
+            {connectionLabel(locale, state.integrationStatus.broker.connected, false, true)}
+          </strong>
         </button>
         <div className="locale-switch-wrap" ref={localeMenuRef}>
           <button

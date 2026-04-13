@@ -1,19 +1,21 @@
 // @ts-nocheck
-import test from 'node:test';
+
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
 import { invokeGatewayRoute as invokeGateway } from './helpers/invoke-gateway.js';
 
 const namespace = `stage-8-agent-daily-run-test-${randomUUID()}`;
 process.env.QUANTPILOT_CONTROL_PLANE_NAMESPACE = namespace;
 
-const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] = await Promise.all([
-  import('../src/gateways/alpaca.js'),
-  import('../../../packages/control-plane-store/src/context.js'),
-  import('../../../packages/control-plane-store/src/store.js'),
-]);
+const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] =
+  await Promise.all([
+    import('../src/gateways/alpaca.js'),
+    import('../../../packages/control-plane-store/src/context.js'),
+    import('../../../packages/control-plane-store/src/store.js'),
+  ]);
 
 const handler = createGatewayHandler({
   getBrokerHealth: async () => ({
@@ -100,7 +102,13 @@ test('POST /api/agent/daily-runs returns 403 without strategy:write permission',
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+    ],
   });
 });
 

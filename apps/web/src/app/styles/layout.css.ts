@@ -26,7 +26,8 @@ globalStyle('.app-shell::before', {
   height: '80px',
   zIndex: 9998,
   pointerEvents: 'none',
-  background: 'linear-gradient(180deg, transparent 0%, rgba(0, 212, 255, 0.022) 50%, transparent 100%)',
+  background:
+    'linear-gradient(180deg, transparent 0%, rgba(0, 212, 255, 0.022) 50%, transparent 100%)',
   animation: 'scan-sweep 16s linear infinite',
 } as any);
 
@@ -54,7 +55,8 @@ globalStyle('.sidebar::after', {
   left: 0,
   width: '200%',
   height: '1px',
-  background: 'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.65) 25%, rgba(255, 183, 0, 0.35) 55%, rgba(139, 92, 246, 0.25) 75%, transparent)',
+  background:
+    'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.65) 25%, rgba(255, 183, 0, 0.35) 55%, rgba(139, 92, 246, 0.25) 75%, transparent)',
   animation: 'gradient-flow 5s linear infinite',
   pointerEvents: 'none',
 } as any);
@@ -86,7 +88,8 @@ globalStyle('.brand-mark', {
   marginTop: '3px',
   borderRadius: 0,
   clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-  background: 'conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent))',
+  background:
+    'conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent))',
   boxShadow: 'var(--glow-cyan)',
   animation: 'diamond-spin 10s linear infinite',
   flexShrink: 0,
@@ -104,9 +107,12 @@ globalStyle('.brand-name', {
   animation: 'fade-in 500ms ease 200ms both',
 } as any);
 
-globalStyle('.brand-sub, .sidebar-label, .eyebrow, .card-eyebrow, .tile-label, .meta-label, .panel-copy', {
-  color: 'var(--muted)',
-} as any);
+globalStyle(
+  '.brand-sub, .sidebar-label, .eyebrow, .card-eyebrow, .tile-label, .meta-label, .panel-copy',
+  {
+    color: 'var(--muted)',
+  } as any
+);
 
 globalStyle('.brand-sub, .sidebar-label, .eyebrow, .card-eyebrow, .tile-label, .meta-label', {
   textTransform: 'uppercase',
@@ -144,15 +150,33 @@ globalStyle('.nav-stack', {
 } as any);
 
 /* Staggered nav entrance */
-globalStyle('.nav-stack .nav-link:nth-child(1)', { animation: 'fade-up 280ms ease 180ms both' } as any);
-globalStyle('.nav-stack .nav-link:nth-child(2)', { animation: 'fade-up 280ms ease 220ms both' } as any);
-globalStyle('.nav-stack .nav-link:nth-child(3)', { animation: 'fade-up 280ms ease 260ms both' } as any);
-globalStyle('.nav-stack .nav-link:nth-child(4)', { animation: 'fade-up 280ms ease 300ms both' } as any);
-globalStyle('.nav-stack .nav-link:nth-child(5)', { animation: 'fade-up 280ms ease 340ms both' } as any);
-globalStyle('.nav-stack .nav-link:nth-child(6)', { animation: 'fade-up 280ms ease 380ms both' } as any);
-globalStyle('.nav-stack .nav-link:nth-child(7)', { animation: 'fade-up 280ms ease 420ms both' } as any);
-globalStyle('.nav-stack .nav-link:nth-child(8)', { animation: 'fade-up 280ms ease 460ms both' } as any);
-globalStyle('.nav-stack .nav-link:nth-child(9)', { animation: 'fade-up 280ms ease 500ms both' } as any);
+globalStyle('.nav-stack .nav-link:nth-child(1)', {
+  animation: 'fade-up 280ms ease 180ms both',
+} as any);
+globalStyle('.nav-stack .nav-link:nth-child(2)', {
+  animation: 'fade-up 280ms ease 220ms both',
+} as any);
+globalStyle('.nav-stack .nav-link:nth-child(3)', {
+  animation: 'fade-up 280ms ease 260ms both',
+} as any);
+globalStyle('.nav-stack .nav-link:nth-child(4)', {
+  animation: 'fade-up 280ms ease 300ms both',
+} as any);
+globalStyle('.nav-stack .nav-link:nth-child(5)', {
+  animation: 'fade-up 280ms ease 340ms both',
+} as any);
+globalStyle('.nav-stack .nav-link:nth-child(6)', {
+  animation: 'fade-up 280ms ease 380ms both',
+} as any);
+globalStyle('.nav-stack .nav-link:nth-child(7)', {
+  animation: 'fade-up 280ms ease 420ms both',
+} as any);
+globalStyle('.nav-stack .nav-link:nth-child(8)', {
+  animation: 'fade-up 280ms ease 460ms both',
+} as any);
+globalStyle('.nav-stack .nav-link:nth-child(9)', {
+  animation: 'fade-up 280ms ease 500ms both',
+} as any);
 
 globalStyle('.nav-link', {
   display: 'block',
@@ -252,7 +276,8 @@ globalStyle('.global-toolbar::before', {
   left: '10%',
   width: '80%',
   height: '1px',
-  background: 'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.25), rgba(255, 183, 0, 0.12), transparent)',
+  background:
+    'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.25), rgba(255, 183, 0, 0.12), transparent)',
   pointerEvents: 'none',
 } as any);
 
@@ -303,7 +328,8 @@ globalStyle('.toolbar-pill', {
   gap: '10px',
   position: 'relative',
   overflow: 'hidden',
-  transition: 'border-color 160ms ease, box-shadow 160ms ease, color 160ms ease, background 160ms ease',
+  transition:
+    'border-color 160ms ease, box-shadow 160ms ease, color 160ms ease, background 160ms ease',
 } as any);
 
 globalStyle('.toolbar-pill::after', {
@@ -510,7 +536,8 @@ globalStyle('.topbar', {
   padding: '22px 24px 18px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-xl)',
-  background: 'linear-gradient(140deg, rgba(8, 18, 40, 0.97) 0%, rgba(5, 10, 26, 0.98) 60%, rgba(8, 5, 28, 0.97) 100%)',
+  background:
+    'linear-gradient(140deg, rgba(8, 18, 40, 0.97) 0%, rgba(5, 10, 26, 0.98) 60%, rgba(8, 5, 28, 0.97) 100%)',
   boxShadow: 'var(--shadow-panel)',
   animation: 'panel-enter 300ms ease 50ms both',
   overflow: 'hidden',
@@ -523,7 +550,8 @@ globalStyle('.topbar::before', {
   left: 0,
   width: '200%',
   height: '1px',
-  background: 'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.7) 20%, rgba(255, 183, 0, 0.45) 48%, rgba(139, 92, 246, 0.35) 65%, rgba(0, 212, 255, 0.5) 80%, transparent)',
+  background:
+    'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.7) 20%, rgba(255, 183, 0, 0.45) 48%, rgba(139, 92, 246, 0.35) 65%, rgba(0, 212, 255, 0.5) 80%, transparent)',
   animation: 'gradient-flow 4s linear infinite',
   pointerEvents: 'none',
 } as any);
@@ -586,7 +614,8 @@ globalStyle('.mode-pill', {
   font: '600 12px/1 var(--font-data)',
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
-  transition: 'border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease',
+  transition:
+    'border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease',
   whiteSpace: 'nowrap',
 } as any);
 
@@ -706,13 +735,16 @@ globalStyle(`.global-toolbar, .topbar`, {
   },
 } as any);
 
-globalStyle(`.hero-grid, .overview-hero-grid, .terminal-strip, .metrics-grid, .panel-grid, .panel-grid-wide, .panel-grid-terminal, .panel-grid-terminal-bottom`, {
-  '@media': {
-    '(max-width: 1180px)': {
-      gridTemplateColumns: '1fr',
+globalStyle(
+  `.hero-grid, .overview-hero-grid, .terminal-strip, .metrics-grid, .panel-grid, .panel-grid-wide, .panel-grid-terminal, .panel-grid-terminal-bottom`,
+  {
+    '@media': {
+      '(max-width: 1180px)': {
+        gridTemplateColumns: '1fr',
+      },
     },
-  },
-} as any);
+  } as any
+);
 
 globalStyle(`.toolbar-actions`, {
   '@media': {

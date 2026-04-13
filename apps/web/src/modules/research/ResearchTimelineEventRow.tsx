@@ -23,7 +23,7 @@ export function ResearchTimelineEventRow(props: {
       leadTitle={title}
       leadCopy={detail}
       metrics={metrics}
-      actions={(
+      actions={
         <button
           type="button"
           className="inline-action"
@@ -31,10 +31,14 @@ export function ResearchTimelineEventRow(props: {
           onClick={() => onInspect(id)}
         >
           {selected
-            ? (locale === 'zh' ? '已选中' : 'Selected')
-            : (locale === 'zh' ? '查看' : 'Inspect')}
+            ? locale === 'zh'
+              ? '已选中'
+              : 'Selected'
+            : locale === 'zh'
+              ? '查看'
+              : 'Inspect'}
         </button>
-      )}
+      }
     />
   );
 }

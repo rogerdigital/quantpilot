@@ -1,13 +1,20 @@
 // @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
-import { getBacktestResultSummary, listBacktestResults } from '../../backtest/services/results-service.js';
-import { getBacktestSummary } from '../../backtest/services/summary-service.js';
+import {
+  getBacktestResultSummary,
+  listBacktestResults,
+} from '../../backtest/services/results-service.js';
 import { listBacktestRuns } from '../../backtest/services/runs-service.js';
+import { getBacktestSummary } from '../../backtest/services/summary-service.js';
 import { listStrategyCatalog } from '../../strategy/services/catalog-service.js';
-import { getResearchEvaluationSummary, listResearchEvaluations } from './evaluation-service.js';
 import { listExecutionCandidateHandoffs } from '../../strategy/services/execution-handoff-service.js';
+import { getResearchEvaluationSummary, listResearchEvaluations } from './evaluation-service.js';
 import { getResearchReportSummary, listResearchReports } from './report-service.js';
-import { getResearchGovernanceActionSummary, getResearchWorkbenchSnapshot, listResearchGovernanceActions } from './workbench-service.js';
+import {
+  getResearchGovernanceActionSummary,
+  getResearchWorkbenchSnapshot,
+  listResearchGovernanceActions,
+} from './workbench-service.js';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);
@@ -49,8 +56,12 @@ export function getResearchTaskDetail(taskId) {
   }
 
   const run = task.runId ? controlPlaneRuntime.getBacktestRun(task.runId) : null;
-  const workflow = task.workflowRunId ? controlPlaneRuntime.getWorkflowRun(task.workflowRunId) : null;
-  const strategy = task.strategyId ? controlPlaneRuntime.getStrategyCatalogItem(task.strategyId) : null;
+  const workflow = task.workflowRunId
+    ? controlPlaneRuntime.getWorkflowRun(task.workflowRunId)
+    : null;
+  const strategy = task.strategyId
+    ? controlPlaneRuntime.getStrategyCatalogItem(task.strategyId)
+    : null;
 
   return {
     ok: true,
@@ -99,12 +110,16 @@ export function getResearchTaskSummary(options = {}) {
       strategyId: task.strategyId || '',
       strategyName: task.strategyName || 'Unknown Strategy',
       count: (strategyCounts.get(strategyKey)?.count || 0) + 1,
-      activeCount: (strategyCounts.get(strategyKey)?.activeCount || 0) + (['queued', 'running', 'needs_review'].includes(task.status) ? 1 : 0),
+      activeCount:
+        (strategyCounts.get(strategyKey)?.activeCount || 0) +
+        (['queued', 'running', 'needs_review'].includes(task.status) ? 1 : 0),
     });
   });
 
   summary.byType = [...typeCounts.entries()].map(([taskType, count]) => ({ taskType, count }));
-  summary.byStrategy = [...strategyCounts.values()].sort((left, right) => right.activeCount - left.activeCount || right.count - left.count);
+  summary.byStrategy = [...strategyCounts.values()].sort(
+    (left, right) => right.activeCount - left.activeCount || right.count - left.count
+  );
 
   return {
     ok: true,

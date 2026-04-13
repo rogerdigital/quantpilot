@@ -1,6 +1,6 @@
+import type { MarketProviderStatusSnapshot } from '@shared-types/trading.ts';
 import { useEffect, useState } from 'react';
 import { fetchMarketProviderStatus } from '../app/api/controlPlane.ts';
-import type { MarketProviderStatusSnapshot } from '@shared-types/trading.ts';
 
 export function useMarketProviderStatus(refreshKey?: string) {
   const [status, setStatus] = useState<MarketProviderStatusSnapshot | null>(null);

@@ -45,9 +45,11 @@ function buildMockBacktestMetrics(strategy, runId) {
     .split('')
     .reduce((sum, char) => sum + char.charCodeAt(0), 0);
   const variance = (seed % 9) / 10;
-  const annualizedReturnPct = Number((Math.max(strategy.expectedReturnPct - 2 + variance, 4)).toFixed(1));
-  const maxDrawdownPct = Number((Math.max(strategy.maxDrawdownPct + (seed % 4) * 0.6, 4)).toFixed(1));
-  const sharpe = Number((Math.max(strategy.sharpe - 0.15 + variance / 4, 0.4)).toFixed(2));
+  const annualizedReturnPct = Number(
+    Math.max(strategy.expectedReturnPct - 2 + variance, 4).toFixed(1)
+  );
+  const maxDrawdownPct = Number(Math.max(strategy.maxDrawdownPct + (seed % 4) * 0.6, 4).toFixed(1));
+  const sharpe = Number(Math.max(strategy.sharpe - 0.15 + variance / 4, 0.4).toFixed(2));
   const winRatePct = Number((52 + (seed % 10) * 1.1).toFixed(1));
   const turnoverPct = Number((110 + (seed % 7) * 14).toFixed(0));
   const status = maxDrawdownPct > 10 || sharpe < 1 ? 'needs_review' : 'completed';
@@ -59,9 +61,10 @@ function buildMockBacktestMetrics(strategy, runId) {
     sharpe,
     winRatePct,
     turnoverPct,
-    summary: status === 'needs_review'
-      ? `${strategy.name} completed with elevated review pressure because drawdown or Sharpe is outside the current promotion gate.`
-      : `${strategy.name} completed inside the current research promotion envelope.`,
+    summary:
+      status === 'needs_review'
+        ? `${strategy.name} completed with elevated review pressure because drawdown or Sharpe is outside the current promotion gate.`
+        : `${strategy.name} completed inside the current research promotion envelope.`,
   };
 }
 
@@ -70,22 +73,24 @@ function buildMockBacktestMetrics(strategy, runId) {
 // =========================================================
 
 function buildPreMarketBrief(context, payload) {
-  const snapshot = typeof context.getAgentGovernanceSnapshot === 'function'
-    ? context.getAgentGovernanceSnapshot()
-    : {};
+  const snapshot =
+    typeof context.getAgentGovernanceSnapshot === 'function'
+      ? context.getAgentGovernanceSnapshot()
+      : {};
   const authorityMode = snapshot.authorityState?.mode || 'manual_only';
-  const instructions = typeof context.listAgentInstructions === 'function'
-    ? context.listAgentInstructions(20, { activeOnly: true })
-    : [];
-  const recentRiskEvents = typeof context.listRiskEvents === 'function'
-    ? context.listRiskEvents(10)
-    : [];
+  const instructions =
+    typeof context.listAgentInstructions === 'function'
+      ? context.listAgentInstructions(20, { activeOnly: true })
+      : [];
+  const recentRiskEvents =
+    typeof context.listRiskEvents === 'function' ? context.listRiskEvents(10) : [];
   const criticalRiskCount = recentRiskEvents.filter(
-    (e) => e.level === 'critical' || e.status === 'risk-off',
+    (e) => e.level === 'critical' || e.status === 'risk-off'
   ).length;
-  const recentRuns = typeof context.listAgentDailyRuns === 'function'
-    ? context.listAgentDailyRuns(5, { kind: 'pre_market', status: 'completed' })
-    : [];
+  const recentRuns =
+    typeof context.listAgentDailyRuns === 'function'
+      ? context.listAgentDailyRuns(5, { kind: 'pre_market', status: 'completed' })
+      : [];
 
   const lines = [
     `Authority mode: ${authorityMode}`,
@@ -114,21 +119,22 @@ function runIntradayMonitorCheck(context, payload, existingRun) {
     ? existingRun.metadata.processedRiskEventIds
     : [];
 
-  const recentRiskEvents = typeof context.listRiskEvents === 'function'
-    ? context.listRiskEvents(20)
-    : [];
+  const recentRiskEvents =
+    typeof context.listRiskEvents === 'function' ? context.listRiskEvents(20) : [];
 
   const newCritical = recentRiskEvents.filter(
-    (e) => !alreadyProcessed.includes(e.id) && (e.level === 'critical' || e.status === 'risk-off'),
+    (e) => !alreadyProcessed.includes(e.id) && (e.level === 'critical' || e.status === 'risk-off')
   );
 
-  const blockedPlans = typeof context.listExecutionPlans === 'function'
-    ? context.listExecutionPlans(20, { lifecycleStatus: 'blocked' })
-    : [];
+  const blockedPlans =
+    typeof context.listExecutionPlans === 'function'
+      ? context.listExecutionPlans(20, { lifecycleStatus: 'blocked' })
+      : [];
 
-  const snapshot = typeof context.getAgentGovernanceSnapshot === 'function'
-    ? context.getAgentGovernanceSnapshot()
-    : {};
+  const snapshot =
+    typeof context.getAgentGovernanceSnapshot === 'function'
+      ? context.getAgentGovernanceSnapshot()
+      : {};
   const currentMode = snapshot.authorityState?.mode || 'manual_only';
 
   const actionsApplied = [];
@@ -183,20 +189,24 @@ function buildPostMarketRecap(context, payload) {
   const today = new Date().toISOString().slice(0, 10);
   const since = `${today}T00:00:00.000Z`;
 
-  const todayRuns = typeof context.listAgentDailyRuns === 'function'
-    ? context.listAgentDailyRuns(50, { since })
-    : [];
-  const authorityEvents = typeof context.listAgentAuthorityEvents === 'function'
-    ? context.listAgentAuthorityEvents(20, { since })
-    : [];
-  const allRequests = typeof context.listAgentActionRequests === 'function'
-    ? context.listAgentActionRequests(20)
-    : [];
+  const todayRuns =
+    typeof context.listAgentDailyRuns === 'function'
+      ? context.listAgentDailyRuns(50, { since })
+      : [];
+  const authorityEvents =
+    typeof context.listAgentAuthorityEvents === 'function'
+      ? context.listAgentAuthorityEvents(20, { since })
+      : [];
+  const allRequests =
+    typeof context.listAgentActionRequests === 'function'
+      ? context.listAgentActionRequests(20)
+      : [];
 
   const completedRuns = todayRuns.filter((r) => r.status === 'completed').length;
   const failedRuns = todayRuns.filter((r) => r.status === 'failed').length;
   const downgrades = authorityEvents.filter(
-    (e) => e.eventType === 'downgraded' || e.eventType === 'stopped' || e.eventType === 'risk_triggered',
+    (e) =>
+      e.eventType === 'downgraded' || e.eventType === 'stopped' || e.eventType === 'risk_triggered'
   ).length;
   const pendingRequests = allRequests.filter((r) => r.status === 'pending_review').length;
 
@@ -208,9 +218,9 @@ function buildPostMarketRecap(context, payload) {
 
   const latestEvent = authorityEvents[0];
   if (
-    latestEvent
-    && (latestEvent.eventType === 'risk_triggered' || latestEvent.eventType === 'stopped')
-    && typeof context.recordAgentAuthorityEvent === 'function'
+    latestEvent &&
+    (latestEvent.eventType === 'risk_triggered' || latestEvent.eventType === 'stopped') &&
+    typeof context.recordAgentAuthorityEvent === 'function'
   ) {
     context.recordAgentAuthorityEvent({
       severity: 'info',
@@ -266,7 +276,7 @@ function syncBacktestResearchTask(context, run, patch = {}) {
 
 function appendBacktestResultVersion(context, run, patch = {}) {
   if (!run?.completedAt || typeof context.appendBacktestResult !== 'function') return null;
-  const benchmarkReturnPct = Number((Math.max(run.annualizedReturnPct - 4.5, 0)).toFixed(1));
+  const benchmarkReturnPct = Number(Math.max(run.annualizedReturnPct - 4.5, 0).toFixed(1));
   return context.appendBacktestResult({
     runId: run.id,
     workflowRunId: run.workflowRunId || '',
@@ -316,20 +326,22 @@ function syncResearchReportTask(context, payload = {}) {
 }
 
 async function executeResearchReportWorkflow(payload, context, options = {}) {
-  const workflow = options.workflow || startWorkflow(context, {
-    workflowId: 'task-orchestrator.research-report',
-    workflowType: 'task-orchestrator',
-    actor: payload.requestedBy || context.getOperatorName(),
-    trigger: options.trigger || 'api',
-    payload,
-    maxAttempts: Number(payload.maxAttempts || 2),
-    steps: [
-      { key: 'load-evaluation-context', status: 'running' },
-      { key: 'generate-research-report', status: 'pending' },
-      { key: 'persist-report-asset', status: 'pending' },
-      { key: 'refresh-research-task', status: 'pending' },
-    ],
-  });
+  const workflow =
+    options.workflow ||
+    startWorkflow(context, {
+      workflowId: 'task-orchestrator.research-report',
+      workflowType: 'task-orchestrator',
+      actor: payload.requestedBy || context.getOperatorName(),
+      trigger: options.trigger || 'api',
+      payload,
+      maxAttempts: Number(payload.maxAttempts || 2),
+      steps: [
+        { key: 'load-evaluation-context', status: 'running' },
+        { key: 'generate-research-report', status: 'pending' },
+        { key: 'persist-report-asset', status: 'pending' },
+        { key: 'refresh-research-task', status: 'pending' },
+      ],
+    });
 
   try {
     const evaluation = context.getResearchEvaluation?.(payload.evaluationId);
@@ -340,7 +352,9 @@ async function executeResearchReportWorkflow(payload, context, options = {}) {
     const result = context.getBacktestResult?.(payload.resultId || evaluation.resultId);
     const strategy = context.getStrategyCatalogItem?.(payload.strategyId || evaluation.strategyId);
     if (!run || !result || !strategy) {
-      throw new Error('Research report workflow could not resolve run, result, or strategy context');
+      throw new Error(
+        'Research report workflow could not resolve run, result, or strategy context'
+      );
     }
 
     syncResearchReportTask(context, {
@@ -377,9 +391,10 @@ async function executeResearchReportWorkflow(payload, context, options = {}) {
       promotionCall: evaluation.recommendedAction.startsWith('promote')
         ? `Promote ${strategy.name} with target readiness ${evaluation.readiness}.`
         : `Do not promote immediately; follow ${evaluation.recommendedAction}.`,
-      executionPreparation: evaluation.verdict === 'prepare_execution'
-        ? `Execution preparation can continue from ${strategy.status} using the latest reviewed result.`
-        : 'Execution preparation should wait until the promotion and review path is completed.',
+      executionPreparation:
+        evaluation.verdict === 'prepare_execution'
+          ? `Execution preparation can continue from ${strategy.status} using the latest reviewed result.`
+          : 'Execution preparation should wait until the promotion and review path is completed.',
       riskNotes: `Sharpe ${result.sharpe.toFixed(2)}, max drawdown ${result.maxDrawdownPct.toFixed(1)}%, excess return ${result.excessReturnPct.toFixed(1)}%.`,
       metadata: {
         evaluationId: evaluation.id,
@@ -477,44 +492,57 @@ async function executeResearchReportWorkflow(payload, context, options = {}) {
         evaluationId: payload.evaluationId || '',
       },
     });
-    const failedWorkflow = failWorkflow(context, workflow.id, error instanceof Error ? error.message : 'unknown research report workflow error', {
-      steps: [
-        { key: 'load-evaluation-context', status: 'failed' },
-        { key: 'generate-research-report', status: 'skipped' },
-        { key: 'persist-report-asset', status: 'skipped' },
-        { key: 'refresh-research-task', status: 'skipped' },
-      ],
-    });
-    throw Object.assign(error instanceof Error ? error : new Error('research report workflow failed'), {
-      workflowId: failedWorkflow?.id,
-    });
+    const failedWorkflow = failWorkflow(
+      context,
+      workflow.id,
+      error instanceof Error ? error.message : 'unknown research report workflow error',
+      {
+        steps: [
+          { key: 'load-evaluation-context', status: 'failed' },
+          { key: 'generate-research-report', status: 'skipped' },
+          { key: 'persist-report-asset', status: 'skipped' },
+          { key: 'refresh-research-task', status: 'skipped' },
+        ],
+      }
+    );
+    throw Object.assign(
+      error instanceof Error ? error : new Error('research report workflow failed'),
+      {
+        workflowId: failedWorkflow?.id,
+      }
+    );
   }
 }
 
 async function executeStrategyExecutionWorkflow(payload, context, options = {}) {
-  const workflow = options.workflow || startWorkflow(context, {
-    workflowId: 'task-orchestrator.strategy-execution',
-    workflowType: 'task-orchestrator',
-    actor: payload.requestedBy || context.getOperatorName(),
-    trigger: options.trigger || 'api',
-    payload,
-    maxAttempts: Number(payload.maxAttempts || 3),
-    steps: [
-      { key: 'load-strategy-candidate', status: 'running' },
-      { key: 'evaluate-risk', status: 'pending' },
-      { key: 'persist-execution-plan', status: 'pending' },
-      { key: 'initialize-execution-lifecycle', status: 'pending' },
-      { key: 'record-execution-runtime', status: 'pending' },
-      { key: 'enqueue-risk-scan', status: 'pending' },
-    ],
-  });
+  const workflow =
+    options.workflow ||
+    startWorkflow(context, {
+      workflowId: 'task-orchestrator.strategy-execution',
+      workflowType: 'task-orchestrator',
+      actor: payload.requestedBy || context.getOperatorName(),
+      trigger: options.trigger || 'api',
+      payload,
+      maxAttempts: Number(payload.maxAttempts || 3),
+      steps: [
+        { key: 'load-strategy-candidate', status: 'running' },
+        { key: 'evaluate-risk', status: 'pending' },
+        { key: 'persist-execution-plan', status: 'pending' },
+        { key: 'initialize-execution-lifecycle', status: 'pending' },
+        { key: 'record-execution-runtime', status: 'pending' },
+        { key: 'enqueue-risk-scan', status: 'pending' },
+      ],
+    });
 
   try {
     const candidate = await context.buildStrategyExecutionCandidate(payload);
     const riskDecision = await context.assessExecutionCandidate(candidate);
-    const lifecycleStatus = riskDecision.riskStatus === 'blocked'
-      ? 'blocked'
-      : (riskDecision.approvalState === 'required' ? 'awaiting_approval' : 'submitted');
+    const lifecycleStatus =
+      riskDecision.riskStatus === 'blocked'
+        ? 'blocked'
+        : riskDecision.approvalState === 'required'
+          ? 'awaiting_approval'
+          : 'submitted';
     const plan = await context.recordExecutionPlan({
       workflowRunId: workflow.id,
       handoffId: payload.handoffId || '',
@@ -536,82 +564,91 @@ async function executeStrategyExecutionWorkflow(payload, context, options = {}) 
         reasons: riskDecision.reasons,
       },
     });
-    const executionRun = await context.recordExecutionRun?.({
-      executionPlanId: plan.id,
-      workflowRunId: workflow.id,
-      strategyId: plan.strategyId,
-      strategyName: plan.strategyName,
-      mode: plan.mode,
-      lifecycleStatus,
-      summary: riskDecision.summary,
-      owner: payload.owner || payload.requestedBy || context.getOperatorName(),
-      orderCount: candidate.orders.length,
-      submittedOrderCount: lifecycleStatus === 'submitted' ? candidate.orders.length : 0,
-      filledOrderCount: 0,
-      rejectedOrderCount: 0,
-      metadata: {
-        handoffId: payload.handoffId || '',
-        approvalState: riskDecision.approvalState,
-        riskStatus: riskDecision.riskStatus,
-      },
-      actor: payload.requestedBy || context.getOperatorName(),
-    }) || null;
-    const orderStates = context.appendExecutionOrderStates?.(
-      candidate.orders.map((order, index) => ({
+    const executionRun =
+      (await context.recordExecutionRun?.({
         executionPlanId: plan.id,
-        executionRunId: executionRun?.id || '',
-        symbol: order.symbol,
-        side: order.side,
-        qty: order.qty,
-        weight: order.weight,
-        lifecycleStatus: lifecycleStatus === 'submitted' ? 'submitted' : (lifecycleStatus === 'blocked' ? 'rejected' : 'planned'),
-        brokerOrderId: lifecycleStatus === 'submitted' ? `broker-${plan.id}-${index + 1}` : '',
-        filledQty: 0,
-        summary: lifecycleStatus === 'submitted'
-          ? `Submitted ${order.side} ${order.symbol} into the simulated broker route.`
-          : (lifecycleStatus === 'blocked'
-            ? `Execution for ${order.symbol} was blocked before broker submission.`
-            : `Execution for ${order.symbol} is waiting for operator approval.`),
-        submittedAt: lifecycleStatus === 'submitted' ? new Date().toISOString() : '',
+        workflowRunId: workflow.id,
+        strategyId: plan.strategyId,
+        strategyName: plan.strategyName,
+        mode: plan.mode,
+        lifecycleStatus,
+        summary: riskDecision.summary,
+        owner: payload.owner || payload.requestedBy || context.getOperatorName(),
+        orderCount: candidate.orders.length,
+        submittedOrderCount: lifecycleStatus === 'submitted' ? candidate.orders.length : 0,
+        filledOrderCount: 0,
+        rejectedOrderCount: 0,
         metadata: {
-          rationale: order.rationale,
+          handoffId: payload.handoffId || '',
+          approvalState: riskDecision.approvalState,
+          riskStatus: riskDecision.riskStatus,
         },
-      })),
-    ) || [];
+        actor: payload.requestedBy || context.getOperatorName(),
+      })) || null;
+    const orderStates =
+      context.appendExecutionOrderStates?.(
+        candidate.orders.map((order, index) => ({
+          executionPlanId: plan.id,
+          executionRunId: executionRun?.id || '',
+          symbol: order.symbol,
+          side: order.side,
+          qty: order.qty,
+          weight: order.weight,
+          lifecycleStatus:
+            lifecycleStatus === 'submitted'
+              ? 'submitted'
+              : lifecycleStatus === 'blocked'
+                ? 'rejected'
+                : 'planned',
+          brokerOrderId: lifecycleStatus === 'submitted' ? `broker-${plan.id}-${index + 1}` : '',
+          filledQty: 0,
+          summary:
+            lifecycleStatus === 'submitted'
+              ? `Submitted ${order.side} ${order.symbol} into the simulated broker route.`
+              : lifecycleStatus === 'blocked'
+                ? `Execution for ${order.symbol} was blocked before broker submission.`
+                : `Execution for ${order.symbol} is waiting for operator approval.`,
+          submittedAt: lifecycleStatus === 'submitted' ? new Date().toISOString() : '',
+          metadata: {
+            rationale: order.rationale,
+          },
+        }))
+      ) || [];
     context.updateExecutionPlan?.(plan.id, {
       executionRunId: executionRun?.id || '',
       lifecycleStatus,
     });
     let runtime = null;
     if (lifecycleStatus === 'submitted') {
-      runtime = context.recordExecutionRuntime?.({
-        cycleId: workflow.id,
-        cycle: 0,
-        executionPlanId: plan.id,
-        executionRunId: executionRun?.id || '',
-        mode: plan.mode,
-        brokerAdapter: 'simulated',
-        brokerConnected: true,
-        marketConnected: true,
-        submittedOrderCount: plan.orderCount,
-        rejectedOrderCount: 0,
-        openOrderCount: plan.orderCount,
-        positionCount: 0,
-        cash: Number(candidate.capital || 0),
-        buyingPower: Number(candidate.capital || 0),
-        equity: Number(candidate.capital || 0),
-        message: `Submitted ${plan.orderCount} orders for ${plan.strategyName}.`,
-        orders: orderStates.map((item) => ({
-          id: item.brokerOrderId || item.id,
-          symbol: item.symbol,
-          side: item.side,
-          qty: item.qty,
-          type: 'market',
-          status: 'submitted',
-        })),
-        positions: [],
-        actor: payload.requestedBy || context.getOperatorName(),
-      }) || null;
+      runtime =
+        context.recordExecutionRuntime?.({
+          cycleId: workflow.id,
+          cycle: 0,
+          executionPlanId: plan.id,
+          executionRunId: executionRun?.id || '',
+          mode: plan.mode,
+          brokerAdapter: 'simulated',
+          brokerConnected: true,
+          marketConnected: true,
+          submittedOrderCount: plan.orderCount,
+          rejectedOrderCount: 0,
+          openOrderCount: plan.orderCount,
+          positionCount: 0,
+          cash: Number(candidate.capital || 0),
+          buyingPower: Number(candidate.capital || 0),
+          equity: Number(candidate.capital || 0),
+          message: `Submitted ${plan.orderCount} orders for ${plan.strategyName}.`,
+          orders: orderStates.map((item) => ({
+            id: item.brokerOrderId || item.id,
+            symbol: item.symbol,
+            side: item.side,
+            qty: item.qty,
+            type: 'market',
+            status: 'submitted',
+          })),
+          positions: [],
+          actor: payload.requestedBy || context.getOperatorName(),
+        }) || null;
       context.updateExecutionCandidateHandoff?.(payload.handoffId || '', {
         handoffStatus: 'converted',
         updatedAt: new Date().toISOString(),
@@ -650,8 +687,15 @@ async function executeStrategyExecutionWorkflow(payload, context, options = {}) 
         { key: 'load-strategy-candidate', status: 'completed', strategyId: candidate.strategyId },
         { key: 'evaluate-risk', status: 'completed', riskStatus: riskDecision.riskStatus },
         { key: 'persist-execution-plan', status: 'completed', executionPlanId: plan.id },
-        { key: 'initialize-execution-lifecycle', status: 'completed', executionRunId: executionRun?.id || '' },
-        { key: 'record-execution-runtime', status: lifecycleStatus === 'submitted' ? 'completed' : 'skipped' },
+        {
+          key: 'initialize-execution-lifecycle',
+          status: 'completed',
+          executionRunId: executionRun?.id || '',
+        },
+        {
+          key: 'record-execution-runtime',
+          status: lifecycleStatus === 'submitted' ? 'completed' : 'skipped',
+        },
         { key: 'enqueue-risk-scan', status: 'completed' },
       ],
       result: {
@@ -670,37 +714,47 @@ async function executeStrategyExecutionWorkflow(payload, context, options = {}) 
       workflow: persistedWorkflow,
     };
   } catch (error) {
-    const failedWorkflow = failWorkflow(context, workflow.id, error instanceof Error ? error.message : 'unknown strategy execution error', {
-      steps: [
-        { key: 'load-strategy-candidate', status: 'failed' },
-        { key: 'evaluate-risk', status: 'skipped' },
-        { key: 'persist-execution-plan', status: 'skipped' },
-        { key: 'initialize-execution-lifecycle', status: 'skipped' },
-        { key: 'record-execution-runtime', status: 'skipped' },
-        { key: 'enqueue-risk-scan', status: 'skipped' },
-      ],
-    });
-    throw Object.assign(error instanceof Error ? error : new Error('strategy execution workflow failed'), {
-      workflowId: failedWorkflow?.id,
-    });
+    const failedWorkflow = failWorkflow(
+      context,
+      workflow.id,
+      error instanceof Error ? error.message : 'unknown strategy execution error',
+      {
+        steps: [
+          { key: 'load-strategy-candidate', status: 'failed' },
+          { key: 'evaluate-risk', status: 'skipped' },
+          { key: 'persist-execution-plan', status: 'skipped' },
+          { key: 'initialize-execution-lifecycle', status: 'skipped' },
+          { key: 'record-execution-runtime', status: 'skipped' },
+          { key: 'enqueue-risk-scan', status: 'skipped' },
+        ],
+      }
+    );
+    throw Object.assign(
+      error instanceof Error ? error : new Error('strategy execution workflow failed'),
+      {
+        workflowId: failedWorkflow?.id,
+      }
+    );
   }
 }
 
 async function executeAgentActionRequestWorkflow(payload, context, options = {}) {
-  const workflow = options.workflow || startWorkflow(context, {
-    workflowId: 'task-orchestrator.agent-action-request',
-    workflowType: 'task-orchestrator',
-    actor: payload.requestedBy || context.getOperatorName(),
-    trigger: options.trigger || 'agent',
-    payload,
-    maxAttempts: Number(payload.maxAttempts || 2),
-    steps: [
-      { key: 'validate-request', status: 'running' },
-      { key: 'assess-risk-gate', status: 'pending' },
-      { key: 'persist-action-request', status: 'pending' },
-      { key: 'fanout-review-notification', status: 'pending' },
-    ],
-  });
+  const workflow =
+    options.workflow ||
+    startWorkflow(context, {
+      workflowId: 'task-orchestrator.agent-action-request',
+      workflowType: 'task-orchestrator',
+      actor: payload.requestedBy || context.getOperatorName(),
+      trigger: options.trigger || 'agent',
+      payload,
+      maxAttempts: Number(payload.maxAttempts || 2),
+      steps: [
+        { key: 'validate-request', status: 'running' },
+        { key: 'assess-risk-gate', status: 'pending' },
+        { key: 'persist-action-request', status: 'pending' },
+        { key: 'fanout-review-notification', status: 'pending' },
+      ],
+    });
 
   try {
     const gate = await context.assessAgentActionRequestRisk(payload);
@@ -711,7 +765,8 @@ async function executeAgentActionRequestWorkflow(payload, context, options = {})
       status: gate.status,
       approvalState: gate.approvalState,
       riskStatus: gate.riskStatus,
-      summary: gate.summary || payload.summary || `${payload.requestType} request submitted by Agent.`,
+      summary:
+        gate.summary || payload.summary || `${payload.requestType} request submitted by Agent.`,
       rationale: payload.rationale || '',
       requestedBy: payload.requestedBy || context.getOperatorName(),
       metadata: {
@@ -735,7 +790,12 @@ async function executeAgentActionRequestWorkflow(payload, context, options = {})
     const persistedWorkflow = completeWorkflow(context, workflow.id, {
       steps: [
         { key: 'validate-request', status: 'completed', requestType: payload.requestType },
-        { key: 'assess-risk-gate', status: 'completed', riskStatus: gate.riskStatus, approvalState: gate.approvalState },
+        {
+          key: 'assess-risk-gate',
+          status: 'completed',
+          riskStatus: gate.riskStatus,
+          approvalState: gate.approvalState,
+        },
         { key: 'persist-action-request', status: 'completed', agentActionRequestId: request.id },
         { key: 'fanout-review-notification', status: 'completed' },
       ],
@@ -753,36 +813,46 @@ async function executeAgentActionRequestWorkflow(payload, context, options = {})
       workflow: persistedWorkflow,
     };
   } catch (error) {
-    const failedWorkflow = failWorkflow(context, workflow.id, error instanceof Error ? error.message : 'unknown agent action request error', {
-      steps: [
-        { key: 'validate-request', status: 'failed' },
-        { key: 'assess-risk-gate', status: 'skipped' },
-        { key: 'persist-action-request', status: 'skipped' },
-        { key: 'fanout-review-notification', status: 'skipped' },
-      ],
-      retryable: false,
-    });
-    throw Object.assign(error instanceof Error ? error : new Error('agent action request workflow failed'), {
-      workflowId: failedWorkflow?.id,
-    });
+    const failedWorkflow = failWorkflow(
+      context,
+      workflow.id,
+      error instanceof Error ? error.message : 'unknown agent action request error',
+      {
+        steps: [
+          { key: 'validate-request', status: 'failed' },
+          { key: 'assess-risk-gate', status: 'skipped' },
+          { key: 'persist-action-request', status: 'skipped' },
+          { key: 'fanout-review-notification', status: 'skipped' },
+        ],
+        retryable: false,
+      }
+    );
+    throw Object.assign(
+      error instanceof Error ? error : new Error('agent action request workflow failed'),
+      {
+        workflowId: failedWorkflow?.id,
+      }
+    );
   }
 }
 
 async function executeBacktestRunWorkflow(payload, context, options = {}) {
-  const workflow = options.workflow || startWorkflow(context, {
-    workflowId: 'task-orchestrator.backtest-run',
-    workflowType: 'task-orchestrator',
-    actor: payload.requestedBy || context.getOperatorName(),
-    trigger: options.trigger || 'api',
-    payload,
-    maxAttempts: Number(payload.maxAttempts || 2),
-    steps: [
-      { key: 'load-strategy', status: 'running' },
-      { key: 'mark-run-running', status: 'pending' },
-      { key: 'produce-backtest-result', status: 'pending' },
-      { key: 'refresh-research-summary', status: 'pending' },
-    ],
-  });
+  const workflow =
+    options.workflow ||
+    startWorkflow(context, {
+      workflowId: 'task-orchestrator.backtest-run',
+      workflowType: 'task-orchestrator',
+      actor: payload.requestedBy || context.getOperatorName(),
+      trigger: options.trigger || 'api',
+      payload,
+      maxAttempts: Number(payload.maxAttempts || 2),
+      steps: [
+        { key: 'load-strategy', status: 'running' },
+        { key: 'mark-run-running', status: 'pending' },
+        { key: 'produce-backtest-result', status: 'pending' },
+        { key: 'refresh-research-summary', status: 'pending' },
+      ],
+    });
 
   const existingRun = context.findBacktestRunByWorkflowRunId?.(workflow.id);
 
@@ -792,15 +862,17 @@ async function executeBacktestRunWorkflow(payload, context, options = {}) {
       throw new Error(`Unknown strategy: ${payload.strategyId}`);
     }
 
-    const run = existingRun || context.appendBacktestRun({
-      workflowRunId: workflow.id,
-      strategyId: strategy.id,
-      strategyName: strategy.name,
-      status: 'queued',
-      windowLabel: payload.windowLabel || '2024-01-01 -> 2026-03-01',
-      requestedBy: payload.requestedBy || context.getOperatorName(),
-      summary: `${strategy.name} was reconstructed from workflow state before execution.`,
-    });
+    const run =
+      existingRun ||
+      context.appendBacktestRun({
+        workflowRunId: workflow.id,
+        strategyId: strategy.id,
+        strategyName: strategy.name,
+        status: 'queued',
+        windowLabel: payload.windowLabel || '2024-01-01 -> 2026-03-01',
+        requestedBy: payload.requestedBy || context.getOperatorName(),
+        summary: `${strategy.name} was reconstructed from workflow state before execution.`,
+      });
     syncBacktestResearchTask(context, run, {
       status: 'queued',
       latestCheckpoint: `${strategy.name} is linked to workflow ${workflow.id}.`,
@@ -865,7 +937,8 @@ async function executeBacktestRunWorkflow(payload, context, options = {}) {
     context.enqueueNotification?.({
       level: completedRun.status === 'needs_review' ? 'warn' : 'info',
       source: 'research-control',
-      title: completedRun.status === 'needs_review' ? 'Backtest requires review' : 'Backtest completed',
+      title:
+        completedRun.status === 'needs_review' ? 'Backtest requires review' : 'Backtest completed',
       message: completedRun.summary,
       metadata: {
         runId: completedRun.id,
@@ -916,14 +989,19 @@ async function executeBacktestRunWorkflow(payload, context, options = {}) {
       context.refreshBacktestSummary?.('task-workflow-engine.backtest-run');
     }
 
-    const failedWorkflow = failWorkflow(context, workflow.id, error instanceof Error ? error.message : 'unknown backtest workflow error', {
-      steps: [
-        { key: 'load-strategy', status: 'failed' },
-        { key: 'mark-run-running', status: 'skipped' },
-        { key: 'produce-backtest-result', status: 'skipped' },
-        { key: 'refresh-research-summary', status: 'skipped' },
-      ],
-    });
+    const failedWorkflow = failWorkflow(
+      context,
+      workflow.id,
+      error instanceof Error ? error.message : 'unknown backtest workflow error',
+      {
+        steps: [
+          { key: 'load-strategy', status: 'failed' },
+          { key: 'mark-run-running', status: 'skipped' },
+          { key: 'produce-backtest-result', status: 'skipped' },
+          { key: 'refresh-research-summary', status: 'skipped' },
+        ],
+      }
+    );
     throw Object.assign(error instanceof Error ? error : new Error('backtest workflow failed'), {
       workflowId: failedWorkflow?.id,
     });
@@ -931,23 +1009,25 @@ async function executeBacktestRunWorkflow(payload, context, options = {}) {
 }
 
 export async function executeCycleWorkflow(payload, context, options = {}) {
-  const workflow = options.workflow || startWorkflow(context, {
-    workflowId: 'task-orchestrator.cycle-run',
-    workflowType: 'task-orchestrator',
-    actor: context.getOperatorName(),
-    trigger: options.trigger || 'api',
-    payload: {
-      cycle: payload.cycle,
-      mode: payload.mode,
-      riskLevel: payload.riskLevel,
-    },
-    maxAttempts: Number(payload.maxAttempts || 3),
-    steps: [
-      { key: 'record-cycle', status: 'running' },
-      { key: 'execute-broker-cycle', status: 'pending' },
-      { key: 'resolve-control-plane', status: 'pending' },
-    ],
-  });
+  const workflow =
+    options.workflow ||
+    startWorkflow(context, {
+      workflowId: 'task-orchestrator.cycle-run',
+      workflowType: 'task-orchestrator',
+      actor: context.getOperatorName(),
+      trigger: options.trigger || 'api',
+      payload: {
+        cycle: payload.cycle,
+        mode: payload.mode,
+        riskLevel: payload.riskLevel,
+      },
+      maxAttempts: Number(payload.maxAttempts || 3),
+      steps: [
+        { key: 'record-cycle', status: 'running' },
+        { key: 'execute-broker-cycle', status: 'pending' },
+        { key: 'resolve-control-plane', status: 'pending' },
+      ],
+    });
 
   try {
     const cycle = await context.recordCycleRun(payload);
@@ -967,8 +1047,12 @@ export async function executeCycleWorkflow(payload, context, options = {}) {
       brokerAdapter: brokerHealth.adapter || 'simulated',
       brokerConnected: brokerHealth.connected,
       marketConnected,
-      submittedOrderCount: Array.isArray(brokerExecution.submittedOrders) ? brokerExecution.submittedOrders.length : 0,
-      rejectedOrderCount: Array.isArray(brokerExecution.rejectedOrders) ? brokerExecution.rejectedOrders.length : 0,
+      submittedOrderCount: Array.isArray(brokerExecution.submittedOrders)
+        ? brokerExecution.submittedOrders.length
+        : 0,
+      rejectedOrderCount: Array.isArray(brokerExecution.rejectedOrders)
+        ? brokerExecution.rejectedOrders.length
+        : 0,
       openOrderCount: Array.isArray(brokerSnapshot.orders) ? brokerSnapshot.orders.length : 0,
       positionCount: Array.isArray(brokerSnapshot.positions) ? brokerSnapshot.positions.length : 0,
       cash: Number(brokerSnapshot.account?.cash || 0),
@@ -981,17 +1065,19 @@ export async function executeCycleWorkflow(payload, context, options = {}) {
       actor: context.getOperatorName(),
     });
 
-    const lastStatus = cycle.pendingApprovals > 0
-      ? 'REVIEW'
-      : (!brokerExecution.connected || !brokerHealth.connected || !marketConnected)
-        ? 'DEGRADED'
-        : 'HEALTHY';
+    const lastStatus =
+      cycle.pendingApprovals > 0
+        ? 'REVIEW'
+        : !brokerExecution.connected || !brokerHealth.connected || !marketConnected
+          ? 'DEGRADED'
+          : 'HEALTHY';
 
-    const routeHint = cycle.pendingApprovals > 0
-      ? 'Control plane is holding live actions for manual approval.'
-      : (!brokerHealth.connected || !marketConnected)
-        ? 'Control plane detected degraded connectivity and is routing through fallback-aware execution.'
-        : 'Control plane confirmed the cycle and kept the default execution route.';
+    const routeHint =
+      cycle.pendingApprovals > 0
+        ? 'Control plane is holding live actions for manual approval.'
+        : !brokerHealth.connected || !marketConnected
+          ? 'Control plane detected degraded connectivity and is routing through fallback-aware execution.'
+          : 'Control plane confirmed the cycle and kept the default execution route.';
 
     const resolution = {
       ok: true,
@@ -1035,13 +1121,18 @@ export async function executeCycleWorkflow(payload, context, options = {}) {
       workflow: persistedWorkflow,
     };
   } catch (error) {
-    const failedWorkflow = failWorkflow(context, workflow.id, error instanceof Error ? error.message : 'unknown workflow error', {
-      steps: [
-        { key: 'record-cycle', status: 'failed' },
-        { key: 'execute-broker-cycle', status: 'skipped' },
-        { key: 'resolve-control-plane', status: 'skipped' },
-      ],
-    });
+    const failedWorkflow = failWorkflow(
+      context,
+      workflow.id,
+      error instanceof Error ? error.message : 'unknown workflow error',
+      {
+        steps: [
+          { key: 'record-cycle', status: 'failed' },
+          { key: 'execute-broker-cycle', status: 'skipped' },
+          { key: 'resolve-control-plane', status: 'skipped' },
+        ],
+      }
+    );
     throw Object.assign(error instanceof Error ? error : new Error('cycle workflow failed'), {
       workflowId: failedWorkflow?.id,
     });
@@ -1049,24 +1140,26 @@ export async function executeCycleWorkflow(payload, context, options = {}) {
 }
 
 export async function executeStateWorkflow(previousState, context, options = {}) {
-  const workflow = options.workflow || startWorkflow(context, {
-    workflowId: 'task-orchestrator.state-run',
-    workflowType: 'task-orchestrator',
-    actor: options.actor || 'state-runner',
-    trigger: options.trigger || 'api',
-    payload: {
-      cycle: Number(previousState?.cycle || 0) + 1,
-      mode: previousState?.mode || 'autopilot',
-      state: previousState,
-    },
-    maxAttempts: Number(options.maxAttempts || 3),
-    steps: [
-      { key: 'load-market-snapshot', status: 'running' },
-      { key: 'advance-local-state', status: 'pending' },
-      { key: 'resolve-cycle', status: 'pending' },
-      { key: 'enqueue-risk-scan', status: 'pending' },
-    ],
-  });
+  const workflow =
+    options.workflow ||
+    startWorkflow(context, {
+      workflowId: 'task-orchestrator.state-run',
+      workflowType: 'task-orchestrator',
+      actor: options.actor || 'state-runner',
+      trigger: options.trigger || 'api',
+      payload: {
+        cycle: Number(previousState?.cycle || 0) + 1,
+        mode: previousState?.mode || 'autopilot',
+        state: previousState,
+      },
+      maxAttempts: Number(options.maxAttempts || 3),
+      steps: [
+        { key: 'load-market-snapshot', status: 'running' },
+        { key: 'advance-local-state', status: 'pending' },
+        { key: 'resolve-cycle', status: 'pending' },
+        { key: 'enqueue-risk-scan', status: 'pending' },
+      ],
+    });
 
   try {
     const marketSnapshot = await context.getMarketSnapshot({
@@ -1126,14 +1219,19 @@ export async function executeStateWorkflow(previousState, context, options = {})
       workflow: persistedWorkflow,
     };
   } catch (error) {
-    const failedWorkflow = failWorkflow(context, workflow.id, error instanceof Error ? error.message : 'unknown state workflow error', {
-      steps: [
-        { key: 'load-market-snapshot', status: 'failed' },
-        { key: 'advance-local-state', status: 'skipped' },
-        { key: 'resolve-cycle', status: 'skipped' },
-        { key: 'enqueue-risk-scan', status: 'skipped' },
-      ],
-    });
+    const failedWorkflow = failWorkflow(
+      context,
+      workflow.id,
+      error instanceof Error ? error.message : 'unknown state workflow error',
+      {
+        steps: [
+          { key: 'load-market-snapshot', status: 'failed' },
+          { key: 'advance-local-state', status: 'skipped' },
+          { key: 'resolve-cycle', status: 'skipped' },
+          { key: 'enqueue-risk-scan', status: 'skipped' },
+        ],
+      }
+    );
     throw Object.assign(error instanceof Error ? error : new Error('state workflow failed'), {
       workflowId: failedWorkflow?.id,
     });
@@ -1179,7 +1277,13 @@ export async function executeQueuedWorkflow(workflowRun, context) {
     });
   }
   if (workflowRun.workflowId === 'task-orchestrator.agent-daily-run') {
-    const { runId, kind = 'pre_market', accountId, strategyId, requestedBy } = workflowRun.payload || {};
+    const {
+      runId,
+      kind = 'pre_market',
+      accountId,
+      strategyId,
+      requestedBy,
+    } = workflowRun.payload || {};
     const now = new Date().toISOString();
 
     try {
@@ -1197,16 +1301,25 @@ export async function executeQueuedWorkflow(workflowRun, context) {
             actor: requestedBy || 'system',
             title: 'Pre-market brief generated',
             detail: resultMetadata.briefContent,
-            metadata: { runId, kind, authorityMode: resultMetadata.authorityMode, instructionCount: resultMetadata.instructionCount },
+            metadata: {
+              runId,
+              kind,
+              authorityMode: resultMetadata.authorityMode,
+              instructionCount: resultMetadata.instructionCount,
+            },
           });
         }
-
       } else if (kind === 'intraday_monitor') {
-        const previousRuns = typeof context.listAgentDailyRuns === 'function'
-          ? context.listAgentDailyRuns(5, { kind: 'intraday_monitor', status: 'completed' })
-          : [];
+        const previousRuns =
+          typeof context.listAgentDailyRuns === 'function'
+            ? context.listAgentDailyRuns(5, { kind: 'intraday_monitor', status: 'completed' })
+            : [];
         const lastCompletedRun = previousRuns.find((r) => r.id !== runId) || null;
-        resultMetadata = runIntradayMonitorCheck(context, { accountId, strategyId }, lastCompletedRun);
+        resultMetadata = runIntradayMonitorCheck(
+          context,
+          { accountId, strategyId },
+          lastCompletedRun
+        );
         if (typeof context.audit?.appendAuditRecord === 'function') {
           context.audit.appendAuditRecord({
             type: 'agent-daily-run',
@@ -1216,7 +1329,6 @@ export async function executeQueuedWorkflow(workflowRun, context) {
             metadata: { runId, kind, actionsApplied: resultMetadata.actionsApplied.length },
           });
         }
-
       } else if (kind === 'post_market') {
         resultMetadata = buildPostMarketRecap(context, { accountId, strategyId, runId });
         if (typeof context.audit?.appendAuditRecord === 'function') {
@@ -1225,10 +1337,14 @@ export async function executeQueuedWorkflow(workflowRun, context) {
             actor: requestedBy || 'system',
             title: 'Post-market recap generated',
             detail: resultMetadata.recap,
-            metadata: { runId, kind, completedRunCount: resultMetadata.completedRunCount, downgradeCount: resultMetadata.downgradeCount },
+            metadata: {
+              runId,
+              kind,
+              completedRunCount: resultMetadata.completedRunCount,
+              downgradeCount: resultMetadata.downgradeCount,
+            },
           });
         }
-
       } else {
         resultMetadata = {
           kind,
@@ -1238,7 +1354,11 @@ export async function executeQueuedWorkflow(workflowRun, context) {
       }
 
       if (runId && typeof context.updateAgentDailyRun === 'function') {
-        context.updateAgentDailyRun(runId, { status: 'completed', updatedAt: now, metadata: resultMetadata });
+        context.updateAgentDailyRun(runId, {
+          status: 'completed',
+          updatedAt: now,
+          metadata: resultMetadata,
+        });
       }
 
       return {
@@ -1252,11 +1372,14 @@ export async function executeQueuedWorkflow(workflowRun, context) {
           result: { ok: true, kind, runId, ...resultMetadata },
         }),
       };
-
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : 'agent daily run workflow failed';
       if (runId && typeof context.updateAgentDailyRun === 'function') {
-        context.updateAgentDailyRun(runId, { status: 'failed', updatedAt: now, metadata: { error: errMsg } });
+        context.updateAgentDailyRun(runId, {
+          status: 'failed',
+          updatedAt: now,
+          metadata: { error: errMsg },
+        });
       }
       return {
         ok: false,
@@ -1275,9 +1398,14 @@ export async function executeQueuedWorkflow(workflowRun, context) {
   }
   return {
     ok: false,
-    workflow: failWorkflow(context, workflowRun.id, `No executor registered for ${workflowRun.workflowId}`, {
-      retryable: false,
-      steps: [{ key: 'dispatch', status: 'failed' }],
-    }),
+    workflow: failWorkflow(
+      context,
+      workflowRun.id,
+      `No executor registered for ${workflowRun.workflowId}`,
+      {
+        retryable: false,
+        steps: [{ key: 'dispatch', status: 'failed' }],
+      }
+    ),
   };
 }

@@ -40,7 +40,7 @@ export function createSchedulerRepository(store) {
       const items = sortByCreatedAtDesc(
         filterByDate(store.readCollection(TICKS_FILE), filter.since)
           .filter((item) => matchesScopeFilter(item, filter))
-          .filter((item) => !filter.phase || item.phase === filter.phase),
+          .filter((item) => !filter.phase || item.phase === filter.phase)
       );
       return items.slice(0, limit);
     },
@@ -70,12 +70,14 @@ export function createSchedulerRepository(store) {
         id: options.id,
         phase,
         status: options.status || (phaseChanged ? 'phase-change' : 'steady'),
-        title: options.title || (phaseChanged ? `Scheduler entered ${phase}` : `Scheduler tick ${phase}`),
-        message: options.message || (
-          phaseChanged
+        title:
+          options.title ||
+          (phaseChanged ? `Scheduler entered ${phase}` : `Scheduler tick ${phase}`),
+        message:
+          options.message ||
+          (phaseChanged
             ? `Scheduler moved into ${phase} window and background jobs can be routed accordingly.`
-            : `Scheduler heartbeat recorded for the ${phase} window.`
-        ),
+            : `Scheduler heartbeat recorded for the ${phase} window.`),
         worker,
         createdAt: options.createdAt,
         metadata: {
@@ -90,16 +92,18 @@ export function createSchedulerRepository(store) {
 
       if (phaseChanged) {
         const notifications = store.readCollection(NOTIFICATIONS_FILE);
-        notifications.unshift(createNotificationEntry({
-          level: phase === 'OFF_HOURS' ? 'info' : 'warn',
-          title: tick.title,
-          message: tick.message,
-          source: 'scheduler',
-          metadata: {
-            phase,
-            previousPhase: state.lastPhase || null,
-          },
-        }));
+        notifications.unshift(
+          createNotificationEntry({
+            level: phase === 'OFF_HOURS' ? 'info' : 'warn',
+            title: tick.title,
+            message: tick.message,
+            source: 'scheduler',
+            metadata: {
+              phase,
+              previousPhase: state.lastPhase || null,
+            },
+          })
+        );
         trimAndSave(store, NOTIFICATIONS_FILE, notifications, 100);
       }
 

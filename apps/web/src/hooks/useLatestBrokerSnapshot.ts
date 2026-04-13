@@ -1,6 +1,6 @@
+import type { BrokerAccountSnapshotRecord } from '@shared-types/trading.ts';
 import { useEffect, useState } from 'react';
 import { fetchLatestBrokerAccountSnapshot } from '../app/api/controlPlane.ts';
-import type { BrokerAccountSnapshotRecord } from '@shared-types/trading.ts';
 
 export function useLatestBrokerSnapshot(refreshKey?: string) {
   const [snapshot, setSnapshot] = useState<BrokerAccountSnapshotRecord | null>(null);

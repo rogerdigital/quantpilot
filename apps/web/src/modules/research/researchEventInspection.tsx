@@ -63,7 +63,12 @@ export function getStrategyTimelineActionLabel(locale: 'zh' | 'en', eventType?: 
     return locale === 'zh' ? '打开回测详情' : 'Open Backtest Detail';
   }
 
-  if (eventType === 'evaluation' || eventType === 'report' || eventType === 'task' || eventType === 'workflow') {
+  if (
+    eventType === 'evaluation' ||
+    eventType === 'report' ||
+    eventType === 'task' ||
+    eventType === 'workflow'
+  ) {
     return locale === 'zh' ? '打开研究详情' : 'Open Research Detail';
   }
 

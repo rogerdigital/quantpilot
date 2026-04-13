@@ -6,7 +6,8 @@ const FILENAME = 'agent-plans.json';
 export function createAgentPlanRepository(store) {
   return {
     listAgentPlans(limit = 50, filter = {}) {
-      return store.readCollection(FILENAME)
+      return store
+        .readCollection(FILENAME)
         .filter((item) => {
           if (!matchesScopeFilter(item, filter)) return false;
           if (filter.status && item.status !== filter.status) return false;

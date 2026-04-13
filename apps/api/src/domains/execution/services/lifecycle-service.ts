@@ -8,12 +8,16 @@ const ACTIVE_PLAN_LIFECYCLES = new Set(['submitted', 'acknowledged', 'partial_fi
 
 function summarizeLifecycle(strategyName, lifecycleStatus) {
   if (lifecycleStatus === 'submitted') return `Submitted execution orders for ${strategyName}.`;
-  if (lifecycleStatus === 'acknowledged') return `Broker acknowledged execution orders for ${strategyName}.`;
-  if (lifecycleStatus === 'partial_fill') return `Execution for ${strategyName} is partially filled.`;
+  if (lifecycleStatus === 'acknowledged')
+    return `Broker acknowledged execution orders for ${strategyName}.`;
+  if (lifecycleStatus === 'partial_fill')
+    return `Execution for ${strategyName} is partially filled.`;
   if (lifecycleStatus === 'filled') return `Execution for ${strategyName} is fully filled.`;
-  if (lifecycleStatus === 'cancelled') return `Execution for ${strategyName} was cancelled before completion.`;
+  if (lifecycleStatus === 'cancelled')
+    return `Execution for ${strategyName} was cancelled before completion.`;
   if (lifecycleStatus === 'failed') return `Execution for ${strategyName} failed during routing.`;
-  if (lifecycleStatus === 'blocked') return `Execution for ${strategyName} was blocked by guardrails.`;
+  if (lifecycleStatus === 'blocked')
+    return `Execution for ${strategyName} was blocked by guardrails.`;
   return `Execution lifecycle updated for ${strategyName}.`;
 }
 
@@ -48,22 +52,25 @@ function buildBrokerPositions(orderStates = []) {
 }
 
 function summarizeOrderBook(orderStates = []) {
-  return orderStates.reduce((acc, item) => {
-    if (item.lifecycleStatus === 'planned') acc.planned += 1;
-    if (item.lifecycleStatus === 'submitted') acc.submitted += 1;
-    if (item.lifecycleStatus === 'acknowledged') acc.acknowledged += 1;
-    if (item.lifecycleStatus === 'filled') acc.filled += 1;
-    if (item.lifecycleStatus === 'rejected') acc.rejected += 1;
-    if (item.lifecycleStatus === 'cancelled') acc.cancelled += 1;
-    return acc;
-  }, {
-    planned: 0,
-    submitted: 0,
-    acknowledged: 0,
-    filled: 0,
-    rejected: 0,
-    cancelled: 0,
-  });
+  return orderStates.reduce(
+    (acc, item) => {
+      if (item.lifecycleStatus === 'planned') acc.planned += 1;
+      if (item.lifecycleStatus === 'submitted') acc.submitted += 1;
+      if (item.lifecycleStatus === 'acknowledged') acc.acknowledged += 1;
+      if (item.lifecycleStatus === 'filled') acc.filled += 1;
+      if (item.lifecycleStatus === 'rejected') acc.rejected += 1;
+      if (item.lifecycleStatus === 'cancelled') acc.cancelled += 1;
+      return acc;
+    },
+    {
+      planned: 0,
+      submitted: 0,
+      acknowledged: 0,
+      filled: 0,
+      rejected: 0,
+      cancelled: 0,
+    }
+  );
 }
 
 function deriveLifecycleFromOrders(orderStates = [], fallback = 'submitted') {
@@ -71,7 +78,8 @@ function deriveLifecycleFromOrders(orderStates = [], fallback = 'submitted') {
   const counts = summarizeOrderBook(orderStates);
   if (counts.filled === orderStates.length) return 'filled';
   if (counts.filled > 0 && (counts.submitted > 0 || counts.acknowledged > 0)) return 'partial_fill';
-  if (counts.acknowledged > 0 && counts.submitted === 0 && counts.filled === 0) return 'acknowledged';
+  if (counts.acknowledged > 0 && counts.submitted === 0 && counts.filled === 0)
+    return 'acknowledged';
   if (counts.acknowledged > 0 && counts.submitted > 0) return 'acknowledged';
   if (counts.submitted > 0) return 'submitted';
   if (counts.cancelled === orderStates.length) return 'cancelled';
@@ -128,15 +136,15 @@ function refreshExecutionAggregate(plan, executionRun, orderStates, payload = {}
   const completedAt = ['filled', 'cancelled', 'failed'].includes(nextLifecycle) ? now : '';
   const nextRun = executionRun
     ? controlPlaneRuntime.updateExecutionRun(executionRun.id, {
-      lifecycleStatus: nextLifecycle,
-      submittedOrderCount: counts.submitted + counts.acknowledged + counts.filled,
-      filledOrderCount: counts.filled,
-      rejectedOrderCount: counts.rejected,
-      summary,
-      completedAt,
-      metadata: payload.metadata || {},
-      updatedAt: now,
-    })
+        lifecycleStatus: nextLifecycle,
+        submittedOrderCount: counts.submitted + counts.acknowledged + counts.filled,
+        filledOrderCount: counts.filled,
+        rejectedOrderCount: counts.rejected,
+        summary,
+        completedAt,
+        metadata: payload.metadata || {},
+        updatedAt: now,
+      })
     : null;
   const nextPlan = controlPlaneRuntime.updateExecutionPlan(plan.id, {
     lifecycleStatus: nextLifecycle,
@@ -146,7 +154,14 @@ function refreshExecutionAggregate(plan, executionRun, orderStates, payload = {}
     metadata: payload.metadata ? { ...(plan.metadata || {}), ...payload.metadata } : plan.metadata,
     updatedAt: now,
   });
-  const runtime = buildRuntimeSnapshot(nextPlan || plan, nextRun || executionRun, orderStates, actor, summary, now);
+  const runtime = buildRuntimeSnapshot(
+    nextPlan || plan,
+    nextRun || executionRun,
+    orderStates,
+    actor,
+    summary,
+    now
+  );
 
   return {
     plan: nextPlan,
@@ -160,8 +175,10 @@ function refreshExecutionAggregate(plan, executionRun, orderStates, payload = {}
 function buildBrokerEventHeadline(strategyName, eventType, symbol) {
   const symbolLabel = symbol ? ` ${symbol}` : '';
   if (eventType === 'acknowledged') return `Broker acknowledged${symbolLabel} for ${strategyName}.`;
-  if (eventType === 'partial_fill') return `Broker reported a partial fill${symbolLabel} for ${strategyName}.`;
-  if (eventType === 'filled') return `Broker reported a full fill${symbolLabel} for ${strategyName}.`;
+  if (eventType === 'partial_fill')
+    return `Broker reported a partial fill${symbolLabel} for ${strategyName}.`;
+  if (eventType === 'filled')
+    return `Broker reported a full fill${symbolLabel} for ${strategyName}.`;
   if (eventType === 'rejected') return `Broker rejected${symbolLabel} for ${strategyName}.`;
   if (eventType === 'cancelled') return `Broker cancelled${symbolLabel} for ${strategyName}.`;
   return `Broker event recorded for ${strategyName}.`;
@@ -179,7 +196,9 @@ function getBrokerEventTargets(orderStates = [], payload = {}) {
   if (filtered.length) return filtered;
   if (brokerOrderId || symbol) return [];
 
-  return orderStates.filter((item) => ['submitted', 'acknowledged', 'planned'].includes(item.lifecycleStatus));
+  return orderStates.filter((item) =>
+    ['submitted', 'acknowledged', 'planned'].includes(item.lifecycleStatus)
+  );
 }
 
 function applyBrokerEventToOrder(item, payload, now) {
@@ -202,7 +221,10 @@ function applyBrokerEventToOrder(item, payload, now) {
   if (eventType === 'partial_fill') {
     const nextFilledQty = Math.min(
       item.qty,
-      Math.max(Number(payload.filledQty || 0), Math.max(item.filledQty || 0, Math.ceil(item.qty / 2))),
+      Math.max(
+        Number(payload.filledQty || 0),
+        Math.max(item.filledQty || 0, Math.ceil(item.qty / 2))
+      )
     );
     return controlPlaneRuntime.updateExecutionOrderState(item.id, {
       lifecycleStatus: nextFilledQty >= item.qty ? 'filled' : 'acknowledged',
@@ -210,7 +232,9 @@ function applyBrokerEventToOrder(item, payload, now) {
       summary: payload.message || `Broker reported a partial fill for ${item.side} ${item.symbol}.`,
       acknowledgedAt: item.acknowledgedAt || now,
       filledQty: nextFilledQty,
-      avgFillPrice: Number.isFinite(payload.avgFillPrice) ? Number(payload.avgFillPrice) : item.avgFillPrice,
+      avgFillPrice: Number.isFinite(payload.avgFillPrice)
+        ? Number(payload.avgFillPrice)
+        : item.avgFillPrice,
       filledAt: nextFilledQty > 0 ? now : item.filledAt,
       updatedAt: now,
       metadata: {
@@ -228,7 +252,9 @@ function applyBrokerEventToOrder(item, payload, now) {
       summary: payload.message || `Broker reported a full fill for ${item.side} ${item.symbol}.`,
       acknowledgedAt: item.acknowledgedAt || now,
       filledQty: Number(payload.filledQty || item.qty),
-      avgFillPrice: Number.isFinite(payload.avgFillPrice) ? Number(payload.avgFillPrice) : item.avgFillPrice,
+      avgFillPrice: Number.isFinite(payload.avgFillPrice)
+        ? Number(payload.avgFillPrice)
+        : item.avgFillPrice,
       filledAt: now,
       updatedAt: now,
       metadata: {
@@ -287,7 +313,8 @@ function loadMutableExecutionPlan(planId, errorMessage) {
     return {
       ok: false,
       error: 'execution run not found',
-      message: errorMessage || `Execution plan ${detail.plan.id} does not have an execution run yet.`,
+      message:
+        errorMessage || `Execution plan ${detail.plan.id} does not have an execution run yet.`,
     };
   }
   return {
@@ -330,13 +357,15 @@ export function approveExecutionPlan(planId, payload = {}) {
 
   const now = new Date().toISOString();
   const updatedOrders = orderStates
-    .map((item, index) => controlPlaneRuntime.updateExecutionOrderState(item.id, {
-      lifecycleStatus: 'submitted',
-      brokerOrderId: item.brokerOrderId || `broker-${plan.id}-${index + 1}`,
-      summary: `Submitted ${item.side} ${item.symbol} after operator approval.`,
-      submittedAt: now,
-      updatedAt: now,
-    }))
+    .map((item, index) =>
+      controlPlaneRuntime.updateExecutionOrderState(item.id, {
+        lifecycleStatus: 'submitted',
+        brokerOrderId: item.brokerOrderId || `broker-${plan.id}-${index + 1}`,
+        summary: `Submitted ${item.side} ${item.symbol} after operator approval.`,
+        submittedAt: now,
+        updatedAt: now,
+      })
+    )
     .filter(Boolean);
 
   const result = refreshExecutionAggregate(plan, executionRun, updatedOrders, {
@@ -417,7 +446,10 @@ export function syncExecutionPlan(planId, payload = {}) {
           lifecycleStatus: shouldFill ? 'filled' : 'acknowledged',
           acknowledgedAt: now,
           filledQty: shouldFill ? item.qty : Math.max(item.filledQty, Math.floor(item.qty / 2)),
-          avgFillPrice: shouldFill || item.avgFillPrice ? Number((100 + index * 3.1).toFixed(2)) : item.avgFillPrice,
+          avgFillPrice:
+            shouldFill || item.avgFillPrice
+              ? Number((100 + index * 3.1).toFixed(2))
+              : item.avgFillPrice,
           filledAt: shouldFill ? now : item.filledAt,
           summary: shouldFill
             ? `${item.symbol} fully filled after broker sync.`
@@ -451,7 +483,10 @@ export function syncExecutionPlan(planId, payload = {}) {
   const result = refreshExecutionAggregate(plan, executionRun, updatedOrders, {
     actor: payload.actor,
     now,
-    summary: summarizeLifecycle(plan.strategyName, deriveLifecycleFromOrders(updatedOrders, plan.lifecycleStatus)),
+    summary: summarizeLifecycle(
+      plan.strategyName,
+      deriveLifecycleFromOrders(updatedOrders, plan.lifecycleStatus)
+    ),
     metadata: {
       syncedBy: payload.actor || 'execution-desk',
       scenario,
@@ -486,7 +521,10 @@ export function syncExecutionPlan(planId, payload = {}) {
 }
 
 export function ingestBrokerExecutionEvent(planId, payload = {}) {
-  const loaded = loadMutableExecutionPlan(planId, `Execution plan ${planId} does not have an execution run for broker event ingestion.`);
+  const loaded = loadMutableExecutionPlan(
+    planId,
+    `Execution plan ${planId} does not have an execution run for broker event ingestion.`
+  );
   if (!loaded.ok) return loaded;
 
   const { plan, executionRun, orderStates } = loaded.detail;
@@ -506,7 +544,11 @@ export function ingestBrokerExecutionEvent(planId, payload = {}) {
     return applyBrokerEventToOrder(item, payload, now);
   });
 
-  const headline = buildBrokerEventHeadline(plan.strategyName, payload.eventType, payload.symbol || targets[0]?.symbol || '');
+  const headline = buildBrokerEventHeadline(
+    plan.strategyName,
+    payload.eventType,
+    payload.symbol || targets[0]?.symbol || ''
+  );
   const result = refreshExecutionAggregate(plan, executionRun, updatedOrders, {
     actor,
     now,
@@ -585,11 +627,13 @@ export function cancelExecutionPlan(planId, payload = {}) {
 
   const now = new Date().toISOString();
   const updatedOrders = orderStates
-    .map((item) => controlPlaneRuntime.updateExecutionOrderState(item.id, {
-      lifecycleStatus: 'cancelled',
-      summary: `Cancelled ${item.side} ${item.symbol} before completion.`,
-      updatedAt: now,
-    }))
+    .map((item) =>
+      controlPlaneRuntime.updateExecutionOrderState(item.id, {
+        lifecycleStatus: 'cancelled',
+        summary: `Cancelled ${item.side} ${item.symbol} before completion.`,
+        updatedAt: now,
+      })
+    )
     .filter(Boolean);
 
   const result = refreshExecutionAggregate(plan, executionRun, updatedOrders, {
@@ -659,15 +703,20 @@ export function reconcileExecutionPlan(planId, payload = {}) {
     },
     issues: [],
   };
-  const level = reconciliation.status === 'drift'
-    ? 'warn'
-    : (reconciliation.status === 'attention' || reconciliation.status === 'missing_snapshot' ? 'warn' : 'info');
-  const title = reconciliation.status === 'aligned'
-    ? `Execution reconciliation aligned for ${detail.plan.strategyName}`
-    : `Execution reconciliation flagged ${detail.plan.strategyName}`;
-  const detailMessage = reconciliation.status === 'aligned'
-    ? 'Broker snapshot, order lifecycle, and position totals are aligned.'
-    : `Found ${reconciliation.issueCount} reconciliation issue(s) across broker snapshot, order lifecycle, or positions.`;
+  const level =
+    reconciliation.status === 'drift'
+      ? 'warn'
+      : reconciliation.status === 'attention' || reconciliation.status === 'missing_snapshot'
+        ? 'warn'
+        : 'info';
+  const title =
+    reconciliation.status === 'aligned'
+      ? `Execution reconciliation aligned for ${detail.plan.strategyName}`
+      : `Execution reconciliation flagged ${detail.plan.strategyName}`;
+  const detailMessage =
+    reconciliation.status === 'aligned'
+      ? 'Broker snapshot, order lifecycle, and position totals are aligned.'
+      : `Found ${reconciliation.issueCount} reconciliation issue(s) across broker snapshot, order lifecycle, or positions.`;
 
   controlPlaneRuntime.recordOperatorAction({
     type: 'execution.reconcile-plan',
@@ -787,7 +836,11 @@ export function compensateExecutionPlan(planId, payload = {}) {
   }
 
   const nextCompensation = exceptionState.detail?.compensation || compensation;
-  if (nextCompensation.steps.some((step) => step.key === 'sync-incident' && step.status !== 'completed')) {
+  if (
+    nextCompensation.steps.some(
+      (step) => step.key === 'sync-incident' && step.status !== 'completed'
+    )
+  ) {
     const synced = finalizeExecutionExceptionState(planId, {
       actor,
       resolveOnStable: exceptionState.detail?.reconciliation?.status === 'aligned',
@@ -857,19 +910,31 @@ export function compensateExecutionPlan(planId, payload = {}) {
     detail: getExecutionPlanDetail(planId),
     compensation: getExecutionPlanDetail(planId)?.compensation || finalCompensation,
     reconciliation: reconciliationResult?.reconciliation || finalDetail?.reconciliation || null,
-    exceptionPolicy: getExecutionPlanDetail(planId)?.exceptionPolicy || exceptionState.exceptionPolicy,
-    incident: getExecutionPlanDetail(planId)?.linkedIncidents?.find((incident) => incident.status !== 'resolved') || exceptionState.incident || null,
+    exceptionPolicy:
+      getExecutionPlanDetail(planId)?.exceptionPolicy || exceptionState.exceptionPolicy,
+    incident:
+      getExecutionPlanDetail(planId)?.linkedIncidents?.find(
+        (incident) => incident.status !== 'resolved'
+      ) ||
+      exceptionState.incident ||
+      null,
     automatedAt: now,
   };
 }
 
 export function bulkOperateExecutionPlans(payload = {}) {
-  const action = ['approve', 'reconcile', 'compensate', 'recover', 'cancel'].includes(payload.action)
+  const action = ['approve', 'reconcile', 'compensate', 'recover', 'cancel'].includes(
+    payload.action
+  )
     ? payload.action
     : '';
-  const planIds = [...new Set((Array.isArray(payload.planIds) ? payload.planIds : [])
-    .map((item) => String(item || '').trim())
-    .filter(Boolean))];
+  const planIds = [
+    ...new Set(
+      (Array.isArray(payload.planIds) ? payload.planIds : [])
+        .map((item) => String(item || '').trim())
+        .filter(Boolean)
+    ),
+  ];
 
   if (!action) {
     return {
@@ -902,8 +967,9 @@ export function bulkOperateExecutionPlans(payload = {}) {
       action,
       lifecycleStatus: detail?.executionRun?.lifecycleStatus || detail?.plan?.lifecycleStatus || '',
       compensationStatus: detail?.compensation?.status || '',
-      incidentId: detail?.linkedIncidents?.find((incident) => incident.status !== 'resolved')?.id || '',
-      error: result?.ok ? '' : (result?.message || result?.error || 'unknown error'),
+      incidentId:
+        detail?.linkedIncidents?.find((incident) => incident.status !== 'resolved')?.id || '',
+      error: result?.ok ? '' : result?.message || result?.error || 'unknown error',
     };
   });
 
@@ -969,26 +1035,35 @@ export function recoverExecutionPlan(planId, payload = {}) {
 
   if (recovery.recommendedAction === 'reroute_orders' && detail.executionRun) {
     const reopenedLifecycle = detail.plan.approvalState === 'required' ? 'planned' : 'submitted';
-    const updatedOrders = detail.orderStates.map((item, index) => controlPlaneRuntime.updateExecutionOrderState(item.id, {
-      lifecycleStatus: reopenedLifecycle,
-      brokerOrderId: reopenedLifecycle === 'submitted' ? (item.brokerOrderId || `broker-${detail.plan.id}-retry-${index + 1}`) : '',
-      filledQty: 0,
-      avgFillPrice: null,
-      filledAt: '',
-      acknowledgedAt: '',
-      submittedAt: reopenedLifecycle === 'submitted' ? now : '',
-      summary: reopenedLifecycle === 'submitted'
-        ? `Re-routed ${item.side} ${item.symbol} after execution recovery.`
-        : `Returned ${item.side} ${item.symbol} to approval review after recovery.`,
-      updatedAt: now,
-    })).filter(Boolean);
+    const updatedOrders = detail.orderStates
+      .map((item, index) =>
+        controlPlaneRuntime.updateExecutionOrderState(item.id, {
+          lifecycleStatus: reopenedLifecycle,
+          brokerOrderId:
+            reopenedLifecycle === 'submitted'
+              ? item.brokerOrderId || `broker-${detail.plan.id}-retry-${index + 1}`
+              : '',
+          filledQty: 0,
+          avgFillPrice: null,
+          filledAt: '',
+          acknowledgedAt: '',
+          submittedAt: reopenedLifecycle === 'submitted' ? now : '',
+          summary:
+            reopenedLifecycle === 'submitted'
+              ? `Re-routed ${item.side} ${item.symbol} after execution recovery.`
+              : `Returned ${item.side} ${item.symbol} to approval review after recovery.`,
+          updatedAt: now,
+        })
+      )
+      .filter(Boolean);
 
     const result = refreshExecutionAggregate(detail.plan, detail.executionRun, updatedOrders, {
       actor,
       now,
-      summary: reopenedLifecycle === 'submitted'
-        ? `Recovered ${detail.plan.strategyName} and re-routed orders back to broker sync.`
-        : `Recovered ${detail.plan.strategyName} and returned orders to approval review.`,
+      summary:
+        reopenedLifecycle === 'submitted'
+          ? `Recovered ${detail.plan.strategyName} and re-routed orders back to broker sync.`
+          : `Recovered ${detail.plan.strategyName} and returned orders to approval review.`,
       metadata: {
         recoveredBy: actor,
         recoveryAction: 'reroute_orders',
@@ -1057,8 +1132,11 @@ export function settleExecutionPlan(planId, payload = {}) {
   }
   return syncExecutionPlan(planId, {
     ...payload,
-    scenario: payload.outcome === 'partial_fill'
-      ? 'partial_fill'
-      : (payload.outcome === 'failed' ? 'failed' : 'filled'),
+    scenario:
+      payload.outcome === 'partial_fill'
+        ? 'partial_fill'
+        : payload.outcome === 'failed'
+          ? 'failed'
+          : 'filled',
   });
 }

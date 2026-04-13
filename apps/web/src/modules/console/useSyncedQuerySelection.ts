@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 
-type SearchParamsSetter = (nextInit: URLSearchParams, navigateOptions?: { replace?: boolean }) => void;
+type SearchParamsSetter = (
+  nextInit: URLSearchParams,
+  navigateOptions?: { replace?: boolean }
+) => void;
 
 export function useSyncedQuerySelection(options: {
   itemIds: string[];
@@ -9,13 +12,7 @@ export function useSyncedQuerySelection(options: {
   searchParams: URLSearchParams;
   setSearchParams: SearchParamsSetter;
 }) {
-  const {
-    itemIds,
-    queryKey,
-    requestedId,
-    searchParams,
-    setSearchParams,
-  } = options;
+  const { itemIds, queryKey, requestedId, searchParams, setSearchParams } = options;
   const [selectedId, setSelectedId] = useState('');
 
   useEffect(() => {

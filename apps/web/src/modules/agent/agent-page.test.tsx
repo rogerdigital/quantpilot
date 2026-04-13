@@ -19,7 +19,9 @@ vi.mock('../../store/trading-system/TradingSystemProvider.tsx', () => ({
 }));
 
 vi.mock('../console/console.i18n.tsx', async () => {
-  const actual = await vi.importActual<typeof import('../console/console.i18n.tsx')>('../console/console.i18n.tsx');
+  const actual = await vi.importActual<typeof import('../console/console.i18n.tsx')>(
+    '../console/console.i18n.tsx'
+  );
   return {
     ...actual,
     useLocale: () => ({ locale: 'en' as const }),
@@ -29,8 +31,19 @@ vi.mock('../console/console.i18n.tsx', async () => {
 vi.mock('../../components/layout/ConsoleChrome.tsx', () => ({
   EmptyState: ({ message }: { message: string }) => <div>{message}</div>,
   SectionHeader: () => <div>SectionHeader</div>,
-  TabPanel: ({ tabs }: { tabs: Array<{ key: string; label: string; content: import('react').ReactNode }> }) => (
-    <div>{tabs.map(t => <div key={t.key}><span>{t.label}</span><div>{t.content}</div></div>)}</div>
+  TabPanel: ({
+    tabs,
+  }: {
+    tabs: Array<{ key: string; label: string; content: import('react').ReactNode }>;
+  }) => (
+    <div>
+      {tabs.map((t) => (
+        <div key={t.key}>
+          <span>{t.label}</span>
+          <div>{t.content}</div>
+        </div>
+      ))}
+    </div>
   ),
   TopMeta: () => <div>TopMeta</div>,
 }));
@@ -43,7 +56,12 @@ describe('AgentPage', () => {
   it('renders the collaboration workbench with chat shell and timeline', () => {
     mockUseAgentTools.mockReturnValue({
       tools: [
-        { name: 'risk.events.list', description: 'Read risk events', category: 'risk', access: 'read' },
+        {
+          name: 'risk.events.list',
+          description: 'Read risk events',
+          category: 'risk',
+          access: 'read',
+        },
       ],
       workbench: {
         summary: {
@@ -53,17 +71,39 @@ describe('AgentPage', () => {
         },
         queues: {
           recentSessions: [
-            { id: 'agent-session-1', title: 'Review risk posture', prompt: 'Explain the latest risk posture.', status: 'completed' },
+            {
+              id: 'agent-session-1',
+              title: 'Review risk posture',
+              prompt: 'Explain the latest risk posture.',
+              status: 'completed',
+            },
           ],
           pendingActionRequests: [
-            { id: 'request-1', requestType: 'prepare_execution_plan', summary: 'Pending review', approvalState: 'required', riskStatus: 'review' },
+            {
+              id: 'request-1',
+              requestType: 'prepare_execution_plan',
+              summary: 'Pending review',
+              approvalState: 'required',
+              riskStatus: 'review',
+            },
           ],
         },
         runbook: [
-          { key: 'review-pending-agent-requests', title: 'Review pending agent requests', detail: 'Pending requests need review.', priority: 'now' },
+          {
+            key: 'review-pending-agent-requests',
+            title: 'Review pending agent requests',
+            detail: 'Pending requests need review.',
+            priority: 'now',
+          },
         ],
         recentExplanations: [
-          { sessionId: 'agent-session-1', analysisRunId: 'analysis-1', thesis: 'Risk posture is elevated.', recommendedNextStep: 'Review risk console.', warningCount: 1 },
+          {
+            sessionId: 'agent-session-1',
+            analysisRunId: 'analysis-1',
+            thesis: 'Risk posture is elevated.',
+            recommendedNextStep: 'Review risk console.',
+            warningCount: 1,
+          },
         ],
       },
       sessionDetail: {
@@ -119,12 +159,45 @@ describe('AgentPage', () => {
           metadata: {},
         },
         timeline: [
-          { id: 'timeline-1', lane: 'operator', title: 'Approved agent request', detail: 'Operator approved the request.', actor: 'risk-operator' },
+          {
+            id: 'timeline-1',
+            lane: 'operator',
+            title: 'Approved agent request',
+            detail: 'Operator approved the request.',
+            actor: 'risk-operator',
+          },
         ],
         messages: [
-          { id: 'msg-0', role: 'user', kind: 'prompt', title: 'Prompt', body: 'Explain the latest risk posture.', requestedBy: 'operator-demo', createdAt: '2026-03-26T09:59:00.000Z', metadata: {} },
-          { id: 'msg-1', role: 'system', kind: 'analysis_status', title: 'Summarizing findings', body: 'Summarizing tool findings into a structured recommendation.', requestedBy: 'agent', createdAt: '2026-03-26T10:00:00.000Z', metadata: {} },
-          { id: 'msg-2', role: 'assistant', kind: 'analysis_result', title: 'Risk posture is elevated.', body: 'Risk posture is elevated. Review the risk console.', requestedBy: 'agent', createdAt: '2026-03-26T10:01:00.000Z', metadata: {} },
+          {
+            id: 'msg-0',
+            role: 'user',
+            kind: 'prompt',
+            title: 'Prompt',
+            body: 'Explain the latest risk posture.',
+            requestedBy: 'operator-demo',
+            createdAt: '2026-03-26T09:59:00.000Z',
+            metadata: {},
+          },
+          {
+            id: 'msg-1',
+            role: 'system',
+            kind: 'analysis_status',
+            title: 'Summarizing findings',
+            body: 'Summarizing tool findings into a structured recommendation.',
+            requestedBy: 'agent',
+            createdAt: '2026-03-26T10:00:00.000Z',
+            metadata: {},
+          },
+          {
+            id: 'msg-2',
+            role: 'assistant',
+            kind: 'analysis_result',
+            title: 'Risk posture is elevated.',
+            body: 'Risk posture is elevated. Review the risk console.',
+            requestedBy: 'agent',
+            createdAt: '2026-03-26T10:01:00.000Z',
+            metadata: {},
+          },
         ],
       },
       selectedSessionId: 'agent-session-1',

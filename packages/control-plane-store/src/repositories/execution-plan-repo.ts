@@ -6,7 +6,8 @@ const FILENAME = 'execution-plans.json';
 export function createExecutionPlanRepository(store) {
   return {
     listExecutionPlans(limit = 50, filter = {}) {
-      return store.readCollection(FILENAME)
+      return store
+        .readCollection(FILENAME)
         .filter((item) => {
           if (filter.status && item.status !== filter.status) return false;
           if (filter.strategyId && item.strategyId !== filter.strategyId) return false;
@@ -18,7 +19,9 @@ export function createExecutionPlanRepository(store) {
       return store.readCollection(FILENAME).find((item) => item.id === planId) || null;
     },
     findExecutionPlanByWorkflowRunId(workflowRunId) {
-      return store.readCollection(FILENAME).find((item) => item.workflowRunId === workflowRunId) || null;
+      return (
+        store.readCollection(FILENAME).find((item) => item.workflowRunId === workflowRunId) || null
+      );
     },
     appendExecutionPlan(payload) {
       const plans = store.readCollection(FILENAME);

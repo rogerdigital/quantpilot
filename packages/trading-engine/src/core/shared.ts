@@ -85,7 +85,7 @@ export function computeAccount(account, stockStates) {
     }
   });
   account.nav = account.cash + marketValue;
-  account.exposure = account.nav ? marketValue / account.nav * 100 : 0;
+  account.exposure = account.nav ? (marketValue / account.nav) * 100 : 0;
   account.equitySeries.push({ value: account.nav, label: account.label });
   if (account.equitySeries.length > 36) {
     account.equitySeries.shift();
@@ -110,13 +110,23 @@ export function cloneState(state) {
     accounts: {
       paper: {
         ...state.accounts.paper,
-        holdings: Object.fromEntries(Object.entries(state.accounts.paper.holdings).map(([symbol, holding]) => [symbol, { ...holding }])),
+        holdings: Object.fromEntries(
+          Object.entries(state.accounts.paper.holdings).map(([symbol, holding]) => [
+            symbol,
+            { ...holding },
+          ])
+        ),
         orders: state.accounts.paper.orders.map((order) => ({ ...order })),
         equitySeries: state.accounts.paper.equitySeries.map((point) => ({ ...point })),
       },
       live: {
         ...state.accounts.live,
-        holdings: Object.fromEntries(Object.entries(state.accounts.live.holdings).map(([symbol, holding]) => [symbol, { ...holding }])),
+        holdings: Object.fromEntries(
+          Object.entries(state.accounts.live.holdings).map(([symbol, holding]) => [
+            symbol,
+            { ...holding },
+          ])
+        ),
         orders: state.accounts.live.orders.map((order) => ({ ...order })),
         equitySeries: state.accounts.live.equitySeries.map((point) => ({ ...point })),
       },
@@ -134,7 +144,17 @@ export function logEvent(state, kind, title, copy) {
   state.activityLog = state.activityLog.slice(0, 40);
 }
 
-export function createOrderRecord(state, accountId, side, symbol, qty, price, status, tag, extra = {}) {
+export function createOrderRecord(
+  state,
+  accountId,
+  side,
+  symbol,
+  qty,
+  price,
+  status,
+  tag,
+  extra = {}
+) {
   const now = new Date().toISOString();
   const id = extra.id || `local-${accountId}-${state.orderSeq}`;
   state.orderSeq += 1;

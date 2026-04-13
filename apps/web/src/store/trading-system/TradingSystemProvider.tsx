@@ -1,10 +1,25 @@
+import type {
+  OperatorSession,
+  TradingState,
+  TradingSystemContextValue,
+} from '@shared-types/trading.ts';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import {
+  fetchOperatorSession,
+  reportOperatorAction,
+  runStateCycle,
+} from '../../app/api/controlPlane.ts';
 import { runtimeConfig } from '../../app/config/runtime.ts';
-import { fetchOperatorSession, reportOperatorAction, runStateCycle } from '../../app/api/controlPlane.ts';
 import { createBrokerProvider } from '../../app/providers/broker.ts';
 import { createMarketDataProvider } from '../../app/providers/marketData.ts';
-import type { OperatorSession, TradingState, TradingSystemContextValue } from '@shared-types/trading.ts';
-import { APP_CONFIG, applyBrokerSnapshot, cloneState, computeAccount, createInitialState, logEvent } from './core.ts';
+import {
+  APP_CONFIG,
+  applyBrokerSnapshot,
+  cloneState,
+  computeAccount,
+  createInitialState,
+  logEvent,
+} from './core.ts';
 
 const TradingSystemContext = createContext<TradingSystemContextValue | null>(null);
 
@@ -15,7 +30,10 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   });
   const [state, setState] = useState(() => createInitialState(providersRef.current));
   const [session, setSession] = useState<OperatorSession | null>(null);
-  const [actionGuardNotice, setActionGuardNotice] = useState<{ permission: string; action: string } | null>(null);
+  const [actionGuardNotice, setActionGuardNotice] = useState<{
+    permission: string;
+    action: string;
+  } | null>(null);
   const stateRef = useRef(state);
   const busyRef = useRef(false);
   const timerRef = useRef<number | null>(null);
@@ -65,7 +83,8 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
     };
   }, []);
 
-  const hasPermission = (permission: string) => Boolean(session?.user.permissions.includes(permission));
+  const hasPermission = (permission: string) =>
+    Boolean(session?.user.permissions.includes(permission));
   const emitPermissionNotice = (permission: string, action: string) => {
     setActionGuardNotice({ permission, action });
   };
@@ -83,7 +102,11 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
     }
     setActionGuardNotice(null);
     setState((current) => {
-      const next = { ...current, mode, engineStatus: mode === 'manual' ? 'MANUAL READY' : 'LIVE EXECUTION' };
+      const next = {
+        ...current,
+        mode,
+        engineStatus: mode === 'manual' ? 'MANUAL READY' : 'LIVE EXECUTION',
+      };
       stateRef.current = next;
       return next;
     });
@@ -150,9 +173,16 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
       const next = cloneState(current);
       const order = next.approvalQueue.find((item) => item.clientOrderId === clientOrderId);
       if (!order) return current;
-      next.approvalQueue = next.approvalQueue.filter((item) => item.clientOrderId !== clientOrderId);
+      next.approvalQueue = next.approvalQueue.filter(
+        (item) => item.clientOrderId !== clientOrderId
+      );
       next.pendingLiveIntents = [...next.pendingLiveIntents, order];
-      logEvent(next, 'info', `Approval granted ${order.symbol}`, `${order.side} ${order.qty} shares moved to broker submission queue.`);
+      logEvent(
+        next,
+        'info',
+        `Approval granted ${order.symbol}`,
+        `${order.side} ${order.qty} shares moved to broker submission queue.`
+      );
       reportOperatorAction({
         type: 'approve-intent',
         title: `Approval granted ${order.symbol}`,
@@ -175,8 +205,15 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
       const next = cloneState(current);
       const order = next.approvalQueue.find((item) => item.clientOrderId === clientOrderId);
       if (!order) return current;
-      next.approvalQueue = next.approvalQueue.filter((item) => item.clientOrderId !== clientOrderId);
-      logEvent(next, 'info', `Approval rejected ${order.symbol}`, `${order.side} ${order.qty} shares were rejected before broker submission.`);
+      next.approvalQueue = next.approvalQueue.filter(
+        (item) => item.clientOrderId !== clientOrderId
+      );
+      logEvent(
+        next,
+        'info',
+        `Approval rejected ${order.symbol}`,
+        `${order.side} ${order.qty} shares were rejected before broker submission.`
+      );
       reportOperatorAction({
         type: 'reject-intent',
         title: `Approval rejected ${order.symbol}`,
@@ -190,19 +227,21 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   };
 
   return (
-    <TradingSystemContext.Provider value={{
-      state,
-      session,
-      hasPermission,
-      refreshSession,
-      actionGuardNotice,
-      clearActionGuardNotice: () => setActionGuardNotice(null),
-      setMode,
-      updateToggle,
-      cancelLiveOrder,
-      approveLiveIntent,
-      rejectLiveIntent,
-    }}>
+    <TradingSystemContext.Provider
+      value={{
+        state,
+        session,
+        hasPermission,
+        refreshSession,
+        actionGuardNotice,
+        clearActionGuardNotice: () => setActionGuardNotice(null),
+        setMode,
+        updateToggle,
+        cancelLiveOrder,
+        approveLiveIntent,
+        rejectLiveIntent,
+      }}
+    >
       {children}
     </TradingSystemContext.Provider>
   );

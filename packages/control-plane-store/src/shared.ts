@@ -387,16 +387,18 @@ export function createAgentPlanEntry(payload = {}) {
     summary: payload.summary || '',
     requiresApproval: Boolean(payload.requiresApproval),
     requestedBy: payload.requestedBy || 'agent',
-    steps: Array.isArray(payload.steps) ? payload.steps.map((step, index) => ({
-      id: step.id || `agent-plan-step-${index + 1}`,
-      kind: step.kind || 'read',
-      title: step.title || 'Untitled step',
-      status: step.status || 'pending',
-      toolName: step.toolName || '',
-      description: step.description || '',
-      outputSummary: step.outputSummary || '',
-      metadata: step.metadata || {},
-    })) : [],
+    steps: Array.isArray(payload.steps)
+      ? payload.steps.map((step, index) => ({
+          id: step.id || `agent-plan-step-${index + 1}`,
+          kind: step.kind || 'read',
+          title: step.title || 'Untitled step',
+          status: step.status || 'pending',
+          toolName: step.toolName || '',
+          description: step.description || '',
+          outputSummary: step.outputSummary || '',
+          metadata: step.metadata || {},
+        }))
+      : [],
     metadata: payload.metadata || {},
     createdAt: now,
     updatedAt: payload.updatedAt || now,
@@ -413,21 +415,25 @@ export function createAgentAnalysisRunEntry(payload = {}) {
     summary: payload.summary || '',
     conclusion: payload.conclusion || '',
     requestedBy: payload.requestedBy || 'agent',
-    toolCalls: Array.isArray(payload.toolCalls) ? payload.toolCalls.map((call) => ({
-      tool: call.tool || '',
-      status: call.status || 'pending',
-      summary: call.summary || '',
-      metadata: call.metadata || {},
-    })) : [],
-    evidence: Array.isArray(payload.evidence) ? payload.evidence.map((entry, index) => ({
-      id: entry.id || `agent-evidence-${index + 1}`,
-      kind: entry.kind || 'tool_result',
-      title: entry.title || 'Evidence',
-      summary: entry.summary || '',
-      source: entry.source || 'agent',
-      sourceId: entry.sourceId || '',
-      metadata: entry.metadata || {},
-    })) : [],
+    toolCalls: Array.isArray(payload.toolCalls)
+      ? payload.toolCalls.map((call) => ({
+          tool: call.tool || '',
+          status: call.status || 'pending',
+          summary: call.summary || '',
+          metadata: call.metadata || {},
+        }))
+      : [],
+    evidence: Array.isArray(payload.evidence)
+      ? payload.evidence.map((entry, index) => ({
+          id: entry.id || `agent-evidence-${index + 1}`,
+          kind: entry.kind || 'tool_result',
+          title: entry.title || 'Evidence',
+          summary: entry.summary || '',
+          source: entry.source || 'agent',
+          sourceId: entry.sourceId || '',
+          metadata: entry.metadata || {},
+        }))
+      : [],
     explanation: {
       thesis: payload.explanation?.thesis || '',
       rationale: Array.isArray(payload.explanation?.rationale) ? payload.explanation.rationale : [],
@@ -646,13 +652,16 @@ export function createWorkspaceEntry(payload = {}, tenant = createTenantEntry())
   const defaultPermissions = getDefaultPermissionsForRole(role);
   const grants = listUniquePermissions(payload.grants || payload.permissionGrants || []);
   const revokes = listUniquePermissions(payload.revokes || payload.permissionRevokes || []);
-  const explicitPermissions = Array.isArray(payload.permissions) && payload.permissions.length
-    ? listUniquePermissions(payload.permissions)
-    : null;
-  const effectivePermissions = explicitPermissions || listUniquePermissions([
-    ...defaultPermissions.filter((item) => !revokes.includes(item)),
-    ...grants,
-  ]);
+  const explicitPermissions =
+    Array.isArray(payload.permissions) && payload.permissions.length
+      ? listUniquePermissions(payload.permissions)
+      : null;
+  const effectivePermissions =
+    explicitPermissions ||
+    listUniquePermissions([
+      ...defaultPermissions.filter((item) => !revokes.includes(item)),
+      ...grants,
+    ]);
   return {
     id: payload.id || 'workspace-operations',
     tenantId: payload.tenantId || tenant.id,
@@ -677,9 +686,14 @@ export function createUserPreferences(payload = {}) {
     theme: payload.theme || 'system',
     defaultMode: payload.defaultMode || 'hybrid',
     riskReviewRequired: payload.riskReviewRequired !== false,
-    notificationChannels: Array.isArray(payload.notificationChannels) && payload.notificationChannels.length
-      ? [...new Set(payload.notificationChannels.map((item) => String(item).trim()).filter(Boolean))]
-      : ['inbox'],
+    notificationChannels:
+      Array.isArray(payload.notificationChannels) && payload.notificationChannels.length
+        ? [
+            ...new Set(
+              payload.notificationChannels.map((item) => String(item).trim()).filter(Boolean)
+            ),
+          ]
+        : ['inbox'],
   };
 }
 
@@ -731,21 +745,31 @@ export function listUserRoleTemplates() {
     {
       id: 'admin',
       label: 'Admin',
-      summary: 'Full control over account settings, strategy changes, risk reviews, and execution approvals.',
-      defaultPermissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write', 'operations:maintain'],
+      summary:
+        'Full control over account settings, strategy changes, risk reviews, and execution approvals.',
+      defaultPermissions: [
+        'dashboard:read',
+        'strategy:write',
+        'risk:review',
+        'execution:approve',
+        'account:write',
+        'operations:maintain',
+      ],
       system: true,
     },
     {
       id: 'operator',
       label: 'Operator',
-      summary: 'Can run the platform, manage strategies, and review risk without account administration.',
+      summary:
+        'Can run the platform, manage strategies, and review risk without account administration.',
       defaultPermissions: ['dashboard:read', 'strategy:write', 'risk:review'],
       system: true,
     },
     {
       id: 'risk-reviewer',
       label: 'Risk Reviewer',
-      summary: 'Focused risk-review role for reviewing risk posture, agent approvals, and guarded execution gates.',
+      summary:
+        'Focused risk-review role for reviewing risk posture, agent approvals, and guarded execution gates.',
       defaultPermissions: ['dashboard:read', 'risk:review'],
       system: true,
     },
@@ -769,11 +793,15 @@ export function listUserRoleTemplates() {
   }));
 }
 
-export function createUserRoleTemplateEntry(payload = {}, existingTemplates = listUserRoleTemplates()) {
+export function createUserRoleTemplateEntry(
+  payload = {},
+  existingTemplates = listUserRoleTemplates()
+) {
   const existing = existingTemplates.find((item) => item.id === payload.id) || null;
-  const inferredPermissions = Array.isArray(payload.defaultPermissions) && payload.defaultPermissions.length
-    ? payload.defaultPermissions
-    : (existing?.defaultPermissions || ['dashboard:read']);
+  const inferredPermissions =
+    Array.isArray(payload.defaultPermissions) && payload.defaultPermissions.length
+      ? payload.defaultPermissions
+      : existing?.defaultPermissions || ['dashboard:read'];
 
   return {
     id: payload.id || existing?.id || 'custom-role',
@@ -784,27 +812,35 @@ export function createUserRoleTemplateEntry(payload = {}, existingTemplates = li
   };
 }
 
-export function getDefaultPermissionsForRole(role = 'viewer', roleTemplates = listUserRoleTemplates()) {
-  const template = roleTemplates.find((item) => item.id === role) || roleTemplates.find((item) => item.id === 'viewer');
+export function getDefaultPermissionsForRole(
+  role = 'viewer',
+  roleTemplates = listUserRoleTemplates()
+) {
+  const template =
+    roleTemplates.find((item) => item.id === role) ||
+    roleTemplates.find((item) => item.id === 'viewer');
   return listUniquePermissions(template?.defaultPermissions || ['dashboard:read']);
 }
 
 export function createUserAccessPolicy(payload = {}, roleTemplates = listUserRoleTemplates()) {
   const role = payload.role || 'admin';
   const defaultPermissions = getDefaultPermissionsForRole(role, roleTemplates);
-  const explicitPermissions = Array.isArray(payload.permissions) && payload.permissions.length
-    ? listUniquePermissions(payload.permissions)
-    : null;
+  const explicitPermissions =
+    Array.isArray(payload.permissions) && payload.permissions.length
+      ? listUniquePermissions(payload.permissions)
+      : null;
   const grants = explicitPermissions
     ? explicitPermissions.filter((item) => !defaultPermissions.includes(item))
     : listUniquePermissions(payload.grants || []);
   const revokes = explicitPermissions
     ? defaultPermissions.filter((item) => !explicitPermissions.includes(item))
     : listUniquePermissions(payload.revokes || []);
-  const effectivePermissions = explicitPermissions || listUniquePermissions([
-    ...defaultPermissions.filter((item) => !revokes.includes(item)),
-    ...grants,
-  ]);
+  const effectivePermissions =
+    explicitPermissions ||
+    listUniquePermissions([
+      ...defaultPermissions.filter((item) => !revokes.includes(item)),
+      ...grants,
+    ]);
 
   return {
     role,
@@ -824,11 +860,17 @@ export function createBrokerBindingEntry(payload = {}) {
   const mismatch = Boolean(payload.health?.mismatch ?? payload.metadata?.mismatch);
   const lastError = payload.health?.lastError || payload.metadata?.lastError || '';
   const requiresAttention = Boolean(
-    payload.health?.requiresAttention
-      ?? Boolean(lastError || mismatch || rawStatus === 'error' || (!connected && payload.environment === 'live')),
+    payload.health?.requiresAttention ??
+      Boolean(
+        lastError ||
+          mismatch ||
+          rawStatus === 'error' ||
+          (!connected && payload.environment === 'live')
+      )
   );
-  const healthStatus = payload.health?.status
-    || (requiresAttention ? (connected ? 'degraded' : 'attention') : (connected ? 'healthy' : 'idle'));
+  const healthStatus =
+    payload.health?.status ||
+    (requiresAttention ? (connected ? 'degraded' : 'attention') : connected ? 'healthy' : 'idle');
   return {
     id: payload.id || `broker-binding-${randomUUID()}`,
     provider: payload.provider || 'alpaca',
@@ -836,9 +878,10 @@ export function createBrokerBindingEntry(payload = {}) {
     environment: payload.environment || 'paper',
     accountId: payload.accountId || '',
     status: payload.status || 'disconnected',
-    permissions: Array.isArray(payload.permissions) && payload.permissions.length
-      ? [...new Set(payload.permissions.map((item) => String(item).trim()).filter(Boolean))]
-      : ['read'],
+    permissions:
+      Array.isArray(payload.permissions) && payload.permissions.length
+        ? [...new Set(payload.permissions.map((item) => String(item).trim()).filter(Boolean))]
+        : ['read'],
     lastSyncAt: payload.lastSyncAt || '',
     isDefault: Boolean(payload.isDefault),
     health: {
@@ -967,7 +1010,8 @@ export function buildRiskScanResult(payload) {
       level: 'warn',
       status: 'connectivity-degraded',
       title: `Cycle ${payload.cycle} risk scan detected degraded inputs`,
-      message: 'Broker or market connectivity is degraded, so downstream execution confidence is reduced.',
+      message:
+        'Broker or market connectivity is degraded, so downstream execution confidence is reduced.',
       notify: true,
     };
   }

@@ -1,7 +1,15 @@
+import type {
+  MarketDataProvider,
+  MarketDataSnapshot,
+  Quote,
+  RuntimeConfig,
+  StockState,
+} from '@shared-types/trading.ts';
 import { fetchJson } from '../api/http.ts';
-import type { MarketDataProvider, MarketDataSnapshot, Quote, RuntimeConfig, StockState } from '@shared-types/trading.ts';
 
-function normalizeQuote(rawQuote: Partial<Quote> & { symbol?: string } | null | undefined): Quote | null {
+function normalizeQuote(
+  rawQuote: (Partial<Quote> & { symbol?: string }) | null | undefined
+): Quote | null {
   if (!rawQuote || !rawQuote.symbol) return null;
   const price = Number(rawQuote.price);
   if (!Number.isFinite(price) || price <= 0) return null;
@@ -40,7 +48,8 @@ function customHttpProvider(config: RuntimeConfig): MarketDataProvider {
         return {
           connected: false,
           fallback: true,
-          message: 'VITE_MARKET_DATA_HTTP_URL is not configured. Fell back to local simulated market data.',
+          message:
+            'VITE_MARKET_DATA_HTTP_URL is not configured. Fell back to local simulated market data.',
           quotes: [],
         };
       }
@@ -48,17 +57,22 @@ function customHttpProvider(config: RuntimeConfig): MarketDataProvider {
       try {
         const query = new URL(config.marketDataHttpUrl);
         query.searchParams.set('symbols', stockStates.map((stock) => stock.symbol).join(','));
-        const payload = await fetchJson<{ data?: Array<Partial<Quote> & { symbol?: string }> }>(query.toString(), {
-          headers: {
-            Accept: 'application/json',
-          },
-        });
+        const payload = await fetchJson<{ data?: Array<Partial<Quote> & { symbol?: string }> }>(
+          query.toString(),
+          {
+            headers: {
+              Accept: 'application/json',
+            },
+          }
+        );
         const rawQuotes = Array.isArray(payload?.data) ? payload.data : [];
         const quotes = rawQuotes.map(normalizeQuote).filter(Boolean);
         return {
           connected: true,
           fallback: false,
-          message: quotes.length ? `HTTP market gateway updated ${quotes.length} symbols.` : 'HTTP market gateway returned no data. Keeping simulated quotes.',
+          message: quotes.length
+            ? `HTTP market gateway updated ${quotes.length} symbols.`
+            : 'HTTP market gateway returned no data. Keeping simulated quotes.',
           quotes,
         };
       } catch (error) {
@@ -81,16 +95,23 @@ function alpacaProvider(config: RuntimeConfig): MarketDataProvider {
       try {
         const query = new URL(`${config.alpacaProxyBase}/market/snapshots`, window.location.origin);
         query.searchParams.set('symbols', stockStates.map((stock) => stock.symbol).join(','));
-        const payload = await fetchJson<{ quotes?: Array<Partial<Quote> & { symbol?: string }> }>(query.toString(), {
-          headers: {
-            Accept: 'application/json',
-          },
-        });
-        const quotes = Array.isArray(payload?.quotes) ? payload.quotes.map(normalizeQuote).filter(Boolean) : [];
+        const payload = await fetchJson<{ quotes?: Array<Partial<Quote> & { symbol?: string }> }>(
+          query.toString(),
+          {
+            headers: {
+              Accept: 'application/json',
+            },
+          }
+        );
+        const quotes = Array.isArray(payload?.quotes)
+          ? payload.quotes.map(normalizeQuote).filter(Boolean)
+          : [];
         return {
           connected: true,
           fallback: false,
-          message: quotes.length ? `Alpaca market data updated ${quotes.length} symbols.` : 'Alpaca returned no quotes. Keeping current prices.',
+          message: quotes.length
+            ? `Alpaca market data updated ${quotes.length} symbols.`
+            : 'Alpaca returned no quotes. Keeping current prices.',
           quotes,
         };
       } catch (error) {

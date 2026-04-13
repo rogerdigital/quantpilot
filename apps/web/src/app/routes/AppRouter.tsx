@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { ErrorBoundary } from '../components/ErrorBoundary.tsx';
 
 const DashboardConsole = lazy(() => import('../../modules/console/DashboardConsole.tsx'));

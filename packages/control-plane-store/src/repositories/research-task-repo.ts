@@ -19,7 +19,12 @@ export function createResearchTaskRepository(store) {
   }
 
   function writeTasks(tasks) {
-    trimAndSave(store, FILENAME, tasks.map((item) => createResearchTaskEntry(item)), 400);
+    trimAndSave(
+      store,
+      FILENAME,
+      tasks.map((item) => createResearchTaskEntry(item)),
+      400
+    );
   }
 
   function findTaskIndex(tasks, payload = {}) {
@@ -98,7 +103,9 @@ export function createResearchTaskRepository(store) {
         id: current.id,
         createdAt: current.createdAt,
         updatedAt: payload.updatedAt || new Date().toISOString(),
-        metadata: payload.metadata ? { ...current.metadata, ...payload.metadata } : current.metadata,
+        metadata: payload.metadata
+          ? { ...current.metadata, ...payload.metadata }
+          : current.metadata,
       });
       writeTasks(tasks);
       return tasks[index];

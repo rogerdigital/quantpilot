@@ -18,11 +18,28 @@ function countBy(items, predicate) {
 
 function matchesSession(session, item, keys = []) {
   if (!session || !item) return false;
-  if (item.id && [session.id, session.latestPlanId, session.latestAnalysisRunId, session.latestActionRequestId].includes(item.id)) return true;
+  if (
+    item.id &&
+    [
+      session.id,
+      session.latestPlanId,
+      session.latestAnalysisRunId,
+      session.latestActionRequestId,
+    ].includes(item.id)
+  )
+    return true;
 
   return keys.some((key) => {
     const value = item?.metadata?.[key];
-    return value && [session.id, session.latestPlanId, session.latestAnalysisRunId, session.latestActionRequestId].includes(value);
+    return (
+      value &&
+      [
+        session.id,
+        session.latestPlanId,
+        session.latestAnalysisRunId,
+        session.latestActionRequestId,
+      ].includes(value)
+    );
   });
 }
 
@@ -35,18 +52,21 @@ function buildSessionTimeline(session, options = {}) {
   const actionRequests = controlPlaneRuntime.listAgentActionRequests(limit * 4);
 
   const relatedRequestIds = actionRequests
-    .filter((item) => item.id === session.latestActionRequestId
-      || item.metadata?.agentSessionId === session.id
-      || (
-        session.latestIntent?.targetId
-        && item.targetId === session.latestIntent.targetId
-        && item.requestedBy === session.requestedBy
-      ))
+    .filter(
+      (item) =>
+        item.id === session.latestActionRequestId ||
+        item.metadata?.agentSessionId === session.id ||
+        (session.latestIntent?.targetId &&
+          item.targetId === session.latestIntent.targetId &&
+          item.requestedBy === session.requestedBy)
+    )
     .map((item) => item.id);
 
   const items = [
     ...auditRecords
-      .filter((item) => matchesSession(session, item, ['agentSessionId', 'agentPlanId', 'agentAnalysisRunId']))
+      .filter((item) =>
+        matchesSession(session, item, ['agentSessionId', 'agentPlanId', 'agentAnalysisRunId'])
+      )
       .map((item) => ({
         id: `audit-${item.id}`,
         lane: 'audit',
@@ -58,8 +78,12 @@ function buildSessionTimeline(session, options = {}) {
         metadata: item.metadata || {},
       })),
     ...notifications
-      .filter((item) => matchesSession(session, item, ['agentActionRequestId'])
-        || (session.latestActionRequestId && item.metadata?.agentActionRequestId === session.latestActionRequestId))
+      .filter(
+        (item) =>
+          matchesSession(session, item, ['agentActionRequestId']) ||
+          (session.latestActionRequestId &&
+            item.metadata?.agentActionRequestId === session.latestActionRequestId)
+      )
       .map((item) => ({
         id: `notification-${item.id}`,
         lane: 'notification',
@@ -71,8 +95,13 @@ function buildSessionTimeline(session, options = {}) {
         metadata: item.metadata || {},
       })),
     ...operatorActions
-      .filter((item) => relatedRequestIds.includes(item.metadata?.agentActionRequestId)
-        || (session.latestIntent?.targetId && item.metadata?.targetId === session.latestIntent.targetId && item.type?.includes('agent-request')))
+      .filter(
+        (item) =>
+          relatedRequestIds.includes(item.metadata?.agentActionRequestId) ||
+          (session.latestIntent?.targetId &&
+            item.metadata?.targetId === session.latestIntent.targetId &&
+            item.type?.includes('agent-request'))
+      )
       .map((item) => ({
         id: `action-${item.id}`,
         lane: 'operator',
@@ -127,7 +156,8 @@ function buildRunbook(summary) {
       key: 'review-pending-agent-requests',
       priority: summary.pendingActionRequests >= 3 ? 'now' : 'next',
       title: 'Review pending agent requests',
-      detail: 'Pending agent action requests are waiting for operator review and should be triaged from the workbench.',
+      detail:
+        'Pending agent action requests are waiting for operator review and should be triaged from the workbench.',
       count: summary.pendingActionRequests,
     });
   }
@@ -136,7 +166,8 @@ function buildRunbook(summary) {
       key: 'replay-failed-analyses',
       priority: 'next',
       title: 'Replay failed analyses',
-      detail: 'Some agent analyses failed and should be replayed or refined before operators rely on them.',
+      detail:
+        'Some agent analyses failed and should be replayed or refined before operators rely on them.',
       count: summary.failedAnalyses,
     });
   }
@@ -145,7 +176,8 @@ function buildRunbook(summary) {
       key: 'review-latest-explanations',
       priority: 'next',
       title: 'Review latest explanations',
-      detail: 'Recent completed sessions now have structured explanations and evidence trails available for operator review.',
+      detail:
+        'Recent completed sessions now have structured explanations and evidence trails available for operator review.',
       count: summary.completedSessions,
     });
   }
@@ -162,12 +194,21 @@ export function getAgentWorkbench(options = {}) {
     instructionLimit: limit,
     runLimit: limit,
   });
-  const notifications = controlPlaneRuntime.listNotifications(limit * 4)
+  const notifications = controlPlaneRuntime
+    .listNotifications(limit * 4)
     .filter((item) => item.source === 'agent-control' || item.metadata?.agentActionRequestId);
-  const auditRecords = controlPlaneRuntime.listAuditRecords(limit * 6)
-    .filter((item) => ['agent-session', 'agent-plan', 'agent-analysis-run', 'agent-action-request'].includes(item.type));
-  const operatorActions = controlPlaneRuntime.listOperatorActions(limit * 4)
-    .filter((item) => item.type === 'approve-agent-request' || item.type === 'reject-agent-request');
+  const auditRecords = controlPlaneRuntime
+    .listAuditRecords(limit * 6)
+    .filter((item) =>
+      ['agent-session', 'agent-plan', 'agent-analysis-run', 'agent-action-request'].includes(
+        item.type
+      )
+    );
+  const operatorActions = controlPlaneRuntime
+    .listOperatorActions(limit * 4)
+    .filter(
+      (item) => item.type === 'approve-agent-request' || item.type === 'reject-agent-request'
+    );
 
   const summary = {
     sessions: sessions.length,
@@ -211,7 +252,10 @@ export function getAgentWorkbench(options = {}) {
         status: summary.pendingActionRequests > 0 ? 'warn' : 'healthy',
         detail: `${summary.pendingActionRequests} action requests are waiting for operator review.`,
         primaryCount: summary.pendingActionRequests,
-        secondaryCount: countBy(requests, (item) => item.status === 'approved' || item.status === 'rejected'),
+        secondaryCount: countBy(
+          requests,
+          (item) => item.status === 'approved' || item.status === 'rejected'
+        ),
         updatedAt: requests[0]?.updatedAt || summary.latestUpdatedAt,
       },
       {
@@ -221,12 +265,18 @@ export function getAgentWorkbench(options = {}) {
         detail: `${auditRecords.length} audit events, ${notifications.length} notifications, and ${operatorActions.length} operator actions are linked to agent activity.`,
         primaryCount: notifications.length,
         secondaryCount: operatorActions.length,
-        updatedAt: notifications[0]?.createdAt || operatorActions[0]?.createdAt || auditRecords[0]?.createdAt || summary.latestUpdatedAt,
+        updatedAt:
+          notifications[0]?.createdAt ||
+          operatorActions[0]?.createdAt ||
+          auditRecords[0]?.createdAt ||
+          summary.latestUpdatedAt,
       },
     ],
     runbook: buildRunbook(summary),
     queues: {
-      pendingActionRequests: requests.filter((item) => item.status === 'pending_review').slice(0, limit),
+      pendingActionRequests: requests
+        .filter((item) => item.status === 'pending_review')
+        .slice(0, limit),
       recentSessions: sessions.slice(0, limit),
       recentAnalysisRuns: runs.slice(0, limit),
     },
@@ -281,20 +331,28 @@ export function getAgentSessionLinkedArtifacts(sessionId, options = {}) {
   }
 
   const limit = parseLimit(options.limit, 20);
-  const requests = controlPlaneRuntime.listAgentActionRequests(limit * 4)
-    .filter((item) => item.id === session.latestActionRequestId
-      || item.metadata?.agentSessionId === session.id
-      || (
-        session.latestIntent?.targetId
-        && item.targetId === session.latestIntent.targetId
-        && item.requestedBy === session.requestedBy
-      ))
+  const requests = controlPlaneRuntime
+    .listAgentActionRequests(limit * 4)
+    .filter(
+      (item) =>
+        item.id === session.latestActionRequestId ||
+        item.metadata?.agentSessionId === session.id ||
+        (session.latestIntent?.targetId &&
+          item.targetId === session.latestIntent.targetId &&
+          item.requestedBy === session.requestedBy)
+    )
     .slice(0, limit);
-  const notifications = controlPlaneRuntime.listNotifications(limit * 4)
-    .filter((item) => requests.some((request) => request.id === item.metadata?.agentActionRequestId))
+  const notifications = controlPlaneRuntime
+    .listNotifications(limit * 4)
+    .filter((item) =>
+      requests.some((request) => request.id === item.metadata?.agentActionRequestId)
+    )
     .slice(0, limit);
-  const operatorActions = controlPlaneRuntime.listOperatorActions(limit * 4)
-    .filter((item) => requests.some((request) => request.id === item.metadata?.agentActionRequestId))
+  const operatorActions = controlPlaneRuntime
+    .listOperatorActions(limit * 4)
+    .filter((item) =>
+      requests.some((request) => request.id === item.metadata?.agentActionRequestId)
+    )
     .slice(0, limit);
 
   return {

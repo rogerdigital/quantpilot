@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { listActiveAgentInstructions } from './instruction-service.js';
 import { createAgentPlan } from './planning-service.js';
 import { executeAgentTool } from './tools-service.js';
-import { listActiveAgentInstructions } from './instruction-service.js';
 
 function summarizeToolData(tool, data = {}) {
   switch (tool) {
@@ -47,9 +47,10 @@ function buildAnalysisNarrative(intent, toolResults = []) {
       const targetStrategy = strategies.find((item) => item.id === intent.targetId) || null;
       const existingPlans = executionPlans.filter((item) => item.strategyId === intent.targetId);
       const reviewQueue = Number(backtestSummary.reviewQueue || 0);
-      const thesis = existingPlans.length > 0
-        ? 'Execution readiness needs review because the strategy already has persisted execution plans.'
-        : 'Execution readiness can be reviewed through the controlled action path.';
+      const thesis =
+        existingPlans.length > 0
+          ? 'Execution readiness needs review because the strategy already has persisted execution plans.'
+          : 'Execution readiness can be reviewed through the controlled action path.';
       const rationale = [
         targetStrategy
           ? `Strategy ${targetStrategy.name || targetStrategy.id} is available in the strategy catalog.`
@@ -62,8 +63,14 @@ function buildAnalysisNarrative(intent, toolResults = []) {
           : 'No persisted execution plans were found for this strategy.',
       ];
       const warnings = [];
-      if (reviewQueue > 0) warnings.push('Pending research reviews still need operator attention before action handoff.');
-      if (existingPlans.length > 0) warnings.push('Avoid creating duplicate execution requests without reviewing existing plans.');
+      if (reviewQueue > 0)
+        warnings.push(
+          'Pending research reviews still need operator attention before action handoff.'
+        );
+      if (existingPlans.length > 0)
+        warnings.push(
+          'Avoid creating duplicate execution requests without reviewing existing plans.'
+        );
       return {
         summary: thesis,
         conclusion: thesis,
@@ -71,15 +78,19 @@ function buildAnalysisNarrative(intent, toolResults = []) {
           thesis,
           rationale,
           warnings,
-          recommendedNextStep: 'If posture still looks acceptable, queue a controlled execution-plan request instead of direct execution.',
+          recommendedNextStep:
+            'If posture still looks acceptable, queue a controlled execution-plan request instead of direct execution.',
         },
       };
     }
     case 'request_risk_explanation': {
-      const elevatedEvents = riskEvents.filter((item) => item.status === 'risk-off' || item.status === 'attention');
-      const thesis = elevatedEvents.length > 0
-        ? 'Risk posture is elevated and should be reviewed before any downstream action.'
-        : 'Risk posture looks stable from the current event feed.';
+      const elevatedEvents = riskEvents.filter(
+        (item) => item.status === 'risk-off' || item.status === 'attention'
+      );
+      const thesis =
+        elevatedEvents.length > 0
+          ? 'Risk posture is elevated and should be reviewed before any downstream action.'
+          : 'Risk posture looks stable from the current event feed.';
       return {
         summary: thesis,
         conclusion: thesis,
@@ -89,20 +100,23 @@ function buildAnalysisNarrative(intent, toolResults = []) {
             `${riskEvents.length} recent risk events were loaded from the control plane.`,
             `${executionPlans.length} execution plans were checked for overlapping approval posture.`,
           ],
-          warnings: elevatedEvents.length > 0
-            ? ['Recent elevated risk events are still active in the control plane.']
-            : [],
-          recommendedNextStep: elevatedEvents.length > 0
-            ? 'Review the risk console and linked execution approvals before requesting action.'
-            : 'Continue with read-only review or prepare a controlled follow-up if new evidence appears.',
+          warnings:
+            elevatedEvents.length > 0
+              ? ['Recent elevated risk events are still active in the control plane.']
+              : [],
+          recommendedNextStep:
+            elevatedEvents.length > 0
+              ? 'Review the risk console and linked execution approvals before requesting action.'
+              : 'Continue with read-only review or prepare a controlled follow-up if new evidence appears.',
         },
       };
     }
     case 'request_backtest_review': {
       const pendingRuns = backtestRuns.filter((item) => item.status === 'needs_review');
-      const thesis = pendingRuns.length > 0
-        ? 'Backtest review backlog remains and should be cleared before promotion or execution prep.'
-        : 'Backtest posture looks stable from the current run summary.';
+      const thesis =
+        pendingRuns.length > 0
+          ? 'Backtest review backlog remains and should be cleared before promotion or execution prep.'
+          : 'Backtest posture looks stable from the current run summary.';
       return {
         summary: thesis,
         conclusion: thesis,
@@ -113,14 +127,16 @@ function buildAnalysisNarrative(intent, toolResults = []) {
             `${pendingRuns.length} recent backtest runs still require manual review.`,
           ],
           warnings: pendingRuns.length > 0 ? ['Manual backtest review is still pending.'] : [],
-          recommendedNextStep: pendingRuns.length > 0
-            ? 'Review the pending run before promoting or preparing execution.'
-            : 'Use the result as supporting research context for the next controlled action.',
+          recommendedNextStep:
+            pendingRuns.length > 0
+              ? 'Review the pending run before promoting or preparing execution.'
+              : 'Use the result as supporting research context for the next controlled action.',
         },
       };
     }
     default: {
-      const thesis = 'Read-only analysis completed using the current strategy and research context.';
+      const thesis =
+        'Read-only analysis completed using the current strategy and research context.';
       return {
         summary: thesis,
         conclusion: thesis,
@@ -131,7 +147,8 @@ function buildAnalysisNarrative(intent, toolResults = []) {
             `${Number(backtestSummary.completedRuns || 0)} completed backtests were visible in the summary feed.`,
           ],
           warnings: [],
-          recommendedNextStep: 'Refine the prompt or create a more specific plan if a controlled follow-up is needed.',
+          recommendedNextStep:
+            'Refine the prompt or create a more specific plan if a controlled follow-up is needed.',
         },
       };
     }
@@ -154,11 +171,11 @@ function resolveToolArgs(step = {}, intent = {}) {
 export function runAgentAnalysis(payload = {}) {
   const planned = payload.planId
     ? {
-      ok: true,
-      session: payload.sessionId ? controlPlaneRuntime.getAgentSession(payload.sessionId) : null,
-      intent: payload.intent || null,
-      plan: controlPlaneRuntime.getAgentPlan(payload.planId),
-    }
+        ok: true,
+        session: payload.sessionId ? controlPlaneRuntime.getAgentSession(payload.sessionId) : null,
+        intent: payload.intent || null,
+        plan: controlPlaneRuntime.getAgentPlan(payload.planId),
+      }
     : createAgentPlan(payload);
 
   if (!planned.ok) {
@@ -166,7 +183,9 @@ export function runAgentAnalysis(payload = {}) {
   }
 
   const plan = planned.plan || controlPlaneRuntime.getAgentPlan(payload.planId);
-  const session = planned.session || (plan?.sessionId ? controlPlaneRuntime.getAgentSession(plan.sessionId) : null);
+  const session =
+    planned.session ||
+    (plan?.sessionId ? controlPlaneRuntime.getAgentSession(plan.sessionId) : null);
   const intent = planned.intent || session?.latestIntent || null;
 
   if (!plan || !session || !intent) {
@@ -257,7 +276,7 @@ export function runAgentAnalysis(payload = {}) {
     narrative.explanation.rationale.push(
       biasSummary
         ? `Current daily bias: ${biasSummary}`
-        : 'No active daily bias is affecting this session.',
+        : 'No active daily bias is affecting this session.'
     );
   }
   const finalizedSteps = completedSteps.map((step) => {
@@ -278,7 +297,9 @@ export function runAgentAnalysis(payload = {}) {
     return step;
   });
 
-  const planStatus = finalizedSteps.some((step) => step.status === 'failed') ? 'failed' : 'completed';
+  const planStatus = finalizedSteps.some((step) => step.status === 'failed')
+    ? 'failed'
+    : 'completed';
   const runStatus = planStatus === 'failed' ? 'failed' : 'completed';
   const completedAt = new Date().toISOString();
 
@@ -331,8 +352,12 @@ export function runAgentAnalysis(payload = {}) {
       narrative.summary || '',
       ...(Array.isArray(narrative.explanation?.rationale) ? narrative.explanation.rationale : []),
       ...(Array.isArray(narrative.explanation?.warnings) ? narrative.explanation.warnings : []),
-      narrative.explanation?.recommendedNextStep ? `Next step: ${narrative.explanation.recommendedNextStep}` : '',
-    ].filter(Boolean).join(' '),
+      narrative.explanation?.recommendedNextStep
+        ? `Next step: ${narrative.explanation.recommendedNextStep}`
+        : '',
+    ]
+      .filter(Boolean)
+      .join(' '),
     requestedBy: payload.requestedBy || session.requestedBy || 'agent',
     metadata: {
       agentPlanId: plan.id,

@@ -75,7 +75,12 @@ export type BrokerProvider = {
   id: ProviderKind;
   label: string;
   supportsRemoteExecution: boolean;
-  submitOrders: ({ orders }: { orders: BrokerOrder[] }) => Promise<{ connected: boolean; message: string; orders: BrokerOrder[]; rejectedOrders?: BrokerOrder[] }>;
+  submitOrders: ({ orders }: { orders: BrokerOrder[] }) => Promise<{
+    connected: boolean;
+    message: string;
+    orders: BrokerOrder[];
+    rejectedOrders?: BrokerOrder[];
+  }>;
   syncState: ({ state }?: { state?: TradingState }) => Promise<BrokerSnapshot>;
   cancelOrder: (orderId: string) => Promise<{ connected: boolean; message: string }>;
 };
@@ -504,7 +509,17 @@ export type ExecutionRunRecord = {
   strategyId: string;
   strategyName: string;
   mode: 'paper' | 'live';
-  lifecycleStatus: 'planned' | 'awaiting_approval' | 'routing' | 'submitted' | 'acknowledged' | 'partial_fill' | 'filled' | 'blocked' | 'cancelled' | 'failed';
+  lifecycleStatus:
+    | 'planned'
+    | 'awaiting_approval'
+    | 'routing'
+    | 'submitted'
+    | 'acknowledged'
+    | 'partial_fill'
+    | 'filled'
+    | 'blocked'
+    | 'cancelled'
+    | 'failed';
   summary: string;
   owner: string;
   orderCount: number;
@@ -565,7 +580,12 @@ export type ExecutionCompensationStepRecord = {
 
 export type ExecutionCompensationRecord = {
   status: 'not_needed' | 'queued' | 'ready' | 'running' | 'completed' | 'escalated';
-  mode: 'none' | 'manual_review' | 'auto_reconcile' | 'auto_reconcile_and_escalate' | 'incident_followup';
+  mode:
+    | 'none'
+    | 'manual_review'
+    | 'auto_reconcile'
+    | 'auto_reconcile_and_escalate'
+    | 'incident_followup';
   autoExecutable: boolean;
   recommendedAction: 'reconcile' | 'open_incident' | 'none';
   headline: string;
@@ -578,7 +598,13 @@ export type ExecutionCompensationRecord = {
 
 export type ExecutionExceptionPolicyRecord = {
   status: 'stable' | 'attention' | 'retrying' | 'compensation' | 'incident';
-  category: 'none' | 'broker_reject' | 'broker_cancel' | 'workflow_retry' | 'reconciliation_drift' | 'mixed';
+  category:
+    | 'none'
+    | 'broker_reject'
+    | 'broker_cancel'
+    | 'workflow_retry'
+    | 'reconciliation_drift'
+    | 'mixed';
   retryEligible: boolean;
   retryCount: number;
   retryLimit: number;
@@ -689,7 +715,13 @@ export type ExecutionWorkbenchResponse = {
       activeRouting: number;
     }>;
     nextActions: Array<{
-      key: 'clear-approvals' | 'retry-rejected-orders' | 'run-compensation-automation' | 'reconcile-drift' | 'triage-execution-incidents' | 'watch-active-routing';
+      key:
+        | 'clear-approvals'
+        | 'retry-rejected-orders'
+        | 'run-compensation-automation'
+        | 'reconcile-drift'
+        | 'triage-execution-incidents'
+        | 'watch-active-routing';
       priority: 'now' | 'next';
       title: string;
       detail: string;
@@ -771,7 +803,16 @@ export type StrategyCatalogDetailSnapshot = {
   };
   replayTimeline?: Array<{
     id: string;
-    eventType: 'audit' | 'task' | 'workflow' | 'run' | 'result' | 'evaluation' | 'report' | 'governance' | 'execution';
+    eventType:
+      | 'audit'
+      | 'task'
+      | 'workflow'
+      | 'run'
+      | 'result'
+      | 'evaluation'
+      | 'report'
+      | 'governance'
+      | 'execution';
     lane: string;
     title: string;
     detail: string;
@@ -1032,7 +1073,13 @@ export type ResearchWorkbenchComparisonEntry = {
   championReturnGapPct: number | null;
   championSharpeGap: number | null;
   championDrawdownGapPct: number | null;
-  comparisonBand: 'baseline' | 'champion' | 'outperforming_baseline' | 'challenger' | 'trailing' | 'forming';
+  comparisonBand:
+    | 'baseline'
+    | 'champion'
+    | 'outperforming_baseline'
+    | 'challenger'
+    | 'trailing'
+    | 'forming';
   evaluationVerdict: string;
   reportVerdict: string;
   promotionReadiness: string;
@@ -1106,7 +1153,13 @@ export type ResearchWorkbenchSnapshot = {
     strategyId: string;
     strategyName: string;
     strategyStatus: string;
-    comparisonBand: 'baseline' | 'champion' | 'outperforming_baseline' | 'challenger' | 'trailing' | 'forming';
+    comparisonBand:
+      | 'baseline'
+      | 'champion'
+      | 'outperforming_baseline'
+      | 'challenger'
+      | 'trailing'
+      | 'forming';
     headline: string;
     detail: string;
     baselineReturnGapPct: number | null;
@@ -1215,7 +1268,17 @@ export type ExecutionPlanRecord = {
   strategyName: string;
   mode: 'paper' | 'live';
   status: 'draft' | 'ready' | 'blocked';
-  lifecycleStatus: 'planned' | 'awaiting_approval' | 'routing' | 'submitted' | 'acknowledged' | 'partial_fill' | 'filled' | 'blocked' | 'cancelled' | 'failed';
+  lifecycleStatus:
+    | 'planned'
+    | 'awaiting_approval'
+    | 'routing'
+    | 'submitted'
+    | 'acknowledged'
+    | 'partial_fill'
+    | 'filled'
+    | 'blocked'
+    | 'cancelled'
+    | 'failed';
   approvalState: 'pending' | 'not_required' | 'required';
   riskStatus: 'approved' | 'review' | 'blocked';
   summary: string;
@@ -1241,7 +1304,13 @@ export type AgentToolExecutionResult = {
   data: Record<string, unknown>;
 };
 
-export type AgentSessionStatus = 'draft' | 'ready' | 'running' | 'waiting_approval' | 'completed' | 'failed';
+export type AgentSessionStatus =
+  | 'draft'
+  | 'ready'
+  | 'running'
+  | 'waiting_approval'
+  | 'completed'
+  | 'failed';
 export type AgentMessageRole = 'system' | 'user' | 'assistant';
 export type AgentMessageKind =
   | 'prompt'
@@ -1263,7 +1332,14 @@ export type AgentIntentKind =
 export type AgentIntentRecord = {
   kind: AgentIntentKind;
   summary: string;
-  targetType: 'strategy' | 'backtest_run' | 'execution_plan' | 'risk_event' | 'scheduler_window' | 'incident' | 'unknown';
+  targetType:
+    | 'strategy'
+    | 'backtest_run'
+    | 'execution_plan'
+    | 'risk_event'
+    | 'scheduler_window'
+    | 'incident'
+    | 'unknown';
   targetId: string;
   urgency: 'low' | 'normal' | 'high';
   requiresApproval: boolean;
@@ -1875,7 +1951,14 @@ export type OperationsWorkbenchResponse = {
     updatedAt: string;
   }>;
   runbook: Array<{
-    key: 'stabilize-connectivity' | 'drain-queues' | 'triage-critical-incidents' | 'assign-incident-owners' | 'clear-stale-incidents' | 'review-scheduler-attention' | 'follow-control-plane-trail';
+    key:
+      | 'stabilize-connectivity'
+      | 'drain-queues'
+      | 'triage-critical-incidents'
+      | 'assign-incident-owners'
+      | 'clear-stale-incidents'
+      | 'review-scheduler-attention'
+      | 'follow-control-plane-trail';
     priority: 'now' | 'next';
     title: string;
     detail: string;
@@ -1940,7 +2023,17 @@ export type RiskWorkbenchResponse = {
     schedulerAttention: number;
   };
   lanes: Array<{
-    key: 'risk-events' | 'execution-review' | 'backtest-review' | 'incidents' | 'portfolio' | 'drawdown' | 'compliance' | 'emergency' | 'scheduler' | 'broker';
+    key:
+      | 'risk-events'
+      | 'execution-review'
+      | 'backtest-review'
+      | 'incidents'
+      | 'portfolio'
+      | 'drawdown'
+      | 'compliance'
+      | 'emergency'
+      | 'scheduler'
+      | 'broker';
     title: string;
     status: string;
     detail: string;
@@ -1949,7 +2042,14 @@ export type RiskWorkbenchResponse = {
     updatedAt: string;
   }>;
   runbook: Array<{
-    key: 'review-risk-off' | 'clear-review-queue' | 'inspect-live-exposure' | 'triage-risk-incidents' | 'review-scheduler-drift' | 'check-compliance-alerts' | 'release-emergency-brake';
+    key:
+      | 'review-risk-off'
+      | 'clear-review-queue'
+      | 'inspect-live-exposure'
+      | 'triage-risk-incidents'
+      | 'review-scheduler-drift'
+      | 'check-compliance-alerts'
+      | 'release-emergency-brake';
     priority: 'now' | 'next';
     title: string;
     detail: string;
@@ -2030,7 +2130,13 @@ export type RiskSchedulerLinkageSnapshot = {
     activePhase: string;
   };
   lanes: Array<{
-    key: 'current-window' | 'risk-events' | 'scheduler-ticks' | 'incidents' | 'cycles' | 'notifications';
+    key:
+      | 'current-window'
+      | 'risk-events'
+      | 'scheduler-ticks'
+      | 'incidents'
+      | 'cycles'
+      | 'notifications';
     title: string;
     status: string;
     detail: string;
@@ -2039,7 +2145,12 @@ export type RiskSchedulerLinkageSnapshot = {
     updatedAt: string;
   }>;
   runbook: Array<{
-    key: 'focus-linked-window' | 'review-linked-risk' | 'triage-linked-incidents' | 'align-cycle-posture' | 'clear-linked-notifications';
+    key:
+      | 'focus-linked-window'
+      | 'review-linked-risk'
+      | 'triage-linked-incidents'
+      | 'align-cycle-posture'
+      | 'clear-linked-notifications';
     priority: 'now' | 'next';
     title: string;
     detail: string;
@@ -2146,7 +2257,15 @@ export type SchedulerWorkbenchResponse = {
     riskSignals: number;
   };
   lanes: Array<{
-    key: 'pre-open' | 'intraday' | 'post-close' | 'off-hours' | 'incidents' | 'cycles' | 'notifications' | 'risk';
+    key:
+      | 'pre-open'
+      | 'intraday'
+      | 'post-close'
+      | 'off-hours'
+      | 'incidents'
+      | 'cycles'
+      | 'notifications'
+      | 'risk';
     title: string;
     status: string;
     detail: string;
@@ -2155,7 +2274,13 @@ export type SchedulerWorkbenchResponse = {
     updatedAt: string;
   }>;
   runbook: Array<{
-    key: 'review-current-window' | 'triage-scheduler-incidents' | 'clear-scheduler-signals' | 'follow-cycle-drift' | 'align-risk-window' | 'review-off-hours-watch';
+    key:
+      | 'review-current-window'
+      | 'triage-scheduler-incidents'
+      | 'clear-scheduler-signals'
+      | 'follow-cycle-drift'
+      | 'align-risk-window'
+      | 'review-off-hours-watch';
     priority: 'now' | 'next';
     title: string;
     detail: string;
@@ -2245,7 +2370,15 @@ export type IncidentNoteRecord = {
 export type IncidentActivityRecord = {
   id: string;
   incidentId: string;
-  kind: 'opened' | 'status-changed' | 'owner-changed' | 'severity-changed' | 'summary-updated' | 'links-updated' | 'note-added' | 'task-updated';
+  kind:
+    | 'opened'
+    | 'status-changed'
+    | 'owner-changed'
+    | 'severity-changed'
+    | 'summary-updated'
+    | 'links-updated'
+    | 'note-added'
+    | 'task-updated';
   title: string;
   detail: string;
   actor: string;
@@ -2268,7 +2401,15 @@ export type IncidentTaskRecord = {
 
 export type IncidentEvidenceItem = {
   id: string;
-  kind: 'monitoring-alert' | 'notification' | 'audit' | 'operator-action' | 'scheduler-tick' | 'risk-event' | 'workflow-run' | 'execution-plan';
+  kind:
+    | 'monitoring-alert'
+    | 'notification'
+    | 'audit'
+    | 'operator-action'
+    | 'scheduler-tick'
+    | 'risk-event'
+    | 'workflow-run'
+    | 'execution-plan';
   title: string;
   detail: string;
   timestamp: string;
@@ -2391,7 +2532,13 @@ export type IncidentDetailResponse = {
     latestActor: string;
     latestActivityAt: string;
     nextAction: {
-      key: 'assign-owner' | 'acknowledge' | 'resolve-blocker' | 'capture-evidence' | 'closeout' | 'monitor';
+      key:
+        | 'assign-owner'
+        | 'acknowledge'
+        | 'resolve-blocker'
+        | 'capture-evidence'
+        | 'closeout'
+        | 'monitor';
       label: string;
       detail: string;
     };

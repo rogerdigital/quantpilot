@@ -1,15 +1,15 @@
 // @ts-nocheck
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { createControlPlaneRuntime } from '../packages/control-plane-runtime/src/index.js';
+import { createControlPlaneContext } from '../packages/control-plane-store/src/context.js';
 import {
   createControlPlaneStore,
   exportControlPlaneBackup,
   getControlPlaneIntegrityReport,
-  runControlPlaneMigrations,
   restoreControlPlaneBackup,
+  runControlPlaneMigrations,
 } from '../packages/control-plane-store/src/index.js';
-import { createControlPlaneRuntime } from '../packages/control-plane-runtime/src/index.js';
-import { createControlPlaneContext } from '../packages/control-plane-store/src/context.js';
 
 function parseArgs(argv) {
   const [command = 'check', ...rest] = argv;
@@ -75,9 +75,11 @@ async function main() {
 
   if (command === 'restore') {
     const input = requireInput(options.input);
-    printJson(restoreControlPlaneBackup(store, input, {
-      dryRun: Boolean(options['dry-run']),
-    }));
+    printJson(
+      restoreControlPlaneBackup(store, input, {
+        dryRun: Boolean(options['dry-run']),
+      })
+    );
     return;
   }
 
@@ -95,10 +97,12 @@ async function main() {
   }
 
   if (command === 'migrate') {
-    printJson(runControlPlaneMigrations(store, {
-      targetVersion: options.target ? Number(options.target) : undefined,
-      startedAt: options.now || new Date().toISOString(),
-    }));
+    printJson(
+      runControlPlaneMigrations(store, {
+        targetVersion: options.target ? Number(options.target) : undefined,
+        startedAt: options.now || new Date().toISOString(),
+      })
+    );
     return;
   }
 

@@ -47,7 +47,8 @@ function buildPlanSteps(intent = {}) {
           title: 'Load strategy catalog context',
           status: 'pending',
           toolName: 'strategy.catalog.list',
-          description: 'Read lifecycle stage, readiness, and research posture for the target strategy.',
+          description:
+            'Read lifecycle stage, readiness, and research posture for the target strategy.',
           outputSummary: '',
           metadata: {
             domain: 'strategy',
@@ -80,7 +81,8 @@ function buildPlanSteps(intent = {}) {
           title: 'Prepare controlled action handoff',
           status: 'pending',
           toolName: '',
-          description: 'If posture is acceptable, recommend a gated action request instead of direct execution.',
+          description:
+            'If posture is acceptable, recommend a gated action request instead of direct execution.',
           outputSummary: '',
           metadata: {
             proposedActionRequestType: 'prepare_execution_plan',
@@ -105,7 +107,8 @@ function buildPlanSteps(intent = {}) {
           title: 'Load execution plan posture',
           status: 'pending',
           toolName: 'execution.plans.list',
-          description: 'Correlate active approvals and execution posture with current risk signals.',
+          description:
+            'Correlate active approvals and execution posture with current risk signals.',
           outputSummary: '',
           metadata: {
             domain: 'execution',
@@ -141,7 +144,8 @@ function buildPlanSteps(intent = {}) {
           title: 'Load execution plan posture',
           status: 'pending',
           toolName: 'execution.plans.list',
-          description: 'Check whether approvals or blocked plans coincide with scheduler attention.',
+          description:
+            'Check whether approvals or blocked plans coincide with scheduler attention.',
           outputSummary: '',
           metadata: {
             domain: 'execution',
@@ -152,7 +156,8 @@ function buildPlanSteps(intent = {}) {
           title: 'Recommend scheduler runbook action',
           status: 'pending',
           toolName: '',
-          description: 'Produce a reviewed scheduler recommendation instead of directly mutating scheduler state.',
+          description:
+            'Produce a reviewed scheduler recommendation instead of directly mutating scheduler state.',
           outputSummary: '',
           metadata: {
             proposedActionRequestType: 'scheduler_review',
@@ -216,17 +221,19 @@ function buildPlanSummary(intent = {}) {
 export function createAgentPlan(payload = {}) {
   const parsed = payload.intent
     ? {
-      ok: true,
-      session: payload.sessionId ? controlPlaneRuntime.getAgentSession(payload.sessionId) : null,
-      intent: payload.intent,
-    }
+        ok: true,
+        session: payload.sessionId ? controlPlaneRuntime.getAgentSession(payload.sessionId) : null,
+        intent: payload.intent,
+      }
     : parseAgentIntent(payload);
 
   if (!parsed.ok) {
     return parsed;
   }
 
-  const session = parsed.session || (payload.sessionId ? controlPlaneRuntime.getAgentSession(payload.sessionId) : null);
+  const session =
+    parsed.session ||
+    (payload.sessionId ? controlPlaneRuntime.getAgentSession(payload.sessionId) : null);
   if (!session) {
     return {
       ok: false,

@@ -100,8 +100,11 @@ export function getIncidentSummary(options = {}) {
     if (operations.ackState === 'overdue') summary.response.ackOverdue += 1;
     summary.response.blockedTasks += operations.blockedTasks;
     summary.response.activeTasks += operations.activeTasks;
-    if (incident.status !== 'resolved' && incident.severity === 'critical') summary.response.unresolvedCritical += 1;
-    const nextActionEntry = summary.nextActions.find((item) => item.key === operations.nextAction.key);
+    if (incident.status !== 'resolved' && incident.severity === 'critical')
+      summary.response.unresolvedCritical += 1;
+    const nextActionEntry = summary.nextActions.find(
+      (item) => item.key === operations.nextAction.key
+    );
     if (nextActionEntry) nextActionEntry.count += 1;
 
     const updatedMs = parseTimestamp(incident.updatedAt || incident.createdAt) || Date.now();
@@ -112,7 +115,10 @@ export function getIncidentSummary(options = {}) {
     else if (ageHours < 24) summary.ageBuckets[2].count += 1;
     else summary.ageBuckets[3].count += 1;
 
-    sourceCounts.set(incident.source || 'unknown', Number(sourceCounts.get(incident.source || 'unknown') || 0) + 1);
+    sourceCounts.set(
+      incident.source || 'unknown',
+      Number(sourceCounts.get(incident.source || 'unknown') || 0) + 1
+    );
     const ownerKey = incident.owner || 'unassigned';
     const ownerEntry = ownerCounts.get(ownerKey) || {
       owner: ownerKey,
@@ -128,7 +134,8 @@ export function getIncidentSummary(options = {}) {
     if (incident.severity === 'critical') ownerEntry.criticalCount += 1;
     ownerEntry.blockedTaskCount += operations.blockedTasks;
     if (operations.stale) ownerEntry.staleCount += 1;
-    if (operations.ackState === 'pending' || operations.ackState === 'overdue') ownerEntry.unacknowledgedCount += 1;
+    if (operations.ackState === 'pending' || operations.ackState === 'overdue')
+      ownerEntry.unacknowledgedCount += 1;
     ownerCounts.set(ownerKey, ownerEntry);
   });
 
@@ -136,13 +143,22 @@ export function getIncidentSummary(options = {}) {
     .map(([source, count]) => ({ source, count }))
     .sort((left, right) => right.count - left.count);
   summary.byOwner = [...ownerCounts.values()]
-    .sort((left, right) => right.openCount - left.openCount
-      || right.criticalCount - left.criticalCount
-      || right.blockedTaskCount - left.blockedTaskCount
-      || right.staleCount - left.staleCount
-      || right.count - left.count)
+    .sort(
+      (left, right) =>
+        right.openCount - left.openCount ||
+        right.criticalCount - left.criticalCount ||
+        right.blockedTaskCount - left.blockedTaskCount ||
+        right.staleCount - left.staleCount ||
+        right.count - left.count
+    )
     .slice(0, 8);
-  summary.response.ownerHotspots = summary.byOwner.filter((item) => item.openCount >= 3 || item.criticalCount > 0 || item.blockedTaskCount > 0 || item.staleCount > 0).length;
+  summary.response.ownerHotspots = summary.byOwner.filter(
+    (item) =>
+      item.openCount >= 3 ||
+      item.criticalCount > 0 ||
+      item.blockedTaskCount > 0 ||
+      item.staleCount > 0
+  ).length;
 
   return summary;
 }
@@ -153,7 +169,10 @@ export function getIncidentDetail(incidentId, options = {}) {
   const evidence = collectIncidentEvidence(incident, options);
   const activity = collectIncidentActivity(incidentId, options);
   const tasks = collectIncidentTasks(incidentId, options);
-  const notes = controlPlaneRuntime.listIncidentNotes(incidentId, parseLimit(options.noteLimit, 100));
+  const notes = controlPlaneRuntime.listIncidentNotes(
+    incidentId,
+    parseLimit(options.noteLimit, 100)
+  );
   const operations = buildIncidentOperations(incident, {
     activity: activity.timeline,
     evidenceSummary: evidence.summary,
@@ -191,14 +210,19 @@ export function updateIncidentTask(incidentId, taskId, payload = {}) {
 }
 
 export function bulkUpdateIncidents(payload = {}) {
-  const incidentIds = [...new Set((Array.isArray(payload.incidentIds) ? payload.incidentIds : [])
-    .map((item) => String(item || '').trim())
-    .filter(Boolean))];
+  const incidentIds = [
+    ...new Set(
+      (Array.isArray(payload.incidentIds) ? payload.incidentIds : [])
+        .map((item) => String(item || '').trim())
+        .filter(Boolean)
+    ),
+  ];
   const patch = {};
 
   if (typeof payload.status === 'string' && payload.status) patch.status = payload.status;
   if (typeof payload.owner === 'string') patch.owner = payload.owner;
-  if (typeof payload.summary === 'string' && payload.summary.trim()) patch.summary = payload.summary.trim();
+  if (typeof payload.summary === 'string' && payload.summary.trim())
+    patch.summary = payload.summary.trim();
   if (typeof payload.actor === 'string' && payload.actor) patch.actor = payload.actor;
 
   const incidents = [];
@@ -245,18 +269,25 @@ function buildIncidentOperations(incident, inputs = {}) {
   const ageHours = Math.max(0, (Date.now() - updatedMs) / (60 * 60 * 1000));
   const blockedTasks = tasks.filter((item) => item.status === 'blocked').length;
   const pendingTasks = tasks.filter((item) => item.status === 'pending').length;
-  const activeTasks = tasks.filter((item) => item.status === 'pending' || item.status === 'in_progress' || item.status === 'blocked').length;
+  const activeTasks = tasks.filter(
+    (item) =>
+      item.status === 'pending' || item.status === 'in_progress' || item.status === 'blocked'
+  ).length;
   const linkedEvidence = Number(evidenceSummary.linked || 0);
-  const latestActivity = [...activity]
-    .sort((left, right) => (parseTimestamp(right.createdAt) || 0) - (parseTimestamp(left.createdAt) || 0))[0] || null;
+  const latestActivity =
+    [...activity].sort(
+      (left, right) =>
+        (parseTimestamp(right.createdAt) || 0) - (parseTimestamp(left.createdAt) || 0)
+    )[0] || null;
   const stale = incident.status !== 'resolved' && ageHours >= STALE_HOURS;
-  const ackState = incident.status === 'resolved'
-    ? 'acknowledged'
-    : incident.acknowledgedAt
+  const ackState =
+    incident.status === 'resolved'
       ? 'acknowledged'
-      : ageHours >= ACK_OVERDUE_HOURS
-        ? 'overdue'
-        : 'pending';
+      : incident.acknowledgedAt
+        ? 'acknowledged'
+        : ageHours >= ACK_OVERDUE_HOURS
+          ? 'overdue'
+          : 'pending';
 
   const nextAction = resolveIncidentNextAction({
     ackState,
@@ -281,17 +312,26 @@ function buildIncidentOperations(incident, inputs = {}) {
     nextAction,
     handoff: {
       owner: incident.owner || '',
-      queue: incident.status === 'resolved' ? 'resolved' : (incident.owner ? 'owned' : 'unassigned'),
-      summary: incident.status === 'resolved'
-        ? 'Resolved incidents should leave a closeout note and track follow-up work.'
-        : incident.owner
-          ? `${incident.owner} owns the next response step for this incident.`
-          : 'Assign an owner before the incident leaves triage.',
+      queue: incident.status === 'resolved' ? 'resolved' : incident.owner ? 'owned' : 'unassigned',
+      summary:
+        incident.status === 'resolved'
+          ? 'Resolved incidents should leave a closeout note and track follow-up work.'
+          : incident.owner
+            ? `${incident.owner} owns the next response step for this incident.`
+            : 'Assign an owner before the incident leaves triage.',
     },
   };
 }
 
-function resolveIncidentNextAction({ incident, ackState, blockedTasks, linkedEvidence, pendingTasks, notes, tasks }) {
+function resolveIncidentNextAction({
+  incident,
+  ackState,
+  blockedTasks,
+  linkedEvidence,
+  pendingTasks,
+  notes,
+  tasks,
+}) {
   if (!incident.owner) {
     return {
       key: 'assign-owner',
@@ -320,13 +360,17 @@ function resolveIncidentNextAction({ incident, ackState, blockedTasks, linkedEvi
       detail: 'Attach evidence and leave investigation notes so the next operator has context.',
     };
   }
-  if (incident.status !== 'resolved' && (!pendingTasks || tasks.some((item) => item.status === 'done'))) {
+  if (
+    incident.status !== 'resolved' &&
+    (!pendingTasks || tasks.some((item) => item.status === 'done'))
+  ) {
     return {
       key: 'closeout',
       label: incident.status === 'mitigated' ? 'Close out incident' : 'Advance mitigation',
-      detail: incident.status === 'mitigated'
-        ? 'Write the resolution summary and move the incident to resolved when the queue is clean.'
-        : 'Convert current findings into mitigation or closure actions.',
+      detail:
+        incident.status === 'mitigated'
+          ? 'Write the resolution summary and move the incident to resolved when the queue is clean.'
+          : 'Convert current findings into mitigation or closure actions.',
     };
   }
   return {
@@ -343,30 +387,45 @@ function intersects(left = [], right = []) {
 }
 
 function normalizeTokens(...values) {
-  return [...new Set(values
-    .flatMap((value) => Array.isArray(value) ? value : [value])
-    .flatMap((value) => String(value || '')
-      .toLowerCase()
-      .split(/[^a-z0-9_-]+/g)
-      .map((item) => item.trim())
-      .filter(Boolean)
-    ))];
+  return [
+    ...new Set(
+      values
+        .flatMap((value) => (Array.isArray(value) ? value : [value]))
+        .flatMap((value) =>
+          String(value || '')
+            .toLowerCase()
+            .split(/[^a-z0-9_-]+/g)
+            .map((item) => item.trim())
+            .filter(Boolean)
+        )
+    ),
+  ];
 }
 
 function buildLinkSet(incident) {
-  return new Set((incident.links || []).flatMap((item) => Object.values(item || {}).map((value) => String(value || ''))));
+  return new Set(
+    (incident.links || []).flatMap((item) =>
+      Object.values(item || {}).map((value) => String(value || ''))
+    )
+  );
 }
 
 function buildIncidentContext(incident) {
   const createdAtMs = parseTimestamp(incident.createdAt) || Date.now();
   return {
     createdAtMs,
-    fromMs: createdAtMs - (6 * 60 * 60 * 1000),
-    toMs: createdAtMs + (7 * 24 * 60 * 60 * 1000),
+    fromMs: createdAtMs - 6 * 60 * 60 * 1000,
+    toMs: createdAtMs + 7 * 24 * 60 * 60 * 1000,
     linkSet: buildLinkSet(incident),
     source: String(incident.source || '').toLowerCase(),
     tags: normalizeTokens(incident.tags || []),
-    textTokens: normalizeTokens(incident.title, incident.summary, incident.latestNotePreview, incident.source, incident.owner),
+    textTokens: normalizeTokens(
+      incident.title,
+      incident.summary,
+      incident.latestNotePreview,
+      incident.source,
+      incident.owner
+    ),
     metadataTokens: normalizeTokens(Object.values(incident.metadata || {})),
   };
 }
@@ -379,7 +438,14 @@ function withinIncidentWindow(context, timestamp) {
 
 function scoreEvidenceMatch(context, candidate) {
   const refIds = normalizeTokens(candidate.id, ...(candidate.refIds || []));
-  const contentTokens = normalizeTokens(candidate.title, candidate.detail, candidate.source, candidate.level, candidate.status, candidate.tokens || []);
+  const contentTokens = normalizeTokens(
+    candidate.title,
+    candidate.detail,
+    candidate.source,
+    candidate.level,
+    candidate.status,
+    candidate.tokens || []
+  );
   const directLink = refIds.some((item) => context.linkSet.has(item));
   const sourceMatch = context.source && candidate.source?.toLowerCase?.() === context.source;
   const tagMatch = intersects(context.tags, contentTokens);
@@ -589,7 +655,8 @@ function collectIncidentEvidence(incident, options = {}) {
       title: item.workflowId,
       detail: String(item.error || item.result?.summary || item.metadata?.summary || item.status),
       source: item.workflowType,
-      level: item.status === 'failed' ? 'critical' : item.status === 'retry_scheduled' ? 'warn' : 'info',
+      level:
+        item.status === 'failed' ? 'critical' : item.status === 'retry_scheduled' ? 'warn' : 'info',
       status: item.status,
       timestamp: item.updatedAt || item.createdAt,
       tokens: [item.actor, item.trigger, ...Object.values(item.metadata || {})],
@@ -602,7 +669,8 @@ function collectIncidentEvidence(incident, options = {}) {
       detail: String(item.error || item.result?.summary || item.metadata?.summary || item.status),
       timestamp: item.updatedAt || item.createdAt,
       source: item.workflowType,
-      level: item.status === 'failed' ? 'critical' : item.status === 'retry_scheduled' ? 'warn' : 'info',
+      level:
+        item.status === 'failed' ? 'critical' : item.status === 'retry_scheduled' ? 'warn' : 'info',
       status: item.status,
       linked: match.directLink,
       metadata: {
@@ -617,14 +685,25 @@ function collectIncidentEvidence(incident, options = {}) {
   executionPlans.forEach((item) => {
     const match = scoreEvidenceMatch(context, {
       id: item.id,
-      refIds: [item.workflowRunId, item.strategyId, item.metadata?.executionPlanId, item.metadata?.incidentId],
+      refIds: [
+        item.workflowRunId,
+        item.strategyId,
+        item.metadata?.executionPlanId,
+        item.metadata?.incidentId,
+      ],
       title: item.strategyName,
       detail: item.summary,
       source: item.mode,
-      level: item.riskStatus === 'blocked' ? 'critical' : item.riskStatus === 'review' ? 'warn' : 'info',
+      level:
+        item.riskStatus === 'blocked' ? 'critical' : item.riskStatus === 'review' ? 'warn' : 'info',
       status: item.status,
       timestamp: item.updatedAt || item.createdAt,
-      tokens: [item.strategyId, item.riskStatus, item.approvalState, ...Object.values(item.metadata || {})],
+      tokens: [
+        item.strategyId,
+        item.riskStatus,
+        item.approvalState,
+        ...Object.values(item.metadata || {}),
+      ],
     });
     if (!match.matched) return;
     evidence.push({
@@ -634,7 +713,8 @@ function collectIncidentEvidence(incident, options = {}) {
       detail: item.summary,
       timestamp: item.updatedAt || item.createdAt,
       source: item.mode,
-      level: item.riskStatus === 'blocked' ? 'critical' : item.riskStatus === 'review' ? 'warn' : 'info',
+      level:
+        item.riskStatus === 'blocked' ? 'critical' : item.riskStatus === 'review' ? 'warn' : 'info',
       status: item.status,
       linked: match.directLink,
       metadata: {
@@ -647,34 +727,40 @@ function collectIncidentEvidence(incident, options = {}) {
   });
 
   const deduped = [...new Map(evidence.map((item) => [`${item.kind}:${item.id}`, item])).values()]
-    .sort((left, right) => Number(right.linked) - Number(left.linked)
-      || (parseTimestamp(right.timestamp) || 0) - (parseTimestamp(left.timestamp) || 0))
+    .sort(
+      (left, right) =>
+        Number(right.linked) - Number(left.linked) ||
+        (parseTimestamp(right.timestamp) || 0) - (parseTimestamp(left.timestamp) || 0)
+    )
     .slice(0, limit);
 
-  const summary = deduped.reduce((acc, item) => {
-    acc.total += 1;
-    if (item.linked) acc.linked += 1;
-    if (item.kind === 'monitoring-alert') acc.monitoringAlerts += 1;
-    if (item.kind === 'notification') acc.notifications += 1;
-    if (item.kind === 'audit') acc.audits += 1;
-    if (item.kind === 'operator-action') acc.operatorActions += 1;
-    if (item.kind === 'scheduler-tick') acc.schedulerTicks += 1;
-    if (item.kind === 'risk-event') acc.riskEvents += 1;
-    if (item.kind === 'workflow-run') acc.workflowRuns += 1;
-    if (item.kind === 'execution-plan') acc.executionPlans += 1;
-    return acc;
-  }, {
-    total: 0,
-    linked: 0,
-    monitoringAlerts: 0,
-    notifications: 0,
-    audits: 0,
-    operatorActions: 0,
-    schedulerTicks: 0,
-    riskEvents: 0,
-    workflowRuns: 0,
-    executionPlans: 0,
-  });
+  const summary = deduped.reduce(
+    (acc, item) => {
+      acc.total += 1;
+      if (item.linked) acc.linked += 1;
+      if (item.kind === 'monitoring-alert') acc.monitoringAlerts += 1;
+      if (item.kind === 'notification') acc.notifications += 1;
+      if (item.kind === 'audit') acc.audits += 1;
+      if (item.kind === 'operator-action') acc.operatorActions += 1;
+      if (item.kind === 'scheduler-tick') acc.schedulerTicks += 1;
+      if (item.kind === 'risk-event') acc.riskEvents += 1;
+      if (item.kind === 'workflow-run') acc.workflowRuns += 1;
+      if (item.kind === 'execution-plan') acc.executionPlans += 1;
+      return acc;
+    },
+    {
+      total: 0,
+      linked: 0,
+      monitoringAlerts: 0,
+      notifications: 0,
+      audits: 0,
+      operatorActions: 0,
+      schedulerTicks: 0,
+      riskEvents: 0,
+      workflowRuns: 0,
+      executionPlans: 0,
+    }
+  );
 
   return {
     summary,
@@ -683,25 +769,31 @@ function collectIncidentEvidence(incident, options = {}) {
 }
 
 function collectIncidentActivity(incidentId, options = {}) {
-  const timeline = controlPlaneRuntime.listIncidentActivities(incidentId, parseLimit(options.activityLimit, 120));
-  const summary = timeline.reduce((acc, item) => {
-    acc.total += 1;
-    if (item.kind === 'note-added') acc.notes += 1;
-    if (item.kind === 'status-changed') acc.statusChanges += 1;
-    if (item.kind === 'owner-changed') acc.ownerChanges += 1;
-    if (item.kind === 'severity-changed') acc.severityChanges += 1;
-    if (!acc.latestAt || Date.parse(item.createdAt || '') > Date.parse(acc.latestAt || '')) {
-      acc.latestAt = item.createdAt;
+  const timeline = controlPlaneRuntime.listIncidentActivities(
+    incidentId,
+    parseLimit(options.activityLimit, 120)
+  );
+  const summary = timeline.reduce(
+    (acc, item) => {
+      acc.total += 1;
+      if (item.kind === 'note-added') acc.notes += 1;
+      if (item.kind === 'status-changed') acc.statusChanges += 1;
+      if (item.kind === 'owner-changed') acc.ownerChanges += 1;
+      if (item.kind === 'severity-changed') acc.severityChanges += 1;
+      if (!acc.latestAt || Date.parse(item.createdAt || '') > Date.parse(acc.latestAt || '')) {
+        acc.latestAt = item.createdAt;
+      }
+      return acc;
+    },
+    {
+      total: 0,
+      notes: 0,
+      statusChanges: 0,
+      ownerChanges: 0,
+      severityChanges: 0,
+      latestAt: '',
     }
-    return acc;
-  }, {
-    total: 0,
-    notes: 0,
-    statusChanges: 0,
-    ownerChanges: 0,
-    severityChanges: 0,
-    latestAt: '',
-  });
+  );
 
   return {
     summary,
@@ -710,21 +802,27 @@ function collectIncidentActivity(incidentId, options = {}) {
 }
 
 function collectIncidentTasks(incidentId, options = {}) {
-  const items = controlPlaneRuntime.listIncidentTasks(incidentId, parseLimit(options.taskLimit, 100));
-  const summary = items.reduce((acc, item) => {
-    acc.total += 1;
-    if (item.status === 'pending') acc.pending += 1;
-    if (item.status === 'in_progress') acc.inProgress += 1;
-    if (item.status === 'done') acc.done += 1;
-    if (item.status === 'blocked') acc.blocked += 1;
-    return acc;
-  }, {
-    total: 0,
-    pending: 0,
-    inProgress: 0,
-    done: 0,
-    blocked: 0,
-  });
+  const items = controlPlaneRuntime.listIncidentTasks(
+    incidentId,
+    parseLimit(options.taskLimit, 100)
+  );
+  const summary = items.reduce(
+    (acc, item) => {
+      acc.total += 1;
+      if (item.status === 'pending') acc.pending += 1;
+      if (item.status === 'in_progress') acc.inProgress += 1;
+      if (item.status === 'done') acc.done += 1;
+      if (item.status === 'blocked') acc.blocked += 1;
+      return acc;
+    },
+    {
+      total: 0,
+      pending: 0,
+      inProgress: 0,
+      done: 0,
+      blocked: 0,
+    }
+  );
 
   return {
     summary,

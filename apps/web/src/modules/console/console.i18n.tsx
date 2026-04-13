@@ -1,14 +1,18 @@
-import { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
 import type { AppLocale } from '@shared-types/trading.ts';
+import { createContext, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 
-const LocaleContext = createContext<{ locale: AppLocale; setLocale: (locale: AppLocale) => void } | null>(null);
+const LocaleContext = createContext<{
+  locale: AppLocale;
+  setLocale: (locale: AppLocale) => void;
+} | null>(null);
 
 export const copy = {
   zh: {
     product: 'quantpilot',
     tagline: '自主决策量化交易平台',
     heroTitle: '交易总览',
-    heroSub: '将市场信号、策略决策、执行监控与风险控制整合到统一平台中，帮助你构建、评估并运行量化交易系统。',
+    heroSub:
+      '将市场信号、策略决策、执行监控与风险控制整合到统一平台中，帮助你构建、评估并运行量化交易系统。',
     nav: {
       dashboard: '仪表盘',
       market: '市场监控',
@@ -121,13 +125,25 @@ export const copy = {
       riskProtection: '风险保护',
     },
     pages: {
-      dashboard: ['仪表盘', '集中查看资产、信号、执行状态和 Agent 摘要，作为 QuantPilot 的统一指挥面板。'],
-      market: ['市场监控', '跟踪股票池价格、强弱排序和行情接入状态，为策略与 Agent 提供市场上下文。'],
-      strategies: ['策略工作台', '查看策略候选、信号分布、股票池评分和研究视图，形成可执行的策略工作流。'],
+      dashboard: [
+        '仪表盘',
+        '集中查看资产、信号、执行状态和 Agent 摘要，作为 QuantPilot 的统一指挥面板。',
+      ],
+      market: [
+        '市场监控',
+        '跟踪股票池价格、强弱排序和行情接入状态，为策略与 Agent 提供市场上下文。',
+      ],
+      strategies: [
+        '策略工作台',
+        '查看策略候选、信号分布、股票池评分和研究视图，形成可执行的策略工作流。',
+      ],
       backtest: ['回测中心', '发起研究任务、复核绩效曲线，并把候选策略送入后续风险与执行流程。'],
       risk: ['风控面板', '聚合风险等级、暴露、待审批动作和拦截上下文，作为执行前的风险闸门。'],
       agent: ['Agent 对话台', '把策略分析、风险解释和执行建议组织成可确认的协作界面。'],
-      notifications: ['通知中心', '统一查看任务完成、风控拦截、执行结果和系统事件，形成可追踪的操作回执。'],
+      notifications: [
+        '通知中心',
+        '统一查看任务完成、风控拦截、执行结果和系统事件，形成可追踪的操作回执。',
+      ],
       overview: ['总览', '集中观察净值、仓位、信号和最近委托，只保留盯盘主视图。'],
       signals: ['信号中心', '查看当前周期的买卖判断、评分分布和信号方向。'],
       execution: ['执行中心', '跟踪订单状态、撤单动作和最新成交回报。'],
@@ -176,7 +192,8 @@ export const copy = {
     product: 'quantpilot',
     tagline: 'Autonomous quant trading platform',
     heroTitle: 'Trading Overview',
-    heroSub: 'Unify market signals, strategy decisions, execution monitoring, and risk control in one platform to build, evaluate, and run quantitative trading systems.',
+    heroSub:
+      'Unify market signals, strategy decisions, execution monitoring, and risk control in one platform to build, evaluate, and run quantitative trading systems.',
     nav: {
       dashboard: 'Dashboard',
       market: 'Market',
@@ -289,17 +306,50 @@ export const copy = {
       riskProtection: 'Risk Guard',
     },
     pages: {
-      dashboard: ['Dashboard', 'Track assets, signals, execution state, and Agent summaries from one command surface.'],
-      market: ['Market Monitor', 'Track universe pricing, relative strength, and market data connectivity for downstream analysis.'],
-      strategies: ['Strategy Workspace', 'Review strategy candidates, signal mix, universe scores, and research context in one workspace.'],
-      backtest: ['Backtest Center', 'Launch research runs, inspect performance curves, and prepare candidate strategies for downstream review.'],
-      risk: ['Risk Console', 'Monitor risk level, exposure, pending approvals, and execution blockers before orders are released.'],
-      agent: ['Agent Copilot', 'Turn strategy analysis, risk explanations, and execution suggestions into confirmable operator workflows.'],
-      notifications: ['Notification Center', 'Review task completions, execution feedback, risk alerts, and system events in one stream.'],
-      overview: ['Trading Overview', 'Monitor NAV, exposure, signals, and the latest order flow in one platform view.'],
-      signals: ['Signal Center', 'Review the current buy / hold / sell posture and score distribution.'],
-      execution: ['Execution Center', 'Track order states, cancel actions, and the latest fill feedback.'],
-      portfolio: ['Portfolio Center', 'Review NAV, cash, holdings, and current portfolio exposure.'],
+      dashboard: [
+        'Dashboard',
+        'Track assets, signals, execution state, and Agent summaries from one command surface.',
+      ],
+      market: [
+        'Market Monitor',
+        'Track universe pricing, relative strength, and market data connectivity for downstream analysis.',
+      ],
+      strategies: [
+        'Strategy Workspace',
+        'Review strategy candidates, signal mix, universe scores, and research context in one workspace.',
+      ],
+      backtest: [
+        'Backtest Center',
+        'Launch research runs, inspect performance curves, and prepare candidate strategies for downstream review.',
+      ],
+      risk: [
+        'Risk Console',
+        'Monitor risk level, exposure, pending approvals, and execution blockers before orders are released.',
+      ],
+      agent: [
+        'Agent Copilot',
+        'Turn strategy analysis, risk explanations, and execution suggestions into confirmable operator workflows.',
+      ],
+      notifications: [
+        'Notification Center',
+        'Review task completions, execution feedback, risk alerts, and system events in one stream.',
+      ],
+      overview: [
+        'Trading Overview',
+        'Monitor NAV, exposure, signals, and the latest order flow in one platform view.',
+      ],
+      signals: [
+        'Signal Center',
+        'Review the current buy / hold / sell posture and score distribution.',
+      ],
+      execution: [
+        'Execution Center',
+        'Track order states, cancel actions, and the latest fill feedback.',
+      ],
+      portfolio: [
+        'Portfolio Center',
+        'Review NAV, cash, holdings, and current portfolio exposure.',
+      ],
       settings: ['Settings', 'Manage modes, switches, thresholds, and provider connectivity.'],
     },
     desk: {
@@ -324,10 +374,12 @@ export const copy = {
       commandDeckEyebrow: 'Command Deck',
       exposureEyebrow: 'Exposure',
       exposureTitle: 'Positioning Map',
-      exposureNote: 'Keep paper and live exposure in one side card so deployment capacity reads at a glance.',
+      exposureNote:
+        'Keep paper and live exposure in one side card so deployment capacity reads at a glance.',
       workflowEyebrow: 'Workflow',
       workflowTitle: 'Workflow Pulse',
-      workflowNote: 'Condense live flow, approval pressure, and manual intervention load into one operations pulse card.',
+      workflowNote:
+        'Condense live flow, approval pressure, and manual intervention load into one operations pulse card.',
       openLiveOrders: 'Open live orders',
       liveDeskBadge: 'LIVE DESK',
       opsBadge: 'OPS',
@@ -338,7 +390,8 @@ export const copy = {
       connectivity: 'Connectivity',
       deskNotes: 'Desk notes',
     },
-    settingsIntro: 'Manage language, operating mode, thresholds, integration status, and execution switches in one place.',
+    settingsIntro:
+      'Manage language, operating mode, thresholds, integration status, and execution switches in one place.',
   },
 } as const;
 

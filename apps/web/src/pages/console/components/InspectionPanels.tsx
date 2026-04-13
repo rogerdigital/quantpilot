@@ -12,7 +12,13 @@ type InspectionListPanelProps = InspectionPanelProps & {
   terminal?: boolean;
 };
 
-export function InspectionPanel({ title, copy, badge, children, badgeClassName = 'badge-info' }: InspectionPanelProps) {
+export function InspectionPanel({
+  title,
+  copy,
+  badge,
+  children,
+  badgeClassName = 'badge-info',
+}: InspectionPanelProps) {
   return (
     <article className="panel">
       <div className="panel-head">
@@ -27,12 +33,17 @@ export function InspectionPanel({ title, copy, badge, children, badgeClassName =
   );
 }
 
-export function InspectionListPanel({ title, copy, badge, terminal = false, children, badgeClassName }: InspectionListPanelProps) {
+export function InspectionListPanel({
+  title,
+  copy,
+  badge,
+  terminal = false,
+  children,
+  badgeClassName,
+}: InspectionListPanelProps) {
   return (
     <InspectionPanel title={title} copy={copy} badge={badge} badgeClassName={badgeClassName}>
-      <div className={terminal ? 'focus-list focus-list-terminal' : 'focus-list'}>
-        {children}
-      </div>
+      <div className={terminal ? 'focus-list focus-list-terminal' : 'focus-list'}>{children}</div>
     </InspectionPanel>
   );
 }
@@ -74,7 +85,12 @@ export function InspectionMetricsRow({ leadTitle, leadCopy, metrics }: Inspectio
   );
 }
 
-export function InspectionSelectableRow({ leadTitle, leadCopy, metrics, actions }: InspectionSelectableRowProps) {
+export function InspectionSelectableRow({
+  leadTitle,
+  leadCopy,
+  metrics,
+  actions,
+}: InspectionSelectableRowProps) {
   return (
     <div className="focus-row">
       {leadTitle || leadCopy ? (

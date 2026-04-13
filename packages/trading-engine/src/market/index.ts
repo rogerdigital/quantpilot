@@ -33,7 +33,7 @@ export function scoreStock(stock, config = DEFAULT_ENGINE_CONFIG) {
 
 export function createInitialStockStates(config = DEFAULT_ENGINE_CONFIG) {
   const stockStates = STOCK_UNIVERSE.map((ticker, index) => createTickerState(ticker, index));
-  stockStates.forEach((stock) => scoreStock(stock, config));
+  for (const stock of stockStates) scoreStock(stock, config);
   return stockStates;
 }
 
@@ -42,7 +42,14 @@ function seededNoise(index, step) {
   return base - Math.floor(base);
 }
 
-export function updateTicker(stock, index, cycle, riskGuard, stockCount, config = DEFAULT_ENGINE_CONFIG) {
+export function updateTicker(
+  stock,
+  index,
+  cycle,
+  riskGuard,
+  stockCount,
+  config = DEFAULT_ENGINE_CONFIG
+) {
   const noise = (seededNoise(index + 1, cycle + 1) - 0.5) * (stock.volatility / 100);
   const directional = Math.sin((cycle + index * 3) / 6) * (stock.drift / 100);
   const shock = riskGuard && index === cycle % stockCount ? -0.003 : 0;

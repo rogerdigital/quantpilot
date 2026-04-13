@@ -1,8 +1,9 @@
 // @ts-nocheck
-import test from 'node:test';
+
 import assert from 'node:assert/strict';
-import { createMemoryStore } from '../../control-plane-store/test/helpers/memory-store.js';
+import test from 'node:test';
 import { createControlPlaneContext } from '../../control-plane-store/src/context.js';
+import { createMemoryStore } from '../../control-plane-store/test/helpers/memory-store.js';
 import { createControlPlaneRuntime } from '../src/index.js';
 
 test('control plane runtime delegates notification and audit operations', () => {
@@ -121,11 +122,17 @@ test('control plane runtime persists governance records without overwriting appe
 
   assert.equal(policyUpdated.authority, 'ask_first');
   assert.equal(runtime.listAgentPolicies(10, { accountId: 'paper-main' }).length, 1);
-  assert.equal(runtime.listAgentPolicies(10, { accountId: 'paper-main' })[0].authority, 'ask_first');
+  assert.equal(
+    runtime.listAgentPolicies(10, { accountId: 'paper-main' })[0].authority,
+    'ask_first'
+  );
   assert.equal(runtime.listAgentInstructions(10, { sessionId: 'session-1' }).length, 2);
   assert.equal(runtime.listAgentDailyRuns(10, { accountId: 'paper-main' }).length, 2);
   assert.equal(runtime.listAgentAuthorityEvents(10, { policyId: policy.id }).length, 2);
-  assert.equal(runtime.listAgentAuthorityEvents(10, { policyId: policy.id })[0].reason, 'operator requested tighter controls');
+  assert.equal(
+    runtime.listAgentAuthorityEvents(10, { policyId: policy.id })[0].reason,
+    'operator requested tighter controls'
+  );
   assert.equal(authorityEventSecond.nextMode, 'manual_only');
 });
 
@@ -212,7 +219,10 @@ test('control plane runtime stamps current workspace scope into new records', ()
   assert.equal(runtime.getCurrentWorkspace().id, 'workspace-live-ops');
   assert.equal(runtime.listOperatorActions()[0].metadata.workspaceId, 'workspace-live-ops');
   assert.equal(runtime.listAuditRecords()[0].metadata.workspaceId, 'workspace-live-ops');
-  assert.equal(runtime.listNotificationJobs()[0].payload.metadata.tenantId, 'tenant-quantpilot-labs');
+  assert.equal(
+    runtime.listNotificationJobs()[0].payload.metadata.tenantId,
+    'tenant-quantpilot-labs'
+  );
 });
 
 test('control plane runtime filters scoped records to the current workspace by default', () => {
@@ -330,13 +340,33 @@ test('control plane runtime records incidents with audit and notifications', () 
   assert.equal(noteResult.incident.id, 'incident-runtime-1');
   assert.equal(transitionedTask.status, 'done');
   assert.equal(runtime.listIncidents()[0].id, 'incident-runtime-1');
-  assert.equal(runtime.listIncidentNotes('incident-runtime-1')[0].body, 'Failover broker verified.');
+  assert.equal(
+    runtime.listIncidentNotes('incident-runtime-1')[0].body,
+    'Failover broker verified.'
+  );
   assert.equal(runtime.listIncidentTasks('incident-runtime-1').length >= 5, true);
-  assert.equal(runtime.listIncidentActivities('incident-runtime-1').some((item) => item.kind === 'opened'), true);
-  assert.equal(runtime.listIncidentActivities('incident-runtime-1').some((item) => item.kind === 'note-added'), true);
-  assert.equal(runtime.listIncidentActivities('incident-runtime-1').some((item) => item.kind === 'task-updated'), true);
-  assert.equal(runtime.listAuditRecords().some((item) => item.type === 'incident.note'), true);
-  assert.equal(runtime.listNotificationJobs().some((job) => job.payload.title === 'Incident opened'), true);
+  assert.equal(
+    runtime.listIncidentActivities('incident-runtime-1').some((item) => item.kind === 'opened'),
+    true
+  );
+  assert.equal(
+    runtime.listIncidentActivities('incident-runtime-1').some((item) => item.kind === 'note-added'),
+    true
+  );
+  assert.equal(
+    runtime
+      .listIncidentActivities('incident-runtime-1')
+      .some((item) => item.kind === 'task-updated'),
+    true
+  );
+  assert.equal(
+    runtime.listAuditRecords().some((item) => item.type === 'incident.note'),
+    true
+  );
+  assert.equal(
+    runtime.listNotificationJobs().some((job) => job.payload.title === 'Incident opened'),
+    true
+  );
 });
 
 test('control plane runtime dispatches queued jobs through injected context', () => {
@@ -550,10 +580,22 @@ test('control plane runtime records agent collaboration sessions, plans, and ana
   assert.equal(runtime.getAgentSession(session.id).latestPlanId, plan.id);
   assert.equal(runtime.getAgentSession(session.id).latestAnalysisRunId, run.id);
   assert.equal(runtime.listAgentSessionMessages(session.id, 10)[0].id, message.id);
-  assert.equal(runtime.listAuditRecords().some((item) => item.type === 'agent-session'), true);
-  assert.equal(runtime.listAuditRecords().some((item) => item.type === 'agent-plan'), true);
-  assert.equal(runtime.listAuditRecords().some((item) => item.type === 'agent-analysis-run'), true);
-  assert.equal(runtime.listAuditRecords().some((item) => item.type === 'agent-message'), true);
+  assert.equal(
+    runtime.listAuditRecords().some((item) => item.type === 'agent-session'),
+    true
+  );
+  assert.equal(
+    runtime.listAuditRecords().some((item) => item.type === 'agent-plan'),
+    true
+  );
+  assert.equal(
+    runtime.listAuditRecords().some((item) => item.type === 'agent-analysis-run'),
+    true
+  );
+  assert.equal(
+    runtime.listAuditRecords().some((item) => item.type === 'agent-message'),
+    true
+  );
 });
 
 test('control plane runtime persists workflow runs through start and complete transitions', () => {
@@ -576,7 +618,10 @@ test('control plane runtime persists workflow runs through start and complete tr
   });
 
   assert.equal(workflow.status, 'running');
-  assert.equal(runtime.getWorkflowRun('workflow-runtime-1').workflowId, 'task-orchestrator.cycle-run');
+  assert.equal(
+    runtime.getWorkflowRun('workflow-runtime-1').workflowId,
+    'task-orchestrator.cycle-run'
+  );
   assert.equal(completed.status, 'completed');
   assert.equal(runtime.listWorkflowRuns()[0].result.ok, true);
 });
@@ -604,8 +649,14 @@ test('control plane runtime persists research task backbone entries', () => {
 
   assert.equal(created.id, 'research-task-runtime-1');
   assert.equal(runtime.getResearchTask('research-task-runtime-1').status, 'running');
-  assert.equal(runtime.findResearchTaskByWorkflowRunId('workflow-runtime-backtest').id, 'research-task-runtime-1');
-  assert.equal(runtime.findResearchTaskByRunId('run-runtime-backtest').latestCheckpoint, 'runtime worker is executing the backtest');
+  assert.equal(
+    runtime.findResearchTaskByWorkflowRunId('workflow-runtime-backtest').id,
+    'research-task-runtime-1'
+  );
+  assert.equal(
+    runtime.findResearchTaskByRunId('run-runtime-backtest').latestCheckpoint,
+    'runtime worker is executing the backtest'
+  );
   assert.equal(updated.status, 'running');
 });
 
@@ -676,7 +727,10 @@ test('control plane runtime persists research evaluations for run and strategy l
   assert.equal(evaluation.id, 'research-eval-runtime-1');
   assert.equal(runtime.getResearchEvaluation('research-eval-runtime-1').verdict, 'promote');
   assert.equal(runtime.getLatestEvaluationForRun('run-runtime-backtest').scoreBand, 'strong');
-  assert.equal(runtime.getLatestEvaluationForStrategy('ema-cross-us').recommendedAction, 'promote_to_paper');
+  assert.equal(
+    runtime.getLatestEvaluationForStrategy('ema-cross-us').recommendedAction,
+    'promote_to_paper'
+  );
 });
 
 test('control plane runtime persists research reports for run and strategy lookups', () => {
@@ -771,6 +825,12 @@ test('control plane runtime fans out workflow failure and recovery events and sy
   assert.equal(resumedPlan.riskStatus, 'review');
   assert.equal(canceled.status, 'canceled');
   assert.equal(canceledPlan.status, 'blocked');
-  assert.equal(runtime.listAuditRecords().some((item) => item.title.includes('Workflow resumed')), true);
-  assert.equal(runtime.listNotificationJobs().some((item) => item.payload.source === 'workflow-control'), true);
+  assert.equal(
+    runtime.listAuditRecords().some((item) => item.title.includes('Workflow resumed')),
+    true
+  );
+  assert.equal(
+    runtime.listNotificationJobs().some((item) => item.payload.source === 'workflow-control'),
+    true
+  );
 });

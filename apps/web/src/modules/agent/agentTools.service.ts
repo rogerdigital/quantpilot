@@ -1,5 +1,5 @@
-import { fetchJson, jsonHeaders } from '../../app/api/http.ts';
 import type { AgentToolDefinition, AgentToolExecutionResult } from '@shared-types/trading.ts';
+import { fetchJson, jsonHeaders } from '../../app/api/http.ts';
 
 export type AgentWorkbenchPayload = {
   ok: boolean;
@@ -236,7 +236,9 @@ export async function fetchAgentWorkbench(): Promise<AgentWorkbenchPayload> {
   });
 }
 
-export async function fetchAgentSessionDetail(sessionId: string): Promise<AgentSessionDetailPayload> {
+export async function fetchAgentSessionDetail(
+  sessionId: string
+): Promise<AgentSessionDetailPayload> {
   return fetchJson(`/api/agent/sessions/${sessionId}`, {
     method: 'GET',
     headers: { Accept: 'application/json' },
@@ -280,11 +282,14 @@ export async function runAgentAnalysis(payload: {
   });
 }
 
-export async function createAgentSessionActionRequest(sessionId: string, payload: {
-  requestedBy?: string;
-  summary?: string;
-  rationale?: string;
-} = {}): Promise<AgentSessionActionRequestPayload> {
+export async function createAgentSessionActionRequest(
+  sessionId: string,
+  payload: {
+    requestedBy?: string;
+    summary?: string;
+    rationale?: string;
+  } = {}
+): Promise<AgentSessionActionRequestPayload> {
   return fetchJson(`/api/agent/sessions/${sessionId}/action-requests`, {
     method: 'POST',
     headers: jsonHeaders(),

@@ -1,9 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import StrategiesPage from './strategies/StrategiesPage.tsx';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import BacktestPage from './backtest/BacktestPage.tsx';
 import { ExecutionPage } from './console/routes/ExecutionPage.tsx';
+import StrategiesPage from './strategies/StrategiesPage.tsx';
 
 const mockUseResearchWorkspaceData = vi.fn();
 const mockUseStrategyDetail = vi.fn();
@@ -35,9 +35,7 @@ vi.mock('../store/trading-system/TradingSystemProvider.tsx', () => ({
         { symbol: 'AAPL', signal: 'BUY' },
         { symbol: 'MSFT', signal: 'SELL' },
       ],
-      activityLog: [
-        { id: 'activity-1', title: 'Synced' },
-      ],
+      activityLog: [{ id: 'activity-1', title: 'Synced' }],
       approvalQueue: [],
     },
     session: {
@@ -46,7 +44,8 @@ vi.mock('../store/trading-system/TradingSystemProvider.tsx', () => ({
         permissions: ['strategy:write', 'risk:review'],
       },
     },
-    hasPermission: (permission: string) => permission === 'strategy:write' || permission === 'risk:review',
+    hasPermission: (permission: string) =>
+      permission === 'strategy:write' || permission === 'risk:review',
     approveLiveIntent: () => undefined,
     rejectLiveIntent: () => undefined,
     actionGuardNotice: null,
@@ -54,7 +53,9 @@ vi.mock('../store/trading-system/TradingSystemProvider.tsx', () => ({
 }));
 
 vi.mock('../modules/console/console.i18n.tsx', async () => {
-  const actual = await vi.importActual<typeof import('../modules/console/console.i18n.tsx')>('../modules/console/console.i18n.tsx');
+  const actual = await vi.importActual<typeof import('../modules/console/console.i18n.tsx')>(
+    '../modules/console/console.i18n.tsx'
+  );
   return {
     ...actual,
     useLocale: () => ({ locale: 'en' as const }),
@@ -62,7 +63,9 @@ vi.mock('../modules/console/console.i18n.tsx', async () => {
 });
 
 vi.mock('../modules/console/console.hooks.ts', async () => {
-  const actual = await vi.importActual<typeof import('../modules/console/console.hooks.ts')>('../modules/console/console.hooks.ts');
+  const actual = await vi.importActual<typeof import('../modules/console/console.hooks.ts')>(
+    '../modules/console/console.hooks.ts'
+  );
   return {
     ...actual,
     useSettingsNavigation: () => () => undefined,
@@ -99,9 +102,10 @@ vi.mock('../modules/research/useResearchPollingPolicy.ts', () => ({
 
 vi.mock('../modules/console/useSyncedQuerySelection.ts', () => ({
   useSyncedQuerySelection: (options: { itemIds: string[]; requestedId: string }) => ({
-    selectedId: options.requestedId && options.itemIds.includes(options.requestedId)
-      ? options.requestedId
-      : (options.itemIds[0] || ''),
+    selectedId:
+      options.requestedId && options.itemIds.includes(options.requestedId)
+        ? options.requestedId
+        : options.itemIds[0] || '',
     setSelectedId: () => undefined,
   }),
 }));
@@ -119,7 +123,12 @@ vi.mock('../modules/research/useResearchNavigationContext.ts', () => ({
 
 vi.mock('../components/layout/ConsoleChrome.tsx', () => ({
   ChartCanvas: ({ kind }: { kind: string }) => <div>{kind}</div>,
-  SectionHeader: ({ title, copy }: { title: string; copy: string }) => <div>{title}{copy}</div>,
+  SectionHeader: ({ title, copy }: { title: string; copy: string }) => (
+    <div>
+      {title}
+      {copy}
+    </div>
+  ),
   TopMeta: () => <div>TopMeta</div>,
 }));
 
@@ -642,7 +651,10 @@ describe('research workspace pages', () => {
           level: 'ready',
           headline: 'Research package is ready for execution prep.',
           recommendedAction: 'prepare_execution',
-          reasons: ['Latest reviewed result is available.', 'Strategy is already in candidate stage.'],
+          reasons: [
+            'Latest reviewed result is available.',
+            'Strategy is already in candidate stage.',
+          ],
         },
         executionCandidatePreview: {
           mode: 'paper',
@@ -651,7 +663,10 @@ describe('research workspace pages', () => {
           riskStatus: 'approved',
           approvalState: 'required',
           summary: 'Candidate basket is ready for paper execution review.',
-          reasons: ['Risk assessment passed baseline checks.', 'Two candidate orders were generated.'],
+          reasons: [
+            'Risk assessment passed baseline checks.',
+            'Two candidate orders were generated.',
+          ],
           orders: [
             {
               symbol: 'AAPL',
@@ -712,7 +727,7 @@ describe('research workspace pages', () => {
         <Routes>
           <Route path="/strategies" element={<StrategiesPage />} />
         </Routes>
-      </MemoryRouter>,
+      </MemoryRouter>
     );
 
     expect(html).toContain('Selected Strategy Detail');
@@ -1124,7 +1139,7 @@ describe('research workspace pages', () => {
         <Routes>
           <Route path="/backtest" element={<BacktestPage />} />
         </Routes>
-      </MemoryRouter>,
+      </MemoryRouter>
     );
 
     expect(html).toContain('Selected Backtest Detail');
@@ -1257,7 +1272,7 @@ describe('research workspace pages', () => {
         <Routes>
           <Route path="/backtest" element={<BacktestPage />} />
         </Routes>
-      </MemoryRouter>,
+      </MemoryRouter>
     );
 
     expect(html).toContain('Selected Backtest Detail');
@@ -1361,10 +1376,7 @@ describe('research workspace pages', () => {
             summary: 'Paper execution plan',
             capital: 50000,
             orderCount: 2,
-            orders: [
-              { symbol: 'AAPL' },
-              { symbol: 'MSFT' },
-            ],
+            orders: [{ symbol: 'AAPL' }, { symbol: 'MSFT' }],
             metadata: {},
             createdAt: '2026-03-13T11:30:00.000Z',
             updatedAt: '2026-03-13T11:35:00.000Z',
@@ -1443,15 +1455,17 @@ describe('research workspace pages', () => {
             orderCountDelta: 1,
             filledQtyDelta: 0,
             positionDelta: 0,
-            issues: [{
-              id: 'missing-snapshot',
-              kind: 'snapshot',
-              severity: 'warn',
-              title: 'Broker snapshot missing',
-              detail: 'No broker account snapshot has been recorded for this execution plan yet.',
-              expected: 'A broker account snapshot linked to the plan',
-              actual: 'No linked snapshot found',
-            }],
+            issues: [
+              {
+                id: 'missing-snapshot',
+                kind: 'snapshot',
+                severity: 'warn',
+                title: 'Broker snapshot missing',
+                detail: 'No broker account snapshot has been recorded for this execution plan yet.',
+                expected: 'A broker account snapshot linked to the plan',
+                actual: 'No linked snapshot found',
+              },
+            ],
           },
           recovery: {
             status: 'monitor',
@@ -1528,11 +1542,15 @@ describe('research workspace pages', () => {
     });
 
     const html = renderToStaticMarkup(
-      <MemoryRouter initialEntries={['/execution?plan=plan-1&strategy=strategy-1&run=run-1&source=backtest&step=settlement_watch']}>
+      <MemoryRouter
+        initialEntries={[
+          '/execution?plan=plan-1&strategy=strategy-1&run=run-1&source=backtest&step=settlement_watch',
+        ]}
+      >
         <Routes>
           <Route path="/execution" element={<ExecutionPage />} />
         </Routes>
-      </MemoryRouter>,
+      </MemoryRouter>
     );
 
     expect(html).toContain('Selected Execution Detail');
@@ -1660,10 +1678,7 @@ describe('research workspace pages', () => {
             summary: 'Paper execution plan',
             capital: 50000,
             orderCount: 2,
-            orders: [
-              { symbol: 'AAPL' },
-              { symbol: 'MSFT' },
-            ],
+            orders: [{ symbol: 'AAPL' }, { symbol: 'MSFT' }],
             metadata: {},
             createdAt: '2026-03-13T11:30:00.000Z',
             updatedAt: '2026-03-13T11:35:00.000Z',
@@ -1790,11 +1805,15 @@ describe('research workspace pages', () => {
     });
 
     const html = renderToStaticMarkup(
-      <MemoryRouter initialEntries={['/execution?plan=plan-1&strategy=strategy-1&timeline=execution-plan-1&source=strategies']}>
+      <MemoryRouter
+        initialEntries={[
+          '/execution?plan=plan-1&strategy=strategy-1&timeline=execution-plan-1&source=strategies',
+        ]}
+      >
         <Routes>
           <Route path="/execution" element={<ExecutionPage />} />
         </Routes>
-      </MemoryRouter>,
+      </MemoryRouter>
     );
 
     expect(html).toContain('Selected Execution Detail');
