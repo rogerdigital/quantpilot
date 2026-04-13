@@ -1,5 +1,10 @@
+import type {
+  BrokerOrder,
+  BrokerProvider,
+  BrokerSnapshot,
+  RuntimeConfig,
+} from '@shared-types/trading.ts';
 import { fetchJson, jsonHeaders } from '../api/http.ts';
-import type { BrokerOrder, BrokerProvider, BrokerSnapshot, RuntimeConfig } from '@shared-types/trading.ts';
 
 function resolveBrowserBrokerBase(config: RuntimeConfig): string {
   if (config.brokerHttpUrl) return config.brokerHttpUrl.replace(/\/$/, '');
@@ -11,7 +16,12 @@ function simulatedBroker(): BrokerProvider {
     id: 'simulated',
     label: 'Local Simulated Broker',
     supportsRemoteExecution: false,
-    async submitOrders(): Promise<{ connected: boolean; message: string; orders: BrokerOrder[]; rejectedOrders?: BrokerOrder[] }> {
+    async submitOrders(): Promise<{
+      connected: boolean;
+      message: string;
+      orders: BrokerOrder[];
+      rejectedOrders?: BrokerOrder[];
+    }> {
       return {
         connected: true,
         message: 'Using the local simulated broker to execute orders.',
@@ -40,9 +50,18 @@ function customHttpBroker(config: RuntimeConfig): BrokerProvider {
     id: 'custom-http',
     label: 'HTTP Broker Gateway',
     supportsRemoteExecution: true,
-    async submitOrders({ orders }: { orders: BrokerOrder[] }): Promise<{ connected: boolean; message: string; orders: BrokerOrder[]; rejectedOrders?: BrokerOrder[] }> {
+    async submitOrders({ orders }: { orders: BrokerOrder[] }): Promise<{
+      connected: boolean;
+      message: string;
+      orders: BrokerOrder[];
+      rejectedOrders?: BrokerOrder[];
+    }> {
       try {
-        const payload = await fetchJson<{ message?: string; orders?: BrokerOrder[]; rejectedOrders?: BrokerOrder[] }>(`${baseUrl}/orders`, {
+        const payload = await fetchJson<{
+          message?: string;
+          orders?: BrokerOrder[];
+          rejectedOrders?: BrokerOrder[];
+        }>(`${baseUrl}/orders`, {
           method: 'POST',
           headers: jsonHeaders(),
           body: JSON.stringify({
@@ -67,7 +86,12 @@ function customHttpBroker(config: RuntimeConfig): BrokerProvider {
     },
     async syncState(): Promise<BrokerSnapshot> {
       try {
-        const payload = await fetchJson<{ message?: string; account?: BrokerSnapshot['account']; positions?: BrokerSnapshot['positions']; orders?: BrokerSnapshot['orders'] }>(`${baseUrl}/state`, {
+        const payload = await fetchJson<{
+          message?: string;
+          account?: BrokerSnapshot['account'];
+          positions?: BrokerSnapshot['positions'];
+          orders?: BrokerSnapshot['orders'];
+        }>(`${baseUrl}/state`, {
           headers: {
             Accept: 'application/json',
           },
@@ -140,7 +164,12 @@ function alpacaBroker(config: RuntimeConfig): BrokerProvider {
     id: 'alpaca',
     label: 'Alpaca Trading API via Gateway',
     supportsRemoteExecution: true,
-    async submitOrders({ orders }: { orders: BrokerOrder[] }): Promise<{ connected: boolean; message: string; orders: BrokerOrder[]; rejectedOrders?: BrokerOrder[] }> {
+    async submitOrders({ orders }: { orders: BrokerOrder[] }): Promise<{
+      connected: boolean;
+      message: string;
+      orders: BrokerOrder[];
+      rejectedOrders?: BrokerOrder[];
+    }> {
       if (!orders.length) {
         return {
           connected: true,
@@ -150,12 +179,18 @@ function alpacaBroker(config: RuntimeConfig): BrokerProvider {
         };
       }
       try {
-        const payload = await fetchJson<{ message?: string; orders?: unknown[]; rejectedOrders?: BrokerOrder[] }>(`${baseUrl}/orders`, {
+        const payload = await fetchJson<{
+          message?: string;
+          orders?: unknown[];
+          rejectedOrders?: BrokerOrder[];
+        }>(`${baseUrl}/orders`, {
           method: 'POST',
           headers: jsonHeaders(),
           body: JSON.stringify({ orders }),
         });
-        const results = Array.isArray(payload?.orders) ? payload.orders.map(normalizeAlpacaOrder) : [];
+        const results = Array.isArray(payload?.orders)
+          ? payload.orders.map(normalizeAlpacaOrder)
+          : [];
         return {
           connected: true,
           message: payload?.message || `Alpaca accepted ${results.length} orders.`,
@@ -175,7 +210,11 @@ function alpacaBroker(config: RuntimeConfig): BrokerProvider {
       try {
         const payload = await fetchJson<{
           message?: string;
-          account?: { cash?: number | string; buyingPower?: number | string; equity?: number | string };
+          account?: {
+            cash?: number | string;
+            buyingPower?: number | string;
+            equity?: number | string;
+          };
           positions?: unknown[];
           orders?: unknown[];
         }>(`${baseUrl}/state`, {
@@ -191,7 +230,9 @@ function alpacaBroker(config: RuntimeConfig): BrokerProvider {
             buyingPower: Number(payload?.account?.buyingPower || 0),
             equity: Number(payload?.account?.equity || 0),
           },
-          positions: Array.isArray(payload?.positions) ? payload.positions.map(normalizeAlpacaPosition) : [],
+          positions: Array.isArray(payload?.positions)
+            ? payload.positions.map(normalizeAlpacaPosition)
+            : [],
           orders: Array.isArray(payload?.orders) ? payload.orders.map(normalizeAlpacaOrder) : [],
         };
       } catch (error) {

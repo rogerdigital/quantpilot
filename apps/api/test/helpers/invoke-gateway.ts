@@ -1,14 +1,19 @@
 // @ts-nocheck
 import { Readable } from 'node:stream';
 
-export async function invokeGatewayRoute(handler, { method = 'GET', path = '/', body, headers = {} } = {}) {
+export async function invokeGatewayRoute(
+  handler,
+  { method = 'GET', path = '/', body, headers = {} } = {}
+) {
   const payload = body === undefined ? null : JSON.stringify(body);
   const req = Readable.from(payload ? [payload] : []);
   req.method = method;
   req.url = path;
   req.headers = {
     host: '127.0.0.1',
-    ...(payload ? { 'content-type': 'application/json', 'content-length': String(Buffer.byteLength(payload)) } : {}),
+    ...(payload
+      ? { 'content-type': 'application/json', 'content-length': String(Buffer.byteLength(payload)) }
+      : {}),
     ...headers,
   };
 

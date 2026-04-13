@@ -61,6 +61,7 @@ globalStyle('body::after', {
   position: 'fixed',
   inset: 0,
   pointerEvents: 'none',
-  backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 180, 255, 0.009) 3px, rgba(0, 180, 255, 0.009) 4px)',
+  backgroundImage:
+    'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 180, 255, 0.009) 3px, rgba(0, 180, 255, 0.009) 4px)',
   zIndex: 9999,
 });

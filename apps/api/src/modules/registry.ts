@@ -4,14 +4,16 @@ export const ARCHITECTURE_LAYERS = [
     id: 'frontend',
     name: 'Frontend',
     status: 'prototype',
-    responsibility: 'dashboard, strategy workspace, risk console, execution console, and agent interaction surfaces',
+    responsibility:
+      'dashboard, strategy workspace, risk console, execution console, and agent interaction surfaces',
     codeLocations: ['apps/web'],
   },
   {
     id: 'backend',
     name: 'Backend',
     status: 'prototype',
-    responsibility: 'gateway entry, auth, orchestration, notifications, audit, monitoring, and scheduler boundaries',
+    responsibility:
+      'gateway entry, auth, orchestration, notifications, audit, monitoring, and scheduler boundaries',
     codeLocations: ['apps/api', 'apps/api/src/control-plane', 'packages/control-plane-runtime'],
   },
   {
@@ -25,29 +27,52 @@ export const ARCHITECTURE_LAYERS = [
     id: 'strategy',
     name: 'Strategy Layer',
     status: 'prototype',
-    responsibility: 'strategy catalog, signal generation, backtest entry, and research promotion flow',
-    codeLocations: ['packages/trading-engine/src/strategy', 'apps/api/src/domains/strategy', 'apps/api/src/domains/backtest', 'apps/api/src/modules/strategy', 'apps/api/src/modules/backtest'],
+    responsibility:
+      'strategy catalog, signal generation, backtest entry, and research promotion flow',
+    codeLocations: [
+      'packages/trading-engine/src/strategy',
+      'apps/api/src/domains/strategy',
+      'apps/api/src/domains/backtest',
+      'apps/api/src/modules/strategy',
+      'apps/api/src/modules/backtest',
+    ],
   },
   {
     id: 'agent',
     name: 'Agent Layer',
     status: 'prototype',
-    responsibility: 'intent parsing, session-linked planning, read-only analysis execution, workbench aggregation, structured summaries, and approval-gated action requests',
-    codeLocations: ['apps/api/src/domains/agent', 'apps/api/src/modules/agent', 'apps/web/src/pages/agent'],
+    responsibility:
+      'intent parsing, session-linked planning, read-only analysis execution, workbench aggregation, structured summaries, and approval-gated action requests',
+    codeLocations: [
+      'apps/api/src/domains/agent',
+      'apps/api/src/modules/agent',
+      'apps/web/src/pages/agent',
+    ],
   },
   {
     id: 'risk',
     name: 'Risk Layer',
     status: 'prototype',
     responsibility: 'risk scan jobs, risk events, approvals, and final execution gates',
-    codeLocations: ['packages/trading-engine/src/risk', 'apps/api/src/domains/risk', 'apps/api/src/modules/risk', 'apps/worker/src/tasks/risk-scan-task.js'],
+    codeLocations: [
+      'packages/trading-engine/src/risk',
+      'apps/api/src/domains/risk',
+      'apps/api/src/modules/risk',
+      'apps/worker/src/tasks/risk-scan-task.js',
+    ],
   },
   {
     id: 'execution',
     name: 'Execution Layer',
     status: 'prototype',
-    responsibility: 'execution plans, broker handoff, order intent routing, and execution-facing workflows',
-    codeLocations: ['packages/trading-engine/src/execution', 'apps/api/src/domains/execution', 'apps/api/src/modules/execution', 'apps/api/src/gateways/alpaca.js'],
+    responsibility:
+      'execution plans, broker handoff, order intent routing, and execution-facing workflows',
+    codeLocations: [
+      'packages/trading-engine/src/execution',
+      'apps/api/src/domains/execution',
+      'apps/api/src/modules/execution',
+      'apps/api/src/gateways/alpaca.js',
+    ],
   },
 ];
 

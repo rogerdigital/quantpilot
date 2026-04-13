@@ -1,19 +1,21 @@
 // @ts-nocheck
-import test from 'node:test';
+
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
 import { invokeGatewayRoute } from './helpers/invoke-gateway.js';
 
 const namespace = `stage-5-baseline-test-${randomUUID()}`;
 process.env.QUANTPILOT_CONTROL_PLANE_NAMESPACE = namespace;
 
-const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] = await Promise.all([
-  import('../src/gateways/alpaca.js'),
-  import('../../../packages/control-plane-store/src/context.js'),
-  import('../../../packages/control-plane-store/src/store.js'),
-]);
+const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] =
+  await Promise.all([
+    import('../src/gateways/alpaca.js'),
+    import('../../../packages/control-plane-store/src/context.js'),
+    import('../../../packages/control-plane-store/src/store.js'),
+  ]);
 
 const handler = createGatewayHandler({
   getBrokerHealth: async () => ({
@@ -84,7 +86,10 @@ test('stage 5 baseline exposes agent sessions, intent, plan, and analysis run co
   assert.equal(sessionListRes.statusCode, 200);
   assert.equal(sessionListRes.json.ok, true);
   assert.equal(Array.isArray(sessionListRes.json.sessions), true);
-  assert.equal(sessionListRes.json.sessions.some(s => s.id === sessionId), true);
+  assert.equal(
+    sessionListRes.json.sessions.some((s) => s.id === sessionId),
+    true
+  );
 
   // Session detail exposes latest plan, analysis run, and message thread
   const detailRes = await invokeGatewayRoute(handler, {
@@ -99,8 +104,14 @@ test('stage 5 baseline exposes agent sessions, intent, plan, and analysis run co
   assert.equal(Array.isArray(detailRes.json.plans), true);
   assert.equal(Array.isArray(detailRes.json.analysisRuns), true);
   assert.equal(Array.isArray(detailRes.json.messages), true);
-  assert.equal(detailRes.json.messages.some(m => m.role === 'user' && m.kind === 'prompt'), true);
-  assert.equal(detailRes.json.messages.some(m => m.role === 'assistant' && m.kind === 'analysis_result'), true);
+  assert.equal(
+    detailRes.json.messages.some((m) => m.role === 'user' && m.kind === 'prompt'),
+    true
+  );
+  assert.equal(
+    detailRes.json.messages.some((m) => m.role === 'assistant' && m.kind === 'analysis_result'),
+    true
+  );
 });
 
 test('stage 5 baseline exposes agent workbench collaboration queues', async () => {
@@ -141,10 +152,16 @@ test('stage 5 baseline exposes agent workbench collaboration queues', async () =
   assert.equal(typeof workbenchRes.json.queues, 'object');
   assert.equal(Array.isArray(workbenchRes.json.queues.recentSessions), true);
   assert.equal(Array.isArray(workbenchRes.json.queues.pendingActionRequests), true);
-  assert.equal(workbenchRes.json.queues.pendingActionRequests.some(r => r.id === request.id), true);
+  assert.equal(
+    workbenchRes.json.queues.pendingActionRequests.some((r) => r.id === request.id),
+    true
+  );
   assert.equal(Array.isArray(workbenchRes.json.runbook), true);
   assert.equal(Array.isArray(workbenchRes.json.recentExplanations), true);
-  assert.equal(workbenchRes.json.recentExplanations.some(e => e.analysisRunId === analysisRes.json.run.id), true);
+  assert.equal(
+    workbenchRes.json.recentExplanations.some((e) => e.analysisRunId === analysisRes.json.run.id),
+    true
+  );
   assert.equal(Array.isArray(workbenchRes.json.operatorTimeline), true);
 });
 
@@ -328,6 +345,12 @@ test('stage 5 baseline enforces risk:review permission guardrail on action reque
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+    ],
   });
 });

@@ -1,6 +1,11 @@
-import type { OperationsMaintenanceResponse, OperationsPersistencePosture } from '@shared-types/trading.ts';
+import type {
+  OperationsMaintenanceResponse,
+  OperationsPersistencePosture,
+} from '@shared-types/trading.ts';
 
-export function derivePersistencePostureFromMaintenance(maintenance: OperationsMaintenanceResponse | null | undefined): OperationsPersistencePosture {
+export function derivePersistencePostureFromMaintenance(
+  maintenance: OperationsMaintenanceResponse | null | undefined
+): OperationsPersistencePosture {
   const persistence = maintenance?.integrity?.persistence;
   const manifest = persistence?.manifest || null;
   const migrationPlan = persistence?.migrationPlan || {
@@ -10,15 +15,21 @@ export function derivePersistencePostureFromMaintenance(maintenance: OperationsM
     upToDate: true,
   };
   const pendingCount = Array.isArray(migrationPlan.pending) ? migrationPlan.pending.length : 0;
-  const storageModel = manifest?.storageModel || manifest?.persistence || maintenance?.storageAdapter?.persistence || 'filesystem-json';
-  const adapter = persistence?.adapter || maintenance?.storageAdapter || {
-    kind: 'custom',
-    label: 'Custom Store',
-    namespace: 'control-plane',
-  };
-  const latestMigration = Array.isArray(manifest?.migrations) && manifest.migrations.length
-    ? manifest.migrations[manifest.migrations.length - 1]
-    : null;
+  const storageModel =
+    manifest?.storageModel ||
+    manifest?.persistence ||
+    maintenance?.storageAdapter?.persistence ||
+    'filesystem-json';
+  const adapter = persistence?.adapter ||
+    maintenance?.storageAdapter || {
+      kind: 'custom',
+      label: 'Custom Store',
+      namespace: 'control-plane',
+    };
+  const latestMigration =
+    Array.isArray(manifest?.migrations) && manifest.migrations.length
+      ? manifest.migrations[manifest.migrations.length - 1]
+      : null;
 
   let posture: OperationsPersistencePosture['posture'] = 'healthy';
   let headline = 'Persistence posture is current.';
@@ -28,7 +39,8 @@ export function derivePersistencePostureFromMaintenance(maintenance: OperationsM
   if (!manifest || migrationPlan.currentVersion === null || migrationPlan.targetVersion === null) {
     posture = 'degraded';
     headline = 'Persistence metadata needs inspection.';
-    detail = 'Manifest or migration planning data is incomplete, so maintenance posture should be reviewed before making changes.';
+    detail =
+      'Manifest or migration planning data is incomplete, so maintenance posture should be reviewed before making changes.';
     recommendedAction = 'Inspect maintenance posture before making changes.';
   } else if (!migrationPlan.upToDate || pendingCount > 0) {
     posture = 'attention';
@@ -73,7 +85,10 @@ export function buildPersistenceApiExamples() {
   ];
 }
 
-export function translatePersistencePosture(locale: 'zh' | 'en', posture: OperationsPersistencePosture['posture']) {
+export function translatePersistencePosture(
+  locale: 'zh' | 'en',
+  posture: OperationsPersistencePosture['posture']
+) {
   if (locale === 'zh') {
     if (posture === 'attention') return '待迁移';
     if (posture === 'degraded') return '需检查';

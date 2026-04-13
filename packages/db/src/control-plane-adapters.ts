@@ -32,13 +32,16 @@ function createAdapterMetadata(input = {}) {
 function createAdapterManifest(metadata, input = {}) {
   return {
     version: 1,
-    schemaVersion: Number.isInteger(input.schemaVersion) ? input.schemaVersion : CONTROL_PLANE_SCHEMA_VERSION,
+    schemaVersion: Number.isInteger(input.schemaVersion)
+      ? input.schemaVersion
+      : CONTROL_PLANE_SCHEMA_VERSION,
     initializedAt: input.initializedAt || new Date().toISOString(),
     updatedAt: input.updatedAt || input.initializedAt || new Date().toISOString(),
     namespace: metadata.namespace,
     adapterKind: metadata.kind,
     persistence: metadata.persistence,
-    storageModel: input.storageModel || (metadata.kind === 'db' ? 'embedded-docstore' : 'flat-file-json'),
+    storageModel:
+      input.storageModel || (metadata.kind === 'db' ? 'embedded-docstore' : 'flat-file-json'),
     migrations: Array.isArray(input.migrations) ? input.migrations : [],
   };
 }
@@ -77,12 +80,15 @@ function buildMigrationSteps(metadata, manifest, targetVersion = CONTROL_PLANE_S
       kind: currentVersion === 0 ? 'initialize' : 'upgrade',
       fromVersion: Math.max(version - 1, 0),
       toVersion: version,
-      summary: version === 1
-        ? 'Register the embedded DB document layout and baseline schema contract.'
-        : `Upgrade the embedded DB schema contract to version ${version}.`,
+      summary:
+        version === 1
+          ? 'Register the embedded DB document layout and baseline schema contract.'
+          : `Upgrade the embedded DB schema contract to version ${version}.`,
     });
   }
-  return pending.filter((item, index, items) => items.findIndex((entry) => entry.id === item.id) === index);
+  return pending.filter(
+    (item, index, items) => items.findIndex((entry) => entry.id === item.id) === index
+  );
 }
 
 function createAdapterStore({ rootDir, metadata, resolveCollectionPath, resolveObjectPath }) {
@@ -109,12 +115,18 @@ function createAdapterStore({ rootDir, metadata, resolveCollectionPath, resolveO
 
   function readAdapterManifest() {
     ensureRoot();
-    return normalizeAdapterManifest(metadata, store.readObject(CONTROL_PLANE_ADAPTER_MANIFEST_FILENAME, {}));
+    return normalizeAdapterManifest(
+      metadata,
+      store.readObject(CONTROL_PLANE_ADAPTER_MANIFEST_FILENAME, {})
+    );
   }
 
   function writeAdapterManifest(value) {
     ensureRoot();
-    store.writeObject(CONTROL_PLANE_ADAPTER_MANIFEST_FILENAME, normalizeAdapterManifest(metadata, value));
+    store.writeObject(
+      CONTROL_PLANE_ADAPTER_MANIFEST_FILENAME,
+      normalizeAdapterManifest(metadata, value)
+    );
   }
 
   function ensureAdapterManifest() {

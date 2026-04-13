@@ -1,6 +1,7 @@
 // @ts-nocheck
+
+import { existsSync, readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
-import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { handleControlPlaneRoutes } from '../app/routes/control-plane-routes.js';
 import { handlePlatformRoutes } from '../app/routes/platform-routes.js';
@@ -25,22 +26,31 @@ function createGatewayConfig(overrides = {}) {
   const gatewayPort = Number(overrides.gatewayPort || process.env.GATEWAY_PORT || 8787);
   const alpacaKeyId = overrides.alpacaKeyId ?? process.env.ALPACA_KEY_ID ?? '';
   const alpacaSecretKey = overrides.alpacaSecretKey ?? process.env.ALPACA_SECRET_KEY ?? '';
-  const alpacaUsePaper = `${overrides.alpacaUsePaper ?? process.env.ALPACA_USE_PAPER ?? 'true'}` !== 'false';
+  const alpacaUsePaper =
+    `${overrides.alpacaUsePaper ?? process.env.ALPACA_USE_PAPER ?? 'true'}` !== 'false';
   const alpacaDataFeed = overrides.alpacaDataFeed ?? process.env.ALPACA_DATA_FEED ?? 'iex';
   const brokerAdapter = overrides.brokerAdapter ?? process.env.BROKER_ADAPTER ?? 'alpaca';
-  const brokerUpstreamUrl = (overrides.brokerUpstreamUrl ?? process.env.BROKER_UPSTREAM_URL ?? '').replace(/\/$/, '');
+  const brokerUpstreamUrl = (
+    overrides.brokerUpstreamUrl ??
+    process.env.BROKER_UPSTREAM_URL ??
+    ''
+  ).replace(/\/$/, '');
   return {
     gatewayPort,
     alpacaKeyId,
     alpacaSecretKey,
     alpacaUsePaper,
     alpacaDataFeed,
-    alpacaTradingBase: alpacaUsePaper ? 'https://paper-api.alpaca.markets' : 'https://api.alpaca.markets',
+    alpacaTradingBase: alpacaUsePaper
+      ? 'https://paper-api.alpaca.markets'
+      : 'https://api.alpaca.markets',
     alpacaDataBase: 'https://data.alpaca.markets',
     brokerAdapter,
     brokerUpstreamUrl,
-    brokerUpstreamApiKey: overrides.brokerUpstreamApiKey ?? process.env.BROKER_UPSTREAM_API_KEY ?? '',
-    brokerUpstreamAuthScheme: overrides.brokerUpstreamAuthScheme ?? process.env.BROKER_UPSTREAM_AUTH_SCHEME ?? 'Bearer',
+    brokerUpstreamApiKey:
+      overrides.brokerUpstreamApiKey ?? process.env.BROKER_UPSTREAM_API_KEY ?? '',
+    brokerUpstreamAuthScheme:
+      overrides.brokerUpstreamAuthScheme ?? process.env.BROKER_UPSTREAM_AUTH_SCHEME ?? 'Bearer',
   };
 }
 
@@ -94,7 +104,9 @@ function customBrokerHeaders(config, withJson = false) {
   return {
     Accept: 'application/json',
     ...(withJson ? { 'Content-Type': 'application/json' } : {}),
-    ...(config.brokerUpstreamApiKey ? { Authorization: `${config.brokerUpstreamAuthScheme} ${config.brokerUpstreamApiKey}` } : {}),
+    ...(config.brokerUpstreamApiKey
+      ? { Authorization: `${config.brokerUpstreamAuthScheme} ${config.brokerUpstreamApiKey}` }
+      : {}),
   };
 }
 
@@ -105,7 +117,10 @@ function ensureCustomBrokerConfigured(config) {
 async function getBrokerHealthSnapshot(config) {
   return {
     adapter: config.brokerAdapter,
-    connected: config.brokerAdapter === 'custom-http' ? ensureCustomBrokerConfigured(config) : ensureConfigured(config),
+    connected:
+      config.brokerAdapter === 'custom-http'
+        ? ensureCustomBrokerConfigured(config)
+        : ensureConfigured(config),
     customBrokerConfigured: ensureCustomBrokerConfigured(config),
     alpacaConfigured: ensureConfigured(config),
   };
@@ -130,9 +145,13 @@ async function executeBrokerCycle(config, { liveTradeEnabled, orders }) {
       }),
     });
     const submitPayload = await submitResponse.json().catch(() => ({}));
-    messages.push(submitPayload?.message || `Broker order submission HTTP ${submitResponse.status}`);
+    messages.push(
+      submitPayload?.message || `Broker order submission HTTP ${submitResponse.status}`
+    );
     submittedOrders.push(...(Array.isArray(submitPayload?.orders) ? submitPayload.orders : []));
-    rejectedOrders.push(...(Array.isArray(submitPayload?.rejectedOrders) ? submitPayload.rejectedOrders : []));
+    rejectedOrders.push(
+      ...(Array.isArray(submitPayload?.rejectedOrders) ? submitPayload.rejectedOrders : [])
+    );
   }
 
   const stateResponse = await fetch(`${baseUrl}/api/broker/state`, {
@@ -150,16 +169,19 @@ async function executeBrokerCycle(config, { liveTradeEnabled, orders }) {
     message: messages.filter(Boolean).join(' '),
     submittedOrders,
     rejectedOrders,
-    snapshot: stateResponse.ok ? {
-      connected: true,
-      message: statePayload?.message || 'Broker state sync succeeded.',
-      account: statePayload?.account || null,
-      positions: Array.isArray(statePayload?.positions) ? statePayload.positions : [],
-      orders: Array.isArray(statePayload?.orders) ? statePayload.orders : [],
-    } : {
-      connected: false,
-      message: statePayload?.message || `Broker state sync failed with HTTP ${stateResponse.status}.`,
-    },
+    snapshot: stateResponse.ok
+      ? {
+          connected: true,
+          message: statePayload?.message || 'Broker state sync succeeded.',
+          account: statePayload?.account || null,
+          positions: Array.isArray(statePayload?.positions) ? statePayload.positions : [],
+          orders: Array.isArray(statePayload?.orders) ? statePayload.orders : [],
+        }
+      : {
+          connected: false,
+          message:
+            statePayload?.message || `Broker state sync failed with HTTP ${stateResponse.status}.`,
+        },
   };
 }
 
@@ -196,7 +218,8 @@ async function getMarketSnapshot(config, { provider, symbols }) {
     label: 'HTTP Market Gateway',
     connected: false,
     fallback: true,
-    message: 'Custom HTTP market snapshot is not implemented on the backend yet. Falling back to simulated prices.',
+    message:
+      'Custom HTTP market snapshot is not implemented on the backend yet. Falling back to simulated prices.',
     quotes: [],
   };
 }
@@ -260,7 +283,10 @@ function normalizeAlpacaSnapshot(symbol, snapshot) {
 
 async function handleSnapshots(config, reqUrl, res) {
   if (!ensureConfigured(config)) {
-    writeJson(res, 503, { message: 'Alpaca credentials are not configured on gateway.', quotes: [] });
+    writeJson(res, 503, {
+      message: 'Alpaca credentials are not configured on gateway.',
+      quotes: [],
+    });
     return;
   }
   const symbols = reqUrl.searchParams.get('symbols') || '';
@@ -269,7 +295,10 @@ async function handleSnapshots(config, reqUrl, res) {
   upstream.searchParams.set('feed', config.alpacaDataFeed);
   const response = await fetch(upstream, { headers: alpacaHeaders(config, false) });
   if (!response.ok) {
-    writeJson(res, response.status, { message: `alpaca market error: HTTP ${response.status}`, quotes: [] });
+    writeJson(res, response.status, {
+      message: `alpaca market error: HTTP ${response.status}`,
+      quotes: [],
+    });
     return;
   }
   const payload = await response.json();
@@ -281,7 +310,10 @@ async function handleSnapshots(config, reqUrl, res) {
 
 async function handleSubmitOrders(config, req, res) {
   if (!ensureConfigured(config)) {
-    writeJson(res, 503, { message: 'Alpaca credentials are not configured on gateway.', orders: [] });
+    writeJson(res, 503, {
+      message: 'Alpaca credentials are not configured on gateway.',
+      orders: [],
+    });
     return;
   }
   const body = await readJsonBody(req);
@@ -298,11 +330,15 @@ async function handleSubmitOrders(config, req, res) {
         side: String(order.side || '').toLowerCase(),
         type: 'market',
         time_in_force: 'day',
-        client_order_id: order.clientOrderId || `qs-${order.account || 'live'}-${order.symbol}-${Date.now()}-${index}`,
+        client_order_id:
+          order.clientOrderId ||
+          `qs-${order.account || 'live'}-${order.symbol}-${Date.now()}-${index}`,
       }),
     });
     if (!response.ok) {
-      rejectedOrders.push(normalizeRejectedOrder(order, `alpaca submit error: HTTP ${response.status}`));
+      rejectedOrders.push(
+        normalizeRejectedOrder(order, `alpaca submit error: HTTP ${response.status}`)
+      );
       continue;
     }
     results.push(normalizeAlpacaOrder(await response.json()));
@@ -321,11 +357,16 @@ async function handleBrokerState(config, res) {
   const [accountRes, positionsRes, ordersRes] = await Promise.all([
     fetch(`${config.alpacaTradingBase}/v2/account`, { headers: alpacaHeaders(config, false) }),
     fetch(`${config.alpacaTradingBase}/v2/positions`, { headers: alpacaHeaders(config, false) }),
-    fetch(`${config.alpacaTradingBase}/v2/orders?status=all&direction=desc&limit=50`, { headers: alpacaHeaders(config, false) }),
+    fetch(`${config.alpacaTradingBase}/v2/orders?status=all&direction=desc&limit=50`, {
+      headers: alpacaHeaders(config, false),
+    }),
   ]);
   if (!accountRes.ok || !positionsRes.ok || !ordersRes.ok) {
-    const status = [accountRes.status, positionsRes.status, ordersRes.status].find((item) => item >= 400) || 502;
-    writeJson(res, status, { message: `alpaca state error: account=${accountRes.status} positions=${positionsRes.status} orders=${ordersRes.status}` });
+    const status =
+      [accountRes.status, positionsRes.status, ordersRes.status].find((item) => item >= 400) || 502;
+    writeJson(res, status, {
+      message: `alpaca state error: account=${accountRes.status} positions=${positionsRes.status} orders=${ordersRes.status}`,
+    });
     return;
   }
   const [account, positions, orders] = await Promise.all([
@@ -363,7 +404,11 @@ async function handleCancelOrder(config, orderId, res) {
 
 async function handleCustomBrokerSubmit(config, req, res) {
   if (!ensureCustomBrokerConfigured(config)) {
-    writeJson(res, 503, { message: 'Custom broker upstream is not configured on gateway.', orders: [], rejectedOrders: [] });
+    writeJson(res, 503, {
+      message: 'Custom broker upstream is not configured on gateway.',
+      orders: [],
+      rejectedOrders: [],
+    });
     return;
   }
   const body = await readJsonBody(req);
@@ -374,7 +419,11 @@ async function handleCustomBrokerSubmit(config, req, res) {
   });
   const payload = await response.json().catch(() => ({}));
   writeJson(res, response.ok ? 200 : response.status, {
-    message: payload?.message || (response.ok ? 'custom broker submit ok' : `custom broker submit error: HTTP ${response.status}`),
+    message:
+      payload?.message ||
+      (response.ok
+        ? 'custom broker submit ok'
+        : `custom broker submit error: HTTP ${response.status}`),
     orders: Array.isArray(payload?.orders) ? payload.orders : [],
     rejectedOrders: Array.isArray(payload?.rejectedOrders) ? payload.rejectedOrders : [],
   });
@@ -390,7 +439,11 @@ async function handleCustomBrokerState(config, res) {
   });
   const payload = await response.json().catch(() => ({}));
   writeJson(res, response.ok ? 200 : response.status, {
-    message: payload?.message || (response.ok ? 'custom broker state sync ok' : `custom broker state error: HTTP ${response.status}`),
+    message:
+      payload?.message ||
+      (response.ok
+        ? 'custom broker state sync ok'
+        : `custom broker state error: HTTP ${response.status}`),
     account: payload?.account || null,
     positions: Array.isArray(payload?.positions) ? payload.positions : [],
     orders: Array.isArray(payload?.orders) ? payload.orders : [],
@@ -408,7 +461,11 @@ async function handleCustomBrokerCancel(config, orderId, res) {
   });
   const payload = await response.json().catch(() => ({}));
   writeJson(res, response.ok ? 200 : response.status, {
-    message: payload?.message || (response.ok ? `custom broker cancel accepted for ${orderId}` : `custom broker cancel error: HTTP ${response.status}`),
+    message:
+      payload?.message ||
+      (response.ok
+        ? `custom broker cancel accepted for ${orderId}`
+        : `custom broker cancel error: HTTP ${response.status}`),
   });
 }
 
@@ -440,76 +497,80 @@ export function createGatewayHandler(options = {}) {
   const config = createGatewayConfig(options);
   const gatewayDependencies = {
     getBrokerHealth: options.getBrokerHealth || (() => getBrokerHealthSnapshot(config)),
-    executeBrokerCycle: options.executeBrokerCycle || ((payload) => executeBrokerCycle(config, payload)),
-    getMarketSnapshot: options.getMarketSnapshot || ((payload) => getMarketSnapshot(config, payload)),
+    executeBrokerCycle:
+      options.executeBrokerCycle || ((payload) => executeBrokerCycle(config, payload)),
+    getMarketSnapshot:
+      options.getMarketSnapshot || ((payload) => getMarketSnapshot(config, payload)),
   };
   return async function gatewayHandler(req, res) {
     try {
-    if (req.method === 'OPTIONS') {
-      writeJson(res, 204, {});
-      return;
-    }
-    const reqUrl = new URL(req.url || '/', `http://${req.headers.host || '127.0.0.1'}`);
-    const routeContext = {
-      req,
-      reqUrl,
-      res,
-      config,
-      readJsonBody,
-      writeJson,
-      gatewayDependencies,
-    };
-    if (await handlePlatformRoutes(routeContext)) {
-      return;
-    }
-    if (await handleControlPlaneRoutes(routeContext)) {
-      return;
-    }
-    if (req.method === 'GET' && reqUrl.pathname === '/api/broker/health') {
-      const brokerHealth = await getBrokerHealthSnapshot(config);
-      writeJson(res, 200, {
-        ok: true,
-        brokerAdapter: brokerHealth.adapter,
-        customBrokerConfigured: brokerHealth.customBrokerConfigured,
-        alpacaConfigured: brokerHealth.alpacaConfigured,
-        connected: brokerHealth.connected,
+      if (req.method === 'OPTIONS') {
+        writeJson(res, 204, {});
+        return;
+      }
+      const reqUrl = new URL(req.url || '/', `http://${req.headers.host || '127.0.0.1'}`);
+      const routeContext = {
+        req,
+        reqUrl,
+        res,
+        config,
+        readJsonBody,
+        writeJson,
+        gatewayDependencies,
+      };
+      if (await handlePlatformRoutes(routeContext)) {
+        return;
+      }
+      if (await handleControlPlaneRoutes(routeContext)) {
+        return;
+      }
+      if (req.method === 'GET' && reqUrl.pathname === '/api/broker/health') {
+        const brokerHealth = await getBrokerHealthSnapshot(config);
+        writeJson(res, 200, {
+          ok: true,
+          brokerAdapter: brokerHealth.adapter,
+          customBrokerConfigured: brokerHealth.customBrokerConfigured,
+          alpacaConfigured: brokerHealth.alpacaConfigured,
+          connected: brokerHealth.connected,
+        });
+        return;
+      }
+      if (req.method === 'POST' && reqUrl.pathname === '/api/broker/orders') {
+        await handleUnifiedBrokerSubmit(config, req, res);
+        return;
+      }
+      if (req.method === 'GET' && reqUrl.pathname === '/api/broker/state') {
+        await handleUnifiedBrokerState(config, res);
+        return;
+      }
+      if (req.method === 'DELETE' && reqUrl.pathname.startsWith('/api/broker/orders/')) {
+        const orderId = reqUrl.pathname.split('/').at(-1);
+        await handleUnifiedBrokerCancel(config, orderId, res);
+        return;
+      }
+      if (req.method === 'GET' && reqUrl.pathname === '/api/alpaca/market/snapshots') {
+        await handleSnapshots(config, reqUrl, res);
+        return;
+      }
+      if (req.method === 'POST' && reqUrl.pathname === '/api/alpaca/broker/orders') {
+        await handleSubmitOrders(config, req, res);
+        return;
+      }
+      if (req.method === 'GET' && reqUrl.pathname === '/api/alpaca/broker/state') {
+        await handleBrokerState(config, res);
+        return;
+      }
+      if (req.method === 'DELETE' && reqUrl.pathname.startsWith('/api/alpaca/broker/orders/')) {
+        const orderId = reqUrl.pathname.split('/').at(-1);
+        await handleCancelOrder(config, orderId, res);
+        return;
+      }
+      writeJson(res, 404, { message: 'not found' });
+    } catch (error) {
+      writeJson(res, 500, {
+        message: error instanceof Error ? error.message : 'unknown gateway error',
       });
-      return;
     }
-    if (req.method === 'POST' && reqUrl.pathname === '/api/broker/orders') {
-      await handleUnifiedBrokerSubmit(config, req, res);
-      return;
-    }
-    if (req.method === 'GET' && reqUrl.pathname === '/api/broker/state') {
-      await handleUnifiedBrokerState(config, res);
-      return;
-    }
-    if (req.method === 'DELETE' && reqUrl.pathname.startsWith('/api/broker/orders/')) {
-      const orderId = reqUrl.pathname.split('/').at(-1);
-      await handleUnifiedBrokerCancel(config, orderId, res);
-      return;
-    }
-    if (req.method === 'GET' && reqUrl.pathname === '/api/alpaca/market/snapshots') {
-      await handleSnapshots(config, reqUrl, res);
-      return;
-    }
-    if (req.method === 'POST' && reqUrl.pathname === '/api/alpaca/broker/orders') {
-      await handleSubmitOrders(config, req, res);
-      return;
-    }
-    if (req.method === 'GET' && reqUrl.pathname === '/api/alpaca/broker/state') {
-      await handleBrokerState(config, res);
-      return;
-    }
-    if (req.method === 'DELETE' && reqUrl.pathname.startsWith('/api/alpaca/broker/orders/')) {
-      const orderId = reqUrl.pathname.split('/').at(-1);
-      await handleCancelOrder(config, orderId, res);
-      return;
-    }
-    writeJson(res, 404, { message: 'not found' });
-  } catch (error) {
-    writeJson(res, 500, { message: error instanceof Error ? error.message : 'unknown gateway error' });
-  }
   };
 }
 

@@ -21,11 +21,7 @@ type OperatorActionsFeedOptions = {
 export function useOperatorActionsFeed(options: OperatorActionsFeedOptions = {}) {
   const [items, setItems] = useState<OperatorActionFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const {
-    hours = null,
-    level = '',
-    limit = 50,
-  } = options;
+  const { hours = null, level = '', limit = 50 } = options;
 
   useEffect(() => {
     let mounted = true;

@@ -30,7 +30,7 @@ export function createAuditRepository(store) {
       const items = sortByCreatedAtDesc(
         filterByDate(store.readCollection(FILENAME), filter.since)
           .filter((item) => matchesScopeFilter(item, filter))
-          .filter((item) => !filter.type || item.type === filter.type),
+          .filter((item) => !filter.type || item.type === filter.type)
       );
       return items.slice(0, limit);
     },

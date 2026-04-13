@@ -1,8 +1,9 @@
 // @ts-nocheck
-import test from 'node:test';
+
 import assert from 'node:assert/strict';
-import { createControlPlaneContext } from '../../../packages/control-plane-store/src/context.js';
+import test from 'node:test';
 import { createControlPlaneRuntime } from '../../../packages/control-plane-runtime/src/index.js';
+import { createControlPlaneContext } from '../../../packages/control-plane-store/src/context.js';
 import { createMemoryStore } from '../../../packages/control-plane-store/test/helpers/memory-store.js';
 import { runHeartbeatTask } from '../src/tasks/heartbeat-task.js';
 import { runMonitoringScanTask } from '../src/tasks/monitoring-scan-task.js';
@@ -32,7 +33,8 @@ test('notification dispatch task flushes queued notifications', async () => {
   });
 
   const result = await runNotificationDispatchTask(workerConfig, {
-    flushQueuedNotifications: (options) => context.notifications.dispatchPendingNotifications(options),
+    flushQueuedNotifications: (options) =>
+      context.notifications.dispatchPendingNotifications(options),
   });
 
   assert.equal(result.worker, 'worker-test');
@@ -139,7 +141,10 @@ test('monitoring scan task records monitoring snapshots and alerts', async () =>
   assert.equal(result.worker, 'worker-test');
   assert.equal(result.kind, 'monitoring-scan');
   assert.equal(runtime.listMonitoringSnapshots().length, 1);
-  assert.equal(runtime.listMonitoringAlerts().some((item) => item.source === 'workflow'), true);
+  assert.equal(
+    runtime.listMonitoringAlerts().some((item) => item.source === 'workflow'),
+    true
+  );
 });
 
 test('workflow maintenance task re-queues scheduled workflow runs', async () => {
@@ -153,17 +158,23 @@ test('workflow maintenance task re-queues scheduled workflow runs', async () => 
   });
 
   const result = await runWorkflowMaintenanceTask(workerConfig, {
-    releaseScheduledWorkflows: (options) => runtime.releaseScheduledWorkflowRuns({
-      ...options,
-      now: TEST_RELEASE_NOW,
-    }),
+    releaseScheduledWorkflows: (options) =>
+      runtime.releaseScheduledWorkflowRuns({
+        ...options,
+        now: TEST_RELEASE_NOW,
+      }),
   });
 
   assert.equal(result.worker, 'worker-test');
   assert.equal(result.kind, 'workflow-maintenance');
   assert.equal(result.releasedCount, 1);
   assert.equal(context.workflows.getWorkflowRun('workflow-maint-1').status, 'queued');
-  assert.equal(context.notifications.listNotificationJobs().some((item) => item.payload.source === 'workflow-control'), true);
+  assert.equal(
+    context.notifications
+      .listNotificationJobs()
+      .some((item) => item.payload.source === 'workflow-control'),
+    true
+  );
 });
 
 test('workflow execution task claims and executes queued workflow runs', async () => {
@@ -177,10 +188,11 @@ test('workflow execution task claims and executes queued workflow runs', async (
   });
 
   const result = await runWorkflowExecutionTask(workerConfig, {
-    claimQueuedWorkflows: (options) => context.workflows.claimQueuedWorkflowRuns({
-      ...options,
-      now: TEST_CLAIM_NOW,
-    }),
+    claimQueuedWorkflows: (options) =>
+      context.workflows.claimQueuedWorkflowRuns({
+        ...options,
+        now: TEST_CLAIM_NOW,
+      }),
     executeWorkflow: async (workflow, runtimeContext) => {
       runtimeContext.completeWorkflowRun(workflow.id, {
         steps: [{ key: 'manual-review', status: 'completed' }],

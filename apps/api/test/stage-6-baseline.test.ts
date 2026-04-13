@@ -1,19 +1,21 @@
 // @ts-nocheck
-import test from 'node:test';
+
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
 import { invokeGatewayRoute } from './helpers/invoke-gateway.js';
 
 const namespace = `stage-6-baseline-test-${randomUUID()}`;
 process.env.QUANTPILOT_CONTROL_PLANE_NAMESPACE = namespace;
 
-const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] = await Promise.all([
-  import('../src/gateways/alpaca.js'),
-  import('../../../packages/control-plane-store/src/context.js'),
-  import('../../../packages/control-plane-store/src/store.js'),
-]);
+const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] =
+  await Promise.all([
+    import('../src/gateways/alpaca.js'),
+    import('../../../packages/control-plane-store/src/context.js'),
+    import('../../../packages/control-plane-store/src/store.js'),
+  ]);
 
 const handler = createGatewayHandler({
   getBrokerHealth: async () => ({
@@ -142,7 +144,10 @@ test('stage 6 baseline exposes backup, restore dry-run, workflow repair, and obs
 
   assert.equal(backup.statusCode, 200);
   assert.equal(backup.json.ok, true);
-  assert.equal(backup.json.backup.files.some((item) => item.filename === 'user-account.json'), true);
+  assert.equal(
+    backup.json.backup.files.some((item) => item.filename === 'user-account.json'),
+    true
+  );
 
   const restorePreview = await invokeGatewayRoute(handler, {
     method: 'POST',
@@ -171,5 +176,8 @@ test('stage 6 baseline exposes backup, restore dry-run, workflow repair, and obs
   assert.equal(repair.statusCode, 200);
   assert.equal(repair.json.ok, true);
   assert.equal(repair.json.releasedCount >= 1, true);
-  assert.equal(repair.json.workflows.some((item) => item.id === 'stage6-retry-workflow'), true);
+  assert.equal(
+    repair.json.workflows.some((item) => item.id === 'stage6-retry-workflow'),
+    true
+  );
 });

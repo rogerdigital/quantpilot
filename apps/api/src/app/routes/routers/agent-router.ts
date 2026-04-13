@@ -1,6 +1,5 @@
 // @ts-nocheck
-import { hasPermission } from '../../../modules/auth/service.js';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
+
 import {
   approveAgentActionRequest,
   createSessionActionRequest,
@@ -12,24 +11,43 @@ import { runAgentAnalysis } from '../../../domains/agent/services/analysis-servi
 import { createAgentInstruction } from '../../../domains/agent/services/instruction-service.js';
 import { parseAgentIntent } from '../../../domains/agent/services/intent-service.js';
 import { createAgentPlan } from '../../../domains/agent/services/planning-service.js';
-import { resolveAgentAuthority, saveAgentPolicy } from '../../../domains/agent/services/policy-service.js';
-import { getAgentSessionDetail, listAgentSessionsSnapshot } from '../../../domains/agent/services/session-service.js';
-import { getAgentOperatorTimeline, getAgentWorkbench } from '../../../domains/agent/services/workbench-service.js';
-import { listAgentTools, executeAgentTool } from '../../../domains/agent/services/tools-service.js';
-import { queueAgentDailyRun, listAgentDailyRuns } from '../../../domains/agent/services/runtime-service.js';
+import {
+  resolveAgentAuthority,
+  saveAgentPolicy,
+} from '../../../domains/agent/services/policy-service.js';
+import {
+  listAgentDailyRuns,
+  queueAgentDailyRun,
+} from '../../../domains/agent/services/runtime-service.js';
+import {
+  getAgentSessionDetail,
+  listAgentSessionsSnapshot,
+} from '../../../domains/agent/services/session-service.js';
+import { executeAgentTool, listAgentTools } from '../../../domains/agent/services/tools-service.js';
+import {
+  getAgentOperatorTimeline,
+  getAgentWorkbench,
+} from '../../../domains/agent/services/workbench-service.js';
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
+import { hasPermission } from '../../../modules/auth/service.js';
 
 export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
-  const writeForbidden = (permission, action = '') => writeForbiddenJson(writeJson, res, permission, action);
+  const writeForbidden = (permission, action = '') =>
+    writeForbiddenJson(writeJson, res, permission, action);
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/agent/authority') {
-    writeJson(res, 200, resolveAgentAuthority({
-      accountId: reqUrl.searchParams.get('accountId') || 'all',
-      strategyId: reqUrl.searchParams.get('strategyId') || 'all',
-      actionType: reqUrl.searchParams.get('actionType') || 'all',
-      environment: reqUrl.searchParams.get('environment') || 'paper',
-      riskMode: reqUrl.searchParams.get('riskMode') || 'healthy',
-      anomalyMode: reqUrl.searchParams.get('anomalyMode') || 'healthy',
-    }));
+    writeJson(
+      res,
+      200,
+      resolveAgentAuthority({
+        accountId: reqUrl.searchParams.get('accountId') || 'all',
+        strategyId: reqUrl.searchParams.get('strategyId') || 'all',
+        actionType: reqUrl.searchParams.get('actionType') || 'all',
+        environment: reqUrl.searchParams.get('environment') || 'paper',
+        riskMode: reqUrl.searchParams.get('riskMode') || 'healthy',
+        anomalyMode: reqUrl.searchParams.get('anomalyMode') || 'healthy',
+      })
+    );
     return true;
   }
 
@@ -84,14 +102,22 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
   }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/agent/workbench') {
-    writeJson(res, 200, getAgentWorkbench({
-      limit: reqUrl.searchParams.get('limit'),
-      hours: reqUrl.searchParams.get('hours'),
-    }));
+    writeJson(
+      res,
+      200,
+      getAgentWorkbench({
+        limit: reqUrl.searchParams.get('limit'),
+        hours: reqUrl.searchParams.get('hours'),
+      })
+    );
     return true;
   }
 
-  if (req.method === 'GET' && reqUrl.pathname.endsWith('/timeline') && reqUrl.pathname.startsWith('/api/agent/sessions/')) {
+  if (
+    req.method === 'GET' &&
+    reqUrl.pathname.endsWith('/timeline') &&
+    reqUrl.pathname.startsWith('/api/agent/sessions/')
+  ) {
     const sessionId = reqUrl.pathname.split('/').at(-2);
     const result = getAgentOperatorTimeline(sessionId, {
       limit: reqUrl.searchParams.get('limit'),
@@ -108,8 +134,15 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
     return true;
   }
 
-  if (req.method === 'POST' && reqUrl.pathname.endsWith('/action-requests') && reqUrl.pathname.startsWith('/api/agent/sessions/')) {
-    if (!hasPermission('strategy:write')) { writeForbidden('strategy:write', 'create agent session action requests'); return true; }
+  if (
+    req.method === 'POST' &&
+    reqUrl.pathname.endsWith('/action-requests') &&
+    reqUrl.pathname.startsWith('/api/agent/sessions/')
+  ) {
+    if (!hasPermission('strategy:write')) {
+      writeForbidden('strategy:write', 'create agent session action requests');
+      return true;
+    }
     const sessionId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = createSessionActionRequest(sessionId, body);
@@ -123,15 +156,25 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/action-requests') {
-    if (!hasPermission('strategy:write')) { writeForbidden('strategy:write', 'queue agent action requests'); return true; }
+    if (!hasPermission('strategy:write')) {
+      writeForbidden('strategy:write', 'queue agent action requests');
+      return true;
+    }
     const body = await readJsonBody(req);
     const result = queueAgentActionRequest(body);
     writeJson(res, result.ok ? 200 : 403, result);
     return true;
   }
 
-  if (req.method === 'POST' && reqUrl.pathname.endsWith('/approve') && reqUrl.pathname.startsWith('/api/agent/action-requests/')) {
-    if (!hasPermission('risk:review')) { writeForbidden('risk:review', 'approve agent action requests'); return true; }
+  if (
+    req.method === 'POST' &&
+    reqUrl.pathname.endsWith('/approve') &&
+    reqUrl.pathname.startsWith('/api/agent/action-requests/')
+  ) {
+    if (!hasPermission('risk:review')) {
+      writeForbidden('risk:review', 'approve agent action requests');
+      return true;
+    }
     const requestId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = approveAgentActionRequest(requestId, body);
@@ -139,8 +182,15 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
     return true;
   }
 
-  if (req.method === 'POST' && reqUrl.pathname.endsWith('/reject') && reqUrl.pathname.startsWith('/api/agent/action-requests/')) {
-    if (!hasPermission('risk:review')) { writeForbidden('risk:review', 'reject agent action requests'); return true; }
+  if (
+    req.method === 'POST' &&
+    reqUrl.pathname.endsWith('/reject') &&
+    reqUrl.pathname.startsWith('/api/agent/action-requests/')
+  ) {
+    if (!hasPermission('risk:review')) {
+      writeForbidden('risk:review', 'reject agent action requests');
+      return true;
+    }
     const requestId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = rejectAgentActionRequest(requestId, body);
@@ -149,7 +199,10 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/daily-runs') {
-    if (!hasPermission('strategy:write')) { writeForbidden('strategy:write', 'queue agent daily runs'); return true; }
+    if (!hasPermission('strategy:write')) {
+      writeForbidden('strategy:write', 'queue agent daily runs');
+      return true;
+    }
     const body = await readJsonBody(req);
     writeJson(res, 200, queueAgentDailyRun(body || {}));
     return true;

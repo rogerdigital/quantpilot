@@ -27,12 +27,12 @@ function persistDailyRun(store, payload = {}) {
   const current = currentIndex >= 0 ? records[currentIndex] : null;
   const entry = current
     ? createAgentDailyRunEntry({
-      ...current,
-      ...payload,
-      id: current.id,
-      createdAt: current.createdAt,
-      updatedAt: new Date().toISOString(),
-    })
+        ...current,
+        ...payload,
+        id: current.id,
+        createdAt: current.createdAt,
+        updatedAt: new Date().toISOString(),
+      })
     : createAgentDailyRunEntry(payload);
 
   if (currentIndex >= 0) {
@@ -56,7 +56,8 @@ function appendDailyRun(store, payload = {}) {
 export function createAgentDailyRunRepository(store) {
   return {
     list(limit = 50, filter = {}) {
-      return store.readCollection(FILENAME)
+      return store
+        .readCollection(FILENAME)
         .filter((item) => matchesDailyRunFilter(item, filter))
         .slice(0, limit);
     },

@@ -74,12 +74,7 @@ const requiredStage6Sections = [
   '## 验证基线',
 ];
 
-const requiredStage7Sections = [
-  '## 目标',
-  '## 完成定义',
-  '## 明确非目标',
-  '## 后续扩展前提',
-];
+const requiredStage7Sections = ['## 目标', '## 完成定义', '## 明确非目标', '## 后续扩展前提'];
 
 for (const section of requiredStage1Sections) {
   assert.ok(stage1Closeout.includes(section), `missing stage 1 closeout section: ${section}`);
@@ -111,60 +106,60 @@ for (const section of requiredStage7Sections) {
 
 assert.ok(
   readme.includes('docs/architecture/stage-1-closeout.md'),
-  'README.md must reference the stage 1 closeout document',
+  'README.md must reference the stage 1 closeout document'
 );
 assert.ok(
   readme.includes('docs/architecture/stage-2-closeout.md'),
-  'README.md must reference the stage 2 closeout document',
+  'README.md must reference the stage 2 closeout document'
 );
 assert.ok(
   readme.includes('docs/architecture/stage-3-closeout.md'),
-  'README.md must reference the stage 3 closeout document',
+  'README.md must reference the stage 3 closeout document'
 );
 assert.ok(
   readme.includes('docs/architecture/stage-4-closeout.md'),
-  'README.md must reference the stage 4 closeout document',
+  'README.md must reference the stage 4 closeout document'
 );
 assert.ok(
   readme.includes('docs/architecture/stage-5-closeout.md'),
-  'README.md must reference the stage 5 closeout document',
+  'README.md must reference the stage 5 closeout document'
 );
 assert.ok(
   readme.includes('docs/architecture/stage-6-closeout.md'),
-  'README.md must reference the stage 6 closeout document',
+  'README.md must reference the stage 6 closeout document'
 );
 assert.ok(
   readme.includes('docs/architecture/stage-7-closeout.md'),
-  'README.md must reference the stage 7 closeout document',
+  'README.md must reference the stage 7 closeout document'
 );
 
 assert.ok(
   structure.includes('stage-1-closeout.md'),
-  'project-structure.md must reference the stage 1 closeout document',
+  'project-structure.md must reference the stage 1 closeout document'
 );
 assert.ok(
   structure.includes('stage-2-closeout.md'),
-  'project-structure.md must reference the stage 2 closeout document',
+  'project-structure.md must reference the stage 2 closeout document'
 );
 assert.ok(
   structure.includes('stage-3-closeout.md'),
-  'project-structure.md must reference the stage 3 closeout document',
+  'project-structure.md must reference the stage 3 closeout document'
 );
 assert.ok(
   structure.includes('stage-4-closeout.md'),
-  'project-structure.md must reference the stage 4 closeout document',
+  'project-structure.md must reference the stage 4 closeout document'
 );
 assert.ok(
   structure.includes('stage-5-closeout.md'),
-  'project-structure.md must reference the stage 5 closeout document',
+  'project-structure.md must reference the stage 5 closeout document'
 );
 assert.ok(
   structure.includes('stage-6-closeout.md'),
-  'project-structure.md must reference the stage 6 closeout document',
+  'project-structure.md must reference the stage 6 closeout document'
 );
 assert.ok(
   structure.includes('stage-7-closeout.md'),
-  'project-structure.md must reference the stage 7 closeout document',
+  'project-structure.md must reference the stage 7 closeout document'
 );
 
 console.log('stage documentation links are in sync');

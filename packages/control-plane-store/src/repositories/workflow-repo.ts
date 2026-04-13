@@ -6,7 +6,8 @@ const FILENAME = 'workflow-runs.json';
 export function createWorkflowRepository(store) {
   return {
     listWorkflowRuns(limit = 50, filter = {}) {
-      return store.readCollection(FILENAME)
+      return store
+        .readCollection(FILENAME)
         .filter((item) => {
           if (!matchesScopeFilter(item, filter)) return false;
           if (filter.status && item.status !== filter.status) return false;
@@ -71,7 +72,9 @@ export function createWorkflowRepository(store) {
       return {
         worker,
         releasedCount,
-        workflows: workflows.filter((item) => item.lockedBy === worker && item.lockedAt === nowIso).slice(0, limit),
+        workflows: workflows
+          .filter((item) => item.lockedBy === worker && item.lockedAt === nowIso)
+          .slice(0, limit),
       };
     },
     claimQueuedWorkflowRuns(options = {}) {

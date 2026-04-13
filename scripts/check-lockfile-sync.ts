@@ -28,7 +28,7 @@ function main() {
 
   if (missing.length) {
     console.error('Lockfile is out of sync with workspace packages:');
-    missing.forEach((entry) => console.error(`- ${entry}`));
+    for (const entry of missing) console.error(`- ${entry}`);
     console.error('Run `npm install` and commit the updated package-lock.json.');
     process.exitCode = 1;
     return;

@@ -32,7 +32,7 @@ export function createNotificationRepository(store) {
         filterByDate(store.readCollection(EVENTS_FILE), filter.since)
           .filter((item) => matchesScopeFilter(item, filter))
           .filter((item) => !filter.level || item.level === filter.level)
-          .filter((item) => !filter.source || item.source === filter.source),
+          .filter((item) => !filter.source || item.source === filter.source)
       );
       return items.slice(0, limit);
     },

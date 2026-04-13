@@ -16,7 +16,8 @@ globalStyle('.focus-row', {
   borderRadius: 'var(--radius)',
   background: 'var(--panel)',
   overflow: 'clip',
-  transition: 'border-color 150ms ease, background 150ms ease, box-shadow 150ms ease, transform 150ms ease',
+  transition:
+    'border-color 150ms ease, background 150ms ease, box-shadow 150ms ease, transform 150ms ease',
 } as any);
 
 globalStyle('.focus-row::before', {
@@ -254,7 +255,8 @@ globalStyle('.inline-action', {
   cursor: 'pointer',
   font: '600 11px/1 var(--font-ui)',
   letterSpacing: '0.02em',
-  transition: 'border-color 140ms ease, background 140ms ease, box-shadow 140ms ease, transform 120ms ease',
+  transition:
+    'border-color 140ms ease, background 140ms ease, box-shadow 140ms ease, transform 120ms ease',
 } as any);
 
 globalStyle('.inline-action:hover', {
@@ -268,11 +270,14 @@ globalStyle('.inline-action:active', {
   transform: 'translateY(0) scale(0.97)',
 } as any);
 
-globalStyle('.inline-action:disabled, .settings-button:disabled, .settings-inline-button:disabled, .settings-chip:disabled, .mode-pill:disabled', {
-  cursor: 'not-allowed',
-  opacity: 0.45,
-  transform: 'none !important',
-} as any);
+globalStyle(
+  '.inline-action:disabled, .settings-button:disabled, .settings-inline-button:disabled, .settings-chip:disabled, .mode-pill:disabled',
+  {
+    cursor: 'not-allowed',
+    opacity: 0.45,
+    transform: 'none !important',
+  } as any
+);
 
 globalStyle('.inline-action-approve', {
   borderColor: 'rgba(0, 232, 157, 0.2)',
@@ -312,7 +317,8 @@ globalStyle('.log-item', {
   borderRadius: 'var(--radius)',
   background: 'var(--panel)',
   overflow: 'hidden',
-  transition: 'border-color 150ms ease, background 150ms ease, box-shadow 150ms ease, transform 150ms ease',
+  transition:
+    'border-color 150ms ease, background 150ms ease, box-shadow 150ms ease, transform 150ms ease',
 } as any);
 
 globalStyle('.log-item::before', {

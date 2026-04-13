@@ -18,7 +18,10 @@ export function BacktestCandidateStrategyRow(props: {
       metrics={[
         { label: locale === 'zh' ? '阶段' : 'Stage', value: item.status },
         { label: 'Sharpe', value: item.sharpe.toFixed(2) },
-        { label: locale === 'zh' ? '回撤' : 'Drawdown', value: props.formatPercent(item.maxDrawdownPct) },
+        {
+          label: locale === 'zh' ? '回撤' : 'Drawdown',
+          value: props.formatPercent(item.maxDrawdownPct),
+        },
         {
           label: locale === 'zh' ? '动作' : 'Action',
           value: (
@@ -29,8 +32,12 @@ export function BacktestCandidateStrategyRow(props: {
               onClick={() => props.onQueue(item.id)}
             >
               {submittingStrategyId === item.id
-                ? (locale === 'zh' ? '提交中...' : 'Queueing...')
-                : (locale === 'zh' ? '发起回测' : 'Queue Backtest')}
+                ? locale === 'zh'
+                  ? '提交中...'
+                  : 'Queueing...'
+                : locale === 'zh'
+                  ? '发起回测'
+                  : 'Queue Backtest'}
             </button>
           ),
         },

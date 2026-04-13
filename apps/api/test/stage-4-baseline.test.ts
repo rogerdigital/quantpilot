@@ -1,19 +1,21 @@
 // @ts-nocheck
-import test from 'node:test';
+
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
 import { invokeGatewayRoute } from './helpers/invoke-gateway.js';
 
 const namespace = `stage-4-baseline-test-${randomUUID()}`;
 process.env.QUANTPILOT_CONTROL_PLANE_NAMESPACE = namespace;
 
-const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] = await Promise.all([
-  import('../src/gateways/alpaca.js'),
-  import('../../../packages/control-plane-store/src/context.js'),
-  import('../../../packages/control-plane-store/src/store.js'),
-]);
+const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] =
+  await Promise.all([
+    import('../src/gateways/alpaca.js'),
+    import('../../../packages/control-plane-store/src/context.js'),
+    import('../../../packages/control-plane-store/src/store.js'),
+  ]);
 
 const handler = createGatewayHandler({
   getBrokerHealth: async () => ({
@@ -224,11 +226,15 @@ test('stage 4 baseline exposes stable risk and scheduler action contracts', asyn
   assert.equal(schedulerAction.statusCode, 200);
   assert.equal(schedulerAction.json.ok, true);
   assert.equal(schedulerAction.json.action.key, 'align-risk-window');
-  assert.equal(schedulerAction.json.operatorAction.type, 'scheduler.orchestration.align-risk-window');
+  assert.equal(
+    schedulerAction.json.operatorAction.type,
+    'scheduler.orchestration.align-risk-window'
+  );
   assert.equal(typeof schedulerAction.json.schedulerTick.emitted, 'boolean');
   assert.equal(
-    schedulerAction.json.schedulerTick.tick === null || typeof schedulerAction.json.schedulerTick.tick?.id === 'string',
-    true,
+    schedulerAction.json.schedulerTick.tick === null ||
+      typeof schedulerAction.json.schedulerTick.tick?.id === 'string',
+    true
   );
   assert.equal(Array.isArray(schedulerAction.json.action.touchedIncidentIds), true);
   assert.equal(schedulerAction.json.workbench.ok, true);

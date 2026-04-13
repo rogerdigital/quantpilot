@@ -114,7 +114,8 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       policyId: options.policyId,
     });
     const latestPolicy = context.agentPolicy.listAgentPolicies(1, policyFilter)[0] || null;
-    const latestEvent = context.agentAuthorityEvent.listAgentAuthorityEvents(1, eventFilter)[0] || null;
+    const latestEvent =
+      context.agentAuthorityEvent.listAgentAuthorityEvents(1, eventFilter)[0] || null;
     const now = new Date().toISOString();
 
     if (latestEvent) {
@@ -157,13 +158,17 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     });
     const instructions = context.agentInstruction.listAgentInstructions(
       Number.isFinite(options.instructionLimit) ? options.instructionLimit : 20,
-      instructionFilter,
+      instructionFilter
     );
     const latestInstruction = instructions[0] || null;
 
     return {
       instructions,
-      summary: latestInstruction?.title || (instructions.length > 0 ? `${instructions.length} active instructions` : 'No active daily bias instructions.'),
+      summary:
+        latestInstruction?.title ||
+        (instructions.length > 0
+          ? `${instructions.length} active instructions`
+          : 'No active daily bias instructions.'),
       updatedAt: latestInstruction?.createdAt || activeAt,
     };
   }
@@ -199,13 +204,19 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.agentSessions.updateAgentSession(sessionId, patch);
     },
     listAgentSessionMessages(sessionId, limit = 100, filter = {}) {
-      return context.agentSessionMessages.listAgentSessionMessages(sessionId, limit, withScopedFilter(filter));
+      return context.agentSessionMessages.listAgentSessionMessages(
+        sessionId,
+        limit,
+        withScopedFilter(filter)
+      );
     },
     appendAgentSessionMessage(payload = {}) {
       return context.agentSessionMessages.appendAgentSessionMessage(withScopeMetadata(payload));
     },
     recordAgentSessionMessage(payload = {}) {
-      const message = context.agentSessionMessages.appendAgentSessionMessage(withScopeMetadata(payload));
+      const message = context.agentSessionMessages.appendAgentSessionMessage(
+        withScopeMetadata(payload)
+      );
 
       context.audit.appendAuditRecord({
         type: 'agent-message',
@@ -311,7 +322,9 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.agentActionRequests.appendAgentActionRequest(withScopeMetadata(payload));
     },
     recordAgentActionRequest(payload) {
-      const request = context.agentActionRequests.appendAgentActionRequest(withScopeMetadata(payload));
+      const request = context.agentActionRequests.appendAgentActionRequest(
+        withScopeMetadata(payload)
+      );
 
       context.audit.appendAuditRecord({
         type: 'agent-action-request',
@@ -330,7 +343,8 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         level: 'warn',
         source: 'agent-control',
         title: `Agent action request submitted`,
-        message: request.summary || `${request.requestType} request is waiting for operator review.`,
+        message:
+          request.summary || `${request.requestType} request is waiting for operator review.`,
         metadata: withScopeMetaRecord({
           agentActionRequestId: request.id,
           requestType: request.requestType,
@@ -556,7 +570,8 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
           level: 'warn',
           source: 'task-orchestrator',
           title: `Cycle ${entry.cycle} degraded`,
-          message: 'One or more platform integrations are disconnected or running in fallback mode.',
+          message:
+            'One or more platform integrations are disconnected or running in fallback mode.',
           metadata: withScopeMetaRecord({
             cycle: entry.cycle,
             brokerConnected: entry.brokerConnected,
@@ -604,10 +619,14 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.executionCandidateHandoffs.getExecutionCandidateHandoff(handoffId);
     },
     getLatestExecutionCandidateHandoffForStrategy(strategyId) {
-      return context.executionCandidateHandoffs.getLatestExecutionCandidateHandoffForStrategy(strategyId);
+      return context.executionCandidateHandoffs.getLatestExecutionCandidateHandoffForStrategy(
+        strategyId
+      );
     },
     appendExecutionCandidateHandoff(payload) {
-      return context.executionCandidateHandoffs.appendExecutionCandidateHandoff(withScopeMetadata(payload));
+      return context.executionCandidateHandoffs.appendExecutionCandidateHandoff(
+        withScopeMetadata(payload)
+      );
     },
     updateExecutionCandidateHandoff(handoffId, patch = {}) {
       return context.executionCandidateHandoffs.updateExecutionCandidateHandoff(handoffId, patch);
@@ -634,7 +653,9 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.executionRuns.appendExecutionRun(withScopeMetadata(payload));
     },
     appendExecutionOrderStates(entries = []) {
-      return context.executionRuns.appendExecutionOrderStates(entries.map((entry) => withScopeMetadata(entry)));
+      return context.executionRuns.appendExecutionOrderStates(
+        entries.map((entry) => withScopeMetadata(entry))
+      );
     },
     updateExecutionRun(runId, patch = {}) {
       return context.executionRuns.updateExecutionRun(runId, patch);
@@ -672,7 +693,12 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       });
 
       context.notifications.enqueueNotification({
-        level: plan.riskStatus === 'approved' ? 'info' : (plan.riskStatus === 'blocked' ? 'critical' : 'warn'),
+        level:
+          plan.riskStatus === 'approved'
+            ? 'info'
+            : plan.riskStatus === 'blocked'
+              ? 'critical'
+              : 'warn',
         source: 'execution-planner',
         title: `Execution plan ${plan.riskStatus}`,
         message: plan.summary || `${plan.strategyName} generated an execution plan.`,
@@ -721,20 +747,24 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.executionRuntime.appendBrokerExecutionEvent(withScopeMetadata(payload));
     },
     recordExecutionRuntime(payload) {
-      const runtimeEvent = context.executionRuntime.appendExecutionRuntimeEvent(withScopeMetadata(payload));
-      const brokerSnapshot = context.executionRuntime.appendBrokerAccountSnapshot(withScopeMetadata({
-        cycleId: payload.cycleId,
-        cycle: payload.cycle,
-        executionPlanId: payload.executionPlanId,
-        executionRunId: payload.executionRunId,
-        provider: payload.brokerAdapter,
-        connected: payload.brokerConnected,
-        account: payload.account || null,
-        positions: payload.positions || [],
-        orders: payload.orders || [],
-        message: payload.message,
-        createdAt: payload.createdAt,
-      }));
+      const runtimeEvent = context.executionRuntime.appendExecutionRuntimeEvent(
+        withScopeMetadata(payload)
+      );
+      const brokerSnapshot = context.executionRuntime.appendBrokerAccountSnapshot(
+        withScopeMetadata({
+          cycleId: payload.cycleId,
+          cycle: payload.cycle,
+          executionPlanId: payload.executionPlanId,
+          executionRunId: payload.executionRunId,
+          provider: payload.brokerAdapter,
+          connected: payload.brokerConnected,
+          account: payload.account || null,
+          positions: payload.positions || [],
+          orders: payload.orders || [],
+          message: payload.message,
+          createdAt: payload.createdAt,
+        })
+      );
 
       context.audit.appendAuditRecord({
         type: 'execution-runtime',
@@ -1034,7 +1064,9 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       return context.workerHeartbeats.listWorkerHeartbeats(limit, withScopedFilter(filter));
     },
     getLatestWorkerHeartbeat(worker = '') {
-      return this.listWorkerHeartbeats(120).find((item) => !worker || item.worker === worker) || null;
+      return (
+        this.listWorkerHeartbeats(120).find((item) => !worker || item.worker === worker) || null
+      );
     },
     recordWorkerHeartbeat(payload = {}) {
       return context.workerHeartbeats.recordWorkerHeartbeat(payload);
@@ -1081,7 +1113,9 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         ...patch,
         status: canRetry ? 'retry_scheduled' : 'failed',
         failedAt,
-        nextRunAt: canRetry ? (patch.nextRunAt || new Date(Date.now() + 60_000).toISOString()) : (patch.nextRunAt || ''),
+        nextRunAt: canRetry
+          ? patch.nextRunAt || new Date(Date.now() + 60_000).toISOString()
+          : patch.nextRunAt || '',
         error: error || patch.error || null,
         lockedBy: '',
         lockedAt: '',
@@ -1100,7 +1134,9 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         });
         fanoutWorkflowEvent(
           canRetry ? 'warn' : 'critical',
-          canRetry ? `Workflow retry scheduled ${workflow.workflowId}` : `Workflow failed ${workflow.workflowId}`,
+          canRetry
+            ? `Workflow retry scheduled ${workflow.workflowId}`
+            : `Workflow failed ${workflow.workflowId}`,
           canRetry
             ? `Workflow ${workflow.workflowId} failed and was scheduled for retry.`
             : `Workflow ${workflow.workflowId} failed without remaining retries.`,
@@ -1219,94 +1255,140 @@ export const updateUserProfile = (...args) => controlPlaneRuntime.updateUserProf
 export const getUserPreferences = (...args) => controlPlaneRuntime.getUserPreferences(...args);
 export const getUserAccess = (...args) => controlPlaneRuntime.getUserAccess(...args);
 export const getUserAccessSummary = (...args) => controlPlaneRuntime.getUserAccessSummary(...args);
-export const listUserRoleTemplates = (...args) => controlPlaneRuntime.listUserRoleTemplates(...args);
+export const listUserRoleTemplates = (...args) =>
+  controlPlaneRuntime.listUserRoleTemplates(...args);
 export const getUserRoleTemplate = (...args) => controlPlaneRuntime.getUserRoleTemplate(...args);
-export const getBrokerBindingSummary = (...args) => controlPlaneRuntime.getBrokerBindingSummary(...args);
-export const updateUserPreferences = (...args) => controlPlaneRuntime.updateUserPreferences(...args);
+export const getBrokerBindingSummary = (...args) =>
+  controlPlaneRuntime.getBrokerBindingSummary(...args);
+export const updateUserPreferences = (...args) =>
+  controlPlaneRuntime.updateUserPreferences(...args);
 export const updateUserAccess = (...args) => controlPlaneRuntime.updateUserAccess(...args);
-export const upsertUserRoleTemplate = (...args) => controlPlaneRuntime.upsertUserRoleTemplate(...args);
-export const deleteUserRoleTemplate = (...args) => controlPlaneRuntime.deleteUserRoleTemplate(...args);
+export const upsertUserRoleTemplate = (...args) =>
+  controlPlaneRuntime.upsertUserRoleTemplate(...args);
+export const deleteUserRoleTemplate = (...args) =>
+  controlPlaneRuntime.deleteUserRoleTemplate(...args);
 export const upsertWorkspace = (...args) => controlPlaneRuntime.upsertWorkspace(...args);
 export const setCurrentWorkspace = (...args) => controlPlaneRuntime.setCurrentWorkspace(...args);
 export const listBrokerBindings = (...args) => controlPlaneRuntime.listBrokerBindings(...args);
 export const upsertBrokerBinding = (...args) => controlPlaneRuntime.upsertBrokerBinding(...args);
-export const setDefaultBrokerBinding = (...args) => controlPlaneRuntime.setDefaultBrokerBinding(...args);
+export const setDefaultBrokerBinding = (...args) =>
+  controlPlaneRuntime.setDefaultBrokerBinding(...args);
 export const deleteBrokerBinding = (...args) => controlPlaneRuntime.deleteBrokerBinding(...args);
-export const listExecutionRuntimeEvents = (...args) => controlPlaneRuntime.listExecutionRuntimeEvents(...args);
-export const listBrokerAccountSnapshots = (...args) => controlPlaneRuntime.listBrokerAccountSnapshots(...args);
-export const listBrokerExecutionEvents = (...args) => controlPlaneRuntime.listBrokerExecutionEvents(...args);
+export const listExecutionRuntimeEvents = (...args) =>
+  controlPlaneRuntime.listExecutionRuntimeEvents(...args);
+export const listBrokerAccountSnapshots = (...args) =>
+  controlPlaneRuntime.listBrokerAccountSnapshots(...args);
+export const listBrokerExecutionEvents = (...args) =>
+  controlPlaneRuntime.listBrokerExecutionEvents(...args);
 export const listAgentPolicies = (...args) => controlPlaneRuntime.listAgentPolicies(...args);
 export const getAgentPolicy = (...args) => controlPlaneRuntime.getAgentPolicy(...args);
 export const appendAgentPolicy = (...args) => controlPlaneRuntime.appendAgentPolicy(...args);
 export const saveAgentPolicy = (...args) => controlPlaneRuntime.saveAgentPolicy(...args);
 export const recordAgentPolicy = (...args) => controlPlaneRuntime.recordAgentPolicy(...args);
 export const updateAgentPolicy = (...args) => controlPlaneRuntime.updateAgentPolicy(...args);
-export const listAgentInstructions = (...args) => controlPlaneRuntime.listAgentInstructions(...args);
+export const listAgentInstructions = (...args) =>
+  controlPlaneRuntime.listAgentInstructions(...args);
 export const getAgentInstruction = (...args) => controlPlaneRuntime.getAgentInstruction(...args);
-export const appendAgentInstruction = (...args) => controlPlaneRuntime.appendAgentInstruction(...args);
-export const recordAgentInstruction = (...args) => controlPlaneRuntime.recordAgentInstruction(...args);
-export const updateAgentInstruction = (...args) => controlPlaneRuntime.updateAgentInstruction(...args);
+export const appendAgentInstruction = (...args) =>
+  controlPlaneRuntime.appendAgentInstruction(...args);
+export const recordAgentInstruction = (...args) =>
+  controlPlaneRuntime.recordAgentInstruction(...args);
+export const updateAgentInstruction = (...args) =>
+  controlPlaneRuntime.updateAgentInstruction(...args);
 export const listAgentDailyRuns = (...args) => controlPlaneRuntime.listAgentDailyRuns(...args);
 export const getAgentDailyRun = (...args) => controlPlaneRuntime.getAgentDailyRun(...args);
 export const appendAgentDailyRun = (...args) => controlPlaneRuntime.appendAgentDailyRun(...args);
 export const recordAgentDailyRun = (...args) => controlPlaneRuntime.recordAgentDailyRun(...args);
 export const updateAgentDailyRun = (...args) => controlPlaneRuntime.updateAgentDailyRun(...args);
 export const queueAgentDailyRun = (...args) => controlPlaneRuntime.queueAgentDailyRun(...args);
-export const listAgentAuthorityEvents = (...args) => controlPlaneRuntime.listAgentAuthorityEvents(...args);
-export const getAgentAuthorityEvent = (...args) => controlPlaneRuntime.getAgentAuthorityEvent(...args);
-export const appendAgentAuthorityEvent = (...args) => controlPlaneRuntime.appendAgentAuthorityEvent(...args);
-export const recordAgentAuthorityEvent = (...args) => controlPlaneRuntime.recordAgentAuthorityEvent(...args);
-export const updateAgentAuthorityEvent = (...args) => controlPlaneRuntime.updateAgentAuthorityEvent(...args);
-export const getAgentGovernanceSnapshot = (...args) => controlPlaneRuntime.getAgentGovernanceSnapshot(...args);
+export const listAgentAuthorityEvents = (...args) =>
+  controlPlaneRuntime.listAgentAuthorityEvents(...args);
+export const getAgentAuthorityEvent = (...args) =>
+  controlPlaneRuntime.getAgentAuthorityEvent(...args);
+export const appendAgentAuthorityEvent = (...args) =>
+  controlPlaneRuntime.appendAgentAuthorityEvent(...args);
+export const recordAgentAuthorityEvent = (...args) =>
+  controlPlaneRuntime.recordAgentAuthorityEvent(...args);
+export const updateAgentAuthorityEvent = (...args) =>
+  controlPlaneRuntime.updateAgentAuthorityEvent(...args);
+export const getAgentGovernanceSnapshot = (...args) =>
+  controlPlaneRuntime.getAgentGovernanceSnapshot(...args);
 export const listExecutionRuns = (...args) => controlPlaneRuntime.listExecutionRuns(...args);
 export const getExecutionRun = (...args) => controlPlaneRuntime.getExecutionRun(...args);
-export const getExecutionRunByPlanId = (...args) => controlPlaneRuntime.getExecutionRunByPlanId(...args);
-export const listExecutionOrderStates = (...args) => controlPlaneRuntime.listExecutionOrderStates(...args);
-export const listExecutionCandidateHandoffs = (...args) => controlPlaneRuntime.listExecutionCandidateHandoffs(...args);
-export const getExecutionCandidateHandoff = (...args) => controlPlaneRuntime.getExecutionCandidateHandoff(...args);
-export const getLatestExecutionCandidateHandoffForStrategy = (...args) => controlPlaneRuntime.getLatestExecutionCandidateHandoffForStrategy(...args);
-export const appendExecutionCandidateHandoff = (...args) => controlPlaneRuntime.appendExecutionCandidateHandoff(...args);
-export const updateExecutionCandidateHandoff = (...args) => controlPlaneRuntime.updateExecutionCandidateHandoff(...args);
+export const getExecutionRunByPlanId = (...args) =>
+  controlPlaneRuntime.getExecutionRunByPlanId(...args);
+export const listExecutionOrderStates = (...args) =>
+  controlPlaneRuntime.listExecutionOrderStates(...args);
+export const listExecutionCandidateHandoffs = (...args) =>
+  controlPlaneRuntime.listExecutionCandidateHandoffs(...args);
+export const getExecutionCandidateHandoff = (...args) =>
+  controlPlaneRuntime.getExecutionCandidateHandoff(...args);
+export const getLatestExecutionCandidateHandoffForStrategy = (...args) =>
+  controlPlaneRuntime.getLatestExecutionCandidateHandoffForStrategy(...args);
+export const appendExecutionCandidateHandoff = (...args) =>
+  controlPlaneRuntime.appendExecutionCandidateHandoff(...args);
+export const updateExecutionCandidateHandoff = (...args) =>
+  controlPlaneRuntime.updateExecutionCandidateHandoff(...args);
 export const recordExecutionRun = (...args) => controlPlaneRuntime.recordExecutionRun(...args);
 export const updateExecutionRun = (...args) => controlPlaneRuntime.updateExecutionRun(...args);
-export const updateExecutionOrderState = (...args) => controlPlaneRuntime.updateExecutionOrderState(...args);
+export const updateExecutionOrderState = (...args) =>
+  controlPlaneRuntime.updateExecutionOrderState(...args);
 export const updateExecutionPlan = (...args) => controlPlaneRuntime.updateExecutionPlan(...args);
-export const appendBrokerExecutionEvent = (...args) => controlPlaneRuntime.appendBrokerExecutionEvent(...args);
+export const appendBrokerExecutionEvent = (...args) =>
+  controlPlaneRuntime.appendBrokerExecutionEvent(...args);
 export const listBacktestRuns = (...args) => controlPlaneRuntime.listBacktestRuns(...args);
 export const listBacktestResults = (...args) => controlPlaneRuntime.listBacktestResults(...args);
-export const listBacktestResultsForRun = (...args) => controlPlaneRuntime.listBacktestResultsForRun(...args);
+export const listBacktestResultsForRun = (...args) =>
+  controlPlaneRuntime.listBacktestResultsForRun(...args);
 export const getBacktestResult = (...args) => controlPlaneRuntime.getBacktestResult(...args);
-export const getLatestBacktestResultForRun = (...args) => controlPlaneRuntime.getLatestBacktestResultForRun(...args);
+export const getLatestBacktestResultForRun = (...args) =>
+  controlPlaneRuntime.getLatestBacktestResultForRun(...args);
 export const appendBacktestResult = (...args) => controlPlaneRuntime.appendBacktestResult(...args);
-export const listResearchEvaluations = (...args) => controlPlaneRuntime.listResearchEvaluations(...args);
-export const getResearchEvaluation = (...args) => controlPlaneRuntime.getResearchEvaluation(...args);
-export const getLatestEvaluationForRun = (...args) => controlPlaneRuntime.getLatestEvaluationForRun(...args);
-export const getLatestEvaluationForStrategy = (...args) => controlPlaneRuntime.getLatestEvaluationForStrategy(...args);
-export const appendResearchEvaluation = (...args) => controlPlaneRuntime.appendResearchEvaluation(...args);
+export const listResearchEvaluations = (...args) =>
+  controlPlaneRuntime.listResearchEvaluations(...args);
+export const getResearchEvaluation = (...args) =>
+  controlPlaneRuntime.getResearchEvaluation(...args);
+export const getLatestEvaluationForRun = (...args) =>
+  controlPlaneRuntime.getLatestEvaluationForRun(...args);
+export const getLatestEvaluationForStrategy = (...args) =>
+  controlPlaneRuntime.getLatestEvaluationForStrategy(...args);
+export const appendResearchEvaluation = (...args) =>
+  controlPlaneRuntime.appendResearchEvaluation(...args);
 export const listResearchReports = (...args) => controlPlaneRuntime.listResearchReports(...args);
 export const getResearchReport = (...args) => controlPlaneRuntime.getResearchReport(...args);
-export const getLatestResearchReportForRun = (...args) => controlPlaneRuntime.getLatestResearchReportForRun(...args);
-export const getLatestResearchReportForStrategy = (...args) => controlPlaneRuntime.getLatestResearchReportForStrategy(...args);
+export const getLatestResearchReportForRun = (...args) =>
+  controlPlaneRuntime.getLatestResearchReportForRun(...args);
+export const getLatestResearchReportForStrategy = (...args) =>
+  controlPlaneRuntime.getLatestResearchReportForStrategy(...args);
 export const appendResearchReport = (...args) => controlPlaneRuntime.appendResearchReport(...args);
 export const getBacktestRun = (...args) => controlPlaneRuntime.getBacktestRun(...args);
-export const findBacktestRunByWorkflowRunId = (...args) => controlPlaneRuntime.findBacktestRunByWorkflowRunId(...args);
+export const findBacktestRunByWorkflowRunId = (...args) =>
+  controlPlaneRuntime.findBacktestRunByWorkflowRunId(...args);
 export const appendBacktestRun = (...args) => controlPlaneRuntime.appendBacktestRun(...args);
 export const updateBacktestRun = (...args) => controlPlaneRuntime.updateBacktestRun(...args);
 export const getResearchSummary = (...args) => controlPlaneRuntime.getResearchSummary(...args);
-export const updateResearchSummary = (...args) => controlPlaneRuntime.updateResearchSummary(...args);
+export const updateResearchSummary = (...args) =>
+  controlPlaneRuntime.updateResearchSummary(...args);
 export const listResearchTasks = (...args) => controlPlaneRuntime.listResearchTasks(...args);
 export const getResearchTask = (...args) => controlPlaneRuntime.getResearchTask(...args);
-export const findResearchTaskByWorkflowRunId = (...args) => controlPlaneRuntime.findResearchTaskByWorkflowRunId(...args);
-export const findResearchTaskByRunId = (...args) => controlPlaneRuntime.findResearchTaskByRunId(...args);
+export const findResearchTaskByWorkflowRunId = (...args) =>
+  controlPlaneRuntime.findResearchTaskByWorkflowRunId(...args);
+export const findResearchTaskByRunId = (...args) =>
+  controlPlaneRuntime.findResearchTaskByRunId(...args);
 export const appendResearchTask = (...args) => controlPlaneRuntime.appendResearchTask(...args);
 export const updateResearchTask = (...args) => controlPlaneRuntime.updateResearchTask(...args);
 export const upsertResearchTask = (...args) => controlPlaneRuntime.upsertResearchTask(...args);
 export const listStrategyCatalog = (...args) => controlPlaneRuntime.listStrategyCatalog(...args);
-export const getStrategyCatalogItem = (...args) => controlPlaneRuntime.getStrategyCatalogItem(...args);
-export const upsertStrategyCatalogItem = (...args) => controlPlaneRuntime.upsertStrategyCatalogItem(...args);
-export const getMarketProviderStatus = (...args) => controlPlaneRuntime.getMarketProviderStatus(...args);
-export const updateMarketProviderStatus = (...args) => controlPlaneRuntime.updateMarketProviderStatus(...args);
-export const listMonitoringSnapshots = (...args) => controlPlaneRuntime.listMonitoringSnapshots(...args);
+export const getStrategyCatalogItem = (...args) =>
+  controlPlaneRuntime.getStrategyCatalogItem(...args);
+export const upsertStrategyCatalogItem = (...args) =>
+  controlPlaneRuntime.upsertStrategyCatalogItem(...args);
+export const getMarketProviderStatus = (...args) =>
+  controlPlaneRuntime.getMarketProviderStatus(...args);
+export const updateMarketProviderStatus = (...args) =>
+  controlPlaneRuntime.updateMarketProviderStatus(...args);
+export const listMonitoringSnapshots = (...args) =>
+  controlPlaneRuntime.listMonitoringSnapshots(...args);
 export const listMonitoringAlerts = (...args) => controlPlaneRuntime.listMonitoringAlerts(...args);
 export const listIncidents = (...args) => controlPlaneRuntime.listIncidents(...args);
 export const getIncident = (...args) => controlPlaneRuntime.getIncident(...args);
@@ -1318,13 +1400,17 @@ export const transitionIncident = (...args) => controlPlaneRuntime.transitionInc
 export const appendIncidentNote = (...args) => controlPlaneRuntime.appendIncidentNote(...args);
 export const recordIncidentNote = (...args) => controlPlaneRuntime.recordIncidentNote(...args);
 export const listWorkerHeartbeats = (...args) => controlPlaneRuntime.listWorkerHeartbeats(...args);
-export const getLatestWorkerHeartbeat = (...args) => controlPlaneRuntime.getLatestWorkerHeartbeat(...args);
+export const getLatestWorkerHeartbeat = (...args) =>
+  controlPlaneRuntime.getLatestWorkerHeartbeat(...args);
 export const listWorkflowRuns = (...args) => controlPlaneRuntime.listWorkflowRuns(...args);
 export const getWorkflowRun = (...args) => controlPlaneRuntime.getWorkflowRun(...args);
 
+export { recordAgentActionRequest } from '../../../apps/api/src/domains/agent/services/action-request-service.js';
+export { refreshBacktestSummary } from '../../../apps/api/src/domains/backtest/services/summary-service.js';
 // Domain service re-exports for worker decoupling (no apps/api cross-imports needed)
 export { recordExecutionPlan } from '../../../apps/api/src/domains/execution/services/command-service.js';
-export { refreshBacktestSummary } from '../../../apps/api/src/domains/backtest/services/summary-service.js';
-export { assessAgentActionRequestRisk, assessExecutionCandidate } from '../../../apps/api/src/domains/risk/services/assessment-service.js';
+export {
+  assessAgentActionRequestRisk,
+  assessExecutionCandidate,
+} from '../../../apps/api/src/domains/risk/services/assessment-service.js';
 export { buildStrategyExecutionCandidate } from '../../../apps/api/src/domains/strategy/services/execution-candidate-service.js';
-export { recordAgentActionRequest } from '../../../apps/api/src/domains/agent/services/action-request-service.js';

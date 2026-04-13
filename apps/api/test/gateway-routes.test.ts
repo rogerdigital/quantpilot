@@ -1,11 +1,12 @@
 // @ts-nocheck
-import test from 'node:test';
+
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { invokeGatewayRoute } from './helpers/invoke-gateway.js';
+import test from 'node:test';
 import { createTradingState } from './helpers/create-trading-state.js';
+import { invokeGatewayRoute } from './helpers/invoke-gateway.js';
 
 const namespace = `control-plane-api-test-${randomUUID()}`;
 process.env.QUANTPILOT_CONTROL_PLANE_NAMESPACE = namespace;
@@ -42,11 +43,12 @@ const fakeMarketSnapshot = {
   quotes: [],
 };
 
-const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] = await Promise.all([
-  import('../src/gateways/alpaca.js'),
-  import('../../../packages/control-plane-store/src/context.js'),
-  import('../../../packages/control-plane-store/src/store.js'),
-]);
+const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] =
+  await Promise.all([
+    import('../src/gateways/alpaca.js'),
+    import('../../../packages/control-plane-store/src/context.js'),
+    import('../../../packages/control-plane-store/src/store.js'),
+  ]);
 
 const handler = createGatewayHandler({
   getBrokerHealth: async () => fakeBrokerHealth,
@@ -89,7 +91,10 @@ test('GET /api/notification/events returns seeded notifications', async () => {
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.events[0].id, 'notif-api-test');
   assert.equal(filteredResponse.statusCode, 200);
-  assert.equal(filteredResponse.json.events.some((item) => item.id === 'notif-api-warn'), true);
+  assert.equal(
+    filteredResponse.json.events.some((item) => item.id === 'notif-api-warn'),
+    true
+  );
 });
 
 test('GET /api/risk/events returns seeded risk events', async () => {
@@ -227,21 +232,47 @@ test('GET /api/risk/workbench returns the consolidated risk workbench snapshot',
   assert.equal(response.json.summary.complianceAlerts >= 1, true);
   assert.equal(response.json.summary.drawdownAlerts >= 1, true);
   assert.equal(response.json.summary.schedulerAttention >= 1, true);
-  assert.equal(response.json.lanes.some((item) => item.key === 'execution-review'), true);
-  assert.equal(response.json.lanes.some((item) => item.key === 'scheduler'), true);
-  assert.equal(response.json.runbook.some((item) => item.key === 'review-risk-off'), true);
-  assert.equal(response.json.reviewQueue.riskEvents.some((item) => item.id === 'risk-workbench-event'), true);
+  assert.equal(
+    response.json.lanes.some((item) => item.key === 'execution-review'),
+    true
+  );
+  assert.equal(
+    response.json.lanes.some((item) => item.key === 'scheduler'),
+    true
+  );
+  assert.equal(
+    response.json.runbook.some((item) => item.key === 'review-risk-off'),
+    true
+  );
+  assert.equal(
+    response.json.reviewQueue.riskEvents.some((item) => item.id === 'risk-workbench-event'),
+    true
+  );
   assert.equal(response.json.reviewQueue.schedulerTicks[0].id, 'risk-workbench-scheduler');
   assert.equal(response.json.reviewQueue.executionPlans[0].id, 'risk-workbench-plan');
   assert.equal(response.json.reviewQueue.backtestRuns[0].id, 'risk-workbench-run');
   assert.equal(response.json.reviewQueue.incidents[0].id, 'risk-workbench-incident');
-  assert.equal(response.json.recent.riskEvents.some((item) => item.id === 'risk-workbench-event'), true);
+  assert.equal(
+    response.json.recent.riskEvents.some((item) => item.id === 'risk-workbench-event'),
+    true
+  );
   assert.equal(response.json.recent.schedulerTicks[0].id, 'risk-workbench-scheduler');
   assert.equal(response.json.linkage.summary.linkedRiskEvents >= 1, true);
   assert.equal(response.json.linkage.summary.linkedSchedulerTicks >= 1, true);
-  assert.equal(response.json.linkage.lanes.some((item) => item.key === 'risk-events'), true);
-  assert.equal(response.json.linkage.runbook.some((item) => item.key === 'review-linked-risk'), true);
-  assert.equal(response.json.linkage.queue.schedulerTicks.some((item) => item.id === 'risk-workbench-scheduler'), true);
+  assert.equal(
+    response.json.linkage.lanes.some((item) => item.key === 'risk-events'),
+    true
+  );
+  assert.equal(
+    response.json.linkage.runbook.some((item) => item.key === 'review-linked-risk'),
+    true
+  );
+  assert.equal(
+    response.json.linkage.queue.schedulerTicks.some(
+      (item) => item.id === 'risk-workbench-scheduler'
+    ),
+    true
+  );
 });
 
 test('POST /api/risk/actions executes risk policy actions and leaves policy traces', async () => {
@@ -307,8 +338,16 @@ test('POST /api/risk/actions executes risk policy actions and leaves policy trac
   assert.equal(response.json.riskEvent.metadata.policyAction, 'release-emergency-brake');
   assert.equal(context.incidents.getIncident('risk-policy-incident')?.status, 'investigating');
   assert.equal(context.incidents.listIncidentNotes('risk-policy-incident', 10).length >= 1, true);
-  assert.equal(context.operatorActions.listOperatorActions(10).some((item) => item.type === 'risk.policy.release-emergency-brake'), true);
-  assert.equal(response.json.workbench.runbook.some((item) => item.key === 'release-emergency-brake'), true);
+  assert.equal(
+    context.operatorActions
+      .listOperatorActions(10)
+      .some((item) => item.type === 'risk.policy.release-emergency-brake'),
+    true
+  );
+  assert.equal(
+    response.json.workbench.runbook.some((item) => item.key === 'release-emergency-brake'),
+    true
+  );
 });
 
 test('GET /api/risk/events/:id returns a single risk event', async () => {
@@ -338,7 +377,10 @@ test('GET /api/strategy/catalog returns research strategies', async () => {
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(Array.isArray(response.json.strategies), true);
-  assert.equal(response.json.strategies.some((item) => item.status === 'candidate'), true);
+  assert.equal(
+    response.json.strategies.some((item) => item.status === 'candidate'),
+    true
+  );
 });
 
 test('POST /api/strategy/catalog saves strategy catalog entries', async () => {
@@ -365,7 +407,12 @@ test('POST /api/strategy/catalog saves strategy catalog entries', async () => {
   assert.equal(response.json.ok, true);
   assert.equal(response.json.strategy.id, 'stat-arb-us');
   assert.equal(context.strategyCatalog.getStrategy('stat-arb-us').family, 'stat-arb');
-  const audit = context.audit.listAuditRecords(5).find((item) => item.type === 'strategy-catalog.saved' && item.metadata?.strategyId === 'stat-arb-us');
+  const audit = context.audit
+    .listAuditRecords(5)
+    .find(
+      (item) =>
+        item.type === 'strategy-catalog.saved' && item.metadata?.strategyId === 'stat-arb-us'
+    );
   assert.equal(audit.metadata?.timeframe, '30m');
   assert.equal(audit.metadata?.score, 68);
   assert.equal(audit.metadata?.expectedReturnPct, 11.4);
@@ -380,10 +427,16 @@ test('GET /api/strategy/catalog/:id returns strategy detail with recent runs', a
   assert.equal(response.json.ok, true);
   assert.equal(response.json.strategy.id, 'ema-cross-us');
   assert.equal(Array.isArray(response.json.recentRuns), true);
-  assert.equal(response.json.recentRuns.every((item) => item.strategyId === 'ema-cross-us'), true);
+  assert.equal(
+    response.json.recentRuns.every((item) => item.strategyId === 'ema-cross-us'),
+    true
+  );
   assert.ok(response.json.latestResult);
   assert.equal(Array.isArray(response.json.recentResults), true);
-  assert.equal(response.json.recentResults.every((item) => item.strategyId === 'ema-cross-us'), true);
+  assert.equal(
+    response.json.recentResults.every((item) => item.strategyId === 'ema-cross-us'),
+    true
+  );
   assert.equal(typeof response.json.latestEvaluation?.verdict, 'string');
   assert.equal(Array.isArray(response.json.recentEvaluations), true);
   assert.equal(Array.isArray(response.json.replayTimeline), true);
@@ -434,7 +487,10 @@ test('GET /api/backtest/runs returns structured backtest runs', async () => {
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(Array.isArray(response.json.runs), true);
-  assert.equal(response.json.runs.some((item) => item.status === 'completed'), true);
+  assert.equal(
+    response.json.runs.some((item) => item.status === 'completed'),
+    true
+  );
 });
 
 test('GET /api/backtest/runs/:id returns run detail with linked strategy and workflow context', async () => {
@@ -493,11 +549,17 @@ test('GET /api/research/tasks returns research backbone tasks and related summar
   assert.equal(tasksResponse.json.tasks[0].id, created.json.researchTask.id);
   assert.equal(summaryResponse.statusCode, 200);
   assert.equal(summaryResponse.json.summary.total >= 1, true);
-  assert.equal(summaryResponse.json.summary.byType.some((item) => item.taskType === 'backtest-run'), true);
+  assert.equal(
+    summaryResponse.json.summary.byType.some((item) => item.taskType === 'backtest-run'),
+    true
+  );
   assert.equal(hubResponse.statusCode, 200);
   assert.equal(hubResponse.json.taskSummary.total >= 1, true);
   assert.equal(hubResponse.json.workbench.ok, true);
-  assert.equal(hubResponse.json.tasks.some((item) => item.id === created.json.researchTask.id), true);
+  assert.equal(
+    hubResponse.json.tasks.some((item) => item.id === created.json.researchTask.id),
+    true
+  );
   assert.equal(workbenchResponse.statusCode, 200);
   assert.equal(workbenchResponse.json.ok, true);
   assert.equal(Array.isArray(workbenchResponse.json.promotionQueue), true);
@@ -551,7 +613,10 @@ test('POST /api/backtest/runs/:id/evaluate persists a research evaluation and ex
   assert.equal(typeof evaluated.json.evaluation.id, 'string');
   assert.equal(evaluated.json.reportWorkflow.workflowId, 'task-orchestrator.research-report');
   assert.equal(detail.json.latestEvaluation.id, evaluated.json.evaluation.id);
-  assert.equal(feed.json.evaluations.some((item) => item.id === evaluated.json.evaluation.id), true);
+  assert.equal(
+    feed.json.evaluations.some((item) => item.id === evaluated.json.evaluation.id),
+    true
+  );
   assert.equal(summary.json.summary.total >= 1, true);
 });
 
@@ -663,7 +728,10 @@ test('POST /api/research/execution-candidates creates a persisted handoff and qu
   assert.equal(created.json.handoff.strategyId, 'ema-cross-us');
   assert.equal(listed.statusCode, 200);
   assert.equal(listed.json.summary.total >= 1, true);
-  assert.equal(listed.json.handoffs.some((item) => item.id === created.json.handoff.id), true);
+  assert.equal(
+    listed.json.handoffs.some((item) => item.id === created.json.handoff.id),
+    true
+  );
   assert.equal(queued.statusCode, 200);
   assert.equal(queued.json.handoff.handoffStatus, 'queued');
   assert.equal(queued.json.workflow.workflowId, 'task-orchestrator.strategy-execution');
@@ -822,7 +890,12 @@ test('POST /api/backtest/runs/:id/review updates reviewable backtest runs', asyn
   assert.equal(reviewResponse.json.ok, true);
   assert.equal(reviewResponse.json.run.status, 'completed');
   assert.equal(reviewResponse.json.run.reviewedBy, 'risk-operator');
-  const audit = context.audit.listAuditRecords(10).find((item) => item.type === 'backtest-run.reviewed' && item.metadata?.runId === created.json.run.id);
+  const audit = context.audit
+    .listAuditRecords(10)
+    .find(
+      (item) =>
+        item.type === 'backtest-run.reviewed' && item.metadata?.runId === created.json.run.id
+    );
   assert.equal(audit.metadata?.windowLabel, '2023-01-01 -> 2024-12-31');
   assert.equal(audit.metadata?.annualizedReturnPct, 0);
 });
@@ -835,8 +908,14 @@ test('GET /api/agent/tools returns allowlisted read-only tools', async () => {
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(Array.isArray(response.json.tools), true);
-  assert.equal(response.json.tools.some((item) => item.name === 'execution.plans.list'), true);
-  assert.equal(response.json.tools.every((item) => item.access === 'read'), true);
+  assert.equal(
+    response.json.tools.some((item) => item.name === 'execution.plans.list'),
+    true
+  );
+  assert.equal(
+    response.json.tools.every((item) => item.access === 'read'),
+    true
+  );
 });
 
 test('GET /api/architecture returns the seven-layer architecture summary', async () => {
@@ -847,13 +926,21 @@ test('GET /api/architecture returns the seven-layer architecture summary', async
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(response.json.architecture.summary.layerCount, 7);
-  assert.equal(response.json.architecture.layers.some((item) => item.id === 'frontend'), true);
-  assert.equal(response.json.architecture.layers.some((item) => item.id === 'backend' && item.moduleCount >= 1), true);
+  assert.equal(
+    response.json.architecture.layers.some((item) => item.id === 'frontend'),
+    true
+  );
   assert.equal(
     response.json.architecture.layers.some(
-      (item) => item.id === 'agent' && item.modules.some((module) => module.id === 'agent'),
+      (item) => item.id === 'backend' && item.moduleCount >= 1
     ),
-    true,
+    true
+  );
+  assert.equal(
+    response.json.architecture.layers.some(
+      (item) => item.id === 'agent' && item.modules.some((module) => module.id === 'agent')
+    ),
+    true
   );
 });
 
@@ -878,8 +965,18 @@ test('GET /api/auth/permissions returns the shared permission catalog', async ()
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(Array.isArray(response.json.permissions), true);
-  assert.equal(response.json.permissions.some((item) => item.id === 'execution:approve' && item.scope === 'execution'), true);
-  assert.equal(response.json.permissions.some((item) => item.id === 'operations:maintain' && item.scope === 'operations'), true);
+  assert.equal(
+    response.json.permissions.some(
+      (item) => item.id === 'execution:approve' && item.scope === 'execution'
+    ),
+    true
+  );
+  assert.equal(
+    response.json.permissions.some(
+      (item) => item.id === 'operations:maintain' && item.scope === 'operations'
+    ),
+    true
+  );
 });
 
 test('GET /api/user-account/profile returns profile and preferences', async () => {
@@ -906,7 +1003,10 @@ test('GET /api/user-account/roles returns persisted role templates', async () =>
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(Array.isArray(response.json.roleTemplates), true);
-  assert.equal(response.json.roleTemplates.some((item) => item.id === 'risk-reviewer'), true);
+  assert.equal(
+    response.json.roleTemplates.some((item) => item.id === 'risk-reviewer'),
+    true
+  );
 });
 
 test('GET /api/user-account returns consolidated account workspace data', async () => {
@@ -977,12 +1077,23 @@ test('POST /api/user-account/access updates persisted access policy and session 
     path: '/api/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
-  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.access.updated' && item.metadata.role === 'operator'), true);
+  assert.equal(
+    auditResponse.json.records.some(
+      (item) => item.type === 'user-account.access.updated' && item.metadata.role === 'operator'
+    ),
+    true
+  );
 
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+    ],
   });
 });
 
@@ -1001,7 +1112,10 @@ test('POST and DELETE /api/user-account/roles persist custom role templates', as
   assert.equal(createResponse.statusCode, 200);
   assert.equal(createResponse.json.ok, true);
   assert.equal(createResponse.json.roleTemplate.id, 'quant-analyst');
-  assert.equal(createResponse.json.roleTemplates.some((item) => item.id === 'quant-analyst'), true);
+  assert.equal(
+    createResponse.json.roleTemplates.some((item) => item.id === 'quant-analyst'),
+    true
+  );
 
   const deleteResponse = await invokeGatewayRoute(handler, {
     method: 'DELETE',
@@ -1010,7 +1124,10 @@ test('POST and DELETE /api/user-account/roles persist custom role templates', as
 
   assert.equal(deleteResponse.statusCode, 200);
   assert.equal(deleteResponse.json.ok, true);
-  assert.equal(deleteResponse.json.roleTemplates.some((item) => item.id === 'quant-analyst'), false);
+  assert.equal(
+    deleteResponse.json.roleTemplates.some((item) => item.id === 'quant-analyst'),
+    false
+  );
 });
 
 test('POST /api/user-account/workspaces and /current persist workspace scope selection', async () => {
@@ -1030,7 +1147,10 @@ test('POST /api/user-account/workspaces and /current persist workspace scope sel
 
   assert.equal(createResponse.statusCode, 200);
   assert.equal(createResponse.json.ok, true);
-  assert.equal(createResponse.json.workspaces.some((item) => item.id === 'workspace-live-ops'), true);
+  assert.equal(
+    createResponse.json.workspaces.some((item) => item.id === 'workspace-live-ops'),
+    true
+  );
 
   const selectResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
@@ -1043,18 +1163,34 @@ test('POST /api/user-account/workspaces and /current persist workspace scope sel
   assert.equal(selectResponse.statusCode, 200);
   assert.equal(selectResponse.json.ok, true);
   assert.equal(selectResponse.json.currentWorkspace.id, 'workspace-live-ops');
-  assert.equal(selectResponse.json.currentWorkspace.effectivePermissions.includes('risk:review'), true);
-  assert.equal(selectResponse.json.currentWorkspace.effectivePermissions.includes('execution:approve'), false);
+  assert.equal(
+    selectResponse.json.currentWorkspace.effectivePermissions.includes('risk:review'),
+    true
+  );
+  assert.equal(
+    selectResponse.json.currentWorkspace.effectivePermissions.includes('execution:approve'),
+    false
+  );
   assert.equal(selectResponse.json.session.user.workspaceId, 'workspace-live-ops');
   assert.equal(selectResponse.json.session.user.permissions.includes('risk:review'), true);
   assert.equal(selectResponse.json.session.user.permissions.includes('execution:approve'), false);
-  assert.equal(selectResponse.json.workspaces.find((item) => item.id === 'workspace-live-ops').isCurrent, true);
+  assert.equal(
+    selectResponse.json.workspaces.find((item) => item.id === 'workspace-live-ops').isCurrent,
+    true
+  );
 
   const auditResponse = await invokeGatewayRoute(handler, {
     path: '/api/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
-  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.workspace.selected' && item.metadata.workspaceId === 'workspace-live-ops'), true);
+  assert.equal(
+    auditResponse.json.records.some(
+      (item) =>
+        item.type === 'user-account.workspace.selected' &&
+        item.metadata.workspaceId === 'workspace-live-ops'
+    ),
+    true
+  );
 
   const sessionResponse = await invokeGatewayRoute(handler, {
     path: '/api/auth/session',
@@ -1090,7 +1226,13 @@ test('POST /api/user-account/profile updates persisted profile data', async () =
     path: '/api/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
-  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.profile.updated' && item.metadata.userId === 'operator-demo'), true);
+  assert.equal(
+    auditResponse.json.records.some(
+      (item) =>
+        item.type === 'user-account.profile.updated' && item.metadata.userId === 'operator-demo'
+    ),
+    true
+  );
 });
 
 test('POST /api/user-account/preferences updates persisted preferences', async () => {
@@ -1112,7 +1254,12 @@ test('POST /api/user-account/preferences updates persisted preferences', async (
     path: '/api/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
-  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.preferences.updated' && item.metadata.locale === 'en-US'), true);
+  assert.equal(
+    auditResponse.json.records.some(
+      (item) => item.type === 'user-account.preferences.updated' && item.metadata.locale === 'en-US'
+    ),
+    true
+  );
 });
 
 test('account write routes reject requests without account:write permission', async () => {
@@ -1140,7 +1287,13 @@ test('account write routes reject requests without account:write permission', as
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+    ],
   });
 });
 
@@ -1170,14 +1323,24 @@ test('POST /api/user-account/broker-bindings upserts broker bindings', async () 
   });
   assert.equal(listResponse.statusCode, 200);
   assert.equal(listResponse.json.ok, true);
-  assert.equal(listResponse.json.bindings.some((item) => item.id === 'binding-live' && item.isDefault), true);
+  assert.equal(
+    listResponse.json.bindings.some((item) => item.id === 'binding-live' && item.isDefault),
+    true
+  );
   assert.equal(typeof listResponse.json.summary.requiresAttention, 'number');
 
   const auditResponse = await invokeGatewayRoute(handler, {
     path: '/api/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
-  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.broker-binding.saved' && item.metadata.bindingId === 'binding-live'), true);
+  assert.equal(
+    auditResponse.json.records.some(
+      (item) =>
+        item.type === 'user-account.broker-binding.saved' &&
+        item.metadata.bindingId === 'binding-live'
+    ),
+    true
+  );
 });
 
 test('POST /api/user-account/broker-bindings/:id/default switches the default binding', async () => {
@@ -1212,7 +1375,14 @@ test('POST /api/user-account/broker-bindings/:id/default switches the default bi
     path: '/api/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
-  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.broker-binding.default-set' && item.metadata.bindingId === 'binding-paper'), true);
+  assert.equal(
+    auditResponse.json.records.some(
+      (item) =>
+        item.type === 'user-account.broker-binding.default-set' &&
+        item.metadata.bindingId === 'binding-paper'
+    ),
+    true
+  );
 });
 
 test('DELETE /api/user-account/broker-bindings/:id removes a non-default binding', async () => {
@@ -1239,13 +1409,23 @@ test('DELETE /api/user-account/broker-bindings/:id removes a non-default binding
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(response.json.binding.id, 'binding-delete');
-  assert.equal(response.json.bindings.some((item) => item.id === 'binding-delete'), false);
+  assert.equal(
+    response.json.bindings.some((item) => item.id === 'binding-delete'),
+    false
+  );
 
   const auditResponse = await invokeGatewayRoute(handler, {
     path: '/api/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
-  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.broker-binding.deleted' && item.metadata.bindingId === 'binding-delete'), true);
+  assert.equal(
+    auditResponse.json.records.some(
+      (item) =>
+        item.type === 'user-account.broker-binding.deleted' &&
+        item.metadata.bindingId === 'binding-delete'
+    ),
+    true
+  );
 });
 
 test('DELETE /api/user-account/broker-bindings/:id rejects deleting the default binding', async () => {
@@ -1292,7 +1472,14 @@ test('POST /api/user-account/broker-bindings/sync updates default binding runtim
     path: '/api/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
-  assert.equal(auditResponse.json.records.some((item) => item.type === 'user-account.broker-binding.runtime-synced' && item.metadata.bindingId === response.json.binding.id), true);
+  assert.equal(
+    auditResponse.json.records.some(
+      (item) =>
+        item.type === 'user-account.broker-binding.runtime-synced' &&
+        item.metadata.bindingId === response.json.binding.id
+    ),
+    true
+  );
 });
 
 test('POST /api/agent/tools/execute runs an allowlisted read-only tool', async () => {
@@ -1340,7 +1527,10 @@ test('POST /api/agent/intent parses execution-prep prompts into persisted agent 
   assert.equal(response.json.intent.targetId, 'ema-cross-us');
   assert.equal(response.json.intent.requiresApproval, true);
   assert.equal(response.json.session.latestIntent.kind, 'request_execution_prep');
-  assert.equal(context.agentSessions.getAgentSession(response.json.session.id).latestIntent.kind, 'request_execution_prep');
+  assert.equal(
+    context.agentSessions.getAgentSession(response.json.session.id).latestIntent.kind,
+    'request_execution_prep'
+  );
 });
 
 test('POST /api/agent/intent rejects empty prompts', async () => {
@@ -1371,10 +1561,22 @@ test('POST /api/agent/plans creates a persisted plan with structured steps', asy
   assert.equal(response.json.ok, true);
   assert.equal(response.json.intent.kind, 'request_risk_explanation');
   assert.equal(response.json.plan.status, 'ready');
-  assert.equal(response.json.plan.steps.some((item) => item.toolName === 'risk.events.list'), true);
-  assert.equal(response.json.plan.steps.some((item) => item.kind === 'explain'), true);
-  assert.equal(context.agentPlans.getAgentPlan(response.json.plan.id).sessionId, response.json.session.id);
-  assert.equal(context.agentSessions.getAgentSession(response.json.session.id).latestPlanId, response.json.plan.id);
+  assert.equal(
+    response.json.plan.steps.some((item) => item.toolName === 'risk.events.list'),
+    true
+  );
+  assert.equal(
+    response.json.plan.steps.some((item) => item.kind === 'explain'),
+    true
+  );
+  assert.equal(
+    context.agentPlans.getAgentPlan(response.json.plan.id).sessionId,
+    response.json.session.id
+  );
+  assert.equal(
+    context.agentSessions.getAgentSession(response.json.session.id).latestPlanId,
+    response.json.plan.id
+  );
 });
 
 test('POST /api/agent/analysis-runs executes a planned read-only analysis and persists the run', async () => {
@@ -1382,7 +1584,8 @@ test('POST /api/agent/analysis-runs executes a planned read-only analysis and pe
     method: 'POST',
     path: '/api/agent/analysis-runs',
     body: {
-      prompt: 'Prepare execution for ema-cross-us and explain whether anything is still blocking it.',
+      prompt:
+        'Prepare execution for ema-cross-us and explain whether anything is still blocking it.',
       requestedBy: 'operator-demo',
     },
   });
@@ -1392,10 +1595,19 @@ test('POST /api/agent/analysis-runs executes a planned read-only analysis and pe
   assert.equal(response.json.intent.kind, 'request_execution_prep');
   assert.equal(response.json.plan.status, 'completed');
   assert.equal(response.json.run.status, 'completed');
-  assert.equal(response.json.run.toolCalls.some((item) => item.tool === 'strategy.catalog.list'), true);
+  assert.equal(
+    response.json.run.toolCalls.some((item) => item.tool === 'strategy.catalog.list'),
+    true
+  );
   assert.equal(response.json.run.evidence.length >= 1, true);
-  assert.equal(context.agentAnalysisRuns.getAgentAnalysisRun(response.json.run.id).planId, response.json.plan.id);
-  assert.equal(context.agentSessions.getAgentSession(response.json.session.id).latestAnalysisRunId, response.json.run.id);
+  assert.equal(
+    context.agentAnalysisRuns.getAgentAnalysisRun(response.json.run.id).planId,
+    response.json.plan.id
+  );
+  assert.equal(
+    context.agentSessions.getAgentSession(response.json.session.id).latestAnalysisRunId,
+    response.json.run.id
+  );
 });
 
 test('GET /api/agent/sessions and detail expose persisted plans and analysis runs', async () => {
@@ -1417,7 +1629,10 @@ test('GET /api/agent/sessions and detail expose persisted plans and analysis run
 
   assert.equal(listResponse.statusCode, 200);
   assert.equal(listResponse.json.ok, true);
-  assert.equal(listResponse.json.sessions.some((item) => item.id === createResponse.json.session.id), true);
+  assert.equal(
+    listResponse.json.sessions.some((item) => item.id === createResponse.json.session.id),
+    true
+  );
   assert.equal(detailResponse.statusCode, 200);
   assert.equal(detailResponse.json.ok, true);
   assert.equal(detailResponse.json.session.id, createResponse.json.session.id);
@@ -1426,11 +1641,30 @@ test('GET /api/agent/sessions and detail expose persisted plans and analysis run
   assert.equal(Array.isArray(detailResponse.json.plans), true);
   assert.equal(Array.isArray(detailResponse.json.analysisRuns), true);
   assert.equal(Array.isArray(detailResponse.json.messages), true);
-  assert.equal(detailResponse.json.messages.some((item) => item.role === 'user' && item.kind === 'prompt'), true);
-  assert.equal(detailResponse.json.messages.some((item) => item.role === 'assistant' && item.kind === 'plan'), true);
-  assert.equal(detailResponse.json.messages.some((item) => item.kind === 'analysis_status'), true);
-  assert.equal(detailResponse.json.messages.some((item) => item.kind === 'analysis_status' && String(item.body || '').includes('Summarizing')), true);
-  assert.equal(detailResponse.json.messages.some((item) => item.role === 'assistant' && item.kind === 'analysis_result'), true);
+  assert.equal(
+    detailResponse.json.messages.some((item) => item.role === 'user' && item.kind === 'prompt'),
+    true
+  );
+  assert.equal(
+    detailResponse.json.messages.some((item) => item.role === 'assistant' && item.kind === 'plan'),
+    true
+  );
+  assert.equal(
+    detailResponse.json.messages.some((item) => item.kind === 'analysis_status'),
+    true
+  );
+  assert.equal(
+    detailResponse.json.messages.some(
+      (item) => item.kind === 'analysis_status' && String(item.body || '').includes('Summarizing')
+    ),
+    true
+  );
+  assert.equal(
+    detailResponse.json.messages.some(
+      (item) => item.role === 'assistant' && item.kind === 'analysis_result'
+    ),
+    true
+  );
 });
 
 test('GET /api/agent/sessions respects the current workspace scope by default', async () => {
@@ -1469,8 +1703,14 @@ test('GET /api/agent/sessions respects the current workspace scope by default', 
   });
 
   assert.equal(scopedList.statusCode, 200);
-  assert.equal(scopedList.json.sessions.some((item) => item.id === liveResponse.json.session.id), true);
-  assert.equal(scopedList.json.sessions.some((item) => item.id === operationsResponse.json.session.id), false);
+  assert.equal(
+    scopedList.json.sessions.some((item) => item.id === liveResponse.json.session.id),
+    true
+  );
+  assert.equal(
+    scopedList.json.sessions.some((item) => item.id === operationsResponse.json.session.id),
+    false
+  );
   assert.equal(hiddenDetail.statusCode, 404);
 
   context.userAccount.setCurrentWorkspace('workspace-operations');
@@ -1509,8 +1749,16 @@ test('GET /api/agent/workbench returns explanation queues and operator trail', a
   assert.equal(response.json.summary.sessions >= 1, true);
   assert.equal(response.json.summary.pendingActionRequests >= 1, true);
   assert.equal(Array.isArray(response.json.recentExplanations), true);
-  assert.equal(response.json.recentExplanations.some((item) => item.analysisRunId === createResponse.json.run.id), true);
-  assert.equal(response.json.queues.pendingActionRequests.some((item) => item.id === request.id), true);
+  assert.equal(
+    response.json.recentExplanations.some(
+      (item) => item.analysisRunId === createResponse.json.run.id
+    ),
+    true
+  );
+  assert.equal(
+    response.json.queues.pendingActionRequests.some((item) => item.id === request.id),
+    true
+  );
   assert.equal(Array.isArray(response.json.operatorTimeline), true);
 });
 
@@ -1555,11 +1803,26 @@ test('GET /api/agent/sessions/:id/timeline returns linked operator events', asyn
 
   assert.equal(timelineResponse.statusCode, 200);
   assert.equal(timelineResponse.json.ok, true);
-  assert.equal(timelineResponse.json.timeline.some((item) => item.lane === 'operator' && item.title.includes('Approved agent request')), true);
-  assert.equal(timelineResponse.json.timeline.some((item) => item.lane === 'audit' && item.title.includes('Agent analysis')), true);
+  assert.equal(
+    timelineResponse.json.timeline.some(
+      (item) => item.lane === 'operator' && item.title.includes('Approved agent request')
+    ),
+    true
+  );
+  assert.equal(
+    timelineResponse.json.timeline.some(
+      (item) => item.lane === 'audit' && item.title.includes('Agent analysis')
+    ),
+    true
+  );
   assert.equal(detailResponse.statusCode, 200);
   assert.equal(Array.isArray(detailResponse.json.timeline), true);
-  assert.equal(detailResponse.json.linkedOperatorActions.some((item) => item.metadata?.agentActionRequestId === request.id), true);
+  assert.equal(
+    detailResponse.json.linkedOperatorActions.some(
+      (item) => item.metadata?.agentActionRequestId === request.id
+    ),
+    true
+  );
 });
 
 test('POST /api/agent/action-requests queues an agent action request workflow', async () => {
@@ -1663,7 +1926,10 @@ test('POST /api/agent/sessions/:id/action-requests queues a controlled handoff f
   assert.equal(response.json.handoff.requestType, 'prepare_execution_plan');
   assert.equal(response.json.session.status, 'waiting_approval');
   assert.equal(response.json.workflow.workflowId, 'task-orchestrator.agent-action-request');
-  assert.equal(context.workflows.getWorkflowRun(response.json.workflow.id).payload.metadata.agentSessionId, session.id);
+  assert.equal(
+    context.workflows.getWorkflowRun(response.json.workflow.id).payload.metadata.agentSessionId,
+    session.id
+  );
 });
 
 test('POST /api/agent/action-requests rejects unsupported request types', async () => {
@@ -1706,7 +1972,13 @@ test('POST /api/agent/action-requests requires strategy:write permission', async
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+    ],
   });
 });
 
@@ -1885,7 +2157,13 @@ test('POST /api/agent/action-requests/:id/approve requires risk:review permissio
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+    ],
   });
 });
 
@@ -1933,7 +2211,13 @@ test('POST /api/strategy/execute requires strategy:write permission', async () =
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+    ],
   });
 });
 
@@ -2247,8 +2531,14 @@ test('GET /api/execution/workbench returns lifecycle summary and execution ledge
   assert.equal(Array.isArray(response.json.operations.nextActions), true);
   assert.equal(response.json.summary.recoverablePlans >= 1, true);
   assert.equal(Array.isArray(response.json.entries), true);
-  assert.equal(response.json.entries.some((entry) => entry.plan.id === 'exec-workbench-plan'), true);
-  assert.equal(response.json.entries.some((entry) => entry.recovery?.recommendedAction === 'reroute_orders'), true);
+  assert.equal(
+    response.json.entries.some((entry) => entry.plan.id === 'exec-workbench-plan'),
+    true
+  );
+  assert.equal(
+    response.json.entries.some((entry) => entry.recovery?.recommendedAction === 'reroute_orders'),
+    true
+  );
   assert.equal(typeof response.json.entries[0].compensation?.status, 'string');
   assert.equal(typeof response.json.entries[0].exceptionPolicy?.status, 'string');
 });
@@ -2319,7 +2609,10 @@ test('POST /api/execution/plans/:id/approve transitions awaiting plans into subm
   assert.equal(response.json.ok, true);
   assert.equal(response.json.plan.lifecycleStatus, 'submitted');
   assert.equal(response.json.executionRun.lifecycleStatus, 'submitted');
-  assert.equal(response.json.orderStates.every((item) => item.lifecycleStatus === 'submitted'), true);
+  assert.equal(
+    response.json.orderStates.every((item) => item.lifecycleStatus === 'submitted'),
+    true
+  );
 });
 
 test('POST /api/execution/plans/bulk runs approval actions across multiple execution plans', async () => {
@@ -2336,7 +2629,15 @@ test('POST /api/execution/plans/bulk runs approval actions across multiple execu
       summary: 'Awaiting approval.',
       capital: 100000,
       orderCount: 1,
-      orders: [{ symbol: index === 0 ? 'AAPL' : 'MSFT', side: 'BUY', qty: 5, weight: 1, rationale: 'trend' }],
+      orders: [
+        {
+          symbol: index === 0 ? 'AAPL' : 'MSFT',
+          side: 'BUY',
+          qty: 5,
+          weight: 1,
+          rationale: 'trend',
+        },
+      ],
     });
     context.executionRuns.appendExecutionRun({
       id: `exec-bulk-approve-run-${index + 1}`,
@@ -2349,26 +2650,28 @@ test('POST /api/execution/plans/bulk runs approval actions across multiple execu
       owner: 'execution-desk',
       orderCount: 1,
     });
-    context.executionRuns.appendExecutionOrderStates([{
-      id: `exec-bulk-approve-order-${index + 1}`,
-      executionPlanId: planId,
-      executionRunId: `exec-bulk-approve-run-${index + 1}`,
-      symbol: index === 0 ? 'AAPL' : 'MSFT',
-      side: 'BUY',
-      qty: 5,
-      weight: 1,
-      lifecycleStatus: 'planned',
-      brokerOrderId: '',
-      filledQty: 0,
-      avgFillPrice: null,
-      summary: 'planned',
-      createdAt: '',
-      updatedAt: '',
-      submittedAt: '',
-      acknowledgedAt: '',
-      filledAt: '',
-      metadata: {},
-    }]);
+    context.executionRuns.appendExecutionOrderStates([
+      {
+        id: `exec-bulk-approve-order-${index + 1}`,
+        executionPlanId: planId,
+        executionRunId: `exec-bulk-approve-run-${index + 1}`,
+        symbol: index === 0 ? 'AAPL' : 'MSFT',
+        side: 'BUY',
+        qty: 5,
+        weight: 1,
+        lifecycleStatus: 'planned',
+        brokerOrderId: '',
+        filledQty: 0,
+        avgFillPrice: null,
+        summary: 'planned',
+        createdAt: '',
+        updatedAt: '',
+        submittedAt: '',
+        acknowledgedAt: '',
+        filledAt: '',
+        metadata: {},
+      },
+    ]);
   });
 
   const response = await invokeGatewayRoute(handler, {
@@ -2384,9 +2687,18 @@ test('POST /api/execution/plans/bulk runs approval actions across multiple execu
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
   assert.equal(response.json.action, 'approve');
-  assert.deepEqual(response.json.updatedIds.sort(), ['exec-bulk-approve-plan-1', 'exec-bulk-approve-plan-2']);
-  assert.equal(response.json.results.every((item) => item.ok), true);
-  assert.equal(response.json.results.every((item) => item.lifecycleStatus === 'submitted'), true);
+  assert.deepEqual(response.json.updatedIds.sort(), [
+    'exec-bulk-approve-plan-1',
+    'exec-bulk-approve-plan-2',
+  ]);
+  assert.equal(
+    response.json.results.every((item) => item.ok),
+    true
+  );
+  assert.equal(
+    response.json.results.every((item) => item.lifecycleStatus === 'submitted'),
+    true
+  );
 });
 
 test('POST /api/execution/plans/:id/settle moves submitted plans into filled lifecycle', async () => {
@@ -2624,7 +2936,16 @@ test('POST /api/execution/plans/:id/reconcile records structured reconciliation 
     connected: true,
     account: { cash: 90000, buyingPower: 90000, equity: 100000 },
     positions: [{ symbol: 'AAPL', qty: 3, avgCost: 181.5 }],
-    orders: [{ id: 'broker-exec-reconcile-1', symbol: 'AAPL', side: 'BUY', qty: 5, filledQty: 5, status: 'filled' }],
+    orders: [
+      {
+        id: 'broker-exec-reconcile-1',
+        symbol: 'AAPL',
+        side: 'BUY',
+        qty: 5,
+        filledQty: 5,
+        status: 'filled',
+      },
+    ],
     message: 'snapshot synced',
     createdAt: '2026-03-21T08:03:00.000Z',
   });
@@ -2791,7 +3112,16 @@ test('POST /api/execution/plans/:id/compensate runs execution compensation autom
     connected: true,
     account: { cash: 90000, buyingPower: 90000, equity: 100000 },
     positions: [{ symbol: 'AAPL', qty: 3, avgCost: 181.5 }],
-    orders: [{ id: 'broker-exec-compensate-1', symbol: 'AAPL', side: 'BUY', qty: 5, filledQty: 5, status: 'filled' }],
+    orders: [
+      {
+        id: 'broker-exec-compensate-1',
+        symbol: 'AAPL',
+        side: 'BUY',
+        qty: 5,
+        filledQty: 5,
+        status: 'filled',
+      },
+    ],
     message: 'snapshot synced',
     createdAt: '2026-03-21T08:03:00.000Z',
   });
@@ -2833,7 +3163,10 @@ test('POST /api/execution/plans/:id/compensate runs execution compensation autom
   assert.equal(response.json.compensation.status, 'escalated');
   assert.equal(Boolean(response.json.compensation.linkedIncidentId), true);
   assert.equal(response.json.incident.id, response.json.compensation.linkedIncidentId);
-  assert.equal(response.json.exceptionPolicy.linkedIncidentId, response.json.compensation.linkedIncidentId);
+  assert.equal(
+    response.json.exceptionPolicy.linkedIncidentId,
+    response.json.compensation.linkedIncidentId
+  );
 });
 
 test('POST /api/execution/plans/:id/broker-events ingests a broker fill event into execution state', async () => {
@@ -3025,7 +3358,12 @@ test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control no
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.workflow.status, 'queued');
-  assert.equal(context.notifications.listNotificationJobs().some((item) => item.payload.source === 'workflow-control'), true);
+  assert.equal(
+    context.notifications
+      .listNotificationJobs()
+      .some((item) => item.payload.source === 'workflow-control'),
+    true
+  );
 });
 
 test('GET /api/scheduler/ticks returns scheduler ticks from shared store', async () => {
@@ -3059,10 +3397,19 @@ test('GET /api/scheduler/ticks returns scheduler ticks from shared store', async
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ticks.length >= 1, true);
-  assert.equal(response.json.ticks.some((item) => item.id === 'scheduler-tick-intraday'), true);
+  assert.equal(
+    response.json.ticks.some((item) => item.id === 'scheduler-tick-intraday'),
+    true
+  );
   assert.equal(filteredResponse.statusCode, 200);
-  assert.equal(filteredResponse.json.ticks.some((item) => item.id === 'scheduler-tick-intraday'), true);
-  assert.equal(filteredResponse.json.ticks.every((item) => item.phase === 'INTRADAY'), true);
+  assert.equal(
+    filteredResponse.json.ticks.some((item) => item.id === 'scheduler-tick-intraday'),
+    true
+  );
+  assert.equal(
+    filteredResponse.json.ticks.every((item) => item.phase === 'INTRADAY'),
+    true
+  );
 });
 
 test('GET /api/scheduler/workbench returns the scheduler operations snapshot', async () => {
@@ -3140,19 +3487,54 @@ test('GET /api/scheduler/workbench returns the scheduler operations snapshot', a
   assert.equal(response.json.summary.cycleAttention >= 1, true);
   assert.equal(response.json.summary.schedulerNotifications >= 1, true);
   assert.equal(response.json.summary.riskSignals >= 1, true);
-  assert.equal(response.json.lanes.some((item) => item.key === 'intraday'), true);
-  assert.equal(response.json.lanes.some((item) => item.key === 'cycles'), true);
-  assert.equal(response.json.runbook.some((item) => item.key === 'review-current-window'), true);
-  assert.equal(response.json.queue.attentionTicks.some((item) => item.id === 'scheduler-workbench-intraday'), true);
-  assert.equal(response.json.queue.incidents.some((item) => item.id === 'scheduler-workbench-incident'), true);
-  assert.equal(response.json.queue.notifications.some((item) => item.id === 'scheduler-workbench-notification'), true);
-  assert.equal(response.json.queue.cycleRecords.some((item) => item.id === 'scheduler-workbench-cycle'), true);
-  assert.equal(response.json.queue.riskEvents.some((item) => item.id === 'scheduler-workbench-risk'), true);
+  assert.equal(
+    response.json.lanes.some((item) => item.key === 'intraday'),
+    true
+  );
+  assert.equal(
+    response.json.lanes.some((item) => item.key === 'cycles'),
+    true
+  );
+  assert.equal(
+    response.json.runbook.some((item) => item.key === 'review-current-window'),
+    true
+  );
+  assert.equal(
+    response.json.queue.attentionTicks.some((item) => item.id === 'scheduler-workbench-intraday'),
+    true
+  );
+  assert.equal(
+    response.json.queue.incidents.some((item) => item.id === 'scheduler-workbench-incident'),
+    true
+  );
+  assert.equal(
+    response.json.queue.notifications.some(
+      (item) => item.id === 'scheduler-workbench-notification'
+    ),
+    true
+  );
+  assert.equal(
+    response.json.queue.cycleRecords.some((item) => item.id === 'scheduler-workbench-cycle'),
+    true
+  );
+  assert.equal(
+    response.json.queue.riskEvents.some((item) => item.id === 'scheduler-workbench-risk'),
+    true
+  );
   assert.equal(response.json.linkage.summary.linkedRiskEvents >= 1, true);
   assert.equal(response.json.linkage.summary.linkedSchedulerTicks >= 1, true);
-  assert.equal(response.json.linkage.lanes.some((item) => item.key === 'current-window'), true);
-  assert.equal(response.json.linkage.runbook.some((item) => item.key === 'focus-linked-window'), true);
-  assert.equal(response.json.linkage.queue.riskEvents.some((item) => item.id === 'scheduler-workbench-risk'), true);
+  assert.equal(
+    response.json.linkage.lanes.some((item) => item.key === 'current-window'),
+    true
+  );
+  assert.equal(
+    response.json.linkage.runbook.some((item) => item.key === 'focus-linked-window'),
+    true
+  );
+  assert.equal(
+    response.json.linkage.queue.riskEvents.some((item) => item.id === 'scheduler-workbench-risk'),
+    true
+  );
 });
 
 test('POST /api/scheduler/actions executes scheduler orchestration actions and leaves control-plane traces', async () => {
@@ -3230,14 +3612,28 @@ test('POST /api/scheduler/actions executes scheduler orchestration actions and l
   assert.equal(response.json.schedulerTick.phase, 'INTRADAY');
   assert.equal(response.json.action.title.includes('Align risk'), true);
   assert.equal(response.json.action.touchedIncidentIds.includes('scheduler-action-incident'), true);
-  assert.equal(response.json.action.touchedNotificationIds.includes('scheduler-action-notification'), true);
+  assert.equal(
+    response.json.action.touchedNotificationIds.includes('scheduler-action-notification'),
+    true
+  );
   assert.equal(response.json.action.touchedRiskEventIds.includes('scheduler-action-risk'), true);
   assert.equal(response.json.action.touchedCycleIds.includes('scheduler-action-cycle'), true);
   assert.equal(response.json.cycleRecord?.mode, 'scheduler-orchestration');
-  assert.equal(response.json.workbench.runbook.some((item) => item.key === 'align-risk-window'), true);
+  assert.equal(
+    response.json.workbench.runbook.some((item) => item.key === 'align-risk-window'),
+    true
+  );
   assert.equal(context.incidents.getIncident('scheduler-action-incident')?.status, 'investigating');
-  assert.equal(context.incidents.listIncidentNotes('scheduler-action-incident', 10).length >= 1, true);
-  assert.equal(context.operatorActions.listOperatorActions(10).some((item) => item.type === 'scheduler.orchestration.align-risk-window'), true);
+  assert.equal(
+    context.incidents.listIncidentNotes('scheduler-action-incident', 10).length >= 1,
+    true
+  );
+  assert.equal(
+    context.operatorActions
+      .listOperatorActions(10)
+      .some((item) => item.type === 'scheduler.orchestration.align-risk-window'),
+    true
+  );
 });
 
 test('POST then GET /api/task-orchestrator/actions persists operator actions', async () => {
@@ -3261,7 +3657,10 @@ test('POST then GET /api/task-orchestrator/actions persists operator actions', a
   assert.equal(createResponse.statusCode, 200);
   assert.equal(createResponse.json.action.title, 'Approve from API test');
   assert.equal(listResponse.statusCode, 200);
-  assert.equal(listResponse.json.actions.some((item) => item.id === createResponse.json.action.id), true);
+  assert.equal(
+    listResponse.json.actions.some((item) => item.id === createResponse.json.action.id),
+    true
+  );
 
   context.operatorActions.appendOperatorAction({
     id: 'operator-action-warn',
@@ -3279,7 +3678,10 @@ test('POST then GET /api/task-orchestrator/actions persists operator actions', a
   });
 
   assert.equal(filteredResponse.statusCode, 200);
-  assert.equal(filteredResponse.json.actions.some((item) => item.id === 'operator-action-warn'), true);
+  assert.equal(
+    filteredResponse.json.actions.some((item) => item.id === 'operator-action-warn'),
+    true
+  );
 });
 
 test('POST /api/task-orchestrator/actions requires execution:approve permission', async () => {
@@ -3310,7 +3712,13 @@ test('POST /api/task-orchestrator/actions requires execution:approve permission'
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+    ],
   });
 });
 
@@ -3415,16 +3823,18 @@ test('GET /api/monitoring/status returns runtime health and queue summary', asyn
     summary: 'worker heartbeat',
     createdAt: nowIso,
   });
-  context.store.writeCollection('scheduler-ticks.json', [{
-    id: 'scheduler-monitoring-tick',
-    phase: 'INTRADAY',
-    status: 'steady',
-    title: 'Scheduler tick',
-    message: 'scheduler tick',
-    worker: 'quantpilot-task-worker',
-    createdAt: nowIso,
-    metadata: {},
-  }]);
+  context.store.writeCollection('scheduler-ticks.json', [
+    {
+      id: 'scheduler-monitoring-tick',
+      phase: 'INTRADAY',
+      status: 'steady',
+      title: 'Scheduler tick',
+      message: 'scheduler tick',
+      worker: 'quantpilot-task-worker',
+      createdAt: nowIso,
+      metadata: {},
+    },
+  ]);
 
   const response = await invokeGatewayRoute(handler, {
     path: '/api/monitoring/status',
@@ -3453,8 +3863,14 @@ test('GET /api/monitoring/status returns runtime health and queue summary', asyn
   assert.equal(response.json.services.queues.totalPending >= 4, true);
   assert.equal(response.json.services.queues.backlogStatus, 'critical');
   assert.equal(response.json.services.risk.riskOff >= 1, true);
-  assert.equal(response.json.alerts.some((item) => item.source === 'workflow' && item.level === 'critical'), true);
-  assert.equal(response.json.alerts.some((item) => item.source === 'queue' && item.level === 'critical'), true);
+  assert.equal(
+    response.json.alerts.some((item) => item.source === 'workflow' && item.level === 'critical'),
+    true
+  );
+  assert.equal(
+    response.json.alerts.some((item) => item.source === 'queue' && item.level === 'critical'),
+    true
+  );
   assert.equal(response.json.recent.latestWorkerHeartbeat.id, 'worker-heartbeat-monitoring');
   assert.equal(response.json.recent.latestSchedulerTick.id, 'scheduler-monitoring-tick');
 });
@@ -3650,11 +4066,26 @@ test('GET /api/operations/workbench returns unified operations overview', async 
   assert.equal(typeof response.json.persistence.recommendedAction, 'string');
   assert.equal(typeof response.json.persistence.links.settings, 'string');
   assert.equal(typeof response.json.persistence.links.maintenance, 'string');
-  assert.equal(response.json.lanes.some((item) => item.key === 'monitoring'), true);
-  assert.equal(response.json.lanes.some((item) => item.key === 'incidents'), true);
-  assert.equal(response.json.runbook.some((item) => item.key === 'stabilize-connectivity'), true);
-  assert.equal(response.json.runbook.some((item) => item.key === 'review-retry-posture'), true);
-  assert.equal(response.json.runbook.some((item) => item.key === 'triage-critical-incidents'), true);
+  assert.equal(
+    response.json.lanes.some((item) => item.key === 'monitoring'),
+    true
+  );
+  assert.equal(
+    response.json.lanes.some((item) => item.key === 'incidents'),
+    true
+  );
+  assert.equal(
+    response.json.runbook.some((item) => item.key === 'stabilize-connectivity'),
+    true
+  );
+  assert.equal(
+    response.json.runbook.some((item) => item.key === 'review-retry-posture'),
+    true
+  );
+  assert.equal(
+    response.json.runbook.some((item) => item.key === 'triage-critical-incidents'),
+    true
+  );
   assert.equal(response.json.recent.incident.id, 'operations-incident');
   assert.equal(typeof response.json.recent.notification.title, 'string');
   assert.equal(typeof response.json.recent.notification.source, 'string');
@@ -3667,7 +4098,14 @@ test('GET /api/operations/maintenance returns backup posture and integrity summa
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write', 'operations:maintain'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+      'operations:maintain',
+    ],
   });
   context.notifications.enqueueNotification({
     id: 'maintenance-route-notification',
@@ -3707,7 +4145,14 @@ test('operations maintenance routes export backups, dry-run restores, and repair
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write', 'operations:maintain'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+      'operations:maintain',
+    ],
   });
   const dueIso = new Date(Date.now() - 15 * 60 * 1000).toISOString();
   context.workflows.appendWorkflowRun({
@@ -3726,7 +4171,10 @@ test('operations maintenance routes export backups, dry-run restores, and repair
 
   assert.equal(backupResponse.statusCode, 200);
   assert.equal(backupResponse.json.ok, true);
-  assert.equal(backupResponse.json.backup.files.some((item) => item.filename === 'workflow-runs.json'), true);
+  assert.equal(
+    backupResponse.json.backup.files.some((item) => item.filename === 'workflow-runs.json'),
+    true
+  );
 
   const restoreResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
@@ -3755,7 +4203,10 @@ test('operations maintenance routes export backups, dry-run restores, and repair
   assert.equal(repairResponse.statusCode, 200);
   assert.equal(repairResponse.json.ok, true);
   assert.equal(repairResponse.json.releasedCount >= 1, true);
-  assert.equal(repairResponse.json.workflows.some((item) => item.id === 'maintenance-repair-workflow'), true);
+  assert.equal(
+    repairResponse.json.workflows.some((item) => item.id === 'maintenance-repair-workflow'),
+    true
+  );
   assert.equal(context.workflows.getWorkflowRun('maintenance-repair-workflow').status, 'queued');
 });
 
@@ -3763,7 +4214,13 @@ test('operations maintenance routes reject requests without operations:maintain 
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+    ],
   });
 
   const response = await invokeGatewayRoute(handler, {
@@ -3778,7 +4235,14 @@ test('operations maintenance routes reject requests without operations:maintain 
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write', 'operations:maintain'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+      'operations:maintain',
+    ],
   });
 });
 
@@ -3787,12 +4251,14 @@ test('incident routes create, update, and return incident details', async () => 
     id: 'incident-monitoring-snapshot',
     status: 'warn',
     generatedAt: '2026-03-16T08:00:00.000Z',
-    alerts: [{
-      id: 'incident-monitoring-alert',
-      level: 'warn',
-      source: 'worker',
-      message: 'Worker lag exceeded threshold.',
-    }],
+    alerts: [
+      {
+        id: 'incident-monitoring-alert',
+        level: 'warn',
+        source: 'worker',
+        message: 'Worker lag exceeded threshold.',
+      },
+    ],
   });
   context.notifications.appendNotification({
     id: 'incident-notification',
@@ -3885,14 +4351,22 @@ test('incident routes create, update, and return incident details', async () => 
       owner: 'api-operator',
       initialNote: 'Created from API test.',
       links: [
-        { kind: 'monitoring-alert', alertId: 'incident-monitoring-alert', snapshotId: 'incident-monitoring-snapshot' },
+        {
+          kind: 'monitoring-alert',
+          alertId: 'incident-monitoring-alert',
+          snapshotId: 'incident-monitoring-snapshot',
+        },
         { kind: 'notification', notificationId: 'incident-notification' },
         { kind: 'audit', auditId: 'incident-audit' },
         { kind: 'operator-action', actionId: 'incident-action' },
         { kind: 'scheduler-tick', tickId: 'incident-scheduler-tick' },
         { kind: 'risk-event', riskEventId: 'incident-risk-event' },
         { kind: 'workflow-run', workflowRunId: 'incident-workflow-run' },
-        { kind: 'execution-plan', executionPlanId: 'incident-execution-plan', workflowRunId: 'incident-workflow-run' },
+        {
+          kind: 'execution-plan',
+          executionPlanId: 'incident-execution-plan',
+          workflowRunId: 'incident-workflow-run',
+        },
       ],
       metadata: {
         monitoringAlertId: 'incident-monitoring-alert',
@@ -3968,10 +4442,16 @@ test('incident routes create, update, and return incident details', async () => 
   assert.equal(listed.json.incidents[0].id, 'incident-api-test');
   assert.equal(summary.statusCode, 200);
   assert.equal(summary.json.summary.total >= 1, true);
-  assert.equal(summary.json.summary.byOwner.some((item) => item.owner === 'api-operator'), true);
+  assert.equal(
+    summary.json.summary.byOwner.some((item) => item.owner === 'api-operator'),
+    true
+  );
   assert.equal(typeof summary.json.summary.response.ackOverdue, 'number');
   assert.equal(typeof summary.json.summary.response.blockedTasks, 'number');
-  assert.equal(summary.json.summary.nextActions.some((item) => item.key === 'closeout'), true);
+  assert.equal(
+    summary.json.summary.nextActions.some((item) => item.key === 'closeout'),
+    true
+  );
   assert.equal(updated.statusCode, 200);
   assert.equal(updated.json.incident.status, 'investigating');
   assert.equal(noted.statusCode, 200);
@@ -3989,21 +4469,69 @@ test('incident routes create, update, and return incident details', async () => 
   assert.equal(detail.json.incident.status, 'mitigated');
   assert.equal(detail.json.notes.length >= 2, true);
   assert.equal(detail.json.tasks.summary.total >= 5, true);
-  assert.equal(detail.json.tasks.items.some((item) => item.title === 'Validate queue recovery'), true);
+  assert.equal(
+    detail.json.tasks.items.some((item) => item.title === 'Validate queue recovery'),
+    true
+  );
   assert.equal(detail.json.activity.summary.total >= 4, true);
-  assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'opened'), true);
-  assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'status-changed'), true);
-  assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'owner-changed'), true);
-  assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'note-added'), true);
-  assert.equal(detail.json.activity.timeline.some((item) => item.kind === 'task-updated'), true);
+  assert.equal(
+    detail.json.activity.timeline.some((item) => item.kind === 'opened'),
+    true
+  );
+  assert.equal(
+    detail.json.activity.timeline.some((item) => item.kind === 'status-changed'),
+    true
+  );
+  assert.equal(
+    detail.json.activity.timeline.some((item) => item.kind === 'owner-changed'),
+    true
+  );
+  assert.equal(
+    detail.json.activity.timeline.some((item) => item.kind === 'note-added'),
+    true
+  );
+  assert.equal(
+    detail.json.activity.timeline.some((item) => item.kind === 'task-updated'),
+    true
+  );
   assert.equal(detail.json.evidence.summary.total >= 5, true);
   assert.equal(detail.json.evidence.summary.linked >= 5, true);
-  assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'monitoring-alert' && item.id === 'incident-monitoring-alert'), true);
-  assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'notification' && item.id === 'incident-notification'), true);
-  assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'audit' && item.id === 'incident-audit'), true);
-  assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'risk-event' && item.id === 'incident-risk-event'), true);
-  assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'workflow-run' && item.id === 'incident-workflow-run'), true);
-  assert.equal(detail.json.evidence.timeline.some((item) => item.kind === 'execution-plan' && item.id === 'incident-execution-plan'), true);
+  assert.equal(
+    detail.json.evidence.timeline.some(
+      (item) => item.kind === 'monitoring-alert' && item.id === 'incident-monitoring-alert'
+    ),
+    true
+  );
+  assert.equal(
+    detail.json.evidence.timeline.some(
+      (item) => item.kind === 'notification' && item.id === 'incident-notification'
+    ),
+    true
+  );
+  assert.equal(
+    detail.json.evidence.timeline.some(
+      (item) => item.kind === 'audit' && item.id === 'incident-audit'
+    ),
+    true
+  );
+  assert.equal(
+    detail.json.evidence.timeline.some(
+      (item) => item.kind === 'risk-event' && item.id === 'incident-risk-event'
+    ),
+    true
+  );
+  assert.equal(
+    detail.json.evidence.timeline.some(
+      (item) => item.kind === 'workflow-run' && item.id === 'incident-workflow-run'
+    ),
+    true
+  );
+  assert.equal(
+    detail.json.evidence.timeline.some(
+      (item) => item.kind === 'execution-plan' && item.id === 'incident-execution-plan'
+    ),
+    true
+  );
   assert.equal(detail.json.operations.ackState, 'acknowledged');
   assert.equal(detail.json.operations.linkedEvidence >= 5, true);
   assert.equal(detail.json.operations.nextAction.key, 'closeout');
@@ -4029,7 +4557,10 @@ test('POST then GET /api/audit/records persists audit entries', async () => {
   assert.equal(createResponse.statusCode, 200);
   assert.equal(createResponse.json.record.title, 'Audit from API test');
   assert.equal(listResponse.statusCode, 200);
-  assert.equal(listResponse.json.records.some((item) => item.id === createResponse.json.record.id), true);
+  assert.equal(
+    listResponse.json.records.some((item) => item.id === createResponse.json.record.id),
+    true
+  );
 
   context.audit.appendAuditRecord({
     id: 'audit-workflow-test',
@@ -4045,7 +4576,10 @@ test('POST then GET /api/audit/records persists audit entries', async () => {
   });
 
   assert.equal(filteredResponse.statusCode, 200);
-  assert.equal(filteredResponse.json.records.some((item) => item.id === 'audit-workflow-test'), true);
+  assert.equal(
+    filteredResponse.json.records.some((item) => item.id === 'audit-workflow-test'),
+    true
+  );
 });
 
 test('POST then GET /api/task-orchestrator/cycles persists cycle records', async () => {
@@ -4071,8 +4605,14 @@ test('POST then GET /api/task-orchestrator/cycles persists cycle records', async
   assert.equal(createResponse.statusCode, 200);
   assert.equal(createResponse.json.cycle.cycle, 21);
   assert.equal(listResponse.statusCode, 200);
-  assert.equal(listResponse.json.cycles.some((item) => item.id === createResponse.json.cycle.id), true);
-  assert.equal(context.audit.listAuditRecords().some((item) => item.title.includes('Cycle 21 completed')), true);
+  assert.equal(
+    listResponse.json.cycles.some((item) => item.id === createResponse.json.cycle.id),
+    true
+  );
+  assert.equal(
+    context.audit.listAuditRecords().some((item) => item.title.includes('Cycle 21 completed')),
+    true
+  );
   assert.equal(context.notifications.listNotificationJobs().length >= 0, true);
 });
 
@@ -4123,7 +4663,10 @@ test('POST /api/task-orchestrator/cycles queues review notifications when approv
   const notificationJobs = context.notifications.listNotificationJobs();
 
   assert.equal(response.statusCode, 200);
-  assert.equal(notificationJobs.some((job) => job.payload.title.includes('requires approval')), true);
+  assert.equal(
+    notificationJobs.some((job) => job.payload.title.includes('requires approval')),
+    true
+  );
 });
 
 test('POST /api/task-orchestrator/state/run returns next state and enqueues risk scan', async () => {
@@ -4172,7 +4715,10 @@ test('GET /api/task-orchestrator/workflows returns persisted workflow runs', asy
   });
 
   assert.equal(response.statusCode, 200);
-  assert.equal(response.json.workflows.some((item) => item.workflowId === 'task-orchestrator.cycle-run'), true);
+  assert.equal(
+    response.json.workflows.some((item) => item.workflowId === 'task-orchestrator.cycle-run'),
+    true
+  );
 });
 
 test('GET /api/task-orchestrator/workflows/:id returns a persisted workflow run', async () => {
@@ -4327,7 +4873,13 @@ test('POST /api/task-orchestrator/workflows/:id/resume requires execution:approv
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+    ],
   });
 });
 
@@ -4385,7 +4937,13 @@ test('POST /api/task-orchestrator/workflows/:id/cancel requires execution:approv
   context.userAccount.updateUserAccess({
     role: 'admin',
     status: 'active',
-    permissions: ['dashboard:read', 'strategy:write', 'risk:review', 'execution:approve', 'account:write'],
+    permissions: [
+      'dashboard:read',
+      'strategy:write',
+      'risk:review',
+      'execution:approve',
+      'account:write',
+    ],
   });
 });
 
@@ -4393,7 +4951,12 @@ test('POST /api/agent/instructions records a daily bias instruction', async () =
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
     path: '/api/agent/instructions',
-    body: { sessionId: 'session-governance-1', kind: 'daily_bias', title: 'Conservative bias', body: 'Trade smaller today.' },
+    body: {
+      sessionId: 'session-governance-1',
+      kind: 'daily_bias',
+      title: 'Conservative bias',
+      body: 'Trade smaller today.',
+    },
   });
 
   assert.equal(response.statusCode, 200);

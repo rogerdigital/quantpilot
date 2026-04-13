@@ -75,7 +75,12 @@ export function createBacktestResultRepository(store) {
   }
 
   function writeResults(results) {
-    trimAndSave(store, FILENAME, results.map((entry) => createBacktestResultEntry(entry)), 600);
+    trimAndSave(
+      store,
+      FILENAME,
+      results.map((entry) => createBacktestResultEntry(entry)),
+      600
+    );
   }
 
   function nextVersion(results, runId) {

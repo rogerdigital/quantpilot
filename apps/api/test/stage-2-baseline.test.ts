@@ -1,19 +1,21 @@
 // @ts-nocheck
-import test from 'node:test';
+
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
 import { invokeGatewayRoute } from './helpers/invoke-gateway.js';
 
 const namespace = `stage-2-baseline-test-${randomUUID()}`;
 process.env.QUANTPILOT_CONTROL_PLANE_NAMESPACE = namespace;
 
-const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] = await Promise.all([
-  import('../src/gateways/alpaca.js'),
-  import('../../../packages/control-plane-store/src/context.js'),
-  import('../../../packages/control-plane-store/src/store.js'),
-]);
+const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] =
+  await Promise.all([
+    import('../src/gateways/alpaca.js'),
+    import('../../../packages/control-plane-store/src/context.js'),
+    import('../../../packages/control-plane-store/src/store.js'),
+  ]);
 
 const handler = createGatewayHandler({
   getBrokerHealth: async () => ({
@@ -56,10 +58,16 @@ test.after(() => {
 function seedResearchChain() {
   const nowMs = Date.now();
   const createdAt = new Date(nowMs - 2 * 24 * 60 * 60 * 1000).toISOString();
-  const workflowCompletedAt = new Date(nowMs - (2 * 24 * 60 * 60 * 1000) + 5 * 60 * 1000).toISOString();
-  const evaluationCreatedAt = new Date(nowMs - (2 * 24 * 60 * 60 * 1000) + 8 * 60 * 1000).toISOString();
-  const reportCreatedAt = new Date(nowMs - (2 * 24 * 60 * 60 * 1000) + 10 * 60 * 1000).toISOString();
-  const governanceActionAt = new Date(nowMs - (2 * 24 * 60 * 60 * 1000) + 12 * 60 * 1000).toISOString();
+  const workflowCompletedAt = new Date(
+    nowMs - 2 * 24 * 60 * 60 * 1000 + 5 * 60 * 1000
+  ).toISOString();
+  const evaluationCreatedAt = new Date(
+    nowMs - 2 * 24 * 60 * 60 * 1000 + 8 * 60 * 1000
+  ).toISOString();
+  const reportCreatedAt = new Date(nowMs - 2 * 24 * 60 * 60 * 1000 + 10 * 60 * 1000).toISOString();
+  const governanceActionAt = new Date(
+    nowMs - 2 * 24 * 60 * 60 * 1000 + 12 * 60 * 1000
+  ).toISOString();
   context.strategyCatalog.upsertStrategy({
     id: 'stage2-strategy',
     name: 'Stage 2 Research Strategy',
@@ -235,8 +243,14 @@ test('stage 2 baseline exposes the research hub with governance and execution ha
   assert.equal(typeof hub.json.handoffSummary.total, 'number');
   assert.equal(Array.isArray(hub.json.governanceActions), true);
   assert.equal(Array.isArray(hub.json.handoffs), true);
-  assert.equal(hub.json.governanceActions.some((item) => item.type === 'research-governance.set-champion'), true);
-  assert.equal(hub.json.handoffs.some((item) => item.strategyId === 'stage2-strategy'), true);
+  assert.equal(
+    hub.json.governanceActions.some((item) => item.type === 'research-governance.set-champion'),
+    true
+  );
+  assert.equal(
+    hub.json.handoffs.some((item) => item.strategyId === 'stage2-strategy'),
+    true
+  );
 });
 
 test('stage 2 baseline exposes research replay and queued execution handoff contracts', async () => {
@@ -299,5 +313,8 @@ test('stage 2 baseline exposes research replay and queued execution handoff cont
   assert.equal(typeof workbench.json.summary.readyForExecution, 'number');
   assert.equal(Array.isArray(workbench.json.comparisons), true);
   assert.equal(Array.isArray(workbench.json.recentActions), true);
-  assert.equal(workbench.json.recentActions.some((item) => item.type?.startsWith('research-governance.')), true);
+  assert.equal(
+    workbench.json.recentActions.some((item) => item.type?.startsWith('research-governance.')),
+    true
+  );
 });

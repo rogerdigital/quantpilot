@@ -1,31 +1,55 @@
+import type {
+  IncidentActivityRecord,
+  IncidentEvidenceItem,
+  OperationsPersistencePosture,
+  SchedulerOrchestrationActionResponse,
+  SchedulerRunbookActionKey,
+} from '@shared-types/trading.ts';
 import { useEffect, useState } from 'react';
-import type { IncidentActivityRecord, IncidentEvidenceItem, OperationsPersistencePosture, SchedulerOrchestrationActionResponse, SchedulerRunbookActionKey } from '@shared-types/trading.ts';
-import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
+import {
+  appendIncidentNote,
+  appendIncidentTask,
+  bulkUpdateIncidentQueue,
+  createIncident,
+  runSchedulerOrchestrationAction,
+  updateIncident,
+  updateIncidentTask,
+} from '../../app/api/controlPlane.ts';
+import { ActivityLog } from '../../components/business/ConsoleTables.tsx';
+import { EmptyState, SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
 import { useLatestBrokerSnapshot } from '../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useMonitoringStatus } from '../../hooks/useMonitoringStatus.ts';
-import { appendIncidentNote, appendIncidentTask, bulkUpdateIncidentQueue, createIncident, runSchedulerOrchestrationAction, updateIncident, updateIncidentTask } from '../../app/api/controlPlane.ts';
-import { useExecutionLedgerFeed } from '../../modules/notifications/useExecutionLedgerFeed.ts';
-import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
+import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
+import {
+  connectionLabel,
+  fmtDateTime,
+  monitoringTone,
+  translateMonitoringStatus,
+  translateProviderLabel,
+} from '../../modules/console/console.utils.ts';
 import { useAuditRecordsFeed } from '../../modules/notifications/useAuditRecordsFeed.ts';
-import { useIncidentDetail } from '../../modules/notifications/useIncidentDetail.ts';
+import { useExecutionLedgerFeed } from '../../modules/notifications/useExecutionLedgerFeed.ts';
 import { useIncidentArtifactInspector } from '../../modules/notifications/useIncidentArtifactInspector.ts';
-import { useIncidentsFeed } from '../../modules/notifications/useIncidentsFeed.ts';
+import { useIncidentDetail } from '../../modules/notifications/useIncidentDetail.ts';
 import { useIncidentSummary } from '../../modules/notifications/useIncidentSummary.ts';
+import { useIncidentsFeed } from '../../modules/notifications/useIncidentsFeed.ts';
 import { useMonitoringAlertsFeed } from '../../modules/notifications/useMonitoringAlertsFeed.ts';
 import { useMonitoringSnapshotsFeed } from '../../modules/notifications/useMonitoringSnapshotsFeed.ts';
+import { useNotificationsFeed } from '../../modules/notifications/useNotificationsFeed.ts';
 import { useOperationsWorkbench } from '../../modules/notifications/useOperationsWorkbench.ts';
 import { useOperatorActionsFeed } from '../../modules/notifications/useOperatorActionsFeed.ts';
 import { useRiskEventsFeed } from '../../modules/notifications/useRiskEventsFeed.ts';
-import { useSchedulerWorkbench } from '../../modules/notifications/useSchedulerWorkbench.ts';
 import { useSchedulerTicksFeed } from '../../modules/notifications/useSchedulerTicksFeed.ts';
+import { useSchedulerWorkbench } from '../../modules/notifications/useSchedulerWorkbench.ts';
 import { useWorkflowRunsFeed } from '../../modules/notifications/useWorkflowRunsFeed.ts';
-import { buildPersistenceApiExamples, buildPersistenceCliCommands, translatePersistencePosture } from '../../modules/operations/persistencePosture.ts';
-import { EmptyState, SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
-import { ActivityLog } from '../../components/business/ConsoleTables.tsx';
+import {
+  buildPersistenceApiExamples,
+  buildPersistenceCliCommands,
+  translatePersistencePosture,
+} from '../../modules/operations/persistencePosture.ts';
+import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { InspectionSelectableRow } from '../console/components/InspectionPanels.tsx';
-import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
-import { connectionLabel, fmtDateTime, monitoringTone, translateMonitoringStatus, translateProviderLabel } from '../../modules/console/console.utils.ts';
 
 const MONITORING_TIME_WINDOWS = [
   { key: '1h', hours: 1 },
@@ -34,27 +58,84 @@ const MONITORING_TIME_WINDOWS = [
   { key: 'all', hours: null },
 ] as const;
 
-const MONITORING_SOURCES = ['all', 'worker', 'workflow', 'queue', 'risk', 'broker', 'market'] as const;
+const MONITORING_SOURCES = [
+  'all',
+  'worker',
+  'workflow',
+  'queue',
+  'risk',
+  'broker',
+  'market',
+] as const;
 const MONITORING_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
 const MONITORING_SNAPSHOT_STATUSES = ['all', 'healthy', 'warn', 'critical'] as const;
 const SCHEDULER_PHASES = ['all', 'PRE_OPEN', 'INTRADAY', 'POST_CLOSE', 'OFF_HOURS'] as const;
 const OPERATOR_ACTION_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
 const NOTIFICATION_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
-const NOTIFICATION_SOURCES = ['all', 'scheduler', 'workflow-control', 'task-orchestrator', 'execution-planner', 'control-plane', 'agent-control'] as const;
-const AUDIT_TYPES = ['all', 'workflow', 'execution-plan', 'agent-action-request', 'cycle', 'backtest-run.reviewed', 'strategy-catalog.saved'] as const;
+const NOTIFICATION_SOURCES = [
+  'all',
+  'scheduler',
+  'workflow-control',
+  'task-orchestrator',
+  'execution-planner',
+  'control-plane',
+  'agent-control',
+] as const;
+const AUDIT_TYPES = [
+  'all',
+  'workflow',
+  'execution-plan',
+  'agent-action-request',
+  'cycle',
+  'backtest-run.reviewed',
+  'strategy-catalog.saved',
+] as const;
 const INCIDENT_STATUSES = ['all', 'open', 'investigating', 'mitigated', 'resolved'] as const;
 const INCIDENT_SEVERITIES = ['all', 'info', 'warn', 'critical'] as const;
-const INCIDENT_SOURCES = ['all', 'monitoring', 'notification', 'audit', 'operator', 'workflow', 'scheduler', 'control-plane', 'risk', 'execution'] as const;
+const INCIDENT_SOURCES = [
+  'all',
+  'monitoring',
+  'notification',
+  'audit',
+  'operator',
+  'workflow',
+  'scheduler',
+  'control-plane',
+  'risk',
+  'execution',
+] as const;
 const INCIDENT_OWNER_FILTERS = ['all', 'unassigned', 'mine'] as const;
 const RISK_EVENT_LEVELS = ['all', 'info', 'warn', 'critical'] as const;
-const RISK_EVENT_STATUSES = ['all', 'healthy', 'risk-off', 'approval-required', 'connectivity-degraded'] as const;
-const WORKFLOW_RUN_STATUSES = ['all', 'queued', 'running', 'retry_scheduled', 'failed', 'completed', 'canceled'] as const;
+const RISK_EVENT_STATUSES = [
+  'all',
+  'healthy',
+  'risk-off',
+  'approval-required',
+  'connectivity-degraded',
+] as const;
+const WORKFLOW_RUN_STATUSES = [
+  'all',
+  'queued',
+  'running',
+  'retry_scheduled',
+  'failed',
+  'completed',
+  'canceled',
+] as const;
 const EXECUTION_PLAN_STATUSES = ['all', 'draft', 'ready', 'blocked', 'approved', 'review'] as const;
 
 type InvestigationTimelineItem = {
   id: string;
   detail: string;
-  kind: 'incident' | 'notification' | 'audit' | 'operator-action' | 'monitoring-alert' | 'risk-event' | 'workflow-run' | 'execution-plan';
+  kind:
+    | 'incident'
+    | 'notification'
+    | 'audit'
+    | 'operator-action'
+    | 'monitoring-alert'
+    | 'risk-event'
+    | 'workflow-run'
+    | 'execution-plan';
   level: string;
   source: string;
   timestamp: string;
@@ -83,7 +164,18 @@ function translateTimelineKind(locale: string, kind: InvestigationTimelineItem['
   return 'Monitoring';
 }
 
-function translateEvidenceKind(locale: string, kind: 'monitoring-alert' | 'notification' | 'audit' | 'operator-action' | 'scheduler-tick' | 'risk-event' | 'workflow-run' | 'execution-plan') {
+function translateEvidenceKind(
+  locale: string,
+  kind:
+    | 'monitoring-alert'
+    | 'notification'
+    | 'audit'
+    | 'operator-action'
+    | 'scheduler-tick'
+    | 'risk-event'
+    | 'workflow-run'
+    | 'execution-plan'
+) {
   if (kind === 'scheduler-tick') {
     return locale === 'zh' ? '调度' : 'Scheduler';
   }
@@ -163,7 +255,10 @@ function buildActivityDraft(locale: string, item: IncidentActivityRecord) {
   return lines.join('\n');
 }
 
-function translateIncidentTaskStatus(locale: string, status: 'pending' | 'in_progress' | 'done' | 'blocked') {
+function translateIncidentTaskStatus(
+  locale: string,
+  status: 'pending' | 'in_progress' | 'done' | 'blocked'
+) {
   if (locale === 'zh') {
     if (status === 'pending') return '待处理';
     if (status === 'in_progress') return '处理中';
@@ -177,7 +272,16 @@ function translateIncidentTaskStatus(locale: string, status: 'pending' | 'in_pro
   return 'Blocked';
 }
 
-function translateIncidentNextAction(locale: string, key: 'assign-owner' | 'acknowledge' | 'resolve-blocker' | 'capture-evidence' | 'closeout' | 'monitor') {
+function translateIncidentNextAction(
+  locale: string,
+  key:
+    | 'assign-owner'
+    | 'acknowledge'
+    | 'resolve-blocker'
+    | 'capture-evidence'
+    | 'closeout'
+    | 'monitor'
+) {
   if (locale === 'zh') {
     if (key === 'assign-owner') return '指派负责人';
     if (key === 'acknowledge') return '确认接管';
@@ -214,7 +318,10 @@ function getTimeWindowLabel(locale: string, key: (typeof MONITORING_TIME_WINDOWS
   return locale === 'zh' ? '全部时间' : 'All Time';
 }
 
-function translateOperationsLane(locale: string, key: 'monitoring' | 'incidents' | 'scheduler' | 'connectivity' | 'control-plane') {
+function translateOperationsLane(
+  locale: string,
+  key: 'monitoring' | 'incidents' | 'scheduler' | 'connectivity' | 'control-plane'
+) {
   if (locale === 'zh') {
     if (key === 'monitoring') return '监控';
     if (key === 'incidents') return '事件';
@@ -230,7 +337,17 @@ function translateOperationsLane(locale: string, key: 'monitoring' | 'incidents'
   return 'Control Plane';
 }
 
-function translateRunbookKey(locale: string, key: 'stabilize-connectivity' | 'drain-queues' | 'triage-critical-incidents' | 'assign-incident-owners' | 'clear-stale-incidents' | 'review-scheduler-attention' | 'follow-control-plane-trail') {
+function translateRunbookKey(
+  locale: string,
+  key:
+    | 'stabilize-connectivity'
+    | 'drain-queues'
+    | 'triage-critical-incidents'
+    | 'assign-incident-owners'
+    | 'clear-stale-incidents'
+    | 'review-scheduler-attention'
+    | 'follow-control-plane-trail'
+) {
   if (locale === 'zh') {
     if (key === 'stabilize-connectivity') return '稳定链路';
     if (key === 'drain-queues') return '清理积压';
@@ -281,7 +398,9 @@ export function OperationsPersistencePanel({
         <div className="focus-row focus-row-wide">
           <div className="symbol-cell">
             <strong>{locale === 'zh' ? '后端摘要' : 'Backend Summary'}</strong>
-            <span>{persistence.adapter.label} · {persistence.storageModel}</span>
+            <span>
+              {persistence.adapter.label} · {persistence.storageModel}
+            </span>
           </div>
           <div className="focus-metric">
             <span>{locale === 'zh' ? 'Schema' : 'Schema'}</span>
@@ -289,7 +408,11 @@ export function OperationsPersistencePanel({
           </div>
           <div className="focus-metric">
             <span>{locale === 'zh' ? '当前 -> 目标' : 'Current -> Target'}</span>
-            <strong>{persistence.currentVersion !== null && persistence.targetVersion !== null ? `${persistence.currentVersion} → ${persistence.targetVersion}` : '--'}</strong>
+            <strong>
+              {persistence.currentVersion !== null && persistence.targetVersion !== null
+                ? `${persistence.currentVersion} → ${persistence.targetVersion}`
+                : '--'}
+            </strong>
           </div>
         </div>
         <div className="focus-row focus-row-wide">
@@ -298,8 +421,12 @@ export function OperationsPersistencePanel({
             <span>{persistence.recommendedAction}</span>
           </div>
           <div className="settings-chip-row">
-            <a className="settings-chip active" href={persistence.links.maintenance}>{locale === 'zh' ? '跳到运维锚点' : 'Open Ops Anchor'}</a>
-            <a className="settings-chip" href={persistence.links.settings}>{locale === 'zh' ? '打开设置细节' : 'Open Settings Detail'}</a>
+            <a className="settings-chip active" href={persistence.links.maintenance}>
+              {locale === 'zh' ? '跳到运维锚点' : 'Open Ops Anchor'}
+            </a>
+            <a className="settings-chip" href={persistence.links.settings}>
+              {locale === 'zh' ? '打开设置细节' : 'Open Settings Detail'}
+            </a>
           </div>
         </div>
         {cliExamples.map((item) => (
@@ -330,21 +457,27 @@ function NotificationsPage() {
   const [monitoringLevelFilter, setMonitoringLevelFilter] = useState('all');
   const [selectedMonitoringSnapshotId, setSelectedMonitoringSnapshotId] = useState('');
   const [monitoringSnapshotStatusFilter, setMonitoringSnapshotStatusFilter] = useState('all');
-  const [monitoringTimeWindow, setMonitoringTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
+  const [monitoringTimeWindow, setMonitoringTimeWindow] =
+    useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const [schedulerPhaseFilter, setSchedulerPhaseFilter] = useState('all');
-  const [schedulerTimeWindow, setSchedulerTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
+  const [schedulerTimeWindow, setSchedulerTimeWindow] =
+    useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const [operatorActionLevelFilter, setOperatorActionLevelFilter] = useState('all');
-  const [operatorActionTimeWindow, setOperatorActionTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
+  const [operatorActionTimeWindow, setOperatorActionTimeWindow] =
+    useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const [notificationLevelFilter, setNotificationLevelFilter] = useState('all');
   const [notificationSourceFilter, setNotificationSourceFilter] = useState('all');
-  const [notificationTimeWindow, setNotificationTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
+  const [notificationTimeWindow, setNotificationTimeWindow] =
+    useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const [auditTypeFilter, setAuditTypeFilter] = useState('all');
-  const [auditTimeWindow, setAuditTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
+  const [auditTimeWindow, setAuditTimeWindow] =
+    useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('24h');
   const [incidentStatusFilter, setIncidentStatusFilter] = useState('all');
   const [incidentSeverityFilter, setIncidentSeverityFilter] = useState('all');
   const [incidentSourceFilter, setIncidentSourceFilter] = useState('all');
   const [incidentOwnerFilter, setIncidentOwnerFilter] = useState('all');
-  const [incidentTimeWindow, setIncidentTimeWindow] = useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('7d');
+  const [incidentTimeWindow, setIncidentTimeWindow] =
+    useState<(typeof MONITORING_TIME_WINDOWS)[number]['key']>('7d');
   const [selectedIncidentId, setSelectedIncidentId] = useState('');
   const [selectedIncidentIds, setSelectedIncidentIds] = useState<string[]>([]);
   const [incidentRefreshKey, setIncidentRefreshKey] = useState(0);
@@ -358,30 +491,49 @@ function NotificationsPage() {
   const [incidentBulkNoteDraft, setIncidentBulkNoteDraft] = useState('');
   const [incidentBusy, setIncidentBusy] = useState(false);
   const [schedulerActionBusy, setSchedulerActionBusy] = useState(false);
-  const [schedulerActionResult, setSchedulerActionResult] = useState<SchedulerOrchestrationActionResponse['action'] | null>(null);
+  const [schedulerActionResult, setSchedulerActionResult] = useState<
+    SchedulerOrchestrationActionResponse['action'] | null
+  >(null);
   const [riskEventLevelFilter, setRiskEventLevelFilter] = useState('all');
   const [riskEventStatusFilter, setRiskEventStatusFilter] = useState('all');
   const [workflowRunStatusFilter, setWorkflowRunStatusFilter] = useState('all');
   const [executionPlanStatusFilter, setExecutionPlanStatusFilter] = useState('all');
-  const activeTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === monitoringTimeWindow) || MONITORING_TIME_WINDOWS[1];
-  const activeSchedulerTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === schedulerTimeWindow) || MONITORING_TIME_WINDOWS[1];
-  const activeOperatorActionTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === operatorActionTimeWindow) || MONITORING_TIME_WINDOWS[1];
-  const activeNotificationTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === notificationTimeWindow) || MONITORING_TIME_WINDOWS[1];
-  const activeAuditTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === auditTimeWindow) || MONITORING_TIME_WINDOWS[1];
-  const activeIncidentTimeWindow = MONITORING_TIME_WINDOWS.find((item) => item.key === incidentTimeWindow) || MONITORING_TIME_WINDOWS[2];
+  const activeTimeWindow =
+    MONITORING_TIME_WINDOWS.find((item) => item.key === monitoringTimeWindow) ||
+    MONITORING_TIME_WINDOWS[1];
+  const activeSchedulerTimeWindow =
+    MONITORING_TIME_WINDOWS.find((item) => item.key === schedulerTimeWindow) ||
+    MONITORING_TIME_WINDOWS[1];
+  const activeOperatorActionTimeWindow =
+    MONITORING_TIME_WINDOWS.find((item) => item.key === operatorActionTimeWindow) ||
+    MONITORING_TIME_WINDOWS[1];
+  const activeNotificationTimeWindow =
+    MONITORING_TIME_WINDOWS.find((item) => item.key === notificationTimeWindow) ||
+    MONITORING_TIME_WINDOWS[1];
+  const activeAuditTimeWindow =
+    MONITORING_TIME_WINDOWS.find((item) => item.key === auditTimeWindow) ||
+    MONITORING_TIME_WINDOWS[1];
+  const activeIncidentTimeWindow =
+    MONITORING_TIME_WINDOWS.find((item) => item.key === incidentTimeWindow) ||
+    MONITORING_TIME_WINDOWS[2];
   const { snapshot } = useLatestBrokerSnapshot(state.controlPlane.lastSyncAt);
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
-  const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(state.controlPlane.lastSyncAt);
-  const { items: monitoringAlertItems, loading: monitoringAlertsLoading } = useMonitoringAlertsFeed({
-    hours: activeTimeWindow.hours,
-    level: monitoringLevelFilter === 'all' ? '' : monitoringLevelFilter,
-    snapshotId: selectedMonitoringSnapshotId,
-    source: monitoringSourceFilter === 'all' ? '' : monitoringSourceFilter,
-  });
-  const { items: monitoringSnapshotItems, loading: monitoringSnapshotsLoading } = useMonitoringSnapshotsFeed({
-    hours: activeTimeWindow.hours,
-    status: monitoringSnapshotStatusFilter === 'all' ? '' : monitoringSnapshotStatusFilter,
-  });
+  const { status: monitoringStatus, loading: monitoringLoading } = useMonitoringStatus(
+    state.controlPlane.lastSyncAt
+  );
+  const { items: monitoringAlertItems, loading: monitoringAlertsLoading } = useMonitoringAlertsFeed(
+    {
+      hours: activeTimeWindow.hours,
+      level: monitoringLevelFilter === 'all' ? '' : monitoringLevelFilter,
+      snapshotId: selectedMonitoringSnapshotId,
+      source: monitoringSourceFilter === 'all' ? '' : monitoringSourceFilter,
+    }
+  );
+  const { items: monitoringSnapshotItems, loading: monitoringSnapshotsLoading } =
+    useMonitoringSnapshotsFeed({
+      hours: activeTimeWindow.hours,
+      status: monitoringSnapshotStatusFilter === 'all' ? '' : monitoringSnapshotStatusFilter,
+    });
   const { items, loading } = useNotificationsFeed({
     hours: activeNotificationTimeWindow.hours,
     level: notificationLevelFilter === 'all' ? '' : notificationLevelFilter,
@@ -397,9 +549,12 @@ function NotificationsPage() {
   });
   const { items: incidentItems, loading: incidentsLoading } = useIncidentsFeed({
     hours: activeIncidentTimeWindow.hours,
-    owner: incidentOwnerFilter === 'all'
-      ? ''
-      : (incidentOwnerFilter === 'mine' ? state.controlPlane.operator : incidentOwnerFilter),
+    owner:
+      incidentOwnerFilter === 'all'
+        ? ''
+        : incidentOwnerFilter === 'mine'
+          ? state.controlPlane.operator
+          : incidentOwnerFilter,
     refreshKey: incidentRefreshKey,
     severity: incidentSeverityFilter === 'all' ? '' : incidentSeverityFilter,
     source: incidentSourceFilter === 'all' ? '' : incidentSourceFilter,
@@ -407,9 +562,12 @@ function NotificationsPage() {
   });
   const { summary: incidentSummary, loading: incidentSummaryLoading } = useIncidentSummary({
     hours: activeIncidentTimeWindow.hours,
-    owner: incidentOwnerFilter === 'all'
-      ? ''
-      : (incidentOwnerFilter === 'mine' ? state.controlPlane.operator : incidentOwnerFilter),
+    owner:
+      incidentOwnerFilter === 'all'
+        ? ''
+        : incidentOwnerFilter === 'mine'
+          ? state.controlPlane.operator
+          : incidentOwnerFilter,
     refreshKey: incidentRefreshKey,
     severity: incidentSeverityFilter === 'all' ? '' : incidentSeverityFilter,
     source: incidentSourceFilter === 'all' ? '' : incidentSourceFilter,
@@ -424,8 +582,16 @@ function NotificationsPage() {
     operations: selectedIncidentOperations,
     loading: incidentDetailLoading,
   } = useIncidentDetail(selectedIncidentId, incidentRefreshKey);
-  const selectedArtifact = selectedIncidentEvidence.timeline.find((item) => `${item.kind}:${item.id}` === selectedArtifactKey) || selectedIncidentEvidence.timeline[0] || null;
-  const selectedActivity = selectedIncidentActivity.timeline.find((item) => item.id === selectedActivityId) || selectedIncidentActivity.timeline[0] || null;
+  const selectedArtifact =
+    selectedIncidentEvidence.timeline.find(
+      (item) => `${item.kind}:${item.id}` === selectedArtifactKey
+    ) ||
+    selectedIncidentEvidence.timeline[0] ||
+    null;
+  const selectedActivity =
+    selectedIncidentActivity.timeline.find((item) => item.id === selectedActivityId) ||
+    selectedIncidentActivity.timeline[0] ||
+    null;
   const artifactInspector = useIncidentArtifactInspector(selectedArtifact, incidentRefreshKey);
   const { items: riskEventItems, loading: riskEventsLoading } = useRiskEventsFeed({
     level: riskEventLevelFilter === 'all' ? '' : riskEventLevelFilter,
@@ -444,11 +610,12 @@ function NotificationsPage() {
     hours: activeSchedulerTimeWindow.hours,
     phase: schedulerPhaseFilter === 'all' ? '' : schedulerPhaseFilter,
   });
-  const { workbench: schedulerWorkbench, loading: schedulerWorkbenchLoading } = useSchedulerWorkbench({
-    hours: activeSchedulerTimeWindow.hours,
-    limit: 12,
-    refreshKey: incidentRefreshKey,
-  });
+  const { workbench: schedulerWorkbench, loading: schedulerWorkbenchLoading } =
+    useSchedulerWorkbench({
+      hours: activeSchedulerTimeWindow.hours,
+      limit: 12,
+      refreshKey: incidentRefreshKey,
+    });
   const marketConnected = marketStatus?.connected ?? state.integrationStatus.marketData.connected;
   const marketFallback = marketStatus?.fallback ?? !marketConnected;
   const brokerConnected = Boolean(snapshot?.connected ?? state.integrationStatus.broker.connected);
@@ -459,30 +626,42 @@ function NotificationsPage() {
       ? 'Alpaca Market Data via Gateway'
       : marketStatus?.provider === 'custom-http'
         ? 'HTTP 行情网关'
-        : (state.integrationStatus.marketData.label || state.integrationStatus.marketData.provider),
+        : state.integrationStatus.marketData.label || state.integrationStatus.marketData.provider
   );
-  const monitoringWorkflowBacklog = (monitoringStatus?.services.workflows.queued || 0)
-    + (monitoringStatus?.services.workflows.running || 0)
-    + (monitoringStatus?.services.workflows.retryScheduled || 0);
-  const monitoringQueueBacklog = (monitoringStatus?.services.queues.pendingNotificationJobs || 0)
-    + (monitoringStatus?.services.queues.pendingRiskScanJobs || 0)
-    + (monitoringStatus?.services.queues.pendingAgentReviews || 0);
+  const monitoringWorkflowBacklog =
+    (monitoringStatus?.services.workflows.queued || 0) +
+    (monitoringStatus?.services.workflows.running || 0) +
+    (monitoringStatus?.services.workflows.retryScheduled || 0);
+  const monitoringQueueBacklog =
+    (monitoringStatus?.services.queues.pendingNotificationJobs || 0) +
+    (monitoringStatus?.services.queues.pendingRiskScanJobs || 0) +
+    (monitoringStatus?.services.queues.pendingAgentReviews || 0);
   const workerHeartbeatLag = monitoringStatus?.services.worker.lagSeconds;
-  const selectedMonitoringSnapshot = monitoringSnapshotItems.find((item) => item.id === selectedMonitoringSnapshotId) || null;
-  const { workbench: operationsWorkbench, loading: operationsWorkbenchLoading } = useOperationsWorkbench({
-    hours: 24,
-    limit: 120,
-    refreshKey: incidentRefreshKey,
-  });
-  const monitoringCriticalCount = monitoringAlertItems.filter((item) => item.level === 'critical').length;
+  const selectedMonitoringSnapshot =
+    monitoringSnapshotItems.find((item) => item.id === selectedMonitoringSnapshotId) || null;
+  const { workbench: operationsWorkbench, loading: operationsWorkbenchLoading } =
+    useOperationsWorkbench({
+      hours: 24,
+      limit: 120,
+      refreshKey: incidentRefreshKey,
+    });
+  const monitoringCriticalCount = monitoringAlertItems.filter(
+    (item) => item.level === 'critical'
+  ).length;
   const monitoringWarnCount = monitoringAlertItems.filter((item) => item.level === 'warn').length;
-  const monitoringSnapshotCriticalCount = monitoringSnapshotItems.filter((item) => item.status === 'critical').length;
-  const monitoringSnapshotWarnCount = monitoringSnapshotItems.filter((item) => item.status === 'warn').length;
+  const monitoringSnapshotCriticalCount = monitoringSnapshotItems.filter(
+    (item) => item.status === 'critical'
+  ).length;
+  const monitoringSnapshotWarnCount = monitoringSnapshotItems.filter(
+    (item) => item.status === 'warn'
+  ).length;
   const operatorCriticalCount = actionItems.filter((item) => item.level === 'critical').length;
   const operatorWarnCount = actionItems.filter((item) => item.level === 'warn').length;
   const notificationCriticalCount = items.filter((item) => item.level === 'critical').length;
   const notificationWarnCount = items.filter((item) => item.level === 'warn').length;
-  const notificationControlPlaneCount = items.filter((item) => item.source === 'control-plane').length;
+  const notificationControlPlaneCount = items.filter(
+    (item) => item.source === 'control-plane'
+  ).length;
   const auditWorkflowCount = auditItems.filter((item) => item.type === 'workflow').length;
   const auditExecutionCount = auditItems.filter((item) => item.type === 'execution-plan').length;
   const auditAgentCount = auditItems.filter((item) => item.type === 'agent-action-request').length;
@@ -493,74 +672,98 @@ function NotificationsPage() {
     {
       id: 'monitoring',
       title: locale === 'zh' ? 'Monitoring Board' : 'Monitoring Board',
-      detail: locale === 'zh' ? '看 worker、workflow、队列和风险告警的健康状态。' : 'Track worker, workflow, queue, and risk health.',
+      detail:
+        locale === 'zh'
+          ? '看 worker、workflow、队列和风险告警的健康状态。'
+          : 'Track worker, workflow, queue, and risk health.',
       primaryLabel: locale === 'zh' ? 'Critical 告警' : 'Critical Alerts',
       primaryValue: monitoringCriticalCount,
       secondaryLabel: locale === 'zh' ? 'Workflow 积压' : 'Workflow Backlog',
       secondaryValue: monitoringWorkflowBacklog,
       tone: monitoringCriticalCount ? 'badge-warn' : 'badge-info',
-      onClick: () => applyMonitoringFocus({
-        level: monitoringCriticalCount ? 'critical' : monitoringLevelFilter,
-        source: monitoringCriticalCount ? 'risk' : monitoringSourceFilter,
-        timeWindow: '24h',
-      }),
+      onClick: () =>
+        applyMonitoringFocus({
+          level: monitoringCriticalCount ? 'critical' : monitoringLevelFilter,
+          source: monitoringCriticalCount ? 'risk' : monitoringSourceFilter,
+          timeWindow: '24h',
+        }),
     },
     {
       id: 'notifications',
       title: locale === 'zh' ? 'Notification Board' : 'Notification Board',
-      detail: locale === 'zh' ? '聚焦控制面通知里的 critical/warn 事件和来源分布。' : 'Focus critical/warn control-plane notifications and source mix.',
+      detail:
+        locale === 'zh'
+          ? '聚焦控制面通知里的 critical/warn 事件和来源分布。'
+          : 'Focus critical/warn control-plane notifications and source mix.',
       primaryLabel: locale === 'zh' ? 'Critical 通知' : 'Critical Notifications',
       primaryValue: notificationCriticalCount,
       secondaryLabel: locale === 'zh' ? '控制面来源' : 'Control-Plane Source',
       secondaryValue: notificationControlPlaneCount,
       tone: notificationCriticalCount ? 'badge-warn' : 'badge-info',
-      onClick: () => applyNotificationFocus({
-        level: notificationCriticalCount ? 'critical' : notificationLevelFilter,
-        source: notificationCriticalCount ? 'control-plane' : notificationSourceFilter,
-        timeWindow: '24h',
-      }),
+      onClick: () =>
+        applyNotificationFocus({
+          level: notificationCriticalCount ? 'critical' : notificationLevelFilter,
+          source: notificationCriticalCount ? 'control-plane' : notificationSourceFilter,
+          timeWindow: '24h',
+        }),
     },
     {
       id: 'audit',
       title: locale === 'zh' ? 'Audit Board' : 'Audit Board',
-      detail: locale === 'zh' ? '按 workflow、execution、agent 三类看审计热点。' : 'Track workflow, execution, and agent audit hotspots.',
+      detail:
+        locale === 'zh'
+          ? '按 workflow、execution、agent 三类看审计热点。'
+          : 'Track workflow, execution, and agent audit hotspots.',
       primaryLabel: locale === 'zh' ? 'Workflow 审计' : 'Workflow Audits',
       primaryValue: auditWorkflowCount,
       secondaryLabel: locale === 'zh' ? 'Execution 审计' : 'Execution Audits',
       secondaryValue: auditExecutionCount,
       tone: auditWorkflowCount || auditExecutionCount ? 'badge-info' : 'muted',
-      onClick: () => applyAuditFocus({
-        type: auditWorkflowCount >= auditExecutionCount ? 'workflow' : 'execution-plan',
-        timeWindow: '24h',
-      }),
+      onClick: () =>
+        applyAuditFocus({
+          type: auditWorkflowCount >= auditExecutionCount ? 'workflow' : 'execution-plan',
+          timeWindow: '24h',
+        }),
     },
     {
       id: 'operator',
       title: locale === 'zh' ? 'Operator Board' : 'Operator Board',
-      detail: locale === 'zh' ? '查看高风险人工动作、批注和复核轨迹。' : 'Inspect high-risk manual actions and review traces.',
+      detail:
+        locale === 'zh'
+          ? '查看高风险人工动作、批注和复核轨迹。'
+          : 'Inspect high-risk manual actions and review traces.',
       primaryLabel: locale === 'zh' ? 'Critical 动作' : 'Critical Actions',
       primaryValue: operatorCriticalCount,
       secondaryLabel: locale === 'zh' ? 'Warn 动作' : 'Warn Actions',
       secondaryValue: operatorWarnCount,
       tone: operatorCriticalCount ? 'badge-warn' : 'badge-info',
-      onClick: () => applyOperatorActionFocus({
-        level: operatorCriticalCount ? 'critical' : (operatorWarnCount ? 'warn' : operatorActionLevelFilter),
-        timeWindow: '24h',
-      }),
+      onClick: () =>
+        applyOperatorActionFocus({
+          level: operatorCriticalCount
+            ? 'critical'
+            : operatorWarnCount
+              ? 'warn'
+              : operatorActionLevelFilter,
+          timeWindow: '24h',
+        }),
     },
     {
       id: 'scheduler',
       title: locale === 'zh' ? 'Scheduler Board' : 'Scheduler Board',
-      detail: locale === 'zh' ? '盘前、盘中和 off-hours 节拍都在这里统一观察。' : 'Review pre-open, intraday, and off-hours scheduler ticks in one place.',
+      detail:
+        locale === 'zh'
+          ? '盘前、盘中和 off-hours 节拍都在这里统一观察。'
+          : 'Review pre-open, intraday, and off-hours scheduler ticks in one place.',
       primaryLabel: locale === 'zh' ? '盘中节拍' : 'Intraday Ticks',
       primaryValue: schedulerIntradayCount,
       secondaryLabel: locale === 'zh' ? '关注项' : 'Attention Items',
       secondaryValue: schedulerAttentionCount,
       tone: schedulerAttentionCount ? 'badge-warn' : 'badge-info',
-      onClick: () => applySchedulerFocus({
-        phase: schedulerAttentionCount ? 'INTRADAY' : schedulerPhaseFilter,
-        timeWindow: '24h',
-      }),
+      onClick: () =>
+        applySchedulerFocus({
+          phase: schedulerAttentionCount ? 'INTRADAY' : schedulerPhaseFilter,
+          timeWindow: '24h',
+        }),
     },
   ];
   const controlPlaneContextRows = [
@@ -569,10 +772,18 @@ function NotificationsPage() {
       label: locale === 'zh' ? 'Monitoring' : 'Monitoring',
       filters: [
         monitoringTimeWindow !== '24h' ? getTimeWindowLabel(locale, monitoringTimeWindow) : '',
-        monitoringSourceFilter !== 'all' ? `${locale === 'zh' ? '来源' : 'Source'}: ${monitoringSourceFilter}` : '',
-        monitoringLevelFilter !== 'all' ? `${locale === 'zh' ? '级别' : 'Level'}: ${translateMonitoringStatus(locale, monitoringLevelFilter)}` : '',
-        monitoringSnapshotStatusFilter !== 'all' ? `${locale === 'zh' ? '快照' : 'Snapshot'}: ${translateMonitoringStatus(locale, monitoringSnapshotStatusFilter)}` : '',
-        selectedMonitoringSnapshot ? `${locale === 'zh' ? '选中快照' : 'Selected Snapshot'}: ${fmtDateTime(selectedMonitoringSnapshot.generatedAt || selectedMonitoringSnapshot.createdAt, locale)}` : '',
+        monitoringSourceFilter !== 'all'
+          ? `${locale === 'zh' ? '来源' : 'Source'}: ${monitoringSourceFilter}`
+          : '',
+        monitoringLevelFilter !== 'all'
+          ? `${locale === 'zh' ? '级别' : 'Level'}: ${translateMonitoringStatus(locale, monitoringLevelFilter)}`
+          : '',
+        monitoringSnapshotStatusFilter !== 'all'
+          ? `${locale === 'zh' ? '快照' : 'Snapshot'}: ${translateMonitoringStatus(locale, monitoringSnapshotStatusFilter)}`
+          : '',
+        selectedMonitoringSnapshot
+          ? `${locale === 'zh' ? '选中快照' : 'Selected Snapshot'}: ${fmtDateTime(selectedMonitoringSnapshot.generatedAt || selectedMonitoringSnapshot.createdAt, locale)}`
+          : '',
       ].filter(Boolean),
       count: monitoringAlertItems.length + monitoringSnapshotItems.length,
       reset: () => applyMonitoringFocus({ timeWindow: '24h' }),
@@ -582,8 +793,12 @@ function NotificationsPage() {
       label: locale === 'zh' ? 'Notifications' : 'Notifications',
       filters: [
         notificationTimeWindow !== '24h' ? getTimeWindowLabel(locale, notificationTimeWindow) : '',
-        notificationSourceFilter !== 'all' ? `${locale === 'zh' ? '来源' : 'Source'}: ${notificationSourceFilter}` : '',
-        notificationLevelFilter !== 'all' ? `${locale === 'zh' ? '级别' : 'Level'}: ${translateMonitoringStatus(locale, notificationLevelFilter)}` : '',
+        notificationSourceFilter !== 'all'
+          ? `${locale === 'zh' ? '来源' : 'Source'}: ${notificationSourceFilter}`
+          : '',
+        notificationLevelFilter !== 'all'
+          ? `${locale === 'zh' ? '级别' : 'Level'}: ${translateMonitoringStatus(locale, notificationLevelFilter)}`
+          : '',
       ].filter(Boolean),
       count: items.length,
       reset: () => applyNotificationFocus({ timeWindow: '24h' }),
@@ -602,8 +817,12 @@ function NotificationsPage() {
       id: 'operator-context',
       label: locale === 'zh' ? 'Operator' : 'Operator',
       filters: [
-        operatorActionTimeWindow !== '24h' ? getTimeWindowLabel(locale, operatorActionTimeWindow) : '',
-        operatorActionLevelFilter !== 'all' ? `${locale === 'zh' ? '级别' : 'Level'}: ${translateMonitoringStatus(locale, operatorActionLevelFilter)}` : '',
+        operatorActionTimeWindow !== '24h'
+          ? getTimeWindowLabel(locale, operatorActionTimeWindow)
+          : '',
+        operatorActionLevelFilter !== 'all'
+          ? `${locale === 'zh' ? '级别' : 'Level'}: ${translateMonitoringStatus(locale, operatorActionLevelFilter)}`
+          : '',
       ].filter(Boolean),
       count: actionItems.length,
       reset: () => applyOperatorActionFocus({ timeWindow: '24h' }),
@@ -613,75 +832,103 @@ function NotificationsPage() {
       label: locale === 'zh' ? 'Scheduler' : 'Scheduler',
       filters: [
         schedulerTimeWindow !== '24h' ? getTimeWindowLabel(locale, schedulerTimeWindow) : '',
-        schedulerPhaseFilter !== 'all' ? `${locale === 'zh' ? '窗口' : 'Phase'}: ${schedulerPhaseFilter}` : '',
+        schedulerPhaseFilter !== 'all'
+          ? `${locale === 'zh' ? '窗口' : 'Phase'}: ${schedulerPhaseFilter}`
+          : '',
       ].filter(Boolean),
       count: schedulerItems.length,
       reset: () => applySchedulerFocus({ timeWindow: '24h' }),
     },
   ];
   const operationsRecentItems = [
-    operationsWorkbench.recent.incident ? {
-      id: `recent-incident:${operationsWorkbench.recent.incident.id}`,
-      kind: 'incidents' as const,
-      title: operationsWorkbench.recent.incident.title,
-      detail: operationsWorkbench.recent.incident.summary || operationsWorkbench.recent.incident.latestNotePreview || operationsWorkbench.recent.incident.status,
-      timestamp: operationsWorkbench.recent.incident.updatedAt || operationsWorkbench.recent.incident.createdAt,
-      onClick: () => applyIncidentFocus({
-        incidentId: operationsWorkbench.recent.incident?.id || '',
-        owner: operationsWorkbench.recent.incident?.owner || 'unassigned',
-        severity: operationsWorkbench.recent.incident?.severity || 'all',
-        source: operationsWorkbench.recent.incident?.source || 'all',
-        status: operationsWorkbench.recent.incident?.status || 'all',
-        timeWindow: '7d',
-      }),
-    } : null,
-    operationsWorkbench.recent.monitoringAlert ? {
-      id: `recent-monitoring:${operationsWorkbench.recent.monitoringAlert.id}`,
-      kind: 'monitoring' as const,
-      title: operationsWorkbench.recent.monitoringAlert.source,
-      detail: operationsWorkbench.recent.monitoringAlert.message,
-      timestamp: operationsWorkbench.recent.monitoringAlert.createdAt,
-      onClick: () => applyMonitoringFocus({
-        source: operationsWorkbench.recent.monitoringAlert?.source || 'all',
-        level: operationsWorkbench.recent.monitoringAlert?.level === 'info' ? 'all' : (operationsWorkbench.recent.monitoringAlert?.level || 'all'),
-        snapshotId: operationsWorkbench.recent.monitoringAlert?.snapshotId || '',
-        timeWindow: '24h',
-      }),
-    } : null,
-    operationsWorkbench.recent.notification ? {
-      id: `recent-notification:${operationsWorkbench.recent.notification.id}`,
-      kind: 'control-plane' as const,
-      title: operationsWorkbench.recent.notification.title,
-      detail: operationsWorkbench.recent.notification.message,
-      timestamp: operationsWorkbench.recent.notification.createdAt,
-      onClick: () => applyNotificationFocus({
-        source: operationsWorkbench.recent.notification?.source || 'all',
-        level: operationsWorkbench.recent.notification?.level === 'info' ? 'all' : (operationsWorkbench.recent.notification?.level || 'all'),
-        timeWindow: '24h',
-      }),
-    } : null,
-    operationsWorkbench.recent.auditRecord ? {
-      id: `recent-audit:${operationsWorkbench.recent.auditRecord.id}`,
-      kind: 'control-plane' as const,
-      title: operationsWorkbench.recent.auditRecord.title,
-      detail: operationsWorkbench.recent.auditRecord.detail,
-      timestamp: operationsWorkbench.recent.auditRecord.createdAt,
-      onClick: () => applyAuditFocus({
-        type: operationsWorkbench.recent.auditRecord?.type || 'all',
-        timeWindow: '24h',
-      }),
-    } : null,
-    operationsWorkbench.recent.schedulerTick ? {
-      id: `recent-scheduler:${operationsWorkbench.recent.schedulerTick.id}`,
-      kind: 'scheduler' as const,
-      title: operationsWorkbench.recent.schedulerTick.title,
-      detail: operationsWorkbench.recent.schedulerTick.message,
-      timestamp: operationsWorkbench.recent.schedulerTick.createdAt,
-      onClick: () => applySchedulerFocus({
-        phase: operationsWorkbench.recent.schedulerTick?.phase || 'all',
-        timeWindow: '24h',
-      }),
-    } : null,
+    operationsWorkbench.recent.incident
+      ? {
+          id: `recent-incident:${operationsWorkbench.recent.incident.id}`,
+          kind: 'incidents' as const,
+          title: operationsWorkbench.recent.incident.title,
+          detail:
+            operationsWorkbench.recent.incident.summary ||
+            operationsWorkbench.recent.incident.latestNotePreview ||
+            operationsWorkbench.recent.incident.status,
+          timestamp:
+            operationsWorkbench.recent.incident.updatedAt ||
+            operationsWorkbench.recent.incident.createdAt,
+          onClick: () =>
+            applyIncidentFocus({
+              incidentId: operationsWorkbench.recent.incident?.id || '',
+              owner: operationsWorkbench.recent.incident?.owner || 'unassigned',
+              severity: operationsWorkbench.recent.incident?.severity || 'all',
+              source: operationsWorkbench.recent.incident?.source || 'all',
+              status: operationsWorkbench.recent.incident?.status || 'all',
+              timeWindow: '7d',
+            }),
+        }
+      : null,
+    operationsWorkbench.recent.monitoringAlert
+      ? {
+          id: `recent-monitoring:${operationsWorkbench.recent.monitoringAlert.id}`,
+          kind: 'monitoring' as const,
+          title: operationsWorkbench.recent.monitoringAlert.source,
+          detail: operationsWorkbench.recent.monitoringAlert.message,
+          timestamp: operationsWorkbench.recent.monitoringAlert.createdAt,
+          onClick: () =>
+            applyMonitoringFocus({
+              source: operationsWorkbench.recent.monitoringAlert?.source || 'all',
+              level:
+                operationsWorkbench.recent.monitoringAlert?.level === 'info'
+                  ? 'all'
+                  : operationsWorkbench.recent.monitoringAlert?.level || 'all',
+              snapshotId: operationsWorkbench.recent.monitoringAlert?.snapshotId || '',
+              timeWindow: '24h',
+            }),
+        }
+      : null,
+    operationsWorkbench.recent.notification
+      ? {
+          id: `recent-notification:${operationsWorkbench.recent.notification.id}`,
+          kind: 'control-plane' as const,
+          title: operationsWorkbench.recent.notification.title,
+          detail: operationsWorkbench.recent.notification.message,
+          timestamp: operationsWorkbench.recent.notification.createdAt,
+          onClick: () =>
+            applyNotificationFocus({
+              source: operationsWorkbench.recent.notification?.source || 'all',
+              level:
+                operationsWorkbench.recent.notification?.level === 'info'
+                  ? 'all'
+                  : operationsWorkbench.recent.notification?.level || 'all',
+              timeWindow: '24h',
+            }),
+        }
+      : null,
+    operationsWorkbench.recent.auditRecord
+      ? {
+          id: `recent-audit:${operationsWorkbench.recent.auditRecord.id}`,
+          kind: 'control-plane' as const,
+          title: operationsWorkbench.recent.auditRecord.title,
+          detail: operationsWorkbench.recent.auditRecord.detail,
+          timestamp: operationsWorkbench.recent.auditRecord.createdAt,
+          onClick: () =>
+            applyAuditFocus({
+              type: operationsWorkbench.recent.auditRecord?.type || 'all',
+              timeWindow: '24h',
+            }),
+        }
+      : null,
+    operationsWorkbench.recent.schedulerTick
+      ? {
+          id: `recent-scheduler:${operationsWorkbench.recent.schedulerTick.id}`,
+          kind: 'scheduler' as const,
+          title: operationsWorkbench.recent.schedulerTick.title,
+          detail: operationsWorkbench.recent.schedulerTick.message,
+          timestamp: operationsWorkbench.recent.schedulerTick.createdAt,
+          onClick: () =>
+            applySchedulerFocus({
+              phase: operationsWorkbench.recent.schedulerTick?.phase || 'all',
+              timeWindow: '24h',
+            }),
+        }
+      : null,
   ].filter(Boolean);
 
   useEffect(() => {
@@ -718,9 +965,13 @@ function NotificationsPage() {
       setSelectedArtifactKey('');
       return;
     }
-    const exists = selectedIncidentEvidence.timeline.some((item) => `${item.kind}:${item.id}` === selectedArtifactKey);
+    const exists = selectedIncidentEvidence.timeline.some(
+      (item) => `${item.kind}:${item.id}` === selectedArtifactKey
+    );
     if (!exists) {
-      const preferred = selectedIncidentEvidence.timeline.find((item) => item.linked) || selectedIncidentEvidence.timeline[0];
+      const preferred =
+        selectedIncidentEvidence.timeline.find((item) => item.linked) ||
+        selectedIncidentEvidence.timeline[0];
       setSelectedArtifactKey(preferred ? `${preferred.kind}:${preferred.id}` : '');
     }
   }, [selectedArtifactKey, selectedIncidentEvidence.timeline, selectedIncidentId]);
@@ -818,23 +1069,16 @@ function NotificationsPage() {
     }
   }
 
-  function applyRiskFocus(options: {
-    level?: string;
-    status?: string;
-  }) {
+  function applyRiskFocus(options: { level?: string; status?: string }) {
     setRiskEventLevelFilter(options.level || 'all');
     setRiskEventStatusFilter(options.status || 'all');
   }
 
-  function applyWorkflowFocus(options: {
-    status?: string;
-  }) {
+  function applyWorkflowFocus(options: { status?: string }) {
     setWorkflowRunStatusFilter(options.status || 'all');
   }
 
-  function applyExecutionFocus(options: {
-    status?: string;
-  }) {
+  function applyExecutionFocus(options: { status?: string }) {
     setExecutionPlanStatusFilter(options.status || 'all');
   }
 
@@ -896,7 +1140,17 @@ function NotificationsPage() {
     applyNotificationFocus({ source: 'scheduler', timeWindow: '24h' });
   }
 
-  function focusSchedulerWorkbenchLane(key: 'pre-open' | 'intraday' | 'post-close' | 'off-hours' | 'incidents' | 'cycles' | 'notifications' | 'risk') {
+  function focusSchedulerWorkbenchLane(
+    key:
+      | 'pre-open'
+      | 'intraday'
+      | 'post-close'
+      | 'off-hours'
+      | 'incidents'
+      | 'cycles'
+      | 'notifications'
+      | 'risk'
+  ) {
     if (key === 'pre-open') {
       focusSchedulerItem('PRE_OPEN');
       return;
@@ -932,9 +1186,11 @@ function NotificationsPage() {
 
   function focusSchedulerRunbook(key: SchedulerRunbookActionKey) {
     if (key === 'review-current-window') {
-      const phase = schedulerWorkbench.posture.currentPhase && schedulerWorkbench.posture.currentPhase !== 'UNKNOWN'
-        ? schedulerWorkbench.posture.currentPhase
-        : 'INTRADAY';
+      const phase =
+        schedulerWorkbench.posture.currentPhase &&
+        schedulerWorkbench.posture.currentPhase !== 'UNKNOWN'
+          ? schedulerWorkbench.posture.currentPhase
+          : 'INTRADAY';
       focusSchedulerItem(phase);
       return;
     }
@@ -976,9 +1232,19 @@ function NotificationsPage() {
     }
   }
 
-  function focusRiskSchedulerLinkage(key: 'focus-linked-window' | 'review-linked-risk' | 'triage-linked-incidents' | 'align-cycle-posture' | 'clear-linked-notifications') {
+  function focusRiskSchedulerLinkage(
+    key:
+      | 'focus-linked-window'
+      | 'review-linked-risk'
+      | 'triage-linked-incidents'
+      | 'align-cycle-posture'
+      | 'clear-linked-notifications'
+  ) {
     if (key === 'focus-linked-window') {
-      const phase = schedulerWorkbench.linkage.summary.activePhase || schedulerWorkbench.posture.currentPhase || 'INTRADAY';
+      const phase =
+        schedulerWorkbench.linkage.summary.activePhase ||
+        schedulerWorkbench.posture.currentPhase ||
+        'INTRADAY';
       applySchedulerFocus({ phase, timeWindow: '24h' });
       return;
     }
@@ -1033,14 +1299,24 @@ function NotificationsPage() {
     });
   }
 
-  function focusOperationsRunbook(key: 'stabilize-connectivity' | 'drain-queues' | 'triage-critical-incidents' | 'assign-incident-owners' | 'clear-stale-incidents' | 'review-scheduler-attention' | 'follow-control-plane-trail') {
+  function focusOperationsRunbook(
+    key:
+      | 'stabilize-connectivity'
+      | 'drain-queues'
+      | 'triage-critical-incidents'
+      | 'assign-incident-owners'
+      | 'clear-stale-incidents'
+      | 'review-scheduler-attention'
+      | 'follow-control-plane-trail'
+  ) {
     if (key === 'stabilize-connectivity') {
       applyMonitoringFocus({
-        source: monitoringStatus?.services.worker.status !== 'healthy'
-          ? 'worker'
-          : (!marketConnected || marketFallback)
-            ? 'market'
-            : 'broker',
+        source:
+          monitoringStatus?.services.worker.status !== 'healthy'
+            ? 'worker'
+            : !marketConnected || marketFallback
+              ? 'market'
+              : 'broker',
         level: 'warn',
         timeWindow: '24h',
       });
@@ -1178,7 +1454,10 @@ function NotificationsPage() {
     }
   }
 
-  async function transitionSelectedIncidentTask(taskId: string, status: 'pending' | 'in_progress' | 'done' | 'blocked') {
+  async function transitionSelectedIncidentTask(
+    taskId: string,
+    status: 'pending' | 'in_progress' | 'done' | 'blocked'
+  ) {
     if (!selectedIncidentId) return;
     setIncidentBusy(true);
     try {
@@ -1221,14 +1500,17 @@ function NotificationsPage() {
   }
 
   function toggleIncidentSelection(incidentId: string) {
-    setSelectedIncidentIds((current) => current.includes(incidentId)
-      ? current.filter((item) => item !== incidentId)
-      : [...current, incidentId]);
+    setSelectedIncidentIds((current) =>
+      current.includes(incidentId)
+        ? current.filter((item) => item !== incidentId)
+        : [...current, incidentId]
+    );
   }
 
   function toggleSelectVisibleIncidents() {
     const visibleIds = incidentItems.map((item) => item.id);
-    const allSelected = visibleIds.length > 0 && visibleIds.every((item) => selectedIncidentIds.includes(item));
+    const allSelected =
+      visibleIds.length > 0 && visibleIds.every((item) => selectedIncidentIds.includes(item));
     setSelectedIncidentIds(allSelected ? [] : visibleIds);
   }
 
@@ -1363,7 +1645,8 @@ function NotificationsPage() {
     return openIncident({
       title: item.workflowId,
       summary: String(item.error || item.metadata?.summary || item.status),
-      severity: item.status === 'failed' ? 'critical' : item.status === 'retry_scheduled' ? 'warn' : 'info',
+      severity:
+        item.status === 'failed' ? 'critical' : item.status === 'retry_scheduled' ? 'warn' : 'info',
       source: 'workflow',
       tags: ['workflow', item.workflowType, item.status, item.actor].filter(Boolean),
       links: [{ kind: 'workflow-run', workflowRunId: item.id, workflowId: item.workflowId }],
@@ -1381,10 +1664,23 @@ function NotificationsPage() {
     return openIncident({
       title: item.plan.strategyName,
       summary: item.plan.summary,
-      severity: item.plan.riskStatus === 'blocked' ? 'critical' : item.plan.riskStatus === 'review' ? 'warn' : 'info',
+      severity:
+        item.plan.riskStatus === 'blocked'
+          ? 'critical'
+          : item.plan.riskStatus === 'review'
+            ? 'warn'
+            : 'info',
       source: 'execution',
-      tags: ['execution-plan', item.plan.status, item.plan.riskStatus, item.plan.mode].filter(Boolean),
-      links: [{ kind: 'execution-plan', executionPlanId: item.plan.id, workflowRunId: item.plan.workflowRunId }],
+      tags: ['execution-plan', item.plan.status, item.plan.riskStatus, item.plan.mode].filter(
+        Boolean
+      ),
+      links: [
+        {
+          kind: 'execution-plan',
+          executionPlanId: item.plan.id,
+          workflowRunId: item.plan.workflowRunId,
+        },
+      ],
       initialNote: item.plan.summary,
       metadata: {
         executionPlanId: item.plan.id,
@@ -1484,7 +1780,8 @@ function NotificationsPage() {
       kind: 'workflow-run',
       title: item.workflowId,
       detail: String(item.error || item.metadata?.summary || item.status),
-      level: item.status === 'failed' ? 'critical' : item.status === 'retry_scheduled' ? 'warn' : 'info',
+      level:
+        item.status === 'failed' ? 'critical' : item.status === 'retry_scheduled' ? 'warn' : 'info',
       source: item.workflowType,
       timestamp: item.updatedAt || item.createdAt,
     })),
@@ -1493,7 +1790,12 @@ function NotificationsPage() {
       kind: 'execution-plan',
       title: item.plan.strategyName,
       detail: item.plan.summary,
-      level: item.plan.riskStatus === 'blocked' ? 'critical' : item.plan.riskStatus === 'review' ? 'warn' : 'info',
+      level:
+        item.plan.riskStatus === 'blocked'
+          ? 'critical'
+          : item.plan.riskStatus === 'review'
+            ? 'warn'
+            : 'info',
       source: item.plan.mode,
       timestamp: item.plan.updatedAt || item.plan.createdAt,
     })),
@@ -1503,47 +1805,60 @@ function NotificationsPage() {
 
   const investigationPathSummary = activeFocusTags.length
     ? activeFocusTags.join(' -> ')
-    : (locale === 'zh' ? '当前处于默认总览路径，可从任一条时间线或状态卡开始钻取。' : 'You are on the default overview path. Drill in from any timeline entry or status card.');
-  const incidentResponseChecklist = selectedIncident ? [
-    {
-      id: 'owner',
-      label: locale === 'zh' ? '负责人已指派' : 'Owner assigned',
-      done: Boolean(selectedIncident.owner),
-      hint: selectedIncident.owner || (locale === 'zh' ? '还没有负责人' : 'No owner assigned yet'),
-    },
-    {
-      id: 'ack',
-      label: locale === 'zh' ? '已开始排查' : 'Investigation acknowledged',
-      done: Boolean(selectedIncident.acknowledgedAt || selectedIncident.status !== 'open'),
-      hint: selectedIncident.acknowledgedAt
-        ? fmtDateTime(selectedIncident.acknowledgedAt, locale)
-        : (locale === 'zh' ? '还没有确认时间' : 'No acknowledgement timestamp'),
-    },
-    {
-      id: 'notes',
-      label: locale === 'zh' ? '已有排查记录' : 'Notes captured',
-      done: selectedIncidentNotes.length > 0,
-      hint: selectedIncidentNotes.length
-        ? `${selectedIncidentNotes.length} ${locale === 'zh' ? '条记录' : 'notes'}`
-        : (locale === 'zh' ? '还没有排查记录' : 'No notes captured yet'),
-    },
-    {
-      id: 'evidence',
-      label: locale === 'zh' ? '已有关联证据' : 'Evidence linked',
-      done: selectedIncidentEvidence.summary.total > 0,
-      hint: selectedIncidentEvidence.summary.total
-        ? `${selectedIncidentEvidence.summary.total} ${locale === 'zh' ? '条证据' : 'evidence items'}`
-        : (locale === 'zh' ? '还没有聚合证据' : 'No evidence aggregated yet'),
-    },
-    {
-      id: 'resolved',
-      label: locale === 'zh' ? '已完成收尾' : 'Resolution complete',
-      done: selectedIncident.status === 'resolved',
-      hint: selectedIncident.resolvedAt
-        ? fmtDateTime(selectedIncident.resolvedAt, locale)
-        : (locale === 'zh' ? '还未标记为 resolved' : 'Not resolved yet'),
-    },
-  ] : [];
+    : locale === 'zh'
+      ? '当前处于默认总览路径，可从任一条时间线或状态卡开始钻取。'
+      : 'You are on the default overview path. Drill in from any timeline entry or status card.';
+  const incidentResponseChecklist = selectedIncident
+    ? [
+        {
+          id: 'owner',
+          label: locale === 'zh' ? '负责人已指派' : 'Owner assigned',
+          done: Boolean(selectedIncident.owner),
+          hint:
+            selectedIncident.owner || (locale === 'zh' ? '还没有负责人' : 'No owner assigned yet'),
+        },
+        {
+          id: 'ack',
+          label: locale === 'zh' ? '已开始排查' : 'Investigation acknowledged',
+          done: Boolean(selectedIncident.acknowledgedAt || selectedIncident.status !== 'open'),
+          hint: selectedIncident.acknowledgedAt
+            ? fmtDateTime(selectedIncident.acknowledgedAt, locale)
+            : locale === 'zh'
+              ? '还没有确认时间'
+              : 'No acknowledgement timestamp',
+        },
+        {
+          id: 'notes',
+          label: locale === 'zh' ? '已有排查记录' : 'Notes captured',
+          done: selectedIncidentNotes.length > 0,
+          hint: selectedIncidentNotes.length
+            ? `${selectedIncidentNotes.length} ${locale === 'zh' ? '条记录' : 'notes'}`
+            : locale === 'zh'
+              ? '还没有排查记录'
+              : 'No notes captured yet',
+        },
+        {
+          id: 'evidence',
+          label: locale === 'zh' ? '已有关联证据' : 'Evidence linked',
+          done: selectedIncidentEvidence.summary.total > 0,
+          hint: selectedIncidentEvidence.summary.total
+            ? `${selectedIncidentEvidence.summary.total} ${locale === 'zh' ? '条证据' : 'evidence items'}`
+            : locale === 'zh'
+              ? '还没有聚合证据'
+              : 'No evidence aggregated yet',
+        },
+        {
+          id: 'resolved',
+          label: locale === 'zh' ? '已完成收尾' : 'Resolution complete',
+          done: selectedIncident.status === 'resolved',
+          hint: selectedIncident.resolvedAt
+            ? fmtDateTime(selectedIncident.resolvedAt, locale)
+            : locale === 'zh'
+              ? '还未标记为 resolved'
+              : 'Not resolved yet',
+        },
+      ]
+    : [];
   const incidentPriorityActions = incidentSummary.nextActions
     .filter((item) => item.count > 0)
     .slice(0, 5);
@@ -1551,90 +1866,119 @@ function NotificationsPage() {
     {
       id: 'ack-overdue',
       label: locale === 'zh' ? '确认超时' : 'Ack Overdue',
-      hint: locale === 'zh' ? '聚焦超出初始响应窗口的事件。' : 'Focus incidents that missed the first response window.',
+      hint:
+        locale === 'zh'
+          ? '聚焦超出初始响应窗口的事件。'
+          : 'Focus incidents that missed the first response window.',
       value: incidentSummary.response.ackOverdue,
-      onClick: () => applyIncidentFocus({
-        owner: incidentOwnerFilter,
-        severity: incidentSeverityFilter,
-        source: incidentSourceFilter,
-        status: 'open',
-        timeWindow: incidentTimeWindow,
-      }),
+      onClick: () =>
+        applyIncidentFocus({
+          owner: incidentOwnerFilter,
+          severity: incidentSeverityFilter,
+          source: incidentSourceFilter,
+          status: 'open',
+          timeWindow: incidentTimeWindow,
+        }),
     },
     {
       id: 'blocked-tasks',
       label: locale === 'zh' ? '阻塞任务' : 'Blocked Tasks',
-      hint: locale === 'zh' ? '优先处理当前 playbook 里的阻塞项。' : 'Prioritize incidents that are blocked inside the playbook.',
+      hint:
+        locale === 'zh'
+          ? '优先处理当前 playbook 里的阻塞项。'
+          : 'Prioritize incidents that are blocked inside the playbook.',
       value: incidentSummary.response.blockedTasks,
-      onClick: () => applyIncidentFocus({
-        owner: incidentOwnerFilter,
-        severity: incidentSeverityFilter,
-        source: incidentSourceFilter,
-        status: incidentStatusFilter,
-        timeWindow: incidentTimeWindow,
-      }),
+      onClick: () =>
+        applyIncidentFocus({
+          owner: incidentOwnerFilter,
+          severity: incidentSeverityFilter,
+          source: incidentSourceFilter,
+          status: incidentStatusFilter,
+          timeWindow: incidentTimeWindow,
+        }),
     },
     {
       id: 'owner-hotspots',
       label: locale === 'zh' ? '热点负责人' : 'Owner Hotspots',
-      hint: locale === 'zh' ? '查看负载偏高或带 critical 的负责人队列。' : 'Surface owners carrying queue pressure or critical incidents.',
+      hint:
+        locale === 'zh'
+          ? '查看负载偏高或带 critical 的负责人队列。'
+          : 'Surface owners carrying queue pressure or critical incidents.',
       value: incidentSummary.response.ownerHotspots,
-      onClick: () => applyIncidentFocus({
-        owner: 'mine',
-        severity: incidentSeverityFilter,
-        source: incidentSourceFilter,
-        status: incidentStatusFilter,
-        timeWindow: incidentTimeWindow,
-      }),
+      onClick: () =>
+        applyIncidentFocus({
+          owner: 'mine',
+          severity: incidentSeverityFilter,
+          source: incidentSourceFilter,
+          status: incidentStatusFilter,
+          timeWindow: incidentTimeWindow,
+        }),
     },
     {
       id: 'critical-open',
       label: locale === 'zh' ? '未收敛 Critical' : 'Open Critical',
-      hint: locale === 'zh' ? '聚焦还没有收尾的 critical incident。' : 'Focus critical incidents that still need mitigation or closure.',
+      hint:
+        locale === 'zh'
+          ? '聚焦还没有收尾的 critical incident。'
+          : 'Focus critical incidents that still need mitigation or closure.',
       value: incidentSummary.response.unresolvedCritical,
-      onClick: () => applyIncidentFocus({
-        owner: incidentOwnerFilter,
-        severity: 'critical',
-        source: incidentSourceFilter,
-        status: incidentStatusFilter,
-        timeWindow: incidentTimeWindow,
-      }),
+      onClick: () =>
+        applyIncidentFocus({
+          owner: incidentOwnerFilter,
+          severity: 'critical',
+          source: incidentSourceFilter,
+          status: incidentStatusFilter,
+          timeWindow: incidentTimeWindow,
+        }),
     },
   ].filter((item) => item.value > 0);
-  const selectedIncidentResponsePosture = selectedIncident ? [
-    {
-      id: 'age',
-      label: locale === 'zh' ? '队列年龄' : 'Queue Age',
-      value: `${selectedIncidentOperations.ageHours.toFixed(1)}h`,
-      hint: selectedIncidentOperations.stale
-        ? (locale === 'zh' ? '已进入 stale 区间，需要尽快推进。' : 'This incident is stale and needs immediate movement.')
-        : (locale === 'zh' ? '仍处于活跃窗口。' : 'Still inside the active response window.'),
-    },
-    {
-      id: 'ack',
-      label: locale === 'zh' ? '响应确认' : 'Response Ack',
-      value: translateIncidentAckState(locale, selectedIncidentOperations.ackState),
-      hint: selectedIncidentOperations.nextAction.key === 'acknowledge'
-        ? selectedIncidentOperations.nextAction.detail
-        : (locale === 'zh' ? '当前响应确认状态正常。' : 'The current acknowledgement state is healthy.'),
-    },
-    {
-      id: 'tasks',
-      label: locale === 'zh' ? '活跃任务' : 'Active Tasks',
-      value: `${selectedIncidentOperations.activeTasks}`,
-      hint: selectedIncidentOperations.blockedTasks
-        ? `${selectedIncidentOperations.blockedTasks} ${locale === 'zh' ? '个任务阻塞' : 'tasks blocked'}`
-        : `${selectedIncidentOperations.pendingTasks} ${locale === 'zh' ? '个任务待处理' : 'tasks pending'}`,
-    },
-    {
-      id: 'evidence',
-      label: locale === 'zh' ? '直接证据' : 'Direct Evidence',
-      value: `${selectedIncidentOperations.linkedEvidence}`,
-      hint: selectedIncidentOperations.linkedEvidence
-        ? (locale === 'zh' ? '已有可回溯的直接对象链接。' : 'Direct evidence links are already attached.')
-        : (locale === 'zh' ? '还需要补充至少一条直接证据。' : 'Add at least one direct evidence link next.'),
-    },
-  ] : [];
+  const selectedIncidentResponsePosture = selectedIncident
+    ? [
+        {
+          id: 'age',
+          label: locale === 'zh' ? '队列年龄' : 'Queue Age',
+          value: `${selectedIncidentOperations.ageHours.toFixed(1)}h`,
+          hint: selectedIncidentOperations.stale
+            ? locale === 'zh'
+              ? '已进入 stale 区间，需要尽快推进。'
+              : 'This incident is stale and needs immediate movement.'
+            : locale === 'zh'
+              ? '仍处于活跃窗口。'
+              : 'Still inside the active response window.',
+        },
+        {
+          id: 'ack',
+          label: locale === 'zh' ? '响应确认' : 'Response Ack',
+          value: translateIncidentAckState(locale, selectedIncidentOperations.ackState),
+          hint:
+            selectedIncidentOperations.nextAction.key === 'acknowledge'
+              ? selectedIncidentOperations.nextAction.detail
+              : locale === 'zh'
+                ? '当前响应确认状态正常。'
+                : 'The current acknowledgement state is healthy.',
+        },
+        {
+          id: 'tasks',
+          label: locale === 'zh' ? '活跃任务' : 'Active Tasks',
+          value: `${selectedIncidentOperations.activeTasks}`,
+          hint: selectedIncidentOperations.blockedTasks
+            ? `${selectedIncidentOperations.blockedTasks} ${locale === 'zh' ? '个任务阻塞' : 'tasks blocked'}`
+            : `${selectedIncidentOperations.pendingTasks} ${locale === 'zh' ? '个任务待处理' : 'tasks pending'}`,
+        },
+        {
+          id: 'evidence',
+          label: locale === 'zh' ? '直接证据' : 'Direct Evidence',
+          value: `${selectedIncidentOperations.linkedEvidence}`,
+          hint: selectedIncidentOperations.linkedEvidence
+            ? locale === 'zh'
+              ? '已有可回溯的直接对象链接。'
+              : 'Direct evidence links are already attached.'
+            : locale === 'zh'
+              ? '还需要补充至少一条直接证据。'
+              : 'Add at least one direct evidence link next.',
+        },
+      ]
+    : [];
 
   function focusTimelineItem(item: InvestigationTimelineItem) {
     if (item.kind === 'incident') {
@@ -1663,11 +2007,15 @@ function NotificationsPage() {
       return;
     }
     if (item.kind === 'workflow-run') {
-      focusWorkflowRunItem(item.level === 'critical' ? 'failed' : item.level === 'warn' ? 'retry_scheduled' : 'running');
+      focusWorkflowRunItem(
+        item.level === 'critical' ? 'failed' : item.level === 'warn' ? 'retry_scheduled' : 'running'
+      );
       return;
     }
     if (item.kind === 'execution-plan') {
-      focusExecutionPlanItem(item.level === 'critical' ? 'blocked' : item.level === 'warn' ? 'review' : 'ready');
+      focusExecutionPlanItem(
+        item.level === 'critical' ? 'blocked' : item.level === 'warn' ? 'review' : 'ready'
+      );
       return;
     }
     applyMonitoringFocus({
@@ -1677,7 +2025,9 @@ function NotificationsPage() {
     });
   }
 
-  function focusIncidentEvidenceItem(item: NonNullable<typeof selectedIncidentEvidence>['timeline'][number]) {
+  function focusIncidentEvidenceItem(
+    item: NonNullable<typeof selectedIncidentEvidence>['timeline'][number]
+  ) {
     setSelectedArtifactKey(`${item.kind}:${item.id}`);
     if (item.kind === 'monitoring-alert') {
       applyMonitoringFocus({
@@ -1727,7 +2077,9 @@ function NotificationsPage() {
       return;
     }
     applySchedulerFocus({
-      phase: ['PRE_OPEN', 'INTRADAY', 'POST_CLOSE', 'OFF_HOURS'].includes(item.status) ? item.status : 'all',
+      phase: ['PRE_OPEN', 'INTRADAY', 'POST_CLOSE', 'OFF_HOURS'].includes(item.status)
+        ? item.status
+        : 'all',
       timeWindow: '7d',
     });
   }
@@ -1735,12 +2087,21 @@ function NotificationsPage() {
   return (
     <>
       <SectionHeader routeKey="notifications" />
-      <TopMeta items={[
-        { label: locale === 'zh' ? '系统事件' : 'System Events', value: String(state.activityLog.length), accent: true },
-        { label: copy[locale].terms.pendingApprovals, value: String(state.approvalQueue.length) },
-        { label: locale === 'zh' ? '在线链路' : 'Connected Links', value: `${connectedCount}/2` },
-        { label: locale === 'zh' ? '控制面状态' : 'Control Plane', value: state.controlPlane.lastStatus },
-      ]} />
+      <TopMeta
+        items={[
+          {
+            label: locale === 'zh' ? '系统事件' : 'System Events',
+            value: String(state.activityLog.length),
+            accent: true,
+          },
+          { label: copy[locale].terms.pendingApprovals, value: String(state.approvalQueue.length) },
+          { label: locale === 'zh' ? '在线链路' : 'Connected Links', value: `${connectedCount}/2` },
+          {
+            label: locale === 'zh' ? '控制面状态' : 'Control Plane',
+            value: state.controlPlane.lastStatus,
+          },
+        ]}
+      />
 
       <section className="panel-grid">
         <article className="panel" id="operations-workbench">
@@ -1760,10 +2121,14 @@ function NotificationsPage() {
               {locale === 'zh' ? '重置全部筛选' : 'Reset All Filters'}
             </button>
             {!activeFocusTags.length ? (
-              <span className="empty-cell">{locale === 'zh' ? '当前没有额外焦点筛选' : 'No extra focus filters are active.'}</span>
+              <span className="empty-cell">
+                {locale === 'zh' ? '当前没有额外焦点筛选' : 'No extra focus filters are active.'}
+              </span>
             ) : null}
             {activeFocusTags.map((tag) => (
-              <span key={tag} className="settings-chip active">{tag}</span>
+              <span key={tag} className="settings-chip active">
+                {tag}
+              </span>
             ))}
           </div>
           <div className="status-copy">{investigationPathSummary}</div>
@@ -1771,7 +2136,9 @@ function NotificationsPage() {
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '排查时间线' : 'Investigation Timeline'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '排查时间线' : 'Investigation Timeline'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '把通知、审计、操作动作和监控告警按时间汇总到一条主线里，方便先看最近发生了什么。'
@@ -1781,9 +2148,23 @@ function NotificationsPage() {
             <div className="panel-badge badge-info">{investigationTimeline.length}</div>
           </div>
           <div className="focus-list focus-list-terminal">
-            {!investigationTimeline.length ? <EmptyState icon="📅" message={locale === 'zh' ? '当前没有可用于排查的时间线事件' : 'No investigation timeline entries are available right now.'} /> : null}
+            {!investigationTimeline.length ? (
+              <EmptyState
+                icon="📅"
+                message={
+                  locale === 'zh'
+                    ? '当前没有可用于排查的时间线事件'
+                    : 'No investigation timeline entries are available right now.'
+                }
+              />
+            ) : null}
             {investigationTimeline.map((item) => (
-              <button type="button" className="focus-row status-row-button" key={item.id} onClick={() => focusTimelineItem(item)}>
+              <button
+                type="button"
+                className="focus-row status-row-button"
+                key={item.id}
+                onClick={() => focusTimelineItem(item)}
+              >
                 <div className="symbol-cell">
                   <strong>{item.title}</strong>
                   <span>{item.detail}</span>
@@ -1811,14 +2192,18 @@ function NotificationsPage() {
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '事件总览' : 'Incident Overview'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '事件总览' : 'Incident Overview'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '从负责人、来源和老化维度先看清 incident 队列，再决定要不要批量处置。'
                   : 'Read the incident queue by owner, source, and aging before deciding how to batch triage it.'}
               </div>
             </div>
-            <div className={`panel-badge ${incidentSummary.total ? 'badge-warn' : 'muted'}`}>{incidentSummary.total}</div>
+            <div className={`panel-badge ${incidentSummary.total ? 'badge-warn' : 'muted'}`}>
+              {incidentSummary.total}
+            </div>
           </div>
           <div className="metrics-grid metrics-grid-compact">
             <div className="metric-card">
@@ -1846,11 +2231,27 @@ function NotificationsPage() {
               <strong>{incidentSummaryLoading ? '--' : incidentSummary.missingNotes}</strong>
             </div>
           </div>
-          <div className="panel-subtitle">{locale === 'zh' ? '运营视角' : 'Operational Lenses'}</div>
+          <div className="panel-subtitle">
+            {locale === 'zh' ? '运营视角' : 'Operational Lenses'}
+          </div>
           <div className="focus-list focus-list-terminal">
-            {!incidentOperationalLenses.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前没有额外的 incident 运营热点。' : 'No additional incident hotspots are active right now.'} /> : null}
+            {!incidentOperationalLenses.length ? (
+              <EmptyState
+                icon="✓"
+                message={
+                  locale === 'zh'
+                    ? '当前没有额外的 incident 运营热点。'
+                    : 'No additional incident hotspots are active right now.'
+                }
+              />
+            ) : null}
             {incidentOperationalLenses.map((item) => (
-              <button type="button" className="focus-row status-row-button" key={item.id} onClick={item.onClick}>
+              <button
+                type="button"
+                className="focus-row status-row-button"
+                key={item.id}
+                onClick={item.onClick}
+              >
                 <div className="symbol-cell">
                   <strong>{item.label}</strong>
                   <span>{item.hint}</span>
@@ -1862,25 +2263,43 @@ function NotificationsPage() {
               </button>
             ))}
           </div>
-          <div className="panel-subtitle">{locale === 'zh' ? '下一步动作分布' : 'Next Action Mix'}</div>
+          <div className="panel-subtitle">
+            {locale === 'zh' ? '下一步动作分布' : 'Next Action Mix'}
+          </div>
           <div className="focus-list focus-list-terminal">
-            {!incidentPriorityActions.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前所有 incident 都处于可跟进状态。' : 'All visible incidents already have a usable next step.'} /> : null}
+            {!incidentPriorityActions.length ? (
+              <EmptyState
+                icon="✓"
+                message={
+                  locale === 'zh'
+                    ? '当前所有 incident 都处于可跟进状态。'
+                    : 'All visible incidents already have a usable next step.'
+                }
+              />
+            ) : null}
             {incidentPriorityActions.map((item) => (
               <button
                 type="button"
                 className="focus-row status-row-button"
                 key={item.key}
-                onClick={() => applyIncidentFocus({
-                  owner: item.key === 'assign-owner' ? 'unassigned' : incidentOwnerFilter,
-                  severity: item.key === 'closeout' ? incidentSeverityFilter : incidentSeverityFilter,
-                  source: incidentSourceFilter,
-                  status: item.key === 'acknowledge' ? 'open' : incidentStatusFilter,
-                  timeWindow: incidentTimeWindow,
-                })}
+                onClick={() =>
+                  applyIncidentFocus({
+                    owner: item.key === 'assign-owner' ? 'unassigned' : incidentOwnerFilter,
+                    severity:
+                      item.key === 'closeout' ? incidentSeverityFilter : incidentSeverityFilter,
+                    source: incidentSourceFilter,
+                    status: item.key === 'acknowledge' ? 'open' : incidentStatusFilter,
+                    timeWindow: incidentTimeWindow,
+                  })
+                }
               >
                 <div className="symbol-cell">
                   <strong>{translateIncidentNextAction(locale, item.key)}</strong>
-                  <span>{locale === 'zh' ? '点击后把队列切到这类优先动作。' : 'Click to pivot the queue toward this action bucket.'}</span>
+                  <span>
+                    {locale === 'zh'
+                      ? '点击后把队列切到这类优先动作。'
+                      : 'Click to pivot the queue toward this action bucket.'}
+                  </span>
                 </div>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '数量' : 'Count'}</span>
@@ -1891,23 +2310,44 @@ function NotificationsPage() {
           </div>
           <div className="panel-subtitle">{locale === 'zh' ? '负责人与负载' : 'Owner Load'}</div>
           <div className="focus-list focus-list-terminal">
-            {!incidentSummary.byOwner.length ? <EmptyState icon="👥" message={locale === 'zh' ? '当前没有可显示的负责人负载' : 'No owner workload is available yet.'} /> : null}
+            {!incidentSummary.byOwner.length ? (
+              <EmptyState
+                icon="👥"
+                message={
+                  locale === 'zh'
+                    ? '当前没有可显示的负责人负载'
+                    : 'No owner workload is available yet.'
+                }
+              />
+            ) : null}
             {incidentSummary.byOwner.map((item) => (
               <button
                 type="button"
                 className="focus-row status-row-button"
                 key={item.owner}
-                onClick={() => applyIncidentFocus({
-                  owner: item.owner === 'unassigned' ? 'unassigned' : item.owner,
-                  severity: incidentSeverityFilter,
-                  source: incidentSourceFilter,
-                  status: incidentStatusFilter,
-                  timeWindow: incidentTimeWindow,
-                })}
+                onClick={() =>
+                  applyIncidentFocus({
+                    owner: item.owner === 'unassigned' ? 'unassigned' : item.owner,
+                    severity: incidentSeverityFilter,
+                    source: incidentSourceFilter,
+                    status: incidentStatusFilter,
+                    timeWindow: incidentTimeWindow,
+                  })
+                }
               >
                 <div className="symbol-cell">
-                  <strong>{item.owner === 'unassigned' ? (locale === 'zh' ? '未指派' : 'Unassigned') : item.owner}</strong>
-                  <span>{locale === 'zh' ? '点击后聚焦该负责人队列' : 'Click to focus this owner queue.'}</span>
+                  <strong>
+                    {item.owner === 'unassigned'
+                      ? locale === 'zh'
+                        ? '未指派'
+                        : 'Unassigned'
+                      : item.owner}
+                  </strong>
+                  <span>
+                    {locale === 'zh'
+                      ? '点击后聚焦该负责人队列'
+                      : 'Click to focus this owner queue.'}
+                  </span>
                 </div>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '总数' : 'Total'}</span>
@@ -1932,24 +2372,30 @@ function NotificationsPage() {
               </button>
             ))}
           </div>
-          <div className="panel-subtitle">{locale === 'zh' ? '来源分布与老化' : 'Source Mix And Aging'}</div>
+          <div className="panel-subtitle">
+            {locale === 'zh' ? '来源分布与老化' : 'Source Mix And Aging'}
+          </div>
           <div className="focus-list focus-list-terminal">
             {incidentSummary.bySource.slice(0, 6).map((item) => (
               <button
                 type="button"
                 className="focus-row status-row-button"
                 key={item.source}
-                onClick={() => applyIncidentFocus({
-                  owner: incidentOwnerFilter,
-                  severity: incidentSeverityFilter,
-                  source: item.source,
-                  status: incidentStatusFilter,
-                  timeWindow: incidentTimeWindow,
-                })}
+                onClick={() =>
+                  applyIncidentFocus({
+                    owner: incidentOwnerFilter,
+                    severity: incidentSeverityFilter,
+                    source: item.source,
+                    status: incidentStatusFilter,
+                    timeWindow: incidentTimeWindow,
+                  })
+                }
               >
                 <div className="symbol-cell">
                   <strong>{item.source}</strong>
-                  <span>{locale === 'zh' ? '点击后聚焦这个来源' : 'Click to focus this source.'}</span>
+                  <span>
+                    {locale === 'zh' ? '点击后聚焦这个来源' : 'Click to focus this source.'}
+                  </span>
                 </div>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '数量' : 'Count'}</span>
@@ -1960,16 +2406,26 @@ function NotificationsPage() {
             {incidentSummary.ageBuckets.map((item) => (
               <div className="focus-row" key={item.bucket}>
                 <div className="symbol-cell">
-                  <strong>{
-                    item.bucket === 'lt_1h'
-                      ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
+                  <strong>
+                    {item.bucket === 'lt_1h'
+                      ? locale === 'zh'
+                        ? '最近 1 小时'
+                        : 'Last 1h'
                       : item.bucket === 'lt_6h'
-                        ? (locale === 'zh' ? '1-6 小时' : '1-6h')
+                        ? locale === 'zh'
+                          ? '1-6 小时'
+                          : '1-6h'
                         : item.bucket === 'lt_24h'
-                          ? (locale === 'zh' ? '6-24 小时' : '6-24h')
-                          : (locale === 'zh' ? '超过 24 小时' : '24h+')
-                  }</strong>
-                  <span>{locale === 'zh' ? '按最近更新时间分桶' : 'Bucketed by latest update time.'}</span>
+                          ? locale === 'zh'
+                            ? '6-24 小时'
+                            : '6-24h'
+                          : locale === 'zh'
+                            ? '超过 24 小时'
+                            : '24h+'}
+                  </strong>
+                  <span>
+                    {locale === 'zh' ? '按最近更新时间分桶' : 'Bucketed by latest update time.'}
+                  </span>
                 </div>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '数量' : 'Count'}</span>
@@ -1994,13 +2450,22 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
               const selected = incidentTimeWindow === window.key;
-              const label = window.key === '1h'
-                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
-                : window.key === '24h'
-                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
-                  : window.key === '7d'
-                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
-                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              const label =
+                window.key === '1h'
+                  ? locale === 'zh'
+                    ? '最近 1 小时'
+                    : 'Last 1h'
+                  : window.key === '24h'
+                    ? locale === 'zh'
+                      ? '最近 24 小时'
+                      : 'Last 24h'
+                    : window.key === '7d'
+                      ? locale === 'zh'
+                        ? '最近 7 天'
+                        : 'Last 7d'
+                      : locale === 'zh'
+                        ? '全部时间'
+                        : 'All Time';
               return (
                 <button
                   key={window.key}
@@ -2016,9 +2481,12 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {INCIDENT_STATUSES.map((status) => {
               const selected = incidentStatusFilter === status;
-              const label = status === 'all'
-                ? (locale === 'zh' ? '全部状态' : 'All Statuses')
-                : translateMonitoringStatus(locale, status);
+              const label =
+                status === 'all'
+                  ? locale === 'zh'
+                    ? '全部状态'
+                    : 'All Statuses'
+                  : translateMonitoringStatus(locale, status);
               return (
                 <button
                   key={status}
@@ -2034,9 +2502,12 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {INCIDENT_SEVERITIES.map((severity) => {
               const selected = incidentSeverityFilter === severity;
-              const label = severity === 'all'
-                ? (locale === 'zh' ? '全部级别' : 'All Levels')
-                : translateMonitoringStatus(locale, severity);
+              const label =
+                severity === 'all'
+                  ? locale === 'zh'
+                    ? '全部级别'
+                    : 'All Levels'
+                  : translateMonitoringStatus(locale, severity);
               return (
                 <button
                   key={severity}
@@ -2052,7 +2523,8 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {INCIDENT_SOURCES.map((source) => {
               const selected = incidentSourceFilter === source;
-              const label = source === 'all' ? (locale === 'zh' ? '全部来源' : 'All Sources') : source;
+              const label =
+                source === 'all' ? (locale === 'zh' ? '全部来源' : 'All Sources') : source;
               return (
                 <button
                   key={source}
@@ -2068,11 +2540,18 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {INCIDENT_OWNER_FILTERS.map((owner) => {
               const selected = incidentOwnerFilter === owner;
-              const label = owner === 'all'
-                ? (locale === 'zh' ? '全部负责人' : 'All Owners')
-                : owner === 'mine'
-                  ? (locale === 'zh' ? '我的队列' : 'My Queue')
-                  : (locale === 'zh' ? '未指派' : 'Unassigned');
+              const label =
+                owner === 'all'
+                  ? locale === 'zh'
+                    ? '全部负责人'
+                    : 'All Owners'
+                  : owner === 'mine'
+                    ? locale === 'zh'
+                      ? '我的队列'
+                      : 'My Queue'
+                    : locale === 'zh'
+                      ? '未指派'
+                      : 'Unassigned';
               return (
                 <button
                   key={owner}
@@ -2084,15 +2563,28 @@ function NotificationsPage() {
                 </button>
               );
             })}
-            {incidentOwnerFilter !== 'all' && !INCIDENT_OWNER_FILTERS.includes(incidentOwnerFilter as (typeof INCIDENT_OWNER_FILTERS)[number]) ? (
+            {incidentOwnerFilter !== 'all' &&
+            !INCIDENT_OWNER_FILTERS.includes(
+              incidentOwnerFilter as (typeof INCIDENT_OWNER_FILTERS)[number]
+            ) ? (
               <span className="settings-chip active">{incidentOwnerFilter}</span>
             ) : null}
           </div>
           <div className="settings-chip-row">
-            <button type="button" className="settings-chip" disabled={!incidentItems.length} onClick={toggleSelectVisibleIncidents}>
-              {incidentItems.length > 0 && incidentItems.every((item) => selectedIncidentIds.includes(item.id))
-                ? (locale === 'zh' ? '取消全选当前列表' : 'Clear Visible Selection')
-                : (locale === 'zh' ? '全选当前列表' : 'Select Visible')}
+            <button
+              type="button"
+              className="settings-chip"
+              disabled={!incidentItems.length}
+              onClick={toggleSelectVisibleIncidents}
+            >
+              {incidentItems.length > 0 &&
+              incidentItems.every((item) => selectedIncidentIds.includes(item.id))
+                ? locale === 'zh'
+                  ? '取消全选当前列表'
+                  : 'Clear Visible Selection'
+                : locale === 'zh'
+                  ? '全选当前列表'
+                  : 'Select Visible'}
             </button>
             <span className="empty-cell">
               {locale === 'zh'
@@ -2100,32 +2592,65 @@ function NotificationsPage() {
                 : `${selectedIncidentIds.length} incidents selected`}
             </span>
           </div>
-          <label className="field-label" htmlFor="incident-bulk-owner-input">{locale === 'zh' ? '批量负责人' : 'Bulk Owner'}</label>
+          <label className="field-label" htmlFor="incident-bulk-owner-input">
+            {locale === 'zh' ? '批量负责人' : 'Bulk Owner'}
+          </label>
           <div className="settings-chip-row">
             <input
               id="incident-bulk-owner-input"
               className="text-input"
               value={incidentBulkOwnerDraft}
               onChange={(event) => setIncidentBulkOwnerDraft(event.target.value)}
-              placeholder={locale === 'zh' ? '给选中 incident 指派负责人' : 'Assign owner to selected incidents'}
+              placeholder={
+                locale === 'zh'
+                  ? '给选中 incident 指派负责人'
+                  : 'Assign owner to selected incidents'
+              }
             />
-            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length} onClick={() => applyBulkIncidentUpdate({ owner: state.controlPlane.operator })}>
+            <button
+              type="button"
+              className="settings-chip"
+              disabled={incidentBusy || !selectedIncidentIds.length}
+              onClick={() => applyBulkIncidentUpdate({ owner: state.controlPlane.operator })}
+            >
               {locale === 'zh' ? '批量归我' : 'Assign To Me'}
             </button>
-            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length} onClick={() => applyBulkIncidentUpdate({ owner: incidentBulkOwnerDraft.trim() })}>
+            <button
+              type="button"
+              className="settings-chip"
+              disabled={incidentBusy || !selectedIncidentIds.length}
+              onClick={() => applyBulkIncidentUpdate({ owner: incidentBulkOwnerDraft.trim() })}
+            >
               {locale === 'zh' ? '批量指派' : 'Assign Selected'}
             </button>
-            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length} onClick={() => applyBulkIncidentUpdate({ status: 'investigating' })}>
+            <button
+              type="button"
+              className="settings-chip"
+              disabled={incidentBusy || !selectedIncidentIds.length}
+              onClick={() => applyBulkIncidentUpdate({ status: 'investigating' })}
+            >
               {locale === 'zh' ? '批量开始排查' : 'Bulk Investigate'}
             </button>
-            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length} onClick={() => applyBulkIncidentUpdate({ status: 'mitigated' })}>
+            <button
+              type="button"
+              className="settings-chip"
+              disabled={incidentBusy || !selectedIncidentIds.length}
+              onClick={() => applyBulkIncidentUpdate({ status: 'mitigated' })}
+            >
               {locale === 'zh' ? '批量缓解' : 'Bulk Mitigate'}
             </button>
-            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length} onClick={() => applyBulkIncidentUpdate({ status: 'resolved' })}>
+            <button
+              type="button"
+              className="settings-chip"
+              disabled={incidentBusy || !selectedIncidentIds.length}
+              onClick={() => applyBulkIncidentUpdate({ status: 'resolved' })}
+            >
               {locale === 'zh' ? '批量解决' : 'Bulk Resolve'}
             </button>
           </div>
-          <label className="field-label" htmlFor="incident-bulk-note-input">{locale === 'zh' ? '批量备注' : 'Bulk Note'}</label>
+          <label className="field-label" htmlFor="incident-bulk-note-input">
+            {locale === 'zh' ? '批量备注' : 'Bulk Note'}
+          </label>
           <div className="settings-chip-row">
             <textarea
               id="incident-bulk-note-input"
@@ -2133,74 +2658,133 @@ function NotificationsPage() {
               rows={3}
               value={incidentBulkNoteDraft}
               onChange={(event) => setIncidentBulkNoteDraft(event.target.value)}
-              placeholder={locale === 'zh' ? '给当前选中的 incident 统一追加备注' : 'Append a shared note to the selected incidents'}
+              placeholder={
+                locale === 'zh'
+                  ? '给当前选中的 incident 统一追加备注'
+                  : 'Append a shared note to the selected incidents'
+              }
             />
           </div>
           <div className="settings-chip-row">
-            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length || !incidentBulkNoteDraft.trim()} onClick={() => applyBulkIncidentUpdate({ note: incidentBulkNoteDraft.trim() })}>
+            <button
+              type="button"
+              className="settings-chip"
+              disabled={
+                incidentBusy || !selectedIncidentIds.length || !incidentBulkNoteDraft.trim()
+              }
+              onClick={() => applyBulkIncidentUpdate({ note: incidentBulkNoteDraft.trim() })}
+            >
               {locale === 'zh' ? '批量追加备注' : 'Append Bulk Note'}
             </button>
-            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length || !incidentBulkNoteDraft.trim()} onClick={() => applyBulkIncidentUpdate({ note: incidentBulkNoteDraft.trim(), status: 'investigating' })}>
+            <button
+              type="button"
+              className="settings-chip"
+              disabled={
+                incidentBusy || !selectedIncidentIds.length || !incidentBulkNoteDraft.trim()
+              }
+              onClick={() =>
+                applyBulkIncidentUpdate({
+                  note: incidentBulkNoteDraft.trim(),
+                  status: 'investigating',
+                })
+              }
+            >
               {locale === 'zh' ? '备注并开始排查' : 'Note And Investigate'}
             </button>
-            <button type="button" className="settings-chip" disabled={incidentBusy || !selectedIncidentIds.length || !incidentBulkNoteDraft.trim()} onClick={() => applyBulkIncidentUpdate({ note: incidentBulkNoteDraft.trim(), status: 'resolved' })}>
+            <button
+              type="button"
+              className="settings-chip"
+              disabled={
+                incidentBusy || !selectedIncidentIds.length || !incidentBulkNoteDraft.trim()
+              }
+              onClick={() =>
+                applyBulkIncidentUpdate({ note: incidentBulkNoteDraft.trim(), status: 'resolved' })
+              }
+            >
               {locale === 'zh' ? '备注并收尾' : 'Note And Resolve'}
             </button>
           </div>
           <div className="focus-list focus-list-terminal">
-            {incidentsLoading ? <EmptyState message={locale === 'zh' ? '正在加载事件...' : 'Loading incidents...'} /> : null}
-            {!incidentsLoading && !incidentItems.length ? <EmptyState icon="🔔" message={locale === 'zh' ? '当前还没有升级为 incident 的事件' : 'No incidents have been opened yet.'} /> : null}
-            {!incidentsLoading ? incidentItems.map((item) => (
-              <div className="focus-row focus-row-wide" key={item.id}>
-                <div className="symbol-cell">
-                  <strong>{item.title}</strong>
-                  <span>{item.summary || item.latestNotePreview || (locale === 'zh' ? '暂无摘要' : 'No summary')}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                  <strong>{translateMonitoringStatus(locale, item.status)}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '负责人' : 'Owner'}</span>
-                  <strong>{item.owner || (locale === 'zh' ? '未指派' : 'Unassigned')}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '更新于' : 'Updated'}</span>
-                  <strong>{fmtDateTime(item.updatedAt || item.createdAt, locale)}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '备注' : 'Notes'}</span>
-                  <strong>{item.noteCount}</strong>
-                </div>
-                <div className="settings-chip-row">
-                  <button
-                    type="button"
-                    className={`settings-chip${selectedIncidentIds.includes(item.id) ? ' active' : ''}`}
-                    onClick={() => toggleIncidentSelection(item.id)}
-                  >
-                    {selectedIncidentIds.includes(item.id)
-                      ? (locale === 'zh' ? '已选中' : 'Selected')
-                      : (locale === 'zh' ? '加入批量' : 'Select')}
-                  </button>
-                  <button
-                    type="button"
-                    className={`settings-chip${selectedIncidentId === item.id ? ' active' : ''}`}
-                    onClick={() => applyIncidentFocus({
-                      incidentId: selectedIncidentId === item.id ? '' : item.id,
-                      owner: item.owner || 'unassigned',
-                      severity: item.severity,
-                      source: item.source,
-                      status: item.status,
-                      timeWindow: incidentTimeWindow,
-                    })}
-                  >
-                    {selectedIncidentId === item.id
-                      ? (locale === 'zh' ? '取消详情' : 'Hide Detail')
-                      : (locale === 'zh' ? '查看详情' : 'Open Detail')}
-                  </button>
-                </div>
-              </div>
-            )) : null}
+            {incidentsLoading ? (
+              <EmptyState message={locale === 'zh' ? '正在加载事件...' : 'Loading incidents...'} />
+            ) : null}
+            {!incidentsLoading && !incidentItems.length ? (
+              <EmptyState
+                icon="🔔"
+                message={
+                  locale === 'zh'
+                    ? '当前还没有升级为 incident 的事件'
+                    : 'No incidents have been opened yet.'
+                }
+              />
+            ) : null}
+            {!incidentsLoading
+              ? incidentItems.map((item) => (
+                  <div className="focus-row focus-row-wide" key={item.id}>
+                    <div className="symbol-cell">
+                      <strong>{item.title}</strong>
+                      <span>
+                        {item.summary ||
+                          item.latestNotePreview ||
+                          (locale === 'zh' ? '暂无摘要' : 'No summary')}
+                      </span>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                      <strong>{translateMonitoringStatus(locale, item.status)}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '负责人' : 'Owner'}</span>
+                      <strong>{item.owner || (locale === 'zh' ? '未指派' : 'Unassigned')}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '更新于' : 'Updated'}</span>
+                      <strong>{fmtDateTime(item.updatedAt || item.createdAt, locale)}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '备注' : 'Notes'}</span>
+                      <strong>{item.noteCount}</strong>
+                    </div>
+                    <div className="settings-chip-row">
+                      <button
+                        type="button"
+                        className={`settings-chip${selectedIncidentIds.includes(item.id) ? ' active' : ''}`}
+                        onClick={() => toggleIncidentSelection(item.id)}
+                      >
+                        {selectedIncidentIds.includes(item.id)
+                          ? locale === 'zh'
+                            ? '已选中'
+                            : 'Selected'
+                          : locale === 'zh'
+                            ? '加入批量'
+                            : 'Select'}
+                      </button>
+                      <button
+                        type="button"
+                        className={`settings-chip${selectedIncidentId === item.id ? ' active' : ''}`}
+                        onClick={() =>
+                          applyIncidentFocus({
+                            incidentId: selectedIncidentId === item.id ? '' : item.id,
+                            owner: item.owner || 'unassigned',
+                            severity: item.severity,
+                            source: item.source,
+                            status: item.status,
+                            timeWindow: incidentTimeWindow,
+                          })
+                        }
+                      >
+                        {selectedIncidentId === item.id
+                          ? locale === 'zh'
+                            ? '取消详情'
+                            : 'Hide Detail'
+                          : locale === 'zh'
+                            ? '查看详情'
+                            : 'Open Detail'}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              : null}
           </div>
         </article>
         <article className="panel">
@@ -2213,24 +2797,39 @@ function NotificationsPage() {
                   : 'Once an incident is selected, update its status, assign an owner, and add investigation notes here.'}
               </div>
             </div>
-            <div className={`panel-badge ${selectedIncident ? 'badge-info' : 'muted'}`}>{selectedIncident ? selectedIncident.status : '--'}</div>
+            <div className={`panel-badge ${selectedIncident ? 'badge-info' : 'muted'}`}>
+              {selectedIncident ? selectedIncident.status : '--'}
+            </div>
           </div>
           {!selectedIncidentId ? (
-            <EmptyState icon="👆" message={locale === 'zh' ? '从上方事件队列选择一条 incident，或在告警/通知/审计面板里直接升级创建。' : 'Select an incident from the queue above, or escalate one from the alert, notification, or audit panels below.'} />
+            <EmptyState
+              icon="👆"
+              message={
+                locale === 'zh'
+                  ? '从上方事件队列选择一条 incident，或在告警/通知/审计面板里直接升级创建。'
+                  : 'Select an incident from the queue above, or escalate one from the alert, notification, or audit panels below.'
+              }
+            />
           ) : null}
           {selectedIncidentId && incidentDetailLoading ? (
-            <EmptyState message={locale === 'zh' ? '正在加载事件详情...' : 'Loading incident detail...'} />
+            <EmptyState
+              message={locale === 'zh' ? '正在加载事件详情...' : 'Loading incident detail...'}
+            />
           ) : null}
           {selectedIncident ? (
             <>
               <div className="metrics-grid metrics-grid-compact">
                 <div className="metric-card">
                   <span>{locale === 'zh' ? '下一步' : 'Next Action'}</span>
-                  <strong>{translateIncidentNextAction(locale, selectedIncidentOperations.nextAction.key)}</strong>
+                  <strong>
+                    {translateIncidentNextAction(locale, selectedIncidentOperations.nextAction.key)}
+                  </strong>
                 </div>
                 <div className="metric-card">
                   <span>{locale === 'zh' ? '确认状态' : 'Ack State'}</span>
-                  <strong>{translateIncidentAckState(locale, selectedIncidentOperations.ackState)}</strong>
+                  <strong>
+                    {translateIncidentAckState(locale, selectedIncidentOperations.ackState)}
+                  </strong>
                 </div>
                 <div className="metric-card">
                   <span>{locale === 'zh' ? '队列年龄' : 'Queue Age'}</span>
@@ -2242,14 +2841,33 @@ function NotificationsPage() {
                 </div>
               </div>
               <div className="status-stack">
-                <div className="status-row"><span>{locale === 'zh' ? '标题' : 'Title'}</span><strong>{selectedIncident.title}</strong></div>
-                <div className="status-row"><span>{locale === 'zh' ? '来源' : 'Source'}</span><strong>{selectedIncident.source}</strong></div>
-                <div className="status-row"><span>{locale === 'zh' ? '级别' : 'Severity'}</span><strong>{translateMonitoringStatus(locale, selectedIncident.severity)}</strong></div>
-                <div className="status-row"><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{translateMonitoringStatus(locale, selectedIncident.status)}</strong></div>
-                <div className="status-row"><span>{locale === 'zh' ? '创建于' : 'Created'}</span><strong>{fmtDateTime(selectedIncident.createdAt, locale)}</strong></div>
-                <div className="status-copy">{selectedIncident.summary || (locale === 'zh' ? '暂无摘要' : 'No summary')}</div>
+                <div className="status-row">
+                  <span>{locale === 'zh' ? '标题' : 'Title'}</span>
+                  <strong>{selectedIncident.title}</strong>
+                </div>
+                <div className="status-row">
+                  <span>{locale === 'zh' ? '来源' : 'Source'}</span>
+                  <strong>{selectedIncident.source}</strong>
+                </div>
+                <div className="status-row">
+                  <span>{locale === 'zh' ? '级别' : 'Severity'}</span>
+                  <strong>{translateMonitoringStatus(locale, selectedIncident.severity)}</strong>
+                </div>
+                <div className="status-row">
+                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                  <strong>{translateMonitoringStatus(locale, selectedIncident.status)}</strong>
+                </div>
+                <div className="status-row">
+                  <span>{locale === 'zh' ? '创建于' : 'Created'}</span>
+                  <strong>{fmtDateTime(selectedIncident.createdAt, locale)}</strong>
+                </div>
+                <div className="status-copy">
+                  {selectedIncident.summary || (locale === 'zh' ? '暂无摘要' : 'No summary')}
+                </div>
               </div>
-              <div className="panel-subtitle">{locale === 'zh' ? '响应态势' : 'Response Posture'}</div>
+              <div className="panel-subtitle">
+                {locale === 'zh' ? '响应态势' : 'Response Posture'}
+              </div>
               <div className="focus-list focus-list-terminal">
                 {selectedIncidentResponsePosture.map((item) => (
                   <div className="focus-row" key={item.id}>
@@ -2264,16 +2882,26 @@ function NotificationsPage() {
                   </div>
                 ))}
               </div>
-              <div className="panel-subtitle">{locale === 'zh' ? '交接与下一步' : 'Handoff And Next Step'}</div>
+              <div className="panel-subtitle">
+                {locale === 'zh' ? '交接与下一步' : 'Handoff And Next Step'}
+              </div>
               <div className="focus-list focus-list-terminal">
                 <div className="focus-row">
                   <div className="symbol-cell">
-                    <strong>{translateIncidentNextAction(locale, selectedIncidentOperations.nextAction.key)}</strong>
+                    <strong>
+                      {translateIncidentNextAction(
+                        locale,
+                        selectedIncidentOperations.nextAction.key
+                      )}
+                    </strong>
                     <span>{selectedIncidentOperations.nextAction.detail}</span>
                   </div>
                   <div className="focus-metric">
                     <span>{locale === 'zh' ? '负责人' : 'Owner'}</span>
-                    <strong>{selectedIncidentOperations.handoff.owner || (locale === 'zh' ? '未指派' : 'Unassigned')}</strong>
+                    <strong>
+                      {selectedIncidentOperations.handoff.owner ||
+                        (locale === 'zh' ? '未指派' : 'Unassigned')}
+                    </strong>
                   </div>
                 </div>
                 <div className="focus-row">
@@ -2287,25 +2915,71 @@ function NotificationsPage() {
                   </div>
                   <div className="focus-metric">
                     <span>{locale === 'zh' ? '最近活动' : 'Latest Activity'}</span>
-                    <strong>{selectedIncidentOperations.latestActivityAt ? fmtDateTime(selectedIncidentOperations.latestActivityAt, locale) : '--'}</strong>
+                    <strong>
+                      {selectedIncidentOperations.latestActivityAt
+                        ? fmtDateTime(selectedIncidentOperations.latestActivityAt, locale)
+                        : '--'}
+                    </strong>
                   </div>
                 </div>
               </div>
               <div className="settings-chip-row">
-                <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => updateSelectedIncident({ status: 'investigating', actor: state.controlPlane.operator })}>
+                <button
+                  type="button"
+                  className="settings-chip"
+                  disabled={incidentBusy}
+                  onClick={() =>
+                    updateSelectedIncident({
+                      status: 'investigating',
+                      actor: state.controlPlane.operator,
+                    })
+                  }
+                >
                   {locale === 'zh' ? '开始排查' : 'Start Investigating'}
                 </button>
-                <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => updateSelectedIncident({ status: 'mitigated', actor: state.controlPlane.operator })}>
+                <button
+                  type="button"
+                  className="settings-chip"
+                  disabled={incidentBusy}
+                  onClick={() =>
+                    updateSelectedIncident({
+                      status: 'mitigated',
+                      actor: state.controlPlane.operator,
+                    })
+                  }
+                >
                   {locale === 'zh' ? '已缓解' : 'Mark Mitigated'}
                 </button>
-                <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => updateSelectedIncident({ status: 'resolved', actor: state.controlPlane.operator })}>
+                <button
+                  type="button"
+                  className="settings-chip"
+                  disabled={incidentBusy}
+                  onClick={() =>
+                    updateSelectedIncident({
+                      status: 'resolved',
+                      actor: state.controlPlane.operator,
+                    })
+                  }
+                >
                   {locale === 'zh' ? '已解决' : 'Resolve'}
                 </button>
-                <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => updateSelectedIncident({ owner: state.controlPlane.operator, actor: state.controlPlane.operator })}>
+                <button
+                  type="button"
+                  className="settings-chip"
+                  disabled={incidentBusy}
+                  onClick={() =>
+                    updateSelectedIncident({
+                      owner: state.controlPlane.operator,
+                      actor: state.controlPlane.operator,
+                    })
+                  }
+                >
                   {locale === 'zh' ? '由我接管' : 'Take Ownership'}
                 </button>
               </div>
-              <label className="field-label" htmlFor="incident-owner-input">{locale === 'zh' ? '负责人' : 'Owner'}</label>
+              <label className="field-label" htmlFor="incident-owner-input">
+                {locale === 'zh' ? '负责人' : 'Owner'}
+              </label>
               <div className="settings-chip-row">
                 <input
                   id="incident-owner-input"
@@ -2318,29 +2992,52 @@ function NotificationsPage() {
                   type="button"
                   className="settings-chip"
                   disabled={incidentBusy || !incidentOwnerDraft.trim()}
-                  onClick={() => updateSelectedIncident({ owner: incidentOwnerDraft.trim(), actor: state.controlPlane.operator })}
+                  onClick={() =>
+                    updateSelectedIncident({
+                      owner: incidentOwnerDraft.trim(),
+                      actor: state.controlPlane.operator,
+                    })
+                  }
                 >
                   {locale === 'zh' ? '保存负责人' : 'Save Owner'}
                 </button>
               </div>
-              <label className="field-label" htmlFor="incident-note-input">{locale === 'zh' ? '排查记录' : 'Investigation Note'}</label>
+              <label className="field-label" htmlFor="incident-note-input">
+                {locale === 'zh' ? '排查记录' : 'Investigation Note'}
+              </label>
               <textarea
                 id="incident-note-input"
                 className="detail-textarea"
                 rows={4}
                 value={incidentNoteDraft}
                 onChange={(event) => setIncidentNoteDraft(event.target.value)}
-                placeholder={locale === 'zh' ? '记录当前判断、缓解动作或下一步计划' : 'Capture findings, mitigation steps, or next actions'}
+                placeholder={
+                  locale === 'zh'
+                    ? '记录当前判断、缓解动作或下一步计划'
+                    : 'Capture findings, mitigation steps, or next actions'
+                }
               />
               <div className="settings-chip-row">
-                <button type="button" className="settings-chip" disabled={incidentBusy || !incidentNoteDraft.trim()} onClick={appendSelectedIncidentNote}>
+                <button
+                  type="button"
+                  className="settings-chip"
+                  disabled={incidentBusy || !incidentNoteDraft.trim()}
+                  onClick={appendSelectedIncidentNote}
+                >
                   {locale === 'zh' ? '追加记录' : 'Append Note'}
                 </button>
-                <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => setIncidentNoteDraft('')}>
+                <button
+                  type="button"
+                  className="settings-chip"
+                  disabled={incidentBusy}
+                  onClick={() => setIncidentNoteDraft('')}
+                >
                   {locale === 'zh' ? '清空草稿' : 'Clear Draft'}
                 </button>
               </div>
-              <div className="panel-subtitle">{locale === 'zh' ? '处置 Playbook' : 'Incident Playbook'}</div>
+              <div className="panel-subtitle">
+                {locale === 'zh' ? '处置 Playbook' : 'Incident Playbook'}
+              </div>
               <div className="metrics-grid metrics-grid-compact">
                 <div className="metric-card">
                   <span>{locale === 'zh' ? '总任务' : 'Tasks'}</span>
@@ -2363,14 +3060,20 @@ function NotificationsPage() {
                   <strong>{selectedIncidentTasks.summary.blocked}</strong>
                 </div>
               </div>
-              <label className="field-label" htmlFor="incident-task-title-input">{locale === 'zh' ? '新增处置任务' : 'Add Playbook Task'}</label>
+              <label className="field-label" htmlFor="incident-task-title-input">
+                {locale === 'zh' ? '新增处置任务' : 'Add Playbook Task'}
+              </label>
               <div className="settings-chip-row">
                 <input
                   id="incident-task-title-input"
                   className="text-input"
                   value={incidentTaskTitleDraft}
                   onChange={(event) => setIncidentTaskTitleDraft(event.target.value)}
-                  placeholder={locale === 'zh' ? '任务标题，例如：确认 fallback broker 可用' : 'Task title, for example: verify fallback broker readiness'}
+                  placeholder={
+                    locale === 'zh'
+                      ? '任务标题，例如：确认 fallback broker 可用'
+                      : 'Task title, for example: verify fallback broker readiness'
+                  }
                 />
               </div>
               <textarea
@@ -2378,26 +3081,51 @@ function NotificationsPage() {
                 rows={2}
                 value={incidentTaskDetailDraft}
                 onChange={(event) => setIncidentTaskDetailDraft(event.target.value)}
-                placeholder={locale === 'zh' ? '补充任务说明、判定标准或交接备注' : 'Add implementation notes, acceptance criteria, or handoff detail'}
+                placeholder={
+                  locale === 'zh'
+                    ? '补充任务说明、判定标准或交接备注'
+                    : 'Add implementation notes, acceptance criteria, or handoff detail'
+                }
               />
               <div className="settings-chip-row">
-                <button type="button" className="settings-chip" disabled={incidentBusy || !incidentTaskTitleDraft.trim()} onClick={appendSelectedIncidentTask}>
+                <button
+                  type="button"
+                  className="settings-chip"
+                  disabled={incidentBusy || !incidentTaskTitleDraft.trim()}
+                  onClick={appendSelectedIncidentTask}
+                >
                   {locale === 'zh' ? '追加任务' : 'Add Task'}
                 </button>
-                <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => {
-                  setIncidentTaskTitleDraft('');
-                  setIncidentTaskDetailDraft('');
-                }}>
+                <button
+                  type="button"
+                  className="settings-chip"
+                  disabled={incidentBusy}
+                  onClick={() => {
+                    setIncidentTaskTitleDraft('');
+                    setIncidentTaskDetailDraft('');
+                  }}
+                >
                   {locale === 'zh' ? '清空任务草稿' : 'Clear Task Draft'}
                 </button>
               </div>
               <div className="focus-list focus-list-terminal">
-                {!selectedIncidentTasks.items.length ? <EmptyState icon="📋" message={locale === 'zh' ? '这条 incident 还没有处置任务' : 'No incident playbook tasks have been created yet.'} /> : null}
+                {!selectedIncidentTasks.items.length ? (
+                  <EmptyState
+                    icon="📋"
+                    message={
+                      locale === 'zh'
+                        ? '这条 incident 还没有处置任务'
+                        : 'No incident playbook tasks have been created yet.'
+                    }
+                  />
+                ) : null}
                 {selectedIncidentTasks.items.map((task) => (
                   <div className="focus-row focus-row-wide" key={task.id}>
                     <div className="symbol-cell">
                       <strong>{task.title}</strong>
-                      <span>{task.detail || (locale === 'zh' ? '暂无详细说明' : 'No task detail')}</span>
+                      <span>
+                        {task.detail || (locale === 'zh' ? '暂无详细说明' : 'No task detail')}
+                      </span>
                     </div>
                     <div className="focus-metric">
                       <span>{locale === 'zh' ? '状态' : 'Status'}</span>
@@ -2412,19 +3140,41 @@ function NotificationsPage() {
                       <strong>{fmtDateTime(task.updatedAt || task.createdAt, locale)}</strong>
                     </div>
                     <div className="settings-chip-row">
-                      <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => transitionSelectedIncidentTask(task.id, 'in_progress')}>
+                      <button
+                        type="button"
+                        className="settings-chip"
+                        disabled={incidentBusy}
+                        onClick={() => transitionSelectedIncidentTask(task.id, 'in_progress')}
+                      >
                         {locale === 'zh' ? '开始处理' : 'Start'}
                       </button>
-                      <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => transitionSelectedIncidentTask(task.id, 'done')}>
+                      <button
+                        type="button"
+                        className="settings-chip"
+                        disabled={incidentBusy}
+                        onClick={() => transitionSelectedIncidentTask(task.id, 'done')}
+                      >
                         {locale === 'zh' ? '标记完成' : 'Done'}
                       </button>
-                      <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => transitionSelectedIncidentTask(task.id, 'blocked')}>
+                      <button
+                        type="button"
+                        className="settings-chip"
+                        disabled={incidentBusy}
+                        onClick={() => transitionSelectedIncidentTask(task.id, 'blocked')}
+                      >
                         {locale === 'zh' ? '标记阻塞' : 'Block'}
                       </button>
-                      <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => setIncidentNoteDraft((draft) => {
-                        const next = `${locale === 'zh' ? '任务' : 'Task'}: ${task.title}\n${locale === 'zh' ? '状态' : 'Status'}: ${task.status}\n${locale === 'zh' ? '说明' : 'Detail'}: ${task.detail || '--'}`;
-                        return draft ? `${draft}\n\n${next}` : next;
-                      })}>
+                      <button
+                        type="button"
+                        className="settings-chip"
+                        disabled={incidentBusy}
+                        onClick={() =>
+                          setIncidentNoteDraft((draft) => {
+                            const next = `${locale === 'zh' ? '任务' : 'Task'}: ${task.title}\n${locale === 'zh' ? '状态' : 'Status'}: ${task.status}\n${locale === 'zh' ? '说明' : 'Detail'}: ${task.detail || '--'}`;
+                            return draft ? `${draft}\n\n${next}` : next;
+                          })
+                        }
+                      >
                         {locale === 'zh' ? '引用到记录' : 'Quote To Note'}
                       </button>
                     </div>
@@ -2438,7 +3188,11 @@ function NotificationsPage() {
                 </div>
                 <div className="metric-card">
                   <span>{locale === 'zh' ? '最后活动' : 'Latest Activity'}</span>
-                  <strong>{selectedIncidentActivity.summary.latestAt ? fmtDateTime(selectedIncidentActivity.summary.latestAt, locale) : '--'}</strong>
+                  <strong>
+                    {selectedIncidentActivity.summary.latestAt
+                      ? fmtDateTime(selectedIncidentActivity.summary.latestAt, locale)
+                      : '--'}
+                  </strong>
                 </div>
                 <div className="metric-card">
                   <span>{locale === 'zh' ? '关联证据' : 'Evidence'}</span>
@@ -2457,15 +3211,29 @@ function NotificationsPage() {
                   <strong>{selectedIncidentEvidence.summary.notifications}</strong>
                 </div>
                 <div className="metric-card">
-                  <span>{locale === 'zh' ? '审计 / 动作 / 调度' : 'Audit / Action / Scheduler'}</span>
-                  <strong>{selectedIncidentEvidence.summary.audits + selectedIncidentEvidence.summary.operatorActions + selectedIncidentEvidence.summary.schedulerTicks}</strong>
+                  <span>
+                    {locale === 'zh' ? '审计 / 动作 / 调度' : 'Audit / Action / Scheduler'}
+                  </span>
+                  <strong>
+                    {selectedIncidentEvidence.summary.audits +
+                      selectedIncidentEvidence.summary.operatorActions +
+                      selectedIncidentEvidence.summary.schedulerTicks}
+                  </strong>
                 </div>
                 <div className="metric-card">
-                  <span>{locale === 'zh' ? '风控 / 工作流 / 执行' : 'Risk / Workflow / Execution'}</span>
-                  <strong>{selectedIncidentEvidence.summary.riskEvents + selectedIncidentEvidence.summary.workflowRuns + selectedIncidentEvidence.summary.executionPlans}</strong>
+                  <span>
+                    {locale === 'zh' ? '风控 / 工作流 / 执行' : 'Risk / Workflow / Execution'}
+                  </span>
+                  <strong>
+                    {selectedIncidentEvidence.summary.riskEvents +
+                      selectedIncidentEvidence.summary.workflowRuns +
+                      selectedIncidentEvidence.summary.executionPlans}
+                  </strong>
                 </div>
               </div>
-              <div className="panel-subtitle">{locale === 'zh' ? '响应检查单' : 'Response Checklist'}</div>
+              <div className="panel-subtitle">
+                {locale === 'zh' ? '响应检查单' : 'Response Checklist'}
+              </div>
               <div className="focus-list focus-list-terminal">
                 {incidentResponseChecklist.map((item) => (
                   <div className="focus-row" key={item.id}>
@@ -2475,16 +3243,40 @@ function NotificationsPage() {
                     </div>
                     <div className="focus-metric">
                       <span>{locale === 'zh' ? '状态' : 'State'}</span>
-                      <strong>{item.done ? (locale === 'zh' ? '已完成' : 'Done') : (locale === 'zh' ? '待处理' : 'Pending')}</strong>
+                      <strong>
+                        {item.done
+                          ? locale === 'zh'
+                            ? '已完成'
+                            : 'Done'
+                          : locale === 'zh'
+                            ? '待处理'
+                            : 'Pending'}
+                      </strong>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="panel-subtitle">{locale === 'zh' ? '关联证据时间线' : 'Related Evidence Timeline'}</div>
+              <div className="panel-subtitle">
+                {locale === 'zh' ? '关联证据时间线' : 'Related Evidence Timeline'}
+              </div>
               <div className="focus-list focus-list-terminal">
-                {!selectedIncidentEvidence.timeline.length ? <EmptyState icon="🔍" message={locale === 'zh' ? '当前还没有自动聚合到关联证据' : 'No related evidence has been aggregated yet.'} /> : null}
+                {!selectedIncidentEvidence.timeline.length ? (
+                  <EmptyState
+                    icon="🔍"
+                    message={
+                      locale === 'zh'
+                        ? '当前还没有自动聚合到关联证据'
+                        : 'No related evidence has been aggregated yet.'
+                    }
+                  />
+                ) : null}
                 {selectedIncidentEvidence.timeline.map((item) => (
-                  <button type="button" className="focus-row focus-row-wide status-row-button" key={`${item.kind}:${item.id}`} onClick={() => focusIncidentEvidenceItem(item)}>
+                  <button
+                    type="button"
+                    className="focus-row focus-row-wide status-row-button"
+                    key={`${item.kind}:${item.id}`}
+                    onClick={() => focusIncidentEvidenceItem(item)}
+                  >
                     <div className="symbol-cell">
                       <strong>{item.title}</strong>
                       <span>{item.detail}</span>
@@ -2499,7 +3291,15 @@ function NotificationsPage() {
                     </div>
                     <div className="focus-metric">
                       <span>{locale === 'zh' ? '关联' : 'Link'}</span>
-                      <strong>{item.linked ? (locale === 'zh' ? '直接' : 'Direct') : (locale === 'zh' ? '推断' : 'Inferred')}</strong>
+                      <strong>
+                        {item.linked
+                          ? locale === 'zh'
+                            ? '直接'
+                            : 'Direct'
+                          : locale === 'zh'
+                            ? '推断'
+                            : 'Inferred'}
+                      </strong>
                     </div>
                     <div className="focus-metric">
                       <span>{locale === 'zh' ? '时间' : 'Time'}</span>
@@ -2508,9 +3308,20 @@ function NotificationsPage() {
                   </button>
                 ))}
               </div>
-              <div className="panel-subtitle">{locale === 'zh' ? '排查记录' : 'Investigation Notes'}</div>
+              <div className="panel-subtitle">
+                {locale === 'zh' ? '排查记录' : 'Investigation Notes'}
+              </div>
               <div className="focus-list focus-list-terminal">
-                {!selectedIncidentNotes.length ? <EmptyState icon="📝" message={locale === 'zh' ? '这条 incident 还没有追加记录' : 'This incident does not have investigation notes yet.'} /> : null}
+                {!selectedIncidentNotes.length ? (
+                  <EmptyState
+                    icon="📝"
+                    message={
+                      locale === 'zh'
+                        ? '这条 incident 还没有追加记录'
+                        : 'This incident does not have investigation notes yet.'
+                    }
+                  />
+                ) : null}
                 {selectedIncidentNotes.map((note) => (
                   <div className="focus-row" key={note.id}>
                     <div className="symbol-cell">
@@ -2524,7 +3335,9 @@ function NotificationsPage() {
                   </div>
                 ))}
               </div>
-              <div className="panel-subtitle">{locale === 'zh' ? '处置活动流' : 'Response Activity'}</div>
+              <div className="panel-subtitle">
+                {locale === 'zh' ? '处置活动流' : 'Response Activity'}
+              </div>
               <div className="metrics-grid metrics-grid-compact">
                 <div className="metric-card">
                   <span>{locale === 'zh' ? '状态变更' : 'Status Changes'}</span>
@@ -2544,9 +3357,23 @@ function NotificationsPage() {
                 </div>
               </div>
               <div className="focus-list focus-list-terminal">
-                {!selectedIncidentActivity.timeline.length ? <EmptyState icon="📊" message={locale === 'zh' ? '这条 incident 还没有活动流记录' : 'No response activity has been recorded for this incident yet.'} /> : null}
+                {!selectedIncidentActivity.timeline.length ? (
+                  <EmptyState
+                    icon="📊"
+                    message={
+                      locale === 'zh'
+                        ? '这条 incident 还没有活动流记录'
+                        : 'No response activity has been recorded for this incident yet.'
+                    }
+                  />
+                ) : null}
                 {selectedIncidentActivity.timeline.map((item) => (
-                  <button type="button" className="focus-row focus-row-wide status-row-button" key={item.id} onClick={() => focusIncidentActivityItem(item)}>
+                  <button
+                    type="button"
+                    className="focus-row focus-row-wide status-row-button"
+                    key={item.id}
+                    onClick={() => focusIncidentActivityItem(item)}
+                  >
                     <div className="symbol-cell">
                       <strong>{item.title}</strong>
                       <span>{item.detail}</span>
@@ -2572,10 +3399,12 @@ function NotificationsPage() {
                     type="button"
                     className="settings-chip"
                     disabled={incidentBusy}
-                    onClick={() => setIncidentNoteDraft((draft) => {
-                      const next = buildActivityDraft(locale, selectedActivity);
-                      return draft ? `${draft}\n\n${next}` : next;
-                    })}
+                    onClick={() =>
+                      setIncidentNoteDraft((draft) => {
+                        const next = buildActivityDraft(locale, selectedActivity);
+                        return draft ? `${draft}\n\n${next}` : next;
+                      })
+                    }
                   >
                     {locale === 'zh' ? '引用活动到草稿' : 'Append Activity To Draft'}
                   </button>
@@ -2583,7 +3412,9 @@ function NotificationsPage() {
                     type="button"
                     className="settings-chip"
                     disabled={incidentBusy}
-                    onClick={() => setIncidentNoteDraft(buildActivityDraft(locale, selectedActivity))}
+                    onClick={() =>
+                      setIncidentNoteDraft(buildActivityDraft(locale, selectedActivity))
+                    }
                   >
                     {locale === 'zh' ? '用活动覆盖草稿' : 'Replace Draft With Activity'}
                   </button>
@@ -2595,33 +3426,60 @@ function NotificationsPage() {
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '对象检查器' : 'Artifact Inspector'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '对象检查器' : 'Artifact Inspector'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '针对当前选中的关联证据，直接预览 workflow、execution plan、risk event 或运行态细节。'
                   : 'Preview workflow, execution plan, risk event, or runtime detail for the currently selected evidence item.'}
               </div>
             </div>
-            <div className={`panel-badge ${selectedArtifact ? 'badge-info' : 'muted'}`}>{selectedArtifact ? translateEvidenceKind(locale, selectedArtifact.kind) : '--'}</div>
+            <div className={`panel-badge ${selectedArtifact ? 'badge-info' : 'muted'}`}>
+              {selectedArtifact ? translateEvidenceKind(locale, selectedArtifact.kind) : '--'}
+            </div>
           </div>
           {!selectedArtifact ? (
-            <EmptyState icon="👆" message={locale === 'zh' ? '先在上面的关联证据时间线里选择一条证据。' : 'Select an evidence item from the related evidence timeline above first.'} />
+            <EmptyState
+              icon="👆"
+              message={
+                locale === 'zh'
+                  ? '先在上面的关联证据时间线里选择一条证据。'
+                  : 'Select an evidence item from the related evidence timeline above first.'
+              }
+            />
           ) : null}
           {selectedArtifact && artifactInspector.loading ? (
-            <EmptyState message={locale === 'zh' ? '正在加载对象详情...' : 'Loading artifact detail...'} />
+            <EmptyState
+              message={locale === 'zh' ? '正在加载对象详情...' : 'Loading artifact detail...'}
+            />
           ) : null}
           {selectedArtifact ? (
             <>
               <div className="status-stack">
-                <div className="status-row"><span>{locale === 'zh' ? '证据标题' : 'Evidence'}</span><strong>{selectedArtifact.title}</strong></div>
-                <div className="status-row"><span>{locale === 'zh' ? '类型' : 'Kind'}</span><strong>{translateEvidenceKind(locale, selectedArtifact.kind)}</strong></div>
-                <div className="status-row"><span>{locale === 'zh' ? '来源' : 'Source'}</span><strong>{selectedArtifact.source}</strong></div>
-                <div className="status-row"><span>{locale === 'zh' ? '时间' : 'Time'}</span><strong>{fmtDateTime(selectedArtifact.timestamp, locale)}</strong></div>
+                <div className="status-row">
+                  <span>{locale === 'zh' ? '证据标题' : 'Evidence'}</span>
+                  <strong>{selectedArtifact.title}</strong>
+                </div>
+                <div className="status-row">
+                  <span>{locale === 'zh' ? '类型' : 'Kind'}</span>
+                  <strong>{translateEvidenceKind(locale, selectedArtifact.kind)}</strong>
+                </div>
+                <div className="status-row">
+                  <span>{locale === 'zh' ? '来源' : 'Source'}</span>
+                  <strong>{selectedArtifact.source}</strong>
+                </div>
+                <div className="status-row">
+                  <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                  <strong>{fmtDateTime(selectedArtifact.timestamp, locale)}</strong>
+                </div>
                 <div className="status-copy">{selectedArtifact.detail}</div>
               </div>
-              {(selectedArtifact.kind === 'workflow-run' || artifactInspector.workflow) ? (
+              {selectedArtifact.kind === 'workflow-run' || artifactInspector.workflow ? (
                 <>
-                  <div className="panel-subtitle">{locale === 'zh' ? '工作流详情' : 'Workflow Detail'}</div>
+                  <div className="panel-subtitle">
+                    {locale === 'zh' ? '工作流详情' : 'Workflow Detail'}
+                  </div>
                   <div className="metrics-grid metrics-grid-compact">
                     <div className="metric-card">
                       <span>{locale === 'zh' ? '状态' : 'Status'}</span>
@@ -2629,7 +3487,11 @@ function NotificationsPage() {
                     </div>
                     <div className="metric-card">
                       <span>{locale === 'zh' ? '尝试次数' : 'Attempts'}</span>
-                      <strong>{artifactInspector.workflow ? `${artifactInspector.workflow.attempt}/${artifactInspector.workflow.maxAttempts}` : '--'}</strong>
+                      <strong>
+                        {artifactInspector.workflow
+                          ? `${artifactInspector.workflow.attempt}/${artifactInspector.workflow.maxAttempts}`
+                          : '--'}
+                      </strong>
                     </div>
                     <div className="metric-card">
                       <span>{locale === 'zh' ? '触发' : 'Trigger'}</span>
@@ -2653,36 +3515,63 @@ function NotificationsPage() {
                         </div>
                       </div>
                     ))}
-                    {!artifactInspector.workflow?.steps?.length ? <EmptyState icon="📋" message={locale === 'zh' ? '当前没有步骤详情。' : 'No workflow steps are available.'} /> : null}
+                    {!artifactInspector.workflow?.steps?.length ? (
+                      <EmptyState
+                        icon="📋"
+                        message={
+                          locale === 'zh'
+                            ? '当前没有步骤详情。'
+                            : 'No workflow steps are available.'
+                        }
+                      />
+                    ) : null}
                   </div>
-                  {(artifactInspector.workflow?.payload || artifactInspector.workflow?.result || artifactInspector.workflow?.error) ? (
+                  {artifactInspector.workflow?.payload ||
+                  artifactInspector.workflow?.result ||
+                  artifactInspector.workflow?.error ? (
                     <>
-                      <div className="panel-subtitle">{locale === 'zh' ? '工作流上下文' : 'Workflow Context'}</div>
+                      <div className="panel-subtitle">
+                        {locale === 'zh' ? '工作流上下文' : 'Workflow Context'}
+                      </div>
                       {artifactInspector.workflow?.payload ? (
                         <>
-                          <div className="field-label">{locale === 'zh' ? '输入载荷' : 'Payload'}</div>
-                          <pre className="inspection-json">{JSON.stringify(artifactInspector.workflow.payload, null, 2)}</pre>
+                          <div className="field-label">
+                            {locale === 'zh' ? '输入载荷' : 'Payload'}
+                          </div>
+                          <pre className="inspection-json">
+                            {JSON.stringify(artifactInspector.workflow.payload, null, 2)}
+                          </pre>
                         </>
                       ) : null}
                       {artifactInspector.workflow?.result ? (
                         <>
-                          <div className="field-label">{locale === 'zh' ? '执行结果' : 'Result'}</div>
-                          <pre className="inspection-json">{JSON.stringify(artifactInspector.workflow.result, null, 2)}</pre>
+                          <div className="field-label">
+                            {locale === 'zh' ? '执行结果' : 'Result'}
+                          </div>
+                          <pre className="inspection-json">
+                            {JSON.stringify(artifactInspector.workflow.result, null, 2)}
+                          </pre>
                         </>
                       ) : null}
                       {artifactInspector.workflow?.error ? (
                         <>
-                          <div className="field-label">{locale === 'zh' ? '错误信息' : 'Error'}</div>
-                          <pre className="inspection-json">{JSON.stringify(artifactInspector.workflow.error, null, 2)}</pre>
+                          <div className="field-label">
+                            {locale === 'zh' ? '错误信息' : 'Error'}
+                          </div>
+                          <pre className="inspection-json">
+                            {JSON.stringify(artifactInspector.workflow.error, null, 2)}
+                          </pre>
                         </>
                       ) : null}
                     </>
                   ) : null}
                 </>
               ) : null}
-              {(selectedArtifact.kind === 'execution-plan' || artifactInspector.executionPlan) ? (
+              {selectedArtifact.kind === 'execution-plan' || artifactInspector.executionPlan ? (
                 <>
-                  <div className="panel-subtitle">{locale === 'zh' ? '执行计划详情' : 'Execution Plan Detail'}</div>
+                  <div className="panel-subtitle">
+                    {locale === 'zh' ? '执行计划详情' : 'Execution Plan Detail'}
+                  </div>
                   <div className="metrics-grid metrics-grid-compact">
                     <div className="metric-card">
                       <span>{locale === 'zh' ? '模式' : 'Mode'}</span>
@@ -2722,7 +3611,16 @@ function NotificationsPage() {
                         </div>
                       </div>
                     ))}
-                    {!artifactInspector.executionPlan?.orders?.length ? <EmptyState icon="📋" message={locale === 'zh' ? '当前没有订单明细。' : 'No execution orders are available.'} /> : null}
+                    {!artifactInspector.executionPlan?.orders?.length ? (
+                      <EmptyState
+                        icon="📋"
+                        message={
+                          locale === 'zh'
+                            ? '当前没有订单明细。'
+                            : 'No execution orders are available.'
+                        }
+                      />
+                    ) : null}
                   </div>
                   {artifactInspector.latestRuntime ? (
                     <div className="status-copy">
@@ -2733,39 +3631,62 @@ function NotificationsPage() {
                   ) : null}
                   {artifactInspector.executionPlan?.metadata ? (
                     <>
-                      <div className="field-label">{locale === 'zh' ? '计划元数据' : 'Plan Metadata'}</div>
-                      <pre className="inspection-json">{JSON.stringify(artifactInspector.executionPlan.metadata, null, 2)}</pre>
+                      <div className="field-label">
+                        {locale === 'zh' ? '计划元数据' : 'Plan Metadata'}
+                      </div>
+                      <pre className="inspection-json">
+                        {JSON.stringify(artifactInspector.executionPlan.metadata, null, 2)}
+                      </pre>
                     </>
                   ) : null}
                 </>
               ) : null}
-              {(selectedArtifact.kind === 'risk-event' || artifactInspector.riskEvent) ? (
+              {selectedArtifact.kind === 'risk-event' || artifactInspector.riskEvent ? (
                 <>
-                  <div className="panel-subtitle">{locale === 'zh' ? '风控事件详情' : 'Risk Event Detail'}</div>
+                  <div className="panel-subtitle">
+                    {locale === 'zh' ? '风控事件详情' : 'Risk Event Detail'}
+                  </div>
                   <div className="metrics-grid metrics-grid-compact">
                     <div className="metric-card">
                       <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                      <strong>{artifactInspector.riskEvent?.status || selectedArtifact.status || '--'}</strong>
+                      <strong>
+                        {artifactInspector.riskEvent?.status || selectedArtifact.status || '--'}
+                      </strong>
                     </div>
                     <div className="metric-card">
                       <span>{locale === 'zh' ? '级别' : 'Level'}</span>
-                      <strong>{artifactInspector.riskEvent?.level || selectedArtifact.level || '--'}</strong>
+                      <strong>
+                        {artifactInspector.riskEvent?.level || selectedArtifact.level || '--'}
+                      </strong>
                     </div>
                     <div className="metric-card">
                       <span>{locale === 'zh' ? '风险级别' : 'Risk Level'}</span>
-                      <strong>{artifactInspector.riskEvent?.riskLevel || String(selectedArtifact.metadata?.riskLevel || '--')}</strong>
+                      <strong>
+                        {artifactInspector.riskEvent?.riskLevel ||
+                          String(selectedArtifact.metadata?.riskLevel || '--')}
+                      </strong>
                     </div>
                     <div className="metric-card">
                       <span>{locale === 'zh' ? '周期' : 'Cycle'}</span>
-                      <strong>{String(artifactInspector.riskEvent?.cycle ?? selectedArtifact.metadata?.cycle ?? '--')}</strong>
+                      <strong>
+                        {String(
+                          artifactInspector.riskEvent?.cycle ??
+                            selectedArtifact.metadata?.cycle ??
+                            '--'
+                        )}
+                      </strong>
                     </div>
                   </div>
-                  <div className="status-copy">{artifactInspector.riskEvent?.message || selectedArtifact.detail}</div>
+                  <div className="status-copy">
+                    {artifactInspector.riskEvent?.message || selectedArtifact.detail}
+                  </div>
                 </>
               ) : null}
               {getMetadataEntries(selectedArtifact.metadata).length ? (
                 <>
-                  <div className="panel-subtitle">{locale === 'zh' ? '关键元数据' : 'Key Metadata'}</div>
+                  <div className="panel-subtitle">
+                    {locale === 'zh' ? '关键元数据' : 'Key Metadata'}
+                  </div>
                   <div className="focus-list focus-list-terminal">
                     {getMetadataEntries(selectedArtifact.metadata).map((entry) => (
                       <div className="focus-row" key={entry.key}>
@@ -2778,16 +3699,22 @@ function NotificationsPage() {
                   </div>
                 </>
               ) : null}
-              <div className="panel-subtitle">{locale === 'zh' ? '原始元数据' : 'Raw Metadata'}</div>
-              <pre className="inspection-json">{JSON.stringify(selectedArtifact.metadata || {}, null, 2)}</pre>
+              <div className="panel-subtitle">
+                {locale === 'zh' ? '原始元数据' : 'Raw Metadata'}
+              </div>
+              <pre className="inspection-json">
+                {JSON.stringify(selectedArtifact.metadata || {}, null, 2)}
+              </pre>
               <div className="settings-chip-row">
                 <button
                   type="button"
                   className="settings-chip"
-                  onClick={() => setIncidentNoteDraft((current) => {
-                    const prefix = current.trim() ? `${current.trim()}\n\n` : '';
-                    return `${prefix}${buildArtifactDraft(locale, selectedArtifact)}`;
-                  })}
+                  onClick={() =>
+                    setIncidentNoteDraft((current) => {
+                      const prefix = current.trim() ? `${current.trim()}\n\n` : '';
+                      return `${prefix}${buildArtifactDraft(locale, selectedArtifact)}`;
+                    })
+                  }
                 >
                   {locale === 'zh' ? '写入排查草稿' : 'Append To Note Draft'}
                 </button>
@@ -2795,7 +3722,12 @@ function NotificationsPage() {
                   type="button"
                   className="settings-chip"
                   disabled={incidentBusy}
-                  onClick={() => updateSelectedIncident({ status: 'investigating', actor: state.controlPlane.operator })}
+                  onClick={() =>
+                    updateSelectedIncident({
+                      status: 'investigating',
+                      actor: state.controlPlane.operator,
+                    })
+                  }
                 >
                   {locale === 'zh' ? '据此开始排查' : 'Investigate From Artifact'}
                 </button>
@@ -2803,7 +3735,12 @@ function NotificationsPage() {
                   type="button"
                   className="settings-chip"
                   disabled={incidentBusy}
-                  onClick={() => updateSelectedIncident({ status: selectedArtifact.level === 'critical' ? 'mitigated' : 'resolved', actor: state.controlPlane.operator })}
+                  onClick={() =>
+                    updateSelectedIncident({
+                      status: selectedArtifact.level === 'critical' ? 'mitigated' : 'resolved',
+                      actor: state.controlPlane.operator,
+                    })
+                  }
                 >
                   {locale === 'zh' ? '据此推进处置' : 'Advance Resolution'}
                 </button>
@@ -2814,7 +3751,9 @@ function NotificationsPage() {
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '通知流' : 'Notification Stream'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '通知流' : 'Notification Stream'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '统一查看执行事件、风险拦截、审批动作和系统提示。'
@@ -2828,39 +3767,59 @@ function NotificationsPage() {
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '运维工作台' : 'Operations Workbench'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '运维工作台' : 'Operations Workbench'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '把 monitoring、incidents、scheduler、connectivity 和 control-plane trail 汇成一份统一运维快照。'
                   : 'Collapse monitoring, incidents, scheduler, connectivity, and control-plane trail into one operations snapshot.'}
               </div>
             </div>
-            <div className={`panel-badge tone-${monitoringTone(operationsWorkbench.status)}`}>{operationsWorkbenchLoading ? '...' : translateMonitoringStatus(locale, operationsWorkbench.status)}</div>
+            <div className={`panel-badge tone-${monitoringTone(operationsWorkbench.status)}`}>
+              {operationsWorkbenchLoading
+                ? '...'
+                : translateMonitoringStatus(locale, operationsWorkbench.status)}
+            </div>
           </div>
           <div className="metrics-grid metrics-grid-compact">
             <div className="metric-card">
               <span>{locale === 'zh' ? 'Critical 信号' : 'Critical Signals'}</span>
-              <strong>{operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.criticalSignals}</strong>
+              <strong>
+                {operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.criticalSignals}
+              </strong>
             </div>
             <div className="metric-card">
               <span>{locale === 'zh' ? 'Warn 信号' : 'Warn Signals'}</span>
-              <strong>{operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.warnSignals}</strong>
+              <strong>
+                {operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.warnSignals}
+              </strong>
             </div>
             <div className="metric-card">
               <span>{locale === 'zh' ? '队列积压' : 'Queue Pressure'}</span>
-              <strong>{operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.queuePressure}</strong>
+              <strong>
+                {operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.queuePressure}
+              </strong>
             </div>
             <div className="metric-card">
               <span>{locale === 'zh' ? '未解决事件' : 'Open Incidents'}</span>
-              <strong>{operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.openIncidents}</strong>
+              <strong>
+                {operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.openIncidents}
+              </strong>
             </div>
             <div className="metric-card">
               <span>{locale === 'zh' ? 'Stale 事件' : 'Stale Incidents'}</span>
-              <strong>{operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.staleIncidents}</strong>
+              <strong>
+                {operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.staleIncidents}
+              </strong>
             </div>
             <div className="metric-card">
               <span>{locale === 'zh' ? '未指派事件' : 'Unassigned Incidents'}</span>
-              <strong>{operationsWorkbenchLoading ? '--' : operationsWorkbench.summary.unassignedIncidents}</strong>
+              <strong>
+                {operationsWorkbenchLoading
+                  ? '--'
+                  : operationsWorkbench.summary.unassignedIncidents}
+              </strong>
             </div>
           </div>
           <div className="panel-subtitle">{locale === 'zh' ? '运维泳道' : 'Operations Lanes'}</div>
@@ -2874,7 +3833,8 @@ function NotificationsPage() {
                   if (lane.key === 'monitoring') applyMonitoringFocus({ timeWindow: '24h' });
                   else if (lane.key === 'incidents') applyIncidentFocus({ timeWindow: '7d' });
                   else if (lane.key === 'scheduler') applySchedulerFocus({ timeWindow: '24h' });
-                  else if (lane.key === 'connectivity') applyMonitoringFocus({ source: 'market', timeWindow: '24h' });
+                  else if (lane.key === 'connectivity')
+                    applyMonitoringFocus({ source: 'market', timeWindow: '24h' });
                   else {
                     applyNotificationFocus({ source: 'control-plane', timeWindow: '24h' });
                     applyAuditFocus({ timeWindow: '24h' });
@@ -2900,18 +3860,42 @@ function NotificationsPage() {
               </button>
             ))}
           </div>
-          <div className="panel-subtitle">{locale === 'zh' ? '运维 Runbook' : 'Operations Runbook'}</div>
+          <div className="panel-subtitle">
+            {locale === 'zh' ? '运维 Runbook' : 'Operations Runbook'}
+          </div>
           <div className="focus-list focus-list-terminal">
-            {!operationsWorkbench.runbook.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前没有需要额外推进的运维动作。' : 'No extra operations actions are queued right now.'} /> : null}
+            {!operationsWorkbench.runbook.length ? (
+              <EmptyState
+                icon="✓"
+                message={
+                  locale === 'zh'
+                    ? '当前没有需要额外推进的运维动作。'
+                    : 'No extra operations actions are queued right now.'
+                }
+              />
+            ) : null}
             {operationsWorkbench.runbook.map((item) => (
-              <button type="button" className="focus-row focus-row-wide status-row-button" key={item.key} onClick={() => focusOperationsRunbook(item.key)}>
+              <button
+                type="button"
+                className="focus-row focus-row-wide status-row-button"
+                key={item.key}
+                onClick={() => focusOperationsRunbook(item.key)}
+              >
                 <div className="symbol-cell">
                   <strong>{translateRunbookKey(locale, item.key)}</strong>
                   <span>{item.detail}</span>
                 </div>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '优先级' : 'Priority'}</span>
-                  <strong>{item.priority === 'now' ? (locale === 'zh' ? '立即' : 'Now') : (locale === 'zh' ? '下一步' : 'Next')}</strong>
+                  <strong>
+                    {item.priority === 'now'
+                      ? locale === 'zh'
+                        ? '立即'
+                        : 'Now'
+                      : locale === 'zh'
+                        ? '下一步'
+                        : 'Next'}
+                  </strong>
                 </div>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '数量' : 'Count'}</span>
@@ -2920,12 +3904,31 @@ function NotificationsPage() {
               </button>
             ))}
           </div>
-          <OperationsPersistencePanel locale={locale} persistence={operationsWorkbench.persistence} />
-          <div className="panel-subtitle">{locale === 'zh' ? '最近运维信号' : 'Recent Operations Signals'}</div>
+          <OperationsPersistencePanel
+            locale={locale}
+            persistence={operationsWorkbench.persistence}
+          />
+          <div className="panel-subtitle">
+            {locale === 'zh' ? '最近运维信号' : 'Recent Operations Signals'}
+          </div>
           <div className="focus-list focus-list-terminal">
-            {!operationsRecentItems.length ? <EmptyState icon="📡" message={locale === 'zh' ? '当前没有新的运维信号。' : 'No recent operations signals are available.'} /> : null}
+            {!operationsRecentItems.length ? (
+              <EmptyState
+                icon="📡"
+                message={
+                  locale === 'zh'
+                    ? '当前没有新的运维信号。'
+                    : 'No recent operations signals are available.'
+                }
+              />
+            ) : null}
             {operationsRecentItems.map((item) => (
-              <button type="button" className="focus-row status-row-button" key={item.id} onClick={item.onClick}>
+              <button
+                type="button"
+                className="focus-row status-row-button"
+                key={item.id}
+                onClick={item.onClick}
+              >
                 <div className="symbol-cell">
                   <strong>{item.title}</strong>
                   <span>{item.detail}</span>
@@ -2945,7 +3948,9 @@ function NotificationsPage() {
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '控制面总览板' : 'Control Plane Boards'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '控制面总览板' : 'Control Plane Boards'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '先看 monitoring、notifications、audit、operator 和 scheduler 五块板的热点，再往下钻明细。'
@@ -2956,7 +3961,12 @@ function NotificationsPage() {
           </div>
           <div className="focus-list focus-list-terminal">
             {controlPlaneBoards.map((item) => (
-              <button type="button" className="focus-row focus-row-wide status-row-button" key={item.id} onClick={item.onClick}>
+              <button
+                type="button"
+                className="focus-row focus-row-wide status-row-button"
+                key={item.id}
+                onClick={item.onClick}
+              >
                 <div className="symbol-cell">
                   <strong>{item.title}</strong>
                   <span>{item.detail}</span>
@@ -2976,21 +3986,31 @@ function NotificationsPage() {
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '控制面上下文' : 'Control Plane Context'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '控制面上下文' : 'Control Plane Context'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '统一展示五条控制面 feed 当前激活的筛选上下文，并允许就地重置。'
                   : 'Show the active filter context for the five control-plane feeds and reset them in place.'}
               </div>
             </div>
-            <div className="panel-badge badge-info">{controlPlaneContextRows.filter((item) => item.filters.length).length}</div>
+            <div className="panel-badge badge-info">
+              {controlPlaneContextRows.filter((item) => item.filters.length).length}
+            </div>
           </div>
           <div className="focus-list focus-list-terminal">
             {controlPlaneContextRows.map((item) => (
               <div className="focus-row focus-row-wide" key={item.id}>
                 <div className="symbol-cell">
                   <strong>{item.label}</strong>
-                  <span>{item.filters.length ? item.filters.join(' · ') : (locale === 'zh' ? '当前是默认视图' : 'Currently on the default view.')}</span>
+                  <span>
+                    {item.filters.length
+                      ? item.filters.join(' · ')
+                      : locale === 'zh'
+                        ? '当前是默认视图'
+                        : 'Currently on the default view.'}
+                  </span>
                 </div>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '结果数' : 'Results'}</span>
@@ -3008,14 +4028,20 @@ function NotificationsPage() {
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '运行态摘要' : 'Monitoring Summary'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '运行态摘要' : 'Monitoring Summary'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '把 worker、workflow、风险和队列积压收敛成一个控制面健康摘要。'
                   : 'Collapse worker, workflow, risk, and queue backlog into one control-plane health summary.'}
               </div>
             </div>
-            <div className={`panel-badge tone-${monitoringTone(monitoringStatus?.status)}`}>{monitoringLoading ? '...' : translateMonitoringStatus(locale, monitoringStatus?.status)}</div>
+            <div className={`panel-badge tone-${monitoringTone(monitoringStatus?.status)}`}>
+              {monitoringLoading
+                ? '...'
+                : translateMonitoringStatus(locale, monitoringStatus?.status)}
+            </div>
           </div>
           <div className="metrics-grid metrics-grid-compact">
             <div className="metric-card">
@@ -3036,20 +4062,83 @@ function NotificationsPage() {
             </div>
           </div>
           <div className="status-stack">
-            <div className="status-row"><span>{locale === 'zh' ? '系统健康' : 'System health'}</span><strong>{monitoringLoading ? (locale === 'zh' ? '加载中' : 'Loading') : translateMonitoringStatus(locale, monitoringStatus?.status)}</strong></div>
-            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'worker', timeWindow: '24h' })}><span>{locale === 'zh' ? 'Worker 心跳' : 'Worker heartbeat'}</span><strong>{workerHeartbeatLag === null || workerHeartbeatLag === undefined ? '--' : `${workerHeartbeatLag}s`}</strong></button>
-            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'workflow', timeWindow: '24h' })}><span>{locale === 'zh' ? 'Workflow 积压' : 'Workflow backlog'}</span><strong>{monitoringWorkflowBacklog}</strong></button>
-            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'queue', timeWindow: '24h' })}><span>{locale === 'zh' ? '待处理队列' : 'Pending queues'}</span><strong>{monitoringQueueBacklog}</strong></button>
-            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'risk', level: 'critical', timeWindow: '24h' })}><span>{locale === 'zh' ? '风险阻断' : 'Risk-off events'}</span><strong>{monitoringStatus?.services.risk.riskOff || 0}</strong></button>
-            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'queue', level: 'warn', timeWindow: '24h' })}><span>{locale === 'zh' ? '人工复核' : 'Manual reviews'}</span><strong>{monitoringStatus?.services.queues.pendingAgentReviews || 0}</strong></button>
-            <div className="status-copy">{monitoringStatus?.services.worker.message || (locale === 'zh' ? '监控摘要尚未返回。' : 'Monitoring summary has not returned yet.')}</div>
-            <div className="status-copy">{monitoringStatus?.generatedAt ? `${locale === 'zh' ? '摘要时间' : 'Summary time'}: ${fmtDateTime(monitoringStatus.generatedAt, locale)}` : ''}</div>
+            <div className="status-row">
+              <span>{locale === 'zh' ? '系统健康' : 'System health'}</span>
+              <strong>
+                {monitoringLoading
+                  ? locale === 'zh'
+                    ? '加载中'
+                    : 'Loading'
+                  : translateMonitoringStatus(locale, monitoringStatus?.status)}
+              </strong>
+            </div>
+            <button
+              type="button"
+              className="status-row status-row-button"
+              onClick={() => applyMonitoringFocus({ source: 'worker', timeWindow: '24h' })}
+            >
+              <span>{locale === 'zh' ? 'Worker 心跳' : 'Worker heartbeat'}</span>
+              <strong>
+                {workerHeartbeatLag === null || workerHeartbeatLag === undefined
+                  ? '--'
+                  : `${workerHeartbeatLag}s`}
+              </strong>
+            </button>
+            <button
+              type="button"
+              className="status-row status-row-button"
+              onClick={() => applyMonitoringFocus({ source: 'workflow', timeWindow: '24h' })}
+            >
+              <span>{locale === 'zh' ? 'Workflow 积压' : 'Workflow backlog'}</span>
+              <strong>{monitoringWorkflowBacklog}</strong>
+            </button>
+            <button
+              type="button"
+              className="status-row status-row-button"
+              onClick={() => applyMonitoringFocus({ source: 'queue', timeWindow: '24h' })}
+            >
+              <span>{locale === 'zh' ? '待处理队列' : 'Pending queues'}</span>
+              <strong>{monitoringQueueBacklog}</strong>
+            </button>
+            <button
+              type="button"
+              className="status-row status-row-button"
+              onClick={() =>
+                applyMonitoringFocus({ source: 'risk', level: 'critical', timeWindow: '24h' })
+              }
+            >
+              <span>{locale === 'zh' ? '风险阻断' : 'Risk-off events'}</span>
+              <strong>{monitoringStatus?.services.risk.riskOff || 0}</strong>
+            </button>
+            <button
+              type="button"
+              className="status-row status-row-button"
+              onClick={() =>
+                applyMonitoringFocus({ source: 'queue', level: 'warn', timeWindow: '24h' })
+              }
+            >
+              <span>{locale === 'zh' ? '人工复核' : 'Manual reviews'}</span>
+              <strong>{monitoringStatus?.services.queues.pendingAgentReviews || 0}</strong>
+            </button>
+            <div className="status-copy">
+              {monitoringStatus?.services.worker.message ||
+                (locale === 'zh'
+                  ? '监控摘要尚未返回。'
+                  : 'Monitoring summary has not returned yet.')}
+            </div>
+            <div className="status-copy">
+              {monitoringStatus?.generatedAt
+                ? `${locale === 'zh' ? '摘要时间' : 'Summary time'}: ${fmtDateTime(monitoringStatus.generatedAt, locale)}`
+                : ''}
+            </div>
           </div>
         </article>
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '监控告警' : 'Monitoring Alerts'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '监控告警' : 'Monitoring Alerts'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '直接查看 Monitoring 模块聚合出的当前告警来源和原因，并按快照、来源或级别快速聚焦。'
@@ -3079,13 +4168,22 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
               const selected = monitoringTimeWindow === window.key;
-              const label = window.key === '1h'
-                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
-                : window.key === '24h'
-                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
-                  : window.key === '7d'
-                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
-                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              const label =
+                window.key === '1h'
+                  ? locale === 'zh'
+                    ? '最近 1 小时'
+                    : 'Last 1h'
+                  : window.key === '24h'
+                    ? locale === 'zh'
+                      ? '最近 24 小时'
+                      : 'Last 24h'
+                    : window.key === '7d'
+                      ? locale === 'zh'
+                        ? '最近 7 天'
+                        : 'Last 7d'
+                      : locale === 'zh'
+                        ? '全部时间'
+                        : 'All Time';
               return (
                 <button
                   key={window.key}
@@ -3105,16 +4203,19 @@ function NotificationsPage() {
               onClick={() => setSelectedMonitoringSnapshotId('')}
             >
               {selectedMonitoringSnapshot
-                ? (locale === 'zh'
+                ? locale === 'zh'
                   ? `快照 ${fmtDateTime(selectedMonitoringSnapshot.generatedAt || selectedMonitoringSnapshot.createdAt, locale)}`
-                  : `Snapshot ${fmtDateTime(selectedMonitoringSnapshot.generatedAt || selectedMonitoringSnapshot.createdAt, locale)}`)
-                : (locale === 'zh' ? '全部快照' : 'All Snapshots')}
+                  : `Snapshot ${fmtDateTime(selectedMonitoringSnapshot.generatedAt || selectedMonitoringSnapshot.createdAt, locale)}`
+                : locale === 'zh'
+                  ? '全部快照'
+                  : 'All Snapshots'}
             </button>
           </div>
           <div className="settings-chip-row">
             {MONITORING_SOURCES.map((source) => {
               const selected = monitoringSourceFilter === source;
-              const label = source === 'all' ? (locale === 'zh' ? '全部来源' : 'All Sources') : source;
+              const label =
+                source === 'all' ? (locale === 'zh' ? '全部来源' : 'All Sources') : source;
               return (
                 <button
                   key={source}
@@ -3130,7 +4231,12 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {MONITORING_LEVELS.map((level) => {
               const selected = monitoringLevelFilter === level;
-              const label = level === 'all' ? (locale === 'zh' ? '全部级别' : 'All Levels') : translateMonitoringStatus(locale, level);
+              const label =
+                level === 'all'
+                  ? locale === 'zh'
+                    ? '全部级别'
+                    : 'All Levels'
+                  : translateMonitoringStatus(locale, level);
               return (
                 <button
                   key={level}
@@ -3144,36 +4250,58 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {monitoringAlertsLoading ? <EmptyState message={locale === 'zh' ? '正在加载监控告警...' : 'Loading monitoring alerts...'} /> : null}
-            {!monitoringAlertsLoading && !monitoringAlertItems.length ? <EmptyState icon="🔔" message={locale === 'zh' ? '当前筛选条件下没有监控告警' : 'No monitoring alerts match the current filters.'} /> : null}
-            {!monitoringAlertsLoading ? monitoringAlertItems.map((item) => (
-              <div className="focus-row" key={item.id}>
-                <div className="symbol-cell">
-                  <strong>{item.source}</strong>
-                  <span>{item.message}</span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '级别' : 'Level'}</span>
-                  <strong>{translateMonitoringStatus(locale, item.level)}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '时间' : 'Time'}</span>
-                  <strong>{fmtDateTime(item.createdAt, locale)}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
-                  <button type="button" className="settings-chip" disabled={incidentBusy} onClick={() => createMonitoringIncident(item)}>
-                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
-                  </button>
-                </div>
-              </div>
-            )) : null}
+            {monitoringAlertsLoading ? (
+              <EmptyState
+                message={locale === 'zh' ? '正在加载监控告警...' : 'Loading monitoring alerts...'}
+              />
+            ) : null}
+            {!monitoringAlertsLoading && !monitoringAlertItems.length ? (
+              <EmptyState
+                icon="🔔"
+                message={
+                  locale === 'zh'
+                    ? '当前筛选条件下没有监控告警'
+                    : 'No monitoring alerts match the current filters.'
+                }
+              />
+            ) : null}
+            {!monitoringAlertsLoading
+              ? monitoringAlertItems.map((item) => (
+                  <div className="focus-row" key={item.id}>
+                    <div className="symbol-cell">
+                      <strong>{item.source}</strong>
+                      <span>{item.message}</span>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '级别' : 'Level'}</span>
+                      <strong>{translateMonitoringStatus(locale, item.level)}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                      <strong>{fmtDateTime(item.createdAt, locale)}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                      <button
+                        type="button"
+                        className="settings-chip"
+                        disabled={incidentBusy}
+                        onClick={() => createMonitoringIncident(item)}
+                      >
+                        {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              : null}
           </div>
         </article>
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '监控快照' : 'Monitoring Snapshots'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '监控快照' : 'Monitoring Snapshots'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '查看最近几次 monitoring snapshot 的状态演进、告警数量和采样时间。'
@@ -3185,7 +4313,9 @@ function NotificationsPage() {
           <div className="metrics-grid metrics-grid-compact">
             <div className="metric-card">
               <span>{locale === 'zh' ? 'Healthy' : 'Healthy'}</span>
-              <strong>{monitoringSnapshotItems.filter((item) => item.status === 'healthy').length}</strong>
+              <strong>
+                {monitoringSnapshotItems.filter((item) => item.status === 'healthy').length}
+              </strong>
             </div>
             <div className="metric-card">
               <span>{locale === 'zh' ? 'Warn' : 'Warn'}</span>
@@ -3203,13 +4333,22 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
               const selected = monitoringTimeWindow === window.key;
-              const label = window.key === '1h'
-                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
-                : window.key === '24h'
-                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
-                  : window.key === '7d'
-                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
-                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              const label =
+                window.key === '1h'
+                  ? locale === 'zh'
+                    ? '最近 1 小时'
+                    : 'Last 1h'
+                  : window.key === '24h'
+                    ? locale === 'zh'
+                      ? '最近 24 小时'
+                      : 'Last 24h'
+                    : window.key === '7d'
+                      ? locale === 'zh'
+                        ? '最近 7 天'
+                        : 'Last 7d'
+                      : locale === 'zh'
+                        ? '全部时间'
+                        : 'All Time';
               return (
                 <button
                   key={window.key}
@@ -3225,7 +4364,12 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {MONITORING_SNAPSHOT_STATUSES.map((status) => {
               const selected = monitoringSnapshotStatusFilter === status;
-              const label = status === 'all' ? (locale === 'zh' ? '全部状态' : 'All Statuses') : translateMonitoringStatus(locale, status);
+              const label =
+                status === 'all'
+                  ? locale === 'zh'
+                    ? '全部状态'
+                    : 'All Statuses'
+                  : translateMonitoringStatus(locale, status);
               return (
                 <button
                   key={status}
@@ -3239,35 +4383,62 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {monitoringSnapshotsLoading ? <EmptyState message={locale === 'zh' ? '正在加载监控快照...' : 'Loading monitoring snapshots...'} /> : null}
-            {!monitoringSnapshotsLoading && !monitoringSnapshotItems.length ? <EmptyState icon="📸" message={locale === 'zh' ? '当前筛选条件下没有监控快照' : 'No monitoring snapshots match the current filters.'} /> : null}
-            {!monitoringSnapshotsLoading ? monitoringSnapshotItems.map((item) => (
-              <button
-                type="button"
-                className="focus-row status-row-button"
-                key={item.id}
-                onClick={() => setSelectedMonitoringSnapshotId((current) => (current === item.id ? '' : item.id))}
-              >
-                <div className="symbol-cell">
-                  <strong>{translateMonitoringStatus(locale, item.status)}</strong>
-                  <span>
-                    {selectedMonitoringSnapshotId === item.id
-                      ? (locale === 'zh' ? `已选中 · 告警 ${item.alertCount} 条` : `Selected · ${item.alertCount} alerts`)
-                      : (locale === 'zh' ? `告警 ${item.alertCount} 条` : `${item.alertCount} alerts`)}
-                  </span>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '采样时间' : 'Captured'}</span>
-                  <strong>{fmtDateTime(item.generatedAt || item.createdAt, locale)}</strong>
-                </div>
-              </button>
-            )) : null}
+            {monitoringSnapshotsLoading ? (
+              <EmptyState
+                message={
+                  locale === 'zh' ? '正在加载监控快照...' : 'Loading monitoring snapshots...'
+                }
+              />
+            ) : null}
+            {!monitoringSnapshotsLoading && !monitoringSnapshotItems.length ? (
+              <EmptyState
+                icon="📸"
+                message={
+                  locale === 'zh'
+                    ? '当前筛选条件下没有监控快照'
+                    : 'No monitoring snapshots match the current filters.'
+                }
+              />
+            ) : null}
+            {!monitoringSnapshotsLoading
+              ? monitoringSnapshotItems.map((item) => (
+                  <button
+                    type="button"
+                    className="focus-row status-row-button"
+                    key={item.id}
+                    onClick={() =>
+                      setSelectedMonitoringSnapshotId((current) =>
+                        current === item.id ? '' : item.id
+                      )
+                    }
+                  >
+                    <div className="symbol-cell">
+                      <strong>{translateMonitoringStatus(locale, item.status)}</strong>
+                      <span>
+                        {selectedMonitoringSnapshotId === item.id
+                          ? locale === 'zh'
+                            ? `已选中 · 告警 ${item.alertCount} 条`
+                            : `Selected · ${item.alertCount} alerts`
+                          : locale === 'zh'
+                            ? `告警 ${item.alertCount} 条`
+                            : `${item.alertCount} alerts`}
+                      </span>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '采样时间' : 'Captured'}</span>
+                      <strong>{fmtDateTime(item.generatedAt || item.createdAt, locale)}</strong>
+                    </div>
+                  </button>
+                ))
+              : null}
           </div>
         </article>
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '操作动作流' : 'Operator Actions'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '操作动作流' : 'Operator Actions'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '查看批准、拒绝、撤单等操作员动作的后端记录。'
@@ -3293,13 +4464,22 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
               const selected = operatorActionTimeWindow === window.key;
-              const label = window.key === '1h'
-                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
-                : window.key === '24h'
-                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
-                  : window.key === '7d'
-                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
-                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              const label =
+                window.key === '1h'
+                  ? locale === 'zh'
+                    ? '最近 1 小时'
+                    : 'Last 1h'
+                  : window.key === '24h'
+                    ? locale === 'zh'
+                      ? '最近 24 小时'
+                      : 'Last 24h'
+                    : window.key === '7d'
+                      ? locale === 'zh'
+                        ? '最近 7 天'
+                        : 'Last 7d'
+                      : locale === 'zh'
+                        ? '全部时间'
+                        : 'All Time';
               return (
                 <button
                   key={window.key}
@@ -3315,7 +4495,12 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {OPERATOR_ACTION_LEVELS.map((level) => {
               const selected = operatorActionLevelFilter === level;
-              const label = level === 'all' ? (locale === 'zh' ? '全部级别' : 'All Levels') : translateMonitoringStatus(locale, level);
+              const label =
+                level === 'all'
+                  ? locale === 'zh'
+                    ? '全部级别'
+                    : 'All Levels'
+                  : translateMonitoringStatus(locale, level);
               return (
                 <button
                   key={level}
@@ -3329,43 +4514,60 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {actionLoading ? <EmptyState message={locale === 'zh' ? '正在加载操作动作...' : 'Loading operator actions...'} /> : null}
-            {!actionLoading && !actionItems.length ? <EmptyState icon="🎮" message={locale === 'zh' ? '暂无操作动作' : 'No operator actions yet.'} /> : null}
-            {!actionLoading ? actionItems.map((item) => (
-              <div className="focus-row" key={item.id}>
-                <button type="button" className="focus-main-button" onClick={() => focusOperatorActionItem(item.level)}>
-                  <div className="symbol-cell">
-                    <strong>{item.title}</strong>
-                    <span>{item.detail}</span>
+            {actionLoading ? (
+              <EmptyState
+                message={locale === 'zh' ? '正在加载操作动作...' : 'Loading operator actions...'}
+              />
+            ) : null}
+            {!actionLoading && !actionItems.length ? (
+              <EmptyState
+                icon="🎮"
+                message={locale === 'zh' ? '暂无操作动作' : 'No operator actions yet.'}
+              />
+            ) : null}
+            {!actionLoading
+              ? actionItems.map((item) => (
+                  <div className="focus-row" key={item.id}>
+                    <button
+                      type="button"
+                      className="focus-main-button"
+                      onClick={() => focusOperatorActionItem(item.level)}
+                    >
+                      <div className="symbol-cell">
+                        <strong>{item.title}</strong>
+                        <span>{item.detail}</span>
+                      </div>
+                    </button>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '执行人' : 'Actor'}</span>
+                      <strong>{item.actor}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '级别' : 'Level'}</span>
+                      <strong>{translateMonitoringStatus(locale, item.level)}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                      <button
+                        type="button"
+                        className="settings-chip"
+                        disabled={incidentBusy}
+                        onClick={() => void createOperatorActionIncident(item)}
+                      >
+                        {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                      </button>
+                    </div>
                   </div>
-                </button>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '执行人' : 'Actor'}</span>
-                  <strong>{item.actor}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '级别' : 'Level'}</span>
-                  <strong>{translateMonitoringStatus(locale, item.level)}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
-                  <button
-                    type="button"
-                    className="settings-chip"
-                    disabled={incidentBusy}
-                    onClick={() => void createOperatorActionIncident(item)}
-                  >
-                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
-                  </button>
-                </div>
-              </div>
-            )) : null}
+                ))
+              : null}
           </div>
         </article>
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '控制面通知' : 'Control Plane Notifications'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '控制面通知' : 'Control Plane Notifications'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '来自后端任务编排、审计和告警模块的事件流。'
@@ -3395,13 +4597,22 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
               const selected = notificationTimeWindow === window.key;
-              const label = window.key === '1h'
-                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
-                : window.key === '24h'
-                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
-                  : window.key === '7d'
-                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
-                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              const label =
+                window.key === '1h'
+                  ? locale === 'zh'
+                    ? '最近 1 小时'
+                    : 'Last 1h'
+                  : window.key === '24h'
+                    ? locale === 'zh'
+                      ? '最近 24 小时'
+                      : 'Last 24h'
+                    : window.key === '7d'
+                      ? locale === 'zh'
+                        ? '最近 7 天'
+                        : 'Last 7d'
+                      : locale === 'zh'
+                        ? '全部时间'
+                        : 'All Time';
               return (
                 <button
                   key={window.key}
@@ -3417,7 +4628,12 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {NOTIFICATION_LEVELS.map((level) => {
               const selected = notificationLevelFilter === level;
-              const label = level === 'all' ? (locale === 'zh' ? '全部级别' : 'All Levels') : translateMonitoringStatus(locale, level);
+              const label =
+                level === 'all'
+                  ? locale === 'zh'
+                    ? '全部级别'
+                    : 'All Levels'
+                  : translateMonitoringStatus(locale, level);
               return (
                 <button
                   key={level}
@@ -3433,7 +4649,8 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {NOTIFICATION_SOURCES.map((source) => {
               const selected = notificationSourceFilter === source;
-              const label = source === 'all' ? (locale === 'zh' ? '全部来源' : 'All Sources') : source;
+              const label =
+                source === 'all' ? (locale === 'zh' ? '全部来源' : 'All Sources') : source;
               return (
                 <button
                   key={source}
@@ -3447,43 +4664,60 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {loading ? <EmptyState message={locale === 'zh' ? '正在加载通知...' : 'Loading notifications...'} /> : null}
-            {!loading && !items.length ? <EmptyState icon="🔔" message={locale === 'zh' ? '暂无控制面通知' : 'No control-plane notifications yet.'} /> : null}
-            {!loading ? items.map((item) => (
-              <div className="focus-row" key={item.id}>
-                <button type="button" className="focus-main-button" onClick={() => focusNotificationItem(item.source)}>
-                  <div className="symbol-cell">
-                    <strong>{item.title}</strong>
-                    <span>{item.message}</span>
+            {loading ? (
+              <EmptyState
+                message={locale === 'zh' ? '正在加载通知...' : 'Loading notifications...'}
+              />
+            ) : null}
+            {!loading && !items.length ? (
+              <EmptyState
+                icon="🔔"
+                message={locale === 'zh' ? '暂无控制面通知' : 'No control-plane notifications yet.'}
+              />
+            ) : null}
+            {!loading
+              ? items.map((item) => (
+                  <div className="focus-row" key={item.id}>
+                    <button
+                      type="button"
+                      className="focus-main-button"
+                      onClick={() => focusNotificationItem(item.source)}
+                    >
+                      <div className="symbol-cell">
+                        <strong>{item.title}</strong>
+                        <span>{item.message}</span>
+                      </div>
+                    </button>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '来源' : 'Source'}</span>
+                      <strong>{item.source}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '时间' : 'Time'}</span>
+                      <strong>{fmtDateTime(item.createdAt, locale)}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                      <button
+                        type="button"
+                        className="settings-chip"
+                        disabled={incidentBusy}
+                        onClick={() => void createNotificationIncident(item)}
+                      >
+                        {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                      </button>
+                    </div>
                   </div>
-                </button>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '来源' : 'Source'}</span>
-                  <strong>{item.source}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '时间' : 'Time'}</span>
-                  <strong>{fmtDateTime(item.createdAt, locale)}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
-                  <button
-                    type="button"
-                    className="settings-chip"
-                    disabled={incidentBusy}
-                    onClick={() => void createNotificationIncident(item)}
-                  >
-                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
-                  </button>
-                </div>
-              </div>
-            )) : null}
+                ))
+              : null}
           </div>
         </article>
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '控制面裁决' : 'Control Plane Resolution'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '控制面裁决' : 'Control Plane Resolution'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '这里展示后端对当前周期的最终控制面判断。'
@@ -3511,20 +4745,49 @@ function NotificationsPage() {
             </div>
           </div>
           <div className="settings-chip-row">
-            <button type="button" className="settings-chip" onClick={() => applyNotificationFocus({ timeWindow: '24h' })}>
+            <button
+              type="button"
+              className="settings-chip"
+              onClick={() => applyNotificationFocus({ timeWindow: '24h' })}
+            >
               {locale === 'zh' ? '查看通知' : 'Open Notifications'}
             </button>
-            <button type="button" className="settings-chip" onClick={() => applyAuditFocus({ timeWindow: '24h' })}>
+            <button
+              type="button"
+              className="settings-chip"
+              onClick={() => applyAuditFocus({ timeWindow: '24h' })}
+            >
               {locale === 'zh' ? '查看审计' : 'Open Audit Trail'}
             </button>
-            <button type="button" className="settings-chip" onClick={() => applyAuditFocus({ type: 'workflow', timeWindow: '24h' })}>
+            <button
+              type="button"
+              className="settings-chip"
+              onClick={() => applyAuditFocus({ type: 'workflow', timeWindow: '24h' })}
+            >
               {locale === 'zh' ? '工作流审计' : 'Workflow Audits'}
             </button>
           </div>
           <div className="status-stack">
-            <div className="status-row"><span>{locale === 'zh' ? '操作员' : 'Operator'}</span><strong>{state.controlPlane.operator}</strong></div>
-            <button type="button" className="status-row status-row-button" onClick={() => applyNotificationFocus({ source: 'control-plane', timeWindow: '24h' })}><span>{locale === 'zh' ? '状态' : 'Status'}</span><strong>{state.controlPlane.lastStatus}</strong></button>
-            <button type="button" className="status-row status-row-button" onClick={() => applyAuditFocus({ timeWindow: '24h' })}><span>{locale === 'zh' ? '审计记录' : 'Audit Records'}</span><strong>{state.controlPlane.auditCount}</strong></button>
+            <div className="status-row">
+              <span>{locale === 'zh' ? '操作员' : 'Operator'}</span>
+              <strong>{state.controlPlane.operator}</strong>
+            </div>
+            <button
+              type="button"
+              className="status-row status-row-button"
+              onClick={() => applyNotificationFocus({ source: 'control-plane', timeWindow: '24h' })}
+            >
+              <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+              <strong>{state.controlPlane.lastStatus}</strong>
+            </button>
+            <button
+              type="button"
+              className="status-row status-row-button"
+              onClick={() => applyAuditFocus({ timeWindow: '24h' })}
+            >
+              <span>{locale === 'zh' ? '审计记录' : 'Audit Records'}</span>
+              <strong>{state.controlPlane.auditCount}</strong>
+            </button>
             <div className="status-copy">{state.controlPlane.routeHint}</div>
           </div>
         </article>
@@ -3561,13 +4824,22 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
               const selected = auditTimeWindow === window.key;
-              const label = window.key === '1h'
-                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
-                : window.key === '24h'
-                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
-                  : window.key === '7d'
-                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
-                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              const label =
+                window.key === '1h'
+                  ? locale === 'zh'
+                    ? '最近 1 小时'
+                    : 'Last 1h'
+                  : window.key === '24h'
+                    ? locale === 'zh'
+                      ? '最近 24 小时'
+                      : 'Last 24h'
+                    : window.key === '7d'
+                      ? locale === 'zh'
+                        ? '最近 7 天'
+                        : 'Last 7d'
+                      : locale === 'zh'
+                        ? '全部时间'
+                        : 'All Time';
               return (
                 <button
                   key={window.key}
@@ -3597,43 +4869,64 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {auditLoading ? <EmptyState message={locale === 'zh' ? '正在加载审计记录...' : 'Loading audit records...'} /> : null}
-            {!auditLoading && !auditItems.length ? <EmptyState icon="📋" message={locale === 'zh' ? '当前筛选条件下没有审计记录' : 'No audit records match the current filters.'} /> : null}
-            {!auditLoading ? auditItems.map((item) => (
-              <div className="focus-row" key={item.id}>
-                <button type="button" className="focus-main-button" onClick={() => focusAuditItem(item.type)}>
-                  <div className="symbol-cell">
-                    <strong>{item.title}</strong>
-                    <span>{item.detail}</span>
+            {auditLoading ? (
+              <EmptyState
+                message={locale === 'zh' ? '正在加载审计记录...' : 'Loading audit records...'}
+              />
+            ) : null}
+            {!auditLoading && !auditItems.length ? (
+              <EmptyState
+                icon="📋"
+                message={
+                  locale === 'zh'
+                    ? '当前筛选条件下没有审计记录'
+                    : 'No audit records match the current filters.'
+                }
+              />
+            ) : null}
+            {!auditLoading
+              ? auditItems.map((item) => (
+                  <div className="focus-row" key={item.id}>
+                    <button
+                      type="button"
+                      className="focus-main-button"
+                      onClick={() => focusAuditItem(item.type)}
+                    >
+                      <div className="symbol-cell">
+                        <strong>{item.title}</strong>
+                        <span>{item.detail}</span>
+                      </div>
+                    </button>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '类型' : 'Type'}</span>
+                      <strong>{item.type}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '操作人' : 'Actor'}</span>
+                      <strong>{item.actor}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                      <button
+                        type="button"
+                        className="settings-chip"
+                        disabled={incidentBusy}
+                        onClick={() => void createAuditIncident(item)}
+                      >
+                        {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                      </button>
+                    </div>
                   </div>
-                </button>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '类型' : 'Type'}</span>
-                  <strong>{item.type}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '操作人' : 'Actor'}</span>
-                  <strong>{item.actor}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
-                  <button
-                    type="button"
-                    className="settings-chip"
-                    disabled={incidentBusy}
-                    onClick={() => void createAuditIncident(item)}
-                  >
-                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
-                  </button>
-                </div>
-              </div>
-            )) : null}
+                ))
+              : null}
           </div>
         </article>
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '后端链路健康' : 'Backend Connectivity'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '后端链路健康' : 'Backend Connectivity'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '通知中心里的接入状态以 worker 和后端快照为准。'
@@ -3643,36 +4936,90 @@ function NotificationsPage() {
             <div className="panel-badge badge-info">{connectedCount}/2</div>
           </div>
           <div className="settings-chip-row">
-            <button type="button" className="settings-chip" onClick={() => applyMonitoringFocus({ source: 'market', timeWindow: '24h' })}>
+            <button
+              type="button"
+              className="settings-chip"
+              onClick={() => applyMonitoringFocus({ source: 'market', timeWindow: '24h' })}
+            >
               {locale === 'zh' ? '查看行情监控' : 'Market Monitoring'}
             </button>
-            <button type="button" className="settings-chip" onClick={() => applyMonitoringFocus({ source: 'broker', timeWindow: '24h' })}>
+            <button
+              type="button"
+              className="settings-chip"
+              onClick={() => applyMonitoringFocus({ source: 'broker', timeWindow: '24h' })}
+            >
               {locale === 'zh' ? '查看券商监控' : 'Broker Monitoring'}
             </button>
-            <button type="button" className="settings-chip" onClick={() => applyNotificationFocus({ source: 'task-orchestrator', timeWindow: '24h' })}>
+            <button
+              type="button"
+              className="settings-chip"
+              onClick={() =>
+                applyNotificationFocus({ source: 'task-orchestrator', timeWindow: '24h' })
+              }
+            >
               {locale === 'zh' ? '查看同步通知' : 'Sync Notifications'}
             </button>
           </div>
           <div className="status-stack">
-            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'market', timeWindow: '24h' })}><span>{copy[locale].labels.marketData}</span><strong>{marketProviderLabel}</strong></button>
-            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'market', timeWindow: '24h' })}><span>{copy[locale].labels.marketState}</span><strong>{connectionLabel(locale, marketConnected, marketFallback)}</strong></button>
-            <button type="button" className="status-row status-row-button" onClick={() => applyMonitoringFocus({ source: 'broker', timeWindow: '24h' })}><span>{copy[locale].labels.brokerState}</span><strong>{connectionLabel(locale, brokerConnected, false, true)}</strong></button>
-            <button type="button" className="status-row status-row-button" onClick={() => applyNotificationFocus({ source: 'task-orchestrator', timeWindow: '24h' })}><span>{locale === 'zh' ? '最近行情同步' : 'Last market sync'}</span><strong>{fmtDateTime(marketStatus?.asOf, locale)}</strong></button>
-            <div className="status-copy">{marketStatus?.message || state.integrationStatus.marketData.message}</div>
-            <div className="status-copy">{snapshot?.message || state.integrationStatus.broker.message}</div>
+            <button
+              type="button"
+              className="status-row status-row-button"
+              onClick={() => applyMonitoringFocus({ source: 'market', timeWindow: '24h' })}
+            >
+              <span>{copy[locale].labels.marketData}</span>
+              <strong>{marketProviderLabel}</strong>
+            </button>
+            <button
+              type="button"
+              className="status-row status-row-button"
+              onClick={() => applyMonitoringFocus({ source: 'market', timeWindow: '24h' })}
+            >
+              <span>{copy[locale].labels.marketState}</span>
+              <strong>{connectionLabel(locale, marketConnected, marketFallback)}</strong>
+            </button>
+            <button
+              type="button"
+              className="status-row status-row-button"
+              onClick={() => applyMonitoringFocus({ source: 'broker', timeWindow: '24h' })}
+            >
+              <span>{copy[locale].labels.brokerState}</span>
+              <strong>{connectionLabel(locale, brokerConnected, false, true)}</strong>
+            </button>
+            <button
+              type="button"
+              className="status-row status-row-button"
+              onClick={() =>
+                applyNotificationFocus({ source: 'task-orchestrator', timeWindow: '24h' })
+              }
+            >
+              <span>{locale === 'zh' ? '最近行情同步' : 'Last market sync'}</span>
+              <strong>{fmtDateTime(marketStatus?.asOf, locale)}</strong>
+            </button>
+            <div className="status-copy">
+              {marketStatus?.message || state.integrationStatus.marketData.message}
+            </div>
+            <div className="status-copy">
+              {snapshot?.message || state.integrationStatus.broker.message}
+            </div>
           </div>
         </article>
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '调度运营工作台' : 'Scheduler Operations Workbench'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '调度运营工作台' : 'Scheduler Operations Workbench'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '把 scheduler windows、cycle drift、scheduler notifications 和相关 risk linkage 收到统一工作台里。'
                   : 'Collapse scheduler windows, cycle drift, scheduler notifications, and linked risk signals into one operations workbench.'}
               </div>
             </div>
-            <div className={`panel-badge badge-${monitoringTone(schedulerWorkbench.posture.status)}`}>{schedulerWorkbench.summary.totalTicks}</div>
+            <div
+              className={`panel-badge badge-${monitoringTone(schedulerWorkbench.posture.status)}`}
+            >
+              {schedulerWorkbench.summary.totalTicks}
+            </div>
           </div>
           <div className="metrics-grid metrics-grid-compact">
             <div className="metric-card">
@@ -3693,54 +5040,88 @@ function NotificationsPage() {
             </div>
           </div>
           <div className="status-stack">
-            <div className="status-row"><span>{locale === 'zh' ? '姿态' : 'Posture'}</span><strong>{schedulerWorkbench.posture.title || '--'}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '最近节拍' : 'Last Tick'}</span><strong>{fmtDateTime(schedulerWorkbench.posture.lastTickAt, locale)}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '最近编排动作' : 'Last Orchestration'}</span><strong>{schedulerActionResult?.title || '--'}</strong></div>
-            <div className="status-row"><span>{locale === 'zh' ? '动作时间' : 'Executed At'}</span><strong>{fmtDateTime(schedulerActionResult?.executedAt || '', locale)}</strong></div>
-            <div className="status-copy">{schedulerWorkbench.posture.detail || (locale === 'zh' ? '当前 scheduler posture 会随着窗口和控制面信号实时聚合。' : 'The scheduler posture is derived from live windows and control-plane signals.')}</div>
+            <div className="status-row">
+              <span>{locale === 'zh' ? '姿态' : 'Posture'}</span>
+              <strong>{schedulerWorkbench.posture.title || '--'}</strong>
+            </div>
+            <div className="status-row">
+              <span>{locale === 'zh' ? '最近节拍' : 'Last Tick'}</span>
+              <strong>{fmtDateTime(schedulerWorkbench.posture.lastTickAt, locale)}</strong>
+            </div>
+            <div className="status-row">
+              <span>{locale === 'zh' ? '最近编排动作' : 'Last Orchestration'}</span>
+              <strong>{schedulerActionResult?.title || '--'}</strong>
+            </div>
+            <div className="status-row">
+              <span>{locale === 'zh' ? '动作时间' : 'Executed At'}</span>
+              <strong>{fmtDateTime(schedulerActionResult?.executedAt || '', locale)}</strong>
+            </div>
+            <div className="status-copy">
+              {schedulerWorkbench.posture.detail ||
+                (locale === 'zh'
+                  ? '当前 scheduler posture 会随着窗口和控制面信号实时聚合。'
+                  : 'The scheduler posture is derived from live windows and control-plane signals.')}
+            </div>
             {schedulerActionResult ? (
-              <div className="status-copy">
-                {schedulerActionResult.detail}
-              </div>
+              <div className="status-copy">{schedulerActionResult.detail}</div>
             ) : null}
           </div>
           <div className="focus-list">
-            {schedulerWorkbenchLoading ? <EmptyState message={locale === 'zh' ? '正在加载调度工作台...' : 'Loading scheduler workbench...'} /> : null}
-            {!schedulerWorkbenchLoading ? schedulerWorkbench.lanes.map((lane) => (
-              <div className="focus-row" key={lane.key}>
-                <button type="button" className="focus-main-button" onClick={() => focusSchedulerWorkbenchLane(lane.key)}>
-                  <div className="symbol-cell">
-                    <strong>{lane.title}</strong>
-                    <span>{lane.detail}</span>
+            {schedulerWorkbenchLoading ? (
+              <EmptyState
+                message={
+                  locale === 'zh' ? '正在加载调度工作台...' : 'Loading scheduler workbench...'
+                }
+              />
+            ) : null}
+            {!schedulerWorkbenchLoading
+              ? schedulerWorkbench.lanes.map((lane) => (
+                  <div className="focus-row" key={lane.key}>
+                    <button
+                      type="button"
+                      className="focus-main-button"
+                      onClick={() => focusSchedulerWorkbenchLane(lane.key)}
+                    >
+                      <div className="symbol-cell">
+                        <strong>{lane.title}</strong>
+                        <span>{lane.detail}</span>
+                      </div>
+                    </button>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '主要计数' : 'Primary'}</span>
+                      <strong>{lane.primaryCount}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '次级计数' : 'Secondary'}</span>
+                      <strong>{lane.secondaryCount}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                      <strong>{lane.status}</strong>
+                    </div>
                   </div>
-                </button>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '主要计数' : 'Primary'}</span>
-                  <strong>{lane.primaryCount}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '次级计数' : 'Secondary'}</span>
-                  <strong>{lane.secondaryCount}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                  <strong>{lane.status}</strong>
-                </div>
-              </div>
-            )) : null}
+                ))
+              : null}
           </div>
         </article>
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? 'Risk Scheduler Linkage' : 'Risk Scheduler Linkage'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? 'Risk Scheduler Linkage' : 'Risk Scheduler Linkage'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '把 risk events、scheduler ticks、linked incidents、cycle drift 和通知压成同一条联动排查路径。'
                   : 'Read risk events, scheduler ticks, linked incidents, cycle drift, and notifications as one shared linkage path.'}
               </div>
             </div>
-            <div className={`panel-badge badge-${monitoringTone(schedulerWorkbench.linkage.posture.status)}`}>{schedulerWorkbench.linkage.summary.linkedRiskEvents + schedulerWorkbench.linkage.summary.linkedSchedulerTicks}</div>
+            <div
+              className={`panel-badge badge-${monitoringTone(schedulerWorkbench.linkage.posture.status)}`}
+            >
+              {schedulerWorkbench.linkage.summary.linkedRiskEvents +
+                schedulerWorkbench.linkage.summary.linkedSchedulerTicks}
+            </div>
           </div>
           <div className="metrics-grid metrics-grid-compact">
             <div className="metric-card">
@@ -3761,8 +5142,16 @@ function NotificationsPage() {
             </div>
           </div>
           <div className="status-stack">
-            <div className="status-row"><span>{locale === 'zh' ? '姿态' : 'Posture'}</span><strong>{schedulerWorkbench.linkage.posture.title || '--'}</strong></div>
-            <div className="status-copy">{schedulerWorkbench.linkage.posture.detail || (locale === 'zh' ? '当前没有明显的 risk/scheduler linkage drift。' : 'No material risk/scheduler linkage drift is active right now.')}</div>
+            <div className="status-row">
+              <span>{locale === 'zh' ? '姿态' : 'Posture'}</span>
+              <strong>{schedulerWorkbench.linkage.posture.title || '--'}</strong>
+            </div>
+            <div className="status-copy">
+              {schedulerWorkbench.linkage.posture.detail ||
+                (locale === 'zh'
+                  ? '当前没有明显的 risk/scheduler linkage drift。'
+                  : 'No material risk/scheduler linkage drift is active right now.')}
+            </div>
           </div>
           <div className="focus-list">
             {schedulerWorkbench.linkage.runbook.map((item) => (
@@ -3779,12 +5168,25 @@ function NotificationsPage() {
                   <span>{locale === 'zh' ? '计数' : 'Count'}</span>
                   <strong>{item.count}</strong>
                 </div>
-                <button type="button" className="inline-action" onClick={() => focusRiskSchedulerLinkage(item.key)}>
+                <button
+                  type="button"
+                  className="inline-action"
+                  onClick={() => focusRiskSchedulerLinkage(item.key)}
+                >
                   {locale === 'zh' ? '执行建议' : 'Focus Action'}
                 </button>
               </div>
             ))}
-            {!schedulerWorkbench.linkage.runbook.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前没有额外的 risk/scheduler linkage 动作。' : 'No extra risk/scheduler linkage actions are queued right now.'} /> : null}
+            {!schedulerWorkbench.linkage.runbook.length ? (
+              <EmptyState
+                icon="✓"
+                message={
+                  locale === 'zh'
+                    ? '当前没有额外的 risk/scheduler linkage 动作。'
+                    : 'No extra risk/scheduler linkage actions are queued right now.'
+                }
+              />
+            ) : null}
             {schedulerWorkbench.linkage.queue.riskEvents.slice(0, 2).map((item) => (
               <InspectionSelectableRow
                 key={item.id}
@@ -3792,9 +5194,24 @@ function NotificationsPage() {
                   { label: locale === 'zh' ? '风险事件' : 'Risk Event', value: item.title },
                   { label: locale === 'zh' ? '状态' : 'Status', value: item.status },
                   { label: locale === 'zh' ? '级别' : 'Level', value: item.level },
-                  { label: locale === 'zh' ? '窗口' : 'Phase', value: String(item.metadata?.schedulerPhase || schedulerWorkbench.linkage.summary.activePhase || '--') },
+                  {
+                    label: locale === 'zh' ? '窗口' : 'Phase',
+                    value: String(
+                      item.metadata?.schedulerPhase ||
+                        schedulerWorkbench.linkage.summary.activePhase ||
+                        '--'
+                    ),
+                  },
                 ]}
-                actions={<button type="button" className="inline-action" onClick={() => focusRiskSchedulerLinkage('review-linked-risk')}>{locale === 'zh' ? '打开风控' : 'Open Risk'}</button>}
+                actions={
+                  <button
+                    type="button"
+                    className="inline-action"
+                    onClick={() => focusRiskSchedulerLinkage('review-linked-risk')}
+                  >
+                    {locale === 'zh' ? '打开风控' : 'Open Risk'}
+                  </button>
+                }
               />
             ))}
           </div>
@@ -3802,7 +5219,9 @@ function NotificationsPage() {
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? '调度 Runbook 与队列' : 'Scheduler Runbook And Queue'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? '调度 Runbook 与队列' : 'Scheduler Runbook And Queue'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '把当前窗口、incident、cycle、notification 和风险联动压成可执行的 scheduler 处置路径。'
@@ -3813,11 +5232,26 @@ function NotificationsPage() {
           </div>
           <div className="focus-list">
             <div className="focus-row">
-              <div className="focus-metric"><span>{locale === 'zh' ? 'Attention Ticks' : 'Attention Ticks'}</span><strong>{schedulerWorkbench.queue.attentionTicks.length}</strong></div>
-              <div className="focus-metric"><span>{locale === 'zh' ? 'Incidents' : 'Incidents'}</span><strong>{schedulerWorkbench.queue.incidents.length}</strong></div>
-              <div className="focus-metric"><span>{locale === 'zh' ? 'Notifications' : 'Notifications'}</span><strong>{schedulerWorkbench.queue.notifications.length}</strong></div>
-              <div className="focus-metric"><span>{locale === 'zh' ? 'Cycles' : 'Cycles'}</span><strong>{schedulerWorkbench.queue.cycleRecords.length}</strong></div>
-              <div className="focus-metric"><span>{locale === 'zh' ? 'Risk' : 'Risk'}</span><strong>{schedulerWorkbench.queue.riskEvents.length}</strong></div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? 'Attention Ticks' : 'Attention Ticks'}</span>
+                <strong>{schedulerWorkbench.queue.attentionTicks.length}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? 'Incidents' : 'Incidents'}</span>
+                <strong>{schedulerWorkbench.queue.incidents.length}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? 'Notifications' : 'Notifications'}</span>
+                <strong>{schedulerWorkbench.queue.notifications.length}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? 'Cycles' : 'Cycles'}</span>
+                <strong>{schedulerWorkbench.queue.cycleRecords.length}</strong>
+              </div>
+              <div className="focus-metric">
+                <span>{locale === 'zh' ? 'Risk' : 'Risk'}</span>
+                <strong>{schedulerWorkbench.queue.riskEvents.length}</strong>
+              </div>
             </div>
             {schedulerWorkbench.runbook.map((item) => (
               <div className="focus-row" key={item.key}>
@@ -3834,16 +5268,40 @@ function NotificationsPage() {
                   <strong>{item.count}</strong>
                 </div>
                 <div className="settings-chip-row">
-                  <button type="button" className="inline-action" onClick={() => focusSchedulerRunbook(item.key)}>
+                  <button
+                    type="button"
+                    className="inline-action"
+                    onClick={() => focusSchedulerRunbook(item.key)}
+                  >
                     {locale === 'zh' ? '聚焦路径' : 'Focus Action'}
                   </button>
-                  <button type="button" className="inline-action" disabled={schedulerActionBusy} onClick={() => void executeSchedulerRunbook(item.key)}>
-                    {schedulerActionBusy ? (locale === 'zh' ? '执行中...' : 'Running...') : (locale === 'zh' ? '运行编排' : 'Run Action')}
+                  <button
+                    type="button"
+                    className="inline-action"
+                    disabled={schedulerActionBusy}
+                    onClick={() => void executeSchedulerRunbook(item.key)}
+                  >
+                    {schedulerActionBusy
+                      ? locale === 'zh'
+                        ? '执行中...'
+                        : 'Running...'
+                      : locale === 'zh'
+                        ? '运行编排'
+                        : 'Run Action'}
                   </button>
                 </div>
               </div>
             ))}
-            {!schedulerWorkbench.runbook.length ? <EmptyState icon="✓" message={locale === 'zh' ? '当前没有额外的 scheduler runbook 动作。' : 'No extra scheduler runbook actions are queued right now.'} /> : null}
+            {!schedulerWorkbench.runbook.length ? (
+              <EmptyState
+                icon="✓"
+                message={
+                  locale === 'zh'
+                    ? '当前没有额外的 scheduler runbook 动作。'
+                    : 'No extra scheduler runbook actions are queued right now.'
+                }
+              />
+            ) : null}
             {schedulerWorkbench.queue.attentionTicks.slice(0, 2).map((item) => (
               <InspectionSelectableRow
                 key={item.id}
@@ -3851,9 +5309,20 @@ function NotificationsPage() {
                   { label: locale === 'zh' ? '窗口' : 'Phase', value: item.phase },
                   { label: locale === 'zh' ? '状态' : 'Status', value: item.status },
                   { label: locale === 'zh' ? '标题' : 'Title', value: item.title },
-                  { label: locale === 'zh' ? '时间' : 'Time', value: fmtDateTime(item.createdAt, locale) },
+                  {
+                    label: locale === 'zh' ? '时间' : 'Time',
+                    value: fmtDateTime(item.createdAt, locale),
+                  },
                 ]}
-                actions={<button type="button" className="inline-action" onClick={() => focusSchedulerItem(item.phase)}>{locale === 'zh' ? '打开窗口' : 'Open Phase'}</button>}
+                actions={
+                  <button
+                    type="button"
+                    className="inline-action"
+                    onClick={() => focusSchedulerItem(item.phase)}
+                  >
+                    {locale === 'zh' ? '打开窗口' : 'Open Phase'}
+                  </button>
+                }
               />
             ))}
             {schedulerWorkbench.queue.incidents.slice(0, 2).map((item) => (
@@ -3865,7 +5334,21 @@ function NotificationsPage() {
                   { label: locale === 'zh' ? '状态' : 'Status', value: item.status },
                   { label: locale === 'zh' ? '负责人' : 'Owner', value: item.owner || '--' },
                 ]}
-                actions={<button type="button" className="inline-action" onClick={() => applyIncidentFocus({ incidentId: item.id, source: 'scheduler', timeWindow: '7d' })}>{locale === 'zh' ? '打开事件' : 'Open Incident'}</button>}
+                actions={
+                  <button
+                    type="button"
+                    className="inline-action"
+                    onClick={() =>
+                      applyIncidentFocus({
+                        incidentId: item.id,
+                        source: 'scheduler',
+                        timeWindow: '7d',
+                      })
+                    }
+                  >
+                    {locale === 'zh' ? '打开事件' : 'Open Incident'}
+                  </button>
+                }
               />
             ))}
           </div>
@@ -3885,13 +5368,22 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {MONITORING_TIME_WINDOWS.map((window) => {
               const selected = schedulerTimeWindow === window.key;
-              const label = window.key === '1h'
-                ? (locale === 'zh' ? '最近 1 小时' : 'Last 1h')
-                : window.key === '24h'
-                  ? (locale === 'zh' ? '最近 24 小时' : 'Last 24h')
-                  : window.key === '7d'
-                    ? (locale === 'zh' ? '最近 7 天' : 'Last 7d')
-                    : (locale === 'zh' ? '全部时间' : 'All Time');
+              const label =
+                window.key === '1h'
+                  ? locale === 'zh'
+                    ? '最近 1 小时'
+                    : 'Last 1h'
+                  : window.key === '24h'
+                    ? locale === 'zh'
+                      ? '最近 24 小时'
+                      : 'Last 24h'
+                    : window.key === '7d'
+                      ? locale === 'zh'
+                        ? '最近 7 天'
+                        : 'Last 7d'
+                      : locale === 'zh'
+                        ? '全部时间'
+                        : 'All Time';
               return (
                 <button
                   key={window.key}
@@ -3921,37 +5413,56 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {schedulerLoading ? <EmptyState message={locale === 'zh' ? '正在加载调度节拍...' : 'Loading scheduler ticks...'} /> : null}
-            {!schedulerLoading && !schedulerItems.length ? <EmptyState icon="⏱" message={locale === 'zh' ? '当前筛选条件下没有调度节拍' : 'No scheduler ticks match the current filters.'} /> : null}
-            {!schedulerLoading ? schedulerItems.map((item) => (
-              <div className="focus-row" key={item.id}>
-                <button type="button" className="focus-main-button" onClick={() => focusSchedulerItem(item.phase)}>
-                  <div className="symbol-cell">
-                    <strong>{item.title}</strong>
-                    <span>{item.message}</span>
+            {schedulerLoading ? (
+              <EmptyState
+                message={locale === 'zh' ? '正在加载调度节拍...' : 'Loading scheduler ticks...'}
+              />
+            ) : null}
+            {!schedulerLoading && !schedulerItems.length ? (
+              <EmptyState
+                icon="⏱"
+                message={
+                  locale === 'zh'
+                    ? '当前筛选条件下没有调度节拍'
+                    : 'No scheduler ticks match the current filters.'
+                }
+              />
+            ) : null}
+            {!schedulerLoading
+              ? schedulerItems.map((item) => (
+                  <div className="focus-row" key={item.id}>
+                    <button
+                      type="button"
+                      className="focus-main-button"
+                      onClick={() => focusSchedulerItem(item.phase)}
+                    >
+                      <div className="symbol-cell">
+                        <strong>{item.title}</strong>
+                        <span>{item.message}</span>
+                      </div>
+                    </button>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '窗口' : 'Phase'}</span>
+                      <strong>{item.phase}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                      <strong>{item.status}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                      <button
+                        type="button"
+                        className="settings-chip"
+                        disabled={incidentBusy}
+                        onClick={() => void createSchedulerIncident(item)}
+                      >
+                        {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                      </button>
+                    </div>
                   </div>
-                </button>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '窗口' : 'Phase'}</span>
-                  <strong>{item.phase}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                  <strong>{item.status}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
-                  <button
-                    type="button"
-                    className="settings-chip"
-                    disabled={incidentBusy}
-                    onClick={() => void createSchedulerIncident(item)}
-                  >
-                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
-                  </button>
-                </div>
-              </div>
-            )) : null}
+                ))
+              : null}
           </div>
         </article>
         <article className="panel">
@@ -3969,7 +5480,12 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {RISK_EVENT_LEVELS.map((level) => {
               const selected = riskEventLevelFilter === level;
-              const label = level === 'all' ? (locale === 'zh' ? '全部级别' : 'All Levels') : translateMonitoringStatus(locale, level);
+              const label =
+                level === 'all'
+                  ? locale === 'zh'
+                    ? '全部级别'
+                    : 'All Levels'
+                  : translateMonitoringStatus(locale, level);
               return (
                 <button
                   key={level}
@@ -3985,7 +5501,8 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {RISK_EVENT_STATUSES.map((status) => {
               const selected = riskEventStatusFilter === status;
-              const label = status === 'all' ? (locale === 'zh' ? '全部状态' : 'All Statuses') : status;
+              const label =
+                status === 'all' ? (locale === 'zh' ? '全部状态' : 'All Statuses') : status;
               return (
                 <button
                   key={status}
@@ -3999,37 +5516,56 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {riskEventsLoading ? <EmptyState message={locale === 'zh' ? '正在加载风控事件...' : 'Loading risk events...'} /> : null}
-            {!riskEventsLoading && !riskEventItems.length ? <EmptyState icon="🛡" message={locale === 'zh' ? '当前筛选条件下没有风控事件' : 'No risk events match the current filters.'} /> : null}
-            {!riskEventsLoading ? riskEventItems.map((item) => (
-              <div className="focus-row" key={item.id}>
-                <button type="button" className="focus-main-button" onClick={() => focusRiskEventItem(item.status, item.level)}>
-                  <div className="symbol-cell">
-                    <strong>{item.title}</strong>
-                    <span>{item.message}</span>
+            {riskEventsLoading ? (
+              <EmptyState
+                message={locale === 'zh' ? '正在加载风控事件...' : 'Loading risk events...'}
+              />
+            ) : null}
+            {!riskEventsLoading && !riskEventItems.length ? (
+              <EmptyState
+                icon="🛡"
+                message={
+                  locale === 'zh'
+                    ? '当前筛选条件下没有风控事件'
+                    : 'No risk events match the current filters.'
+                }
+              />
+            ) : null}
+            {!riskEventsLoading
+              ? riskEventItems.map((item) => (
+                  <div className="focus-row" key={item.id}>
+                    <button
+                      type="button"
+                      className="focus-main-button"
+                      onClick={() => focusRiskEventItem(item.status, item.level)}
+                    >
+                      <div className="symbol-cell">
+                        <strong>{item.title}</strong>
+                        <span>{item.message}</span>
+                      </div>
+                    </button>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                      <strong>{item.status}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '风险级别' : 'Risk Level'}</span>
+                      <strong>{item.riskLevel}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                      <button
+                        type="button"
+                        className="settings-chip"
+                        disabled={incidentBusy}
+                        onClick={() => void createRiskIncident(item)}
+                      >
+                        {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                      </button>
+                    </div>
                   </div>
-                </button>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                  <strong>{item.status}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '风险级别' : 'Risk Level'}</span>
-                  <strong>{item.riskLevel}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
-                  <button
-                    type="button"
-                    className="settings-chip"
-                    disabled={incidentBusy}
-                    onClick={() => void createRiskIncident(item)}
-                  >
-                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
-                  </button>
-                </div>
-              </div>
-            )) : null}
+                ))
+              : null}
           </div>
         </article>
         <article className="panel">
@@ -4047,7 +5583,8 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {WORKFLOW_RUN_STATUSES.map((status) => {
               const selected = workflowRunStatusFilter === status;
-              const label = status === 'all' ? (locale === 'zh' ? '全部状态' : 'All Statuses') : status;
+              const label =
+                status === 'all' ? (locale === 'zh' ? '全部状态' : 'All Statuses') : status;
               return (
                 <button
                   key={status}
@@ -4061,37 +5598,56 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {workflowRunsLoading ? <EmptyState message={locale === 'zh' ? '正在加载工作流...' : 'Loading workflow runs...'} /> : null}
-            {!workflowRunsLoading && !workflowRunItems.length ? <EmptyState icon="⚙️" message={locale === 'zh' ? '当前筛选条件下没有工作流记录' : 'No workflow runs match the current filters.'} /> : null}
-            {!workflowRunsLoading ? workflowRunItems.map((item) => (
-              <div className="focus-row" key={item.id}>
-                <button type="button" className="focus-main-button" onClick={() => focusWorkflowRunItem(item.status)}>
-                  <div className="symbol-cell">
-                    <strong>{item.workflowId}</strong>
-                    <span>{String(item.error || item.metadata?.summary || item.status)}</span>
+            {workflowRunsLoading ? (
+              <EmptyState
+                message={locale === 'zh' ? '正在加载工作流...' : 'Loading workflow runs...'}
+              />
+            ) : null}
+            {!workflowRunsLoading && !workflowRunItems.length ? (
+              <EmptyState
+                icon="⚙️"
+                message={
+                  locale === 'zh'
+                    ? '当前筛选条件下没有工作流记录'
+                    : 'No workflow runs match the current filters.'
+                }
+              />
+            ) : null}
+            {!workflowRunsLoading
+              ? workflowRunItems.map((item) => (
+                  <div className="focus-row" key={item.id}>
+                    <button
+                      type="button"
+                      className="focus-main-button"
+                      onClick={() => focusWorkflowRunItem(item.status)}
+                    >
+                      <div className="symbol-cell">
+                        <strong>{item.workflowId}</strong>
+                        <span>{String(item.error || item.metadata?.summary || item.status)}</span>
+                      </div>
+                    </button>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                      <strong>{item.status}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '执行人' : 'Actor'}</span>
+                      <strong>{item.actor}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                      <button
+                        type="button"
+                        className="settings-chip"
+                        disabled={incidentBusy}
+                        onClick={() => void createWorkflowIncident(item)}
+                      >
+                        {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                      </button>
+                    </div>
                   </div>
-                </button>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                  <strong>{item.status}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '执行人' : 'Actor'}</span>
-                  <strong>{item.actor}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
-                  <button
-                    type="button"
-                    className="settings-chip"
-                    disabled={incidentBusy}
-                    onClick={() => void createWorkflowIncident(item)}
-                  >
-                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
-                  </button>
-                </div>
-              </div>
-            )) : null}
+                ))
+              : null}
           </div>
         </article>
         <article className="panel">
@@ -4109,7 +5665,8 @@ function NotificationsPage() {
           <div className="settings-chip-row">
             {EXECUTION_PLAN_STATUSES.map((status) => {
               const selected = executionPlanStatusFilter === status;
-              const label = status === 'all' ? (locale === 'zh' ? '全部状态' : 'All Statuses') : status;
+              const label =
+                status === 'all' ? (locale === 'zh' ? '全部状态' : 'All Statuses') : status;
               return (
                 <button
                   key={status}
@@ -4123,37 +5680,60 @@ function NotificationsPage() {
             })}
           </div>
           <div className="focus-list focus-list-terminal">
-            {executionLedgerLoading ? <EmptyState message={locale === 'zh' ? '正在加载执行计划...' : 'Loading execution plans...'} /> : null}
-            {!executionLedgerLoading && !executionLedgerItems.length ? <EmptyState icon="📈" message={locale === 'zh' ? '当前筛选条件下没有执行计划' : 'No execution plans match the current filters.'} /> : null}
-            {!executionLedgerLoading ? executionLedgerItems.map((item) => (
-              <div className="focus-row" key={item.plan.id}>
-                <button type="button" className="focus-main-button" onClick={() => focusExecutionPlanItem(item.plan.status === 'blocked' ? 'blocked' : item.plan.riskStatus)}>
-                  <div className="symbol-cell">
-                    <strong>{item.plan.strategyName}</strong>
-                    <span>{item.plan.summary}</span>
+            {executionLedgerLoading ? (
+              <EmptyState
+                message={locale === 'zh' ? '正在加载执行计划...' : 'Loading execution plans...'}
+              />
+            ) : null}
+            {!executionLedgerLoading && !executionLedgerItems.length ? (
+              <EmptyState
+                icon="📈"
+                message={
+                  locale === 'zh'
+                    ? '当前筛选条件下没有执行计划'
+                    : 'No execution plans match the current filters.'
+                }
+              />
+            ) : null}
+            {!executionLedgerLoading
+              ? executionLedgerItems.map((item) => (
+                  <div className="focus-row" key={item.plan.id}>
+                    <button
+                      type="button"
+                      className="focus-main-button"
+                      onClick={() =>
+                        focusExecutionPlanItem(
+                          item.plan.status === 'blocked' ? 'blocked' : item.plan.riskStatus
+                        )
+                      }
+                    >
+                      <div className="symbol-cell">
+                        <strong>{item.plan.strategyName}</strong>
+                        <span>{item.plan.summary}</span>
+                      </div>
+                    </button>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '状态' : 'Status'}</span>
+                      <strong>{item.plan.status}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '风控' : 'Risk'}</span>
+                      <strong>{item.plan.riskStatus}</strong>
+                    </div>
+                    <div className="focus-metric">
+                      <span>{locale === 'zh' ? '处置' : 'Action'}</span>
+                      <button
+                        type="button"
+                        className="settings-chip"
+                        disabled={incidentBusy}
+                        onClick={() => void createExecutionPlanIncident(item)}
+                      >
+                        {locale === 'zh' ? '升级事件' : 'Open Incident'}
+                      </button>
+                    </div>
                   </div>
-                </button>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-                  <strong>{item.plan.status}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '风控' : 'Risk'}</span>
-                  <strong>{item.plan.riskStatus}</strong>
-                </div>
-                <div className="focus-metric">
-                  <span>{locale === 'zh' ? '处置' : 'Action'}</span>
-                  <button
-                    type="button"
-                    className="settings-chip"
-                    disabled={incidentBusy}
-                    onClick={() => void createExecutionPlanIncident(item)}
-                  >
-                    {locale === 'zh' ? '升级事件' : 'Open Incident'}
-                  </button>
-                </div>
-              </div>
-            )) : null}
+                ))
+              : null}
           </div>
         </article>
       </section>

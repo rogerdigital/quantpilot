@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import type { BacktestRunDetailSnapshot } from '@shared-types/trading.ts';
+import { useEffect, useState } from 'react';
 import { fetchBacktestRunItem } from './research.service.ts';
 
 type BacktestRunDetailState = {

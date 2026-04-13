@@ -1,4 +1,4 @@
-import { keyframes, globalStyle } from '@vanilla-extract/css';
+import { globalStyle, keyframes } from '@vanilla-extract/css';
 
 /* ============================================================
    KEYFRAMES

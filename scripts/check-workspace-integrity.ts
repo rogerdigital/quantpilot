@@ -26,7 +26,9 @@ function main() {
     }
 
     if (seenNames.has(manifest.name)) {
-      errors.push(`${workspacePath} duplicates workspace package name ${manifest.name} already used by ${seenNames.get(manifest.name)}`);
+      errors.push(
+        `${workspacePath} duplicates workspace package name ${manifest.name} already used by ${seenNames.get(manifest.name)}`
+      );
     } else {
       seenNames.set(manifest.name, workspacePath);
     }
@@ -36,10 +38,19 @@ function main() {
       errors.push(`${workspacePath} is missing from package-lock packages`);
     } else {
       if (lockPathEntry.name && lockPathEntry.name !== manifest.name) {
-        errors.push(`${workspacePath} lockfile name mismatch: expected ${manifest.name}, found ${lockPathEntry.name}`);
+        errors.push(
+          `${workspacePath} lockfile name mismatch: expected ${manifest.name}, found ${lockPathEntry.name}`
+        );
       }
-      if (typeof manifest.version === 'string' && manifest.version && lockPathEntry.version && lockPathEntry.version !== manifest.version) {
-        errors.push(`${workspacePath} lockfile version mismatch: expected ${manifest.version}, found ${lockPathEntry.version}`);
+      if (
+        typeof manifest.version === 'string' &&
+        manifest.version &&
+        lockPathEntry.version &&
+        lockPathEntry.version !== manifest.version
+      ) {
+        errors.push(
+          `${workspacePath} lockfile version mismatch: expected ${manifest.version}, found ${lockPathEntry.version}`
+        );
       }
     }
 
@@ -53,8 +64,10 @@ function main() {
 
   if (errors.length) {
     console.error('Workspace integrity check failed:');
-    errors.forEach((entry) => console.error(`- ${entry}`));
-    console.error('Run `npm install` and commit the updated package-lock.json after fixing workspace metadata.');
+    for (const entry of errors) console.error(`- ${entry}`);
+    console.error(
+      'Run `npm install` and commit the updated package-lock.json after fixing workspace metadata.'
+    );
     process.exitCode = 1;
     return;
   }

@@ -2,7 +2,8 @@
 import { controlPlaneRuntime } from '../../../../packages/control-plane-runtime/src/index.js';
 
 export async function runNotificationDispatchTask(config, dependencies = {}) {
-  const flushNotifications = dependencies.flushQueuedNotifications || controlPlaneRuntime.dispatchPendingNotifications;
+  const flushNotifications =
+    dependencies.flushQueuedNotifications || controlPlaneRuntime.dispatchPendingNotifications;
   const result = flushNotifications({
     worker: config.name,
     limit: config.notificationBatchSize,

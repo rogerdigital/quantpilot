@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import type { RiskWorkbenchResponse } from '@shared-types/trading.ts';
+import { useEffect, useState } from 'react';
 import { fetchRiskWorkbench } from '../../app/api/controlPlane.ts';
 
 const EMPTY_WORKBENCH: RiskWorkbenchResponse = {

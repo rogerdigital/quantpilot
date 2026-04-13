@@ -1,6 +1,6 @@
+import type { ExecutionLedgerEntry } from '@shared-types/trading.ts';
 import { useEffect, useState } from 'react';
 import { fetchExecutionLedger } from '../../app/api/controlPlane.ts';
-import type { ExecutionLedgerEntry } from '@shared-types/trading.ts';
 
 type ExecutionLedgerFeedOptions = {
   refreshKey?: number;
@@ -10,10 +10,7 @@ type ExecutionLedgerFeedOptions = {
 export function useExecutionLedgerFeed(options: ExecutionLedgerFeedOptions = {}) {
   const [items, setItems] = useState<ExecutionLedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const {
-    refreshKey = 0,
-    status = '',
-  } = options;
+  const { refreshKey = 0, status = '' } = options;
 
   useEffect(() => {
     let mounted = true;
@@ -21,8 +18,9 @@ export function useExecutionLedgerFeed(options: ExecutionLedgerFeedOptions = {})
     fetchExecutionLedger()
       .then((payload) => {
         if (!mounted) return;
-        const next = (Array.isArray(payload?.entries) ? payload.entries : [])
-          .filter((item) => !status || item.plan.status === status || item.plan.riskStatus === status);
+        const next = (Array.isArray(payload?.entries) ? payload.entries : []).filter(
+          (item) => !status || item.plan.status === status || item.plan.riskStatus === status
+        );
         setItems(next);
       })
       .catch(() => {

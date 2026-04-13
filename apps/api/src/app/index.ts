@@ -1,1 +1,5 @@
-export { createGatewayHandler, createGatewayServer, startGatewayServer } from '../gateways/alpaca.js';
+export {
+  createGatewayHandler,
+  createGatewayServer,
+  startGatewayServer,
+} from '../gateways/alpaca.js';

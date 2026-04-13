@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import type { ResearchHubSnapshot } from '@shared-types/trading.ts';
+import { useEffect, useState } from 'react';
 import { fetchResearchHub } from './research.service.ts';
 
 type ResearchHubState = {

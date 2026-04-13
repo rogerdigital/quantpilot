@@ -21,7 +21,9 @@ function buildBacktestResultFromRun(run, patch = {}) {
     sharpe: run.sharpe,
     winRatePct: run.winRatePct,
     turnoverPct: run.turnoverPct,
-    benchmarkReturnPct: Number(patch.benchmarkReturnPct ?? Math.max(run.annualizedReturnPct - 4.5, 0).toFixed(1)),
+    benchmarkReturnPct: Number(
+      patch.benchmarkReturnPct ?? Math.max(run.annualizedReturnPct - 4.5, 0).toFixed(1)
+    ),
     excessReturnPct: Number(patch.excessReturnPct ?? 0),
     reviewVerdict: patch.reviewVerdict || '',
     metadata: {
@@ -201,7 +203,9 @@ export function updateBacktestRun(runId, patch = {}) {
   if (!latestResult && updated.completedAt) {
     latestResult = buildBacktestResultFromRun(updated, {
       stage: 'generated',
-      excessReturnPct: Number((updated.annualizedReturnPct - Math.max(updated.annualizedReturnPct - 4.5, 0)).toFixed(1)),
+      excessReturnPct: Number(
+        (updated.annualizedReturnPct - Math.max(updated.annualizedReturnPct - 4.5, 0)).toFixed(1)
+      ),
       metadata: {
         source: 'backtest-runs.update',
       },

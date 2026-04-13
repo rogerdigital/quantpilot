@@ -1,6 +1,7 @@
 // @ts-nocheck
-import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.js';
+
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.js';
 import { listBacktestRuns } from '../../backtest/services/runs-service.js';
 import { listExecutionPlans } from '../../execution/services/query-service.js';
 import { listRiskEvents } from '../../risk/services/feed-service.js';
@@ -85,9 +86,10 @@ function resolveHandoffTarget(intent = {}, session = {}) {
   }
 
   if (intent.kind === 'request_backtest_review') {
-    const run = listBacktestRuns().runs.find((item) => item.status === 'needs_review')
-      || listBacktestRuns().runs[0]
-      || null;
+    const run =
+      listBacktestRuns().runs.find((item) => item.status === 'needs_review') ||
+      listBacktestRuns().runs[0] ||
+      null;
     if (run) {
       return {
         ok: true,
@@ -98,9 +100,12 @@ function resolveHandoffTarget(intent = {}, session = {}) {
   }
 
   if (intent.kind === 'request_risk_explanation') {
-    const riskEvent = listRiskEvents(20).find((item) => item.status === 'risk-off' || item.status === 'attention')
-      || listRiskEvents(20)[0]
-      || null;
+    const riskEvent =
+      listRiskEvents(20).find(
+        (item) => item.status === 'risk-off' || item.status === 'attention'
+      ) ||
+      listRiskEvents(20)[0] ||
+      null;
     if (riskEvent) {
       return {
         ok: true,
@@ -135,7 +140,9 @@ export function createSessionActionRequest(sessionId, payload = {}) {
   }
 
   const plan = session.latestPlanId ? controlPlaneRuntime.getAgentPlan(session.latestPlanId) : null;
-  const run = session.latestAnalysisRunId ? controlPlaneRuntime.getAgentAnalysisRun(session.latestAnalysisRunId) : null;
+  const run = session.latestAnalysisRunId
+    ? controlPlaneRuntime.getAgentAnalysisRun(session.latestAnalysisRunId)
+    : null;
   if (!plan || !run) {
     return {
       ok: false,
@@ -182,13 +189,15 @@ export function createSessionActionRequest(sessionId, payload = {}) {
     };
   }
 
-  const summary = payload.summary
-    || run.explanation?.recommendedNextStep
-    || run.explanation?.thesis
-    || run.summary
-    || plan.summary;
-  const rationale = payload.rationale
-    || [
+  const summary =
+    payload.summary ||
+    run.explanation?.recommendedNextStep ||
+    run.explanation?.thesis ||
+    run.summary ||
+    plan.summary;
+  const rationale =
+    payload.rationale ||
+    [
       run.explanation?.thesis || '',
       ...(Array.isArray(run.explanation?.rationale) ? run.explanation.rationale : []),
     ]
@@ -280,7 +289,12 @@ export function approveAgentActionRequest(requestId, payload = {}) {
     });
   }
 
-  const AGENT_DIRECT_ACTION_TYPES = ['agent_trim', 'agent_exit', 'agent_cancel', 'agent_risk_reduce'];
+  const AGENT_DIRECT_ACTION_TYPES = [
+    'agent_trim',
+    'agent_exit',
+    'agent_cancel',
+    'agent_risk_reduce',
+  ];
   if (AGENT_DIRECT_ACTION_TYPES.includes(request.requestType)) {
     controlPlaneRuntime.recordOperatorAction({
       type: 'agent-action-approved',
@@ -382,7 +396,9 @@ export function rejectAgentActionRequest(requestId, payload = {}) {
       role: 'system',
       kind: 'approval_note',
       title: 'Action request rejected',
-      body: payload.reason || `Request ${request.requestType} was rejected by ${payload.rejectedBy || 'operator'}.`,
+      body:
+        payload.reason ||
+        `Request ${request.requestType} was rejected by ${payload.rejectedBy || 'operator'}.`,
       requestedBy: payload.rejectedBy || 'operator',
       metadata: {
         agentActionRequestId: request.id,

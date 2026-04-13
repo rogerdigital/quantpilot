@@ -1,45 +1,47 @@
 import type {
+  BrokerAccountSnapshotRecord,
   ControlPlaneResolution,
   CycleRunPayload,
-  OperatorSession,
-  ExecutionRuntimeEvent,
-  BrokerAccountSnapshotRecord,
+  ExecutionBulkActionResponse,
   ExecutionCandidateHandoffSnapshot,
   ExecutionLedgerEntry,
+  ExecutionPlanDetailResponse,
+  ExecutionRuntimeEvent,
   ExecutionWorkbenchResponse,
-  LatestBrokerAccountSnapshotResponse,
-  MarketProviderStatusSnapshot,
-  WorkflowRunsSnapshot,
-  StateCycleResult,
-  TradingState,
-  UserAccountSnapshot,
-  UserAccountProfileSnapshot,
-  MonitoringStatusSnapshot,
-  OperationsWorkbenchResponse,
-  OperationsMaintenanceResponse,
-  RiskWorkbenchResponse,
-  RiskPolicyActionResponse,
-  SchedulerWorkbenchResponse,
-  SchedulerOrchestrationActionResponse,
-  MonitoringAlertsResponse,
-  MonitoringSnapshotsResponse,
   IncidentBulkUpdateResponse,
-  ExecutionBulkActionResponse,
-  IncidentsResponse,
   IncidentDetailResponse,
   IncidentSummaryResponse,
-  ExecutionPlanDetailResponse,
+  IncidentsResponse,
+  LatestBrokerAccountSnapshotResponse,
+  MarketProviderStatusSnapshot,
+  MonitoringAlertsResponse,
+  MonitoringSnapshotsResponse,
+  MonitoringStatusSnapshot,
+  OperationsMaintenanceResponse,
+  OperationsWorkbenchResponse,
+  OperatorSession,
   RiskEventDetailResponse,
-  UserBrokerBindingsSnapshot,
-  UserBrokerBindingSaveSnapshot,
-  UserBrokerBindingRuntimeSnapshot,
-  UserBrokerBindingDeleteSnapshot,
-  UserPreferencesUpdateSnapshot,
+  RiskPolicyActionResponse,
+  RiskWorkbenchResponse,
+  SchedulerOrchestrationActionResponse,
+  SchedulerWorkbenchResponse,
+  StateCycleResult,
+  TradingState,
   UserAccessUpdateSnapshot,
+  UserAccountProfileSnapshot,
+  UserAccountSnapshot,
+  UserBrokerBindingDeleteSnapshot,
+  UserBrokerBindingRuntimeSnapshot,
+  UserBrokerBindingSaveSnapshot,
+  UserBrokerBindingsSnapshot,
+  UserPreferencesUpdateSnapshot,
   UserProfileUpdateSnapshot,
   WorkflowRunDetailResponse,
+  WorkflowRunsSnapshot,
 } from '@shared-types/trading.ts';
+
 export { ApiPermissionError } from './http.ts';
+
 import { assertOk, fetchJson, jsonHeaders } from './http.ts';
 
 export async function fetchOperatorSession(): Promise<OperatorSession> {
@@ -60,7 +62,9 @@ export async function fetchUserAccount(): Promise<UserAccountSnapshot> {
   });
 }
 
-export async function updateUserAccountProfile(payload: Record<string, unknown>): Promise<UserProfileUpdateSnapshot> {
+export async function updateUserAccountProfile(
+  payload: Record<string, unknown>
+): Promise<UserProfileUpdateSnapshot> {
   const response = await fetch('/api/user-account/profile', {
     method: 'POST',
     headers: jsonHeaders(),
@@ -70,7 +74,9 @@ export async function updateUserAccountProfile(payload: Record<string, unknown>)
   return response.json();
 }
 
-export async function updateUserAccountPreferences(payload: Record<string, unknown>): Promise<UserPreferencesUpdateSnapshot> {
+export async function updateUserAccountPreferences(
+  payload: Record<string, unknown>
+): Promise<UserPreferencesUpdateSnapshot> {
   const response = await fetch('/api/user-account/preferences', {
     method: 'POST',
     headers: jsonHeaders(),
@@ -80,7 +86,9 @@ export async function updateUserAccountPreferences(payload: Record<string, unkno
   return response.json();
 }
 
-export async function updateUserAccountAccess(payload: Record<string, unknown>): Promise<UserAccessUpdateSnapshot> {
+export async function updateUserAccountAccess(
+  payload: Record<string, unknown>
+): Promise<UserAccessUpdateSnapshot> {
   const response = await fetch('/api/user-account/access', {
     method: 'POST',
     headers: jsonHeaders(),
@@ -98,7 +106,9 @@ export async function fetchBrokerBindings(): Promise<UserBrokerBindingsSnapshot>
   return response.json();
 }
 
-export async function saveBrokerBinding(payload: Record<string, unknown>): Promise<UserBrokerBindingSaveSnapshot> {
+export async function saveBrokerBinding(
+  payload: Record<string, unknown>
+): Promise<UserBrokerBindingSaveSnapshot> {
   const response = await fetch('/api/user-account/broker-bindings', {
     method: 'POST',
     headers: jsonHeaders(),
@@ -108,7 +118,9 @@ export async function saveBrokerBinding(payload: Record<string, unknown>): Promi
   return response.json();
 }
 
-export async function setDefaultBrokerBinding(bindingId: string): Promise<UserBrokerBindingSaveSnapshot> {
+export async function setDefaultBrokerBinding(
+  bindingId: string
+): Promise<UserBrokerBindingSaveSnapshot> {
   const response = await fetch(`/api/user-account/broker-bindings/${bindingId}/default`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -118,7 +130,9 @@ export async function setDefaultBrokerBinding(bindingId: string): Promise<UserBr
   return response.json();
 }
 
-export async function deleteBrokerBinding(bindingId: string): Promise<UserBrokerBindingDeleteSnapshot> {
+export async function deleteBrokerBinding(
+  bindingId: string
+): Promise<UserBrokerBindingDeleteSnapshot> {
   const response = await fetch(`/api/user-account/broker-bindings/${bindingId}`, {
     method: 'DELETE',
     headers: { Accept: 'application/json' },
@@ -299,7 +313,9 @@ export async function fetchRiskEvents(): Promise<{
   });
 }
 
-export async function fetchRiskWorkbench(options: { hours?: number | null; limit?: number } = {}): Promise<RiskWorkbenchResponse> {
+export async function fetchRiskWorkbench(
+  options: { hours?: number | null; limit?: number } = {}
+): Promise<RiskWorkbenchResponse> {
   const params = new URLSearchParams();
   if (typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0) {
     params.set('limit', String(options.limit));
@@ -374,7 +390,9 @@ export async function fetchSchedulerTicks(options: SchedulerTicksQuery = {}): Pr
   });
 }
 
-export async function fetchSchedulerWorkbench(options: SchedulerTicksQuery = {}): Promise<SchedulerWorkbenchResponse> {
+export async function fetchSchedulerWorkbench(
+  options: SchedulerTicksQuery = {}
+): Promise<SchedulerWorkbenchResponse> {
   return fetchJson(`/api/scheduler/workbench${buildSchedulerTicksQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
@@ -442,25 +460,36 @@ export async function fetchTaskWorkflows(): Promise<WorkflowRunsSnapshot> {
   });
 }
 
-export async function fetchWorkflowRunDetail(workflowRunId: string): Promise<WorkflowRunDetailResponse> {
+export async function fetchWorkflowRunDetail(
+  workflowRunId: string
+): Promise<WorkflowRunDetailResponse> {
   return fetchJson(`/api/task-orchestrator/workflows/${workflowRunId}`, {
     headers: { Accept: 'application/json' },
   });
 }
 
-export async function fetchExecutionRuntime(): Promise<{ ok: boolean; events: ExecutionRuntimeEvent[] }> {
+export async function fetchExecutionRuntime(): Promise<{
+  ok: boolean;
+  events: ExecutionRuntimeEvent[];
+}> {
   return fetchJson('/api/execution/runtime', {
     headers: { Accept: 'application/json' },
   });
 }
 
-export async function fetchExecutionAccountSnapshots(): Promise<{ ok: boolean; snapshots: BrokerAccountSnapshotRecord[] }> {
+export async function fetchExecutionAccountSnapshots(): Promise<{
+  ok: boolean;
+  snapshots: BrokerAccountSnapshotRecord[];
+}> {
   return fetchJson('/api/execution/account-snapshots', {
     headers: { Accept: 'application/json' },
   });
 }
 
-export async function fetchExecutionLedger(): Promise<{ ok: boolean; entries: ExecutionLedgerEntry[] }> {
+export async function fetchExecutionLedger(): Promise<{
+  ok: boolean;
+  entries: ExecutionLedgerEntry[];
+}> {
   return fetchJson('/api/execution/ledger', {
     headers: { Accept: 'application/json' },
   });
@@ -478,10 +507,13 @@ export async function fetchExecutionCandidateHandoffs(): Promise<ExecutionCandid
   });
 }
 
-export async function queueExecutionCandidateHandoff(handoffId: string, payload: {
-  actor?: string;
-  owner?: string;
-} = {}) {
+export async function queueExecutionCandidateHandoff(
+  handoffId: string,
+  payload: {
+    actor?: string;
+    owner?: string;
+  } = {}
+) {
   const response = await fetch(`/api/research/execution-candidates/${handoffId}/queue`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -491,15 +523,20 @@ export async function queueExecutionCandidateHandoff(handoffId: string, payload:
   return response.json();
 }
 
-export async function fetchExecutionPlanDetail(planId: string): Promise<ExecutionPlanDetailResponse> {
+export async function fetchExecutionPlanDetail(
+  planId: string
+): Promise<ExecutionPlanDetailResponse> {
   return fetchJson(`/api/execution/plans/${planId}`, {
     headers: { Accept: 'application/json' },
   });
 }
 
-export async function approveExecutionPlan(planId: string, payload: {
-  actor?: string;
-} = {}) {
+export async function approveExecutionPlan(
+  planId: string,
+  payload: {
+    actor?: string;
+  } = {}
+) {
   const response = await fetch(`/api/execution/plans/${planId}/approve`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -509,10 +546,13 @@ export async function approveExecutionPlan(planId: string, payload: {
   return response.json();
 }
 
-export async function settleExecutionPlan(planId: string, payload: {
-  actor?: string;
-  outcome?: 'filled' | 'partial_fill' | 'cancelled' | 'failed';
-} = {}) {
+export async function settleExecutionPlan(
+  planId: string,
+  payload: {
+    actor?: string;
+    outcome?: 'filled' | 'partial_fill' | 'cancelled' | 'failed';
+  } = {}
+) {
   const response = await fetch(`/api/execution/plans/${planId}/settle`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -522,10 +562,13 @@ export async function settleExecutionPlan(planId: string, payload: {
   return response.json();
 }
 
-export async function syncExecutionPlan(planId: string, payload: {
-  actor?: string;
-  scenario?: 'acknowledge' | 'partial_fill' | 'filled' | 'failed';
-} = {}) {
+export async function syncExecutionPlan(
+  planId: string,
+  payload: {
+    actor?: string;
+    scenario?: 'acknowledge' | 'partial_fill' | 'filled' | 'failed';
+  } = {}
+) {
   const response = await fetch(`/api/execution/plans/${planId}/sync`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -535,18 +578,21 @@ export async function syncExecutionPlan(planId: string, payload: {
   return response.json();
 }
 
-export async function ingestBrokerExecutionEvent(planId: string, payload: {
-  actor?: string;
-  source?: string;
-  symbol?: string;
-  brokerOrderId?: string;
-  eventType: 'acknowledged' | 'partial_fill' | 'filled' | 'rejected' | 'cancelled';
-  filledQty?: number;
-  avgFillPrice?: number;
-  message?: string;
-  externalEventId?: string;
-  reason?: string;
-}) {
+export async function ingestBrokerExecutionEvent(
+  planId: string,
+  payload: {
+    actor?: string;
+    source?: string;
+    symbol?: string;
+    brokerOrderId?: string;
+    eventType: 'acknowledged' | 'partial_fill' | 'filled' | 'rejected' | 'cancelled';
+    filledQty?: number;
+    avgFillPrice?: number;
+    message?: string;
+    externalEventId?: string;
+    reason?: string;
+  }
+) {
   const response = await fetch(`/api/execution/plans/${planId}/broker-events`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -556,10 +602,13 @@ export async function ingestBrokerExecutionEvent(planId: string, payload: {
   return response.json();
 }
 
-export async function cancelExecutionPlan(planId: string, payload: {
-  actor?: string;
-  reason?: string;
-} = {}) {
+export async function cancelExecutionPlan(
+  planId: string,
+  payload: {
+    actor?: string;
+    reason?: string;
+  } = {}
+) {
   const response = await fetch(`/api/execution/plans/${planId}/cancel`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -569,9 +618,12 @@ export async function cancelExecutionPlan(planId: string, payload: {
   return response.json();
 }
 
-export async function reconcileExecutionPlan(planId: string, payload: {
-  actor?: string;
-} = {}) {
+export async function reconcileExecutionPlan(
+  planId: string,
+  payload: {
+    actor?: string;
+  } = {}
+) {
   const response = await fetch(`/api/execution/plans/${planId}/reconcile`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -581,9 +633,12 @@ export async function reconcileExecutionPlan(planId: string, payload: {
   return response.json();
 }
 
-export async function compensateExecutionPlan(planId: string, payload: {
-  actor?: string;
-} = {}) {
+export async function compensateExecutionPlan(
+  planId: string,
+  payload: {
+    actor?: string;
+  } = {}
+) {
   const response = await fetch(`/api/execution/plans/${planId}/compensate`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -593,9 +648,12 @@ export async function compensateExecutionPlan(planId: string, payload: {
   return response.json();
 }
 
-export async function recoverExecutionPlan(planId: string, payload: {
-  actor?: string;
-} = {}) {
+export async function recoverExecutionPlan(
+  planId: string,
+  payload: {
+    actor?: string;
+  } = {}
+) {
   const response = await fetch(`/api/execution/plans/${planId}/recover`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -625,7 +683,10 @@ export async function fetchLatestBrokerAccountSnapshot(): Promise<LatestBrokerAc
   });
 }
 
-export async function fetchMarketProviderStatus(): Promise<{ ok: boolean; status: MarketProviderStatusSnapshot }> {
+export async function fetchMarketProviderStatus(): Promise<{
+  ok: boolean;
+  status: MarketProviderStatusSnapshot;
+}> {
   return fetchJson('/api/market/provider-status', {
     headers: { Accept: 'application/json' },
   });
@@ -672,19 +733,25 @@ function buildMonitoringHistoryQuery(options: MonitoringHistoryQuery = {}) {
   return query ? `?${query}` : '';
 }
 
-export async function fetchMonitoringAlerts(options: MonitoringHistoryQuery = {}): Promise<MonitoringAlertsResponse> {
+export async function fetchMonitoringAlerts(
+  options: MonitoringHistoryQuery = {}
+): Promise<MonitoringAlertsResponse> {
   return fetchJson(`/api/monitoring/alerts${buildMonitoringHistoryQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
 
-export async function fetchMonitoringSnapshots(options: MonitoringHistoryQuery = {}): Promise<MonitoringSnapshotsResponse> {
+export async function fetchMonitoringSnapshots(
+  options: MonitoringHistoryQuery = {}
+): Promise<MonitoringSnapshotsResponse> {
   return fetchJson(`/api/monitoring/snapshots${buildMonitoringHistoryQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
 
-export async function fetchOperationsWorkbench(options: { hours?: number | null; limit?: number } = {}): Promise<OperationsWorkbenchResponse> {
+export async function fetchOperationsWorkbench(
+  options: { hours?: number | null; limit?: number } = {}
+): Promise<OperationsWorkbenchResponse> {
   const params = new URLSearchParams();
   if (typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0) {
     params.set('limit', String(options.limit));
@@ -698,7 +765,9 @@ export async function fetchOperationsWorkbench(options: { hours?: number | null;
   });
 }
 
-export async function fetchOperationsMaintenance(options: { limit?: number } = {}): Promise<OperationsMaintenanceResponse> {
+export async function fetchOperationsMaintenance(
+  options: { limit?: number } = {}
+): Promise<OperationsMaintenanceResponse> {
   const params = new URLSearchParams();
   if (typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0) {
     params.set('limit', String(options.limit));
@@ -750,19 +819,31 @@ export async function fetchIncidents(options: IncidentsQuery = {}): Promise<Inci
   });
 }
 
-export async function fetchIncidentSummary(options: IncidentsQuery = {}): Promise<IncidentSummaryResponse> {
+export async function fetchIncidentSummary(
+  options: IncidentsQuery = {}
+): Promise<IncidentSummaryResponse> {
   return fetchJson(`/api/incidents/summary${buildIncidentsQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
 
-export async function fetchIncidentDetail(incidentId: string, noteLimit = 100, activityLimit = 120, taskLimit = 100): Promise<IncidentDetailResponse> {
-  return fetchJson(`/api/incidents/${incidentId}?noteLimit=${noteLimit}&activityLimit=${activityLimit}&taskLimit=${taskLimit}`, {
-    headers: { Accept: 'application/json' },
-  });
+export async function fetchIncidentDetail(
+  incidentId: string,
+  noteLimit = 100,
+  activityLimit = 120,
+  taskLimit = 100
+): Promise<IncidentDetailResponse> {
+  return fetchJson(
+    `/api/incidents/${incidentId}?noteLimit=${noteLimit}&activityLimit=${activityLimit}&taskLimit=${taskLimit}`,
+    {
+      headers: { Accept: 'application/json' },
+    }
+  );
 }
 
-export async function createIncident(payload: Record<string, unknown>): Promise<{ ok: boolean; incident: IncidentDetailResponse['incident'] }> {
+export async function createIncident(
+  payload: Record<string, unknown>
+): Promise<{ ok: boolean; incident: IncidentDetailResponse['incident'] }> {
   const response = await fetch('/api/incidents', {
     method: 'POST',
     headers: jsonHeaders(),
@@ -772,7 +853,10 @@ export async function createIncident(payload: Record<string, unknown>): Promise<
   return response.json();
 }
 
-export async function updateIncident(incidentId: string, payload: Record<string, unknown>): Promise<{ ok: boolean; incident: IncidentDetailResponse['incident'] }> {
+export async function updateIncident(
+  incidentId: string,
+  payload: Record<string, unknown>
+): Promise<{ ok: boolean; incident: IncidentDetailResponse['incident'] }> {
   const response = await fetch(`/api/incidents/${incidentId}`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -782,7 +866,9 @@ export async function updateIncident(incidentId: string, payload: Record<string,
   return response.json();
 }
 
-export async function bulkUpdateIncidentQueue(payload: Record<string, unknown>): Promise<IncidentBulkUpdateResponse> {
+export async function bulkUpdateIncidentQueue(
+  payload: Record<string, unknown>
+): Promise<IncidentBulkUpdateResponse> {
   const response = await fetch('/api/incidents/bulk', {
     method: 'POST',
     headers: jsonHeaders(),
@@ -792,7 +878,10 @@ export async function bulkUpdateIncidentQueue(payload: Record<string, unknown>):
   return response.json();
 }
 
-export async function appendIncidentNote(incidentId: string, payload: Record<string, unknown>): Promise<{
+export async function appendIncidentNote(
+  incidentId: string,
+  payload: Record<string, unknown>
+): Promise<{
   ok: boolean;
   incident: IncidentDetailResponse['incident'] | null;
   note: IncidentDetailResponse['notes'][number];
@@ -806,7 +895,10 @@ export async function appendIncidentNote(incidentId: string, payload: Record<str
   return response.json();
 }
 
-export async function appendIncidentTask(incidentId: string, payload: Record<string, unknown>): Promise<{
+export async function appendIncidentTask(
+  incidentId: string,
+  payload: Record<string, unknown>
+): Promise<{
   ok: boolean;
   task: IncidentDetailResponse['tasks']['items'][number];
 }> {
@@ -819,7 +911,11 @@ export async function appendIncidentTask(incidentId: string, payload: Record<str
   return response.json();
 }
 
-export async function updateIncidentTask(incidentId: string, taskId: string, payload: Record<string, unknown>): Promise<{
+export async function updateIncidentTask(
+  incidentId: string,
+  taskId: string,
+  payload: Record<string, unknown>
+): Promise<{
   ok: boolean;
   task: IncidentDetailResponse['tasks']['items'][number];
 }> {

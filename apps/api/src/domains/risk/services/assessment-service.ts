@@ -5,8 +5,8 @@ import { getStrategyCatalogItem } from '../../strategy/services/catalog-service.
 import { listRiskEvents } from './feed-service.js';
 
 export function assessExecutionCandidate(candidate) {
-  const needsReview = candidate.mode === 'live'
-    && (candidate.status !== 'paper' && candidate.status !== 'live');
+  const needsReview =
+    candidate.mode === 'live' && candidate.status !== 'paper' && candidate.status !== 'live';
   const blockedByDrawdown = candidate.metrics.maxDrawdownPct > 12;
   const blockedBySharpe = candidate.metrics.sharpe < 0.9;
 
@@ -14,7 +14,8 @@ export function assessExecutionCandidate(candidate) {
     return {
       riskStatus: 'blocked',
       approvalState: 'required',
-      summary: 'Risk rejected the execution candidate because risk-adjusted quality is below the current floor.',
+      summary:
+        'Risk rejected the execution candidate because risk-adjusted quality is below the current floor.',
       reasons: [
         blockedByDrawdown ? `max drawdown ${candidate.metrics.maxDrawdownPct}% exceeds 12%` : '',
         blockedBySharpe ? `sharpe ${candidate.metrics.sharpe} is below 0.9` : '',
@@ -34,9 +35,10 @@ export function assessExecutionCandidate(candidate) {
   return {
     riskStatus: 'approved',
     approvalState: candidate.mode === 'live' ? 'required' : 'not_required',
-    summary: candidate.mode === 'live'
-      ? 'Risk approved the strategy candidate and marked it ready for live approval.'
-      : 'Risk approved the strategy candidate for paper execution.',
+    summary:
+      candidate.mode === 'live'
+        ? 'Risk approved the strategy candidate and marked it ready for live approval.'
+        : 'Risk approved the strategy candidate for paper execution.',
     reasons: [],
   };
 }
@@ -67,7 +69,8 @@ export function assessAgentActionRequestRisk(payload = {}) {
         riskStatus: 'blocked',
         approvalState: 'rejected',
         status: 'rejected',
-        summary: 'Risk blocked the request because the target strategy is below the current quality floor.',
+        summary:
+          'Risk blocked the request because the target strategy is below the current quality floor.',
         reasons: ['strategy risk metrics are below threshold'],
       };
     }
@@ -75,7 +78,8 @@ export function assessAgentActionRequestRisk(payload = {}) {
       riskStatus: strategy.status === 'paper' || strategy.status === 'live' ? 'approved' : 'review',
       approvalState: 'required',
       status: 'pending_review',
-      summary: 'Risk accepted the request, but operator approval is required before execution planning can proceed.',
+      summary:
+        'Risk accepted the request, but operator approval is required before execution planning can proceed.',
       reasons: [],
     };
   }
@@ -101,8 +105,9 @@ export function assessAgentActionRequestRisk(payload = {}) {
   }
 
   if (payload.requestType === 'explain_risk') {
-    const hasTarget = listExecutionPlans(20).some((item) => item.id === payload.targetId)
-      || listRiskEvents(20).some((item) => item.id === payload.targetId);
+    const hasTarget =
+      listExecutionPlans(20).some((item) => item.id === payload.targetId) ||
+      listRiskEvents(20).some((item) => item.id === payload.targetId);
     if (!hasTarget) {
       return {
         riskStatus: 'blocked',
@@ -116,7 +121,8 @@ export function assessAgentActionRequestRisk(payload = {}) {
       riskStatus: 'approved',
       approvalState: 'required',
       status: 'pending_review',
-      summary: 'Risk accepted the explanation request and requires operator approval before Agent follow-up.',
+      summary:
+        'Risk accepted the explanation request and requires operator approval before Agent follow-up.',
       reasons: [],
     };
   }

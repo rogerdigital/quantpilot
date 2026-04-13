@@ -1,19 +1,21 @@
 // @ts-nocheck
-import test from 'node:test';
+
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
 import { invokeGatewayRoute } from './helpers/invoke-gateway.js';
 
 const namespace = `stage-3-baseline-test-${randomUUID()}`;
 process.env.QUANTPILOT_CONTROL_PLANE_NAMESPACE = namespace;
 
-const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] = await Promise.all([
-  import('../src/gateways/alpaca.js'),
-  import('../../../packages/control-plane-store/src/context.js'),
-  import('../../../packages/control-plane-store/src/store.js'),
-]);
+const [{ createGatewayHandler }, { createControlPlaneContext }, { createControlPlaneStore }] =
+  await Promise.all([
+    import('../src/gateways/alpaca.js'),
+    import('../../../packages/control-plane-store/src/context.js'),
+    import('../../../packages/control-plane-store/src/store.js'),
+  ]);
 
 const handler = createGatewayHandler({
   getBrokerHealth: async () => ({
@@ -36,7 +38,16 @@ const handler = createGatewayHandler({
         equity: 121500,
       },
       positions: [{ symbol: 'AAPL', qty: 10, avgCost: 189.5 }],
-      orders: [{ id: 'stage3-broker-order-1', symbol: 'AAPL', side: 'BUY', qty: 10, filledQty: 10, status: 'filled' }],
+      orders: [
+        {
+          id: 'stage3-broker-order-1',
+          symbol: 'AAPL',
+          side: 'BUY',
+          qty: 10,
+          filledQty: 10,
+          status: 'filled',
+        },
+      ],
     },
   }),
   getMarketSnapshot: async () => ({
@@ -81,7 +92,9 @@ function seedExecutionChain(suffix) {
     capital: 120000,
     orderCount: 1,
     owner: 'execution-desk',
-    orders: [{ symbol: 'AAPL', side: 'BUY', qty: 10, weight: 1, rationale: 'baseline execution route' }],
+    orders: [
+      { symbol: 'AAPL', side: 'BUY', qty: 10, weight: 1, rationale: 'baseline execution route' },
+    ],
     metadata: {},
     createdAt,
     updatedAt: '2026-03-22T09:08:00.000Z',
@@ -105,26 +118,28 @@ function seedExecutionChain(suffix) {
     updatedAt: '2026-03-22T09:08:00.000Z',
     completedAt: '',
   });
-  context.executionRuns.appendExecutionOrderStates([{
-    id: orderId,
-    executionPlanId: planId,
-    executionRunId: runId,
-    symbol: 'AAPL',
-    side: 'BUY',
-    qty: 10,
-    weight: 1,
-    lifecycleStatus: 'partial_fill',
-    brokerOrderId,
-    avgFillPrice: 189.5,
-    filledQty: 10,
-    summary: 'Broker partially filled the order and left drift for reconciliation.',
-    submittedAt: createdAt,
-    acknowledgedAt: '2026-03-22T09:02:00.000Z',
-    filledAt: '2026-03-22T09:06:00.000Z',
-    metadata: {},
-    createdAt,
-    updatedAt: '2026-03-22T09:06:00.000Z',
-  }]);
+  context.executionRuns.appendExecutionOrderStates([
+    {
+      id: orderId,
+      executionPlanId: planId,
+      executionRunId: runId,
+      symbol: 'AAPL',
+      side: 'BUY',
+      qty: 10,
+      weight: 1,
+      lifecycleStatus: 'partial_fill',
+      brokerOrderId,
+      avgFillPrice: 189.5,
+      filledQty: 10,
+      summary: 'Broker partially filled the order and left drift for reconciliation.',
+      submittedAt: createdAt,
+      acknowledgedAt: '2026-03-22T09:02:00.000Z',
+      filledAt: '2026-03-22T09:06:00.000Z',
+      metadata: {},
+      createdAt,
+      updatedAt: '2026-03-22T09:06:00.000Z',
+    },
+  ]);
   context.executionRuntime.appendExecutionRuntimeEvent({
     id: runtimeId,
     cycleId,
@@ -160,7 +175,9 @@ function seedExecutionChain(suffix) {
       buyingPower: 128500,
       equity: 120900,
     },
-    orders: [{ id: brokerOrderId, symbol: 'AAPL', side: 'BUY', qty: 10, filledQty: 10, status: 'filled' }],
+    orders: [
+      { id: brokerOrderId, symbol: 'AAPL', side: 'BUY', qty: 10, filledQty: 10, status: 'filled' },
+    ],
     positions: [{ symbol: 'AAPL', qty: 9, avgCost: 189.5 }],
     createdAt: '2026-03-22T09:09:00.000Z',
   });
@@ -225,7 +242,9 @@ test('stage 3 baseline exposes execution workbench queues, linked incidents, and
   const [workbench, ledger, brokerEvents] = await Promise.all([
     invokeGatewayRoute(handler, { path: '/api/execution/workbench' }),
     invokeGatewayRoute(handler, { path: '/api/execution/ledger' }),
-    invokeGatewayRoute(handler, { path: `/api/execution/broker-events?executionPlanId=${planId}&limit=10` }),
+    invokeGatewayRoute(handler, {
+      path: `/api/execution/broker-events?executionPlanId=${planId}&limit=10`,
+    }),
   ]);
 
   assert.equal(workbench.statusCode, 200);
@@ -234,16 +253,27 @@ test('stage 3 baseline exposes execution workbench queues, linked incidents, and
   assert.equal(typeof workbench.json.summary.incidentLinkedPlans, 'number');
   assert.equal(Array.isArray(workbench.json.operations.queues.incidents), true);
   assert.equal(Array.isArray(workbench.json.operations.nextActions), true);
-  assert.equal(workbench.json.entries.some((entry) => entry.plan.id === planId), true);
+  assert.equal(
+    workbench.json.entries.some((entry) => entry.plan.id === planId),
+    true
+  );
 
   assert.equal(ledger.statusCode, 200);
   assert.equal(ledger.json.ok, true);
-  assert.equal(ledger.json.entries.some((entry) => entry.plan.id === planId), true);
+  assert.equal(
+    ledger.json.entries.some((entry) => entry.plan.id === planId),
+    true
+  );
 
   assert.equal(brokerEvents.statusCode, 200);
   assert.equal(brokerEvents.json.ok, true);
   assert.equal(Array.isArray(brokerEvents.json.events), true);
-  assert.equal(brokerEvents.json.events.some((event) => event.executionPlanId === planId && event.eventType === 'partial_fill'), true);
+  assert.equal(
+    brokerEvents.json.events.some(
+      (event) => event.executionPlanId === planId && event.eventType === 'partial_fill'
+    ),
+    true
+  );
 });
 
 test('stage 3 baseline exposes execution detail, compensation and incident triage contracts', async () => {
@@ -288,6 +318,9 @@ test('stage 3 baseline exposes execution detail, compensation and incident triag
   assert.equal(incident.json.ok, true);
   assert.equal(incident.json.incident.owner, 'ops-stage3');
   assert.equal(incident.json.incident.status, 'mitigated');
-  assert.equal(incident.json.notes.some((note) => note.body.includes('execution console baseline')), true);
+  assert.equal(
+    incident.json.notes.some((note) => note.body.includes('execution console baseline')),
+    true
+  );
   assert.equal(typeof incident.json.operations.nextAction.key, 'string');
 });

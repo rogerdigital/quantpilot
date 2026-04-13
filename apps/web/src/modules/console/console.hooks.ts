@@ -22,8 +22,11 @@ export function useSummary() {
   const paper = state.accounts.paper;
   const live = state.accounts.live;
   const totalNav = paper.nav + live.nav;
-  const totalBase = (paper.equitySeries[0]?.value || paper.nav) + (live.equitySeries[0]?.value || live.nav);
+  const totalBase =
+    (paper.equitySeries[0]?.value || paper.nav) + (live.equitySeries[0]?.value || live.nav);
   const totalPnlPct = totalBase ? (totalNav / totalBase - 1) * 100 : 0;
-  const positionCount = rowsForPositions(paper, state.stockStates).length + rowsForPositions(live, state.stockStates).length;
+  const positionCount =
+    rowsForPositions(paper, state.stockStates).length +
+    rowsForPositions(live, state.stockStates).length;
   return { paper, live, totalNav, totalPnlPct, positionCount };
 }

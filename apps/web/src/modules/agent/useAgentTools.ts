@@ -1,9 +1,14 @@
+import type { AgentToolDefinition } from '@shared-types/trading.ts';
 import { useEffect, useState } from 'react';
 import { ApiPermissionError } from '../../app/api/http.ts';
 import { useLocale } from '../console/console.i18n.tsx';
 import { formatMissingPermission } from '../permissions/permissionCopy.ts';
-import type { AgentToolDefinition } from '@shared-types/trading.ts';
 import {
+  type AgentIntentPayload,
+  type AgentPlanPayload,
+  type AgentSessionActionRequestPayload,
+  type AgentSessionDetailPayload,
+  type AgentWorkbenchPayload,
   createAgentIntent,
   createAgentPlan,
   createAgentSessionActionRequest,
@@ -11,11 +16,6 @@ import {
   fetchAgentTools,
   fetchAgentWorkbench,
   runAgentAnalysis,
-  type AgentIntentPayload,
-  type AgentPlanPayload,
-  type AgentSessionDetailPayload,
-  type AgentSessionActionRequestPayload,
-  type AgentWorkbenchPayload,
 } from './agentTools.service.ts';
 
 type AgentToolsState = {
@@ -42,11 +42,12 @@ export function useAgentTools() {
     error: '',
   });
 
-  const formatAgentError = (error: unknown) => (
+  const formatAgentError = (error: unknown) =>
     error instanceof ApiPermissionError && error.missingPermission
       ? `${formatMissingPermission(locale, error.missingPermission)}.`
-      : (error instanceof Error ? error.message : 'unknown error')
-  );
+      : error instanceof Error
+        ? error.message
+        : 'unknown error';
 
   const createTransientMessage = (kind: string, body: string) => ({
     id: `local-${kind}-${Date.now()}`,
@@ -61,7 +62,10 @@ export function useAgentTools() {
     },
   });
 
-  const withTransientMessage = (detail: AgentSessionDetailPayload | null, body: string): AgentSessionDetailPayload | null => {
+  const withTransientMessage = (
+    detail: AgentSessionDetailPayload | null,
+    body: string
+  ): AgentSessionDetailPayload | null => {
     if (!detail) return detail;
     return {
       ...detail,
@@ -70,13 +74,9 @@ export function useAgentTools() {
   };
 
   const load = async (sessionId = '') => {
-    const [toolList, workbench] = await Promise.all([
-      fetchAgentTools(),
-      fetchAgentWorkbench(),
-    ]);
-    const nextSessionId = sessionId
-      || state.selectedSessionId
-      || String(workbench.queues.recentSessions[0]?.id || '');
+    const [toolList, workbench] = await Promise.all([fetchAgentTools(), fetchAgentWorkbench()]);
+    const nextSessionId =
+      sessionId || state.selectedSessionId || String(workbench.queues.recentSessions[0]?.id || '');
     const detail = nextSessionId ? await fetchAgentSessionDetail(nextSessionId) : null;
 
     setState((current) => ({
@@ -160,7 +160,10 @@ export function useAgentTools() {
       setState((current) => ({
         ...current,
         selectedSessionId: intentResult.session.id,
-        sessionDetail: withTransientMessage(intentDetail, locale === 'zh' ? '正在规划下一步。' : 'Planning next steps.'),
+        sessionDetail: withTransientMessage(
+          intentDetail,
+          locale === 'zh' ? '正在规划下一步。' : 'Planning next steps.'
+        ),
       }));
 
       const planResult: AgentPlanPayload = await createAgentPlan({
@@ -172,7 +175,10 @@ export function useAgentTools() {
       setState((current) => ({
         ...current,
         selectedSessionId: intentResult.session.id,
-        sessionDetail: withTransientMessage(plannedDetail, locale === 'zh' ? '正在读取工具和收集证据。' : 'Reading tools and collecting evidence.'),
+        sessionDetail: withTransientMessage(
+          plannedDetail,
+          locale === 'zh' ? '正在读取工具和收集证据。' : 'Reading tools and collecting evidence.'
+        ),
       }));
 
       const result = await runAgentAnalysis({
@@ -197,7 +203,9 @@ export function useAgentTools() {
     }
   };
 
-  const requestAction = async (requestedBy?: string): Promise<AgentSessionActionRequestPayload | null> => {
+  const requestAction = async (
+    requestedBy?: string
+  ): Promise<AgentSessionActionRequestPayload | null> => {
     const sessionId = state.selectedSessionId || state.sessionDetail?.session.id || '';
     if (!sessionId) return null;
 

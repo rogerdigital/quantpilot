@@ -1,15 +1,15 @@
-import { assertOk, fetchJson, jsonHeaders } from '../../app/api/http.ts';
 import type {
-  BacktestRunDetailSnapshot,
   BacktestRunCreateSnapshot,
+  BacktestRunDetailSnapshot,
   ExecutionCandidateHandoffSnapshot,
   ResearchEvaluationRecord,
   ResearchGovernanceActionRecord,
-  ResearchWorkbenchSnapshot,
   ResearchHubSnapshot,
+  ResearchWorkbenchSnapshot,
   StrategyCatalogDetailSnapshot,
   StrategyCatalogSaveSnapshot,
 } from '@shared-types/trading.ts';
+import { assertOk, fetchJson, jsonHeaders } from '../../app/api/http.ts';
 
 export async function fetchResearchHub(): Promise<ResearchHubSnapshot> {
   return fetchJson<ResearchHubSnapshot>('/api/research/hub');
@@ -41,7 +41,9 @@ export async function queueBacktestRun(payload: {
   return response.json();
 }
 
-export async function fetchStrategyCatalogItem(strategyId: string): Promise<StrategyCatalogDetailSnapshot> {
+export async function fetchStrategyCatalogItem(
+  strategyId: string
+): Promise<StrategyCatalogDetailSnapshot> {
   return fetchJson<StrategyCatalogDetailSnapshot>(`/api/strategy/catalog/${strategyId}`);
 }
 
@@ -49,10 +51,13 @@ export async function fetchBacktestRunItem(runId: string): Promise<BacktestRunDe
   return fetchJson<BacktestRunDetailSnapshot>(`/api/backtest/runs/${runId}`);
 }
 
-export async function reviewBacktestRun(runId: string, payload: {
-  reviewedBy?: string;
-  summary?: string;
-}) {
+export async function reviewBacktestRun(
+  runId: string,
+  payload: {
+    reviewedBy?: string;
+    summary?: string;
+  }
+) {
   const response = await fetch(`/api/backtest/runs/${runId}/review`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -62,11 +67,14 @@ export async function reviewBacktestRun(runId: string, payload: {
   return response.json();
 }
 
-export async function evaluateBacktestRunItem(runId: string, payload: {
-  actor?: string;
-  summary?: string;
-  note?: string;
-}): Promise<{ ok: boolean; evaluation: ResearchEvaluationRecord }> {
+export async function evaluateBacktestRunItem(
+  runId: string,
+  payload: {
+    actor?: string;
+    summary?: string;
+    note?: string;
+  }
+): Promise<{ ok: boolean; evaluation: ResearchEvaluationRecord }> {
   const response = await fetch(`/api/backtest/runs/${runId}/evaluate`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -76,12 +84,15 @@ export async function evaluateBacktestRunItem(runId: string, payload: {
   return response.json();
 }
 
-export async function promoteStrategyCatalogItem(strategyId: string, payload: {
-  actor?: string;
-  summary?: string;
-  evaluationId?: string;
-  nextStatus?: string;
-} = {}) {
+export async function promoteStrategyCatalogItem(
+  strategyId: string,
+  payload: {
+    actor?: string;
+    summary?: string;
+    evaluationId?: string;
+    nextStatus?: string;
+  } = {}
+) {
   const response = await fetch(`/api/strategy/catalog/${strategyId}/promote`, {
     method: 'POST',
     headers: jsonHeaders(),
@@ -92,7 +103,12 @@ export async function promoteStrategyCatalogItem(strategyId: string, payload: {
 }
 
 export async function runResearchGovernanceAction(payload: {
-  action: 'promote_strategies' | 'queue_backtests' | 'evaluate_runs' | 'set_baseline' | 'set_champion';
+  action:
+    | 'promote_strategies'
+    | 'queue_backtests'
+    | 'evaluate_runs'
+    | 'set_baseline'
+    | 'set_champion';
   actor?: string;
   strategyIds?: string[];
   runIds?: string[];
@@ -133,7 +149,9 @@ export async function createExecutionCandidateHandoff(payload: {
   return response.json();
 }
 
-export async function saveStrategyCatalogItem(payload: Record<string, unknown>): Promise<StrategyCatalogSaveSnapshot> {
+export async function saveStrategyCatalogItem(
+  payload: Record<string, unknown>
+): Promise<StrategyCatalogSaveSnapshot> {
   const response = await fetch('/api/strategy/catalog', {
     method: 'POST',
     headers: jsonHeaders(),

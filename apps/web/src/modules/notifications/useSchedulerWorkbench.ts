@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import type { SchedulerWorkbenchResponse } from '@shared-types/trading.ts';
+import { useEffect, useState } from 'react';
 import { fetchSchedulerWorkbench } from '../../app/api/controlPlane.ts';
 
 const EMPTY_WORKBENCH: SchedulerWorkbenchResponse = {
@@ -71,18 +71,12 @@ const EMPTY_WORKBENCH: SchedulerWorkbenchResponse = {
   },
 };
 
-export function useSchedulerWorkbench(options: {
-  hours?: number | null;
-  limit?: number;
-  refreshKey?: number;
-} = {}) {
+export function useSchedulerWorkbench(
+  options: { hours?: number | null; limit?: number; refreshKey?: number } = {}
+) {
   const [workbench, setWorkbench] = useState<SchedulerWorkbenchResponse>(EMPTY_WORKBENCH);
   const [loading, setLoading] = useState(true);
-  const {
-    hours = 24,
-    limit = 40,
-    refreshKey = 0,
-  } = options;
+  const { hours = 24, limit = 40, refreshKey = 0 } = options;
 
   useEffect(() => {
     let mounted = true;

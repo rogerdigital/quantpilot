@@ -3,12 +3,21 @@ import { getUserAccount } from '../../../../../packages/control-plane-runtime/sr
 
 export function getSession() {
   const account = getUserAccount();
-  const defaultBrokerBinding = account.brokerBindings.find((binding) => binding.isDefault) || account.brokerBindings[0] || null;
-  const currentWorkspace = account.currentWorkspace || account.workspaces?.find((workspace) => workspace.isCurrent) || null;
-  const accountPermissions = account.access?.status === 'active'
-    ? (account.access.effectivePermissions || account.access.permissions || [])
+  const defaultBrokerBinding =
+    account.brokerBindings.find((binding) => binding.isDefault) ||
+    account.brokerBindings[0] ||
+    null;
+  const currentWorkspace =
+    account.currentWorkspace ||
+    account.workspaces?.find((workspace) => workspace.isCurrent) ||
+    null;
+  const accountPermissions =
+    account.access?.status === 'active'
+      ? account.access.effectivePermissions || account.access.permissions || []
+      : [];
+  const workspacePermissions = Array.isArray(currentWorkspace?.effectivePermissions)
+    ? currentWorkspace.effectivePermissions
     : [];
-  const workspacePermissions = Array.isArray(currentWorkspace?.effectivePermissions) ? currentWorkspace.effectivePermissions : [];
   const permissions = workspacePermissions.length
     ? accountPermissions.filter((item) => workspacePermissions.includes(item))
     : accountPermissions;
@@ -29,14 +38,16 @@ export function getSession() {
     tenant: account.tenant || null,
     workspace: currentWorkspace,
     preferences: account.preferences,
-    brokerBinding: defaultBrokerBinding ? {
-      id: defaultBrokerBinding.id,
-      provider: defaultBrokerBinding.provider,
-      label: defaultBrokerBinding.label,
-      environment: defaultBrokerBinding.environment,
-      status: defaultBrokerBinding.status,
-      healthStatus: defaultBrokerBinding.health?.status || 'idle',
-    } : null,
+    brokerBinding: defaultBrokerBinding
+      ? {
+          id: defaultBrokerBinding.id,
+          provider: defaultBrokerBinding.provider,
+          label: defaultBrokerBinding.label,
+          environment: defaultBrokerBinding.environment,
+          status: defaultBrokerBinding.status,
+          healthStatus: defaultBrokerBinding.health?.status || 'idle',
+        }
+      : null,
     issuedAt: new Date().toISOString(),
   };
 }

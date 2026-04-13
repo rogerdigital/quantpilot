@@ -72,7 +72,11 @@ export function createIncidentRepository(store) {
   function listIncidentTasks(incidentId, limit = 100) {
     return readTasks()
       .filter((item) => item.incidentId === incidentId)
-      .sort((left, right) => Date.parse(right.updatedAt || right.createdAt || '') - Date.parse(left.updatedAt || left.createdAt || ''))
+      .sort(
+        (left, right) =>
+          Date.parse(right.updatedAt || right.createdAt || '') -
+          Date.parse(left.updatedAt || left.createdAt || '')
+      )
       .slice(0, limit);
   }
 
@@ -82,7 +86,9 @@ export function createIncidentRepository(store) {
 
   function syncTemplateTask(incidentId, templateKey, patch = {}) {
     const tasks = readTasks();
-    const index = tasks.findIndex((item) => item.incidentId === incidentId && item.metadata?.templateKey === templateKey);
+    const index = tasks.findIndex(
+      (item) => item.incidentId === incidentId && item.metadata?.templateKey === templateKey
+    );
     if (index === -1) return null;
     const current = tasks[index];
     const next = {
@@ -90,9 +96,10 @@ export function createIncidentRepository(store) {
       ...patch,
       status: patch.status ?? current.status,
       owner: patch.owner ?? current.owner,
-      completedAt: (patch.status ?? current.status) === 'done'
-        ? (patch.completedAt || current.completedAt || new Date().toISOString())
-        : current.completedAt,
+      completedAt:
+        (patch.status ?? current.status) === 'done'
+          ? patch.completedAt || current.completedAt || new Date().toISOString()
+          : current.completedAt,
       updatedAt: patch.updatedAt || new Date().toISOString(),
       metadata: patch.metadata ? { ...current.metadata, ...patch.metadata } : current.metadata,
     };
@@ -114,15 +121,17 @@ export function createIncidentRepository(store) {
       },
       {
         title: 'Acknowledge investigation',
-        detail: 'Move the incident into active investigation and confirm the initial response window.',
+        detail:
+          'Move the incident into active investigation and confirm the initial response window.',
         status: entry.status !== 'open' ? 'done' : 'pending',
         owner: entry.owner || '',
-        completedAt: entry.status !== 'open' ? (entry.acknowledgedAt || now) : '',
+        completedAt: entry.status !== 'open' ? entry.acknowledgedAt || now : '',
         metadata: { templateKey: 'acknowledge', source: entry.source },
       },
       {
         title: 'Review linked evidence',
-        detail: 'Validate the monitoring, audit, workflow, or execution artifacts linked to this incident.',
+        detail:
+          'Validate the monitoring, audit, workflow, or execution artifacts linked to this incident.',
         status: Array.isArray(entry.links) && entry.links.length ? 'done' : 'pending',
         owner: entry.owner || '',
         completedAt: Array.isArray(entry.links) && entry.links.length ? now : '',
@@ -130,18 +139,21 @@ export function createIncidentRepository(store) {
       },
       {
         title: 'Capture mitigation update',
-        detail: 'Record the mitigation path, workaround, or containment decision for this incident.',
+        detail:
+          'Record the mitigation path, workaround, or containment decision for this incident.',
         status: entry.status === 'mitigated' || entry.status === 'resolved' ? 'done' : 'pending',
         owner: entry.owner || '',
-        completedAt: entry.status === 'mitigated' || entry.status === 'resolved' ? (entry.updatedAt || now) : '',
+        completedAt:
+          entry.status === 'mitigated' || entry.status === 'resolved' ? entry.updatedAt || now : '',
         metadata: { templateKey: 'mitigation', source: entry.source },
       },
       {
         title: 'Write resolution summary',
-        detail: 'Summarize what happened, what changed, and any remaining follow-up work before closing.',
+        detail:
+          'Summarize what happened, what changed, and any remaining follow-up work before closing.',
         status: entry.status === 'resolved' ? 'done' : 'pending',
         owner: entry.owner || '',
-        completedAt: entry.status === 'resolved' ? (entry.resolvedAt || entry.updatedAt || now) : '',
+        completedAt: entry.status === 'resolved' ? entry.resolvedAt || entry.updatedAt || now : '',
         metadata: { templateKey: 'resolution-summary', source: entry.source },
       },
     ];
@@ -183,9 +195,10 @@ export function createIncidentRepository(store) {
       ...patch,
       status: patch.status ?? current.status,
       owner: patch.owner ?? current.owner,
-      completedAt: (patch.status ?? current.status) === 'done'
-        ? (patch.completedAt || current.completedAt || new Date().toISOString())
-        : (patch.completedAt ?? current.completedAt),
+      completedAt:
+        (patch.status ?? current.status) === 'done'
+          ? patch.completedAt || current.completedAt || new Date().toISOString()
+          : (patch.completedAt ?? current.completedAt),
       updatedAt: patch.updatedAt || new Date().toISOString(),
       metadata: patch.metadata ? { ...current.metadata, ...patch.metadata } : current.metadata,
     };
@@ -208,10 +221,13 @@ export function createIncidentRepository(store) {
 
   function hydrateIncident(incident) {
     const notes = readNotes().filter((item) => item.incidentId === incident.id);
-    const latestNote = sortByUpdatedAtDesc(notes.map((item) => ({
-      ...item,
-      updatedAt: item.createdAt,
-    })))[0] || null;
+    const latestNote =
+      sortByUpdatedAtDesc(
+        notes.map((item) => ({
+          ...item,
+          updatedAt: item.createdAt,
+        }))
+      )[0] || null;
     return {
       ...incident,
       noteCount: notes.length,
@@ -231,7 +247,7 @@ export function createIncidentRepository(store) {
             if (!filter.owner) return true;
             if (filter.owner === 'unassigned') return !item.owner;
             return item.owner === filter.owner;
-          }),
+          })
       ).map(hydrateIncident);
       return items.slice(0, limit);
     },
@@ -269,12 +285,14 @@ export function createIncidentRepository(store) {
 
       const tasks = readTasks();
       buildDefaultTasks(entry).forEach((item) => {
-        tasks.unshift(createIncidentTaskEntry({
-          ...item,
-          incidentId: entry.id,
-          createdAt: entry.createdAt,
-          updatedAt: entry.updatedAt,
-        }));
+        tasks.unshift(
+          createIncidentTaskEntry({
+            ...item,
+            incidentId: entry.id,
+            createdAt: entry.createdAt,
+            updatedAt: entry.updatedAt,
+          })
+        );
       });
       saveTasks(tasks);
 
@@ -320,12 +338,16 @@ export function createIncidentRepository(store) {
         links: Array.isArray(patch.links) ? patch.links : current.links,
         tags: Array.isArray(patch.tags) ? patch.tags : current.tags,
         metadata: patch.metadata ? { ...current.metadata, ...patch.metadata } : current.metadata,
-        acknowledgedAt: patch.status === 'investigating'
-          ? (patch.acknowledgedAt || current.acknowledgedAt || new Date().toISOString())
-          : (patch.acknowledgedAt ?? current.acknowledgedAt),
-        resolvedAt: nextStatus === 'resolved'
-          ? (patch.resolvedAt || current.resolvedAt || new Date().toISOString())
-          : (patch.clearResolvedAt ? '' : current.resolvedAt),
+        acknowledgedAt:
+          patch.status === 'investigating'
+            ? patch.acknowledgedAt || current.acknowledgedAt || new Date().toISOString()
+            : (patch.acknowledgedAt ?? current.acknowledgedAt),
+        resolvedAt:
+          nextStatus === 'resolved'
+            ? patch.resolvedAt || current.resolvedAt || new Date().toISOString()
+            : patch.clearResolvedAt
+              ? ''
+              : current.resolvedAt,
         updatedAt: patch.updatedAt || new Date().toISOString(),
       };
       delete next.clearResolvedAt;
@@ -415,7 +437,11 @@ export function createIncidentRepository(store) {
       }
 
       if (current.status !== next.status) {
-        if (next.status === 'investigating' || next.status === 'mitigated' || next.status === 'resolved') {
+        if (
+          next.status === 'investigating' ||
+          next.status === 'mitigated' ||
+          next.status === 'resolved'
+        ) {
           syncTemplateTask(incidentId, 'acknowledge', {
             status: 'done',
             owner: next.owner || '',

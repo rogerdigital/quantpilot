@@ -1,41 +1,46 @@
 import { useState } from 'react';
+import {
+  EmptyState,
+  SectionHeader,
+  TabPanel,
+  TopMeta,
+} from '../../components/layout/ConsoleChrome.tsx';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
-import { SectionHeader, TabPanel, TopMeta, EmptyState } from '../../components/layout/ConsoleChrome.tsx';
 import { copy, useLocale } from '../console/console.i18n.tsx';
 import { translateRiskLevel } from '../console/console.utils.ts';
-import { useAgentTools } from './useAgentTools.ts';
 import {
-  agentDialogueSection,
-  agentDualViewPanel,
-  agentDualView,
-  agentDialogueStage,
-  agentStageHeader,
-  agentStagePills,
-  agentInsightRail,
-  agentInsightCard,
-  agentInsightHeader,
-  agentPulseGrid,
-  agentPulseItem,
-  agentStepStack,
-  agentStepCard,
-  agentStepTop,
-  agentStepCopy,
-  agentHandoffActions,
-  agentSuggestionList,
-  agentSuggestionButton,
-  agentChatTranscript,
-  agentChatMessage,
-  agentChatUser,
   agentChatAssistant,
-  agentChatSystem,
-  agentChatMuted,
-  agentChatWarn,
-  agentChatMeta,
   agentChatBody,
   agentChatComposer,
   agentChatComposerActions,
+  agentChatMessage,
+  agentChatMeta,
+  agentChatMuted,
+  agentChatSystem,
   agentChatTextarea,
+  agentChatTranscript,
+  agentChatUser,
+  agentChatWarn,
+  agentDialogueSection,
+  agentDialogueStage,
+  agentDualView,
+  agentDualViewPanel,
+  agentHandoffActions,
+  agentInsightCard,
+  agentInsightHeader,
+  agentInsightRail,
+  agentPulseGrid,
+  agentPulseItem,
+  agentStageHeader,
+  agentStagePills,
+  agentStepCard,
+  agentStepCopy,
+  agentStepStack,
+  agentStepTop,
+  agentSuggestionButton,
+  agentSuggestionList,
 } from './AgentPage.css.ts';
+import { useAgentTools } from './useAgentTools.ts';
 
 const promptSuggestions = {
   zh: [
@@ -45,10 +50,10 @@ const promptSuggestions = {
     '明天开盘前生成执行计划',
   ],
   en: [
-    'Summarize today\'s loss drivers',
+    "Summarize today's loss drivers",
     'Suggest a more robust parameter set',
     'Recompute the strategy with max drawdown capped at 8%',
-    'Generate the execution plan before tomorrow\'s open',
+    "Generate the execution plan before tomorrow's open",
   ],
 };
 
@@ -95,11 +100,16 @@ function buildAgentConversation({
     return messages.map((message) => ({
       key: message.id,
       role: message.role === 'user' || message.role === 'assistant' ? message.role : 'system',
-      label: message.role === 'user'
-        ? (locale === 'zh' ? '你' : 'You')
-        : message.role === 'assistant'
-          ? 'Agent'
-          : (locale === 'zh' ? '系统' : 'System'),
+      label:
+        message.role === 'user'
+          ? locale === 'zh'
+            ? '你'
+            : 'You'
+          : message.role === 'assistant'
+            ? 'Agent'
+            : locale === 'zh'
+              ? '系统'
+              : 'System',
       body: message.body || message.title,
       tone: message.kind === 'approval_note' ? 'warn' : 'default',
     }));
@@ -110,9 +120,10 @@ function buildAgentConversation({
     key: 'system-session',
     role: 'system',
     label: locale === 'zh' ? '系统' : 'System',
-    body: locale === 'zh'
-      ? `当前会话状态：${sessionStatus || '未选择'}；最近 intent：${intentKind || '--'}；plan：${planStatus || '--'}。`
-      : `Current session status: ${sessionStatus || 'unselected'}; latest intent: ${intentKind || '--'}; plan: ${planStatus || '--'}.`,
+    body:
+      locale === 'zh'
+        ? `当前会话状态：${sessionStatus || '未选择'}；最近 intent：${intentKind || '--'}；plan：${planStatus || '--'}。`
+        : `Current session status: ${sessionStatus || 'unselected'}; latest intent: ${intentKind || '--'}; plan: ${planStatus || '--'}.`,
     tone: 'muted',
   });
 
@@ -131,24 +142,36 @@ function buildAgentConversation({
       key: 'assistant-running',
       role: 'assistant',
       label: locale === 'zh' ? 'Agent' : 'Agent',
-      body: locale === 'zh'
-        ? '正在解析意图、生成计划，并串行执行白名单只读工具。'
-        : 'Parsing intent, creating a plan, and running allowlisted read-only tools.',
+      body:
+        locale === 'zh'
+          ? '正在解析意图、生成计划，并串行执行白名单只读工具。'
+          : 'Parsing intent, creating a plan, and running allowlisted read-only tools.',
       tone: 'muted',
     });
   }
 
-  if (thesis || summary || rationale.length || warnings.length || recommendedNextStep || actionRequestSummary) {
+  if (
+    thesis ||
+    summary ||
+    rationale.length ||
+    warnings.length ||
+    recommendedNextStep ||
+    actionRequestSummary
+  ) {
     const body = [
-      thesis ? thesis : (locale === 'zh' ? '本轮分析已经完成。' : 'This analysis run has completed.'),
+      thesis ? thesis : locale === 'zh' ? '本轮分析已经完成。' : 'This analysis run has completed.',
       summary ? summary : null,
       rationale.length ? `${locale === 'zh' ? '理由' : 'Rationale'}: ${rationale.join(' ')}` : null,
       warnings.length ? `${locale === 'zh' ? '警告' : 'Warnings'}: ${warnings.join(' ')}` : null,
-      recommendedNextStep ? `${locale === 'zh' ? '下一步' : 'Next step'}: ${recommendedNextStep}` : null,
+      recommendedNextStep
+        ? `${locale === 'zh' ? '下一步' : 'Next step'}: ${recommendedNextStep}`
+        : null,
       actionRequestSummary
         ? `${locale === 'zh' ? '审批请求' : 'Action request'}: ${actionRequestSummary} (${actionRequestStatus || '--'})`
         : null,
-    ].filter(Boolean).join(' ');
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     fallbackMessages.push({
       key: 'assistant-summary',
@@ -175,23 +198,52 @@ function buildAgentConversation({
 export default function AgentPage() {
   const { state, session } = useTradingSystem();
   const { locale } = useLocale();
-  const { tools, workbench, sessionDetail, selectedSessionId, loading, running, requestingAction, error, selectSession, runPrompt, requestAction, refresh } = useAgentTools();
+  const {
+    tools,
+    workbench,
+    sessionDetail,
+    selectedSessionId,
+    loading,
+    running,
+    requestingAction,
+    error,
+    selectSession,
+    runPrompt,
+    requestAction,
+    refresh,
+  } = useAgentTools();
   const [prompt, setPrompt] = useState(promptSuggestions[locale][0]);
 
   const summary = workbench?.summary;
   const authorityState = workbench?.authorityState || null;
-  const dailyBiasInstructions = Array.isArray(workbench?.dailyBias?.instructions) ? workbench.dailyBias.instructions : [];
+  const dailyBiasInstructions = Array.isArray(workbench?.dailyBias?.instructions)
+    ? workbench.dailyBias.instructions
+    : [];
   const latestExplanation = sessionDetail?.latestAnalysisRun?.explanation || null;
   const latestActionRequest = sessionDetail?.latestActionRequest || null;
-  const recentSessions = Array.isArray(workbench?.queues.recentSessions) ? workbench?.queues.recentSessions : [];
-  const pendingRequests = Array.isArray(workbench?.queues.pendingActionRequests) ? workbench?.queues.pendingActionRequests : [];
-  const recentExplanations = Array.isArray(workbench?.recentExplanations) ? workbench.recentExplanations : [];
+  const recentSessions = Array.isArray(workbench?.queues.recentSessions)
+    ? workbench?.queues.recentSessions
+    : [];
+  const pendingRequests = Array.isArray(workbench?.queues.pendingActionRequests)
+    ? workbench?.queues.pendingActionRequests
+    : [];
+  const recentExplanations = Array.isArray(workbench?.recentExplanations)
+    ? workbench.recentExplanations
+    : [];
   const timeline = Array.isArray(sessionDetail?.timeline) ? sessionDetail.timeline : [];
   const runbook = Array.isArray(workbench?.runbook) ? workbench.runbook : [];
-  const latestRationale = Array.isArray(latestExplanation?.rationale) ? latestExplanation.rationale : [];
-  const latestWarnings = Array.isArray(latestExplanation?.warnings) ? latestExplanation.warnings : [];
-  const planSteps = Array.isArray(sessionDetail?.latestPlan?.steps) ? sessionDetail.latestPlan.steps : [];
-  const evidence = Array.isArray(sessionDetail?.latestAnalysisRun?.evidence) ? sessionDetail.latestAnalysisRun.evidence : [];
+  const latestRationale = Array.isArray(latestExplanation?.rationale)
+    ? latestExplanation.rationale
+    : [];
+  const latestWarnings = Array.isArray(latestExplanation?.warnings)
+    ? latestExplanation.warnings
+    : [];
+  const planSteps = Array.isArray(sessionDetail?.latestPlan?.steps)
+    ? sessionDetail.latestPlan.steps
+    : [];
+  const evidence = Array.isArray(sessionDetail?.latestAnalysisRun?.evidence)
+    ? sessionDetail.latestAnalysisRun.evidence
+    : [];
   const conversation = buildAgentConversation({
     locale,
     prompt,
@@ -210,11 +262,11 @@ export default function AgentPage() {
     actionRequestStatus: latestActionRequest?.status || '',
   });
   const canRequestAction = Boolean(
-    sessionDetail?.session.id
-    && sessionDetail?.latestPlan?.requiresApproval
-    && sessionDetail?.latestPlan?.status === 'completed'
-    && sessionDetail?.latestAnalysisRun?.status === 'completed'
-    && latestActionRequest?.status !== 'pending_review',
+    sessionDetail?.session.id &&
+      sessionDetail?.latestPlan?.requiresApproval &&
+      sessionDetail?.latestPlan?.status === 'completed' &&
+      sessionDetail?.latestAnalysisRun?.status === 'completed' &&
+      latestActionRequest?.status !== 'pending_review'
   );
 
   const submitPrompt = async () => {
@@ -228,18 +280,34 @@ export default function AgentPage() {
     await requestAction(session?.user.id);
   };
 
-  const chatRoleClass: Record<string, string> = { user: agentChatUser, assistant: agentChatAssistant, system: agentChatSystem };
+  const chatRoleClass: Record<string, string> = {
+    user: agentChatUser,
+    assistant: agentChatAssistant,
+    system: agentChatSystem,
+  };
   const chatToneClass: Record<string, string> = { muted: agentChatMuted, warn: agentChatWarn };
 
   return (
     <>
       <SectionHeader routeKey="agent" />
-      <TopMeta items={[
-        { label: copy[locale].labels.marketClock, value: state.marketClock },
-        { label: copy[locale].terms.riskLevel, value: translateRiskLevel(locale, state.riskLevel), accent: true },
-        { label: locale === 'zh' ? '活跃会话' : 'Active Sessions', value: String(summary?.runningSessions ?? 0) },
-        { label: locale === 'zh' ? '待审批请求' : 'Pending Requests', value: String(summary?.pendingActionRequests ?? 0) },
-      ]} />
+      <TopMeta
+        items={[
+          { label: copy[locale].labels.marketClock, value: state.marketClock },
+          {
+            label: copy[locale].terms.riskLevel,
+            value: translateRiskLevel(locale, state.riskLevel),
+            accent: true,
+          },
+          {
+            label: locale === 'zh' ? '活跃会话' : 'Active Sessions',
+            value: String(summary?.runningSessions ?? 0),
+          },
+          {
+            label: locale === 'zh' ? '待审批请求' : 'Pending Requests',
+            value: String(summary?.pendingActionRequests ?? 0),
+          },
+        ]}
+      />
 
       <section className="hero-grid two-up">
         <div className="hero-card hero-card-primary">
@@ -255,21 +323,45 @@ export default function AgentPage() {
               : 'This is now a real Agent collaboration workbench: sessions, explanations, pending requests, and the operator trail all come from backend workbench aggregation instead of a simple tool demo.'}
           </div>
           <div className="settings-chip-row">
-            <button type="button" className="inline-link" onClick={() => refresh()} disabled={loading || running || requestingAction}>
-              {loading ? (locale === 'zh' ? '刷新中...' : 'Refreshing...') : (locale === 'zh' ? '刷新工作台' : 'Refresh Workbench')}
+            <button
+              type="button"
+              className="inline-link"
+              onClick={() => refresh()}
+              disabled={loading || running || requestingAction}
+            >
+              {loading
+                ? locale === 'zh'
+                  ? '刷新中...'
+                  : 'Refreshing...'
+                : locale === 'zh'
+                  ? '刷新工作台'
+                  : 'Refresh Workbench'}
             </button>
-            <a className="settings-chip" href="#agent-sessions">{locale === 'zh' ? '最近会话' : 'Recent Sessions'}</a>
-            <a className="settings-chip" href="#agent-explanation">{locale === 'zh' ? '解释详情' : 'Explanation Detail'}</a>
-            <a className="settings-chip" href="#agent-timeline">{locale === 'zh' ? '轨迹时间线' : 'Operator Timeline'}</a>
+            <a className="settings-chip" href="#agent-sessions">
+              {locale === 'zh' ? '最近会话' : 'Recent Sessions'}
+            </a>
+            <a className="settings-chip" href="#agent-explanation">
+              {locale === 'zh' ? '解释详情' : 'Explanation Detail'}
+            </a>
+            <a className="settings-chip" href="#agent-timeline">
+              {locale === 'zh' ? '轨迹时间线' : 'Operator Timeline'}
+            </a>
           </div>
         </div>
         <div className="hero-card">
-          <div className="card-eyebrow">{locale === 'zh' ? 'Latest Explanation' : 'Latest Explanation'}</div>
-          <div className="mini-metric">{latestExplanation?.thesis || (locale === 'zh' ? '等待新的分析结果' : 'Waiting for the next analysis result')}</div>
+          <div className="card-eyebrow">
+            {locale === 'zh' ? 'Latest Explanation' : 'Latest Explanation'}
+          </div>
+          <div className="mini-metric">
+            {latestExplanation?.thesis ||
+              (locale === 'zh' ? '等待新的分析结果' : 'Waiting for the next analysis result')}
+          </div>
           <div className="mini-copy">
             {locale === 'zh'
-              ? (latestExplanation?.recommendedNextStep || '运行一次新的分析后，这里会显示结构化解释和建议的下一步动作。')
-              : (latestExplanation?.recommendedNextStep || 'Run a new analysis to surface a structured explanation and the recommended next action here.')}
+              ? latestExplanation?.recommendedNextStep ||
+                '运行一次新的分析后，这里会显示结构化解释和建议的下一步动作。'
+              : latestExplanation?.recommendedNextStep ||
+                'Run a new analysis to surface a structured explanation and the recommended next action here.'}
           </div>
         </div>
       </section>
@@ -278,14 +370,18 @@ export default function AgentPage() {
         <article className="panel">
           <div className="panel-head">
             <div>
-              <div className="panel-title">{locale === 'zh' ? 'Agent Governance' : 'Agent Governance'}</div>
+              <div className="panel-title">
+                {locale === 'zh' ? 'Agent Governance' : 'Agent Governance'}
+              </div>
               <div className="panel-copy">
                 {locale === 'zh'
                   ? '查看当前 Agent 授权模式（Authority Mode）和今日运营指令（Daily Bias），确保 Agent 行为在人工监督范围内。'
                   : 'Review the current Agent authority mode and active daily bias instructions to keep Agent behaviour within human-supervised bounds.'}
               </div>
             </div>
-            <span className={`panel-badge ${authorityState?.mode === 'stopped' ? 'badge-warn' : 'badge-info'}`}>
+            <span
+              className={`panel-badge ${authorityState?.mode === 'stopped' ? 'badge-warn' : 'badge-info'}`}
+            >
               {authorityState?.mode || 'manual_only'}
             </span>
           </div>
@@ -293,7 +389,12 @@ export default function AgentPage() {
             <div className="focus-row">
               <div className="symbol-cell">
                 <strong>{locale === 'zh' ? 'Authority Mode' : 'Authority Mode'}</strong>
-                <span>{authorityState?.reason || (locale === 'zh' ? '尚未配置 Agent 治理策略。' : 'No agent governance policy configured.')}</span>
+                <span>
+                  {authorityState?.reason ||
+                    (locale === 'zh'
+                      ? '尚未配置 Agent 治理策略。'
+                      : 'No agent governance policy configured.')}
+                </span>
               </div>
               <div className="focus-metric">
                 <span>{locale === 'zh' ? '模式' : 'Mode'}</span>
@@ -309,8 +410,12 @@ export default function AgentPage() {
                 <strong>{locale === 'zh' ? 'Daily Bias' : 'Daily Bias'}</strong>
                 <span>
                   {dailyBiasInstructions.length
-                    ? (locale === 'zh' ? `${dailyBiasInstructions.length} 条活跃的今日运营指令正在影响本次会话。` : `${dailyBiasInstructions.length} active daily bias instruction${dailyBiasInstructions.length > 1 ? 's' : ''} affecting this session.`)
-                    : (locale === 'zh' ? '当前没有活跃的今日运营指令。' : 'No active daily bias instructions for this session.')}
+                    ? locale === 'zh'
+                      ? `${dailyBiasInstructions.length} 条活跃的今日运营指令正在影响本次会话。`
+                      : `${dailyBiasInstructions.length} active daily bias instruction${dailyBiasInstructions.length > 1 ? 's' : ''} affecting this session.`
+                    : locale === 'zh'
+                      ? '当前没有活跃的今日运营指令。'
+                      : 'No active daily bias instructions for this session.'}
                 </span>
               </div>
               <div className="focus-metric">
@@ -336,12 +441,28 @@ export default function AgentPage() {
 
       <section className={agentDialogueSection}>
         <article className={`panel ${agentDualViewPanel}`}>
-          <div className="panel-head"><div><div className="panel-title">{locale === 'zh' ? 'Agent Dialogue' : 'Agent Dialogue'}</div><div className="panel-copy">{locale === 'zh' ? '左侧保持连续对话，右侧固定展示当前会话洞察、计划步骤和受控交接，让聊天和运营工作台同时成立。' : 'Keep the running conversation on the left while the right rail stays anchored on session insight, plan steps, and controlled handoff.'}</div></div><div className={`panel-badge ${running ? 'badge-warn' : 'badge-info'}`}>{running ? 'RUNNING' : 'READY'}</div></div>
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">
+                {locale === 'zh' ? 'Agent Dialogue' : 'Agent Dialogue'}
+              </div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '左侧保持连续对话，右侧固定展示当前会话洞察、计划步骤和受控交接，让聊天和运营工作台同时成立。'
+                  : 'Keep the running conversation on the left while the right rail stays anchored on session insight, plan steps, and controlled handoff.'}
+              </div>
+            </div>
+            <div className={`panel-badge ${running ? 'badge-warn' : 'badge-info'}`}>
+              {running ? 'RUNNING' : 'READY'}
+            </div>
+          </div>
           <div className={agentDualView}>
             <div className={agentDialogueStage}>
               <div className={agentStageHeader}>
                 <div>
-                  <div className="card-eyebrow">{locale === 'zh' ? 'Conversation Thread' : 'Conversation Thread'}</div>
+                  <div className="card-eyebrow">
+                    {locale === 'zh' ? 'Conversation Thread' : 'Conversation Thread'}
+                  </div>
                   <div className="mini-copy">
                     {locale === 'zh'
                       ? '把每一次请求、规划、读取工具和最终解释都沉淀成连续线程。'
@@ -349,16 +470,37 @@ export default function AgentPage() {
                   </div>
                 </div>
                 <div className={agentStagePills}>
-                  <span className="settings-chip">{sessionDetail?.session.status || (locale === 'zh' ? '未选择会话' : 'No session')}</span>
-                  <span className="settings-chip">{sessionDetail?.session.latestIntent.kind || '--'}</span>
+                  <span className="settings-chip">
+                    {sessionDetail?.session.status ||
+                      (locale === 'zh' ? '未选择会话' : 'No session')}
+                  </span>
+                  <span className="settings-chip">
+                    {sessionDetail?.session.latestIntent.kind || '--'}
+                  </span>
                 </div>
               </div>
               <div className={agentChatTranscript}>
                 {!conversation.length ? (
-                  <EmptyState icon="💬" message={locale === 'zh' ? '当前还没有消息，先向 Agent 提一个分析问题。' : 'There are no messages yet. Start by asking the Agent for an analysis.'} />
+                  <EmptyState
+                    icon="💬"
+                    message={
+                      locale === 'zh'
+                        ? '当前还没有消息，先向 Agent 提一个分析问题。'
+                        : 'There are no messages yet. Start by asking the Agent for an analysis.'
+                    }
+                  />
                 ) : null}
                 {conversation.map((message) => (
-                  <div className={[agentChatMessage, chatRoleClass[message.role], chatToneClass[message.tone]].filter(Boolean).join(' ')} key={message.key}>
+                  <div
+                    className={[
+                      agentChatMessage,
+                      chatRoleClass[message.role],
+                      chatToneClass[message.tone],
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    key={message.key}
+                  >
                     <div className={agentChatMeta}>
                       <span>{message.label}</span>
                       <span>{message.role.toUpperCase()}</span>
@@ -367,7 +509,9 @@ export default function AgentPage() {
                   </div>
                 ))}
               </div>
-              <label className="field-label" htmlFor="agent-prompt-input">{locale === 'zh' ? '发给 Agent 的消息' : 'Message To Agent'}</label>
+              <label className="field-label" htmlFor="agent-prompt-input">
+                {locale === 'zh' ? '发给 Agent 的消息' : 'Message To Agent'}
+              </label>
               <div className={agentChatComposer}>
                 <textarea
                   id="agent-prompt-input"
@@ -381,7 +525,20 @@ export default function AgentPage() {
                       ? '发送后会进入 intent -> plan -> read-only analysis 流程，并把结果写回当前会话。'
                       : 'Sending a message enters the intent -> plan -> read-only analysis flow and writes the result back into the current session.'}
                   </div>
-                  <button type="button" className="settings-button" onClick={submitPrompt} disabled={running || !prompt.trim()}>{running ? (locale === 'zh' ? '运行中...' : 'Running...') : (locale === 'zh' ? '发送并分析' : 'Send And Analyze')}</button>
+                  <button
+                    type="button"
+                    className="settings-button"
+                    onClick={submitPrompt}
+                    disabled={running || !prompt.trim()}
+                  >
+                    {running
+                      ? locale === 'zh'
+                        ? '运行中...'
+                        : 'Running...'
+                      : locale === 'zh'
+                        ? '发送并分析'
+                        : 'Send And Analyze'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -390,14 +547,24 @@ export default function AgentPage() {
               <div className={agentInsightCard}>
                 <div className={agentInsightHeader}>
                   <div>
-                    <div className="card-eyebrow">{locale === 'zh' ? 'Session Pulse' : 'Session Pulse'}</div>
+                    <div className="card-eyebrow">
+                      {locale === 'zh' ? 'Session Pulse' : 'Session Pulse'}
+                    </div>
                     <div className="mini-copy">
                       {locale === 'zh'
                         ? '快速查看当前会话是否已经完成规划、分析和审批准备。'
                         : 'Scan whether this session is ready across planning, analysis, and approval handoff.'}
                     </div>
                   </div>
-                  <span className={`panel-badge ${canRequestAction ? 'badge-warn' : 'badge-info'}`}>{canRequestAction ? (locale === 'zh' ? '可审批' : 'APPROVABLE') : (locale === 'zh' ? '跟进中' : 'IN FLIGHT')}</span>
+                  <span className={`panel-badge ${canRequestAction ? 'badge-warn' : 'badge-info'}`}>
+                    {canRequestAction
+                      ? locale === 'zh'
+                        ? '可审批'
+                        : 'APPROVABLE'
+                      : locale === 'zh'
+                        ? '跟进中'
+                        : 'IN FLIGHT'}
+                  </span>
                 </div>
                 <div className={agentPulseGrid}>
                   <div className={agentPulseItem}>
@@ -422,7 +589,9 @@ export default function AgentPage() {
               <div className={agentInsightCard}>
                 <div className={agentInsightHeader}>
                   <div>
-                    <div className="card-eyebrow">{locale === 'zh' ? 'Plan Ladder' : 'Plan Ladder'}</div>
+                    <div className="card-eyebrow">
+                      {locale === 'zh' ? 'Plan Ladder' : 'Plan Ladder'}
+                    </div>
                     <div className="mini-copy">
                       {locale === 'zh'
                         ? '把当前会话的计划步骤和证据读取节奏固定在右侧。'
@@ -432,7 +601,14 @@ export default function AgentPage() {
                 </div>
                 <div className={agentStepStack}>
                   {!planSteps.length ? (
-                    <EmptyState icon="📋" message={locale === 'zh' ? '当前会话还没有计划步骤。' : 'No plan steps have been recorded for this session yet.'} />
+                    <EmptyState
+                      icon="📋"
+                      message={
+                        locale === 'zh'
+                          ? '当前会话还没有计划步骤。'
+                          : 'No plan steps have been recorded for this session yet.'
+                      }
+                    />
                   ) : null}
                   {planSteps.slice(0, 4).map((step) => (
                     <div className={agentStepCard} key={step.id}>
@@ -440,7 +616,9 @@ export default function AgentPage() {
                         <strong>{step.title}</strong>
                         <span>{step.status || '--'}</span>
                       </div>
-                      <div className={agentStepCopy}>{step.description || step.outputSummary || step.toolName || '--'}</div>
+                      <div className={agentStepCopy}>
+                        {step.description || step.outputSummary || step.toolName || '--'}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -449,7 +627,9 @@ export default function AgentPage() {
               <div className={agentInsightCard}>
                 <div className={agentInsightHeader}>
                   <div>
-                    <div className="card-eyebrow">{locale === 'zh' ? 'Evidence Snapshot' : 'Evidence Snapshot'}</div>
+                    <div className="card-eyebrow">
+                      {locale === 'zh' ? 'Evidence Snapshot' : 'Evidence Snapshot'}
+                    </div>
                     <div className="mini-copy">
                       {locale === 'zh'
                         ? '把最近的重要证据摘要固定出来，方便在聊天过程中随时对照。'
@@ -459,7 +639,14 @@ export default function AgentPage() {
                 </div>
                 <div className={agentStepStack}>
                   {!evidence.length ? (
-                    <EmptyState icon="🔍" message={locale === 'zh' ? '当前分析还没有证据摘要。' : 'No evidence snapshot is available for this analysis yet.'} />
+                    <EmptyState
+                      icon="🔍"
+                      message={
+                        locale === 'zh'
+                          ? '当前分析还没有证据摘要。'
+                          : 'No evidence snapshot is available for this analysis yet.'
+                      }
+                    />
                   ) : null}
                   {evidence.slice(0, 3).map((item) => (
                     <div className={agentStepCard} key={item.id}>
@@ -476,27 +663,46 @@ export default function AgentPage() {
               <div className={agentInsightCard}>
                 <div className={agentInsightHeader}>
                   <div>
-                    <div className="card-eyebrow">{locale === 'zh' ? 'Controlled Handoff' : 'Controlled Handoff'}</div>
+                    <div className="card-eyebrow">
+                      {locale === 'zh' ? 'Controlled Handoff' : 'Controlled Handoff'}
+                    </div>
                     <div className="mini-copy">
                       {latestActionRequest?.status === 'pending_review'
-                        ? (locale === 'zh' ? '当前会话已经有待审批的 action request。' : 'This session already has a pending action request.')
-                        : (locale === 'zh'
+                        ? locale === 'zh'
+                          ? '当前会话已经有待审批的 action request。'
+                          : 'This session already has a pending action request.'
+                        : locale === 'zh'
                           ? '当解释链路完成且 plan 需要审批时，可以把下一步建议正式提交为 action request。'
-                          : 'Once analysis is complete and the plan requires approval, the recommended next step can be submitted as a formal action request.')}
+                          : 'Once analysis is complete and the plan requires approval, the recommended next step can be submitted as a formal action request.'}
                     </div>
                   </div>
                   <span className="settings-chip">{latestActionRequest?.status || '--'}</span>
                 </div>
                 <div className={agentHandoffActions}>
-                  <button type="button" className="settings-button" onClick={submitActionRequest} disabled={!canRequestAction || requestingAction}>
+                  <button
+                    type="button"
+                    className="settings-button"
+                    onClick={submitActionRequest}
+                    disabled={!canRequestAction || requestingAction}
+                  >
                     {requestingAction
-                      ? (locale === 'zh' ? '提交中...' : 'Submitting...')
-                      : (locale === 'zh' ? '提交审批' : 'Request Approval')}
+                      ? locale === 'zh'
+                        ? '提交中...'
+                        : 'Submitting...'
+                      : locale === 'zh'
+                        ? '提交审批'
+                        : 'Request Approval'}
                   </button>
                   <div className="settings-chip-row">
-                    <a className="settings-chip" href="#agent-explanation">{locale === 'zh' ? '查看解释' : 'View Explanation'}</a>
-                    <a className="settings-chip" href="#agent-timeline">{locale === 'zh' ? '查看时间线' : 'View Timeline'}</a>
-                    <a className="settings-chip" href="#agent-sessions">{locale === 'zh' ? '切换会话' : 'Switch Session'}</a>
+                    <a className="settings-chip" href="#agent-explanation">
+                      {locale === 'zh' ? '查看解释' : 'View Explanation'}
+                    </a>
+                    <a className="settings-chip" href="#agent-timeline">
+                      {locale === 'zh' ? '查看时间线' : 'View Timeline'}
+                    </a>
+                    <a className="settings-chip" href="#agent-sessions">
+                      {locale === 'zh' ? '切换会话' : 'Switch Session'}
+                    </a>
                   </div>
                 </div>
               </div>
@@ -504,15 +710,24 @@ export default function AgentPage() {
               <div className={agentInsightCard}>
                 <div className={agentInsightHeader}>
                   <div>
-                    <div className="card-eyebrow">{locale === 'zh' ? 'Prompt Suggestions' : 'Prompt Suggestions'}</div>
+                    <div className="card-eyebrow">
+                      {locale === 'zh' ? 'Prompt Suggestions' : 'Prompt Suggestions'}
+                    </div>
                     <div className="mini-copy">
-                      {locale === 'zh' ? '点击建议可直接填入 composer。' : 'Use any suggestion to populate the composer instantly.'}
+                      {locale === 'zh'
+                        ? '点击建议可直接填入 composer。'
+                        : 'Use any suggestion to populate the composer instantly.'}
                     </div>
                   </div>
                 </div>
                 <div className={agentSuggestionList}>
                   {promptSuggestions[locale].map((item) => (
-                    <button type="button" className={agentSuggestionButton} key={item} onClick={() => setPrompt(item)}>
+                    <button
+                      type="button"
+                      className={agentSuggestionButton}
+                      key={item}
+                      onClick={() => setPrompt(item)}
+                    >
                       {item}
                     </button>
                   ))}
@@ -524,7 +739,7 @@ export default function AgentPage() {
       </section>
 
       <section className="panel-grid-wide panel-grid" id="agent-sessions">
-        <article className="panel" style={{gridColumn: '1 / -1'}}>
+        <article className="panel" style={{ gridColumn: '1 / -1' }}>
           <TabPanel
             tabs={[
               {
@@ -532,8 +747,25 @@ export default function AgentPage() {
                 label: locale === 'zh' ? 'Recent Sessions' : 'Recent Sessions',
                 content: (
                   <div className="focus-list focus-list-terminal panel-body panel-body-md">
-                    {loading && !recentSessions.length ? <EmptyState message={locale === 'zh' ? '正在加载 Agent 工作台...' : 'Loading agent workbench...'} /> : null}
-                    {!loading && !recentSessions.length ? <EmptyState icon="🤖" message={locale === 'zh' ? '当前还没有 agent 会话。' : 'No agent sessions have been recorded yet.'} /> : null}
+                    {loading && !recentSessions.length ? (
+                      <EmptyState
+                        message={
+                          locale === 'zh'
+                            ? '正在加载 Agent 工作台...'
+                            : 'Loading agent workbench...'
+                        }
+                      />
+                    ) : null}
+                    {!loading && !recentSessions.length ? (
+                      <EmptyState
+                        icon="🤖"
+                        message={
+                          locale === 'zh'
+                            ? '当前还没有 agent 会话。'
+                            : 'No agent sessions have been recorded yet.'
+                        }
+                      />
+                    ) : null}
                     {recentSessions.map((item) => (
                       <div className="focus-row" key={String(item.id)}>
                         <div className="symbol-cell">
@@ -545,8 +777,18 @@ export default function AgentPage() {
                           <strong>{String(item.status || '--')}</strong>
                         </div>
                         <div className="focus-metric">
-                          <button type="button" className="inline-link" onClick={() => selectSession(String(item.id || ''))}>
-                            {selectedSessionId === String(item.id || '') ? (locale === 'zh' ? '已选中' : 'Selected') : (locale === 'zh' ? '查看' : 'Open')}
+                          <button
+                            type="button"
+                            className="inline-link"
+                            onClick={() => selectSession(String(item.id || ''))}
+                          >
+                            {selectedSessionId === String(item.id || '')
+                              ? locale === 'zh'
+                                ? '已选中'
+                                : 'Selected'
+                              : locale === 'zh'
+                                ? '查看'
+                                : 'Open'}
                           </button>
                         </div>
                       </div>
@@ -556,10 +798,22 @@ export default function AgentPage() {
               },
               {
                 key: 'pending',
-                label: locale === 'zh' ? `Pending (${pendingRequests.length})` : `Pending (${pendingRequests.length})`,
+                label:
+                  locale === 'zh'
+                    ? `Pending (${pendingRequests.length})`
+                    : `Pending (${pendingRequests.length})`,
                 content: (
                   <div className="focus-list focus-list-terminal panel-body panel-body-md">
-                    {!pendingRequests.length ? <EmptyState icon="✅" message={locale === 'zh' ? '当前没有待审批的 agent 请求。' : 'There are no pending agent requests right now.'} /> : null}
+                    {!pendingRequests.length ? (
+                      <EmptyState
+                        icon="✅"
+                        message={
+                          locale === 'zh'
+                            ? '当前没有待审批的 agent 请求。'
+                            : 'There are no pending agent requests right now.'
+                        }
+                      />
+                    ) : null}
                     {pendingRequests.map((item) => (
                       <div className="focus-row" key={String(item.id)}>
                         <div className="symbol-cell">
@@ -585,7 +839,7 @@ export default function AgentPage() {
       </section>
 
       <section className="panel-grid-wide panel-grid" id="agent-explanation">
-        <article className="panel" style={{gridColumn: '1 / -1'}}>
+        <article className="panel" style={{ gridColumn: '1 / -1' }}>
           <TabPanel
             tabs={[
               {
@@ -595,8 +849,16 @@ export default function AgentPage() {
                   <div className="focus-list panel-body panel-body-lg">
                     <div className="focus-row">
                       <div className="symbol-cell">
-                        <strong>{latestExplanation?.thesis || (locale === 'zh' ? '等待解释结果' : 'Waiting for explanation')}</strong>
-                        <span>{sessionDetail?.latestAnalysisRun?.summary || (locale === 'zh' ? '运行一次分析后，这里会显示结构化结论。' : 'Run an analysis to surface a structured conclusion here.')}</span>
+                        <strong>
+                          {latestExplanation?.thesis ||
+                            (locale === 'zh' ? '等待解释结果' : 'Waiting for explanation')}
+                        </strong>
+                        <span>
+                          {sessionDetail?.latestAnalysisRun?.summary ||
+                            (locale === 'zh'
+                              ? '运行一次分析后，这里会显示结构化结论。'
+                              : 'Run an analysis to surface a structured conclusion here.')}
+                        </span>
                       </div>
                     </div>
                     {latestRationale.map((item) => (
@@ -611,7 +873,11 @@ export default function AgentPage() {
                       <div className="focus-row">
                         <div className="symbol-cell">
                           <strong>{locale === 'zh' ? '理由' : 'Rationale'}</strong>
-                          <span>{locale === 'zh' ? '当前解释还没有额外的理由条目。' : 'No additional rationale items are available for this explanation yet.'}</span>
+                          <span>
+                            {locale === 'zh'
+                              ? '当前解释还没有额外的理由条目。'
+                              : 'No additional rationale items are available for this explanation yet.'}
+                          </span>
                         </div>
                       </div>
                     ) : null}
@@ -627,7 +893,11 @@ export default function AgentPage() {
                       <div className="focus-row">
                         <div className="symbol-cell">
                           <strong>{locale === 'zh' ? '警告' : 'Warning'}</strong>
-                          <span>{locale === 'zh' ? '当前解释还没有新的警告条目。' : 'No warning items have been raised for this explanation yet.'}</span>
+                          <span>
+                            {locale === 'zh'
+                              ? '当前解释还没有新的警告条目。'
+                              : 'No warning items have been raised for this explanation yet.'}
+                          </span>
                         </div>
                       </div>
                     ) : null}
@@ -640,7 +910,12 @@ export default function AgentPage() {
                     <div className="focus-row">
                       <div className="symbol-cell">
                         <strong>{locale === 'zh' ? '动作请求' : 'Action Request'}</strong>
-                        <span>{latestActionRequest?.summary || (locale === 'zh' ? '当前会话还没有提交 action request。' : 'No action request has been submitted for this session yet.')}</span>
+                        <span>
+                          {latestActionRequest?.summary ||
+                            (locale === 'zh'
+                              ? '当前会话还没有提交 action request。'
+                              : 'No action request has been submitted for this session yet.')}
+                        </span>
                       </div>
                       <div className="focus-metric">
                         <span>{locale === 'zh' ? '状态' : 'Status'}</span>
@@ -656,10 +931,22 @@ export default function AgentPage() {
               },
               {
                 key: 'timeline',
-                label: locale === 'zh' ? `Timeline (${timeline.length})` : `Timeline (${timeline.length})`,
+                label:
+                  locale === 'zh'
+                    ? `Timeline (${timeline.length})`
+                    : `Timeline (${timeline.length})`,
                 content: (
                   <div className="focus-list focus-list-terminal panel-body panel-body-md">
-                    {!timeline.length ? <EmptyState icon="📅" message={locale === 'zh' ? '当前会话还没有轨迹记录。' : 'This session does not have a timeline yet.'} /> : null}
+                    {!timeline.length ? (
+                      <EmptyState
+                        icon="📅"
+                        message={
+                          locale === 'zh'
+                            ? '当前会话还没有轨迹记录。'
+                            : 'This session does not have a timeline yet.'
+                        }
+                      />
+                    ) : null}
                     {timeline.map((item) => (
                       <div className="focus-row" key={item.id}>
                         <div className="symbol-cell">
@@ -684,7 +971,16 @@ export default function AgentPage() {
                 label: locale === 'zh' ? `Tools (${tools.length})` : `Tools (${tools.length})`,
                 content: (
                   <div className="focus-list panel-body panel-body-md">
-                    {!tools.length ? <EmptyState icon="🔧" message={locale === 'zh' ? '当前没有可用的白名单工具。' : 'No allowlisted tools are available right now.'} /> : null}
+                    {!tools.length ? (
+                      <EmptyState
+                        icon="🔧"
+                        message={
+                          locale === 'zh'
+                            ? '当前没有可用的白名单工具。'
+                            : 'No allowlisted tools are available right now.'
+                        }
+                      />
+                    ) : null}
                     {tools.map((tool) => (
                       <div className="focus-row" key={tool.name}>
                         <div className="symbol-cell">
@@ -706,7 +1002,10 @@ export default function AgentPage() {
               },
               {
                 key: 'runbook',
-                label: locale === 'zh' ? `Runbook (${runbook.length + recentExplanations.length})` : `Runbook (${runbook.length + recentExplanations.length})`,
+                label:
+                  locale === 'zh'
+                    ? `Runbook (${runbook.length + recentExplanations.length})`
+                    : `Runbook (${runbook.length + recentExplanations.length})`,
                 content: (
                   <div className="focus-list panel-body panel-body-md">
                     {runbook.map((item) => (
@@ -732,13 +1031,26 @@ export default function AgentPage() {
                           <strong>{item.warningCount}</strong>
                         </div>
                         <div className="focus-metric">
-                          <button type="button" className="inline-link" onClick={() => selectSession(item.sessionId)}>
+                          <button
+                            type="button"
+                            className="inline-link"
+                            onClick={() => selectSession(item.sessionId)}
+                          >
                             {locale === 'zh' ? '查看会话' : 'Open Session'}
                           </button>
                         </div>
                       </div>
                     ))}
-                    {!runbook.length && !recentExplanations.length ? <EmptyState icon="📖" message={locale === 'zh' ? '工作台还没有形成 runbook 或 explanation 摘要。' : 'The workbench does not have a runbook or explanation summary yet.'} /> : null}
+                    {!runbook.length && !recentExplanations.length ? (
+                      <EmptyState
+                        icon="📖"
+                        message={
+                          locale === 'zh'
+                            ? '工作台还没有形成 runbook 或 explanation 摘要。'
+                            : 'The workbench does not have a runbook or explanation summary yet.'
+                        }
+                      />
+                    ) : null}
                   </div>
                 ),
               },

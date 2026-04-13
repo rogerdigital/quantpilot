@@ -10,7 +10,12 @@ export function createExecutionRunRepository(store) {
   }
 
   function writeRuns(items) {
-    trimAndSave(store, RUNS_FILE, items.map((item) => createExecutionRunEntry(item)), 180);
+    trimAndSave(
+      store,
+      RUNS_FILE,
+      items.map((item) => createExecutionRunEntry(item)),
+      180
+    );
   }
 
   function readOrderStates() {
@@ -18,15 +23,24 @@ export function createExecutionRunRepository(store) {
   }
 
   function writeOrderStates(items) {
-    trimAndSave(store, ORDERS_FILE, items.map((item) => createExecutionOrderStateEntry(item)), 600);
+    trimAndSave(
+      store,
+      ORDERS_FILE,
+      items.map((item) => createExecutionOrderStateEntry(item)),
+      600
+    );
   }
 
   return {
     listExecutionRuns(limit = 50, filter = {}) {
       return readRuns()
-        .filter((item) => !filter.executionPlanId || item.executionPlanId === filter.executionPlanId)
+        .filter(
+          (item) => !filter.executionPlanId || item.executionPlanId === filter.executionPlanId
+        )
         .filter((item) => !filter.strategyId || item.strategyId === filter.strategyId)
-        .filter((item) => !filter.lifecycleStatus || item.lifecycleStatus === filter.lifecycleStatus)
+        .filter(
+          (item) => !filter.lifecycleStatus || item.lifecycleStatus === filter.lifecycleStatus
+        )
         .slice(0, limit);
     },
     getExecutionRun(runId) {
@@ -60,7 +74,9 @@ export function createExecutionRunRepository(store) {
     },
     listExecutionOrderStates(limit = 200, filter = {}) {
       return readOrderStates()
-        .filter((item) => !filter.executionPlanId || item.executionPlanId === filter.executionPlanId)
+        .filter(
+          (item) => !filter.executionPlanId || item.executionPlanId === filter.executionPlanId
+        )
         .filter((item) => !filter.executionRunId || item.executionRunId === filter.executionRunId)
         .slice(0, limit);
     },

@@ -19,7 +19,8 @@ const DEFAULT_BACKTEST_RUNS = [
     sharpe: 1.39,
     winRatePct: 56.4,
     turnoverPct: 138,
-    summary: 'Return and drawdown remain inside the current promotion threshold, suitable for candidate review.',
+    summary:
+      'Return and drawdown remain inside the current promotion threshold, suitable for candidate review.',
     requestedBy: 'research-bot',
     dataSource: 'control-plane-store.backtest-runs',
     createdAt: '2026-03-10T00:15:00.000Z',
@@ -39,7 +40,8 @@ const DEFAULT_BACKTEST_RUNS = [
     sharpe: 0.96,
     winRatePct: 61.2,
     turnoverPct: 184,
-    summary: 'Win rate is acceptable, but drawdown breaches the current 10% review gate and requires explanation.',
+    summary:
+      'Win rate is acceptable, but drawdown breaches the current 10% review gate and requires explanation.',
     requestedBy: 'research-bot',
     dataSource: 'control-plane-store.backtest-runs',
     createdAt: '2026-03-10T00:35:00.000Z',
@@ -58,7 +60,8 @@ const DEFAULT_BACKTEST_RUNS = [
     sharpe: 0,
     winRatePct: 0,
     turnoverPct: 0,
-    summary: 'Long-horizon factor rotation run is rebuilding monthly allocation buckets and cost assumptions.',
+    summary:
+      'Long-horizon factor rotation run is rebuilding monthly allocation buckets and cost assumptions.',
     requestedBy: 'research-bot',
     dataSource: 'control-plane-store.backtest-runs',
     createdAt: '2026-03-10T01:10:00.000Z',
@@ -122,7 +125,12 @@ export function createBacktestRunRepository(store) {
   }
 
   function writeRuns(runs) {
-    trimAndSave(store, FILENAME, runs.map((entry) => createBacktestRunEntry(entry)), 300);
+    trimAndSave(
+      store,
+      FILENAME,
+      runs.map((entry) => createBacktestRunEntry(entry)),
+      300
+    );
   }
 
   return {

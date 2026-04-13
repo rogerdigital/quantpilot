@@ -1,12 +1,16 @@
 // @ts-nocheck
-import test from 'node:test';
+
 import assert from 'node:assert/strict';
+import test from 'node:test';
+import {
+  assessAgentActionRequestRisk,
+  assessExecutionCandidate,
+} from '../../../apps/api/src/modules/risk/service.js';
+import { buildStrategyExecutionCandidate } from '../../../apps/api/src/modules/strategy/service.js';
+import { createTradingState } from '../../../apps/api/test/helpers/create-trading-state.js';
+import { createControlPlaneRuntime } from '../../control-plane-runtime/src/index.js';
 import { createControlPlaneContext } from '../../control-plane-store/src/context.js';
 import { createMemoryStore } from '../../control-plane-store/test/helpers/memory-store.js';
-import { createControlPlaneRuntime } from '../../control-plane-runtime/src/index.js';
-import { createTradingState } from '../../../apps/api/test/helpers/create-trading-state.js';
-import { assessAgentActionRequestRisk, assessExecutionCandidate } from '../../../apps/api/src/modules/risk/service.js';
-import { buildStrategyExecutionCandidate } from '../../../apps/api/src/modules/strategy/service.js';
 import { executeCycleWorkflow, executeQueuedWorkflow, executeStateWorkflow } from '../src/index.js';
 
 function refreshSummaryForRuntime(runtime) {
@@ -19,13 +23,24 @@ function refreshSummaryForRuntime(runtime) {
     runningRuns: runs.filter((run) => run.status === 'running').length,
     completedRuns: completedRuns.length,
     failedRuns: runs.filter((run) => run.status === 'failed').length,
-    candidateStrategies: strategies.filter((item) => ['candidate', 'paper', 'live'].includes(item.status)).length,
+    candidateStrategies: strategies.filter((item) =>
+      ['candidate', 'paper', 'live'].includes(item.status)
+    ).length,
     promotedStrategies: strategies.filter((item) => ['paper', 'live'].includes(item.status)).length,
     averageSharpe: completedRuns.length
-      ? Number((completedRuns.reduce((sum, run) => sum + run.sharpe, 0) / completedRuns.length).toFixed(2))
+      ? Number(
+          (completedRuns.reduce((sum, run) => sum + run.sharpe, 0) / completedRuns.length).toFixed(
+            2
+          )
+        )
       : 0,
     averageReturnPct: completedRuns.length
-      ? Number((completedRuns.reduce((sum, run) => sum + run.annualizedReturnPct, 0) / completedRuns.length).toFixed(2))
+      ? Number(
+          (
+            completedRuns.reduce((sum, run) => sum + run.annualizedReturnPct, 0) /
+            completedRuns.length
+          ).toFixed(2)
+        )
       : 0,
     reviewQueue: runs.filter((run) => run.status === 'needs_review').length,
     dataSource: 'task-workflow-engine.test',
@@ -74,19 +89,22 @@ function createEngineContext() {
 
 test('cycle workflow execution persists a completed workflow', async () => {
   const context = createEngineContext();
-  const result = await executeCycleWorkflow({
-    cycle: 3,
-    mode: 'autopilot',
-    riskLevel: 'NORMAL',
-    decisionSummary: 'engine cycle',
-    marketClock: '2026-03-10 10:00:00',
-    pendingApprovals: 0,
-    liveIntentCount: 0,
-    brokerConnected: true,
-    marketConnected: true,
-    liveTradeEnabled: false,
-    pendingLiveIntents: [],
-  }, context);
+  const result = await executeCycleWorkflow(
+    {
+      cycle: 3,
+      mode: 'autopilot',
+      riskLevel: 'NORMAL',
+      decisionSummary: 'engine cycle',
+      marketClock: '2026-03-10 10:00:00',
+      pendingApprovals: 0,
+      liveIntentCount: 0,
+      brokerConnected: true,
+      marketConnected: true,
+      liveTradeEnabled: false,
+      pendingLiveIntents: [],
+    },
+    context
+  );
 
   assert.equal(result.ok, true);
   assert.equal(result.workflow.status, 'completed');
@@ -99,7 +117,10 @@ test('state workflow execution persists a completed workflow and nested cycle ru
 
   assert.equal(result.ok, true);
   assert.equal(result.workflow.workflowId, 'task-orchestrator.state-run');
-  assert.equal(context.listWorkflowRuns().some((item) => item.workflowId === 'task-orchestrator.cycle-run'), true);
+  assert.equal(
+    context.listWorkflowRuns().some((item) => item.workflowId === 'task-orchestrator.cycle-run'),
+    true
+  );
 });
 
 test('queued workflow dispatcher executes manual-review workflows', async () => {
@@ -223,11 +244,17 @@ test('queued workflow dispatcher executes backtest workflows and refreshes resea
   assert.equal(result.workflow.status, 'completed');
   assert.equal(context.listBacktestRuns().length >= 1, true);
   assert.equal(context.listResearchTasks().length >= 1, true);
-  assert.equal(context.listBacktestResultsForRun(context.listBacktestRuns()[0].id).length >= 1, true);
+  assert.equal(
+    context.listBacktestResultsForRun(context.listBacktestRuns()[0].id).length >= 1,
+    true
+  );
   assert.equal(context.listResearchTasks()[0].taskType, 'backtest-run');
   assert.equal(context.listResearchTasks()[0].status, context.listBacktestRuns()[0].status);
   assert.equal(context.listResearchTasks()[0].workflowRunId, result.workflow.id);
-  assert.equal(result.workflow.result.backtestResultId, context.listBacktestResultsForRun(context.listBacktestRuns()[0].id)[0].id);
+  assert.equal(
+    result.workflow.result.backtestResultId,
+    context.listBacktestResultsForRun(context.listBacktestRuns()[0].id)[0].id
+  );
   assert.equal(typeof context.getResearchSummary().averageSharpe, 'number');
 });
 
@@ -259,12 +286,19 @@ test('queued workflow dispatcher executes research report workflows and persists
   });
   const claimed = context.claimQueuedWorkflowRuns({ worker: 'engine-worker' });
 
-  const reportWorkflow = claimed.workflows.find((item) => item.workflowId === 'task-orchestrator.research-report');
+  const reportWorkflow = claimed.workflows.find(
+    (item) => item.workflowId === 'task-orchestrator.research-report'
+  );
   const result = await executeQueuedWorkflow(reportWorkflow, context);
 
   assert.equal(result.ok, true);
   assert.equal(result.workflow.status, 'completed');
   assert.equal(context.listResearchReports().length >= 1, true);
   assert.equal(context.listResearchReports()[0].evaluationId, evaluation.id);
-  assert.equal(context.listResearchTasks().some((item) => item.taskType === 'research-report' && item.status === 'completed'), true);
+  assert.equal(
+    context
+      .listResearchTasks()
+      .some((item) => item.taskType === 'research-report' && item.status === 'completed'),
+    true
+  );
 });

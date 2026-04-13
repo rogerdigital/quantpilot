@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
 import { getMonitoringStatus } from '../monitoring/service.js';
-import { getOperationsMaintenanceSnapshot } from './maintenance-service.js';
 import { isSchedulerAttentionStatus } from '../scheduler/service.js';
+import { getOperationsMaintenanceSnapshot } from './maintenance-service.js';
 
 const ACK_OVERDUE_HOURS = 1;
 const STALE_HOURS = 24;
@@ -41,16 +41,19 @@ function buildRunbookEntries(input) {
       key: 'stabilize-connectivity',
       priority: 'now',
       title: 'Stabilize connectivity',
-      detail: 'Broker, market, or worker health is degraded and should be stabilized before deeper triage.',
+      detail:
+        'Broker, market, or worker health is degraded and should be stabilized before deeper triage.',
       count: input.connectivityIssues,
     });
   }
   if (input.queuePressure > 0) {
     entries.push({
       key: 'drain-queues',
-      priority: input.queueBacklogStatus === 'critical' || input.queuePressure >= 5 ? 'now' : 'next',
+      priority:
+        input.queueBacklogStatus === 'critical' || input.queuePressure >= 5 ? 'now' : 'next',
       title: 'Drain queue backlog',
-      detail: 'Pending notification, risk scan, or agent review work is building up in the control plane.',
+      detail:
+        'Pending notification, risk scan, or agent review work is building up in the control plane.',
       count: input.queuePressure,
     });
   }
@@ -59,7 +62,8 @@ function buildRunbookEntries(input) {
       key: 'review-retry-posture',
       priority: input.retryScheduledWorkflows >= 3 ? 'now' : 'next',
       title: 'Review retry posture',
-      detail: 'Retry-scheduled workflows are building up and should be checked for repeated failures or blocked dependencies.',
+      detail:
+        'Retry-scheduled workflows are building up and should be checked for repeated failures or blocked dependencies.',
       count: input.retryScheduledWorkflows,
     });
   }
@@ -68,7 +72,8 @@ function buildRunbookEntries(input) {
       key: 'triage-critical-incidents',
       priority: 'now',
       title: 'Triage critical incidents',
-      detail: 'Critical incidents remain unresolved and should be moved into active investigation or mitigation.',
+      detail:
+        'Critical incidents remain unresolved and should be moved into active investigation or mitigation.',
       count: input.criticalIncidents,
     });
   }
@@ -77,7 +82,8 @@ function buildRunbookEntries(input) {
       key: 'assign-incident-owners',
       priority: 'next',
       title: 'Assign incident owners',
-      detail: 'Unassigned incidents are still sitting in the queue without a single accountable operator.',
+      detail:
+        'Unassigned incidents are still sitting in the queue without a single accountable operator.',
       count: input.unassignedIncidents,
     });
   }
@@ -86,7 +92,8 @@ function buildRunbookEntries(input) {
       key: 'clear-stale-incidents',
       priority: 'next',
       title: 'Clear stale incidents',
-      detail: 'Incidents older than the active response window need a mitigation update or explicit closeout.',
+      detail:
+        'Incidents older than the active response window need a mitigation update or explicit closeout.',
       count: input.staleIncidents,
     });
   }
@@ -95,7 +102,8 @@ function buildRunbookEntries(input) {
       key: 'review-scheduler-attention',
       priority: 'next',
       title: 'Review scheduler attention items',
-      detail: 'Scheduler ticks include non-healthy states that may signal timeline drift or missed windows.',
+      detail:
+        'Scheduler ticks include non-healthy states that may signal timeline drift or missed windows.',
       count: input.schedulerAttention,
     });
   }
@@ -104,7 +112,8 @@ function buildRunbookEntries(input) {
       key: 'refresh-worker-capacity',
       priority: 'now',
       title: 'Refresh worker capacity',
-      detail: 'One or more workers have stale heartbeats and may be failing to keep up with queue demand.',
+      detail:
+        'One or more workers have stale heartbeats and may be failing to keep up with queue demand.',
       count: input.staleWorkers,
     });
   }
@@ -113,7 +122,8 @@ function buildRunbookEntries(input) {
       key: 'follow-control-plane-trail',
       priority: 'next',
       title: 'Follow control-plane trail',
-      detail: 'Recent control-plane notifications and audit records should be reviewed together for operator context.',
+      detail:
+        'Recent control-plane notifications and audit records should be reviewed together for operator context.',
       count: input.controlPlaneTrail,
     });
   }
@@ -153,7 +163,8 @@ function buildObservabilitySummary(monitoring) {
   return {
     posture: 'healthy',
     headline: 'Worker, workflow, and queue posture are stable.',
-    detail: 'Recent worker heartbeats, workflow completions, and queue depth are all within the normal operating envelope.',
+    detail:
+      'Recent worker heartbeats, workflow completions, and queue depth are all within the normal operating envelope.',
   };
 }
 
@@ -179,12 +190,18 @@ function buildPersistenceSummary(maintenance) {
     pending: [],
     upToDate: true,
   };
-  const latestMigration = Array.isArray(manifest?.migrations) && manifest.migrations.length
-    ? manifest.migrations[manifest.migrations.length - 1]
-    : null;
+  const latestMigration =
+    Array.isArray(manifest?.migrations) && manifest.migrations.length
+      ? manifest.migrations[manifest.migrations.length - 1]
+      : null;
   const pendingCount = Array.isArray(migrationPlan.pending) ? migrationPlan.pending.length : 0;
-  const storageModel = manifest?.storageModel || manifest?.persistence || maintenance?.storageAdapter?.persistence || 'filesystem-json';
-  const hasReadablePlan = migrationPlan.currentVersion !== null && migrationPlan.targetVersion !== null;
+  const storageModel =
+    manifest?.storageModel ||
+    manifest?.persistence ||
+    maintenance?.storageAdapter?.persistence ||
+    'filesystem-json';
+  const hasReadablePlan =
+    migrationPlan.currentVersion !== null && migrationPlan.targetVersion !== null;
   let posture = 'healthy';
   let headline = 'Persistence posture is current.';
   let detail = `The ${storageModel} backend is aligned with schema version ${manifest?.schemaVersion ?? 'unknown'}.`;
@@ -193,7 +210,8 @@ function buildPersistenceSummary(maintenance) {
   if (!manifest || !hasReadablePlan) {
     posture = 'degraded';
     headline = 'Persistence metadata needs inspection.';
-    detail = 'Manifest or migration planning data is incomplete, so maintenance posture should be reviewed before making changes.';
+    detail =
+      'Manifest or migration planning data is incomplete, so maintenance posture should be reviewed before making changes.';
     recommendedAction = 'Inspect maintenance posture before making changes.';
   } else if (!migrationPlan.upToDate || pendingCount > 0) {
     posture = 'attention';
@@ -233,10 +251,15 @@ export async function getOperationsWorkbench(options = {}) {
     since,
   });
   const unresolvedIncidents = incidents.filter((item) => item.status !== 'resolved');
-  const staleIncidents = unresolvedIncidents.filter((item) => getAgeHours(item.updatedAt || item.createdAt) >= STALE_HOURS);
+  const staleIncidents = unresolvedIncidents.filter(
+    (item) => getAgeHours(item.updatedAt || item.createdAt) >= STALE_HOURS
+  );
   const unassignedIncidents = unresolvedIncidents.filter((item) => !item.owner);
   const criticalIncidents = unresolvedIncidents.filter((item) => item.severity === 'critical');
-  const ackOverdueIncidents = unresolvedIncidents.filter((item) => !item.acknowledgedAt && getAgeHours(item.updatedAt || item.createdAt) >= ACK_OVERDUE_HOURS);
+  const ackOverdueIncidents = unresolvedIncidents.filter(
+    (item) =>
+      !item.acknowledgedAt && getAgeHours(item.updatedAt || item.createdAt) >= ACK_OVERDUE_HOURS
+  );
   const monitoringAlerts = controlPlaneRuntime.listMonitoringAlerts(limit, {
     since,
   });
@@ -250,22 +273,39 @@ export async function getOperationsWorkbench(options = {}) {
     since,
   });
 
-  const schedulerAttention = schedulerTicks.filter((item) => isSchedulerAttentionStatus(item.status));
-  const connectivityIssues = countBy([
-    monitoring.services.broker.status,
-    monitoring.services.market.status,
-    monitoring.services.worker.status,
-  ], (item) => item !== 'healthy');
-  const criticalSignals = monitoringAlerts.filter((item) => item.level === 'critical').length
-    + criticalIncidents.length
-    + schedulerAttention.filter((item) => item.status === 'critical').length
-    + countBy(notifications, (item) => item.level === 'critical');
-  const warnSignals = monitoringAlerts.filter((item) => item.level === 'warn').length
-    + ackOverdueIncidents.length
-    + countBy(notifications, (item) => item.level === 'warn');
+  const schedulerAttention = schedulerTicks.filter((item) =>
+    isSchedulerAttentionStatus(item.status)
+  );
+  const connectivityIssues = countBy(
+    [
+      monitoring.services.broker.status,
+      monitoring.services.market.status,
+      monitoring.services.worker.status,
+    ],
+    (item) => item !== 'healthy'
+  );
+  const criticalSignals =
+    monitoringAlerts.filter((item) => item.level === 'critical').length +
+    criticalIncidents.length +
+    schedulerAttention.filter((item) => item.status === 'critical').length +
+    countBy(notifications, (item) => item.level === 'critical');
+  const warnSignals =
+    monitoringAlerts.filter((item) => item.level === 'warn').length +
+    ackOverdueIncidents.length +
+    countBy(notifications, (item) => item.level === 'warn');
   const queuePressure = monitoring.services.queues.totalPending;
-  const controlPlaneTrail = countBy(notifications, (item) => item.source === 'control-plane' || item.source === 'workflow-control')
-    + countBy(auditRecords, (item) => item.type === 'workflow' || item.type === 'execution-plan' || item.type === 'agent-action-request');
+  const controlPlaneTrail =
+    countBy(
+      notifications,
+      (item) => item.source === 'control-plane' || item.source === 'workflow-control'
+    ) +
+    countBy(
+      auditRecords,
+      (item) =>
+        item.type === 'workflow' ||
+        item.type === 'execution-plan' ||
+        item.type === 'agent-action-request'
+    );
   const observability = buildObservabilitySummary(monitoring);
 
   return {
@@ -310,7 +350,11 @@ export async function getOperationsWorkbench(options = {}) {
       {
         key: 'incidents',
         title: 'Incidents',
-        status: criticalIncidents.length ? 'critical' : (staleIncidents.length || unassignedIncidents.length ? 'warn' : 'healthy'),
+        status: criticalIncidents.length
+          ? 'critical'
+          : staleIncidents.length || unassignedIncidents.length
+            ? 'warn'
+            : 'healthy',
         detail: `${unresolvedIncidents.length} unresolved incidents, ${staleIncidents.length} stale, ${unassignedIncidents.length} unassigned.`,
         primaryCount: criticalIncidents.length,
         secondaryCount: staleIncidents.length + unassignedIncidents.length,
@@ -319,7 +363,11 @@ export async function getOperationsWorkbench(options = {}) {
       {
         key: 'scheduler',
         title: 'Scheduler',
-        status: schedulerAttention.some((item) => item.status === 'critical') ? 'critical' : (schedulerAttention.length ? 'warn' : 'healthy'),
+        status: schedulerAttention.some((item) => item.status === 'critical')
+          ? 'critical'
+          : schedulerAttention.length
+            ? 'warn'
+            : 'healthy',
         detail: `${schedulerTicks.length} scheduler ticks observed with ${schedulerAttention.length} attention items.`,
         primaryCount: schedulerAttention.length,
         secondaryCount: countBy(schedulerTicks, (item) => item.phase === 'INTRADAY'),
@@ -328,7 +376,7 @@ export async function getOperationsWorkbench(options = {}) {
       {
         key: 'connectivity',
         title: 'Connectivity',
-        status: connectivityIssues >= 2 ? 'critical' : (connectivityIssues ? 'warn' : 'healthy'),
+        status: connectivityIssues >= 2 ? 'critical' : connectivityIssues ? 'warn' : 'healthy',
         detail: `${connectivityIssues} connectivity surfaces degraded across broker, market, and worker health.`,
         primaryCount: connectivityIssues,
         secondaryCount: queuePressure,
@@ -339,9 +387,19 @@ export async function getOperationsWorkbench(options = {}) {
         title: 'Control Plane',
         status: controlPlaneTrail > 0 ? 'warn' : 'healthy',
         detail: `${controlPlaneTrail} control-plane notifications and audit records need coordinated review.`,
-        primaryCount: countBy(notifications, (item) => item.level === 'critical' || item.level === 'warn'),
-        secondaryCount: countBy(auditRecords, (item) => item.type === 'workflow' || item.type === 'execution-plan' || item.type === 'agent-action-request'),
-        updatedAt: notifications[0]?.createdAt || auditRecords[0]?.createdAt || monitoring.generatedAt,
+        primaryCount: countBy(
+          notifications,
+          (item) => item.level === 'critical' || item.level === 'warn'
+        ),
+        secondaryCount: countBy(
+          auditRecords,
+          (item) =>
+            item.type === 'workflow' ||
+            item.type === 'execution-plan' ||
+            item.type === 'agent-action-request'
+        ),
+        updatedAt:
+          notifications[0]?.createdAt || auditRecords[0]?.createdAt || monitoring.generatedAt,
       },
     ],
     runbook: buildRunbookEntries({

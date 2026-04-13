@@ -14,7 +14,7 @@ export class ApiPermissionError extends Error {
     status: number,
     missingPermission?: string,
     permission?: { id: string; label: string; summary: string; scope?: string },
-    help?: string,
+    help?: string
   ) {
     super(message);
     this.name = 'ApiPermissionError';
@@ -52,7 +52,7 @@ export async function assertOk(response: Response) {
     response.status,
     payload?.missingPermission,
     payload?.permission,
-    payload?.help,
+    payload?.help
   );
 }
 

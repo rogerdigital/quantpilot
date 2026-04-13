@@ -1,4 +1,4 @@
-import { style, globalStyle } from '@vanilla-extract/css';
+import { globalStyle, style } from '@vanilla-extract/css';
 
 /* ── AGENT LAYOUT ───────────────────────────────────────── */
 
@@ -162,7 +162,8 @@ export const agentSuggestionButton = style({
   cursor: 'pointer',
   position: 'relative',
   overflow: 'hidden',
-  transition: 'border-color 150ms ease, box-shadow 150ms ease, background 150ms ease, transform 120ms ease',
+  transition:
+    'border-color 150ms ease, box-shadow 150ms ease, background 150ms ease, transform 120ms ease',
   ':hover': {
     borderColor: 'rgba(0, 212, 255, 0.22)',
     boxShadow: '0 0 14px rgba(0, 212, 255, 0.08)',
@@ -203,7 +204,8 @@ export const agentChatTranscript = style({
   flexDirection: 'column',
   gap: '12px',
   animation: 'fade-in 200ms ease',
-  boxShadow: 'inset 0 0 60px rgba(0,0,0,.5), 0 0 28px rgba(0,212,255,.06), 0 0 0 1px rgba(0,212,255,.04)',
+  boxShadow:
+    'inset 0 0 60px rgba(0,0,0,.5), 0 0 28px rgba(0,212,255,.06), 0 0 0 1px rgba(0,212,255,.04)',
 });
 
 export const agentChatMessage = style({

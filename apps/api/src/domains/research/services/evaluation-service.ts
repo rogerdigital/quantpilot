@@ -1,10 +1,13 @@
 // @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
-import { refreshBacktestSummary } from '../../backtest/services/summary-service.js';
-import { buildStrategyExecutionCandidate } from '../../strategy/services/execution-candidate-service.js';
-import { getStrategyCatalogDetail, getStrategyCatalogItem } from '../../strategy/services/catalog-service.js';
-import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';
 import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.js';
+import { refreshBacktestSummary } from '../../backtest/services/summary-service.js';
+import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';
+import {
+  getStrategyCatalogDetail,
+  getStrategyCatalogItem,
+} from '../../strategy/services/catalog-service.js';
+import { buildStrategyExecutionCandidate } from '../../strategy/services/execution-candidate-service.js';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);
@@ -26,11 +29,16 @@ function getNextStrategyStage(status) {
 }
 
 function buildEvaluationForRun(run, result, strategy, payload = {}) {
-  const benchmarkGapPct = Number((result.annualizedReturnPct - result.benchmarkReturnPct).toFixed(1));
+  const benchmarkGapPct = Number(
+    (result.annualizedReturnPct - result.benchmarkReturnPct).toFixed(1)
+  );
   const drawdownBufferPct = Number((12 - result.maxDrawdownPct).toFixed(1));
-  const scoreBand = result.sharpe >= 1.2 && result.maxDrawdownPct <= 10
-    ? 'strong'
-    : (result.sharpe >= 0.95 && result.maxDrawdownPct <= 12 ? 'watch' : 'weak');
+  const scoreBand =
+    result.sharpe >= 1.2 && result.maxDrawdownPct <= 10
+      ? 'strong'
+      : result.sharpe >= 0.95 && result.maxDrawdownPct <= 12
+        ? 'watch'
+        : 'weak';
 
   if (result.status === 'failed') {
     return {
@@ -38,7 +46,8 @@ function buildEvaluationForRun(run, result, strategy, payload = {}) {
       scoreBand: 'weak',
       readiness: 'hold',
       recommendedAction: 'rerun_backtest',
-      summary: 'The latest backtest result failed and blocks promotion until the research issue is resolved.',
+      summary:
+        'The latest backtest result failed and blocks promotion until the research issue is resolved.',
       metadata: {
         benchmarkGapPct,
         drawdownBufferPct,
@@ -53,7 +62,8 @@ function buildEvaluationForRun(run, result, strategy, payload = {}) {
       scoreBand,
       readiness: 'hold',
       recommendedAction: 'complete_review',
-      summary: 'The latest result still requires manual review before any promotion decision can be finalized.',
+      summary:
+        'The latest result still requires manual review before any promotion decision can be finalized.',
       metadata: {
         benchmarkGapPct,
         drawdownBufferPct,
@@ -68,7 +78,8 @@ function buildEvaluationForRun(run, result, strategy, payload = {}) {
       scoreBand,
       readiness: 'hold',
       recommendedAction: 'tune_strategy',
-      summary: 'The result is not strong enough for promotion and should return to research tuning.',
+      summary:
+        'The result is not strong enough for promotion and should return to research tuning.',
       metadata: {
         benchmarkGapPct,
         drawdownBufferPct,
@@ -123,7 +134,8 @@ function buildEvaluationForRun(run, result, strategy, payload = {}) {
       scoreBand,
       readiness: 'hold',
       recommendedAction: 'improve_risk_profile',
-      summary: 'The result is healthy, but live execution prep is still blocked by the current risk gate.',
+      summary:
+        'The result is healthy, but live execution prep is still blocked by the current risk gate.',
       metadata: {
         benchmarkGapPct,
         drawdownBufferPct,
@@ -138,9 +150,10 @@ function buildEvaluationForRun(run, result, strategy, payload = {}) {
     scoreBand,
     readiness: strategy.status === 'paper' ? 'live' : 'paper',
     recommendedAction: strategy.status === 'paper' ? 'prepare_live_execution' : 'prepare_execution',
-    summary: strategy.status === 'paper'
-      ? 'The reviewed result and lifecycle state can now support live execution preparation.'
-      : 'The reviewed result is ready for downstream execution preparation.',
+    summary:
+      strategy.status === 'paper'
+        ? 'The reviewed result and lifecycle state can now support live execution preparation.'
+        : 'The reviewed result is ready for downstream execution preparation.',
     metadata: {
       benchmarkGapPct,
       drawdownBufferPct,

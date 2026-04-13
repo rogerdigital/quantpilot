@@ -28,14 +28,24 @@ function parseTimestamp(value) {
 }
 
 function sortByRecency(items, timestampKey = 'createdAt') {
-  return [...items].sort((left, right) => parseTimestamp(right[timestampKey]) - parseTimestamp(left[timestampKey]));
+  return [...items].sort(
+    (left, right) => parseTimestamp(right[timestampKey]) - parseTimestamp(left[timestampKey])
+  );
 }
 
 function takeLatest(items, limit, timestampKey = 'createdAt') {
   return sortByRecency(items, timestampKey).slice(0, limit);
 }
 
-const NEUTRAL_SCHEDULER_STATUSES = new Set(['healthy', 'ok', 'completed', 'success', 'steady', 'phase-change', 'info']);
+const NEUTRAL_SCHEDULER_STATUSES = new Set([
+  'healthy',
+  'ok',
+  'completed',
+  'success',
+  'steady',
+  'phase-change',
+  'info',
+]);
 
 export function isSchedulerAttentionStatus(status = '') {
   return Boolean(status) && !NEUTRAL_SCHEDULER_STATUSES.has(status);
@@ -47,12 +57,14 @@ function isSchedulerCriticalStatus(status = '') {
 
 function isSchedulerLinkedRiskEvent(item) {
   const message = `${item?.title || ''} ${item?.message || ''}`.toLowerCase();
-  return item?.source === 'scheduler'
-    || Boolean(item?.metadata?.schedulerTickId)
-    || message.includes('scheduler')
-    || message.includes('pre-open')
-    || message.includes('post-close')
-    || message.includes('intraday');
+  return (
+    item?.source === 'scheduler' ||
+    Boolean(item?.metadata?.schedulerTickId) ||
+    message.includes('scheduler') ||
+    message.includes('pre-open') ||
+    message.includes('post-close') ||
+    message.includes('intraday')
+  );
 }
 
 function buildRunbook(input) {
@@ -63,7 +75,8 @@ function buildRunbook(input) {
       key: 'review-current-window',
       priority: input.criticalTicks > 0 ? 'now' : 'next',
       title: 'Review current scheduler window',
-      detail: 'The active scheduler window includes attention ticks that can disrupt operator timing and middleware sequencing.',
+      detail:
+        'The active scheduler window includes attention ticks that can disrupt operator timing and middleware sequencing.',
       count: input.currentWindowAttention,
     });
   }
@@ -73,7 +86,8 @@ function buildRunbook(input) {
       key: 'triage-scheduler-incidents',
       priority: input.criticalIncidents > 0 ? 'now' : 'next',
       title: 'Triage scheduler incidents',
-      detail: 'Scheduler-linked incidents still need ownership, mitigation updates, or explicit closeout.',
+      detail:
+        'Scheduler-linked incidents still need ownership, mitigation updates, or explicit closeout.',
       count: input.openIncidents,
     });
   }
@@ -83,7 +97,8 @@ function buildRunbook(input) {
       key: 'clear-scheduler-signals',
       priority: input.notificationCritical > 0 ? 'now' : 'next',
       title: 'Clear scheduler notifications',
-      detail: 'Scheduler notifications and warnings should be reconciled against the active phase before they pile up.',
+      detail:
+        'Scheduler notifications and warnings should be reconciled against the active phase before they pile up.',
       count: input.schedulerNotifications,
     });
   }
@@ -93,7 +108,8 @@ function buildRunbook(input) {
       key: 'follow-cycle-drift',
       priority: 'next',
       title: 'Follow cycle drift',
-      detail: 'Control-plane cycles show degraded connectivity, pending approvals, or review-level risk posture around scheduler windows.',
+      detail:
+        'Control-plane cycles show degraded connectivity, pending approvals, or review-level risk posture around scheduler windows.',
       count: input.cycleAttention,
     });
   }
@@ -103,7 +119,8 @@ function buildRunbook(input) {
       key: 'align-risk-window',
       priority: 'next',
       title: 'Align risk with scheduler',
-      detail: 'Risk middleware is emitting scheduler-linked signals and should be reviewed together with the current scheduling window.',
+      detail:
+        'Risk middleware is emitting scheduler-linked signals and should be reviewed together with the current scheduling window.',
       count: input.riskSignals,
     });
   }
@@ -113,7 +130,8 @@ function buildRunbook(input) {
       key: 'review-off-hours-watch',
       priority: 'next',
       title: 'Review off-hours watch',
-      detail: 'Off-hours scheduler activity is carrying attention items that should be explained before the next market window.',
+      detail:
+        'Off-hours scheduler activity is carrying attention items that should be explained before the next market window.',
       count: input.offHoursAttention,
     });
   }
@@ -126,22 +144,30 @@ function resolvePosture(input) {
     return {
       status: 'critical',
       title: 'Scheduler posture needs intervention',
-      detail: 'Critical scheduler ticks or unresolved scheduler incidents indicate the orchestration path is outside its active guardrails.',
+      detail:
+        'Critical scheduler ticks or unresolved scheduler incidents indicate the orchestration path is outside its active guardrails.',
     };
   }
 
-  if (input.attentionTicks > 0 || input.cycleAttention > 0 || input.schedulerNotifications > 0 || input.riskSignals > 0) {
+  if (
+    input.attentionTicks > 0 ||
+    input.cycleAttention > 0 ||
+    input.schedulerNotifications > 0 ||
+    input.riskSignals > 0
+  ) {
     return {
       status: 'warn',
       title: 'Scheduler posture requires review',
-      detail: 'Scheduler windows, notifications, or adjacent risk and cycle signals still need operator review.',
+      detail:
+        'Scheduler windows, notifications, or adjacent risk and cycle signals still need operator review.',
     };
   }
 
   return {
     status: 'healthy',
     title: 'Scheduler posture is stable',
-    detail: 'Scheduler windows, cycle health, and linked control-plane signals are currently aligned.',
+    detail:
+      'Scheduler windows, cycle health, and linked control-plane signals are currently aligned.',
   };
 }
 
@@ -164,13 +190,17 @@ export function getSchedulerWorkbench(options = {}) {
     since,
     source: 'scheduler',
   });
-  const incidents = controlPlaneRuntime.listIncidents(Math.max(limit * 3, 120), {
-    since,
-    source: 'scheduler',
-  }).filter((item) => item.status !== 'resolved');
-  const cycleRecords = controlPlaneRuntime.listCycleRecords(Math.max(limit * 3, 120))
+  const incidents = controlPlaneRuntime
+    .listIncidents(Math.max(limit * 3, 120), {
+      since,
+      source: 'scheduler',
+    })
+    .filter((item) => item.status !== 'resolved');
+  const cycleRecords = controlPlaneRuntime
+    .listCycleRecords(Math.max(limit * 3, 120))
     .filter((item) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since));
-  const riskEvents = controlPlaneRuntime.listRiskEvents(Math.max(limit * 3, 120))
+  const riskEvents = controlPlaneRuntime
+    .listRiskEvents(Math.max(limit * 3, 120))
     .filter((item) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since))
     .filter(isSchedulerLinkedRiskEvent);
   const linkage = getRiskSchedulerLinkage({ limit, since });
@@ -179,8 +209,16 @@ export function getSchedulerWorkbench(options = {}) {
   const criticalTicks = attentionTicks.filter((item) => isSchedulerCriticalStatus(item.status));
   const phaseChanges = ticks.filter((item) => item.status === 'phase-change');
   const currentPhase = ticks[0]?.phase || 'UNKNOWN';
-  const currentWindowAttention = attentionTicks.filter((item) => item.phase === currentPhase).length;
-  const cycleAttention = cycleRecords.filter((item) => item.pendingApprovals > 0 || !item.brokerConnected || !item.marketConnected || ['REVIEW', 'RISK OFF'].includes(item.riskLevel));
+  const currentWindowAttention = attentionTicks.filter(
+    (item) => item.phase === currentPhase
+  ).length;
+  const cycleAttention = cycleRecords.filter(
+    (item) =>
+      item.pendingApprovals > 0 ||
+      !item.brokerConnected ||
+      !item.marketConnected ||
+      ['REVIEW', 'RISK OFF'].includes(item.riskLevel)
+  );
   const criticalIncidents = incidents.filter((item) => item.severity === 'critical');
   const notificationCritical = notifications.filter((item) => item.level === 'critical').length;
   const offHoursAttention = attentionTicks.filter((item) => item.phase === 'OFF_HOURS').length;
@@ -200,7 +238,11 @@ export function getSchedulerWorkbench(options = {}) {
     return {
       key: title.toLowerCase(),
       title,
-      status: phaseAttention.some((item) => isSchedulerCriticalStatus(item.status)) ? 'critical' : (phaseAttention.length ? 'warn' : 'healthy'),
+      status: phaseAttention.some((item) => isSchedulerCriticalStatus(item.status))
+        ? 'critical'
+        : phaseAttention.length
+          ? 'warn'
+          : 'healthy',
       detail: phaseTicks.length
         ? `${phaseTicks.length} ${phase} ticks observed with ${phaseAttention.length} attention items.`
         : `No ${phase} ticks were observed in the current scheduler window.`,
@@ -252,7 +294,7 @@ export function getSchedulerWorkbench(options = {}) {
       {
         key: 'incidents',
         title: 'Incidents',
-        status: criticalIncidents.length ? 'critical' : (incidents.length ? 'warn' : 'healthy'),
+        status: criticalIncidents.length ? 'critical' : incidents.length ? 'warn' : 'healthy',
         detail: `${incidents.length} unresolved scheduler incidents remain in the operator path.`,
         primaryCount: incidents.length,
         secondaryCount: criticalIncidents.length,
@@ -261,7 +303,11 @@ export function getSchedulerWorkbench(options = {}) {
       {
         key: 'cycles',
         title: 'Cycles',
-        status: cycleAttention.some((item) => !item.brokerConnected || !item.marketConnected) ? 'critical' : (cycleAttention.length ? 'warn' : 'healthy'),
+        status: cycleAttention.some((item) => !item.brokerConnected || !item.marketConnected)
+          ? 'critical'
+          : cycleAttention.length
+            ? 'warn'
+            : 'healthy',
         detail: `${cycleAttention.length} cycle records show approvals, degraded connectivity, or elevated risk posture around scheduler windows.`,
         primaryCount: cycleAttention.length,
         secondaryCount: cycleAttention.filter((item) => item.pendingApprovals > 0).length,
@@ -270,7 +316,7 @@ export function getSchedulerWorkbench(options = {}) {
       {
         key: 'notifications',
         title: 'Notifications',
-        status: notificationCritical ? 'critical' : (notifications.length ? 'warn' : 'healthy'),
+        status: notificationCritical ? 'critical' : notifications.length ? 'warn' : 'healthy',
         detail: `${notifications.length} scheduler notifications are available for operator follow-up.`,
         primaryCount: notifications.length,
         secondaryCount: notificationCritical,
@@ -279,7 +325,11 @@ export function getSchedulerWorkbench(options = {}) {
       {
         key: 'risk',
         title: 'Risk Linkage',
-        status: riskEvents.some((item) => item.level === 'critical' || item.status === 'risk-off') ? 'critical' : (riskEvents.length ? 'warn' : 'healthy'),
+        status: riskEvents.some((item) => item.level === 'critical' || item.status === 'risk-off')
+          ? 'critical'
+          : riskEvents.length
+            ? 'warn'
+            : 'healthy',
         detail: `${riskEvents.length} risk events are linked back to scheduler windows or drift signals.`,
         primaryCount: riskEvents.length,
         secondaryCount: riskEvents.filter((item) => item.status === 'risk-off').length,
@@ -324,8 +374,12 @@ function resolveCurrentPhase(workbench) {
 
 function resolveActionTargets(actionKey, workbench) {
   const currentPhase = resolveCurrentPhase(workbench);
-  const currentWindowAttention = workbench.queue.attentionTicks.filter((item) => item.phase === currentPhase);
-  const offHoursAttention = workbench.queue.attentionTicks.filter((item) => item.phase === 'OFF_HOURS');
+  const currentWindowAttention = workbench.queue.attentionTicks.filter(
+    (item) => item.phase === currentPhase
+  );
+  const offHoursAttention = workbench.queue.attentionTicks.filter(
+    (item) => item.phase === 'OFF_HOURS'
+  );
 
   if (actionKey === 'review-current-window') {
     return {
@@ -388,17 +442,26 @@ function resolveActionTargets(actionKey, workbench) {
     incidents: workbench.queue.incidents,
     notifications: workbench.queue.notifications,
     cycleRecords: workbench.queue.cycleRecords,
-    riskEvents: workbench.queue.riskEvents.filter((item) => String(item.metadata?.schedulerPhase || '') === 'OFF_HOURS'),
+    riskEvents: workbench.queue.riskEvents.filter(
+      (item) => String(item.metadata?.schedulerPhase || '') === 'OFF_HOURS'
+    ),
   };
 }
 
 function buildOrchestrationDescriptor(actionKey, workbench, targets) {
   const currentPhase = targets.phase || resolveCurrentPhase(workbench);
   const hasCriticalNotification = targets.notifications.some((item) => item.level === 'critical');
-  const hasCriticalRisk = targets.riskEvents.some((item) => item.level === 'critical' || item.status === 'risk-off');
-  const hasCriticalTick = targets.attentionTicks.some((item) => isSchedulerCriticalStatus(item.status));
+  const hasCriticalRisk = targets.riskEvents.some(
+    (item) => item.level === 'critical' || item.status === 'risk-off'
+  );
+  const hasCriticalTick = targets.attentionTicks.some((item) =>
+    isSchedulerCriticalStatus(item.status)
+  );
   const hasCriticalIncident = targets.incidents.some((item) => item.severity === 'critical');
-  const level = hasCriticalNotification || hasCriticalRisk || hasCriticalTick || hasCriticalIncident ? 'critical' : 'warn';
+  const level =
+    hasCriticalNotification || hasCriticalRisk || hasCriticalTick || hasCriticalIncident
+      ? 'critical'
+      : 'warn';
 
   if (actionKey === 'review-current-window') {
     return {
@@ -459,7 +522,8 @@ function buildOrchestrationDescriptor(actionKey, workbench, targets) {
     phase: 'OFF_HOURS',
     level: targets.attentionTicks.length ? 'warn' : 'info',
     title: 'Review off-hours watch',
-    detail: 'Off-hours scheduler activity was reviewed so overnight drift and pending follow-up stay visible before the next market window.',
+    detail:
+      'Off-hours scheduler activity was reviewed so overnight drift and pending follow-up stay visible before the next market window.',
     tickStatus: 'info',
     createCycleRecord: false,
     riskLevel: 'NORMAL',

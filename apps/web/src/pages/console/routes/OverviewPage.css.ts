@@ -1,4 +1,4 @@
-import { style, globalStyle } from '@vanilla-extract/css';
+import { globalStyle, style } from '@vanilla-extract/css';
 
 /* ── OVERVIEW HERO GRID ─────────────────────────────────── */
 
@@ -77,10 +77,13 @@ globalStyle(`${overviewBriefCard} span, ${overviewCommandNote} span, ${overviewP
   textTransform: 'uppercase',
 });
 
-globalStyle(`${overviewBriefCard} strong, ${overviewCommandNote} strong, ${overviewPrimaryNote} strong`, {
-  font: '700 15px/1.2 var(--font-data)',
-  color: 'var(--text)',
-});
+globalStyle(
+  `${overviewBriefCard} strong, ${overviewCommandNote} strong, ${overviewPrimaryNote} strong`,
+  {
+    font: '700 15px/1.2 var(--font-data)',
+    color: 'var(--text)',
+  }
+);
 
 globalStyle(`${overviewCommandNote} p, ${overviewPrimaryNote} p`, {
   margin: 0,

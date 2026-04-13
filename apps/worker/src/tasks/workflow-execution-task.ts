@@ -1,12 +1,12 @@
 // @ts-nocheck
 import {
-  controlPlaneRuntime,
-  recordExecutionPlan,
-  refreshBacktestSummary,
   assessAgentActionRequestRisk,
   assessExecutionCandidate,
   buildStrategyExecutionCandidate,
+  controlPlaneRuntime,
   recordAgentActionRequest,
+  recordExecutionPlan,
+  refreshBacktestSummary,
 } from '../../../../packages/control-plane-runtime/src/index.js';
 import { executeQueuedWorkflow } from '../../../../packages/task-workflow-engine/src/index.js';
 
@@ -51,7 +51,8 @@ function createWorkerExecutionContext() {
 }
 
 export async function runWorkflowExecutionTask(config, dependencies = {}) {
-  const claimQueuedWorkflows = dependencies.claimQueuedWorkflows || controlPlaneRuntime.claimQueuedWorkflowRuns;
+  const claimQueuedWorkflows =
+    dependencies.claimQueuedWorkflows || controlPlaneRuntime.claimQueuedWorkflowRuns;
   const executeWorkflow = dependencies.executeWorkflow || executeQueuedWorkflow;
   const context = dependencies.context || createWorkerExecutionContext();
   const claimResult = claimQueuedWorkflows({

@@ -10,7 +10,9 @@ describe('execution collection configs', () => {
     });
 
     expect(configs.audit.badge).toBe(3);
-    expect(configs.audit.emptyItemsMessage).toBe('No audit records exist for the selected execution plan yet.');
+    expect(configs.audit.emptyItemsMessage).toBe(
+      'No audit records exist for the selected execution plan yet.'
+    );
     expect(configs.actions.title).toBe('Selected Approval Actions');
     expect(configs.versions.copy).toContain('Replay order count');
   });

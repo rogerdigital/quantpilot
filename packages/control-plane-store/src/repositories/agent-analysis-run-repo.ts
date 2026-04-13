@@ -6,7 +6,8 @@ const FILENAME = 'agent-analysis-runs.json';
 export function createAgentAnalysisRunRepository(store) {
   return {
     listAgentAnalysisRuns(limit = 50, filter = {}) {
-      return store.readCollection(FILENAME)
+      return store
+        .readCollection(FILENAME)
         .filter((item) => {
           if (!matchesScopeFilter(item, filter)) return false;
           if (filter.status && item.status !== filter.status) return false;
@@ -41,9 +42,9 @@ export function createAgentAnalysisRunRepository(store) {
         evidence: Array.isArray(patch.evidence) ? patch.evidence : current.evidence,
         explanation: patch.explanation
           ? {
-            ...current.explanation,
-            ...patch.explanation,
-          }
+              ...current.explanation,
+              ...patch.explanation,
+            }
           : current.explanation,
         metadata: patch.metadata ? { ...current.metadata, ...patch.metadata } : current.metadata,
         updatedAt: patch.updatedAt || new Date().toISOString(),

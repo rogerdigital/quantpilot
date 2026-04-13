@@ -23,11 +23,7 @@ type RiskEventsFeedOptions = {
 export function useRiskEventsFeed(options: RiskEventsFeedOptions = {}) {
   const [items, setItems] = useState<RiskEventFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const {
-    level = '',
-    refreshKey = 0,
-    status = '',
-  } = options;
+  const { level = '', refreshKey = 0, status = '' } = options;
 
   useEffect(() => {
     let mounted = true;

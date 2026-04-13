@@ -14,7 +14,8 @@ export function StrategyCatalogRow(props: {
   onArchiveToggle: (item: StrategyCatalogItem) => void;
   onInspect: (strategyId: string) => void;
 }) {
-  const { locale, item, nextStage, canWriteStrategy, saving, promotingId, selectedStrategyId } = props;
+  const { locale, item, nextStage, canWriteStrategy, saving, promotingId, selectedStrategyId } =
+    props;
   const isBusy = saving || promotingId === item.id;
   const isSelected = selectedStrategyId === item.id;
 
@@ -24,11 +25,17 @@ export function StrategyCatalogRow(props: {
       leadCopy={item.summary}
       metrics={[
         { label: locale === 'zh' ? '阶段' : 'Stage', value: item.status },
-        { label: locale === 'zh' ? '基线/冠军' : 'Baseline / Champion', value: `${item.baseline ? 'baseline' : '--'} / ${item.champion ? 'champion' : '--'}` },
+        {
+          label: locale === 'zh' ? '基线/冠军' : 'Baseline / Champion',
+          value: `${item.baseline ? 'baseline' : '--'} / ${item.champion ? 'champion' : '--'}`,
+        },
         { label: 'Sharpe', value: item.sharpe.toFixed(2) },
-        { label: locale === 'zh' ? '预期收益' : 'Expected return', value: `${item.expectedReturnPct.toFixed(1)}%` },
+        {
+          label: locale === 'zh' ? '预期收益' : 'Expected return',
+          value: `${item.expectedReturnPct.toFixed(1)}%`,
+        },
       ]}
-      actions={(
+      actions={
         <div className="action-group">
           <button
             type="button"
@@ -46,23 +53,37 @@ export function StrategyCatalogRow(props: {
               onClick={() => props.onPromote(item)}
             >
               {promotingId === item.id
-                ? (locale === 'zh' ? '晋级中...' : 'Promoting...')
-                : (locale === 'zh' ? `晋级到 ${nextStage}` : `Promote to ${nextStage}`)}
+                ? locale === 'zh'
+                  ? '晋级中...'
+                  : 'Promoting...'
+                : locale === 'zh'
+                  ? `晋级到 ${nextStage}`
+                  : `Promote to ${nextStage}`}
             </button>
           ) : null}
           <button
             type="button"
-            className={item.status === 'archived' ? 'inline-action inline-action-approve' : 'inline-action'}
+            className={
+              item.status === 'archived' ? 'inline-action inline-action-approve' : 'inline-action'
+            }
             disabled={!canWriteStrategy || isBusy}
             onClick={() => props.onArchiveToggle(item)}
           >
             {promotingId === item.id
-              ? (item.status === 'archived'
-                  ? (locale === 'zh' ? '恢复中...' : 'Restoring...')
-                  : (locale === 'zh' ? '归档中...' : 'Archiving...'))
-              : (item.status === 'archived'
-                  ? (locale === 'zh' ? '恢复到 draft' : 'Restore to draft')
-                  : (locale === 'zh' ? '归档' : 'Archive'))}
+              ? item.status === 'archived'
+                ? locale === 'zh'
+                  ? '恢复中...'
+                  : 'Restoring...'
+                : locale === 'zh'
+                  ? '归档中...'
+                  : 'Archiving...'
+              : item.status === 'archived'
+                ? locale === 'zh'
+                  ? '恢复到 draft'
+                  : 'Restore to draft'
+                : locale === 'zh'
+                  ? '归档'
+                  : 'Archive'}
           </button>
           <button
             type="button"
@@ -71,11 +92,15 @@ export function StrategyCatalogRow(props: {
             onClick={() => props.onInspect(item.id)}
           >
             {isSelected
-              ? (locale === 'zh' ? '已选中' : 'Selected')
-              : (locale === 'zh' ? '查看' : 'Inspect')}
+              ? locale === 'zh'
+                ? '已选中'
+                : 'Selected'
+              : locale === 'zh'
+                ? '查看'
+                : 'Inspect'}
           </button>
         </div>
-      )}
+      }
     />
   );
 }

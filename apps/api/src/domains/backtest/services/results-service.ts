@@ -42,9 +42,15 @@ export function getBacktestResultDetail(resultId) {
   }
 
   const run = result.runId ? controlPlaneRuntime.getBacktestRun(result.runId) : null;
-  const workflow = result.workflowRunId ? controlPlaneRuntime.getWorkflowRun(result.workflowRunId) : null;
-  const strategy = result.strategyId ? controlPlaneRuntime.getStrategyCatalogItem(result.strategyId) : null;
-  const siblings = result.runId ? controlPlaneRuntime.listBacktestResultsForRun(result.runId, 20) : [];
+  const workflow = result.workflowRunId
+    ? controlPlaneRuntime.getWorkflowRun(result.workflowRunId)
+    : null;
+  const strategy = result.strategyId
+    ? controlPlaneRuntime.getStrategyCatalogItem(result.strategyId)
+    : null;
+  const siblings = result.runId
+    ? controlPlaneRuntime.listBacktestResultsForRun(result.runId, 20)
+    : [];
 
   return {
     ok: true,
@@ -91,9 +97,15 @@ export function getBacktestResultSummary(options = {}) {
     if (item.status === 'failed') summary.failed += 1;
   });
 
-  summary.averageSharpe = Number((results.reduce((sum, item) => sum + item.sharpe, 0) / results.length).toFixed(2));
-  summary.averageReturnPct = Number((results.reduce((sum, item) => sum + item.annualizedReturnPct, 0) / results.length).toFixed(2));
-  summary.averageExcessReturnPct = Number((results.reduce((sum, item) => sum + item.excessReturnPct, 0) / results.length).toFixed(2));
+  summary.averageSharpe = Number(
+    (results.reduce((sum, item) => sum + item.sharpe, 0) / results.length).toFixed(2)
+  );
+  summary.averageReturnPct = Number(
+    (results.reduce((sum, item) => sum + item.annualizedReturnPct, 0) / results.length).toFixed(2)
+  );
+  summary.averageExcessReturnPct = Number(
+    (results.reduce((sum, item) => sum + item.excessReturnPct, 0) / results.length).toFixed(2)
+  );
 
   return {
     ok: true,

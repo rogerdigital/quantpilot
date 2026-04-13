@@ -29,7 +29,7 @@ describe('OperationsPersistencePanel', () => {
             settings: '/settings#persistence-migration',
           },
         }}
-      />,
+      />
     );
 
     expect(html).toContain('Persistence Posture');

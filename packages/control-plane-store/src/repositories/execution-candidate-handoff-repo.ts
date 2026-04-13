@@ -19,7 +19,12 @@ export function createExecutionCandidateHandoffRepository(store) {
   }
 
   function writeHandoffs(items) {
-    trimAndSave(store, FILENAME, items.map((item) => createExecutionCandidateHandoffEntry(item)), 300);
+    trimAndSave(
+      store,
+      FILENAME,
+      items.map((item) => createExecutionCandidateHandoffEntry(item)),
+      300
+    );
   }
 
   return {

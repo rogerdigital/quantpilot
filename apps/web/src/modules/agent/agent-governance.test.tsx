@@ -17,7 +17,9 @@ vi.mock('../../store/trading-system/TradingSystemProvider.tsx', () => ({
 }));
 
 vi.mock('../console/console.i18n.tsx', async () => {
-  const actual = await vi.importActual<typeof import('../console/console.i18n.tsx')>('../console/console.i18n.tsx');
+  const actual = await vi.importActual<typeof import('../console/console.i18n.tsx')>(
+    '../console/console.i18n.tsx'
+  );
   return {
     ...actual,
     useLocale: () => ({ locale: 'en' as const }),
@@ -27,7 +29,13 @@ vi.mock('../console/console.i18n.tsx', async () => {
 vi.mock('../../components/layout/ConsoleChrome.tsx', () => ({
   EmptyState: ({ message }: { message: string }) => <div>{message}</div>,
   SectionHeader: () => <div>SectionHeader</div>,
-  TabPanel: ({ tabs }: { tabs: Array<{ key: string; label: string; content: unknown }> }) => <div>{tabs.map(t => <div key={t.key}>{t.label}</div>)}</div>,
+  TabPanel: ({ tabs }: { tabs: Array<{ key: string; label: string; content: unknown }> }) => (
+    <div>
+      {tabs.map((t) => (
+        <div key={t.key}>{t.label}</div>
+      ))}
+    </div>
+  ),
   TopMeta: () => <div>TopMeta</div>,
 }));
 

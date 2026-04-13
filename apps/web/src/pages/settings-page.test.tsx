@@ -1,6 +1,10 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { AgentGovernanceSettingsPanel, PersistenceMigrationPanel, WorkspaceAccessScopePanel } from './console/routes/SettingsPage.tsx';
+import {
+  AgentGovernanceSettingsPanel,
+  PersistenceMigrationPanel,
+  WorkspaceAccessScopePanel,
+} from './console/routes/SettingsPage.tsx';
 
 describe('WorkspaceAccessScopePanel', () => {
   it('renders workspace role, overrides, and scoped permissions', () => {
@@ -26,8 +30,18 @@ describe('WorkspaceAccessScopePanel', () => {
           role: 'admin',
           roleLabel: 'Admin',
           status: 'active',
-          defaultPermissions: ['dashboard:read', 'risk:review', 'execution:approve', 'account:write'],
-          effectivePermissions: ['dashboard:read', 'risk:review', 'execution:approve', 'account:write'],
+          defaultPermissions: [
+            'dashboard:read',
+            'risk:review',
+            'execution:approve',
+            'account:write',
+          ],
+          effectivePermissions: [
+            'dashboard:read',
+            'risk:review',
+            'execution:approve',
+            'account:write',
+          ],
           workspaceRole: 'execution-approver',
           workspaceLabel: 'Live Operations',
           workspaceDefaultPermissions: ['dashboard:read', 'execution:approve'],
@@ -45,7 +59,7 @@ describe('WorkspaceAccessScopePanel', () => {
           isSessionAligned: true,
         }}
         sessionPermissions={['dashboard:read', 'risk:review']}
-      />,
+      />
     );
 
     expect(html).toContain('Current Workspace Access Scope');
@@ -151,7 +165,7 @@ describe('WorkspaceAccessScopePanel', () => {
           recentRetryScheduledWorkflows: [],
           supportedRepairs: [],
         }}
-      />,
+      />
     );
 
     expect(html).toContain('Persistence &amp; Migration');
@@ -210,7 +224,7 @@ describe('AgentGovernanceSettingsPanel', () => {
           ],
           latestUpdatedAt: '2026-04-07T08:30:00.000Z',
         }}
-      />,
+      />
     );
 
     expect(html).toContain('Agent Governance Settings');
@@ -227,11 +241,7 @@ describe('AgentGovernanceSettingsPanel', () => {
 
   it('renders fallback when no policies or daily bias are configured', () => {
     const html = renderToStaticMarkup(
-      <AgentGovernanceSettingsPanel
-        locale="en"
-        authorityState={null}
-        dailyBias={null}
-      />,
+      <AgentGovernanceSettingsPanel locale="en" authorityState={null} dailyBias={null} />
     );
 
     expect(html).toContain('Agent Governance Settings');

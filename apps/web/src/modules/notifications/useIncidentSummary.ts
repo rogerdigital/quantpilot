@@ -1,6 +1,6 @@
+import type { IncidentSummaryResponse } from '@shared-types/trading.ts';
 import { useEffect, useState } from 'react';
 import { fetchIncidentSummary } from '../../app/api/controlPlane.ts';
-import type { IncidentSummaryResponse } from '@shared-types/trading.ts';
 
 type IncidentSummaryOptions = {
   hours?: number | null;

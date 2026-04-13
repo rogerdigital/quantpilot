@@ -2,7 +2,8 @@
 import { controlPlaneRuntime } from '../../../../packages/control-plane-runtime/src/index.js';
 
 export async function runWorkflowMaintenanceTask(config, dependencies = {}) {
-  const releaseWorkflows = dependencies.releaseScheduledWorkflows || controlPlaneRuntime.releaseScheduledWorkflowRuns;
+  const releaseWorkflows =
+    dependencies.releaseScheduledWorkflows || controlPlaneRuntime.releaseScheduledWorkflowRuns;
   const result = releaseWorkflows({
     worker: config.name,
     limit: config.workflowBatchSize,

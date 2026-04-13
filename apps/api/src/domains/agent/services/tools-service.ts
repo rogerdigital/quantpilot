@@ -1,6 +1,7 @@
 // @ts-nocheck
-import { getBacktestSummary } from '../../backtest/services/summary-service.js';
+
 import { listBacktestRuns } from '../../backtest/services/runs-service.js';
+import { getBacktestSummary } from '../../backtest/services/summary-service.js';
 import { listExecutionPlans } from '../../execution/services/query-service.js';
 import { listRiskEvents } from '../../risk/services/feed-service.js';
 import { listStrategyCatalog } from '../../strategy/services/catalog-service.js';
@@ -71,9 +72,7 @@ function executeBacktestSummaryTool() {
 function executeBacktestRunsTool(args = {}) {
   const snapshot = listBacktestRuns();
   const status = args.status || '';
-  const runs = status
-    ? snapshot.runs.filter((item) => item.status === status)
-    : snapshot.runs;
+  const runs = status ? snapshot.runs.filter((item) => item.status === status) : snapshot.runs;
   return {
     ok: true,
     tool: 'backtest.runs.list',

@@ -1,9 +1,9 @@
 // @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
-import { buildStrategyExecutionCandidate } from './execution-candidate-service.js';
+import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.js';
 import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';
 import { getStrategyCatalogDetail } from './catalog-service.js';
-import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.js';
+import { buildStrategyExecutionCandidate } from './execution-candidate-service.js';
 
 function parseLimit(value, fallback) {
   const parsed = Number(value);
@@ -87,12 +87,14 @@ export function createExecutionCandidateHandoff(strategyId, payload = {}) {
   const detail = getStrategyCatalogDetail(strategyId);
   if (!detail.ok) return detail;
 
-  const handoff = controlPlaneRuntime.appendExecutionCandidateHandoff(buildHandoffRecord(detail, payload));
+  const handoff = controlPlaneRuntime.appendExecutionCandidateHandoff(
+    buildHandoffRecord(detail, payload)
+  );
   const action = recordHandoffAction(
     'created',
     handoff,
     payload.actor || 'research-operator',
-    `Created execution handoff for ${handoff.strategyName}.`,
+    `Created execution handoff for ${handoff.strategyName}.`
   );
 
   return {
@@ -142,7 +144,7 @@ export function queueExecutionCandidateHandoff(handoffId, payload = {}) {
     `Queued execution workflow for ${updated.strategyName} from research handoff.`,
     {
       workflowRunId: workflow.id,
-    },
+    }
   );
 
   return {
@@ -161,22 +163,25 @@ export function listExecutionCandidateHandoffs(options = {}) {
     handoffStatus: options.handoffStatus || '',
     mode: options.mode || '',
   });
-  const summary = handoffs.reduce((acc, item) => {
-    acc.total += 1;
-    if (item.handoffStatus === 'ready') acc.ready += 1;
-    if (item.handoffStatus === 'queued' || item.handoffStatus === 'converted') acc.queued += 1;
-    if (item.handoffStatus === 'blocked') acc.blocked += 1;
-    if (item.mode === 'paper') acc.paper += 1;
-    if (item.mode === 'live') acc.live += 1;
-    return acc;
-  }, {
-    total: 0,
-    ready: 0,
-    queued: 0,
-    blocked: 0,
-    paper: 0,
-    live: 0,
-  });
+  const summary = handoffs.reduce(
+    (acc, item) => {
+      acc.total += 1;
+      if (item.handoffStatus === 'ready') acc.ready += 1;
+      if (item.handoffStatus === 'queued' || item.handoffStatus === 'converted') acc.queued += 1;
+      if (item.handoffStatus === 'blocked') acc.blocked += 1;
+      if (item.mode === 'paper') acc.paper += 1;
+      if (item.mode === 'live') acc.live += 1;
+      return acc;
+    },
+    {
+      total: 0,
+      ready: 0,
+      queued: 0,
+      blocked: 0,
+      paper: 0,
+      live: 0,
+    }
+  );
 
   return {
     ok: true,

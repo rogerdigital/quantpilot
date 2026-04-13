@@ -20,12 +20,7 @@ type NotificationsFeedOptions = {
 export function useNotificationsFeed(options: NotificationsFeedOptions = {}) {
   const [items, setItems] = useState<NotificationFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const {
-    hours = null,
-    level = '',
-    limit = 50,
-    source = '',
-  } = options;
+  const { hours = null, level = '', limit = 50, source = '' } = options;
 
   useEffect(() => {
     let mounted = true;

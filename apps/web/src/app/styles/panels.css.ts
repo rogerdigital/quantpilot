@@ -21,7 +21,8 @@ globalStyle('.meta-card::before, .hero-card::before, .metric-tile::before, .pane
   left: 0,
   width: '100%',
   height: '1px',
-  background: 'linear-gradient(90deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.06) 55%, transparent)',
+  background:
+    'linear-gradient(90deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.06) 55%, transparent)',
   pointerEvents: 'none',
 } as any);
 
@@ -157,10 +158,13 @@ globalStyle('.overview-brief-card span, .overview-command-note span, .overview-p
   textTransform: 'uppercase',
 } as any);
 
-globalStyle('.overview-brief-card strong, .overview-command-note strong, .overview-primary-note strong', {
-  font: '700 15px/1.2 var(--font-data)',
-  color: 'var(--text)',
-} as any);
+globalStyle(
+  '.overview-brief-card strong, .overview-command-note strong, .overview-primary-note strong',
+  {
+    font: '700 15px/1.2 var(--font-data)',
+    color: 'var(--text)',
+  } as any
+);
 
 globalStyle('.overview-command-note', { display: 'grid', gap: '8px' } as any);
 
@@ -246,7 +250,8 @@ globalStyle('.shortcut-surface', {
   textAlign: 'left',
   color: 'inherit',
   cursor: 'pointer',
-  transition: 'border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease',
+  transition:
+    'border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease',
 } as any);
 
 globalStyle('.shortcut-surface:hover', {
@@ -269,10 +274,13 @@ globalStyle('.status-row-button:hover, .inline-link:hover', {
   background: 'rgba(0, 212, 255, 0.035)',
 } as any);
 
-globalStyle('.shortcut-surface:focus-visible, .toolbar-pill-button:focus-visible, .status-row-button:focus-visible, .inline-link:focus-visible, .locale-trigger:focus-visible, .locale-option:focus-visible, .mode-pill:focus-visible', {
-  outline: '2px solid rgba(0, 212, 255, 0.65)',
-  outlineOffset: '2px',
-} as any);
+globalStyle(
+  '.shortcut-surface:focus-visible, .toolbar-pill-button:focus-visible, .status-row-button:focus-visible, .inline-link:focus-visible, .locale-trigger:focus-visible, .locale-option:focus-visible, .mode-pill:focus-visible',
+  {
+    outline: '2px solid rgba(0, 212, 255, 0.65)',
+    outlineOffset: '2px',
+  } as any
+);
 
 /* ============================================================
    HERO CARD — Primary command center
@@ -351,10 +359,18 @@ globalStyle('.metrics-grid', {
   marginTop: '18px',
 } as any);
 
-globalStyle('.metrics-grid > *:nth-child(1)', { animation: 'stagger-enter 320ms ease 60ms both' } as any);
-globalStyle('.metrics-grid > *:nth-child(2)', { animation: 'stagger-enter 320ms ease 100ms both' } as any);
-globalStyle('.metrics-grid > *:nth-child(3)', { animation: 'stagger-enter 320ms ease 140ms both' } as any);
-globalStyle('.metrics-grid > *:nth-child(4)', { animation: 'stagger-enter 320ms ease 180ms both' } as any);
+globalStyle('.metrics-grid > *:nth-child(1)', {
+  animation: 'stagger-enter 320ms ease 60ms both',
+} as any);
+globalStyle('.metrics-grid > *:nth-child(2)', {
+  animation: 'stagger-enter 320ms ease 100ms both',
+} as any);
+globalStyle('.metrics-grid > *:nth-child(3)', {
+  animation: 'stagger-enter 320ms ease 140ms both',
+} as any);
+globalStyle('.metrics-grid > *:nth-child(4)', {
+  animation: 'stagger-enter 320ms ease 180ms both',
+} as any);
 
 globalStyle('.metrics-grid-compact', {
   gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
@@ -465,10 +481,18 @@ globalStyle('.panel-grid', {
   alignItems: 'start',
 } as any);
 
-globalStyle('.panel-grid > *:nth-child(1)', { animation: 'stagger-enter 360ms ease 80ms both' } as any);
-globalStyle('.panel-grid > *:nth-child(2)', { animation: 'stagger-enter 360ms ease 130ms both' } as any);
-globalStyle('.panel-grid > *:nth-child(3)', { animation: 'stagger-enter 360ms ease 180ms both' } as any);
-globalStyle('.panel-grid > *:nth-child(4)', { animation: 'stagger-enter 360ms ease 230ms both' } as any);
+globalStyle('.panel-grid > *:nth-child(1)', {
+  animation: 'stagger-enter 360ms ease 80ms both',
+} as any);
+globalStyle('.panel-grid > *:nth-child(2)', {
+  animation: 'stagger-enter 360ms ease 130ms both',
+} as any);
+globalStyle('.panel-grid > *:nth-child(3)', {
+  animation: 'stagger-enter 360ms ease 180ms both',
+} as any);
+globalStyle('.panel-grid > *:nth-child(4)', {
+  animation: 'stagger-enter 360ms ease 230ms both',
+} as any);
 
 globalStyle('.panel-grid-wide', {
   alignItems: 'start',

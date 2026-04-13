@@ -15,7 +15,8 @@ const DEFAULT_STRATEGY_CATALOG = [
     expectedReturnPct: 18.4,
     maxDrawdownPct: 9.8,
     sharpe: 1.42,
-    summary: 'Uses medium-term trend confirmation and liquidity filters to stage long-only entries on large-cap momentum names.',
+    summary:
+      'Uses medium-term trend confirmation and liquidity filters to stage long-only entries on large-cap momentum names.',
     baseline: true,
     champion: false,
     baselineUpdatedAt: '2026-03-10T09:30:00.000Z',
@@ -34,7 +35,8 @@ const DEFAULT_STRATEGY_CATALOG = [
     expectedReturnPct: 12.1,
     maxDrawdownPct: 7.4,
     sharpe: 1.08,
-    summary: 'Targets short-lived oversold rebounds with strict exit timing and volatility-aware sizing.',
+    summary:
+      'Targets short-lived oversold rebounds with strict exit timing and volatility-aware sizing.',
     baseline: false,
     champion: false,
     baselineUpdatedAt: '',
@@ -53,7 +55,8 @@ const DEFAULT_STRATEGY_CATALOG = [
     expectedReturnPct: 22.6,
     maxDrawdownPct: 8.9,
     sharpe: 1.67,
-    summary: 'Blends momentum, volatility, and carry signals to rotate capital across a constrained ETF basket.',
+    summary:
+      'Blends momentum, volatility, and carry signals to rotate capital across a constrained ETF basket.',
     baseline: false,
     champion: true,
     baselineUpdatedAt: '',
@@ -72,7 +75,8 @@ const DEFAULT_STRATEGY_CATALOG = [
     expectedReturnPct: 28.2,
     maxDrawdownPct: 15.7,
     sharpe: 0.94,
-    summary: 'Captures breakout continuation on liquid crypto pairs, still pending slippage and overnight risk calibration.',
+    summary:
+      'Captures breakout continuation on liquid crypto pairs, still pending slippage and overnight risk calibration.',
     baseline: false,
     champion: false,
     baselineUpdatedAt: '',
@@ -115,7 +119,12 @@ export function createStrategyRepository(store) {
   }
 
   function writeCatalog(entries) {
-    trimAndSave(store, FILENAME, entries.map((entry) => normalizeEntry(entry)), 200);
+    trimAndSave(
+      store,
+      FILENAME,
+      entries.map((entry) => normalizeEntry(entry)),
+      200
+    );
   }
 
   return {

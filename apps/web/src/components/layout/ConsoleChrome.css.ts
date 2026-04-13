@@ -1,4 +1,4 @@
-import { style, globalStyle } from '@vanilla-extract/css';
+import { globalStyle, style } from '@vanilla-extract/css';
 
 /* ── APP SHELL ──────────────────────────────────────────── */
 
@@ -22,7 +22,8 @@ globalStyle(`${appShell}::before`, {
   height: '80px',
   zIndex: 9998,
   pointerEvents: 'none',
-  background: 'linear-gradient(180deg, transparent 0%, rgba(0, 212, 255, 0.022) 50%, transparent 100%)',
+  background:
+    'linear-gradient(180deg, transparent 0%, rgba(0, 212, 255, 0.022) 50%, transparent 100%)',
   animation: 'scan-sweep 16s linear infinite',
 });
 
@@ -68,7 +69,8 @@ globalStyle(`${sidebar}::after`, {
   left: 0,
   width: '200%',
   height: '1px',
-  background: 'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.65) 25%, rgba(255, 183, 0, 0.35) 55%, rgba(139, 92, 246, 0.25) 75%, transparent)',
+  background:
+    'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.65) 25%, rgba(255, 183, 0, 0.35) 55%, rgba(139, 92, 246, 0.25) 75%, transparent)',
   animation: 'gradient-flow 5s linear infinite',
   pointerEvents: 'none',
 });
@@ -100,7 +102,8 @@ export const brandMark = style({
   marginTop: '3px',
   borderRadius: 0,
   clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-  background: 'conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent))',
+  background:
+    'conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent))',
   boxShadow: 'var(--glow-cyan)',
   animation: 'diamond-spin 10s linear infinite',
   flexShrink: 0,
@@ -178,7 +181,8 @@ globalStyle(`${globalToolbar}::before`, {
   left: '10%',
   width: '80%',
   height: '1px',
-  background: 'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.25), rgba(255, 183, 0, 0.12), transparent)',
+  background:
+    'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.25), rgba(255, 183, 0, 0.12), transparent)',
   pointerEvents: 'none',
 });
 
@@ -241,7 +245,8 @@ globalStyle(`${metaCard}::before`, {
   left: 0,
   width: '100%',
   height: '1px',
-  background: 'linear-gradient(90deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.06) 55%, transparent)',
+  background:
+    'linear-gradient(90deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.06) 55%, transparent)',
   pointerEvents: 'none',
 });
 

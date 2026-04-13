@@ -22,7 +22,10 @@ export function BacktestRunQueueRow(props: {
         { label: locale === 'zh' ? '状态' : 'Status', value: run.status },
         {
           label: locale === 'zh' ? '收益' : 'Return',
-          value: run.status === 'completed' || run.status === 'needs_review' ? props.formatPercent(run.annualizedReturnPct) : '--',
+          value:
+            run.status === 'completed' || run.status === 'needs_review'
+              ? props.formatPercent(run.annualizedReturnPct)
+              : '--',
         },
         {
           label: locale === 'zh' ? '更新时间' : 'Updated',
@@ -30,8 +33,8 @@ export function BacktestRunQueueRow(props: {
         },
         {
           label: locale === 'zh' ? '复核' : 'Review',
-          value: run.status === 'needs_review'
-            ? (
+          value:
+            run.status === 'needs_review' ? (
               <button
                 type="button"
                 className="inline-action"
@@ -39,14 +42,21 @@ export function BacktestRunQueueRow(props: {
                 onClick={() => props.onReview(run.id)}
               >
                 {reviewingRunId === run.id
-                  ? (locale === 'zh' ? '处理中...' : 'Reviewing...')
-                  : (locale === 'zh' ? '人工复核' : 'Approve Review')}
+                  ? locale === 'zh'
+                    ? '处理中...'
+                    : 'Reviewing...'
+                  : locale === 'zh'
+                    ? '人工复核'
+                    : 'Approve Review'}
               </button>
-            )
-            : (locale === 'zh' ? '无' : 'None'),
+            ) : locale === 'zh' ? (
+              '无'
+            ) : (
+              'None'
+            ),
         },
       ]}
-      actions={(
+      actions={
         <button
           type="button"
           className="inline-action"
@@ -54,10 +64,14 @@ export function BacktestRunQueueRow(props: {
           onClick={() => props.onInspect(run.id)}
         >
           {selectedRunId === run.id
-            ? (locale === 'zh' ? '已选中' : 'Selected')
-            : (locale === 'zh' ? '查看' : 'Inspect')}
+            ? locale === 'zh'
+              ? '已选中'
+              : 'Selected'
+            : locale === 'zh'
+              ? '查看'
+              : 'Inspect'}
         </button>
-      )}
+      }
     />
   );
 }

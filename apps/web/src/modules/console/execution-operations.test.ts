@@ -40,12 +40,17 @@ describe('executionOperations helpers', () => {
   });
 
   it('collects only unresolved execution incident ids for selected plans', () => {
-    expect(collectExecutionIncidentIds(baseEntries, ['plan-1', 'plan-2', 'plan-3'])).toEqual(['incident-1', 'incident-3']);
+    expect(collectExecutionIncidentIds(baseEntries, ['plan-1', 'plan-2', 'plan-3'])).toEqual([
+      'incident-1',
+      'incident-3',
+    ]);
   });
 
   it('maps execution next actions into queue focuses', () => {
     expect(mapExecutionNextActionToFocus('clear-approvals')).toBe('approvals');
-    expect(mapExecutionNextActionToFocus('run-compensation-automation')).toBe('compensationAutomation');
+    expect(mapExecutionNextActionToFocus('run-compensation-automation')).toBe(
+      'compensationAutomation'
+    );
     expect(mapExecutionNextActionToFocus('watch-active-routing')).toBe('activeRouting');
   });
 

@@ -1,5 +1,10 @@
 // @ts-nocheck
-import { createMonitoringAlertEntry, createMonitoringSnapshotEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
+import {
+  createMonitoringAlertEntry,
+  createMonitoringSnapshotEntry,
+  matchesScopeFilter,
+  trimAndSave,
+} from '../shared.js';
 
 const SNAPSHOTS_FILE = 'monitoring-snapshots.json';
 const ALERTS_FILE = 'monitoring-alerts.json';
@@ -32,7 +37,7 @@ export function createMonitoringRepository(store) {
         filterByDate(store.readCollection(SNAPSHOTS_FILE), 'generatedAt', filter.since)
           .filter((item) => matchesScopeFilter(item, filter))
           .filter((item) => !filter.status || item.status === filter.status),
-        'generatedAt',
+        'generatedAt'
       );
       return items.slice(0, limit);
     },
@@ -43,7 +48,7 @@ export function createMonitoringRepository(store) {
           .filter((item) => !filter.snapshotId || item.snapshotId === filter.snapshotId)
           .filter((item) => !filter.source || item.source === filter.source)
           .filter((item) => !filter.level || item.level === filter.level),
-        'createdAt',
+        'createdAt'
       );
       return items.slice(0, limit);
     },
@@ -54,12 +59,16 @@ export function createMonitoringRepository(store) {
       snapshots.unshift(snapshot);
       trimAndSave(store, SNAPSHOTS_FILE, snapshots, 120);
 
-      const nextAlerts = Array.isArray(payload.alerts) ? payload.alerts.map((item) => createMonitoringAlertEntry({
-        ...item,
-        status: payload.status || 'healthy',
-        snapshotId: snapshot.id,
-        createdAt: payload.generatedAt || snapshot.createdAt,
-      })) : [];
+      const nextAlerts = Array.isArray(payload.alerts)
+        ? payload.alerts.map((item) =>
+            createMonitoringAlertEntry({
+              ...item,
+              status: payload.status || 'healthy',
+              snapshotId: snapshot.id,
+              createdAt: payload.generatedAt || snapshot.createdAt,
+            })
+          )
+        : [];
       if (nextAlerts.length) {
         alerts.unshift(...nextAlerts);
         trimAndSave(store, ALERTS_FILE, alerts, 240);

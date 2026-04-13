@@ -4,12 +4,19 @@ import { controlPlaneRuntime } from '../../../../../../packages/control-plane-ru
 const RETRY_LIMIT = 2;
 
 function hasExecutionLink(incident, detail) {
-  return Array.isArray(incident?.links) && incident.links.some((link) => (
-    (link?.executionPlanId && String(link.executionPlanId) === String(detail.plan.id))
-    || (link?.executionRunId && String(link.executionRunId) === String(detail.executionRun?.id || ''))
-    || (link?.workflowRunId && String(link.workflowRunId) === String(detail.plan.workflowRunId || ''))
-    || (link?.brokerEventId && String(link.brokerEventId) === String(detail.brokerEvents?.[0]?.id || ''))
-  ));
+  return (
+    Array.isArray(incident?.links) &&
+    incident.links.some(
+      (link) =>
+        (link?.executionPlanId && String(link.executionPlanId) === String(detail.plan.id)) ||
+        (link?.executionRunId &&
+          String(link.executionRunId) === String(detail.executionRun?.id || '')) ||
+        (link?.workflowRunId &&
+          String(link.workflowRunId) === String(detail.plan.workflowRunId || '')) ||
+        (link?.brokerEventId &&
+          String(link.brokerEventId) === String(detail.brokerEvents?.[0]?.id || ''))
+    )
+  );
 }
 
 function mergeIncidentLinks(detail, policy, brokerEvent = null) {
@@ -59,13 +66,19 @@ export function buildExecutionExceptionPolicy(detail) {
   const openIncident = linkedIncidents.find((incident) => incident.status !== 'resolved') || null;
   const rejectedEvents = brokerEvents.filter((item) => item.eventType === 'rejected');
   const cancelledEvents = brokerEvents.filter((item) => item.eventType === 'cancelled');
-  const fillEvents = brokerEvents.filter((item) => item.eventType === 'partial_fill' || item.eventType === 'filled');
+  const fillEvents = brokerEvents.filter(
+    (item) => item.eventType === 'partial_fill' || item.eventType === 'filled'
+  );
   const workflowRetryScheduled = detail.workflow?.status === 'retry_scheduled';
-  const workflowFailed = detail.workflow?.status === 'failed' || detail.workflow?.status === 'canceled';
+  const workflowFailed =
+    detail.workflow?.status === 'failed' || detail.workflow?.status === 'canceled';
   const reconciliationStatus = detail.reconciliation?.status || 'missing_snapshot';
   const hardReconciliationDrift = reconciliationStatus === 'drift';
-  const attentionReconciliation = reconciliationStatus === 'attention' || reconciliationStatus === 'missing_snapshot';
-  const openOrders = orderStates.filter((item) => ['submitted', 'acknowledged'].includes(item.lifecycleStatus)).length;
+  const attentionReconciliation =
+    reconciliationStatus === 'attention' || reconciliationStatus === 'missing_snapshot';
+  const openOrders = orderStates.filter((item) =>
+    ['submitted', 'acknowledged'].includes(item.lifecycleStatus)
+  ).length;
   const filledOrders = orderStates.filter((item) => item.lifecycleStatus === 'filled').length;
   const retryCount = rejectedEvents.length + cancelledEvents.length;
   const remainingRetries = Math.max(0, RETRY_LIMIT - retryCount);
@@ -97,24 +110,30 @@ export function buildExecutionExceptionPolicy(detail) {
     reasons.push(
       rejectedEvents.length > 0
         ? `Broker reported ${rejectedEvents.length} reject event(s).`
-        : `Broker reported ${cancelledEvents.length} cancel event(s).`,
+        : `Broker reported ${cancelledEvents.length} cancel event(s).`
     );
 
     if (filledOrders > 0 || fillEvents.length > 0) {
       status = 'compensation';
       recommendedAction = 'reconcile';
       incidentRecommended = true;
-      reasons.push('Execution already has fills, so compensation needs reconciliation and incident tracking.');
+      reasons.push(
+        'Execution already has fills, so compensation needs reconciliation and incident tracking.'
+      );
     } else if (remainingRetries > 0) {
       status = 'retrying';
       recommendedAction = 'reroute_orders';
       retryEligible = true;
-      reasons.push(`Retry budget is still available (${remainingRetries}/${RETRY_LIMIT} remaining).`);
+      reasons.push(
+        `Retry budget is still available (${remainingRetries}/${RETRY_LIMIT} remaining).`
+      );
     } else {
       status = 'incident';
       recommendedAction = 'open_incident';
       incidentRecommended = true;
-      reasons.push('Retry budget is exhausted and the exception should be escalated into incident handling.');
+      reasons.push(
+        'Retry budget is exhausted and the exception should be escalated into incident handling.'
+      );
     }
   }
 
@@ -139,7 +158,9 @@ export function buildExecutionExceptionPolicy(detail) {
   }
 
   if (status === 'stable' && detail.plan.lifecycleStatus === 'filled' && openOrders === 0) {
-    reasons.push('Execution lifecycle is filled with no open orders and no active broker exceptions.');
+    reasons.push(
+      'Execution lifecycle is filled with no open orders and no active broker exceptions.'
+    );
   }
 
   let headline = 'Execution exception posture is stable.';
@@ -204,14 +225,21 @@ export function syncExecutionExceptionState(detail, options = {}) {
   }
 
   const linkedIncidents = listLinkedExecutionIncidents(detail, { limit: 120 });
-  const existingOpenIncident = linkedIncidents.find((incident) => incident.status !== 'resolved') || null;
+  const existingOpenIncident =
+    linkedIncidents.find((incident) => incident.status !== 'resolved') || null;
   let incident = existingOpenIncident;
 
-  if ((policy.incidentRecommended || policy.recommendedAction === 'open_incident') && !existingOpenIncident) {
+  if (
+    (policy.incidentRecommended || policy.recommendedAction === 'open_incident') &&
+    !existingOpenIncident
+  ) {
     incident = controlPlaneRuntime.recordIncident({
       title: `Execution exception: ${detail.plan.strategyName}`,
       summary: policy.headline,
-      severity: policy.category === 'reconciliation_drift' || detail.reconciliation?.status === 'drift' ? 'critical' : 'warn',
+      severity:
+        policy.category === 'reconciliation_drift' || detail.reconciliation?.status === 'drift'
+          ? 'critical'
+          : 'warn',
       source: 'execution',
       status: 'investigating',
       owner: detail.executionRun?.owner || actor,
@@ -230,8 +258,12 @@ export function syncExecutionExceptionState(detail, options = {}) {
   } else if (existingOpenIncident && policy.status !== 'stable') {
     incident = controlPlaneRuntime.transitionIncident(existingOpenIncident.id, {
       actor,
-      status: existingOpenIncident.status === 'open' ? 'investigating' : existingOpenIncident.status,
-      severity: policy.category === 'reconciliation_drift' || detail.reconciliation?.status === 'drift' ? 'critical' : existingOpenIncident.severity,
+      status:
+        existingOpenIncident.status === 'open' ? 'investigating' : existingOpenIncident.status,
+      severity:
+        policy.category === 'reconciliation_drift' || detail.reconciliation?.status === 'drift'
+          ? 'critical'
+          : existingOpenIncident.severity,
       summary: policy.headline,
       links: mergeIncidentLinks(detail, policy, options.brokerEvent || null),
       updatedAt: now,

@@ -14,7 +14,8 @@ const DEFAULT_RESEARCH_EVALUATIONS = [
     scoreBand: 'strong',
     readiness: 'paper',
     recommendedAction: 'promote_to_paper',
-    summary: 'The reviewed trend strategy is healthy enough to move from candidate into paper execution prep.',
+    summary:
+      'The reviewed trend strategy is healthy enough to move from candidate into paper execution prep.',
     actor: 'research-lead',
     createdAt: '2026-03-10T01:05:00.000Z',
     metadata: {
@@ -46,7 +47,12 @@ export function createResearchEvaluationRepository(store) {
   }
 
   function writeEvaluations(evaluations) {
-    trimAndSave(store, FILENAME, evaluations.map((entry) => createResearchEvaluationEntry(entry)), 600);
+    trimAndSave(
+      store,
+      FILENAME,
+      evaluations.map((entry) => createResearchEvaluationEntry(entry)),
+      600
+    );
   }
 
   return {

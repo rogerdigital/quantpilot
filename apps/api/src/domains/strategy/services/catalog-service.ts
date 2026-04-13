@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
-import { buildStrategyExecutionCandidate } from './execution-candidate-service.js';
-import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';
 import { refreshBacktestSummary } from '../../backtest/services/summary-service.js';
+import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';
+import { buildStrategyExecutionCandidate } from './execution-candidate-service.js';
 
 function buildPromotionReadiness(strategy, latestResult) {
   if (!strategy) return null;
@@ -77,7 +77,10 @@ function buildReplayTimeline(strategy, inputs = {}) {
       at: item.createdAt,
       reference: strategy.id,
       metrics: [
-        { label: 'Status', value: typeof item.metadata?.status === 'string' ? item.metadata.status : '--' },
+        {
+          label: 'Status',
+          value: typeof item.metadata?.status === 'string' ? item.metadata.status : '--',
+        },
         { label: 'Actor', value: item.actor || '--' },
       ],
     })),
@@ -101,7 +104,10 @@ function buildReplayTimeline(strategy, inputs = {}) {
       eventType: 'workflow',
       lane: 'Workflow',
       title: workflow.title || workflow.workflowId,
-      detail: workflow.summary || workflow.result?.message || 'Workflow activity recorded for the research chain.',
+      detail:
+        workflow.summary ||
+        workflow.result?.message ||
+        'Workflow activity recorded for the research chain.',
       at: workflow.updatedAt || workflow.createdAt,
       reference: workflow.id,
       linkedWorkflowRunId: workflow.id,
@@ -121,8 +127,20 @@ function buildReplayTimeline(strategy, inputs = {}) {
       linkedRunId: run.id,
       linkedWorkflowRunId: run.workflowRunId || '',
       metrics: [
-        { label: 'Return', value: run.status === 'completed' || run.status === 'needs_review' ? `${run.annualizedReturnPct.toFixed(1)}%` : '--' },
-        { label: 'Sharpe', value: run.status === 'completed' || run.status === 'needs_review' ? run.sharpe.toFixed(2) : '--' },
+        {
+          label: 'Return',
+          value:
+            run.status === 'completed' || run.status === 'needs_review'
+              ? `${run.annualizedReturnPct.toFixed(1)}%`
+              : '--',
+        },
+        {
+          label: 'Sharpe',
+          value:
+            run.status === 'completed' || run.status === 'needs_review'
+              ? run.sharpe.toFixed(2)
+              : '--',
+        },
       ],
     })),
     ...results.map((result) => ({
@@ -179,7 +197,8 @@ function buildReplayTimeline(strategy, inputs = {}) {
       title: action.title,
       detail: action.detail,
       at: action.createdAt,
-      reference: typeof action.metadata?.primaryId === 'string' ? action.metadata.primaryId : strategy.id,
+      reference:
+        typeof action.metadata?.primaryId === 'string' ? action.metadata.primaryId : strategy.id,
       metrics: [
         { label: 'Level', value: action.level || '--' },
         { label: 'Actor', value: action.actor || '--' },
@@ -208,32 +227,43 @@ function buildReplayTimeline(strategy, inputs = {}) {
 }
 
 function buildReplaySummary(timeline = []) {
-  return timeline.reduce((acc, item) => {
-    acc.totalEvents += 1;
-    if (item.eventType === 'audit') acc.registryEvents += 1;
-    if (item.eventType === 'run' || item.eventType === 'result' || item.eventType === 'task' || item.eventType === 'workflow') acc.researchEvents += 1;
-    if (item.eventType === 'evaluation' || item.eventType === 'report') acc.reviewEvents += 1;
-    if (item.eventType === 'governance') acc.governanceEvents += 1;
-    if (item.eventType === 'execution') acc.executionEvents += 1;
-    if (!acc.latestAt) acc.latestAt = item.at || '';
-    if (!acc.latestRunId && item.linkedRunId) acc.latestRunId = item.linkedRunId;
-    if (!acc.latestResultId && item.linkedResultId) acc.latestResultId = item.linkedResultId;
-    if (!acc.latestEvaluationId && item.eventType === 'evaluation') acc.latestEvaluationId = item.id.replace('evaluation-', '');
-    if (!acc.latestReportId && item.eventType === 'report') acc.latestReportId = item.id.replace('report-', '');
-    return acc;
-  }, {
-    totalEvents: 0,
-    registryEvents: 0,
-    researchEvents: 0,
-    reviewEvents: 0,
-    governanceEvents: 0,
-    executionEvents: 0,
-    latestAt: '',
-    latestRunId: '',
-    latestResultId: '',
-    latestEvaluationId: '',
-    latestReportId: '',
-  });
+  return timeline.reduce(
+    (acc, item) => {
+      acc.totalEvents += 1;
+      if (item.eventType === 'audit') acc.registryEvents += 1;
+      if (
+        item.eventType === 'run' ||
+        item.eventType === 'result' ||
+        item.eventType === 'task' ||
+        item.eventType === 'workflow'
+      )
+        acc.researchEvents += 1;
+      if (item.eventType === 'evaluation' || item.eventType === 'report') acc.reviewEvents += 1;
+      if (item.eventType === 'governance') acc.governanceEvents += 1;
+      if (item.eventType === 'execution') acc.executionEvents += 1;
+      if (!acc.latestAt) acc.latestAt = item.at || '';
+      if (!acc.latestRunId && item.linkedRunId) acc.latestRunId = item.linkedRunId;
+      if (!acc.latestResultId && item.linkedResultId) acc.latestResultId = item.linkedResultId;
+      if (!acc.latestEvaluationId && item.eventType === 'evaluation')
+        acc.latestEvaluationId = item.id.replace('evaluation-', '');
+      if (!acc.latestReportId && item.eventType === 'report')
+        acc.latestReportId = item.id.replace('report-', '');
+      return acc;
+    },
+    {
+      totalEvents: 0,
+      registryEvents: 0,
+      researchEvents: 0,
+      reviewEvents: 0,
+      governanceEvents: 0,
+      executionEvents: 0,
+      latestAt: '',
+      latestRunId: '',
+      latestResultId: '',
+      latestEvaluationId: '',
+      latestReportId: '',
+    }
+  );
 }
 
 export function listStrategyCatalog() {
@@ -265,35 +295,46 @@ export function getStrategyCatalogDetail(strategyId) {
   const recentResults = controlPlaneRuntime.listBacktestResults(20, { strategyId: strategy.id });
   const latestResult = recentResults[0] || null;
   const latestEvaluation = controlPlaneRuntime.getLatestEvaluationForStrategy(strategy.id);
-  const recentEvaluations = controlPlaneRuntime.listResearchEvaluations(20, { strategyId: strategy.id });
+  const recentEvaluations = controlPlaneRuntime.listResearchEvaluations(20, {
+    strategyId: strategy.id,
+  });
   const recentReports = controlPlaneRuntime.listResearchReports(20, { strategyId: strategy.id });
   const latestReport = recentReports[0] || null;
   const researchTasks = controlPlaneRuntime.listResearchTasks(20, { strategyId: strategy.id });
-  const workflowRunIds = Array.from(new Set([
-    ...recentRuns.map((item) => item.workflowRunId).filter(Boolean),
-    ...recentResults.map((item) => item.workflowRunId).filter(Boolean),
-    ...recentReports.map((item) => item.workflowRunId).filter(Boolean),
-    ...researchTasks.map((item) => item.workflowRunId).filter(Boolean),
-  ]));
-  const workflows = controlPlaneRuntime.listWorkflowRuns(60, {})
+  const workflowRunIds = Array.from(
+    new Set([
+      ...recentRuns.map((item) => item.workflowRunId).filter(Boolean),
+      ...recentResults.map((item) => item.workflowRunId).filter(Boolean),
+      ...recentReports.map((item) => item.workflowRunId).filter(Boolean),
+      ...researchTasks.map((item) => item.workflowRunId).filter(Boolean),
+    ])
+  );
+  const workflows = controlPlaneRuntime
+    .listWorkflowRuns(60, {})
     .filter((item) => workflowRunIds.includes(item.id))
     .slice(0, 20);
-  const governanceActions = controlPlaneRuntime.listOperatorActions(80, {})
+  const governanceActions = controlPlaneRuntime
+    .listOperatorActions(80, {})
     .filter((item) => item.type?.startsWith('research-governance.'))
     .filter((item) => {
       if (item.symbol === strategy.id) return true;
       const successes = Array.isArray(item.metadata?.successes) ? item.metadata.successes : [];
-      return successes.some((entry) => entry && typeof entry === 'object' && entry.strategyId === strategy.id);
+      return successes.some(
+        (entry) => entry && typeof entry === 'object' && entry.strategyId === strategy.id
+      );
     })
     .slice(0, 20);
-  const strategyAuditItems = controlPlaneRuntime.listAuditRecords(80, {})
+  const strategyAuditItems = controlPlaneRuntime
+    .listAuditRecords(80, {})
     .filter((item) => item.type === 'strategy-catalog.saved')
     .filter((item) => item.metadata?.strategyId === strategy.id)
     .slice(0, 20);
   const recentHandoffs = controlPlaneRuntime.listExecutionCandidateHandoffs(20, {
     strategyId: strategy.id,
   });
-  const latestExecutionHandoff = controlPlaneRuntime.getLatestExecutionCandidateHandoffForStrategy(strategy.id);
+  const latestExecutionHandoff = controlPlaneRuntime.getLatestExecutionCandidateHandoffForStrategy(
+    strategy.id
+  );
   const replayTimeline = buildReplayTimeline(strategy, {
     auditItems: strategyAuditItems,
     runs: recentRuns,
