@@ -42,10 +42,10 @@ globalStyle('.sidebar', {
   minHeight: '100vh',
   padding: '24px 16px',
   borderRight: '1px solid var(--line)',
-  background: 'linear-gradient(180deg, rgba(6, 14, 32, 0.99) 0%, rgba(4, 9, 22, 0.99) 100%)',
+  background: 'linear-gradient(180deg, rgba(8, 18, 42, 0.99) 0%, rgba(6, 12, 28, 0.99) 100%)',
   display: 'flex',
   flexDirection: 'column',
-  overflow: 'hidden',
+  overflow: 'visible',
 } as any);
 
 globalStyle('.sidebar::after', {
@@ -110,7 +110,7 @@ globalStyle('.brand-name', {
 globalStyle(
   '.brand-sub, .sidebar-label, .eyebrow, .card-eyebrow, .tile-label, .meta-label, .panel-copy',
   {
-    color: 'var(--muted)',
+    color: 'var(--muted-strong)',
   } as any
 );
 
@@ -134,7 +134,7 @@ globalStyle('.sidebar-block', {
   padding: '13px 12px 11px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'linear-gradient(135deg, rgba(10, 20, 44, 0.85), rgba(6, 12, 28, 0.9))',
+  background: 'linear-gradient(135deg, rgba(14, 26, 58, 0.9), rgba(8, 16, 36, 0.95))',
   transition: 'border-color 180ms ease',
 } as any);
 
@@ -264,7 +264,7 @@ globalStyle('.global-toolbar', {
   padding: '10px 16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-lg)',
-  background: 'linear-gradient(135deg, rgba(6, 14, 32, 0.98), rgba(4, 9, 22, 0.99))',
+  background: 'linear-gradient(135deg, rgba(8, 18, 42, 0.98), rgba(6, 12, 28, 0.99))',
   boxShadow: '0 2px 16px rgba(0, 0, 0, 0.45)',
   animation: 'panel-enter 250ms ease both',
 } as any);
@@ -284,7 +284,7 @@ globalStyle('.global-toolbar::before', {
 globalStyle('.toolbar-copy', { display: 'grid', gap: '3px' } as any);
 
 globalStyle('.toolbar-kicker', {
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   font: '500 10px/1 var(--font-data)',
   letterSpacing: '0.14em',
   textTransform: 'uppercase',
@@ -293,10 +293,11 @@ globalStyle('.toolbar-kicker', {
 globalStyle('.toolbar-title', {
   font: '700 15px/1 var(--font-data)',
   letterSpacing: '0.01em',
+  color: 'var(--text-strong)',
 } as any);
 
 globalStyle('.toolbar-sub', {
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   fontSize: '12px',
   fontFamily: 'var(--font-data)',
   letterSpacing: '0.04em',
@@ -316,7 +317,7 @@ globalStyle('.toolbar-pill, .locale-trigger, .locale-option', {
   justifyContent: 'center',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'rgba(7, 15, 34, 0.9)',
+  background: 'rgba(10, 20, 46, 0.9)',
   color: 'var(--muted)',
   font: '600 12px/1 var(--font-data)',
   letterSpacing: '0.08em',
@@ -471,7 +472,7 @@ globalStyle('.locale-menu', {
   padding: '6px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line-strong)',
-  background: 'rgba(6, 14, 32, 0.98)',
+  background: 'rgba(8, 18, 42, 0.98)',
   boxShadow: 'var(--shadow), 0 0 30px rgba(0, 0, 0, 0.5)',
   backdropFilter: 'blur(12px)',
   animation: 'fade-up 160ms ease both',
@@ -483,7 +484,7 @@ globalStyle('.locale-option', {
   minHeight: '38px',
   padding: '0 12px',
   marginTop: '4px',
-  background: 'rgba(10, 20, 40, 0.9)',
+  background: 'rgba(12, 24, 52, 0.9)',
   cursor: 'pointer',
   transition: 'border-color 140ms ease, background 140ms ease',
 } as any);
@@ -537,7 +538,7 @@ globalStyle('.topbar', {
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-xl)',
   background:
-    'linear-gradient(140deg, rgba(8, 18, 40, 0.97) 0%, rgba(5, 10, 26, 0.98) 60%, rgba(8, 5, 28, 0.97) 100%)',
+    'linear-gradient(140deg, rgba(10, 22, 50, 0.97) 0%, rgba(7, 14, 34, 0.98) 60%, rgba(10, 7, 34, 0.97) 100%)',
   boxShadow: 'var(--shadow-panel)',
   animation: 'panel-enter 300ms ease 50ms both',
   overflow: 'hidden',
@@ -572,15 +573,15 @@ globalStyle('h1', {
   font: '700 clamp(26px, 4vw, 44px)/0.9 var(--font-display)',
   letterSpacing: '0.05em',
   textTransform: 'uppercase',
-  color: 'var(--text-strong)',
+  color: '#f4fbff',
 } as any);
 
 globalStyle('.topbar-copy', {
   maxWidth: '720px',
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   margin: 0,
   fontSize: '13px',
-  lineHeight: '1.6',
+  lineHeight: '1.65',
 } as any);
 
 globalStyle('.topbar-meta', {
@@ -639,7 +640,7 @@ globalStyle('.route-card, .policy-card', {
   marginTop: '10px',
   padding: '14px',
   borderRadius: 'var(--radius)',
-  background: 'rgba(10, 20, 40, 0.8)',
+  background: 'rgba(12, 24, 52, 0.85)',
   border: '1px solid var(--line)',
 } as any);
 

@@ -6,23 +6,23 @@ import { globalStyle } from '@vanilla-extract/css';
 
 globalStyle(':root', {
   /* Canvas layers */
-  '--bg-canvas': '#01030c',
+  '--bg-canvas': '#030818',
   '--bg': 'var(--bg-canvas)',
-  '--panel': '#04091a',
-  '--panel-2': '#070f24',
-  '--panel-3': '#0b162f',
-  '--panel-frame': 'rgba(0, 200, 255, 0.07)',
+  '--panel': '#091224',
+  '--panel-2': '#0d192e',
+  '--panel-3': '#122038',
+  '--panel-frame': 'rgba(0, 200, 255, 0.10)',
 
   /* Lines & borders */
-  '--line': 'rgba(40, 120, 220, 0.1)',
-  '--line-strong': 'rgba(40, 120, 220, 0.24)',
-  '--line-vivid': 'rgba(0, 210, 255, 0.35)',
+  '--line': 'rgba(60, 140, 240, 0.22)',
+  '--line-strong': 'rgba(60, 140, 240, 0.40)',
+  '--line-vivid': 'rgba(0, 210, 255, 0.55)',
 
   /* Typography */
-  '--text': '#b8cde8',
-  '--text-strong': '#e2efff',
-  '--muted': 'rgba(100, 140, 195, 0.65)',
-  '--muted-strong': 'rgba(140, 175, 225, 0.82)',
+  '--text': '#d8eaf8',
+  '--text-strong': '#f0f8ff',
+  '--muted': 'rgba(160, 195, 230, 0.82)',
+  '--muted-strong': 'rgba(190, 215, 245, 0.95)',
 
   /* Accent palette */
   '--accent-live': '#00d4ff',
@@ -37,9 +37,9 @@ globalStyle(':root', {
   '--info': '#4da6ff',
 
   /* Fonts */
-  '--font-display': '"Rajdhani", "JetBrains Mono", monospace',
-  '--font-ui': '"Plus Jakarta Sans", sans-serif',
-  '--font-data': '"JetBrains Mono", monospace',
+  '--font-display': '"Rajdhani", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
+  '--font-ui': '"Plus Jakarta Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
+  '--font-data': '"JetBrains Mono", "SF Mono", "Consolas", monospace',
 
   /* Shadows */
   '--shadow': '0 24px 64px rgba(0, 0, 0, 0.75), 0 4px 16px rgba(0, 0, 0, 0.55)',
