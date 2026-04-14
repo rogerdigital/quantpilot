@@ -1581,6 +1581,8 @@ export type AgentDailyRunRecord = {
   requestedBy: string;
   createdAt: string;
   updatedAt: string;
+  summary?: string;
+  latestCheckpoint?: string;
   metadata: Record<string, unknown>;
 };
 
