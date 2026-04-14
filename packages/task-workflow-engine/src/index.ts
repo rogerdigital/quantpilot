@@ -4,6 +4,22 @@ import {
   applyControlPlaneResolution,
   buildCyclePayload,
 } from '../../trading-engine/src/runtime.js';
+import { runBacktestEngine } from '../../trading-engine/src/backtest/index.js';
+import { DEFAULT_ENGINE_CONFIG, STOCK_UNIVERSE } from '../../trading-engine/src/core/constants.js';
+
+function parseWindowLabel(label) {
+  const parts = (label || '').split(' -> ');
+  if (parts.length === 2 && parts[0] && parts[1]) {
+    return { startDate: parts[0].trim(), endDate: parts[1].trim() };
+  }
+  const today = new Date();
+  const twoYearsAgo = new Date(today);
+  twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+  return {
+    startDate: twoYearsAgo.toISOString().split('T')[0],
+    endDate: today.toISOString().split('T')[0],
+  };
+}
 
 function startWorkflow(context, payload) {
   if (typeof context.startWorkflow === 'function') {
@@ -892,7 +908,33 @@ async function executeBacktestRunWorkflow(payload, context, options = {}) {
       latestCheckpoint: 'Workflow worker started the research task.',
     });
 
-    const metrics = buildMockBacktestMetrics(strategy, run.id);
+    // buildMockBacktestMetrics(strategy, run.id) — replaced by real engine below
+    const windowDates = parseWindowLabel(run.windowLabel);
+    const engineResult = runBacktestEngine({
+      strategyId: strategy.id,
+      runId: run.id,
+      startDate: windowDates.startDate,
+      endDate: windowDates.endDate,
+      initialCapital: 100000,
+      universe: STOCK_UNIVERSE.map((s) => s.symbol),
+      buyThreshold: DEFAULT_ENGINE_CONFIG.buyThreshold,
+      sellThreshold: DEFAULT_ENGINE_CONFIG.sellThreshold,
+      maxPositionWeight: DEFAULT_ENGINE_CONFIG.maxPositionWeight,
+      slippagePct: 0.001,
+      commissionPct: 0.001,
+    });
+    const metrics = {
+      status: engineResult.status,
+      annualizedReturnPct: engineResult.annualizedReturnPct,
+      maxDrawdownPct: engineResult.maxDrawdownPct,
+      sharpe: engineResult.sharpe,
+      winRatePct: engineResult.winRatePct,
+      turnoverPct: engineResult.turnoverPct,
+      summary:
+        engineResult.status === 'needs_review'
+          ? `${strategy.name} completed with elevated review pressure because drawdown or Sharpe is outside the current promotion gate.`
+          : `${strategy.name} completed inside the current research promotion envelope.`,
+    };
     const completedRun = context.updateBacktestRun(run.id, {
       ...metrics,
       completedAt: new Date().toISOString(),
