@@ -16,6 +16,7 @@ export const copy = {
     nav: {
       dashboard: '仪表盘',
       market: '市场监控',
+      trading: '交易终端',
       strategies: '策略工作台',
       'strategy-detail': '策略详情',
       backtest: '回测中心',
@@ -134,6 +135,10 @@ export const copy = {
         '市场监控',
         '跟踪股票池价格、强弱排序和行情接入状态，为策略与 Agent 提供市场上下文。',
       ],
+      trading: [
+        '交易终端',
+        '在一个界面内完成行情监控、图表分析和下单操作。',
+      ],
       strategies: [
         '策略工作台',
         '查看策略候选、信号分布、股票池评分和研究视图，形成可执行的策略工作流。',
@@ -198,6 +203,7 @@ export const copy = {
     nav: {
       dashboard: 'Dashboard',
       market: 'Market',
+      trading: 'Trading',
       strategies: 'Strategies',
       'strategy-detail': 'Strategy Detail',
       backtest: 'Backtest',
@@ -316,6 +322,10 @@ export const copy = {
         'Market Monitor',
         'Track universe pricing, relative strength, and market data connectivity for downstream analysis.',
       ],
+      trading: [
+        'Trading Terminal',
+        'Monitor the market, read charts, and place orders from one unified trading interface.',
+      ],
       strategies: [
         'Strategy Workspace',
         'Review strategy candidates, signal mix, universe scores, and research context in one workspace.',
@@ -357,6 +367,7 @@ export const copy = {
     desk: {
       dashboard: 'Command Deck',
       market: 'Market Desk',
+      trading: 'Trading Desk',
       strategies: 'Strategy Desk',
       backtest: 'Research Desk',
       risk: 'Risk Desk',

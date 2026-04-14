@@ -24,10 +24,14 @@ const StrategyDetailPage = lazy(() =>
   }))
 );
 const RiskPage = lazy(() => import('../../pages/risk/RiskPage.tsx'));
+const TradingPage = lazy(() =>
+  import('../../pages/trading/TradingPage.tsx').then((m) => ({ default: m.TradingPage }))
+);
 
 type ConsoleNavKey =
   | 'dashboard'
   | 'market'
+  | 'trading'
   | 'strategies'
   | 'strategy-detail'
   | 'backtest'
@@ -71,6 +75,13 @@ export const CONSOLE_ROUTES: ConsoleRouteDefinition[] = [
     path: '/market',
     includeInSidebar: true,
     element: renderLazyRoute(<MarketPage />),
+  },
+  {
+    id: 'trading',
+    pageKey: 'trading',
+    path: '/trading',
+    includeInSidebar: true,
+    element: renderLazyRoute(<TradingPage />),
   },
   {
     id: 'strategies',
