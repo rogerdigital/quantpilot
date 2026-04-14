@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { createCollectionStore } from './collection-store.js';
 import { ensureDirectory, readJsonFile, writeJsonFile } from './filesystem.js';
 import { createKeyValueStore } from './kv-store.js';
+import { createSQLiteAdapter } from './sqlite-adapter.js';
 
 const packageDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(packageDir, '..', '..', '..');
@@ -221,31 +222,10 @@ export function createJsonFileStore({ namespace }) {
 }
 
 export function createEmbeddedDbStore({ namespace }) {
-  const rootDir = join(repoRoot, '.quantpilot-runtime-db', namespace);
-  const collectionsDir = join(rootDir, 'collections');
-  const objectsDir = join(rootDir, 'objects');
-
-  return createAdapterStore({
-    rootDir,
-    metadata: createAdapterMetadata({
-      kind: 'db',
-      label: 'Embedded Control Plane DB',
-      namespace,
-      rootDir,
-      persistence: 'embedded-json-db',
-      capabilities: {
-        migrations: true,
-      },
-    }),
-    resolveCollectionPath: (filename) => {
-      ensureDirectory(collectionsDir);
-      return join(collectionsDir, filename);
-    },
-    resolveObjectPath: (filename) => {
-      ensureDirectory(objectsDir);
-      return join(objectsDir, filename);
-    },
-  });
+  const dbPath = join(repoRoot, '.quantpilot', 'control-plane.db');
+  const store = createSQLiteAdapter({ namespace, dbPath });
+  store.ensureAdapterManifest();
+  return store;
 }
 
 export function listSupportedControlPlaneAdapters() {

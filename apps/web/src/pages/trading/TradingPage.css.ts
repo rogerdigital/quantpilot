@@ -418,6 +418,40 @@ export const tradeSellBtn = style({
   },
 });
 
+export const tradeBuyBtnDisabled = style({
+  width: '100%',
+  padding: '14px',
+  background: 'var(--buy)',
+  border: 'none',
+  borderRadius: 'var(--radius)',
+  color: '#01030c',
+  fontFamily: 'var(--font-display)',
+  fontSize: '15px',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '1px',
+  cursor: 'not-allowed',
+  opacity: 0.45,
+  transition: 'all 150ms ease',
+});
+
+export const tradeSellBtnDisabled = style({
+  width: '100%',
+  padding: '14px',
+  background: 'var(--sell)',
+  border: 'none',
+  borderRadius: 'var(--radius)',
+  color: '#fff',
+  fontFamily: 'var(--font-display)',
+  fontSize: '15px',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '1px',
+  cursor: 'not-allowed',
+  opacity: 0.45,
+  transition: 'all 150ms ease',
+});
+
 export const tradeBtnRow = style({
   display: 'grid',
   gridTemplateColumns: '1fr 1fr',

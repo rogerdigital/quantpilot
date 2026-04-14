@@ -19,6 +19,7 @@ import {
 import { runStateCycle } from '../../../control-plane/task-orchestrator/state-runner.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import { broadcast } from '../../../modules/sse/sse-manager.js';
 
 export async function handleTaskOrchestratorRoutes({
   req,
@@ -171,15 +172,14 @@ export async function handleTaskOrchestratorRoutes({
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/state/run') {
     const body = await readJsonBody(req);
-    writeJson(
-      res,
-      200,
-      await runStateCycle(body?.state, {
-        getBrokerHealth: gatewayDependencies.getBrokerHealth,
-        executeBrokerCycle: gatewayDependencies.executeBrokerCycle,
-        getMarketSnapshot: gatewayDependencies.getMarketSnapshot,
-      })
-    );
+    const result = await runStateCycle(body?.state, {
+      getBrokerHealth: gatewayDependencies.getBrokerHealth,
+      executeBrokerCycle: gatewayDependencies.executeBrokerCycle,
+      getMarketSnapshot: gatewayDependencies.getMarketSnapshot,
+    });
+    writeJson(res, 200, result);
+    // Notify SSE clients so they can pull fresh state
+    broadcast('state-update', { ok: true, ts: Date.now() });
     return true;
   }
 

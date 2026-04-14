@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { ChartCanvas, EmptyState, TabPanel } from '../../components/layout/ConsoleChrome.tsx';
+import { CandlestickChart } from '../../components/charts/CandlestickChart.tsx';
+import { EmptyState, TabPanel } from '../../components/layout/ConsoleChrome.tsx';
+import { useOhlcvData } from '../../hooks/useOhlcvData.ts';
 import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
 import {
   fmtCurrency,
@@ -9,6 +11,7 @@ import {
   translateSide,
   translateSignal,
 } from '../../modules/console/console.utils.ts';
+import { submitTerminalOrder } from '../../modules/console/trading.service.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import {
   blotterPanel,
@@ -25,6 +28,7 @@ import {
   orderTypeTabs,
   tradeBtnRow,
   tradeBuyBtn,
+  tradeBuyBtnDisabled,
   tradeInfoRow,
   tradeInput,
   tradeInputGroup,
@@ -32,6 +36,7 @@ import {
   tradePanel,
   tradePanelTitle,
   tradeSellBtn,
+  tradeSellBtnDisabled,
   tradingGrid,
   tradingHeader,
   tradingHeaderChange,
@@ -63,6 +68,10 @@ export function TradingPage() {
   const [orderType, setOrderType] = useState<OrderType>('limit');
   const [limitPrice, setLimitPrice] = useState('');
   const [qty, setQty] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitFeedback, setSubmitFeedback] = useState<{ ok: boolean; message: string } | null>(
+    null
+  );
 
   const selectedStock = state.stockStates.find((s) => s.symbol === selectedSymbol);
   const priceChange = selectedStock
@@ -73,6 +82,8 @@ export function TradingPage() {
   const buyCount = state.stockStates.filter((s) => s.signal === 'BUY').length;
   const holdCount = state.stockStates.filter((s) => s.signal === 'HOLD').length;
   const sellCount = state.stockStates.filter((s) => s.signal === 'SELL').length;
+
+  const { bars: ohlcvData } = useOhlcvData(selectedSymbol, timeframe);
 
   const allOrders = [
     ...state.accounts.live.orders.map((o) => ({ ...o, account: 'live' as const })),
@@ -104,6 +115,55 @@ export function TradingPage() {
     market: locale === 'zh' ? '市价' : 'MARKET',
     stop: locale === 'zh' ? '止损' : 'STOP',
   };
+
+  async function handleSubmitOrder(side: 'buy' | 'sell') {
+    const parsedQty = Number(qty);
+    const parsedPrice = limitPrice ? Number(limitPrice) : undefined;
+
+    if (!parsedQty || parsedQty <= 0) {
+      setSubmitFeedback({
+        ok: false,
+        message: locale === 'zh' ? '请输入有效数量' : 'Please enter a valid quantity',
+      });
+      return;
+    }
+    if ((orderType === 'limit' || orderType === 'stop') && (!parsedPrice || parsedPrice <= 0)) {
+      setSubmitFeedback({
+        ok: false,
+        message: locale === 'zh' ? '请输入有效价格' : 'Please enter a valid price',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitFeedback(null);
+
+    const result = await submitTerminalOrder({
+      symbol: selectedSymbol,
+      side,
+      orderType,
+      qty: parsedQty,
+      price: parsedPrice,
+      source: 'trading-terminal',
+    });
+
+    setIsSubmitting(false);
+
+    if (result.ok) {
+      const msg =
+        locale === 'zh'
+          ? `执行计划已创建 (${result.handoffId?.slice(-8)})，请在执行台审批`
+          : `Execution plan created (${result.handoffId?.slice(-8)}), review in Execution tab`;
+      setSubmitFeedback({ ok: true, message: msg });
+      setQty('');
+      setLimitPrice('');
+    } else {
+      setSubmitFeedback({
+        ok: false,
+        message: result.message || (locale === 'zh' ? '提交失败' : 'Submission failed'),
+      });
+    }
+  }
 
   return (
     <div className={tradingShell}>
@@ -227,7 +287,7 @@ export function TradingPage() {
             >
               {selectedSymbol}
               <span style={{ color: 'var(--muted)', marginLeft: '8px', fontWeight: 400 }}>
-                {locale === 'zh' ? '权益曲线' : 'Equity Curve'}
+                {locale === 'zh' ? 'K 线图' : 'Chart'}
               </span>
             </div>
             <div className={chartToolbar}>
@@ -245,7 +305,7 @@ export function TradingPage() {
           </div>
 
           <div className={chartBody}>
-            <ChartCanvas kind="equity" />
+            <CandlestickChart data={ohlcvData} timeframe={timeframe} />
 
             <div className={chartSignalStrip}>
               <div className={chartSignalCard}>
@@ -320,13 +380,41 @@ export function TradingPage() {
           </div>
 
           <div className={tradeBtnRow}>
-            <button type="button" className={tradeBuyBtn}>
-              {locale === 'zh' ? '买入' : 'BUY'}
+            <button
+              type="button"
+              className={isSubmitting ? tradeBuyBtnDisabled : tradeBuyBtn}
+              disabled={isSubmitting}
+              onClick={() => handleSubmitOrder('buy')}
+            >
+              {isSubmitting ? '…' : locale === 'zh' ? '买入' : 'BUY'}
             </button>
-            <button type="button" className={tradeSellBtn}>
-              {locale === 'zh' ? '卖出' : 'SELL'}
+            <button
+              type="button"
+              className={isSubmitting ? tradeSellBtnDisabled : tradeSellBtn}
+              disabled={isSubmitting}
+              onClick={() => handleSubmitOrder('sell')}
+            >
+              {isSubmitting ? '…' : locale === 'zh' ? '卖出' : 'SELL'}
             </button>
           </div>
+
+          {submitFeedback && (
+            <div
+              style={{
+                padding: '8px 10px',
+                borderRadius: 'var(--radius)',
+                border: `1px solid ${submitFeedback.ok ? 'var(--buy)' : 'var(--sell)'}`,
+                background: submitFeedback.ok
+                  ? 'rgba(0, 200, 90, 0.06)'
+                  : 'rgba(255, 80, 80, 0.06)',
+                fontSize: '11px',
+                color: submitFeedback.ok ? 'var(--buy)' : 'var(--sell)',
+                lineHeight: 1.5,
+              }}
+            >
+              {submitFeedback.message}
+            </div>
+          )}
 
           <div style={{ display: 'grid', gap: '0' }}>
             <div className={tradeInfoRow}>
@@ -360,22 +448,6 @@ export function TradingPage() {
               <span>{locale === 'zh' ? '模拟现金' : 'Paper Cash'}</span>
               <strong>{fmtCurrency(state.accounts.paper.cash)}</strong>
             </div>
-          </div>
-
-          <div
-            style={{
-              padding: '10px',
-              borderRadius: 'var(--radius)',
-              border: '1px solid var(--line)',
-              background: 'rgba(255, 183, 0, 0.04)',
-              fontSize: '11px',
-              color: 'var(--muted)',
-              lineHeight: 1.5,
-            }}
-          >
-            {locale === 'zh'
-              ? '⚠ 下单功能为界面演示，实际委托请通过 Agent 或执行模块处理。'
-              : '⚠ Order placement is UI-only. Use the Agent or Execution module to submit real orders.'}
           </div>
         </div>
       </div>

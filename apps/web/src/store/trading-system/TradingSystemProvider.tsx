@@ -3,7 +3,7 @@ import type {
   TradingState,
   TradingSystemContextValue,
 } from '@shared-types/trading.ts';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
   fetchOperatorSession,
   reportOperatorAction,
@@ -12,6 +12,7 @@ import {
 import { runtimeConfig } from '../../app/config/runtime.ts';
 import { createBrokerProvider } from '../../app/providers/broker.ts';
 import { createMarketDataProvider } from '../../app/providers/marketData.ts';
+import { useSSE } from '../../hooks/useSSE.ts';
 import {
   APP_CONFIG,
   applyBrokerSnapshot,
@@ -37,6 +38,7 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   const stateRef = useRef(state);
   const busyRef = useRef(false);
   const timerRef = useRef<number | null>(null);
+  const sseConnectedRef = useRef(false);
 
   const refreshSession = async () => {
     try {
@@ -57,30 +59,60 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
     refreshSession().catch(() => null);
   }, []);
 
+  // Core state cycle runner (shared by polling and SSE-triggered paths)
+  const runCycle = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      const result = await runStateCycle(stateRef.current).catch(() => null);
+      const nextState = result?.state || stateRef.current;
+      stateRef.current = nextState;
+      setState(nextState);
+    } finally {
+      busyRef.current = false;
+    }
+  }, []);
+
+  // SSE: trigger runCycle immediately on server-push notification
+  const sseHandlers = useCallback(
+    () => ({
+      'state-update': () => {
+        runCycle();
+      },
+    }),
+    [runCycle]
+  );
+  const { connected: sseConnected } = useSSE('/api/sse/state', sseHandlers());
+
+  useEffect(() => {
+    sseConnectedRef.current = sseConnected;
+  }, [sseConnected]);
+
   useEffect(() => {
     let cancelled = false;
 
-    const runCycle = async () => {
-      if (busyRef.current) return;
-      busyRef.current = true;
-      try {
-        const result = await runStateCycle(stateRef.current).catch(() => null);
-        if (!cancelled) {
-          const nextState = result?.state || stateRef.current;
-          stateRef.current = nextState;
-          setState(nextState);
-        }
-      } finally {
-        busyRef.current = false;
-      }
+    const pollCycle = async () => {
+      if (cancelled) return;
+      await runCycle();
     };
 
-    runCycle();
-    timerRef.current = window.setInterval(runCycle, APP_CONFIG.refreshMs);
+    // Initial fetch regardless of SSE state
+    pollCycle();
+
+    // Fallback polling: 15s when SSE is connected, APP_CONFIG.refreshMs otherwise
+    const getInterval = () => (sseConnectedRef.current ? 15_000 : APP_CONFIG.refreshMs);
+    let intervalMs = getInterval();
+    timerRef.current = window.setInterval(() => {
+      intervalMs = getInterval();
+      pollCycle();
+    }, intervalMs);
+
     return () => {
       cancelled = true;
       if (timerRef.current) window.clearInterval(timerRef.current);
     };
+    // runCycle is stable (useCallback with no deps)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const hasPermission = (permission: string) =>

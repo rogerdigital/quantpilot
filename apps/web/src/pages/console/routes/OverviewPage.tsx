@@ -2,6 +2,7 @@ import { ChartCanvas, EmptyState, TopMeta } from '../../../components/layout/Con
 import { useLatestBrokerSnapshot } from '../../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../../hooks/useMarketProviderStatus.ts';
 import { useMonitoringStatus } from '../../../hooks/useMonitoringStatus.ts';
+import { AgentDailySummaryCard } from '../../../modules/agent/AgentDailySummaryCard.tsx';
 import { useSettingsNavigation, useSummary } from '../../../modules/console/console.hooks.ts';
 import { copy, useLocale } from '../../../modules/console/console.i18n.tsx';
 import {
@@ -236,6 +237,8 @@ export function OverviewPage() {
           <div className={overviewKpiNote}>{copy[locale].overview.workflowNote}</div>
         </article>
       </section>
+
+      <AgentDailySummaryCard />
 
       <section className={`panel-grid panel-grid-terminal ${overviewDeskGrid}`}>
         <article className={`panel ${overviewPrimaryPanel}`}>
