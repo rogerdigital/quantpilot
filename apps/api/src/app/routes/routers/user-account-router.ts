@@ -2,6 +2,7 @@
 
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import { encryptBrokerKey, maskBrokerKey } from '../../../modules/auth/broker-key-service.js';
 import {
   getBrokerBindingRuntimeSnapshot,
   getBrokerBindingsSnapshot,
@@ -129,7 +130,16 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/user-account/broker-bindings') {
-    writeJson(res, 200, getBrokerBindingsSnapshot());
+    const snapshot = getBrokerBindingsSnapshot();
+    // Mask any stored API keys before sending to client
+    if (snapshot.ok && Array.isArray(snapshot.bindings)) {
+      snapshot.bindings = snapshot.bindings.map((b) => ({
+        ...b,
+        apiKey: b.apiKey ? maskBrokerKey(b.apiKey) : undefined,
+        secretKey: b.secretKey ? '****' : undefined,
+      }));
+    }
+    writeJson(res, 200, snapshot);
     return true;
   }
 
@@ -145,6 +155,13 @@ export async function handleUserAccountRoutes({
       return true;
     }
     const body = await readJsonBody(req);
+    // Encrypt API key before persisting
+    if (body && typeof body.apiKey === 'string' && body.apiKey) {
+      body.apiKey = encryptBrokerKey(body.apiKey);
+    }
+    if (body && typeof body.secretKey === 'string' && body.secretKey) {
+      body.secretKey = encryptBrokerKey(body.secretKey);
+    }
     const result = saveBrokerBinding(body);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
