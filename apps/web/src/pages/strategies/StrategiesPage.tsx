@@ -754,6 +754,7 @@ function StrategiesPage() {
               onPromote={handlePromoteStrategy}
               onArchiveToggle={handleArchiveStrategy}
               onInspect={setSelectedStrategyId}
+              onViewDetail={(id) => navigate(`/strategies/${id}`)}
             />
           ))}
           {visibleArchivedStrategies.length ? (
@@ -775,6 +776,7 @@ function StrategiesPage() {
               onPromote={handlePromoteStrategy}
               onArchiveToggle={handleArchiveStrategy}
               onInspect={setSelectedStrategyId}
+              onViewDetail={(id) => navigate(`/strategies/${id}`)}
             />
           ))}
         </ResearchTerminalPanel>

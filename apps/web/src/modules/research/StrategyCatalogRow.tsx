@@ -13,6 +13,7 @@ export function StrategyCatalogRow(props: {
   onPromote: (item: StrategyCatalogItem) => void;
   onArchiveToggle: (item: StrategyCatalogItem) => void;
   onInspect: (strategyId: string) => void;
+  onViewDetail?: (strategyId: string) => void;
 }) {
   const { locale, item, nextStage, canWriteStrategy, saving, promotingId, selectedStrategyId } =
     props;
@@ -99,6 +100,15 @@ export function StrategyCatalogRow(props: {
                 ? '查看'
                 : 'Inspect'}
           </button>
+          {props.onViewDetail ? (
+            <button
+              type="button"
+              className="inline-action inline-action-approve"
+              onClick={() => props.onViewDetail!(item.id)}
+            >
+              {locale === 'zh' ? '详情页' : 'Detail'}
+            </button>
+          ) : null}
         </div>
       }
     />
