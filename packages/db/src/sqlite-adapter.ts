@@ -84,11 +84,11 @@ export function createSQLiteAdapter({ namespace, dbPath }) {
 
   return {
     adapter: {
-      kind: 'sqlite',
+      kind: 'db',
       label: 'SQLite Adapter',
       namespace,
       rootDir: resolvedPath,
-      persistence: 'sqlite',
+      persistence: 'embedded-json-db',
       capabilities: {
         collections: true,
         objects: true,
@@ -106,7 +106,11 @@ export function createSQLiteAdapter({ namespace, dbPath }) {
       return this.adapter;
     },
     describePersistence() {
-      return { adapter: this.adapter };
+      return {
+        adapter: this.adapter,
+        manifest: this.readAdapterManifest(),
+        migrationPlan: this.getMigrationPlan(),
+      };
     },
     readAdapterManifest() {
       return this.readObject('_control-plane-adapter.json', {});
@@ -119,8 +123,8 @@ export function createSQLiteAdapter({ namespace, dbPath }) {
           schemaVersion: 1,
           initializedAt: new Date().toISOString(),
           namespace,
-          adapterKind: 'sqlite',
-          persistence: 'sqlite',
+          adapterKind: 'db',
+          persistence: 'embedded-json-db',
           storageModel: 'sqlite-docstore',
           migrations: [],
         });
@@ -137,7 +141,8 @@ export function createSQLiteAdapter({ namespace, dbPath }) {
       };
     },
     applyMigrations() {
-      return { ok: true, adapter: this.adapter, appliedSteps: [] };
+      const manifest = this.readAdapterManifest();
+      return { ok: true, adapter: this.adapter, appliedSteps: [], manifest };
     },
   };
 }
