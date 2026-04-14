@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { addSseConnection } from '../../modules/sse/sse-manager.js';
+import { addSseConnection } from '../../../modules/sse/sse-manager.js';
 
 const KEEPALIVE_INTERVAL_MS = 30_000;
 
