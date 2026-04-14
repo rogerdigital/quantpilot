@@ -1,5 +1,6 @@
 // @ts-nocheck
 
+import { handleSseRoutes } from './routers/sse-router.js';
 import { handleAgentRoutes } from './routers/agent-router.js';
 import { handleAuthRoutes } from './routers/auth-router.js';
 import { handleBacktestRoutes } from './routers/backtest-router.js';
@@ -14,6 +15,7 @@ import { handleTradingRoutes } from './routers/trading-router.js';
 import { handleUserAccountRoutes } from './routers/user-account-router.js';
 
 const routers = [
+  handleSseRoutes,
   handleHealthRoutes,
   handleMonitoringRoutes,
   handleOperationsRoutes,
