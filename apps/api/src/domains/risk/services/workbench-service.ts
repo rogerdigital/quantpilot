@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { isSchedulerAttentionStatus } from '../../../modules/scheduler/service.js';
+import { calcBeta, calcCVaR, calcHHI, calcHistoricalVaR } from '../../../../../../packages/trading-engine/src/risk/index.js';
 import { getRiskSchedulerLinkage } from './risk-scheduler-linkage-service.js';
 
 function parseLimit(value, fallback) {
@@ -367,5 +368,57 @@ export function getRiskWorkbench(options = {}) {
       schedulerTicks: takeLatest(schedulerTicks, limit),
     },
     linkage,
+    analytics: computeRiskAnalytics(brokerSnapshot),
   };
+}
+
+function computeRiskAnalytics(snapshot) {
+  if (!snapshot) return { var95: null, cvar95: null, beta: null, hhi: null, holdingCount: 0 };
+
+  const positions = Array.isArray(snapshot?.positions) ? snapshot.positions : [];
+  const equity = Number(snapshot?.account?.equity || 0);
+  const holdingCount = positions.length;
+
+  if (holdingCount < 2 || equity <= 0) {
+    return { var95: null, cvar95: null, beta: null, hhi: null, holdingCount };
+  }
+
+  // Compute position weights
+  const weights = positions.map((p) => Number(p.marketValue || 0) / equity);
+  const hhi = parseFloat(calcHHI(weights).toFixed(4));
+
+  // Build portfolio daily returns from position price histories (via priceHistory if available)
+  const positionReturns = positions
+    .map((p) => {
+      const hist = Array.isArray(p.priceHistory) ? p.priceHistory : [];
+      if (hist.length < 2) return null;
+      const weight = Number(p.marketValue || 0) / equity;
+      return hist.slice(1).map((v, i) => (hist[i] > 0 ? Math.log(v / hist[i]) * weight : 0));
+    })
+    .filter(Boolean);
+
+  if (!positionReturns.length) {
+    return { var95: null, cvar95: null, beta: null, hhi, holdingCount };
+  }
+
+  // Sum weighted returns across positions to get portfolio daily returns
+  const len = Math.min(...positionReturns.map((r) => r.length));
+  const portfolioReturns = Array.from({ length: len }, (_, i) =>
+    positionReturns.reduce((s, r) => s + r[i], 0)
+  );
+
+  const var95 = parseFloat((calcHistoricalVaR(portfolioReturns, 0.95) * 100).toFixed(3));
+  const cvar95 = parseFloat((calcCVaR(portfolioReturns, 0.95) * 100).toFixed(3));
+
+  // Beta: compare largest position to portfolio as proxy (if SPY history not available)
+  // We use the first position with longest history as benchmark proxy
+  const benchmarkReturns = positionReturns.reduce((best, r) =>
+    r.length > best.length ? r : best
+  , []);
+  const beta =
+    portfolioReturns.length >= 10
+      ? parseFloat(calcBeta(portfolioReturns, benchmarkReturns).toFixed(3))
+      : null;
+
+  return { var95, cvar95, beta, hhi, holdingCount };
 }
