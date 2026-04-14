@@ -17,6 +17,7 @@ import {
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import {
   appShell,
+  appShellCollapsed,
   brand,
   brandMark,
   brandName,
@@ -30,7 +31,9 @@ import {
   navStack,
   sidebar,
   sidebarBlock,
+  sidebarCollapsed,
   sidebarLabel,
+  sidebarToggle,
   toolbarActions,
   toolbarCopy,
   toolbarKicker,
@@ -275,30 +278,72 @@ export function TopMeta({ items }: { items: TopMetaItem[] }) {
   );
 }
 
-function Sidebar() {
+function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const { locale } = useLocale();
   const routes = listSidebarRoutes();
 
   return (
-    <aside className={sidebar}>
-      <div className={brand}>
-        <div className={brandMark} />
-        <div>
-          <div className={brandName}>{copy[locale].product}</div>
-          <div className={brandSub}>{copy[locale].tagline}</div>
-        </div>
-      </div>
+    <aside
+      className={`${sidebar}${collapsed ? ` ${sidebarCollapsed}` : ''}`}
+      style={{ position: 'relative' }}
+    >
+      <button
+        type="button"
+        className={sidebarToggle}
+        onClick={onToggle}
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        {collapsed ? '›' : '‹'}
+      </button>
 
-      <div className={sidebarBlock}>
-        <div className={sidebarLabel}>{copy[locale].labels.tacticalRoutes}</div>
+      {!collapsed && (
+        <div className={brand}>
+          <div className={brandMark} />
+          <div>
+            <div className={brandName}>{copy[locale].product}</div>
+            <div className={brandSub}>{copy[locale].tagline}</div>
+          </div>
+        </div>
+      )}
+
+      {collapsed && (
+        <div
+          style={{
+            marginBottom: '24px',
+            paddingBottom: '18px',
+            borderBottom: '1px solid var(--line)',
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
+          <div className={brandMark} />
+        </div>
+      )}
+
+      <div className={sidebarBlock} style={collapsed ? { padding: '10px 6px' } : undefined}>
+        {!collapsed && <div className={sidebarLabel}>{copy[locale].labels.tacticalRoutes}</div>}
         <nav className={navStack}>
           {routes.map((route) => (
             <NavLink
               key={route.path}
               to={route.path}
-              className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+              className={({ isActive }) =>
+                `nav-link${isActive ? ' active' : ''}${collapsed ? ' nav-link-icon-only' : ''}`
+              }
+              title={collapsed ? copy[locale].nav[route.id] : undefined}
+              style={
+                collapsed
+                  ? {
+                      padding: '10px',
+                      textAlign: 'center',
+                      fontSize: '10px',
+                      letterSpacing: '0.05em',
+                    }
+                  : undefined
+              }
             >
-              {copy[locale].nav[route.id]}
+              {collapsed ? copy[locale].nav[route.id].slice(0, 2) : copy[locale].nav[route.id]}
             </NavLink>
           ))}
         </nav>
@@ -468,14 +513,25 @@ export function EmptyState({ icon, message, detail }: EmptyStateProps) {
 export function Layout() {
   const location = useLocation();
   const { locale } = useLocale();
+  const [collapsed, setCollapsed] = useState(() => {
+    return window.localStorage.getItem('quantpilot-sidebar-collapsed') === 'true';
+  });
+
+  const handleToggle = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      window.localStorage.setItem('quantpilot-sidebar-collapsed', String(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     document.title = getConsoleDocumentTitle(locale, location.pathname);
   }, [locale, location.pathname]);
 
   return (
-    <div className={appShell}>
-      <Sidebar />
+    <div className={`${appShell}${collapsed ? ` ${appShellCollapsed}` : ''}`}>
+      <Sidebar collapsed={collapsed} onToggle={handleToggle} />
       <main className={mainPanel}>
         <GlobalToolbar />
         <Outlet />

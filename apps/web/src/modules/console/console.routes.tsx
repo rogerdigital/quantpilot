@@ -18,12 +18,22 @@ const SettingsPage = lazy(() =>
 const NotificationsPage = lazy(() => import('../../pages/notifications/NotificationsPage.tsx'));
 const BacktestPage = lazy(() => import('../../pages/backtest/BacktestPage.tsx'));
 const StrategiesPage = lazy(() => import('../../pages/strategies/StrategiesPage.tsx'));
+const StrategyDetailPage = lazy(() =>
+  import('../../pages/strategies/StrategyDetailPage.tsx').then((m) => ({
+    default: m.StrategyDetailPage,
+  }))
+);
 const RiskPage = lazy(() => import('../../pages/risk/RiskPage.tsx'));
+const TradingPage = lazy(() =>
+  import('../../pages/trading/TradingPage.tsx').then((m) => ({ default: m.TradingPage }))
+);
 
 type ConsoleNavKey =
   | 'dashboard'
   | 'market'
+  | 'trading'
   | 'strategies'
+  | 'strategy-detail'
   | 'backtest'
   | 'risk'
   | 'execution'
@@ -67,12 +77,26 @@ export const CONSOLE_ROUTES: ConsoleRouteDefinition[] = [
     element: renderLazyRoute(<MarketPage />),
   },
   {
+    id: 'trading',
+    pageKey: 'trading',
+    path: '/trading',
+    includeInSidebar: true,
+    element: renderLazyRoute(<TradingPage />),
+  },
+  {
     id: 'strategies',
     pageKey: 'strategies',
     path: '/strategies',
     aliases: ['/signals', '/strategy'],
     includeInSidebar: true,
     element: renderLazyRoute(<StrategiesPage />),
+  },
+  {
+    id: 'strategy-detail',
+    pageKey: 'strategies',
+    path: '/strategies/:id',
+    includeInSidebar: false,
+    element: renderLazyRoute(<StrategyDetailPage />),
   },
   {
     id: 'backtest',
