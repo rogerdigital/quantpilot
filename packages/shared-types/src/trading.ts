@@ -12,11 +12,51 @@ export type RuntimeConfig = {
 export type Quote = {
   symbol: string;
   price: number;
+  open?: number;
   prevClose: number;
   high: number;
   low: number;
   volume: number;
   turnover: number;
+};
+
+export type OhlcvBar = {
+  time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+
+export type OhlcvResponse = {
+  symbol: string;
+  timeframe: string;
+  bars: OhlcvBar[];
+};
+
+export type TerminalOrderRequest = {
+  symbol: string;
+  side: 'buy' | 'sell';
+  orderType: 'limit' | 'market' | 'stop';
+  qty: number;
+  price?: number;
+  source: 'trading-terminal';
+};
+
+export type TerminalOrderResponse = {
+  ok: boolean;
+  handoffId?: string;
+  riskDecision?: string;
+  message?: string;
+};
+
+export type RiskAnalytics = {
+  var95: number | null;
+  cvar95: number | null;
+  beta: number | null;
+  hhi: number | null;
+  holdingCount: number;
 };
 
 export type MarketDataSnapshot = {
