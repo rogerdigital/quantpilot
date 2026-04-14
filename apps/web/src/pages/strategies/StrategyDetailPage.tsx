@@ -14,8 +14,8 @@ import {
   detailKvTable,
   detailMetricCard,
   detailMetricLabel,
-  detailMetricValue,
   detailMetricsGrid,
+  detailMetricValue,
   detailPanel,
   detailPanelHead,
   detailRunRow,
@@ -72,9 +72,7 @@ export function StrategyDetailPage() {
         <button type="button" className={detailBackRow} onClick={() => navigate('/strategies')}>
           ← {locale === 'zh' ? '返回策略工作台' : 'Back to Strategies'}
         </button>
-        <EmptyState
-          message={error || (locale === 'zh' ? '策略不存在' : 'Strategy not found')}
-        />
+        <EmptyState message={error || (locale === 'zh' ? '策略不存在' : 'Strategy not found')} />
       </div>
     );
   }
@@ -93,11 +91,17 @@ export function StrategyDetailPage() {
         </button>
         <div className={detailHeaderMeta}>
           <div>
-            <div className="eyebrow">{strategy.family} · {strategy.timeframe} · {strategy.universe}</div>
-            <h1 style={{ margin: '6px 0 0', fontSize: 'clamp(22px, 3vw, 36px)' }}>{strategy.name}</h1>
+            <div className="eyebrow">
+              {strategy.family} · {strategy.timeframe} · {strategy.universe}
+            </div>
+            <h1 style={{ margin: '6px 0 0', fontSize: 'clamp(22px, 3vw, 36px)' }}>
+              {strategy.name}
+            </h1>
           </div>
           <div className={detailHeaderActions}>
-            <span className={`${detailStageBadge} ${detailStageBadgeVariants[tone as keyof typeof detailStageBadgeVariants]}`}>
+            <span
+              className={`${detailStageBadge} ${detailStageBadgeVariants[tone as keyof typeof detailStageBadgeVariants]}`}
+            >
               {strategy.status.toUpperCase()}
             </span>
           </div>
@@ -194,7 +198,13 @@ export function StrategyDetailPage() {
               {recentRuns.slice(0, 8).map((run) => (
                 <div className={detailRunRow} key={run.id}>
                   <div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-strong)', fontFamily: 'var(--font-data)' }}>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        color: 'var(--text-strong)',
+                        fontFamily: 'var(--font-data)',
+                      }}
+                    >
                       {run.windowLabel}
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
@@ -202,8 +212,10 @@ export function StrategyDetailPage() {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div className={`${run.annualizedReturnPct >= 0 ? 'text-up' : 'text-down'}`}
-                      style={{ fontSize: '13px', fontFamily: 'var(--font-data)', fontWeight: 700 }}>
+                    <div
+                      className={`${run.annualizedReturnPct >= 0 ? 'text-up' : 'text-down'}`}
+                      style={{ fontSize: '13px', fontFamily: 'var(--font-data)', fontWeight: 700 }}
+                    >
                       {fmtPct(run.annualizedReturnPct)}
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--muted)' }}>

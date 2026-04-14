@@ -283,7 +283,10 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
   const routes = listSidebarRoutes();
 
   return (
-    <aside className={`${sidebar}${collapsed ? ` ${sidebarCollapsed}` : ''}`} style={{ position: 'relative' }}>
+    <aside
+      className={`${sidebar}${collapsed ? ` ${sidebarCollapsed}` : ''}`}
+      style={{ position: 'relative' }}
+    >
       <button
         type="button"
         className={sidebarToggle}
@@ -305,7 +308,15 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
       )}
 
       {collapsed && (
-        <div style={{ marginBottom: '24px', paddingBottom: '18px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'center' }}>
+        <div
+          style={{
+            marginBottom: '24px',
+            paddingBottom: '18px',
+            borderBottom: '1px solid var(--line)',
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
           <div className={brandMark} />
         </div>
       )}
@@ -317,9 +328,20 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
             <NavLink
               key={route.path}
               to={route.path}
-              className={({ isActive }) => `nav-link${isActive ? ' active' : ''}${collapsed ? ' nav-link-icon-only' : ''}`}
+              className={({ isActive }) =>
+                `nav-link${isActive ? ' active' : ''}${collapsed ? ' nav-link-icon-only' : ''}`
+              }
               title={collapsed ? copy[locale].nav[route.id] : undefined}
-              style={collapsed ? { padding: '10px', textAlign: 'center', fontSize: '10px', letterSpacing: '0.05em' } : undefined}
+              style={
+                collapsed
+                  ? {
+                      padding: '10px',
+                      textAlign: 'center',
+                      fontSize: '10px',
+                      letterSpacing: '0.05em',
+                    }
+                  : undefined
+              }
             >
               {collapsed ? copy[locale].nav[route.id].slice(0, 2) : copy[locale].nav[route.id]}
             </NavLink>

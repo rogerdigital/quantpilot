@@ -386,7 +386,10 @@ export function TradingPage() {
           tabs={[
             {
               key: 'positions',
-              label: locale === 'zh' ? `持仓 (${allPositions.length})` : `Positions (${allPositions.length})`,
+              label:
+                locale === 'zh'
+                  ? `持仓 (${allPositions.length})`
+                  : `Positions (${allPositions.length})`,
               content: (
                 <div className="panel-body panel-body-sm">
                   {allPositions.length === 0 ? (
@@ -399,8 +402,7 @@ export function TradingPage() {
                             <strong>{pos.symbol}</strong>
                             <span
                               style={{
-                                color:
-                                  pos.account === 'live' ? 'var(--buy)' : 'var(--accent-live)',
+                                color: pos.account === 'live' ? 'var(--buy)' : 'var(--accent-live)',
                               }}
                             >
                               {pos.account === 'live'
@@ -425,7 +427,8 @@ export function TradingPage() {
             },
             {
               key: 'orders',
-              label: locale === 'zh' ? `委托 (${allOrders.length})` : `Orders (${allOrders.length})`,
+              label:
+                locale === 'zh' ? `委托 (${allOrders.length})` : `Orders (${allOrders.length})`,
               content: (
                 <div className="panel-body panel-body-sm">
                   {allOrders.length === 0 ? (
