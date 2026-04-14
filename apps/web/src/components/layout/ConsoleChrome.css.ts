@@ -11,6 +11,11 @@ export const appShell = style({
   minHeight: '100vh',
   gap: 0,
   padding: 0,
+  transition: 'grid-template-columns 0.25s ease',
+});
+
+export const appShellCollapsed = style({
+  gridTemplateColumns: '60px 1fr',
 });
 
 globalStyle(`${appShell}::before`, {
@@ -84,6 +89,37 @@ globalStyle(`${sidebar}::before`, {
   height: '120px',
   background: 'radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.06), transparent 70%)',
   pointerEvents: 'none',
+});
+
+export const sidebarCollapsed = style({
+  width: '60px',
+  padding: '24px 10px',
+  alignItems: 'center',
+});
+
+export const sidebarToggle = style({
+  position: 'absolute',
+  top: '24px',
+  right: '-13px',
+  zIndex: 10,
+  width: '26px',
+  height: '26px',
+  borderRadius: '50%',
+  border: '1px solid var(--line-strong)',
+  background: 'var(--panel-2)',
+  color: 'var(--muted)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  fontSize: '12px',
+  transition: 'border-color 160ms ease, color 160ms ease, background 160ms ease',
+  flexShrink: 0,
+  ':hover': {
+    borderColor: 'var(--accent-live)',
+    color: 'var(--accent-live)',
+    background: 'rgba(0, 212, 255, 0.08)',
+  },
 });
 
 export const brand = style({
