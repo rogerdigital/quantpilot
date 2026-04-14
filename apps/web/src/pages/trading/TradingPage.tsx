@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { ChartCanvas, EmptyState, TabPanel } from '../../components/layout/ConsoleChrome.tsx';
+import { useMemo, useState } from 'react';
+import { CandlestickChart } from '../../components/charts/CandlestickChart.tsx';
+import { EmptyState, TabPanel } from '../../components/layout/ConsoleChrome.tsx';
 import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
 import {
   fmtCurrency,
@@ -78,6 +79,33 @@ export function TradingPage() {
   const buyCount = state.stockStates.filter((s) => s.signal === 'BUY').length;
   const holdCount = state.stockStates.filter((s) => s.signal === 'HOLD').length;
   const sellCount = state.stockStates.filter((s) => s.signal === 'SELL').length;
+
+  // Generate deterministic mock OHLCV bars from current price (replaced by real data in P1-3)
+  const ohlcvData = useMemo(() => {
+    if (!selectedStock) return [];
+    const bars = [];
+    let price = selectedStock.prevClose;
+    const seed = selectedSymbol.split('').reduce((s, c) => s + c.charCodeAt(0), 0);
+    for (let i = 59; i >= 0; i--) {
+      const noise = Math.sin(seed * (i + 1) * 0.37) * 0.015;
+      const close = price * (1 + noise);
+      const open = price * (1 + Math.sin(seed * (i + 2) * 0.53) * 0.008);
+      const high = Math.max(open, close) * (1 + Math.abs(Math.sin(seed * (i + 3) * 0.71)) * 0.006);
+      const low = Math.min(open, close) * (1 - Math.abs(Math.sin(seed * (i + 4) * 0.59)) * 0.006);
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      bars.push({
+        time: date.toISOString().split('T')[0],
+        open: parseFloat(open.toFixed(2)),
+        high: parseFloat(high.toFixed(2)),
+        low: parseFloat(low.toFixed(2)),
+        close: parseFloat(close.toFixed(2)),
+        volume: Math.round(1e6 * (1 + Math.abs(Math.sin(seed * (i + 5) * 0.43)) * 0.5)),
+      });
+      price = close;
+    }
+    return bars;
+  }, [selectedSymbol, selectedStock]);
 
   const allOrders = [
     ...state.accounts.live.orders.map((o) => ({ ...o, account: 'live' as const })),
@@ -271,7 +299,7 @@ export function TradingPage() {
             >
               {selectedSymbol}
               <span style={{ color: 'var(--muted)', marginLeft: '8px', fontWeight: 400 }}>
-                {locale === 'zh' ? '权益曲线' : 'Equity Curve'}
+                {locale === 'zh' ? 'K 线图' : 'Chart'}
               </span>
             </div>
             <div className={chartToolbar}>
@@ -289,7 +317,7 @@ export function TradingPage() {
           </div>
 
           <div className={chartBody}>
-            <ChartCanvas kind="equity" />
+            <CandlestickChart data={ohlcvData} timeframe={timeframe} />
 
             <div className={chartSignalStrip}>
               <div className={chartSignalCard}>

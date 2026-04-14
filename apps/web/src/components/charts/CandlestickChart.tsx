@@ -35,7 +35,6 @@ export function CandlestickChart({ data, timeframe }: Props) {
       },
       timeScale: {
         borderColor: 'rgba(0, 180, 255, 0.1)',
-        textColor: 'rgba(100, 140, 195, 0.65)',
         timeVisible: true,
       },
       crosshair: {
