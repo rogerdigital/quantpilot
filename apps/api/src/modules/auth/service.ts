@@ -1,7 +1,8 @@
 // @ts-nocheck
 import { getUserAccount } from '../../../../../packages/control-plane-runtime/src/index.js';
+import { verifyToken } from './jwt-service.js';
 
-export function getSession() {
+export function getSession(authHeader) {
   const account = getUserAccount();
   const defaultBrokerBinding =
     account.brokerBindings.find((binding) => binding.isDefault) ||
@@ -54,4 +55,31 @@ export function getSession() {
 
 export function hasPermission(permission) {
   return getSession().user.permissions.includes(permission);
+}
+
+/** Validate a Bearer token and return JWT-based session fields if valid. */
+export async function getSessionFromToken(authHeader) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  try {
+    const token = authHeader.slice(7);
+    const payload = await verifyToken(token);
+    return {
+      ok: true,
+      user: {
+        id: payload.userId,
+        name: payload.userId,
+        email: '',
+        role: 'operator',
+        organization: '',
+        tenantId: '',
+        workspaceId: '',
+        permissions: Array.isArray(payload.permissions) ? payload.permissions : [],
+        accessStatus: 'active',
+      },
+      issuedAt: new Date().toISOString(),
+      source: 'jwt',
+    };
+  } catch {
+    return null;
+  }
 }
