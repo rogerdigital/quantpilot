@@ -8,11 +8,16 @@ QuantPilot is not a production live-trading system. It is a platform skeleton an
 
 ## What QuantPilot Includes
 
-- A multi-workbench web console for dashboard, market, strategy, backtest, risk, execution, agent, notifications, and settings workflows
-- An API gateway for account, auth, research, execution, risk, scheduler, incident, operations, and agent contracts
+- A multi-workbench web console for dashboard, market, strategy, backtest, risk, execution, trading terminal, agent, notifications, and settings workflows
+- An API gateway for account, auth, research, execution, risk, scheduler, incident, operations, market data, SSE push, and agent contracts
 - Background workers for notification dispatch, risk scans, scheduler ticks, workflow maintenance, monitoring scans, queued workflow execution, and agent daily run operational loops
 - Shared runtime packages for trading logic, control-plane fanout, workflow execution, and frontend/backend type contracts
-- Control-plane persistence with `file` and `db` adapter foundations, maintenance tooling, schema manifests, and migration contracts
+- Control-plane persistence with `file` and `db` adapter foundations — the `db` adapter is backed by SQLite (WAL mode) via `better-sqlite3`, with maintenance tooling, schema manifests, and migration contracts
+- Event-driven backtest engine producing real Sharpe, max drawdown, and win-rate metrics
+- Risk analytics layer computing Historical VaR, CVaR, Beta, and HHI concentration on live portfolio snapshots
+- Optional Hono API gateway layer (`USE_HONO=true`) with CORS, structured logging, and request timing
+- JWT authentication (`jose`) and AES-256-GCM broker API key encryption for credentials at rest
+- Server-Sent Events push for live state updates, reducing polling to a 15-second fallback
 - Verification baselines that protect closed roadmap contracts across platform, research, execution, risk, scheduler, agent, and production-readiness surfaces
 
 ## Platform Scope
@@ -39,6 +44,8 @@ Primary locations:
 - `apps/web/src/pages`
 - `apps/web/src/modules`
 - `apps/web/src/store`
+- `apps/web/src/components/charts` — lightweight-charts v5 components (EquityChart, SignalBarChart, CandlestickChart)
+- `apps/web/src/hooks` — useOhlcvData, useSSE
 
 ### 2. Backend
 
@@ -48,8 +55,11 @@ Primary locations:
 
 - `apps/api`
 - `apps/api/src/app`
+- `apps/api/src/app/routes/hono` — optional Hono router layer
 - `apps/api/src/domains`
 - `apps/api/src/modules`
+- `apps/api/src/modules/auth` — JWT service, broker key encryption
+- `apps/api/src/modules/sse` — SSE connection manager
 - `packages/control-plane-runtime`
 
 ### 3. Data Layer
@@ -59,7 +69,7 @@ Persistence, repository contracts, adapter abstractions, and low-level storage u
 Primary locations:
 
 - `packages/control-plane-store`
-- `packages/db`
+- `packages/db` — includes SQLite adapter (`sqlite-adapter.ts`) and Drizzle schema
 - `packages/shared-types`
 
 ### 4. Strategy Layer
@@ -69,6 +79,7 @@ Strategy registration, backtesting, evaluation, comparison, and governance.
 Primary locations:
 
 - `packages/trading-engine/src/strategy`
+- `packages/trading-engine/src/backtest` — event-driven backtest engine
 - `apps/api/src/domains/strategy`
 - `apps/api/src/domains/backtest`
 - `apps/api/src/modules/strategy`
@@ -86,11 +97,11 @@ Primary locations:
 
 ### 6. Risk Layer
 
-Risk review, approval boundaries, policy actions, and shared risk/scheduler middleware context.
+Risk review, approval boundaries, policy actions, risk analytics, and shared risk/scheduler middleware context.
 
 Primary locations:
 
-- `packages/trading-engine/src/risk`
+- `packages/trading-engine/src/risk` — Historical VaR, CVaR, Beta, HHI calculators
 - `apps/api/src/domains/risk`
 - `apps/api/src/modules/risk`
 - `apps/worker/src/tasks/risk-scan-task.ts`
@@ -133,6 +144,7 @@ quantpilot/
 
 - Strategy catalog with research context
 - Backtest runs, result versions, evaluations, and reports
+- Event-driven daily-frequency backtest engine with real Sharpe, max drawdown, win-rate, and turnover metrics
 - Governance actions, baselines, champions, comparison, and replay
 - Structured handoff from research into execution preparation
 
@@ -141,26 +153,49 @@ quantpilot/
 - Execution plans, runtime events, broker-event ingestion, and account snapshots
 - Lifecycle progression through approval, submission, reconciliation, recovery, and compensation
 - Queue-oriented execution operations console with incident linkage
+- Trading terminal with BUY/SELL order submission wired to the execution candidate handoff flow
 
 ### Risk And Scheduling
 
 - Unified risk workbench and scheduler workbench snapshots
 - Shared risk/scheduler linkage context
 - Reviewed middleware actions that write audit, notifications, and incident-aware control-plane state
+- Risk analytics on live positions: Historical VaR (95%), CVaR (95%), Beta, and HHI concentration index
+
+### Charts And Market Data
+
+- `GET /api/market/ohlcv` endpoint for OHLCV bar history (Alpaca-backed or deterministic simulation)
+- lightweight-charts v5 components replacing hand-drawn Canvas: EquityChart, SignalBarChart, CandlestickChart
+- `useOhlcvData` hook for symbol/timeframe-driven chart data with automatic refetch
 
 ### Agent Collaboration
 
 - Persisted `session / intent / plan / analysis run / action request / daily run` contracts
-- Backend-driven workbench aggregation
+- Backend-driven workbench aggregation with AI daily summary card on the Dashboard
 - Controlled action handoffs that stay inside approval and risk boundaries
 - Daily run operational loop: pre-market brief, intraday monitoring with authority downgrade, and post-market recap with authority reset
 - Ask-first queue for agent-initiated actions: trim, exit, cancel, and risk-reduce
+
+### Real-Time Push
+
+- `GET /api/sse/state` Server-Sent Events endpoint for live state updates
+- `useSSE` hook with exponential-backoff reconnect
+- Frontend polling drops to 15-second fallback while SSE connection is alive
+
+### Auth And Security
+
+- `POST /api/auth/login` endpoint issuing HS256 JWT tokens (8-hour expiry, `jose`)
+- Optional Bearer token validation in `getSession` — backward compatible with the existing static session
+- AES-256-GCM encryption for broker API keys at rest (`BROKER_KEY_ENCRYPTION_KEY`)
+- API key masked to last 4 characters on all read endpoints
 
 ### Operations And Control Plane
 
 - Monitoring snapshots, alerts, incidents, audit trail, operator actions, and workflow history
 - Workspace-aware account scope and access policy resolution
 - Backup, restore dry-run, integrity checks, repair tooling, and persistence posture visibility
+- SQLite WAL storage for the embedded control-plane DB (replaces flat-file JSON in `db` adapter)
+- Optional Hono gateway layer (`USE_HONO=true`) with CORS, request logging, and timing middleware
 
 ## Quick Start
 
@@ -198,6 +233,15 @@ npm run check:runtime-env -- --env-file .env
 
 This validates supported storage adapters, provider combinations, and required environment variables. The checked template lives in `.env.example`.
 
+Key environment variables added in the platform upgrade:
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `JWT_SECRET` | HS256 signing key for issued tokens (min 32 chars) | `dev-secret-change-in-prod` |
+| `BROKER_KEY_ENCRYPTION_KEY` | 64-char hex key (32 bytes) for AES-256-GCM broker key encryption | `000...0` (dev only) |
+| `DEMO_USERNAME` / `DEMO_PASSWORD` | Credentials for `POST /api/auth/login` | `admin` / `changeme` |
+| `USE_HONO` | Set `true` to start the Hono gateway instead of the native HTTP server | unset |
+
 ## Development Commands
 
 ```bash
@@ -223,14 +267,15 @@ After dependency installation, repository git hooks are automatically pointed at
 2. Lockfile sync checks
 3. Documentation consistency checks
 4. Runtime environment checks
-5. Control-plane tests
-6. Runtime tests
-7. Workflow-engine tests
-8. API tests
-9. Worker tests
-10. Web tests
-11. Web typecheck
-12. Production web build
+5. Lint (Biome)
+6. Control-plane tests
+7. Runtime tests
+8. Workflow-engine tests
+9. API tests
+10. Worker tests
+11. Web tests
+12. Web typecheck
+13. Production web build
 
 ## Operations And Deployment
 
@@ -273,6 +318,7 @@ These documents define the closed capability boundaries and the baseline expecta
 - `apps/api/src/app/index.ts`
 - `apps/worker/src/main.ts`
 - `packages/trading-engine/src/runtime.ts`
+- `packages/trading-engine/src/backtest/index.ts`
 - `packages/control-plane-runtime/src/index.ts`
 - `packages/control-plane-store/src/index.ts`
 - `packages/task-workflow-engine/src/index.ts`

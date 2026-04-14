@@ -8,11 +8,16 @@ QuantPilot 不是一个可直接用于实盘的生产交易系统。它当前定
 
 ## QuantPilot 包含什么
 
-- 一个覆盖 dashboard、market、strategy、backtest、risk、execution、agent、notifications 和 settings 的多工作台前端控制台
-- 一套覆盖 account、auth、research、execution、risk、scheduler、incident、operations 与 agent 合同的 API 网关
+- 一个覆盖 dashboard、market、strategy、backtest、risk、execution、trading terminal、agent、notifications 和 settings 的多工作台前端控制台
+- 一套覆盖 account、auth、research、execution、risk、scheduler、incident、operations、market data、SSE push 与 agent 合同的 API 网关
 - 负责通知分发、风险扫描、调度 tick、workflow maintenance、monitoring scan、排队工作流执行以及 Agent 每日运营循环执行的后台 worker
 - 用于交易逻辑、控制面 fanout、工作流执行和前后端共享类型的公共运行时包
-- 具备 `file` 与 `db` adapter foundation、维护工具、schema manifest 和 migration contract 的控制面持久化层
+- 具备 `file` 与 `db` adapter foundation 的控制面持久化层——`db` adapter 由 `better-sqlite3` 驱动的 SQLite（WAL 模式）提供，包含维护工具、schema manifest 和 migration contract
+- 基于事件驱动的日频回测引擎，可产出真实 Sharpe、最大回撤、胜率等指标
+- 基于实时持仓快照的风险量化层：历史法 VaR、CVaR、Beta 和 HHI 集中度
+- 可选 Hono API 网关层（`USE_HONO=true`），内置 CORS、结构化请求日志和耗时中间件
+- 基于 `jose` 的 JWT 认证与 AES-256-GCM broker API key 静态加密
+- Server-Sent Events 实时推送，将轮询降级为 15 秒 fallback
 - 用于保护平台、研究、执行、风险、调度、Agent 与生产化基线合同的自动化验证体系
 
 ## 平台范围
@@ -39,6 +44,8 @@ QuantPilot 当前围绕四条平台级运行主链路组织能力：
 - `apps/web/src/pages`
 - `apps/web/src/modules`
 - `apps/web/src/store`
+- `apps/web/src/components/charts` — lightweight-charts v5 组件（EquityChart、SignalBarChart、CandlestickChart）
+- `apps/web/src/hooks` — useOhlcvData、useSSE
 
 ### 2. Backend
 
@@ -48,8 +55,11 @@ QuantPilot 当前围绕四条平台级运行主链路组织能力：
 
 - `apps/api`
 - `apps/api/src/app`
+- `apps/api/src/app/routes/hono` — 可选 Hono 路由层
 - `apps/api/src/domains`
 - `apps/api/src/modules`
+- `apps/api/src/modules/auth` — JWT 服务、broker key 加密
+- `apps/api/src/modules/sse` — SSE 连接管理器
 - `packages/control-plane-runtime`
 
 ### 3. Data Layer
@@ -59,7 +69,7 @@ QuantPilot 当前围绕四条平台级运行主链路组织能力：
 主要代码位置：
 
 - `packages/control-plane-store`
-- `packages/db`
+- `packages/db` — 包含 SQLite adapter（`sqlite-adapter.ts`）和 Drizzle schema
 - `packages/shared-types`
 
 ### 4. Strategy Layer
@@ -69,6 +79,7 @@ QuantPilot 当前围绕四条平台级运行主链路组织能力：
 主要代码位置：
 
 - `packages/trading-engine/src/strategy`
+- `packages/trading-engine/src/backtest` — 事件驱动回测引擎
 - `apps/api/src/domains/strategy`
 - `apps/api/src/domains/backtest`
 - `apps/api/src/modules/strategy`
@@ -86,11 +97,11 @@ QuantPilot 当前围绕四条平台级运行主链路组织能力：
 
 ### 6. Risk Layer
 
-负责风险复核、审批边界、policy action 以及共享 risk/scheduler 中间件上下文。
+负责风险复核、审批边界、policy action、风险量化分析以及共享 risk/scheduler 中间件上下文。
 
 主要代码位置：
 
-- `packages/trading-engine/src/risk`
+- `packages/trading-engine/src/risk` — 历史法 VaR、CVaR、Beta、HHI 计算器
 - `apps/api/src/domains/risk`
 - `apps/api/src/modules/risk`
 - `apps/worker/src/tasks/risk-scan-task.ts`
@@ -133,6 +144,7 @@ quantpilot/
 
 - 带研究上下文的 strategy catalog
 - backtest run、result version、evaluation 和 report
+- 事件驱动日频回测引擎，计算真实 Sharpe、最大回撤、胜率和换手率指标
 - governance action、baseline、champion、comparison 和 replay
 - 从 research 到 execution preparation 的结构化 handoff
 
@@ -141,26 +153,49 @@ quantpilot/
 - execution plan、runtime event、broker event ingestion 和 account snapshot
 - 覆盖 approval、submission、reconciliation、recovery 和 compensation 的生命周期推进
 - 带 incident linkage 的队列化 execution operations console
+- Trading terminal，BUY/SELL 下单接入执行候选 handoff 流程
 
 ### 风控与调度
 
 - 统一的 risk workbench 与 scheduler workbench 快照
 - 共享的 risk/scheduler linkage context
 - 会写入 audit、notification 和 incident-aware control-plane state 的 reviewed middleware action
+- 实时持仓风险量化：历史法 VaR（95%）、CVaR（95%）、Beta 和 HHI 集中度
+
+### 图表与行情数据
+
+- `GET /api/market/ohlcv` 端点，提供 OHLCV K 线历史（Alpaca 接入或确定性模拟）
+- 基于 lightweight-charts v5 的图表组件，替代手写 Canvas：EquityChart、SignalBarChart、CandlestickChart
+- `useOhlcvData` hook，支持按 symbol/timeframe 驱动的图表数据自动刷新
 
 ### Agent 协作
 
 - 持久化的 `session / intent / plan / analysis run / action request / daily run` 合同
-- 由后端聚合驱动的 Agent workbench
+- 由后端聚合驱动的 Agent workbench，Dashboard 展示 AI 每日摘要卡片
 - 保持在审批与风控边界内的 controlled action handoff
 - 每日运营循环：盘前 brief（权限状态 + 指令摘要）、盘中监控（critical risk event 自动降级 + 通知，防重复处理）、盘后复盘（当日汇总 + authority 重置至 manual_only）
-- 主动提请队列（ask-first）：支持 trim、exit、cancel、risk_reduce 四种 Agent 发起动作，operator approve 后记录 operator_action（P2 对接真实执行）
+- 主动提请队列（ask-first）：支持 trim、exit、cancel、risk_reduce 四种 Agent 发起动作，operator approve 后记录 operator_action
+
+### 实时推送
+
+- `GET /api/sse/state` Server-Sent Events 端点，实时推送状态更新
+- `useSSE` hook，含指数退避断线重连
+- SSE 连接存活时前端轮询降级为 15 秒 fallback
+
+### 鉴权与安全
+
+- `POST /api/auth/login` 端点，签发 HS256 JWT Token（8 小时有效期，基于 `jose`）
+- `getSession` 支持可选 Bearer token 验证——向后兼容现有静态 session
+- AES-256-GCM 加密静态存储的 broker API key（`BROKER_KEY_ENCRYPTION_KEY`）
+- API key 在所有读取端点中仅返回末 4 位掩码
 
 ### 运维与控制面
 
 - monitoring snapshot、alert、incident、audit trail、operator action 和 workflow history
 - workspace-aware 的 account scope 与 access policy 解析
 - backup、restore dry-run、integrity check、repair tooling 和 persistence posture 可视化
+- 嵌入式控制面数据库使用 SQLite WAL 存储（`db` adapter 替代平面 JSON 文件）
+- 可选 Hono 网关层（`USE_HONO=true`），内置 CORS、请求日志和耗时中间件
 
 ## 快速开始
 
@@ -198,6 +233,15 @@ npm run check:runtime-env -- --env-file .env
 
 这一步会校验支持的 storage adapter、provider 组合以及关键环境变量。模板文件位于 `.env.example`。
 
+平台升级后新增的关键环境变量：
+
+| 变量 | 用途 | 默认值 |
+|------|------|--------|
+| `JWT_SECRET` | 签发 Token 的 HS256 密钥（最少 32 字符） | `dev-secret-change-in-prod` |
+| `BROKER_KEY_ENCRYPTION_KEY` | 64 位十六进制密钥（32 字节），用于 AES-256-GCM broker key 加密 | `000...0`（仅限开发） |
+| `DEMO_USERNAME` / `DEMO_PASSWORD` | `POST /api/auth/login` 登录凭据 | `admin` / `changeme` |
+| `USE_HONO` | 设为 `true` 以启动 Hono 网关替代原生 HTTP 服务器 | 未设置 |
+
 ## 开发命令
 
 ```bash
@@ -223,14 +267,15 @@ npm run verify
 2. Lockfile 同步检查
 3. 文档一致性检查
 4. Runtime 环境检查
-5. Control-plane tests
-6. Runtime tests
-7. Workflow-engine tests
-8. API tests
-9. Worker tests
-10. Web tests
-11. Web typecheck
-12. Production web build
+5. Lint（Biome）
+6. Control-plane tests
+7. Runtime tests
+8. Workflow-engine tests
+9. API tests
+10. Worker tests
+11. Web tests
+12. Web typecheck
+13. Production web build
 
 ## 运维与部署
 
@@ -273,6 +318,7 @@ npm run verify
 - `apps/api/src/app/index.ts`
 - `apps/worker/src/main.ts`
 - `packages/trading-engine/src/runtime.ts`
+- `packages/trading-engine/src/backtest/index.ts`
 - `packages/control-plane-runtime/src/index.ts`
 - `packages/control-plane-store/src/index.ts`
 - `packages/task-workflow-engine/src/index.ts`
