@@ -87,9 +87,6 @@ export function EquityChart({ paper, live }: Props) {
   }, [paper, live]);
 
   return (
-    <div
-      ref={containerRef}
-      style={{ width: '100%', height: '280px', position: 'relative' }}
-    />
+    <div ref={containerRef} style={{ width: '100%', height: '280px', position: 'relative' }} />
   );
 }

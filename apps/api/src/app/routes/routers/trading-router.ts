@@ -1,11 +1,11 @@
 // @ts-nocheck
 
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { assessExecutionCandidate } from '../../../domains/risk/services/assessment-service.js';
-import { buildStrategyExecutionCandidate } from '../../../domains/strategy/services/execution-candidate-service.js';
 import { getStrategyCatalogItem } from '../../../domains/strategy/services/catalog-service.js';
+import { buildStrategyExecutionCandidate } from '../../../domains/strategy/services/execution-candidate-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 
 function buildAdhocStrategy(symbol, side) {
   return {
@@ -34,7 +34,10 @@ export async function handleTradingRoutes({ req, reqUrl, res, readJsonBody, writ
   const { symbol, side, orderType, qty, price, source } = body || {};
 
   if (!symbol || !side || !orderType || !qty || qty <= 0) {
-    writeJson(res, 400, { ok: false, message: 'Missing required fields: symbol, side, orderType, qty' });
+    writeJson(res, 400, {
+      ok: false,
+      message: 'Missing required fields: symbol, side, orderType, qty',
+    });
     return true;
   }
 

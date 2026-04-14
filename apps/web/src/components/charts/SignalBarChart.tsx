@@ -1,4 +1,4 @@
-import { HistogramSeries, createChart } from 'lightweight-charts';
+import { createChart, HistogramSeries } from 'lightweight-charts';
 import { useEffect, useRef } from 'react';
 
 type Props = {
@@ -76,9 +76,6 @@ export function SignalBarChart({ buy, hold, sell }: Props) {
   }, [buy, hold, sell]);
 
   return (
-    <div
-      ref={containerRef}
-      style={{ width: '100%', height: '280px', position: 'relative' }}
-    />
+    <div ref={containerRef} style={{ width: '100%', height: '280px', position: 'relative' }} />
   );
 }

@@ -1,8 +1,9 @@
 // @ts-nocheck
-import Database from 'better-sqlite3';
-import { dirname, join } from 'node:path';
+
 import { mkdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Database from 'better-sqlite3';
 
 const packageDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(packageDir, '..', '..', '..');
@@ -37,15 +38,11 @@ export function createSQLiteAdapter({ namespace, dbPath }) {
   db.exec(CREATE_OBJECTS);
 
   const stmts = {
-    getCollection: db.prepare(
-      'SELECT entries FROM collections WHERE id = ? AND namespace = ?'
-    ),
+    getCollection: db.prepare('SELECT entries FROM collections WHERE id = ? AND namespace = ?'),
     upsertCollection: db.prepare(
       'INSERT OR REPLACE INTO collections (id, namespace, entries, updated_at) VALUES (?, ?, ?, ?)'
     ),
-    getObject: db.prepare(
-      'SELECT data FROM objects WHERE id = ? AND namespace = ?'
-    ),
+    getObject: db.prepare('SELECT data FROM objects WHERE id = ? AND namespace = ?'),
     upsertObject: db.prepare(
       'INSERT OR REPLACE INTO objects (id, namespace, data, updated_at) VALUES (?, ?, ?, ?)'
     ),
@@ -82,12 +79,7 @@ export function createSQLiteAdapter({ namespace, dbPath }) {
   }
 
   function writeObject(filename, value) {
-    stmts.upsertObject.run(
-      filename,
-      namespace,
-      JSON.stringify(value),
-      new Date().toISOString()
-    );
+    stmts.upsertObject.run(filename, namespace, JSON.stringify(value), new Date().toISOString());
   }
 
   return {
@@ -136,7 +128,13 @@ export function createSQLiteAdapter({ namespace, dbPath }) {
       return this.readAdapterManifest();
     },
     getMigrationPlan() {
-      return { adapter: this.adapter, pending: [], upToDate: true, currentVersion: 1, targetVersion: 1 };
+      return {
+        adapter: this.adapter,
+        pending: [],
+        upToDate: true,
+        currentVersion: 1,
+        targetVersion: 1,
+      };
     },
     applyMigrations() {
       return { ok: true, adapter: this.adapter, appliedSteps: [] };

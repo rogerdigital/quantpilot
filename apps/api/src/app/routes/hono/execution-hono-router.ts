@@ -25,7 +25,10 @@ import { hasPermission, writeForbiddenJson } from '../../../modules/auth/service
 
 function requireApproval(c, action = '') {
   if (!hasPermission('execution:approve')) {
-    return c.json({ ok: false, message: `Permission 'execution:approve' required to ${action}` }, 403);
+    return c.json(
+      { ok: false, message: `Permission 'execution:approve' required to ${action}` },
+      403
+    );
   }
   return null;
 }

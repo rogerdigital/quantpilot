@@ -76,7 +76,9 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   // SSE: trigger runCycle immediately on server-push notification
   const sseHandlers = useCallback(
     () => ({
-      'state-update': () => { runCycle(); },
+      'state-update': () => {
+        runCycle();
+      },
     }),
     [runCycle]
   );
@@ -109,8 +111,8 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
       cancelled = true;
       if (timerRef.current) window.clearInterval(timerRef.current);
     };
-  // runCycle is stable (useCallback with no deps)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // runCycle is stable (useCallback with no deps)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const hasPermission = (permission: string) =>

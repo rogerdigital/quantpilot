@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import type { OhlcvBar } from '@shared-types/trading.ts';
+import { useEffect, useState } from 'react';
 import { fetchOhlcv } from '../app/api/controlPlane.ts';
 
 type UseOhlcvDataResult = {

@@ -65,24 +65,24 @@ export function generateHistoricalOhlcv(
     const current = addDays(start, i);
     if (!isWeekday(current)) continue;
 
-    const noise  = (seededNoise(symbolSeed, dayIndex + 1) - 0.5) * 2;
+    const noise = (seededNoise(symbolSeed, dayIndex + 1) - 0.5) * 2;
     const noise2 = (seededNoise(symbolSeed, dayIndex + 100) - 0.5) * 2;
     const noise3 = seededNoise(symbolSeed, dayIndex + 200);
     const noise4 = seededNoise(symbolSeed, dayIndex + 300);
     const noise5 = seededNoise(symbolSeed, dayIndex + 400);
 
     const close = price * (1 + drift * 0.0003 + noise * (volatility / 100) * 0.02);
-    const open  = price * (1 + noise2 * 0.005);
-    const high  = Math.max(open, close) * (1 + noise3 * 0.008);
-    const low   = Math.min(open, close) * (1 - noise4 * 0.008);
+    const open = price * (1 + noise2 * 0.005);
+    const high = Math.max(open, close) * (1 + noise3 * 0.008);
+    const low = Math.min(open, close) * (1 - noise4 * 0.008);
     const volume = Math.round(1e6 * (1 + noise5 * 0.5));
 
     bars.push({
       time: current.toISOString().split('T')[0],
-      open:   parseFloat(open.toFixed(2)),
-      high:   parseFloat(high.toFixed(2)),
-      low:    parseFloat(low.toFixed(2)),
-      close:  parseFloat(close.toFixed(2)),
+      open: parseFloat(open.toFixed(2)),
+      high: parseFloat(high.toFixed(2)),
+      low: parseFloat(low.toFixed(2)),
+      close: parseFloat(close.toFixed(2)),
       volume,
     });
 

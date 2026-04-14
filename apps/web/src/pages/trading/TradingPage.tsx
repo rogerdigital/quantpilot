@@ -69,7 +69,9 @@ export function TradingPage() {
   const [limitPrice, setLimitPrice] = useState('');
   const [qty, setQty] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitFeedback, setSubmitFeedback] = useState<{ ok: boolean; message: string } | null>(null);
+  const [submitFeedback, setSubmitFeedback] = useState<{ ok: boolean; message: string } | null>(
+    null
+  );
 
   const selectedStock = state.stockStates.find((s) => s.symbol === selectedSymbol);
   const priceChange = selectedStock
@@ -119,11 +121,17 @@ export function TradingPage() {
     const parsedPrice = limitPrice ? Number(limitPrice) : undefined;
 
     if (!parsedQty || parsedQty <= 0) {
-      setSubmitFeedback({ ok: false, message: locale === 'zh' ? '请输入有效数量' : 'Please enter a valid quantity' });
+      setSubmitFeedback({
+        ok: false,
+        message: locale === 'zh' ? '请输入有效数量' : 'Please enter a valid quantity',
+      });
       return;
     }
     if ((orderType === 'limit' || orderType === 'stop') && (!parsedPrice || parsedPrice <= 0)) {
-      setSubmitFeedback({ ok: false, message: locale === 'zh' ? '请输入有效价格' : 'Please enter a valid price' });
+      setSubmitFeedback({
+        ok: false,
+        message: locale === 'zh' ? '请输入有效价格' : 'Please enter a valid price',
+      });
       return;
     }
 
@@ -142,14 +150,18 @@ export function TradingPage() {
     setIsSubmitting(false);
 
     if (result.ok) {
-      const msg = locale === 'zh'
-        ? `执行计划已创建 (${result.handoffId?.slice(-8)})，请在执行台审批`
-        : `Execution plan created (${result.handoffId?.slice(-8)}), review in Execution tab`;
+      const msg =
+        locale === 'zh'
+          ? `执行计划已创建 (${result.handoffId?.slice(-8)})，请在执行台审批`
+          : `Execution plan created (${result.handoffId?.slice(-8)}), review in Execution tab`;
       setSubmitFeedback({ ok: true, message: msg });
       setQty('');
       setLimitPrice('');
     } else {
-      setSubmitFeedback({ ok: false, message: result.message || (locale === 'zh' ? '提交失败' : 'Submission failed') });
+      setSubmitFeedback({
+        ok: false,
+        message: result.message || (locale === 'zh' ? '提交失败' : 'Submission failed'),
+      });
     }
   }
 
@@ -392,7 +404,9 @@ export function TradingPage() {
                 padding: '8px 10px',
                 borderRadius: 'var(--radius)',
                 border: `1px solid ${submitFeedback.ok ? 'var(--buy)' : 'var(--sell)'}`,
-                background: submitFeedback.ok ? 'rgba(0, 200, 90, 0.06)' : 'rgba(255, 80, 80, 0.06)',
+                background: submitFeedback.ok
+                  ? 'rgba(0, 200, 90, 0.06)'
+                  : 'rgba(255, 80, 80, 0.06)',
                 fontSize: '11px',
                 color: submitFeedback.ok ? 'var(--buy)' : 'var(--sell)',
                 lineHeight: 1.5,

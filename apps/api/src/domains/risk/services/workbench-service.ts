@@ -1,7 +1,12 @@
 // @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import {
+  calcBeta,
+  calcCVaR,
+  calcHHI,
+  calcHistoricalVaR,
+} from '../../../../../../packages/trading-engine/src/risk/index.js';
 import { isSchedulerAttentionStatus } from '../../../modules/scheduler/service.js';
-import { calcBeta, calcCVaR, calcHHI, calcHistoricalVaR } from '../../../../../../packages/trading-engine/src/risk/index.js';
 import { getRiskSchedulerLinkage } from './risk-scheduler-linkage-service.js';
 
 function parseLimit(value, fallback) {
@@ -412,9 +417,10 @@ function computeRiskAnalytics(snapshot) {
 
   // Beta: compare largest position to portfolio as proxy (if SPY history not available)
   // We use the first position with longest history as benchmark proxy
-  const benchmarkReturns = positionReturns.reduce((best, r) =>
-    r.length > best.length ? r : best
-  , []);
+  const benchmarkReturns = positionReturns.reduce(
+    (best, r) => (r.length > best.length ? r : best),
+    []
+  );
   const beta =
     portfolioReturns.length >= 10
       ? parseFloat(calcBeta(portfolioReturns, benchmarkReturns).toFixed(3))

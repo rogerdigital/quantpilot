@@ -1,9 +1,8 @@
+import type { AgentDailyRunRecord } from '@shared-types/trading.ts';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { AgentDailyRunRecord } from '@shared-types/trading.ts';
-import { fmtDateTime } from '../console/console.utils.ts';
 import { useLocale } from '../console/console.i18n.tsx';
-import { fetchAgentWorkbench } from './agentTools.service.ts';
+import { fmtDateTime } from '../console/console.utils.ts';
 import {
   summaryCard,
   summaryCardFooter,
@@ -15,18 +14,19 @@ import {
   summaryStatusChip,
   summaryText,
 } from './AgentDailySummaryCard.css.ts';
+import { fetchAgentWorkbench } from './agentTools.service.ts';
 
 const KIND_LABELS: Record<string, { zh: string; en: string }> = {
-  pre_market:       { zh: '盘前', en: 'Pre-Market' },
+  pre_market: { zh: '盘前', en: 'Pre-Market' },
   intraday_monitor: { zh: '盘中', en: 'Intraday' },
-  post_market:      { zh: '盘后', en: 'Post-Market' },
+  post_market: { zh: '盘后', en: 'Post-Market' },
 };
 
 const STATUS_LABELS: Record<string, { zh: string; en: string }> = {
   completed: { zh: '已完成', en: 'Completed' },
-  running:   { zh: '运行中', en: 'Running' },
-  failed:    { zh: '失败', en: 'Failed' },
-  queued:    { zh: '排队中', en: 'Queued' },
+  running: { zh: '运行中', en: 'Running' },
+  failed: { zh: '失败', en: 'Failed' },
+  queued: { zh: '排队中', en: 'Queued' },
 };
 
 export function AgentDailySummaryCard() {
@@ -117,7 +117,9 @@ export function AgentDailySummaryCard() {
 
       <div className={summaryCardFooter}>
         <div className={summaryKindChip[kindKey as keyof typeof summaryKindChip]}>{kindLabel}</div>
-        <div className={summaryStatusChip[statusKey as keyof typeof summaryStatusChip]}>{statusLabel}</div>
+        <div className={summaryStatusChip[statusKey as keyof typeof summaryStatusChip]}>
+          {statusLabel}
+        </div>
       </div>
     </div>
   );

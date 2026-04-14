@@ -1,7 +1,5 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { EquityChart } from '../charts/EquityChart.tsx';
-import { SignalBarChart } from '../charts/SignalBarChart.tsx';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useSettingsNavigation } from '../../modules/console/console.hooks.ts';
 import { type ConsolePageKey, copy, useLocale } from '../../modules/console/console.i18n.tsx';
@@ -16,6 +14,8 @@ import {
   translateMode,
 } from '../../modules/console/console.utils.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
+import { EquityChart } from '../charts/EquityChart.tsx';
+import { SignalBarChart } from '../charts/SignalBarChart.tsx';
 import {
   appShell,
   appShellCollapsed,

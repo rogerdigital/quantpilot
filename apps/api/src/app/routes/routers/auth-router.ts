@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { createHash } from 'node:crypto';
+import { signToken } from '../../../modules/auth/jwt-service.js';
 import { listPermissionDescriptors } from '../../../modules/auth/permission-catalog.js';
 import { getSession } from '../../../modules/auth/service.js';
-import { signToken } from '../../../modules/auth/jwt-service.js';
 
 function sha256hex(value) {
   return createHash('sha256').update(value).digest('hex');

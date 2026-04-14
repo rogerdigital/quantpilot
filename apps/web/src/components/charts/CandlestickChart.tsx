@@ -1,5 +1,5 @@
-import { CandlestickSeries, HistogramSeries, createChart } from 'lightweight-charts';
 import type { OhlcvBar } from '@shared-types/trading.ts';
+import { CandlestickSeries, createChart, HistogramSeries } from 'lightweight-charts';
 import { useEffect, useRef } from 'react';
 
 type Props = {

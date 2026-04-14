@@ -26,7 +26,7 @@ const STOCK_PARAMS = {
   MSFT: { drift: 0.11, volatility: 1.2 },
   NVDA: { drift: 0.18, volatility: 2.7 },
   AMZN: { drift: 0.13, volatility: 1.8 },
-  GOOGL: { drift: 0.10, volatility: 1.4 },
+  GOOGL: { drift: 0.1, volatility: 1.4 },
   META: { drift: 0.14, volatility: 2.1 },
   TSLA: { drift: 0.09, volatility: 3.2 },
   JPM: { drift: 0.08, volatility: 1.1 },

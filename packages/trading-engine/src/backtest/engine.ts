@@ -1,4 +1,3 @@
-import type { BacktestConfig, BacktestResult, BacktestTrade, DailyEquityPoint } from './types.js';
 import { generateHistoricalOhlcv } from './data.js';
 import {
   calcAnnualizedReturn,
@@ -8,6 +7,7 @@ import {
   calcTurnover,
   calcWinRate,
 } from './metrics.js';
+import type { BacktestConfig, BacktestResult, BacktestTrade, DailyEquityPoint } from './types.js';
 
 type Holding = {
   qty: number;
@@ -29,15 +29,14 @@ function scoreFromHistory(
   const last = history.at(-1)!;
   const prev = history.at(-2) ?? last;
   const short = history.slice(-5).reduce((s, v) => s + v, 0) / 5;
-  const long  = history.slice(-18).reduce((s, v) => s + v, 0) / Math.min(18, history.length);
+  const long = history.slice(-18).reduce((s, v) => s + v, 0) / Math.min(18, history.length);
   const momentum = (last / history[Math.max(history.length - 8, 0)] - 1) * 100;
-  const intraday  = (last / prev - 1) * 100;
+  const intraday = (last / prev - 1) * 100;
   const volatility = Math.abs(intraday) * 8 + volatilityParam * 6;
   const trend = (short / long - 1) * 100;
   const rawScore = 52 + trend * 8 + momentum * 1.6 - volatility * 0.7 + drift * 28;
   const score = Math.max(0, Math.min(100, rawScore));
-  const signal =
-    score >= buyThreshold ? 'BUY' : score <= sellThreshold ? 'SELL' : 'HOLD';
+  const signal = score >= buyThreshold ? 'BUY' : score <= sellThreshold ? 'SELL' : 'HOLD';
   return { score, signal };
 }
 
@@ -78,11 +77,11 @@ export function runBacktestEngine(config: BacktestConfig): BacktestResult {
       NVDA: { drift: 0.18, volatility: 2.7 },
       AMZN: { drift: 0.13, volatility: 1.8 },
       META: { drift: 0.14, volatility: 2.1 },
-      GOOGL: { drift: 0.10, volatility: 1.5 },
+      GOOGL: { drift: 0.1, volatility: 1.5 },
       TSLA: { drift: 0.09, volatility: 3.2 },
-      JPM:  { drift: 0.08, volatility: 1.1 },
-      UNH:  { drift: 0.08, volatility: 1.3 },
-      XOM:  { drift: 0.05, volatility: 1.1 },
+      JPM: { drift: 0.08, volatility: 1.1 },
+      UNH: { drift: 0.08, volatility: 1.3 },
+      XOM: { drift: 0.05, volatility: 1.1 },
     };
     const params = driftMap[symbol] ?? { drift: 0.08, volatility: 1.5 };
 
@@ -98,7 +97,11 @@ export function runBacktestEngine(config: BacktestConfig): BacktestResult {
 
   // Collect all unique trading dates across all symbols, sorted
   const allDatesSet = new Set<string>();
-  symbolStates.forEach((s) => s.tradingDates.forEach((d) => allDatesSet.add(d)));
+  for (const s of symbolStates) {
+    for (const d of s.tradingDates) {
+      allDatesSet.add(d);
+    }
+  }
   const allDates = [...allDatesSet].sort();
 
   let cash = initialCapital;
@@ -180,7 +183,14 @@ export function runBacktestEngine(config: BacktestConfig): BacktestResult {
           cash += proceeds;
           holding.qty -= sellQty;
           if (holding.qty <= 0) holdings.delete(ss.symbol);
-          trades.push({ date, symbol: ss.symbol, side: 'sell', qty: sellQty, price: execPrice, pnl });
+          trades.push({
+            date,
+            symbol: ss.symbol,
+            side: 'sell',
+            qty: sellQty,
+            price: execPrice,
+            pnl,
+          });
         }
       }
     }
@@ -206,8 +216,7 @@ export function runBacktestEngine(config: BacktestConfig): BacktestResult {
   const winRatePct = calcWinRate(trades);
   const turnoverPct = calcTurnover(trades, initialCapital, tradingDays);
 
-  const status =
-    maxDrawdownPct > 10 || sharpe < 1 ? 'needs_review' : 'completed';
+  const status = maxDrawdownPct > 10 || sharpe < 1 ? 'needs_review' : 'completed';
 
   return {
     status,

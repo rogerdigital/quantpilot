@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { SignJWT, jwtVerify } from 'jose';
+import { jwtVerify, SignJWT } from 'jose';
 
 function getKey() {
   return new TextEncoder().encode(
@@ -7,10 +7,7 @@ function getKey() {
   );
 }
 
-export async function signToken(
-  payload,
-  expiresIn = '8h'
-) {
+export async function signToken(payload, expiresIn = '8h') {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()

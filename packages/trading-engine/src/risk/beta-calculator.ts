@@ -20,7 +20,7 @@ export function calcBeta(assetReturns: number[], benchmarkReturns: number[]): nu
   let cov = 0;
   let varB = 0;
   for (let i = 0; i < n; i++) {
-    cov  += (a[i] - meanA) * (b[i] - meanB);
+    cov += (a[i] - meanA) * (b[i] - meanB);
     varB += (b[i] - meanB) ** 2;
   }
 

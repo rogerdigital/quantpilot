@@ -1,5 +1,5 @@
 import type { TerminalOrderRequest, TerminalOrderResponse } from '@shared-types/trading.ts';
-import { jsonHeaders, assertOk } from '../../app/api/http.ts';
+import { assertOk, jsonHeaders } from '../../app/api/http.ts';
 
 export async function submitTerminalOrder(
   req: TerminalOrderRequest
@@ -11,7 +11,10 @@ export async function submitTerminalOrder(
   });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    return { ok: false, message: (body as { message?: string }).message || `HTTP ${response.status}` };
+    return {
+      ok: false,
+      message: (body as { message?: string }).message || `HTTP ${response.status}`,
+    };
   }
   return response.json();
 }

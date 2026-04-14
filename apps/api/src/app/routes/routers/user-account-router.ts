@@ -1,8 +1,8 @@
 // @ts-nocheck
 
+import { encryptBrokerKey, maskBrokerKey } from '../../../modules/auth/broker-key-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
-import { encryptBrokerKey, maskBrokerKey } from '../../../modules/auth/broker-key-service.js';
 import {
   getBrokerBindingRuntimeSnapshot,
   getBrokerBindingsSnapshot,

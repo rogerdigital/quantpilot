@@ -27,9 +27,7 @@ export function decryptBrokerKey(ciphertext) {
   try {
     const decipher = createDecipheriv('aes-256-gcm', getEncKey(), Buffer.from(ivHex, 'hex'));
     decipher.setAuthTag(Buffer.from(tagHex, 'hex'));
-    return (
-      decipher.update(Buffer.from(dataHex, 'hex')).toString('utf8') + decipher.final('utf8')
-    );
+    return decipher.update(Buffer.from(dataHex, 'hex')).toString('utf8') + decipher.final('utf8');
   } catch {
     return ciphertext;
   }

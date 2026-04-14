@@ -1,15 +1,15 @@
 export type BacktestConfig = {
   strategyId: string;
   runId: string;
-  startDate: string;         // 'YYYY-MM-DD'
+  startDate: string; // 'YYYY-MM-DD'
   endDate: string;
-  initialCapital: number;   // default 100000
-  universe: string[];       // symbols
-  buyThreshold: number;     // default 74
-  sellThreshold: number;    // default 38
+  initialCapital: number; // default 100000
+  universe: string[]; // symbols
+  buyThreshold: number; // default 74
+  sellThreshold: number; // default 38
   maxPositionWeight: number; // default 0.24
-  slippagePct: number;      // default 0.001
-  commissionPct: number;    // default 0.001
+  slippagePct: number; // default 0.001
+  commissionPct: number; // default 0.001
 };
 
 export type DailyEquityPoint = {

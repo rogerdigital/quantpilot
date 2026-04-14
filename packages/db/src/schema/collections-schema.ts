@@ -6,7 +6,7 @@ import { sqliteTable, text } from 'drizzle-orm/sqlite-core';
  * the file-based adapter would have written to disk.
  */
 export const collections = sqliteTable('collections', {
-  id: text('id').notNull(),          // collection filename (e.g. 'backtest_run.json')
+  id: text('id').notNull(), // collection filename (e.g. 'backtest_run.json')
   namespace: text('namespace').notNull(),
   entries: text('entries').notNull(), // JSON.stringify(T[])
   updatedAt: text('updated_at').notNull(),
@@ -17,8 +17,8 @@ export const collections = sqliteTable('collections', {
  * (namespace, id).  Mirrors the kv-store / readObject / writeObject API.
  */
 export const objects = sqliteTable('objects', {
-  id: text('id').notNull(),          // object filename (e.g. '_manifest.json')
+  id: text('id').notNull(), // object filename (e.g. '_manifest.json')
   namespace: text('namespace').notNull(),
-  data: text('data').notNull(),       // JSON.stringify(T)
+  data: text('data').notNull(), // JSON.stringify(T)
   updatedAt: text('updated_at').notNull(),
 });
