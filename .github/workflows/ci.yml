@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  # ── 1. Lint (Biome) ────────────────────────────────────────────────────────
+  # ── 1. Lint + static checks ────────────────────────────────────────────────
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -26,6 +26,8 @@ jobs:
       - run: npm ci
       - run: npm run check:workspaces
       - run: npm run check:lockfile
+      - run: npm run check:stage-docs
+      - run: npm run check:runtime-env
       - run: npm run lint
 
   # ── 2. Type Check ─────────────────────────────────────────────────────────
@@ -61,6 +63,9 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      # better-sqlite3 may need to compile from source if no prebuilt matches
+      - name: Install build tools (for native addons)
+        run: sudo apt-get install -y python3 make g++
       - run: npm ci
       - run: npm run test:${{ matrix.suite }}
 
