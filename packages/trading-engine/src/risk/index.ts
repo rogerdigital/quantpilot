@@ -1,6 +1,9 @@
 // @ts-nocheck
 import { buildRemoteSellIntent, sellPosition } from '../execution/index.js';
 
+export { calcHistoricalVaR, calcCVaR } from './var-calculator.js';
+export { calcBeta, calcHHI } from './beta-calculator.js';
+
 export function riskOffIfNeeded(state, brokerSupportsRemoteExecution) {
   const liveRiskIntents = [];
   const avgVol =

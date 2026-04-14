@@ -2113,6 +2113,7 @@ export type RiskWorkbenchResponse = {
     schedulerTicks: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestSchedulerTick']>>;
   };
   linkage: RiskSchedulerLinkageSnapshot;
+  analytics?: RiskAnalytics;
 };
 
 export type RiskRunbookActionKey =
