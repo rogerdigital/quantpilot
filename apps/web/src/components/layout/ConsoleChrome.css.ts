@@ -61,10 +61,10 @@ export const sidebar = style({
   minHeight: '100vh',
   padding: '24px 16px',
   borderRight: '1px solid var(--line)',
-  background: 'linear-gradient(180deg, rgba(6, 14, 32, 0.99) 0%, rgba(4, 9, 22, 0.99) 100%)',
+  background: 'linear-gradient(180deg, rgba(10, 20, 46, 0.99) 0%, rgba(8, 16, 36, 0.99) 100%)',
   display: 'flex',
   flexDirection: 'column',
-  overflow: 'hidden',
+  overflow: 'visible',
 });
 
 globalStyle(`${sidebar}::after`, {
@@ -101,7 +101,7 @@ export const sidebarToggle = style({
   position: 'absolute',
   top: '24px',
   right: '-13px',
-  zIndex: 10,
+  zIndex: 50,
   width: '26px',
   height: '26px',
   borderRadius: '50%',
@@ -169,10 +169,10 @@ export const sidebarBlock = style({
   padding: '13px 12px 11px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'linear-gradient(135deg, rgba(10, 20, 44, 0.85), rgba(6, 12, 28, 0.9))',
+  background: 'linear-gradient(135deg, rgba(16, 30, 66, 0.90), rgba(10, 20, 46, 0.95))',
   transition: 'border-color 180ms ease',
   ':hover': {
-    borderColor: 'rgba(40, 120, 220, 0.2)',
+    borderColor: 'rgba(60, 140, 240, 0.35)',
   },
 });
 
@@ -205,7 +205,7 @@ export const globalToolbar = style({
   padding: '10px 16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-lg)',
-  background: 'linear-gradient(135deg, rgba(6, 14, 32, 0.98), rgba(4, 9, 22, 0.99))',
+  background: 'linear-gradient(135deg, rgba(10, 20, 46, 0.98), rgba(8, 16, 36, 0.99))',
   boxShadow: '0 2px 16px rgba(0, 0, 0, 0.45)',
   animation: 'panel-enter 250ms ease both',
 });

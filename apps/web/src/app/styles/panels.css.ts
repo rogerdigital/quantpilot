@@ -137,7 +137,7 @@ globalStyle('.overview-command-copy', {
   maxWidth: '560px',
   color: 'var(--muted-strong)',
   fontSize: '13px',
-  lineHeight: '1.6',
+  lineHeight: '1.65',
 } as any);
 
 globalStyle('.overview-command-aside', { display: 'grid', gap: '10px' } as any);
@@ -148,7 +148,7 @@ globalStyle('.overview-brief-card, .overview-primary-note', {
   padding: '12px 14px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(10, 20, 44, 0.8)',
+  background: 'rgba(14, 26, 58, 0.85)',
 } as any);
 
 globalStyle('.overview-brief-card span, .overview-command-note span, .overview-primary-note span', {
@@ -187,7 +187,7 @@ globalStyle('.overview-command-strip', {
 globalStyle('.overview-stat', { display: 'grid', gap: '6px' } as any);
 
 globalStyle('.overview-stat span', {
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   font: '600 10px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
@@ -224,7 +224,7 @@ globalStyle('.overview-kpi-grid div', {
 } as any);
 
 globalStyle('.overview-kpi-grid span', {
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   fontSize: '12px',
 } as any);
 
@@ -343,7 +343,7 @@ globalStyle('.mini-metric', {
 
 globalStyle('.mini-copy', {
   marginTop: '10px',
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   fontSize: '13px',
   lineHeight: '1.6',
 } as any);
@@ -380,7 +380,7 @@ globalStyle('.metric-card', {
   padding: '14px 16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'linear-gradient(140deg, rgba(10, 22, 46, 0.9), rgba(6, 12, 28, 0.95))',
+  background: 'linear-gradient(140deg, rgba(14, 28, 56, 0.95), rgba(8, 16, 36, 0.98))',
   display: 'grid',
   gap: '8px',
   position: 'relative',
@@ -405,7 +405,7 @@ globalStyle('.metric-card:hover', {
 } as any);
 
 globalStyle('.metric-card span', {
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   font: '600 10px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
@@ -631,7 +631,7 @@ globalStyle('.overview-inline-metrics', {
 globalStyle('.overview-inline-metric', { display: 'grid', gap: '6px' } as any);
 
 globalStyle('.overview-inline-metric span', {
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   font: '600 10px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
@@ -649,7 +649,7 @@ globalStyle('.overview-ops-cluster', {
   padding: '14px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(8, 18, 40, 0.85)',
+  background: 'rgba(10, 22, 50, 0.9)',
   transition: 'border-color 180ms ease',
 } as any);
 
@@ -708,7 +708,7 @@ globalStyle('.inline-link', {
 } as any);
 
 globalStyle('.status-copy', {
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   fontSize: '13px',
   lineHeight: '1.6',
 } as any);
@@ -725,6 +725,6 @@ globalStyle('.focus-list', {
 globalStyle('.focus-list-terminal', {
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(1, 3, 12, 0.65)',
+  background: 'rgba(4, 8, 22, 0.75)',
   padding: '4px 14px',
 } as any);

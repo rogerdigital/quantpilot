@@ -103,7 +103,7 @@ globalStyle('.inspection-json', {
   padding: '14px 16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(1, 3, 10, 0.7)',
+  background: 'rgba(3, 6, 18, 0.8)',
   color: 'var(--muted)',
   font: '12px/1.6 var(--font-data)',
   whiteSpace: 'pre-wrap',
@@ -176,7 +176,7 @@ globalStyle('.table-wrap', {
   overflowX: 'auto',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(6, 12, 28, 0.85)',
+  background: 'rgba(8, 16, 38, 0.9)',
 } as any);
 
 globalStyle('.table-wrap table', {
@@ -193,11 +193,11 @@ globalStyle('th, td', {
 
 globalStyle('th', {
   font: '600 10px/1 var(--font-data)',
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   textTransform: 'uppercase',
   letterSpacing: '0.12em',
-  background: 'rgba(0, 180, 255, 0.025)',
-  borderBottomColor: 'rgba(40, 120, 220, 0.12)',
+  background: 'rgba(0, 180, 255, 0.04)',
+  borderBottomColor: 'var(--line)',
 } as any);
 
 globalStyle('td', {
@@ -344,7 +344,7 @@ globalStyle('.log-item:hover::before', { opacity: 0.9 } as any);
 globalStyle('.log-item:last-child', { marginBottom: 0 } as any);
 
 globalStyle('.log-time', {
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   font: '600 11px/1.2 var(--font-data)',
 } as any);
 
@@ -355,9 +355,9 @@ globalStyle('.log-title', {
 
 globalStyle('.log-copy', {
   marginTop: '4px',
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   fontSize: '12px',
-  lineHeight: '1.55',
+  lineHeight: '1.6',
 } as any);
 
 globalStyle('.log-tag', {
