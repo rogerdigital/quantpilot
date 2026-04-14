@@ -20,6 +20,7 @@ import type {
   OperationsMaintenanceResponse,
   OperationsWorkbenchResponse,
   OperatorSession,
+  OhlcvResponse,
   RiskEventDetailResponse,
   RiskPolicyActionResponse,
   RiskWorkbenchResponse,
@@ -924,6 +925,17 @@ export async function updateIncidentTask(
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
   });
+  await assertOk(response);
+  return response.json();
+}
+
+export async function fetchOhlcv(
+  symbol: string,
+  timeframe: string,
+  limit = 100
+): Promise<OhlcvResponse> {
+  const params = new URLSearchParams({ symbol, timeframe, limit: String(limit) });
+  const response = await fetch(`/api/market/ohlcv?${params}`);
   await assertOk(response);
   return response.json();
 }
