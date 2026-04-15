@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { CommandPalette } from '../command-palette/CommandPalette.tsx';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useSettingsNavigation } from '../../modules/console/console.hooks.ts';
 import { type ConsolePageKey, copy, useLocale } from '../../modules/console/console.i18n.tsx';
@@ -336,6 +337,7 @@ export function Layout() {
   const [collapsed, setCollapsed] = useState(() => {
     return window.localStorage.getItem('quantpilot-sidebar-collapsed') === 'true';
   });
+  const [cmdOpen, setCmdOpen] = useState(false);
 
   const handleToggle = () => {
     setCollapsed((prev) => {
@@ -349,6 +351,17 @@ export function Layout() {
     document.title = getConsoleDocumentTitle(locale, location.pathname);
   }, [locale, location.pathname]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCmdOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <div className={`${appShell}${collapsed ? ` ${appShellCollapsed}` : ''}`}>
       <Sidebar collapsed={collapsed} onToggle={handleToggle} />
@@ -356,6 +369,7 @@ export function Layout() {
         <GlobalToolbar />
         <Outlet />
       </main>
+      {cmdOpen && <CommandPalette locale={locale} onClose={() => setCmdOpen(false)} />}
     </div>
   );
 }
