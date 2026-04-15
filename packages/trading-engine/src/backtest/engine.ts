@@ -7,7 +7,7 @@ import {
   calcTurnover,
   calcWinRate,
 } from './metrics.js';
-import type { BacktestConfig, BacktestResult, BacktestTrade, DailyEquityPoint } from './types.js';
+import type { BacktestConfig, BacktestResult, BacktestTrade, DailyEquityPoint, OhlcvBar } from './types.js';
 
 type Holding = {
   qty: number;
@@ -66,7 +66,10 @@ export function runBacktestEngine(config: BacktestConfig): BacktestResult {
 
   // Build per-symbol OHLCV maps
   const symbolStates: SymbolState[] = universe.map((symbol) => {
-    const rawBars = generateHistoricalOhlcv(symbol, startDate, endDate);
+    // Use external bars if provided (from Alpaca), otherwise generate synthetic data
+    const rawBars: OhlcvBar[] = config.externalBars?.[symbol]
+      ? config.externalBars[symbol]
+      : generateHistoricalOhlcv(symbol, startDate, endDate);
     const bars = new Map(rawBars.map((b) => [b.time, b]));
     const tradingDates = rawBars.map((b) => b.time);
 

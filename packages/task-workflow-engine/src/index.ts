@@ -8,6 +8,73 @@ import {
   buildCyclePayload,
 } from '../../trading-engine/src/runtime.js';
 
+const USE_MOCK = () => process.env.QUANTPILOT_USE_MOCK_DATA === 'true';
+
+/**
+ * Fetch real historical bars from Alpaca for all symbols in the universe.
+ * Returns a map of symbol -> OhlcvBar[].
+ * Falls back gracefully to undefined (engine uses synthetic data).
+ */
+async function fetchAlpacaBarsForBacktest(symbols, startDate, endDate) {
+  if (USE_MOCK() || !process.env.ALPACA_KEY_ID || !process.env.ALPACA_SECRET_KEY) {
+    return undefined;
+  }
+  try {
+    const ALPACA_DATA_BASE = 'https://data.alpaca.markets';
+    const headers = {
+      Accept: 'application/json',
+      'APCA-API-KEY-ID': process.env.ALPACA_KEY_ID,
+      'APCA-API-SECRET-KEY': process.env.ALPACA_SECRET_KEY,
+    };
+    const feed = process.env.ALPACA_DATA_FEED || 'iex';
+    const externalBars = {};
+
+    await Promise.all(
+      symbols.map(async (symbol) => {
+        try {
+          const url = new URL(`/v2/stocks/${encodeURIComponent(symbol)}/bars`, ALPACA_DATA_BASE);
+          url.searchParams.set('timeframe', '1Day');
+          url.searchParams.set('start', startDate);
+          url.searchParams.set('end', endDate);
+          url.searchParams.set('limit', '1000');
+          url.searchParams.set('feed', feed);
+          url.searchParams.set('sort', 'asc');
+
+          const response = await fetch(url.toString(), { headers });
+          if (!response.ok) return;
+
+          const payload = await response.json();
+          const bars = Array.isArray(payload?.bars)
+            ? payload.bars.map((b) => ({
+                time: b.t ? b.t.split('T')[0] : '',
+                open: Number(b.o || 0),
+                high: Number(b.h || 0),
+                low: Number(b.l || 0),
+                close: Number(b.c || 0),
+                volume: Number(b.v || 0),
+              }))
+            : [];
+
+          if (bars.length > 0) {
+            externalBars[symbol] = bars;
+          }
+        } catch {
+          // Silently skip failed symbols — engine will use synthetic data for them
+        }
+      })
+    );
+
+    const fetchedCount = Object.keys(externalBars).length;
+    if (fetchedCount > 0) {
+      console.log(`[backtest-workflow] Fetched real Alpaca data for ${fetchedCount}/${symbols.length} symbols`);
+    }
+    return fetchedCount > 0 ? externalBars : undefined;
+  } catch (err) {
+    console.warn('[backtest-workflow] Alpaca data fetch failed, using synthetic:', err.message);
+    return undefined;
+  }
+}
+
 function parseWindowLabel(label) {
   const parts = (label || '').split(' -> ');
   if (parts.length === 2 && parts[0] && parts[1]) {
@@ -787,7 +854,7 @@ async function executeAgentActionRequestWorkflow(payload, context, options = {})
       rationale: payload.rationale || '',
       requestedBy: payload.requestedBy || context.getOperatorName(),
       metadata: {
-        ...(payload.metadata || {}),
+        ...payload.metadata,
         channel: 'agent',
         reasons: gate.reasons,
       },
@@ -909,20 +976,27 @@ async function executeBacktestRunWorkflow(payload, context, options = {}) {
       latestCheckpoint: 'Workflow worker started the research task.',
     });
 
-    // buildMockBacktestMetrics(strategy, run.id) — replaced by real engine below
+    // Try to fetch real Alpaca data; falls back to synthetic if unavailable
     const windowDates = parseWindowLabel(run.windowLabel);
+    const universe = STOCK_UNIVERSE.map((s) => s.symbol);
+    const externalBars = await fetchAlpacaBarsForBacktest(
+      universe,
+      windowDates.startDate,
+      windowDates.endDate
+    );
     const engineResult = runBacktestEngine({
       strategyId: strategy.id,
       runId: run.id,
       startDate: windowDates.startDate,
       endDate: windowDates.endDate,
       initialCapital: 100000,
-      universe: STOCK_UNIVERSE.map((s) => s.symbol),
+      universe,
       buyThreshold: DEFAULT_ENGINE_CONFIG.buyThreshold,
       sellThreshold: DEFAULT_ENGINE_CONFIG.sellThreshold,
       maxPositionWeight: DEFAULT_ENGINE_CONFIG.maxPositionWeight,
       slippagePct: 0.001,
       commissionPct: 0.001,
+      externalBars,
     });
     const metrics = {
       status: engineResult.status,
