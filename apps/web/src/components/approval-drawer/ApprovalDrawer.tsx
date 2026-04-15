@@ -1,5 +1,4 @@
-import type { AppLocale } from '@shared-types/trading.ts';
-import type { BrokerOrder } from '@shared-types/trading.ts';
+import type { AppLocale, BrokerOrder } from '@shared-types/trading.ts';
 import { useState } from 'react';
 import {
   approveBtn,

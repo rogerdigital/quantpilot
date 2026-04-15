@@ -50,14 +50,7 @@ import { useResearchNavigationContext } from '../../modules/research/useResearch
 import { useResearchPollingPolicy } from '../../modules/research/useResearchPollingPolicy.ts';
 import { useResearchWorkspaceData } from '../../modules/research/useResearchWorkspaceData.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
-import {
-  InspectionEmpty,
-  InspectionListPanel,
-  InspectionMetricsRow,
-  InspectionPanel,
-  InspectionSelectableRow,
-  InspectionStatus,
-} from '../console/components/InspectionPanels.tsx';
+import { InspectionStatus } from '../console/components/InspectionPanels.tsx';
 
 function fmtDateTime(value: string, locale: 'zh' | 'en') {
   if (!value) return '--';

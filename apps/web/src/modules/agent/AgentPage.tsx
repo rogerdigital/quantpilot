@@ -1,5 +1,4 @@
-import { useRef } from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { EmptyState, SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { copy, useLocale } from '../console/console.i18n.tsx';
@@ -46,8 +45,6 @@ import {
   agentStagePills,
   agentStepCard,
   agentStepCopy,
-  agentStepStack,
-  agentStepTop,
   agentStepper,
   agentStepperConnector,
   agentStepperDot,
@@ -57,6 +54,8 @@ import {
   agentStepperLabel,
   agentStepperLabelActive,
   agentStepperLabelDone,
+  agentStepStack,
+  agentStepTop,
   agentSuggestionButton,
   agentSuggestionList,
   agentThesis,

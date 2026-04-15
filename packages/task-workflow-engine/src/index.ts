@@ -126,7 +126,7 @@ function getTrackedSymbols(state) {
     : [];
 }
 
-function buildMockBacktestMetrics(strategy, runId) {
+function _buildMockBacktestMetrics(strategy, runId) {
   const seed = String(runId || strategy.id)
     .split('')
     .reduce((sum, char) => sum + char.charCodeAt(0), 0);
@@ -158,7 +158,7 @@ function buildMockBacktestMetrics(strategy, runId) {
 // Agent Daily Run helpers
 // =========================================================
 
-function buildPreMarketBrief(context, payload) {
+function buildPreMarketBrief(context, _payload) {
   const snapshot =
     typeof context.getAgentGovernanceSnapshot === 'function'
       ? context.getAgentGovernanceSnapshot()
@@ -704,9 +704,9 @@ async function executeStrategyExecutionWorkflow(payload, context, options = {}) 
       executionRunId: executionRun?.id || '',
       lifecycleStatus,
     });
-    let runtime = null;
+    let _runtime = null;
     if (lifecycleStatus === 'submitted') {
-      runtime =
+      _runtime =
         context.recordExecutionRuntime?.({
           cycleId: workflow.id,
           cycle: 0,

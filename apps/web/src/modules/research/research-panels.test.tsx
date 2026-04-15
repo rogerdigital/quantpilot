@@ -586,8 +586,8 @@ describe('research panel primitives', () => {
       canReviewBacktest: false,
     });
 
-    const strategyPrelude = renderToStaticMarkup(<>{strategyTerminal.registry.prelude}</>);
-    const backtestFooter = renderToStaticMarkup(<>{backtestTerminal.queue.footer}</>);
+    const strategyPrelude = renderToStaticMarkup(strategyTerminal.registry.prelude);
+    const backtestFooter = renderToStaticMarkup(backtestTerminal.queue.footer);
 
     expect(strategyTerminal.registry.badge).toBe('SERVICE');
     expect(strategyPrelude).toContain('Active only');

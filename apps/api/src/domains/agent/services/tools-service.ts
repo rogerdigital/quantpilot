@@ -4,7 +4,7 @@ import { controlPlaneRuntime } from '../../../../../../packages/control-plane-ru
 import { listBacktestRuns } from '../../backtest/services/runs-service.js';
 import { getBacktestSummary } from '../../backtest/services/summary-service.js';
 import { listExecutionPlans } from '../../execution/services/query-service.js';
-import { getHistoricalBars, getMarketQuotes } from '../../market/services/market-data-service.js';
+import { getHistoricalBars } from '../../market/services/market-data-service.js';
 import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';
 import { listRiskEvents } from '../../risk/services/feed-service.js';
 import { listStrategyCatalog } from '../../strategy/services/catalog-service.js';

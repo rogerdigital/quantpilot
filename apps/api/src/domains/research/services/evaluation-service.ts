@@ -28,7 +28,7 @@ function getNextStrategyStage(status) {
   return '';
 }
 
-function buildEvaluationForRun(run, result, strategy, payload = {}) {
+function buildEvaluationForRun(_run, result, strategy, payload = {}) {
   const benchmarkGapPct = Number(
     (result.annualizedReturnPct - result.benchmarkReturnPct).toFixed(1)
   );

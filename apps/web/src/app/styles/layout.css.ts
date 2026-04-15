@@ -701,8 +701,8 @@ globalStyle('@media (max-width: 1180px)', {} as any);
    Use the selector-based approach with media queries. */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const mediaLarge = '@media (max-width: 1180px)';
-const mediaSmall = '@media (max-width: 720px)';
+const _mediaLarge = '@media (max-width: 1180px)';
+const _mediaSmall = '@media (max-width: 720px)';
 
 globalStyle(`.app-shell`, {
   '@media': {

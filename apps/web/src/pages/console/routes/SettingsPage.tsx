@@ -7,7 +7,6 @@ import type {
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
-  ApiPermissionError,
   deleteBrokerBinding,
   fetchBrokerBindingRuntime,
   fetchOperationsMaintenance,
@@ -474,7 +473,7 @@ export function RiskParametersPanel({ locale }: { locale: 'zh' | 'en' }) {
             disabled={!params || saving}
             onChange={(e) => {
               const v = parseFloat(e.target.value);
-              if (isFinite(v)) setParams((prev) => (prev ? { ...prev, [key]: v } : prev));
+              if (Number.isFinite(v)) setParams((prev) => (prev ? { ...prev, [key]: v } : prev));
             }}
           />
           <span className="status-copy" style={{ fontSize: '11px' }}>

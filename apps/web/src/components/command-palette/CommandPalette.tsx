@@ -1,8 +1,8 @@
 import type { AppLocale } from '@shared-types/trading.ts';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { listConsoleRoutes } from '../../modules/console/console.routes.tsx';
 import { copy as i18n } from '../../modules/console/console.i18n.tsx';
+import { listConsoleRoutes } from '../../modules/console/console.routes.tsx';
 import {
   emptyState,
   footer,
@@ -19,8 +19,8 @@ import {
   resultItem,
   resultItemActive,
   resultName,
-  resultText,
   results,
+  resultText,
   sectionLabel,
 } from './CommandPalette.css.ts';
 
@@ -159,7 +159,12 @@ export function CommandPalette({ locale, onClose }: Props) {
   const placeholder = locale === 'zh' ? '搜索页面或功能…' : 'Search pages or actions…';
 
   return (
-    <div className={overlay} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    // biome-ignore lint/a11y/noStaticElementInteractions: overlay backdrop closes palette on click
+    <div
+      className={overlay}
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
+    >
       <div className={panel} role="dialog" aria-label="Command palette" onKeyDown={handleKeyDown}>
         {/* Search input */}
         <div className={inputWrap}>
@@ -181,8 +186,9 @@ export function CommandPalette({ locale, onClose }: Props) {
             <>
               <div className={sectionLabel}>{locale === 'zh' ? '页面' : 'Pages'}</div>
               {filtered.map((item, idx) => (
-                <div
+                <button
                   key={item.id}
+                  type="button"
                   className={`${resultItem}${idx === activeIdx ? ` ${resultItemActive}` : ''}`}
                   role="option"
                   aria-selected={idx === activeIdx}
@@ -194,7 +200,7 @@ export function CommandPalette({ locale, onClose }: Props) {
                     <div className={resultName}>{item.label}</div>
                   </div>
                   {idx === activeIdx && <span className={resultEnter}>↵</span>}
-                </div>
+                </button>
               ))}
             </>
           ) : (

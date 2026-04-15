@@ -3,7 +3,6 @@
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { assessExecutionCandidate } from '../../../domains/risk/services/assessment-service.js';
 import { getStrategyCatalogItem } from '../../../domains/strategy/services/catalog-service.js';
-import { buildStrategyExecutionCandidate } from '../../../domains/strategy/services/execution-candidate-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
 
