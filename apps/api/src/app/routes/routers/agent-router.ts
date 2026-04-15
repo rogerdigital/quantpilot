@@ -75,23 +75,26 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
     return true;
   }
 
+  // LLM-powered intent parsing (now async)
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/intent') {
     const body = await readJsonBody(req);
-    const result = parseAgentIntent(body);
+    const result = await parseAgentIntent(body);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
 
+  // LLM-powered plan creation (now async)
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/plans') {
     const body = await readJsonBody(req);
-    const result = createAgentPlan(body);
+    const result = await createAgentPlan(body);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
 
+  // LLM-powered analysis with tool-use loop (now async)
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/analysis-runs') {
     const body = await readJsonBody(req);
-    const result = runAgentAnalysis(body);
+    const result = await runAgentAnalysis(body);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
