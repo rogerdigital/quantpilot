@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 import { getRiskEvent, listRiskEvents } from '../../../domains/risk/services/feed-service.js';
+import { getRiskParameters, resetRiskParameters, updateRiskParameters } from '../../../domains/risk/services/parameters-service.js';
 import { runRiskPolicyAction } from '../../../domains/risk/services/policy-action-service.js';
 import { getRiskWorkbench } from '../../../domains/risk/services/workbench-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
@@ -9,6 +10,32 @@ import { hasPermission } from '../../../modules/auth/service.js';
 export async function handleRiskRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   const writeForbidden = (permission, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/risk/parameters') {
+    writeJson(res, 200, { ok: true, parameters: getRiskParameters() });
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/risk/parameters') {
+    if (!hasPermission('risk:review')) {
+      writeForbidden('risk:review', 'update risk parameters');
+      return true;
+    }
+    const body = await readJsonBody(req);
+    const updated = updateRiskParameters(body);
+    writeJson(res, 200, { ok: true, parameters: updated });
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/risk/parameters/reset') {
+    if (!hasPermission('risk:review')) {
+      writeForbidden('risk:review', 'reset risk parameters');
+      return true;
+    }
+    const reset = resetRiskParameters();
+    writeJson(res, 200, { ok: true, parameters: reset });
+    return true;
+  }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/risk/events') {
     writeJson(res, 200, { ok: true, events: listRiskEvents() });
