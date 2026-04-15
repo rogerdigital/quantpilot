@@ -32,9 +32,9 @@ globalStyle('.focus-row::before', {
 } as any);
 
 globalStyle('.focus-row:hover', {
-  borderColor: 'rgba(0, 212, 255, 0.2)',
-  background: 'rgba(0, 212, 255, 0.035)',
-  boxShadow: '0 0 18px rgba(0, 212, 255, 0.06)',
+  borderColor: 'rgba(99, 102, 241, 0.2)',
+  background: 'rgba(99, 102, 241, 0.035)',
+  boxShadow: '0 0 18px rgba(99, 102, 241, 0.06)',
   transform: 'translateX(3px)',
 } as any);
 
@@ -119,9 +119,9 @@ globalStyle('.panel-title', {
 
 globalStyle('.panel-badge', {
   padding: '6px 11px',
-  background: 'rgba(0, 212, 255, 0.07)',
+  background: 'rgba(99, 102, 241, 0.07)',
   color: 'var(--accent)',
-  border: '1px solid rgba(0, 212, 255, 0.14)',
+  border: '1px solid rgba(99, 102, 241, 0.14)',
   borderRadius: 'var(--radius-sm)',
 } as any);
 
@@ -211,11 +211,11 @@ globalStyle('.table-row-hover', {
 } as any);
 
 globalStyle('.table-row-hover:hover, .table-row-hover:focus-within', {
-  background: 'rgba(0, 212, 255, 0.04)',
+  background: 'rgba(99, 102, 241, 0.04)',
 } as any);
 
 globalStyle('.table-row-hover:hover td, .table-row-hover:focus-within td', {
-  borderBottomColor: 'rgba(0, 212, 255, 0.1)',
+  borderBottomColor: 'rgba(99, 102, 241, 0.1)',
 } as any);
 
 globalStyle('.table-row-hover:hover td:first-child, .table-row-hover:focus-within td:first-child', {
@@ -333,9 +333,9 @@ globalStyle('.log-item::before', {
 } as any);
 
 globalStyle('.log-item:hover', {
-  borderColor: 'rgba(0, 212, 255, 0.18)',
-  background: 'rgba(0, 212, 255, 0.03)',
-  boxShadow: '0 0 16px rgba(0, 212, 255, 0.05)',
+  borderColor: 'rgba(99, 102, 241, 0.18)',
+  background: 'rgba(99, 102, 241, 0.03)',
+  boxShadow: '0 0 16px rgba(99, 102, 241, 0.05)',
   transform: 'translateX(3px)',
 } as any);
 

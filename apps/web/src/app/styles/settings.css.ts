@@ -36,9 +36,9 @@ globalStyle('.settings-field input, .settings-field select', {
 } as any);
 
 globalStyle('.settings-field input:focus, .settings-field select:focus', {
-  borderColor: 'rgba(0, 212, 255, 0.45)',
-  boxShadow: '0 0 14px rgba(0, 212, 255, 0.12), inset 0 0 10px rgba(0, 212, 255, 0.03)',
-  background: 'rgba(0, 212, 255, 0.03)',
+  borderColor: 'rgba(99, 102, 241, 0.45)',
+  boxShadow: '0 0 14px rgba(99, 102, 241, 0.12), inset 0 0 10px rgba(99, 102, 241, 0.03)',
+  background: 'rgba(99, 102, 241, 0.03)',
 } as any);
 
 globalStyle('.settings-field-wide', {
@@ -68,9 +68,9 @@ globalStyle('.text-input, .detail-textarea', {
 } as any);
 
 globalStyle('.text-input:focus, .detail-textarea:focus', {
-  borderColor: 'rgba(0, 212, 255, 0.45)',
-  boxShadow: '0 0 14px rgba(0, 212, 255, 0.12), inset 0 0 10px rgba(0, 212, 255, 0.03)',
-  background: 'rgba(0, 212, 255, 0.03)',
+  borderColor: 'rgba(99, 102, 241, 0.45)',
+  boxShadow: '0 0 14px rgba(99, 102, 241, 0.12), inset 0 0 10px rgba(99, 102, 241, 0.03)',
+  background: 'rgba(99, 102, 241, 0.03)',
 } as any);
 
 globalStyle('.detail-textarea', {
@@ -94,9 +94,9 @@ globalStyle('.settings-actions', {
 globalStyle('.settings-button', {
   position: 'relative',
   overflow: 'hidden',
-  border: '1px solid rgba(0, 212, 255, 0.22)',
+  border: '1px solid rgba(99, 102, 241, 0.22)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(0, 212, 255, 0.055)',
+  background: 'rgba(99, 102, 241, 0.055)',
   color: 'var(--text)',
   padding: '10px 16px',
   cursor: 'pointer',
@@ -111,15 +111,15 @@ globalStyle('.settings-button::after', {
   content: '""',
   position: 'absolute',
   inset: 0,
-  background: 'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.12), transparent)',
+  background: 'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.12), transparent)',
   transform: 'translateX(-100%)',
   transition: 'none',
 } as any);
 
 globalStyle('.settings-button:hover', {
-  borderColor: 'rgba(0, 212, 255, 0.5)',
-  boxShadow: '0 0 18px rgba(0, 212, 255, 0.22), inset 0 1px 0 rgba(0, 212, 255, 0.08)',
-  background: 'rgba(0, 212, 255, 0.08)',
+  borderColor: 'rgba(99, 102, 241, 0.5)',
+  boxShadow: '0 0 18px rgba(99, 102, 241, 0.22), inset 0 1px 0 rgba(99, 102, 241, 0.08)',
+  background: 'rgba(99, 102, 241, 0.08)',
   transform: 'translateY(-1px)',
 } as any);
 
@@ -159,9 +159,9 @@ globalStyle('.policy-row-actions', {
 globalStyle('.settings-inline-button', {
   position: 'relative',
   overflow: 'hidden',
-  border: '1px solid rgba(0, 212, 255, 0.13)',
+  border: '1px solid rgba(99, 102, 241, 0.13)',
   borderRadius: 'var(--radius-sm)',
-  background: 'rgba(0, 212, 255, 0.035)',
+  background: 'rgba(99, 102, 241, 0.035)',
   color: 'var(--muted)',
   padding: '6px 10px',
   cursor: 'pointer',
@@ -173,8 +173,8 @@ globalStyle('.settings-inline-button', {
 } as any);
 
 globalStyle('.settings-inline-button:hover', {
-  borderColor: 'rgba(0, 212, 255, 0.3)',
-  boxShadow: '0 0 10px rgba(0, 212, 255, 0.12)',
+  borderColor: 'rgba(99, 102, 241, 0.3)',
+  boxShadow: '0 0 10px rgba(99, 102, 241, 0.12)',
   color: 'var(--text)',
   transform: 'translateY(-1px)',
 } as any);
@@ -204,9 +204,9 @@ globalStyle('.settings-chip-row', {
 } as any);
 
 globalStyle('.settings-chip', {
-  border: '1px solid rgba(0, 212, 255, 0.1)',
+  border: '1px solid rgba(99, 102, 241, 0.1)',
   borderRadius: 'var(--radius-sm)',
-  background: 'rgba(0, 212, 255, 0.03)',
+  background: 'rgba(99, 102, 241, 0.03)',
   color: 'var(--muted)',
   padding: '8px 12px',
   cursor: 'pointer',
@@ -218,16 +218,16 @@ globalStyle('.settings-chip', {
 } as any);
 
 globalStyle('.settings-chip:hover', {
-  borderColor: 'rgba(0, 212, 255, 0.22)',
-  background: 'rgba(0, 212, 255, 0.07)',
+  borderColor: 'rgba(99, 102, 241, 0.22)',
+  background: 'rgba(99, 102, 241, 0.07)',
   color: 'var(--text)',
 } as any);
 
 globalStyle('.settings-chip.active', {
-  borderColor: 'rgba(0, 212, 255, 0.38)',
-  background: 'rgba(0, 212, 255, 0.1)',
+  borderColor: 'rgba(99, 102, 241, 0.38)',
+  background: 'rgba(99, 102, 241, 0.1)',
   color: 'var(--text)',
-  boxShadow: '0 0 10px rgba(0, 212, 255, 0.1)',
+  boxShadow: '0 0 10px rgba(99, 102, 241, 0.1)',
 } as any);
 
 globalStyle('.policy-card', {
@@ -278,9 +278,9 @@ globalStyle('.agent-stage-header', {
   gap: '18px',
   alignItems: 'flex-start',
   padding: '14px 16px',
-  border: '1px solid rgba(0, 212, 255, 0.12)',
+  border: '1px solid rgba(99, 102, 241, 0.12)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(0, 212, 255, 0.03)',
+  background: 'rgba(99, 102, 241, 0.03)',
   transition: 'border-color 160ms ease',
   flexShrink: 0,
   marginBottom: '12px',
@@ -317,7 +317,7 @@ globalStyle('.agent-insight-card', {
 
 globalStyle('.agent-insight-card:hover', {
   borderColor: 'rgba(40, 120, 220, 0.2)',
-  boxShadow: '0 0 16px rgba(0, 212, 255, 0.05)',
+  boxShadow: '0 0 16px rgba(99, 102, 241, 0.05)',
 } as any);
 
 globalStyle('.agent-insight-header', {
@@ -374,7 +374,7 @@ globalStyle('.agent-step-card', {
 
 globalStyle('.agent-step-card:hover', {
   borderColor: 'rgba(40, 120, 220, 0.22)',
-  background: 'rgba(0, 212, 255, 0.02)',
+  background: 'rgba(99, 102, 241, 0.02)',
 } as any);
 
 globalStyle('.agent-step-top', {
@@ -430,9 +430,9 @@ globalStyle('.agent-suggestion-button::before', {
 } as any);
 
 globalStyle('.agent-suggestion-button:hover', {
-  borderColor: 'rgba(0, 212, 255, 0.22)',
-  boxShadow: '0 0 14px rgba(0, 212, 255, 0.08)',
-  background: 'rgba(0, 212, 255, 0.03)',
+  borderColor: 'rgba(99, 102, 241, 0.22)',
+  boxShadow: '0 0 14px rgba(99, 102, 241, 0.08)',
+  background: 'rgba(99, 102, 241, 0.03)',
   transform: 'translateX(3px)',
 } as any);
 
@@ -448,7 +448,7 @@ globalStyle('.agent-chat-transcript', {
   flex: 1,
   minHeight: 0,
   overflowY: 'auto',
-  border: '1px solid rgba(0, 212, 255, 0.16)',
+  border: '1px solid rgba(99, 102, 241, 0.16)',
   borderRadius: 'var(--radius-lg)',
   background: 'rgba(1, 3, 10, 0.92)',
   padding: '20px',
@@ -457,7 +457,7 @@ globalStyle('.agent-chat-transcript', {
   gap: '12px',
   animation: 'fade-in 200ms ease',
   boxShadow:
-    'inset 0 0 60px rgba(0, 0, 0, 0.5), 0 0 28px rgba(0, 212, 255, 0.06), 0 0 0 1px rgba(0, 212, 255, 0.04)',
+    'inset 0 0 60px rgba(0, 0, 0, 0.5), 0 0 28px rgba(99, 102, 241, 0.06), 0 0 0 1px rgba(99, 102, 241, 0.04)',
 } as any);
 
 globalStyle('.agent-chat-sidecar', {
@@ -482,10 +482,10 @@ globalStyle('.agent-chat-message:hover', {
 
 globalStyle('.agent-chat-user', {
   justifySelf: 'end',
-  background: 'rgba(0, 212, 255, 0.06)',
-  borderColor: 'rgba(0, 212, 255, 0.18)',
+  background: 'rgba(99, 102, 241, 0.06)',
+  borderColor: 'rgba(99, 102, 241, 0.18)',
   borderLeft: '2px solid var(--accent)',
-  boxShadow: 'inset -4px 0 20px rgba(0, 212, 255, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3)',
+  boxShadow: 'inset -4px 0 20px rgba(99, 102, 241, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3)',
 } as any);
 
 globalStyle('.agent-chat-assistant', {
@@ -532,7 +532,7 @@ globalStyle('.agent-chat-composer', {
   display: 'grid',
   gap: '12px',
   padding: '16px',
-  border: '1px solid rgba(0, 212, 255, 0.1)',
+  border: '1px solid rgba(99, 102, 241, 0.1)',
   borderRadius: 'var(--radius-lg)',
   background: 'rgba(4, 10, 24, 0.8)',
   flexShrink: 0,

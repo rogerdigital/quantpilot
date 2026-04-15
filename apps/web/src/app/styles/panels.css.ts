@@ -22,7 +22,7 @@ globalStyle('.meta-card::before, .hero-card::before, .metric-tile::before, .pane
   width: '100%',
   height: '1px',
   background:
-    'linear-gradient(90deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.06) 55%, transparent)',
+    'linear-gradient(90deg, rgba(99, 102, 241, 0.22), rgba(99, 102, 241, 0.07) 55%, transparent)',
   pointerEvents: 'none',
 } as any);
 
@@ -33,8 +33,8 @@ globalStyle('.panel::after', {
   right: '7px',
   width: '10px',
   height: '10px',
-  borderRight: '1px solid rgba(0, 212, 255, 0.12)',
-  borderBottom: '1px solid rgba(0, 212, 255, 0.12)',
+  borderRight: '1px solid rgba(99, 102, 241, 0.14)',
+  borderBottom: '1px solid rgba(99, 102, 241, 0.14)',
   pointerEvents: 'none',
   transition: 'border-color 200ms ease',
 } as any);
@@ -45,7 +45,7 @@ globalStyle('.panel:hover', {
 } as any);
 
 globalStyle('.panel:hover::after', {
-  borderColor: 'rgba(0, 212, 255, 0.3)',
+  borderColor: 'rgba(99, 102, 241, 0.35)',
 } as any);
 
 globalStyle('.meta-card', {
@@ -61,7 +61,7 @@ globalStyle('.meta-value', {
 
 globalStyle('.meta-value.accent', {
   color: 'var(--accent)',
-  textShadow: '0 0 20px rgba(0, 212, 255, 0.25)',
+  textShadow: '0 0 20px rgba(99, 102, 241, 0.30)',
 } as any);
 
 globalStyle('.panel', {
@@ -255,29 +255,29 @@ globalStyle('.shortcut-surface', {
 } as any);
 
 globalStyle('.shortcut-surface:hover', {
-  borderColor: 'rgba(0, 212, 255, 0.28) !important',
-  boxShadow: '0 0 22px rgba(0, 212, 255, 0.1)',
-  background: 'rgba(0, 212, 255, 0.04) !important',
+  borderColor: 'rgba(99, 102, 241, 0.28) !important',
+  boxShadow: '0 0 22px rgba(99, 102, 241, 0.12)',
+  background: 'rgba(99, 102, 241, 0.05) !important',
   transform: 'translateY(-2px)',
 } as any);
 
 globalStyle('.toolbar-pill-button:hover, .status-row-button:hover, .inline-link:hover', {
-  borderColor: 'rgba(0, 212, 255, 0.28)',
+  borderColor: 'rgba(99, 102, 241, 0.30)',
   color: 'var(--text)',
 } as any);
 
 globalStyle('.toolbar-pill-button:hover, .shortcut-surface:hover', {
-  boxShadow: '0 0 20px rgba(0, 212, 255, 0.1)',
+  boxShadow: '0 0 20px rgba(99, 102, 241, 0.12)',
 } as any);
 
 globalStyle('.status-row-button:hover, .inline-link:hover', {
-  background: 'rgba(0, 212, 255, 0.035)',
+  background: 'rgba(99, 102, 241, 0.04)',
 } as any);
 
 globalStyle(
   '.shortcut-surface:focus-visible, .toolbar-pill-button:focus-visible, .status-row-button:focus-visible, .inline-link:focus-visible, .locale-trigger:focus-visible, .locale-option:focus-visible, .mode-pill:focus-visible',
   {
-    outline: '2px solid rgba(0, 212, 255, 0.65)',
+    outline: '2px solid rgba(99, 102, 241, 0.65)',
     outlineOffset: '2px',
   } as any
 );
@@ -288,7 +288,7 @@ globalStyle(
 
 globalStyle('.hero-card-primary', {
   background: [
-    'linear-gradient(135deg, rgba(0, 212, 255, 0.07) 0%, transparent 45%)',
+    'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, transparent 45%)',
     'linear-gradient(220deg, rgba(139, 92, 246, 0.06) 0%, transparent 60%)',
     'var(--panel)',
   ].join(', '),
@@ -302,7 +302,7 @@ globalStyle('.hero-card-primary::after', {
   width: '200px',
   height: '200px',
   borderRadius: '50%',
-  background: 'radial-gradient(circle, rgba(0, 212, 255, 0.1), transparent 60%)',
+  background: 'radial-gradient(circle, rgba(99, 102, 241, 0.14), transparent 60%)',
   pointerEvents: 'none',
   filter: 'blur(16px)',
   opacity: 0.7,
@@ -318,7 +318,7 @@ globalStyle('.hero-headline', {
 globalStyle('.hero-value', {
   font: '700 clamp(30px, 5vw, 52px)/0.88 var(--font-data)',
   letterSpacing: '-0.04em',
-  textShadow: '0 0 36px rgba(0, 212, 255, 0.22)',
+  textShadow: '0 0 36px rgba(99, 102, 241, 0.28)',
   animation: 'tick-up 320ms ease 150ms both',
 } as any);
 
@@ -395,12 +395,12 @@ globalStyle('.metric-card::before', {
   left: 0,
   width: '55%',
   height: '1px',
-  background: 'linear-gradient(90deg, rgba(0, 212, 255, 0.28), transparent)',
+  background: 'linear-gradient(90deg, rgba(99, 102, 241, 0.30), transparent)',
 } as any);
 
 globalStyle('.metric-card:hover', {
-  borderColor: 'rgba(40, 120, 220, 0.24)',
-  boxShadow: '0 0 20px rgba(0, 212, 255, 0.07)',
+  borderColor: 'rgba(99, 102, 241, 0.28)',
+  boxShadow: '0 0 20px rgba(99, 102, 241, 0.09)',
   transform: 'translateY(-2px)',
 } as any);
 
@@ -437,12 +437,12 @@ globalStyle('.terminal-tile', {
 } as any);
 
 globalStyle('.terminal-tile:hover', {
-  borderColor: 'rgba(40, 120, 220, 0.2)',
-  boxShadow: '0 0 16px rgba(0, 212, 255, 0.05)',
+  borderColor: 'rgba(99, 102, 241, 0.22)',
+  boxShadow: '0 0 16px rgba(99, 102, 241, 0.07)',
 } as any);
 
 globalStyle('.terminal-tile-primary', {
-  background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.06), transparent 36%), var(--panel)',
+  background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.07), transparent 36%), var(--panel)',
 } as any);
 
 globalStyle('.metric-tile', {
