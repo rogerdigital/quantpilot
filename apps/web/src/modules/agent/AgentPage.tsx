@@ -1,10 +1,6 @@
 import { useRef } from 'react';
 import { useState } from 'react';
-import {
-  EmptyState,
-  SectionHeader,
-  TopMeta,
-} from '../../components/layout/ConsoleChrome.tsx';
+import { EmptyState, SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { copy, useLocale } from '../console/console.i18n.tsx';
 import { translateRiskLevel } from '../console/console.utils.ts';
@@ -139,7 +135,14 @@ function AnalysisStepper({
   return (
     <div className={agentStepper}>
       {steps.map((step, idx) => (
-        <div key={step.key} style={{ display: 'flex', alignItems: 'center', flex: idx < steps.length - 1 ? 1 : 'initial' }}>
+        <div
+          key={step.key}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            flex: idx < steps.length - 1 ? 1 : 'initial',
+          }}
+        >
           <div className={agentStepperItem}>
             <div
               className={[
@@ -265,13 +268,26 @@ function buildAgentConversation({
     });
   }
 
-  if (thesis || summary || rationale.length || warnings.length || recommendedNextStep || actionRequestSummary) {
+  if (
+    thesis ||
+    summary ||
+    rationale.length ||
+    warnings.length ||
+    recommendedNextStep ||
+    actionRequestSummary
+  ) {
     const body = [
       thesis || (locale === 'zh' ? '本轮分析已完成。' : 'Analysis complete.'),
       summary || null,
-      rationale.length ? `${locale === 'zh' ? '分析依据' : 'Rationale'}: ${rationale.join(' ')}` : null,
-      warnings.length ? `${locale === 'zh' ? '风险提示' : 'Warnings'}: ${warnings.join(' ')}` : null,
-      recommendedNextStep ? `${locale === 'zh' ? '建议下一步' : 'Next step'}: ${recommendedNextStep}` : null,
+      rationale.length
+        ? `${locale === 'zh' ? '分析依据' : 'Rationale'}: ${rationale.join(' ')}`
+        : null,
+      warnings.length
+        ? `${locale === 'zh' ? '风险提示' : 'Warnings'}: ${warnings.join(' ')}`
+        : null,
+      recommendedNextStep
+        ? `${locale === 'zh' ? '建议下一步' : 'Next step'}: ${recommendedNextStep}`
+        : null,
       actionRequestSummary
         ? `${locale === 'zh' ? '审批请求' : 'Action request'}: ${actionRequestSummary} (${actionRequestStatus || '--'})`
         : null,
@@ -473,7 +489,13 @@ export default function AgentPage() {
               </div>
             </div>
             <div className={`panel-badge ${running ? 'badge-warn' : 'badge-info'}`}>
-              {running ? (locale === 'zh' ? '运行中' : 'RUNNING') : locale === 'zh' ? '就绪' : 'READY'}
+              {running
+                ? locale === 'zh'
+                  ? '运行中'
+                  : 'RUNNING'
+                : locale === 'zh'
+                  ? '就绪'
+                  : 'READY'}
             </div>
           </div>
 
@@ -496,9 +518,7 @@ export default function AgentPage() {
                     {sessionDetail?.session.status || (locale === 'zh' ? '无会话' : 'No session')}
                   </span>
                   {sessionDetail?.session.latestIntent.kind && (
-                    <span className="settings-chip">
-                      {sessionDetail.session.latestIntent.kind}
-                    </span>
+                    <span className="settings-chip">{sessionDetail.session.latestIntent.kind}</span>
                   )}
                 </div>
               </div>
@@ -565,8 +585,12 @@ export default function AgentPage() {
                     disabled={running || !prompt.trim()}
                   >
                     {running
-                      ? locale === 'zh' ? '分析中…' : 'Analyzing…'
-                      : locale === 'zh' ? '发送并分析' : 'Send & Analyze'}
+                      ? locale === 'zh'
+                        ? '分析中…'
+                        : 'Analyzing…'
+                      : locale === 'zh'
+                        ? '发送并分析'
+                        : 'Send & Analyze'}
                   </button>
                 </div>
               </div>
@@ -582,8 +606,12 @@ export default function AgentPage() {
                   </div>
                   <span className={`panel-badge ${hasAnalysis ? 'badge-info' : ''}`}>
                     {hasAnalysis
-                      ? locale === 'zh' ? '已完成' : 'DONE'
-                      : locale === 'zh' ? '等待中' : 'PENDING'}
+                      ? locale === 'zh'
+                        ? '已完成'
+                        : 'DONE'
+                      : locale === 'zh'
+                        ? '等待中'
+                        : 'PENDING'}
                   </span>
                 </div>
 
@@ -593,12 +621,22 @@ export default function AgentPage() {
 
                     {latestRationale.length > 0 && (
                       <div>
-                        <div style={{ font: '600 11px/1 var(--font-data)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
+                        <div
+                          style={{
+                            font: '600 11px/1 var(--font-data)',
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            color: 'var(--muted)',
+                            marginBottom: '8px',
+                          }}
+                        >
                           {locale === 'zh' ? '分析依据' : 'Rationale'}
                         </div>
                         <ul className={agentRationaleList}>
                           {latestRationale.map((item, idx) => (
-                            <li key={idx} className={agentRationaleItem}>{item}</li>
+                            <li key={idx} className={agentRationaleItem}>
+                              {item}
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -607,14 +645,24 @@ export default function AgentPage() {
                     {latestWarnings.length > 0 && (
                       <div style={{ display: 'grid', gap: '6px' }}>
                         {latestWarnings.map((w, idx) => (
-                          <div key={idx} className={agentWarningItem}>{w}</div>
+                          <div key={idx} className={agentWarningItem}>
+                            {w}
+                          </div>
                         ))}
                       </div>
                     )}
 
                     {latestExplanation?.recommendedNextStep && (
                       <div>
-                        <div style={{ font: '600 11px/1 var(--font-data)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '6px' }}>
+                        <div
+                          style={{
+                            font: '600 11px/1 var(--font-data)',
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            color: 'var(--muted)',
+                            marginBottom: '6px',
+                          }}
+                        >
                           {locale === 'zh' ? '建议下一步' : 'Recommended Next Step'}
                         </div>
                         <div className={agentNextStep}>{latestExplanation.recommendedNextStep}</div>
@@ -623,7 +671,15 @@ export default function AgentPage() {
 
                     {/* Action buttons: Paper / Live / Backtest */}
                     <div>
-                      <div style={{ font: '600 11px/1 var(--font-data)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
+                      <div
+                        style={{
+                          font: '600 11px/1 var(--font-data)',
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          color: 'var(--muted)',
+                          marginBottom: '8px',
+                        }}
+                      >
                         {locale === 'zh' ? '快速操作' : 'Quick Actions'}
                       </div>
                       <div className={agentActionButtons}>
@@ -632,22 +688,34 @@ export default function AgentPage() {
                           className={agentActionBtn}
                           onClick={submitActionRequest}
                           disabled={!canRequestAction || requestingAction}
-                          title={locale === 'zh' ? '模拟交易（不需要审批）' : 'Paper trade (no approval needed)'}
+                          title={
+                            locale === 'zh'
+                              ? '模拟交易（不需要审批）'
+                              : 'Paper trade (no approval needed)'
+                          }
                         >
                           <span className={agentActionBtnIcon}>📄</span>
                           <span className={agentActionBtnLabel}>Paper</span>
-                          <span className={agentActionBtnSub}>{locale === 'zh' ? '模拟' : 'Simulate'}</span>
+                          <span className={agentActionBtnSub}>
+                            {locale === 'zh' ? '模拟' : 'Simulate'}
+                          </span>
                         </button>
                         <button
                           type="button"
                           className={agentActionBtn}
                           onClick={submitActionRequest}
                           disabled={!canRequestAction || requestingAction}
-                          title={locale === 'zh' ? '实盘交易（需人工审批）' : 'Live trade (requires approval)'}
+                          title={
+                            locale === 'zh'
+                              ? '实盘交易（需人工审批）'
+                              : 'Live trade (requires approval)'
+                          }
                         >
                           <span className={agentActionBtnIcon}>⚡</span>
                           <span className={agentActionBtnLabel}>Live</span>
-                          <span className={agentActionBtnSub}>{locale === 'zh' ? '实盘' : 'Real'}</span>
+                          <span className={agentActionBtnSub}>
+                            {locale === 'zh' ? '实盘' : 'Real'}
+                          </span>
                         </button>
                         <button
                           type="button"
@@ -655,12 +723,16 @@ export default function AgentPage() {
                           disabled={running}
                           title={locale === 'zh' ? '运行历史回测' : 'Run backtest'}
                           onClick={() => {
-                            setPrompt(locale === 'zh' ? '运行一次历史回测' : 'Run a historical backtest');
+                            setPrompt(
+                              locale === 'zh' ? '运行一次历史回测' : 'Run a historical backtest'
+                            );
                           }}
                         >
                           <span className={agentActionBtnIcon}>📊</span>
                           <span className={agentActionBtnLabel}>Backtest</span>
-                          <span className={agentActionBtnSub}>{locale === 'zh' ? '回测' : 'History'}</span>
+                          <span className={agentActionBtnSub}>
+                            {locale === 'zh' ? '回测' : 'History'}
+                          </span>
                         </button>
                       </div>
                     </div>
@@ -685,8 +757,12 @@ export default function AgentPage() {
                   </div>
                   <span className={`panel-badge ${canRequestAction ? 'badge-warn' : 'badge-info'}`}>
                     {canRequestAction
-                      ? locale === 'zh' ? '可审批' : 'APPROVABLE'
-                      : locale === 'zh' ? '跟进中' : 'IN FLIGHT'}
+                      ? locale === 'zh'
+                        ? '可审批'
+                        : 'APPROVABLE'
+                      : locale === 'zh'
+                        ? '跟进中'
+                        : 'IN FLIGHT'}
                   </span>
                 </div>
                 <div className={agentPulseGrid}>
@@ -712,9 +788,7 @@ export default function AgentPage() {
               {/* ── Plan Steps ── */}
               {planSteps.length > 0 && (
                 <div className={agentInsightCard}>
-                  <div className="card-eyebrow">
-                    {locale === 'zh' ? '执行步骤' : 'Plan Steps'}
-                  </div>
+                  <div className="card-eyebrow">{locale === 'zh' ? '执行步骤' : 'Plan Steps'}</div>
                   <div className={agentStepStack}>
                     {planSteps.slice(0, 5).map((step) => (
                       <div className={agentStepCard} key={step.id}>
@@ -734,9 +808,7 @@ export default function AgentPage() {
               {/* ── Evidence ── */}
               {evidence.length > 0 && (
                 <div className={agentInsightCard}>
-                  <div className="card-eyebrow">
-                    {locale === 'zh' ? '数据证据' : 'Evidence'}
-                  </div>
+                  <div className="card-eyebrow">{locale === 'zh' ? '数据证据' : 'Evidence'}</div>
                   <div className={agentStepStack}>
                     {evidence.slice(0, 3).map((item) => (
                       <div className={agentStepCard} key={item.id}>
@@ -767,8 +839,12 @@ export default function AgentPage() {
                     disabled={!canRequestAction || requestingAction}
                   >
                     {requestingAction
-                      ? locale === 'zh' ? '提交中…' : 'Submitting…'
-                      : locale === 'zh' ? '提交审批请求' : 'Request Approval'}
+                      ? locale === 'zh'
+                        ? '提交中…'
+                        : 'Submitting…'
+                      : locale === 'zh'
+                        ? '提交审批请求'
+                        : 'Request Approval'}
                   </button>
                   <div className="mini-copy" style={{ fontSize: '12px' }}>
                     {latestActionRequest?.status === 'pending_review'
@@ -809,7 +885,11 @@ export default function AgentPage() {
       </section>
 
       {/* Governance section */}
-      <section className="panel-grid panel-grid-wide" id="agent-governance" style={{ marginTop: '24px' }}>
+      <section
+        className="panel-grid panel-grid-wide"
+        id="agent-governance"
+        style={{ marginTop: '24px' }}
+      >
         <article className="panel">
           <div className="panel-head">
             <div>
@@ -822,7 +902,9 @@ export default function AgentPage() {
                   : 'Current agent authority mode and active daily bias instructions.'}
               </div>
             </div>
-            <span className={`panel-badge ${authorityState?.mode === 'stopped' ? 'badge-warn' : 'badge-info'}`}>
+            <span
+              className={`panel-badge ${authorityState?.mode === 'stopped' ? 'badge-warn' : 'badge-info'}`}
+            >
               {authorityState?.mode || 'manual_only'}
             </span>
           </div>
@@ -879,19 +961,27 @@ export default function AgentPage() {
       </section>
 
       {/* Recent sessions */}
-      <section className="panel-grid-wide panel-grid" id="agent-sessions" style={{ marginTop: '24px' }}>
+      <section
+        className="panel-grid-wide panel-grid"
+        id="agent-sessions"
+        style={{ marginTop: '24px' }}
+      >
         <article className="panel" style={{ gridColumn: '1 / -1' }}>
           <div className="panel-head">
-            <div className="panel-title">
-              {locale === 'zh' ? '最近会话' : 'Recent Sessions'}
-            </div>
+            <div className="panel-title">{locale === 'zh' ? '最近会话' : 'Recent Sessions'}</div>
             <button
               type="button"
               className="inline-link"
               onClick={() => refresh()}
               disabled={loading || running}
             >
-              {loading ? (locale === 'zh' ? '刷新中…' : 'Refreshing…') : locale === 'zh' ? '刷新' : 'Refresh'}
+              {loading
+                ? locale === 'zh'
+                  ? '刷新中…'
+                  : 'Refreshing…'
+                : locale === 'zh'
+                  ? '刷新'
+                  : 'Refresh'}
             </button>
           </div>
           <div className="focus-list focus-list-terminal panel-body panel-body-md">
@@ -921,8 +1011,12 @@ export default function AgentPage() {
                     onClick={() => selectSession(String(item.id || ''))}
                   >
                     {selectedSessionId === String(item.id || '')
-                      ? locale === 'zh' ? '已选中' : 'Selected'
-                      : locale === 'zh' ? '查看' : 'Open'}
+                      ? locale === 'zh'
+                        ? '已选中'
+                        : 'Selected'
+                      : locale === 'zh'
+                        ? '查看'
+                        : 'Open'}
                   </button>
                 </div>
               </div>

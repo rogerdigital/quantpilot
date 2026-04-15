@@ -59,8 +59,6 @@ globalStyle(`${overviewResultsKpi} .kpi-sub`, {
   marginTop: '2px',
 });
 
-
-
 export const overviewHeroGrid = style({
   display: 'grid',
   gridTemplateColumns: '1.8fr 0.8fr 0.8fr',

@@ -7,7 +7,13 @@ import {
   calcTurnover,
   calcWinRate,
 } from './metrics.js';
-import type { BacktestConfig, BacktestResult, BacktestTrade, DailyEquityPoint, OhlcvBar } from './types.js';
+import type {
+  BacktestConfig,
+  BacktestResult,
+  BacktestTrade,
+  DailyEquityPoint,
+  OhlcvBar,
+} from './types.js';
 
 type Holding = {
   qty: number;

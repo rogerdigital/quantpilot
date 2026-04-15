@@ -84,18 +84,10 @@ export function ApprovalDrawer({ locale, queue, onApprove, onReject }: Props) {
                   </div>
                 </div>
                 <div className={orderActions}>
-                  <button
-                    type="button"
-                    className={approveBtn}
-                    onClick={() => onApprove(key)}
-                  >
+                  <button type="button" className={approveBtn} onClick={() => onApprove(key)}>
                     {t.approve}
                   </button>
-                  <button
-                    type="button"
-                    className={rejectBtn}
-                    onClick={() => onReject(key)}
-                  >
+                  <button type="button" className={rejectBtn} onClick={() => onReject(key)}>
                     {t.reject}
                   </button>
                 </div>

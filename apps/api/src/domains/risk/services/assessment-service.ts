@@ -19,7 +19,9 @@ export function assessExecutionCandidate(candidate) {
       summary:
         'Risk rejected the execution candidate because risk-adjusted quality is below the current floor.',
       reasons: [
-        blockedByDrawdown ? `max drawdown ${candidate.metrics.maxDrawdownPct}% exceeds ${params.maxDrawdownPct}%` : '',
+        blockedByDrawdown
+          ? `max drawdown ${candidate.metrics.maxDrawdownPct}% exceeds ${params.maxDrawdownPct}%`
+          : '',
         blockedBySharpe ? `sharpe ${candidate.metrics.sharpe} is below ${params.sharpeFloor}` : '',
       ].filter(Boolean),
     };

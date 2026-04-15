@@ -1,7 +1,11 @@
 // @ts-nocheck
 
 import { getRiskEvent, listRiskEvents } from '../../../domains/risk/services/feed-service.js';
-import { getRiskParameters, resetRiskParameters, updateRiskParameters } from '../../../domains/risk/services/parameters-service.js';
+import {
+  getRiskParameters,
+  resetRiskParameters,
+  updateRiskParameters,
+} from '../../../domains/risk/services/parameters-service.js';
 import { runRiskPolicyAction } from '../../../domains/risk/services/policy-action-service.js';
 import { getRiskWorkbench } from '../../../domains/risk/services/workbench-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';

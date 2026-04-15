@@ -151,8 +151,12 @@ export function OverviewPage() {
           </span>
           <span className="kpi-sub">
             {totalPnlPct >= 0
-              ? locale === 'zh' ? '今日盈利' : "Today's gain"
-              : locale === 'zh' ? '今日亏损' : "Today's loss"}
+              ? locale === 'zh'
+                ? '今日盈利'
+                : "Today's gain"
+              : locale === 'zh'
+                ? '今日亏损'
+                : "Today's loss"}
           </span>
         </div>
         <div className={overviewResultsKpi}>
@@ -166,8 +170,12 @@ export function OverviewPage() {
         </div>
         <div className={overviewResultsKpi}>
           <span className="kpi-label">{locale === 'zh' ? '买入信号' : 'Buy Signals'}</span>
-          <span className="kpi-value" style={{ color: 'var(--buy)' }}>{buyCount}</span>
-          <span className="kpi-sub">{locale === 'zh' ? `卖出 ${sellCount}` : `Sell: ${sellCount}`}</span>
+          <span className="kpi-value" style={{ color: 'var(--buy)' }}>
+            {buyCount}
+          </span>
+          <span className="kpi-sub">
+            {locale === 'zh' ? `卖出 ${sellCount}` : `Sell: ${sellCount}`}
+          </span>
         </div>
         <div className={overviewResultsKpi}>
           <span className="kpi-label">{locale === 'zh' ? '待审批' : 'Pending Approvals'}</span>
@@ -177,7 +185,9 @@ export function OverviewPage() {
           >
             {pendingApprovals}
           </span>
-          <span className="kpi-sub">{locale === 'zh' ? '需要人工确认' : 'Require human review'}</span>
+          <span className="kpi-sub">
+            {locale === 'zh' ? '需要人工确认' : 'Require human review'}
+          </span>
         </div>
       </section>
 

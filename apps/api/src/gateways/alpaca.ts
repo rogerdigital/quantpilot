@@ -318,12 +318,20 @@ async function handleHistoricalBars(config, reqUrl, res) {
 
   const response = await fetch(upstream, { headers: alpacaHeaders(config, false) });
   if (!response.ok) {
-    writeJson(res, response.status, { message: `Alpaca bars error: HTTP ${response.status}`, bars: [] });
+    writeJson(res, response.status, {
+      message: `Alpaca bars error: HTTP ${response.status}`,
+      bars: [],
+    });
     return;
   }
   const payload = await response.json();
   const bars = Array.isArray(payload?.bars) ? payload.bars.map(normalizeAlpacaBar) : [];
-  writeJson(res, 200, { symbol, timeframe, bars, message: `Loaded ${bars.length} bars for ${symbol}` });
+  writeJson(res, 200, {
+    symbol,
+    timeframe,
+    bars,
+    message: `Loaded ${bars.length} bars for ${symbol}`,
+  });
 }
 
 async function handleSnapshots(config, reqUrl, res) {

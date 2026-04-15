@@ -66,7 +66,9 @@ async function fetchAlpacaBarsForBacktest(symbols, startDate, endDate) {
 
     const fetchedCount = Object.keys(externalBars).length;
     if (fetchedCount > 0) {
-      console.log(`[backtest-workflow] Fetched real Alpaca data for ${fetchedCount}/${symbols.length} symbols`);
+      console.log(
+        `[backtest-workflow] Fetched real Alpaca data for ${fetchedCount}/${symbols.length} symbols`
+      );
     }
     return fetchedCount > 0 ? externalBars : undefined;
   } catch (err) {
