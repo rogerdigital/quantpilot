@@ -21,34 +21,34 @@ export function EquityChart({ paper, live }: Props) {
     const chart = createChart(el, {
       layout: {
         background: { color: 'transparent' },
-        textColor: 'rgba(100, 140, 195, 0.65)',
+        textColor: 'rgba(160, 162, 210, 0.65)',
         fontFamily: '"JetBrains Mono", monospace',
         fontSize: 10,
       },
       grid: {
-        vertLines: { color: 'rgba(0, 180, 255, 0.04)', style: 1 },
-        horzLines: { color: 'rgba(0, 180, 255, 0.08)' },
+        vertLines: { color: 'rgba(99, 102, 241, 0.05)', style: 1 },
+        horzLines: { color: 'rgba(99, 102, 241, 0.08)' },
       },
       rightPriceScale: {
-        borderColor: 'rgba(0, 180, 255, 0.1)',
-        textColor: 'rgba(100, 140, 195, 0.65)',
+        borderColor: 'rgba(99, 102, 241, 0.12)',
+        textColor: 'rgba(160, 162, 210, 0.65)',
       },
       timeScale: {
-        borderColor: 'rgba(0, 180, 255, 0.1)',
+        borderColor: 'rgba(99, 102, 241, 0.12)',
         timeVisible: false,
       },
       crosshair: {
-        vertLine: { color: 'rgba(0, 212, 255, 0.3)' },
-        horzLine: { color: 'rgba(0, 212, 255, 0.3)' },
+        vertLine: { color: 'rgba(99, 102, 241, 0.40)' },
+        horzLine: { color: 'rgba(99, 102, 241, 0.40)' },
       },
       handleScroll: false,
       handleScale: false,
     });
 
     const paperSeries = chart.addSeries(AreaSeries, {
-      lineColor: '#00d4ff',
-      topColor: 'rgba(0, 212, 255, 0.09)',
-      bottomColor: 'rgba(0, 212, 255, 0)',
+      lineColor: '#6366f1',
+      topColor: 'rgba(99, 102, 241, 0.12)',
+      bottomColor: 'rgba(99, 102, 241, 0)',
       lineWidth: 2,
       priceLineVisible: false,
       lastValueVisible: true,

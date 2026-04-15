@@ -7,12 +7,14 @@ import type {
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
-  ApiPermissionError,
   deleteBrokerBinding,
   fetchBrokerBindingRuntime,
   fetchOperationsMaintenance,
+  fetchRiskParameters,
   fetchUserAccount,
+  resetRiskParametersToDefaults,
   saveBrokerBinding,
+  saveRiskParameters,
   setDefaultBrokerBinding,
   syncBrokerBindingRuntime,
   updateUserAccountAccess,
@@ -387,6 +389,219 @@ export function AgentGovernanceSettingsPanel({
       ) : (
         <div className="status-copy">
           {locale === 'zh' ? '当前没有活跃的今日运营指令。' : 'No active daily bias instructions.'}
+        </div>
+      )}
+    </article>
+  );
+}
+
+export function RiskParametersPanel({ locale }: { locale: 'zh' | 'en' }) {
+  const [params, setParams] = useState<{
+    maxPositionWeight: number;
+    maxDrawdownPct: number;
+    dailyLossStopPct: number;
+    sharpeFloor: number;
+    liveOrderRequiresApproval: boolean;
+  } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchRiskParameters()
+      .then((res) => setParams(res.parameters))
+      .catch(() =>
+        setError(locale === 'zh' ? '加载风险参数失败。' : 'Failed to load risk parameters.')
+      );
+  }, []);
+
+  const handleSave = async () => {
+    if (!params) return;
+    setSaving(true);
+    setNotice('');
+    setError('');
+    try {
+      const res = await saveRiskParameters(params);
+      setParams(res.parameters);
+      setNotice(locale === 'zh' ? '已保存。' : 'Saved.');
+    } catch {
+      setError(locale === 'zh' ? '保存失败，请检查权限。' : 'Save failed. Check your permissions.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReset = async () => {
+    setSaving(true);
+    setNotice('');
+    setError('');
+    try {
+      const res = await resetRiskParametersToDefaults();
+      setParams(res.parameters);
+      setNotice(locale === 'zh' ? '已恢复默认值。' : 'Reset to defaults.');
+    } catch {
+      setError(locale === 'zh' ? '重置失败。' : 'Reset failed.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const numField = (
+    key: keyof typeof params,
+    label: string,
+    hint: string,
+    step = 0.1,
+    min = 0,
+    max = 100
+  ) => {
+    const val = params ? (params[key] as number) : 0;
+    return (
+      <div className="field-group">
+        <label className="field-label" htmlFor={`risk-${key}`}>
+          {label}
+        </label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <input
+            id={`risk-${key}`}
+            type="number"
+            className="detail-input"
+            style={{ width: '120px' }}
+            value={val}
+            step={step}
+            min={min}
+            max={max}
+            disabled={!params || saving}
+            onChange={(e) => {
+              const v = parseFloat(e.target.value);
+              if (Number.isFinite(v)) setParams((prev) => (prev ? { ...prev, [key]: v } : prev));
+            }}
+          />
+          <span className="status-copy" style={{ fontSize: '11px' }}>
+            {hint}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <article className="panel" id="risk-parameters-settings">
+      <div className="panel-head">
+        <div>
+          <div className="panel-title">{locale === 'zh' ? '风险参数配置' : 'Risk Parameters'}</div>
+          <div className="panel-copy">
+            {locale === 'zh'
+              ? '配置持仓上限、回撤阈值、每日止损和 Sharpe 门槛。调整后立即生效，重启后恢复默认。'
+              : 'Configure position limit, drawdown threshold, daily loss stop, and Sharpe floor. Changes take effect immediately and reset to defaults on restart.'}
+          </div>
+        </div>
+        <span className="panel-badge badge-info">{locale === 'zh' ? '风控' : 'Risk Guard'}</span>
+      </div>
+
+      {!params && !error && (
+        <div className="status-copy">{locale === 'zh' ? '加载中…' : 'Loading…'}</div>
+      )}
+      {error && (
+        <div className="status-copy" style={{ color: 'var(--sell)' }}>
+          {error}
+        </div>
+      )}
+
+      {params && (
+        <div style={{ display: 'grid', gap: '20px' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+              gap: '16px',
+            }}
+          >
+            {numField(
+              'maxPositionWeight',
+              locale === 'zh' ? '最大持仓权重' : 'Max Position Weight',
+              locale === 'zh' ? '小数形式，0.05 = 5%' : 'Decimal, 0.05 = 5%',
+              0.01,
+              0.01,
+              1
+            )}
+            {numField(
+              'maxDrawdownPct',
+              locale === 'zh' ? '最大回撤阈值 (%)' : 'Max Drawdown Threshold (%)',
+              locale === 'zh' ? '超出此值则拦截执行' : 'Blocks execution above this',
+              1,
+              1,
+              100
+            )}
+            {numField(
+              'dailyLossStopPct',
+              locale === 'zh' ? '每日止损线 (%)' : 'Daily Loss Stop (%)',
+              locale === 'zh' ? '单日亏损触发硬停' : 'Hard stop on daily loss',
+              1,
+              1,
+              50
+            )}
+            {numField(
+              'sharpeFloor',
+              locale === 'zh' ? 'Sharpe 门槛' : 'Sharpe Floor',
+              locale === 'zh' ? '低于此值则拦截执行' : 'Blocks execution below this',
+              0.1,
+              0,
+              5
+            )}
+          </div>
+
+          <div className="field-group">
+            <label
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+            >
+              <input
+                type="checkbox"
+                checked={params.liveOrderRequiresApproval}
+                disabled={saving}
+                onChange={(e) =>
+                  setParams((prev) =>
+                    prev ? { ...prev, liveOrderRequiresApproval: e.target.checked } : prev
+                  )
+                }
+              />
+              <span className="field-label" style={{ margin: 0 }}>
+                {locale === 'zh' ? '实盘订单必须人工审批' : 'Live orders require manual approval'}
+              </span>
+            </label>
+            <div
+              className="status-copy"
+              style={{ fontSize: '11px', marginTop: '4px', paddingLeft: '26px' }}
+            >
+              {locale === 'zh'
+                ? '启用后，Agent 生成的所有实盘订单都需要在执行页面手动确认。'
+                : 'When enabled, all live orders generated by Agent require manual confirmation on the Execution page.'}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button
+              type="button"
+              className="settings-button"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving
+                ? locale === 'zh'
+                  ? '保存中…'
+                  : 'Saving…'
+                : locale === 'zh'
+                  ? '保存参数'
+                  : 'Save Parameters'}
+            </button>
+            <button type="button" className="inline-link" onClick={handleReset} disabled={saving}>
+              {locale === 'zh' ? '恢复默认' : 'Reset to Defaults'}
+            </button>
+            {notice && (
+              <span className="status-copy" style={{ color: 'var(--buy)', fontSize: '12px' }}>
+                {notice}
+              </span>
+            )}
+          </div>
         </div>
       )}
     </article>
@@ -1256,6 +1471,8 @@ export function SettingsPage() {
           authorityState={governanceWorkbench?.authorityState || null}
           dailyBias={governanceWorkbench?.dailyBias || null}
         />
+
+        <RiskParametersPanel locale={locale} />
 
         <article className="panel" id="policy">
           <div className="panel-head">

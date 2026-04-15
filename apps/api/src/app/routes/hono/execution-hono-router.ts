@@ -21,7 +21,7 @@ import {
   listExecutionPlans,
   listExecutionRuntimeEvents,
 } from '../../../domains/execution/services/query-service.js';
-import { hasPermission, writeForbiddenJson } from '../../../modules/auth/service.js';
+import { hasPermission } from '../../../modules/auth/service.js';
 
 function requireApproval(c, action = '') {
   if (!hasPermission('execution:approve')) {

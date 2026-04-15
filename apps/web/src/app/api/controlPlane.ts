@@ -351,6 +351,41 @@ export async function fetchRiskEventDetail(eventId: string): Promise<RiskEventDe
   });
 }
 
+export type RiskParameters = {
+  maxPositionWeight: number;
+  maxDrawdownPct: number;
+  dailyLossStopPct: number;
+  sharpeFloor: number;
+  liveOrderRequiresApproval: boolean;
+};
+
+export async function fetchRiskParameters(): Promise<{ ok: boolean; parameters: RiskParameters }> {
+  return fetchJson('/api/risk/parameters', {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export async function saveRiskParameters(
+  patch: Partial<RiskParameters>
+): Promise<{ ok: boolean; parameters: RiskParameters }> {
+  return fetchJson('/api/risk/parameters', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify(patch),
+  });
+}
+
+export async function resetRiskParametersToDefaults(): Promise<{
+  ok: boolean;
+  parameters: RiskParameters;
+}> {
+  return fetchJson('/api/risk/parameters/reset', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: '{}',
+  });
+}
+
 type SchedulerTicksQuery = {
   hours?: number | null;
   limit?: number;

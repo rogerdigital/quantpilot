@@ -1,6 +1,63 @@
 import { globalStyle, style } from '@vanilla-extract/css';
 
-/* ── OVERVIEW HERO GRID ─────────────────────────────────── */
+/* ── RESULTS BANNER (result-first hero row) ─────────────── */
+
+export const overviewResultsBanner = style({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+  gap: '12px',
+  marginTop: '20px',
+  marginBottom: '20px',
+  padding: '20px 24px',
+  borderRadius: 'var(--radius-lg)',
+  border: '1px solid var(--line)',
+  background: 'rgba(8,10,24,0.85)',
+  position: 'relative',
+  overflow: 'hidden',
+  '::before': {
+    content: '""',
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(135deg, rgba(99,102,241,0.04) 0%, transparent 60%)',
+    pointerEvents: 'none',
+  } as any,
+});
+
+export const overviewResultsKpi = style({
+  display: 'grid',
+  gap: '6px',
+  padding: '4px 0',
+});
+
+export const overviewResultsKpiDivider = style({
+  width: '1px',
+  background: 'var(--line)',
+  alignSelf: 'stretch',
+  margin: '4px 0',
+  '@media': {
+    '(max-width: 640px)': { display: 'none' },
+  },
+});
+
+globalStyle(`${overviewResultsKpi} .kpi-label`, {
+  font: '600 10px/1 var(--font-data)',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  color: 'var(--muted)',
+});
+
+globalStyle(`${overviewResultsKpi} .kpi-value`, {
+  font: '700 clamp(24px, 3vw, 36px)/1 var(--font-data)',
+  letterSpacing: '-0.04em',
+  color: 'var(--text)',
+  animation: 'tick-up 300ms ease 80ms both',
+});
+
+globalStyle(`${overviewResultsKpi} .kpi-sub`, {
+  font: '600 12px/1 var(--font-data)',
+  color: 'var(--muted-strong)',
+  marginTop: '2px',
+});
 
 export const overviewHeroGrid = style({
   display: 'grid',

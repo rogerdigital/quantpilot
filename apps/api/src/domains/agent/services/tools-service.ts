@@ -1,12 +1,16 @@
 // @ts-nocheck
 
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { listBacktestRuns } from '../../backtest/services/runs-service.js';
 import { getBacktestSummary } from '../../backtest/services/summary-service.js';
 import { listExecutionPlans } from '../../execution/services/query-service.js';
+import { getHistoricalBars } from '../../market/services/market-data-service.js';
+import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';
 import { listRiskEvents } from '../../risk/services/feed-service.js';
 import { listStrategyCatalog } from '../../strategy/services/catalog-service.js';
 
 const AGENT_TOOLS = [
+  // Read tools
   {
     name: 'strategy.catalog.list',
     category: 'strategy',
@@ -37,14 +41,46 @@ const AGENT_TOOLS = [
     description: 'Read persisted execution plans and their current review state.',
     access: 'read',
   },
+  {
+    name: 'market.quotes.get',
+    category: 'market',
+    description: 'Get current market quotes for symbols.',
+    access: 'read',
+  },
+  {
+    name: 'market.history.get',
+    category: 'market',
+    description: 'Get historical OHLCV data for a symbol.',
+    access: 'read',
+  },
+  // Write tools (paper = auto-execute, live = requires approval)
+  {
+    name: 'execution.paper.submit',
+    category: 'execution',
+    description: 'Submit a paper trading order immediately (no approval required).',
+    access: 'write',
+    mode: 'paper',
+  },
+  {
+    name: 'execution.live.request',
+    category: 'execution',
+    description: 'Request a live trading order (requires operator approval).',
+    access: 'write',
+    mode: 'live',
+  },
+  {
+    name: 'backtest.queue',
+    category: 'backtest',
+    description: 'Queue a new backtest run for a strategy description.',
+    access: 'write',
+  },
 ];
 
 export function listAgentTools() {
-  return {
-    ok: true,
-    tools: AGENT_TOOLS,
-  };
+  return { ok: true, tools: AGENT_TOOLS.filter((t) => t.access === 'read') };
 }
+
+// ─── Read Tools ───────────────────────────────────────────────────────────────
 
 function executeStrategyCatalogTool() {
   const snapshot = listStrategyCatalog();
@@ -52,10 +88,7 @@ function executeStrategyCatalogTool() {
     ok: true,
     tool: 'strategy.catalog.list',
     summary: `Loaded ${snapshot.strategies.length} strategy catalog entries.`,
-    data: {
-      asOf: snapshot.asOf,
-      strategies: snapshot.strategies,
-    },
+    data: { asOf: snapshot.asOf, strategies: snapshot.strategies },
   };
 }
 
@@ -77,10 +110,7 @@ function executeBacktestRunsTool(args = {}) {
     ok: true,
     tool: 'backtest.runs.list',
     summary: `Loaded ${runs.length} backtest runs${status ? ` with status ${status}` : ''}.`,
-    data: {
-      asOf: snapshot.asOf,
-      runs,
-    },
+    data: { asOf: snapshot.asOf, runs },
   };
 }
 
@@ -91,9 +121,7 @@ function executeRiskEventsTool(args = {}) {
     ok: true,
     tool: 'risk.events.list',
     summary: `Loaded ${events.length} risk events.`,
-    data: {
-      events,
-    },
+    data: { events },
   };
 }
 
@@ -104,13 +132,271 @@ function executeExecutionPlansTool(args = {}) {
     ok: true,
     tool: 'execution.plans.list',
     summary: `Loaded ${plans.length} execution plans.`,
+    data: { plans },
+  };
+}
+
+function executeMarketQuotesTool(args = {}) {
+  const symbols = Array.isArray(args.symbols) ? args.symbols : [];
+  if (symbols.length === 0) {
+    return { ok: false, tool: 'market.quotes.get', summary: 'No symbols provided.', data: {} };
+  }
+  // Return from control plane state (real-time data from Worker sync)
+  const state = controlPlaneRuntime.getLatestSystemState
+    ? controlPlaneRuntime.getLatestSystemState()
+    : null;
+  const stockStates = state?.stockStates || [];
+  const quotes = symbols.map((sym) => {
+    const found = stockStates.find((s) => s.symbol?.toUpperCase() === sym.toUpperCase());
+    if (found) {
+      return {
+        symbol: sym.toUpperCase(),
+        price: found.price || 0,
+        change: found.change || 0,
+        changePct: found.changePct || 0,
+        volume: found.volume || 0,
+        signal: found.signal || 'hold',
+        score: found.score || 0,
+      };
+    }
+    return {
+      symbol: sym.toUpperCase(),
+      price: null,
+      signal: 'unknown',
+      note: 'Not in current universe',
+    };
+  });
+  return {
+    ok: true,
+    tool: 'market.quotes.get',
+    summary: `Loaded quotes for ${symbols.join(', ')}.`,
+    data: { quotes, asOf: new Date().toISOString() },
+  };
+}
+
+async function executeMarketHistoryTool(args = {}) {
+  const symbol = args.symbol || '';
+  const days = Math.min(Number(args.days) || 90, 365);
+  if (!symbol) {
+    return { ok: false, tool: 'market.history.get', summary: 'Symbol is required.', data: {} };
+  }
+  const result = await getHistoricalBars(symbol, days);
+  return {
+    ok: result.ok,
+    tool: 'market.history.get',
+    summary: `Loaded ${result.bars?.length || 0} bars for ${symbol} (${days} days, source: ${result.source}).`,
     data: {
-      plans,
+      symbol: result.symbol,
+      bars: result.bars || [],
+      source: result.source,
+      timeframe: result.timeframe || '1Day',
     },
   };
 }
 
-export function executeAgentTool(payload = {}) {
+// ─── Write Tools ──────────────────────────────────────────────────────────────
+
+function executePaperOrderTool(args = {}) {
+  const { symbol, side, qty, orderType = 'market', price = null, rationale = '' } = args;
+
+  if (!symbol || !side || !qty || qty <= 0) {
+    return {
+      ok: false,
+      tool: 'execution.paper.submit',
+      summary: 'Missing required fields: symbol, side, qty.',
+      data: {},
+    };
+  }
+
+  const normalizedSide = side.toLowerCase();
+  if (!['buy', 'sell'].includes(normalizedSide)) {
+    return {
+      ok: false,
+      tool: 'execution.paper.submit',
+      summary: 'side must be buy or sell.',
+      data: {},
+    };
+  }
+
+  const capital = price ? qty * price : qty * 100;
+  const candidate = {
+    strategyId: `agent-paper-${symbol.toLowerCase()}-${normalizedSide}`,
+    strategyName: `Agent Paper ${normalizedSide.toUpperCase()} ${symbol}`,
+    mode: 'paper',
+    capital,
+    status: 'paper',
+    metrics: { score: 60, expectedReturnPct: 8, maxDrawdownPct: 8, sharpe: 1.2 },
+    orders: [
+      {
+        symbol: symbol.toUpperCase(),
+        side: normalizedSide.toUpperCase(),
+        weight: 1.0,
+        qty: Number(qty),
+        price: price || null,
+        orderType,
+        rationale: rationale || `Agent paper ${normalizedSide} ${qty} ${symbol}`,
+      },
+    ],
+    summary: `Agent Paper ${normalizedSide.toUpperCase()} ${qty} ${symbol}${price ? ` @ $${price}` : ''}`,
+    metadata: { source: 'agent-paper-submit', requestedBy: 'agent' },
+  };
+
+  // Risk assessment before executing
+  const riskAssessment = assessExecutionCandidate(candidate);
+
+  if (riskAssessment.riskStatus === 'blocked') {
+    return {
+      ok: false,
+      tool: 'execution.paper.submit',
+      summary: `Order blocked by risk assessment: ${riskAssessment.summary}`,
+      data: { riskStatus: 'blocked', riskSummary: riskAssessment.summary },
+    };
+  }
+
+  const handoff = {
+    id: `handoff-agent-paper-${Date.now()}`,
+    strategyId: candidate.strategyId,
+    strategyName: candidate.strategyName,
+    mode: 'paper',
+    capital: candidate.capital,
+    orders: candidate.orders,
+    summary: candidate.summary,
+    riskStatus: riskAssessment.riskStatus,
+    approvalState: 'auto_approved',
+    riskSummary: riskAssessment.summary,
+    metadata: candidate.metadata,
+    createdAt: new Date().toISOString(),
+  };
+
+  controlPlaneRuntime.appendExecutionCandidateHandoff(handoff);
+
+  return {
+    ok: true,
+    tool: 'execution.paper.submit',
+    summary: `Paper order submitted: ${candidate.summary}. Risk: ${riskAssessment.riskStatus}.`,
+    data: {
+      handoffId: handoff.id,
+      order: candidate.orders[0],
+      riskStatus: riskAssessment.riskStatus,
+      mode: 'paper',
+    },
+  };
+}
+
+function executeLiveOrderRequestTool(args = {}) {
+  const { symbol, side, qty, orderType = 'market', price = null, rationale = '' } = args;
+
+  if (!symbol || !side || !qty || qty <= 0) {
+    return {
+      ok: false,
+      tool: 'execution.live.request',
+      summary: 'Missing required fields: symbol, side, qty.',
+      data: {},
+    };
+  }
+
+  const normalizedSide = side.toLowerCase();
+  const capital = price ? qty * price : qty * 100;
+
+  const candidate = {
+    strategyId: `agent-live-${symbol.toLowerCase()}-${normalizedSide}`,
+    strategyName: `Agent Live ${normalizedSide.toUpperCase()} ${symbol}`,
+    mode: 'live',
+    capital,
+    status: 'live',
+    metrics: { score: 60, expectedReturnPct: 8, maxDrawdownPct: 8, sharpe: 1.2 },
+    orders: [
+      {
+        symbol: symbol.toUpperCase(),
+        side: normalizedSide.toUpperCase(),
+        weight: 1.0,
+        qty: Number(qty),
+        price: price || null,
+        orderType,
+        rationale: rationale || `Agent live ${normalizedSide} ${qty} ${symbol}`,
+      },
+    ],
+    summary: `Agent Live ${normalizedSide.toUpperCase()} ${qty} ${symbol}${price ? ` @ $${price}` : ''}`,
+    metadata: { source: 'agent-live-request', requestedBy: 'agent', requiresApproval: true },
+  };
+
+  const riskAssessment = assessExecutionCandidate(candidate);
+
+  // Live orders always go into the approval queue
+  const handoff = {
+    id: `handoff-agent-live-${Date.now()}`,
+    strategyId: candidate.strategyId,
+    strategyName: candidate.strategyName,
+    mode: 'live',
+    capital: candidate.capital,
+    orders: candidate.orders,
+    summary: candidate.summary,
+    riskStatus: riskAssessment.riskStatus,
+    approvalState: 'pending_approval',
+    riskSummary: riskAssessment.summary,
+    metadata: candidate.metadata,
+    createdAt: new Date().toISOString(),
+  };
+
+  controlPlaneRuntime.appendExecutionCandidateHandoff(handoff);
+
+  return {
+    ok: true,
+    tool: 'execution.live.request',
+    summary: `Live order request submitted for operator approval: ${candidate.summary}.`,
+    data: {
+      handoffId: handoff.id,
+      order: candidate.orders[0],
+      approvalState: 'pending_approval',
+      mode: 'live',
+      message:
+        'This order requires your manual approval before execution. Check the Execution page.',
+    },
+  };
+}
+
+function executeBacktestQueueTool(args = {}) {
+  const { strategyDescription = '', symbols = [], days = 90 } = args;
+  if (!strategyDescription) {
+    return {
+      ok: false,
+      tool: 'backtest.queue',
+      summary: 'strategyDescription is required.',
+      data: {},
+    };
+  }
+
+  const strategyId = `agent-backtest-${Date.now()}`;
+  // Queue a backtest workflow
+  controlPlaneRuntime.recordWorkflowRun?.({
+    kind: 'task-orchestrator.backtest-run',
+    status: 'pending',
+    payload: {
+      strategyId,
+      strategyDescription,
+      symbols: symbols.length > 0 ? symbols : ['AAPL', 'MSFT', 'NVDA'],
+      days,
+      requestedBy: 'agent',
+    },
+  });
+
+  return {
+    ok: true,
+    tool: 'backtest.queue',
+    summary: `Backtest queued for: "${strategyDescription.slice(0, 80)}".`,
+    data: {
+      strategyId,
+      strategyDescription,
+      symbols: symbols.length > 0 ? symbols : ['AAPL', 'MSFT', 'NVDA'],
+      days,
+      status: 'queued',
+    },
+  };
+}
+
+// ─── Main dispatcher ──────────────────────────────────────────────────────────
+
+export async function executeAgentTool(payload = {}) {
   const tool = payload.tool || '';
   const args = payload.args || {};
 
@@ -125,11 +411,21 @@ export function executeAgentTool(payload = {}) {
       return executeRiskEventsTool(args);
     case 'execution.plans.list':
       return executeExecutionPlansTool(args);
+    case 'market.quotes.get':
+      return executeMarketQuotesTool(args);
+    case 'market.history.get':
+      return executeMarketHistoryTool(args);
+    case 'execution.paper.submit':
+      return executePaperOrderTool(args);
+    case 'execution.live.request':
+      return executeLiveOrderRequestTool(args);
+    case 'backtest.queue':
+      return executeBacktestQueueTool(args);
     default:
       return {
         ok: false,
         tool,
-        summary: `Tool ${tool || 'unknown'} is not allowed for Agent access.`,
+        summary: `Tool ${tool || 'unknown'} is not registered for Agent access.`,
         data: {},
       };
   }

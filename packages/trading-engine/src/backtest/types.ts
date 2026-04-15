@@ -1,3 +1,12 @@
+export type OhlcvBar = {
+  time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+
 export type BacktestConfig = {
   strategyId: string;
   runId: string;
@@ -10,6 +19,8 @@ export type BacktestConfig = {
   maxPositionWeight: number; // default 0.24
   slippagePct: number; // default 0.001
   commissionPct: number; // default 0.001
+  /** Optional pre-fetched bars per symbol. If provided, skips synthetic data generation. */
+  externalBars?: Record<string, OhlcvBar[]>;
 };
 
 export type DailyEquityPoint = {

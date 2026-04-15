@@ -24,26 +24,26 @@ export function SignalBarChart({ buy, hold, sell }: Props) {
     const chart = createChart(el, {
       layout: {
         background: { color: 'transparent' },
-        textColor: 'rgba(100, 140, 195, 0.65)',
+        textColor: 'rgba(160, 162, 210, 0.65)',
         fontFamily: '"JetBrains Mono", monospace',
         fontSize: 10,
       },
       grid: {
-        vertLines: { color: 'rgba(0, 180, 255, 0.04)', style: 1 },
-        horzLines: { color: 'rgba(0, 180, 255, 0.06)' },
+        vertLines: { color: 'rgba(99, 102, 241, 0.05)', style: 1 },
+        horzLines: { color: 'rgba(99, 102, 241, 0.07)' },
       },
       rightPriceScale: {
-        borderColor: 'rgba(0, 180, 255, 0.1)',
-        textColor: 'rgba(100, 140, 195, 0.65)',
+        borderColor: 'rgba(99, 102, 241, 0.12)',
+        textColor: 'rgba(160, 162, 210, 0.65)',
         visible: true,
       },
       timeScale: {
-        borderColor: 'rgba(0, 180, 255, 0.1)',
+        borderColor: 'rgba(99, 102, 241, 0.12)',
         visible: false,
       },
       crosshair: {
         vertLine: { visible: false },
-        horzLine: { color: 'rgba(0, 212, 255, 0.3)' },
+        horzLine: { color: 'rgba(99, 102, 241, 0.40)' },
       },
       handleScroll: false,
       handleScale: false,

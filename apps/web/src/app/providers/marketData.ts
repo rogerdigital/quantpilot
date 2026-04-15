@@ -10,7 +10,7 @@ import { fetchJson } from '../api/http.ts';
 function normalizeQuote(
   rawQuote: (Partial<Quote> & { symbol?: string }) | null | undefined
 ): Quote | null {
-  if (!rawQuote || !rawQuote.symbol) return null;
+  if (!rawQuote?.symbol) return null;
   const price = Number(rawQuote.price);
   if (!Number.isFinite(price) || price <= 0) return null;
   return {

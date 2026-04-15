@@ -58,7 +58,6 @@ import { formatActionGuardNotice } from '../../../modules/permissions/permission
 import { useResearchNavigationContext } from '../../../modules/research/useResearchNavigationContext.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
 import {
-  InspectionEmpty,
   InspectionListPanel,
   InspectionMetricsRow,
   InspectionPanel,

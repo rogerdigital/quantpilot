@@ -14,8 +14,10 @@ import {
   translateMode,
 } from '../../modules/console/console.utils.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
+import { ApprovalDrawer } from '../approval-drawer/ApprovalDrawer.tsx';
 import { EquityChart } from '../charts/EquityChart.tsx';
 import { SignalBarChart } from '../charts/SignalBarChart.tsx';
+import { CommandPalette } from '../command-palette/CommandPalette.tsx';
 import {
   appShell,
   appShellCollapsed,
@@ -333,9 +335,11 @@ export function EmptyState({ icon, message, detail }: EmptyStateProps) {
 export function Layout() {
   const location = useLocation();
   const { locale } = useLocale();
+  const { state, approveLiveIntent, rejectLiveIntent } = useTradingSystem();
   const [collapsed, setCollapsed] = useState(() => {
     return window.localStorage.getItem('quantpilot-sidebar-collapsed') === 'true';
   });
+  const [cmdOpen, setCmdOpen] = useState(false);
 
   const handleToggle = () => {
     setCollapsed((prev) => {
@@ -349,6 +353,17 @@ export function Layout() {
     document.title = getConsoleDocumentTitle(locale, location.pathname);
   }, [locale, location.pathname]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCmdOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <div className={`${appShell}${collapsed ? ` ${appShellCollapsed}` : ''}`}>
       <Sidebar collapsed={collapsed} onToggle={handleToggle} />
@@ -356,6 +371,13 @@ export function Layout() {
         <GlobalToolbar />
         <Outlet />
       </main>
+      {cmdOpen && <CommandPalette locale={locale} onClose={() => setCmdOpen(false)} />}
+      <ApprovalDrawer
+        locale={locale}
+        queue={state.approvalQueue}
+        onApprove={approveLiveIntent}
+        onReject={rejectLiveIntent}
+      />
     </div>
   );
 }

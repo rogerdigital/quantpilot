@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChartCanvas, EmptyState } from '../../components/layout/ConsoleChrome.tsx';
-import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
+import { useLocale } from '../../modules/console/console.i18n.tsx';
 import { translateRuntimeText } from '../../modules/console/console.utils.ts';
 import { useStrategyDetail } from '../../modules/research/useStrategyDetail.ts';
 import {

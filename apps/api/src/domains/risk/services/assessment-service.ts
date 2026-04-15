@@ -3,12 +3,14 @@ import { listBacktestRuns } from '../../backtest/services/runs-service.js';
 import { listExecutionPlans } from '../../execution/services/query-service.js';
 import { getStrategyCatalogItem } from '../../strategy/services/catalog-service.js';
 import { listRiskEvents } from './feed-service.js';
+import { getRiskParameters } from './parameters-service.js';
 
 export function assessExecutionCandidate(candidate) {
+  const params = getRiskParameters();
   const needsReview =
     candidate.mode === 'live' && candidate.status !== 'paper' && candidate.status !== 'live';
-  const blockedByDrawdown = candidate.metrics.maxDrawdownPct > 12;
-  const blockedBySharpe = candidate.metrics.sharpe < 0.9;
+  const blockedByDrawdown = candidate.metrics.maxDrawdownPct > params.maxDrawdownPct;
+  const blockedBySharpe = candidate.metrics.sharpe < params.sharpeFloor;
 
   if (blockedByDrawdown || blockedBySharpe) {
     return {
@@ -17,8 +19,10 @@ export function assessExecutionCandidate(candidate) {
       summary:
         'Risk rejected the execution candidate because risk-adjusted quality is below the current floor.',
       reasons: [
-        blockedByDrawdown ? `max drawdown ${candidate.metrics.maxDrawdownPct}% exceeds 12%` : '',
-        blockedBySharpe ? `sharpe ${candidate.metrics.sharpe} is below 0.9` : '',
+        blockedByDrawdown
+          ? `max drawdown ${candidate.metrics.maxDrawdownPct}% exceeds ${params.maxDrawdownPct}%`
+          : '',
+        blockedBySharpe ? `sharpe ${candidate.metrics.sharpe} is below ${params.sharpeFloor}` : '',
       ].filter(Boolean),
     };
   }
@@ -45,6 +49,7 @@ export function assessExecutionCandidate(candidate) {
 
 export function assessAgentActionRequestRisk(payload = {}) {
   if (payload.requestType === 'prepare_execution_plan') {
+    const params = getRiskParameters();
     const strategy = getStrategyCatalogItem(payload.targetId);
     if (!strategy) {
       return {
@@ -64,7 +69,7 @@ export function assessAgentActionRequestRisk(payload = {}) {
         reasons: ['archived strategy cannot be routed into execution planning'],
       };
     }
-    if (strategy.maxDrawdownPct > 12 || strategy.sharpe < 0.9) {
+    if (strategy.maxDrawdownPct > params.maxDrawdownPct || strategy.sharpe < params.sharpeFloor) {
       return {
         riskStatus: 'blocked',
         approvalState: 'rejected',

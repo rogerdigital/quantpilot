@@ -1,5 +1,5 @@
 import type { TerminalOrderRequest, TerminalOrderResponse } from '@shared-types/trading.ts';
-import { assertOk, jsonHeaders } from '../../app/api/http.ts';
+import { jsonHeaders } from '../../app/api/http.ts';
 
 export async function submitTerminalOrder(
   req: TerminalOrderRequest

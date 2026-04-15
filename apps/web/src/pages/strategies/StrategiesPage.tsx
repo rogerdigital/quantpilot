@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiPermissionError } from '../../app/api/controlPlane.ts';
 import { UniverseTable } from '../../components/business/ConsoleTables.tsx';
-import { ChartCanvas, SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
+import { ChartCanvas, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
 import { onShortcutKeyDown, useSettingsNavigation } from '../../modules/console/console.hooks.ts';
 import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
 import { translateMode, translateRuntimeText } from '../../modules/console/console.utils.ts';
@@ -53,7 +53,6 @@ import {
   InspectionListPanel,
   InspectionMetricsRow,
   InspectionPanel,
-  InspectionSelectableRow,
   InspectionStatus,
 } from '../console/components/InspectionPanels.tsx';
 

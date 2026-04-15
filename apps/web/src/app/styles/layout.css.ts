@@ -27,7 +27,7 @@ globalStyle('.app-shell::before', {
   zIndex: 9998,
   pointerEvents: 'none',
   background:
-    'linear-gradient(180deg, transparent 0%, rgba(0, 212, 255, 0.022) 50%, transparent 100%)',
+    'linear-gradient(180deg, transparent 0%, rgba(99, 102, 241, 0.022) 50%, transparent 100%)',
   animation: 'scan-sweep 16s linear infinite',
 } as any);
 
@@ -56,7 +56,7 @@ globalStyle('.sidebar::after', {
   width: '200%',
   height: '1px',
   background:
-    'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.65) 25%, rgba(255, 183, 0, 0.35) 55%, rgba(139, 92, 246, 0.25) 75%, transparent)',
+    'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.65) 25%, rgba(255, 183, 0, 0.35) 55%, rgba(139, 92, 246, 0.25) 75%, transparent)',
   animation: 'gradient-flow 5s linear infinite',
   pointerEvents: 'none',
 } as any);
@@ -139,7 +139,7 @@ globalStyle('.sidebar-block', {
 } as any);
 
 globalStyle('.sidebar-block:hover', {
-  borderColor: 'rgba(40, 120, 220, 0.2)',
+  borderColor: 'rgba(99, 102, 241, 0.20)',
 } as any);
 
 globalStyle('.nav-stack', {
@@ -197,7 +197,7 @@ globalStyle('.nav-link::after', {
   position: 'absolute',
   inset: 0,
   borderRadius: 'var(--radius)',
-  background: 'linear-gradient(90deg, rgba(0, 212, 255, 0.08), rgba(0, 212, 255, 0.02))',
+  background: 'linear-gradient(90deg, rgba(99, 102, 241, 0.08), rgba(99, 102, 241, 0.02))',
   transform: 'translateX(-100%)',
   transition: 'transform 200ms ease',
   pointerEvents: 'none',
@@ -209,8 +209,8 @@ globalStyle('.nav-link:hover::after', { transform: 'translateX(0)' } as any);
 
 globalStyle('.nav-link.active', {
   color: 'var(--accent)',
-  borderColor: 'rgba(0, 212, 255, 0.16)',
-  background: 'rgba(0, 212, 255, 0.055)',
+  borderColor: 'rgba(99, 102, 241, 0.16)',
+  background: 'rgba(99, 102, 241, 0.055)',
 } as any);
 
 globalStyle('.nav-link.active::before', {
@@ -277,7 +277,7 @@ globalStyle('.global-toolbar::before', {
   width: '80%',
   height: '1px',
   background:
-    'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.25), rgba(255, 183, 0, 0.12), transparent)',
+    'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.25), rgba(255, 183, 0, 0.12), transparent)',
   pointerEvents: 'none',
 } as any);
 
@@ -350,9 +350,9 @@ globalStyle('.toolbar-pill-button', {
 } as any);
 
 globalStyle('.toolbar-pill-button:hover', {
-  borderColor: 'rgba(0, 212, 255, 0.28)',
-  boxShadow: '0 0 18px rgba(0, 212, 255, 0.1), inset 0 0 18px rgba(0, 212, 255, 0.02)',
-  background: 'rgba(0, 212, 255, 0.04)',
+  borderColor: 'rgba(99, 102, 241, 0.28)',
+  boxShadow: '0 0 18px rgba(99, 102, 241, 0.1), inset 0 0 18px rgba(99, 102, 241, 0.02)',
+  background: 'rgba(99, 102, 241, 0.04)',
 } as any);
 
 globalStyle('.toolbar-pill-button:hover::after', {
@@ -418,12 +418,12 @@ globalStyle('.tone-warn .status-dot', {
 
 globalStyle('.tone-muted', {
   color: 'rgba(100, 140, 195, 0.65)',
-  borderColor: 'rgba(0, 212, 255, 0.1)',
-  background: 'rgba(0, 212, 255, 0.02)',
+  borderColor: 'rgba(99, 102, 241, 0.1)',
+  background: 'rgba(99, 102, 241, 0.02)',
 } as any);
 
 globalStyle('.tone-muted .status-dot', {
-  boxShadow: '0 0 6px rgba(0, 212, 255, 0.3)',
+  boxShadow: '0 0 6px rgba(99, 102, 241, 0.3)',
 } as any);
 
 /* ============================================================
@@ -444,8 +444,8 @@ globalStyle('.locale-trigger', {
 } as any);
 
 globalStyle('.locale-trigger:hover', {
-  borderColor: 'rgba(0, 212, 255, 0.22)',
-  boxShadow: '0 0 10px rgba(0, 212, 255, 0.08)',
+  borderColor: 'rgba(99, 102, 241, 0.22)',
+  boxShadow: '0 0 10px rgba(99, 102, 241, 0.08)',
 } as any);
 
 globalStyle('.locale-trigger strong', {
@@ -494,8 +494,8 @@ globalStyle('.locale-option:first-of-type', {
 } as any);
 
 globalStyle('.locale-option:hover', {
-  borderColor: 'rgba(0, 212, 255, 0.22)',
-  background: 'rgba(0, 212, 255, 0.07)',
+  borderColor: 'rgba(99, 102, 241, 0.22)',
+  background: 'rgba(99, 102, 241, 0.07)',
 } as any);
 
 globalStyle('.locale-option span', {
@@ -519,8 +519,8 @@ globalStyle('.locale-check', {
 } as any);
 
 globalStyle('.locale-option.active', {
-  borderColor: 'rgba(0, 212, 255, 0.28)',
-  background: 'rgba(0, 212, 255, 0.08)',
+  borderColor: 'rgba(99, 102, 241, 0.28)',
+  background: 'rgba(99, 102, 241, 0.08)',
 } as any);
 
 /* ============================================================
@@ -552,7 +552,7 @@ globalStyle('.topbar::before', {
   width: '200%',
   height: '1px',
   background:
-    'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.7) 20%, rgba(255, 183, 0, 0.45) 48%, rgba(139, 92, 246, 0.35) 65%, rgba(0, 212, 255, 0.5) 80%, transparent)',
+    'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.7) 20%, rgba(255, 183, 0, 0.45) 48%, rgba(139, 92, 246, 0.35) 65%, rgba(99, 102, 241, 0.5) 80%, transparent)',
   animation: 'gradient-flow 4s linear infinite',
   pointerEvents: 'none',
 } as any);
@@ -622,14 +622,14 @@ globalStyle('.mode-pill', {
 
 globalStyle('.mode-pill:hover', {
   color: 'var(--text)',
-  background: 'rgba(0, 212, 255, 0.05)',
+  background: 'rgba(99, 102, 241, 0.05)',
 } as any);
 
 globalStyle('.mode-pill.active', {
-  borderColor: 'rgba(0, 212, 255, 0.28)',
-  background: 'rgba(0, 212, 255, 0.1)',
+  borderColor: 'rgba(99, 102, 241, 0.28)',
+  background: 'rgba(99, 102, 241, 0.1)',
   color: 'var(--text-strong)',
-  boxShadow: '0 0 12px rgba(0, 212, 255, 0.12), inset 0 1px 0 rgba(0, 212, 255, 0.1)',
+  boxShadow: '0 0 12px rgba(99, 102, 241, 0.12), inset 0 1px 0 rgba(99, 102, 241, 0.1)',
 } as any);
 
 /* ============================================================
@@ -666,15 +666,15 @@ globalStyle('.route-status, .panel-badge, .signal-chip, .log-tag', {
 
 globalStyle('.route-status', {
   padding: '6px 10px',
-  background: 'rgba(0, 212, 255, 0.08)',
+  background: 'rgba(99, 102, 241, 0.08)',
   color: 'var(--info)',
   borderRadius: 'var(--radius-sm)',
 } as any);
 
 globalStyle('.route-status.active', {
-  background: 'rgba(0, 212, 255, 0.14)',
+  background: 'rgba(99, 102, 241, 0.14)',
   color: 'var(--accent)',
-  boxShadow: '0 0 8px rgba(0, 212, 255, 0.2)',
+  boxShadow: '0 0 8px rgba(99, 102, 241, 0.2)',
 } as any);
 
 globalStyle('.route-copy', {
@@ -701,8 +701,8 @@ globalStyle('@media (max-width: 1180px)', {} as any);
    Use the selector-based approach with media queries. */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const mediaLarge = '@media (max-width: 1180px)';
-const mediaSmall = '@media (max-width: 720px)';
+const _mediaLarge = '@media (max-width: 1180px)';
+const _mediaSmall = '@media (max-width: 720px)';
 
 globalStyle(`.app-shell`, {
   '@media': {

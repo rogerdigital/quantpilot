@@ -53,7 +53,7 @@ vi.mock('./useAgentTools.ts', () => ({
 }));
 
 describe('AgentPage', () => {
-  it('renders the collaboration workbench with chat shell and timeline', () => {
+  it('renders the agent workspace with chat, insight card, and session list', () => {
     mockUseAgentTools.mockReturnValue({
       tools: [
         {
@@ -88,14 +88,7 @@ describe('AgentPage', () => {
             },
           ],
         },
-        runbook: [
-          {
-            key: 'review-pending-agent-requests',
-            title: 'Review pending agent requests',
-            detail: 'Pending requests need review.',
-            priority: 'now',
-          },
-        ],
+        runbook: [],
         recentExplanations: [
           {
             sessionId: 'agent-session-1',
@@ -213,29 +206,30 @@ describe('AgentPage', () => {
 
     const html = renderToStaticMarkup(<AgentPage />);
 
-    expect(html).toContain('Agent Dialogue');
-    expect(html).toContain('Conversation Thread');
+    // New redesigned UI labels
+    expect(html).toContain('Agent Workspace');
+    expect(html).toContain('Conversation');
     expect(html).toContain('Session Pulse');
-    expect(html).toContain('Plan Ladder');
-    expect(html).toContain('Evidence Snapshot');
-    expect(html).toContain('Message To Agent');
-    expect(html).toContain('Send And Analyze');
+    expect(html).toContain('Analysis Insight');
+    expect(html).toContain('Send &amp; Analyze');
     expect(html).toContain('You');
     expect(html).toContain('Agent');
     expect(html).toContain('Summarizing tool findings into a structured recommendation.');
     expect(html).toContain('Read risk events');
     expect(html).toContain('Primary evidence');
-    expect(html).toContain('Refresh Workbench');
     expect(html).toContain('Recent Sessions');
-    expect(html).toContain('Pending (');
-    expect(html).toContain('Operator Timeline');
     expect(html).toContain('Risk posture is elevated.');
-    expect(html).toContain('Action Request');
-    expect(html).toContain('#agent-explanation');
-    expect(html).toContain('#agent-timeline');
+    expect(html).toContain('Controlled Handoff');
+    expect(html).toContain('Quick Prompts');
+    // Insight card action buttons
+    expect(html).toContain('Paper');
+    expect(html).toContain('Live');
+    expect(html).toContain('Backtest');
+    // Quick chips
+    expect(html).toContain('Analyze recent AAPL price action');
   });
 
-  it('renders workbench alerts and empty explanation states clearly', () => {
+  it('renders empty states and error notice correctly', () => {
     mockUseAgentTools.mockReturnValue({
       tools: [],
       workbench: {
@@ -291,13 +285,15 @@ describe('AgentPage', () => {
 
     const html = renderToStaticMarkup(<AgentPage />);
 
-    expect(html).toContain('Workbench Alert');
+    // Error shown in chat as warn message
     expect(html).toContain('Missing permission: agent:read.');
-    expect(html).toContain('Message To Agent');
-    expect(html).toContain('No plan steps have been recorded for this session yet.');
-    expect(html).toContain('No evidence snapshot is available for this analysis yet.');
-    expect(html).toContain('No additional rationale items are available for this explanation yet.');
-    expect(html).toContain('No warning items have been raised for this explanation yet.');
-    expect(html).toContain('No allowlisted tools are available right now.');
+    // Empty session list
+    expect(html).toContain('No agent sessions recorded yet.');
+    // Analysis insight empty state
+    expect(html).toContain('Ask Agent a question');
+    // Insight card labels present
+    expect(html).toContain('Analysis Insight');
+    expect(html).toContain('Session Pulse');
+    expect(html).toContain('Controlled Handoff');
   });
 });

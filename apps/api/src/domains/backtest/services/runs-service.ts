@@ -5,7 +5,7 @@ import { getStrategyCatalogItem } from '../../strategy/services/catalog-service.
 import { refreshBacktestSummary } from './summary-service.js';
 
 function buildBacktestResultFromRun(run, patch = {}) {
-  if (!run || !run.completedAt) return null;
+  if (!run?.completedAt) return null;
   return controlPlaneRuntime.appendBacktestResult({
     runId: run.id,
     workflowRunId: run.workflowRunId || '',

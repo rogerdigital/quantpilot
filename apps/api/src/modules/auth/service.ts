@@ -2,7 +2,7 @@
 import { getUserAccount } from '../../../../../packages/control-plane-runtime/src/index.js';
 import { verifyToken } from './jwt-service.js';
 
-export function getSession(authHeader) {
+export function getSession(_authHeader) {
   const account = getUserAccount();
   const defaultBrokerBinding =
     account.brokerBindings.find((binding) => binding.isDefault) ||
@@ -59,7 +59,7 @@ export function hasPermission(permission) {
 
 /** Validate a Bearer token and return JWT-based session fields if valid. */
 export async function getSessionFromToken(authHeader) {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  if (!authHeader?.startsWith('Bearer ')) return null;
   try {
     const token = authHeader.slice(7);
     const payload = await verifyToken(token);

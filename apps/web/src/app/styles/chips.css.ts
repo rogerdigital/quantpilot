@@ -47,8 +47,9 @@ globalStyle('.order-status', {
 } as any);
 
 globalStyle('.order-status-open', {
-  background: 'rgba(77, 166, 255, 0.12)',
+  background: 'rgba(99, 102, 241, 0.12)',
   color: 'var(--info)',
+  border: '1px solid rgba(99, 102, 241, 0.18)',
 } as any);
 
 globalStyle('.order-status-filled', {

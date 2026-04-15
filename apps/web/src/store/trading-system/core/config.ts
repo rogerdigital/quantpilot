@@ -1,9 +1,4 @@
-import {
-  DEFAULT_ENGINE_CONFIG,
-  INITIAL_SERIES_LENGTH,
-  OPEN_ORDER_STATUSES,
-  STOCK_UNIVERSE,
-} from '../../../../../../packages/trading-engine/src/runtime.js';
+import { DEFAULT_ENGINE_CONFIG } from '../../../../../../packages/trading-engine/src/runtime.js';
 import { runtimeConfig } from '../../../app/config/runtime.ts';
 
 export const APP_CONFIG = {
