@@ -45,6 +45,9 @@ QuantPilot 当前围绕四条平台级运行主链路组织能力：
 - `apps/web/src/modules`
 - `apps/web/src/store`
 - `apps/web/src/components/charts` — lightweight-charts v5 组件（EquityChart、SignalBarChart、CandlestickChart）
+- `apps/web/src/components/command-palette` — 全局 `Cmd+K` 模糊搜索命令面板
+- `apps/web/src/components/approval-drawer` — 底部固定抽屉，用于待审批实盘订单确认
+- `apps/web/src/components/toast` — Toast 通知系统（`ToastProvider` / `useToast`）
 - `apps/web/src/hooks` — useOhlcvData、useSSE
 
 ### 2. Backend
@@ -61,6 +64,7 @@ QuantPilot 当前围绕四条平台级运行主链路组织能力：
 - `apps/api/src/modules/auth` — JWT 服务、broker key 加密
 - `apps/api/src/modules/sse` — SSE 连接管理器
 - `packages/control-plane-runtime`
+- `packages/llm-provider` — 与 provider 无关的 LLM 抽象层（支持 Claude、OpenAI），供 agent 服务调用
 
 ### 3. Data Layer
 
@@ -129,6 +133,7 @@ quantpilot/
 │   ├── control-plane-runtime/
 │   ├── control-plane-store/
 │   ├── db/
+│   ├── llm-provider/
 │   ├── shared-types/
 │   ├── task-workflow-engine/
 │   └── trading-engine/

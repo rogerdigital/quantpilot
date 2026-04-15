@@ -45,6 +45,9 @@ Primary locations:
 - `apps/web/src/modules`
 - `apps/web/src/store`
 - `apps/web/src/components/charts` — lightweight-charts v5 components (EquityChart, SignalBarChart, CandlestickChart)
+- `apps/web/src/components/command-palette` — global `Cmd+K` fuzzy-search command palette
+- `apps/web/src/components/approval-drawer` — fixed bottom drawer for pending live order approvals
+- `apps/web/src/components/toast` — toast notification system (`ToastProvider` / `useToast`)
 - `apps/web/src/hooks` — useOhlcvData, useSSE
 
 ### 2. Backend
@@ -61,6 +64,7 @@ Primary locations:
 - `apps/api/src/modules/auth` — JWT service, broker key encryption
 - `apps/api/src/modules/sse` — SSE connection manager
 - `packages/control-plane-runtime`
+- `packages/llm-provider` — provider-agnostic LLM abstraction (Claude, OpenAI) used by agent services
 
 ### 3. Data Layer
 
@@ -129,6 +133,7 @@ quantpilot/
 │   ├── control-plane-runtime/
 │   ├── control-plane-store/
 │   ├── db/
+│   ├── llm-provider/
 │   ├── shared-types/
 │   ├── task-workflow-engine/
 │   └── trading-engine/
