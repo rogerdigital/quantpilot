@@ -54,6 +54,13 @@ function buildFallbackSteps(intent = {}) {
         { kind: 'read', title: 'Load execution posture', toolName: 'execution.plans.list', description: 'Correlate risk with execution.', outputSummary: '', metadata: { domain: 'execution' } },
         { kind: 'explain', title: 'Explain risk posture', toolName: '', description: 'Produce risk explanation.', outputSummary: '', metadata: { deliverable: 'risk-explanation' } },
       ];
+    case 'request_execution_prep':
+      return [
+        { kind: 'read', title: 'Load strategy catalog', toolName: 'strategy.catalog.list', description: 'Read strategy state and readiness.', outputSummary: '', metadata: { domain: 'strategy' } },
+        { kind: 'read', title: 'Load execution plans', toolName: 'execution.plans.list', description: 'Check existing execution plans.', outputSummary: '', metadata: { domain: 'execution' } },
+        { kind: 'read', title: 'Load risk events', toolName: 'risk.events.list', description: 'Review risk posture before prep.', outputSummary: '', metadata: { domain: 'risk' } },
+        { kind: 'explain', title: 'Prepare execution readiness summary', toolName: '', description: 'Summarize execution readiness.', outputSummary: '', metadata: { deliverable: 'execution-prep' } },
+      ];
     default:
       return [
         ...baseReadSteps,

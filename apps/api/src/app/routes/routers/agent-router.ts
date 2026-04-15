@@ -70,7 +70,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/tools/execute') {
     const body = await readJsonBody(req);
-    const result = executeAgentTool(body);
+    const result = await executeAgentTool(body);
     writeJson(res, result.ok ? 200 : 403, result);
     return true;
   }

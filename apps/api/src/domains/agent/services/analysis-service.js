@@ -402,6 +402,17 @@ export async function runAgentAnalysis(payload = {}) {
     metadata: { latestAnalysisCompletedAt: completedAt },
   });
 
+  // Record summarizing status before final result
+  controlPlaneRuntime.recordAgentSessionMessage({
+    sessionId: session.id,
+    role: 'system',
+    kind: 'analysis_status',
+    title: 'Summarizing findings',
+    body: 'Summarizing findings and preparing recommendations.',
+    requestedBy: payload.requestedBy || session.requestedBy || 'agent',
+    metadata: { agentPlanId: plan.id, agentAnalysisRunId: run.id },
+  });
+
   // Record the main assistant response message
   controlPlaneRuntime.recordAgentSessionMessage({
     sessionId: session.id,

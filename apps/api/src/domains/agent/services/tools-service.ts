@@ -77,7 +77,7 @@ const AGENT_TOOLS = [
 ];
 
 export function listAgentTools() {
-  return { ok: true, tools: AGENT_TOOLS };
+  return { ok: true, tools: AGENT_TOOLS.filter((t) => t.access === 'read') };
 }
 
 // ─── Read Tools ───────────────────────────────────────────────────────────────

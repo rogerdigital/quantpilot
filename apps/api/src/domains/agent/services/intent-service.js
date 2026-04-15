@@ -41,6 +41,24 @@ function inferIntentFromRules(prompt, explicitTargetId = '') {
     };
   }
 
+  if (/(执行计划|准备执行|execution prep|prepare execution|execution plan|execution-prep|exec prep)/.test(normalized)) {
+    const requiresApproval = /(审批|approval|approve|需要审批|is.*approval|confirm.*approval)/.test(normalized);
+    // Try to extract a strategy ID from the prompt (kebab-case or dotted identifiers)
+    const idMatch = prompt.match(/[\w-]{4,}(?:[-.][\w-]+)+/);
+    const targetId = explicitTargetId || (idMatch ? idMatch[0] : '');
+    return {
+      kind: 'request_execution_prep',
+      summary: 'Prepare an execution plan for a strategy.',
+      targetType: 'strategy',
+      targetId,
+      urgency,
+      requiresApproval,
+      requestedMode: requiresApproval ? 'request_live' : 'execute_paper',
+      confidence: 0.75,
+      metadata: { source: 'rule_fallback' },
+    };
+  }
+
   if (/(策略|strategy|构建|build|设计|create.*strat|momentum|value|mean reversion)/.test(normalized)) {
     return {
       kind: 'build_strategy',
