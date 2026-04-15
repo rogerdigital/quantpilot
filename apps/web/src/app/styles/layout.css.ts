@@ -139,7 +139,7 @@ globalStyle('.sidebar-block', {
 } as any);
 
 globalStyle('.sidebar-block:hover', {
-  borderColor: 'rgba(40, 120, 220, 0.2)',
+  borderColor: 'rgba(99, 102, 241, 0.20)',
 } as any);
 
 globalStyle('.nav-stack', {

@@ -287,7 +287,7 @@ globalStyle('.agent-stage-header', {
 } as any);
 
 globalStyle('.agent-stage-header:hover', {
-  borderColor: 'rgba(40, 120, 220, 0.2)',
+  borderColor: 'rgba(99, 102, 241, 0.2)',
 } as any);
 
 globalStyle('.agent-stage-pills', {
@@ -316,7 +316,7 @@ globalStyle('.agent-insight-card', {
 } as any);
 
 globalStyle('.agent-insight-card:hover', {
-  borderColor: 'rgba(40, 120, 220, 0.2)',
+  borderColor: 'rgba(99, 102, 241, 0.2)',
   boxShadow: '0 0 16px rgba(99, 102, 241, 0.05)',
 } as any);
 
@@ -344,7 +344,7 @@ globalStyle('.agent-pulse-item', {
 } as any);
 
 globalStyle('.agent-pulse-item:hover', {
-  borderColor: 'rgba(40, 120, 220, 0.22)',
+  borderColor: 'rgba(99, 102, 241, 0.22)',
 } as any);
 
 globalStyle('.agent-pulse-item span', {
@@ -373,7 +373,7 @@ globalStyle('.agent-step-card', {
 } as any);
 
 globalStyle('.agent-step-card:hover', {
-  borderColor: 'rgba(40, 120, 220, 0.22)',
+  borderColor: 'rgba(99, 102, 241, 0.22)',
   background: 'rgba(99, 102, 241, 0.02)',
 } as any);
 
@@ -477,7 +477,7 @@ globalStyle('.agent-chat-message', {
 } as any);
 
 globalStyle('.agent-chat-message:hover', {
-  borderColor: 'rgba(40, 120, 220, 0.22)',
+  borderColor: 'rgba(99, 102, 241, 0.22)',
 } as any);
 
 globalStyle('.agent-chat-user', {

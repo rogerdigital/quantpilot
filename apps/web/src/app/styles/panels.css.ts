@@ -40,7 +40,7 @@ globalStyle('.panel::after', {
 } as any);
 
 globalStyle('.panel:hover', {
-  borderColor: 'rgba(40, 120, 220, 0.22)',
+  borderColor: 'rgba(99, 102, 241, 0.22)',
   boxShadow: 'var(--shadow-panel-hover)',
 } as any);
 
@@ -654,7 +654,7 @@ globalStyle('.overview-ops-cluster', {
 } as any);
 
 globalStyle('.overview-ops-cluster:hover', {
-  borderColor: 'rgba(40, 120, 220, 0.2)',
+  borderColor: 'rgba(99, 102, 241, 0.2)',
 } as any);
 
 globalStyle('.overview-blotter-grid', { gridTemplateColumns: '1.06fr 0.94fr' } as any);
@@ -682,7 +682,7 @@ globalStyle('.status-row', {
 } as any);
 
 globalStyle('.status-row:hover', {
-  borderBottomColor: 'rgba(40, 120, 220, 0.2)',
+  borderBottomColor: 'rgba(99, 102, 241, 0.2)',
 } as any);
 
 globalStyle('.status-row-button, .inline-link', {

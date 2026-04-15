@@ -126,9 +126,9 @@ globalStyle('.panel-badge', {
 } as any);
 
 globalStyle('.panel-badge.accent', {
-  background: 'rgba(77, 166, 255, 0.09)',
+  background: 'rgba(99, 102, 241, 0.09)',
   color: 'var(--info)',
-  borderColor: 'rgba(77, 166, 255, 0.14)',
+  borderColor: 'rgba(99, 102, 241, 0.16)',
 } as any);
 
 globalStyle('.panel-badge.muted', {
@@ -138,9 +138,9 @@ globalStyle('.panel-badge.muted', {
 } as any);
 
 globalStyle('.badge-info', {
-  background: 'rgba(77, 166, 255, 0.09)',
+  background: 'rgba(99, 102, 241, 0.09)',
   color: 'var(--info)',
-  borderColor: 'rgba(77, 166, 255, 0.14)',
+  borderColor: 'rgba(99, 102, 241, 0.16)',
 } as any);
 
 globalStyle('.badge-ok, .badge-success', {
@@ -379,9 +379,9 @@ globalStyle('.log-tag.sell', {
 } as any);
 
 globalStyle('.log-tag.info', {
-  background: 'rgba(77, 166, 255, 0.1)',
+  background: 'rgba(99, 102, 241, 0.1)',
   color: 'var(--info)',
-  border: '1px solid rgba(77, 166, 255, 0.15)',
+  border: '1px solid rgba(99, 102, 241, 0.16)',
 } as any);
 
 /* ============================================================
