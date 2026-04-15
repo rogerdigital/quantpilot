@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { ApprovalDrawer } from '../approval-drawer/ApprovalDrawer.tsx';
 import { CommandPalette } from '../command-palette/CommandPalette.tsx';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useSettingsNavigation } from '../../modules/console/console.hooks.ts';
@@ -334,6 +335,7 @@ export function EmptyState({ icon, message, detail }: EmptyStateProps) {
 export function Layout() {
   const location = useLocation();
   const { locale } = useLocale();
+  const { state, approveLiveIntent, rejectLiveIntent } = useTradingSystem();
   const [collapsed, setCollapsed] = useState(() => {
     return window.localStorage.getItem('quantpilot-sidebar-collapsed') === 'true';
   });
@@ -370,6 +372,12 @@ export function Layout() {
         <Outlet />
       </main>
       {cmdOpen && <CommandPalette locale={locale} onClose={() => setCmdOpen(false)} />}
+      <ApprovalDrawer
+        locale={locale}
+        queue={state.approvalQueue}
+        onApprove={approveLiveIntent}
+        onReject={rejectLiveIntent}
+      />
     </div>
   );
 }
