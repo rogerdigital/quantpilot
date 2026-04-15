@@ -281,6 +281,51 @@ function normalizeAlpacaSnapshot(symbol, snapshot) {
   };
 }
 
+function normalizeAlpacaBar(bar) {
+  return {
+    time: bar.t ? bar.t.split('T')[0] : '',
+    open: Number(bar.o || 0),
+    high: Number(bar.h || 0),
+    low: Number(bar.l || 0),
+    close: Number(bar.c || 0),
+    volume: Number(bar.v || 0),
+  };
+}
+
+async function handleHistoricalBars(config, reqUrl, res) {
+  if (!ensureConfigured(config)) {
+    writeJson(res, 503, { message: 'Alpaca credentials are not configured.', bars: [] });
+    return;
+  }
+  const symbol = reqUrl.searchParams.get('symbol') || '';
+  const timeframe = reqUrl.searchParams.get('timeframe') || '1Day';
+  const start = reqUrl.searchParams.get('start') || '';
+  const end = reqUrl.searchParams.get('end') || '';
+  const limit = reqUrl.searchParams.get('limit') || '252';
+
+  if (!symbol) {
+    writeJson(res, 400, { message: 'symbol is required', bars: [] });
+    return;
+  }
+
+  const upstream = new URL(`/v2/stocks/${encodeURIComponent(symbol)}/bars`, config.alpacaDataBase);
+  upstream.searchParams.set('timeframe', timeframe);
+  if (start) upstream.searchParams.set('start', start);
+  if (end) upstream.searchParams.set('end', end);
+  upstream.searchParams.set('limit', limit);
+  upstream.searchParams.set('feed', config.alpacaDataFeed);
+  upstream.searchParams.set('sort', 'asc');
+
+  const response = await fetch(upstream, { headers: alpacaHeaders(config, false) });
+  if (!response.ok) {
+    writeJson(res, response.status, { message: `Alpaca bars error: HTTP ${response.status}`, bars: [] });
+    return;
+  }
+  const payload = await response.json();
+  const bars = Array.isArray(payload?.bars) ? payload.bars.map(normalizeAlpacaBar) : [];
+  writeJson(res, 200, { symbol, timeframe, bars, message: `Loaded ${bars.length} bars for ${symbol}` });
+}
+
 async function handleSnapshots(config, reqUrl, res) {
   if (!ensureConfigured(config)) {
     writeJson(res, 503, {
@@ -550,6 +595,10 @@ export function createGatewayHandler(options = {}) {
       }
       if (req.method === 'GET' && reqUrl.pathname === '/api/alpaca/market/snapshots') {
         await handleSnapshots(config, reqUrl, res);
+        return;
+      }
+      if (req.method === 'GET' && reqUrl.pathname === '/api/alpaca/market/bars') {
+        await handleHistoricalBars(config, reqUrl, res);
         return;
       }
       if (req.method === 'POST' && reqUrl.pathname === '/api/alpaca/broker/orders') {

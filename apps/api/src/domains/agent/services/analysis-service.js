@@ -89,7 +89,7 @@ function llmToolNameToAgentTool(name) {
 /**
  * Execute a single tool call from LLM and return the result.
  */
-function executeLLMToolCall(toolName, toolInput) {
+async function executeLLMToolCall(toolName, toolInput) {
   const dotName = (() => {
     switch (toolName) {
       case 'strategy_catalog_list': return 'strategy.catalog.list';
@@ -207,7 +207,7 @@ async function runLLMAnalysisLoop(intent, dailyBias, sessionId) {
       // Execute all tool calls and collect results
       const toolResultContent = [];
       for (const tc of response.toolCalls) {
-        const result = executeLLMToolCall(tc.name, tc.input);
+        const result = await executeLLMToolCall(tc.name, tc.input);
         toolCallLog.push({ tool: tc.name, input: tc.input, result });
 
         toolResultContent.push({
@@ -316,7 +316,7 @@ export async function runAgentAnalysis(payload = {}) {
         : step.toolName === 'execution.plans.list' ? { limit: 12 }
         : step.toolName === 'backtest.runs.list' && intent.kind === 'request_backtest_review' ? { status: 'needs_review' }
         : {};
-      const result = executeAgentTool({ tool: step.toolName, args });
+      const result = await executeAgentTool({ tool: step.toolName, args });
       toolResults.push(result);
     }
 

@@ -4,6 +4,7 @@ import { controlPlaneRuntime } from '../../../../../../packages/control-plane-ru
 import { listBacktestRuns } from '../../backtest/services/runs-service.js';
 import { getBacktestSummary } from '../../backtest/services/summary-service.js';
 import { listExecutionPlans } from '../../execution/services/query-service.js';
+import { getHistoricalBars, getMarketQuotes } from '../../market/services/market-data-service.js';
 import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';
 import { listRiskEvents } from '../../risk/services/feed-service.js';
 import { listStrategyCatalog } from '../../strategy/services/catalog-service.js';
@@ -114,22 +115,22 @@ function executeMarketQuotesTool(args = {}) {
   };
 }
 
-function executeMarketHistoryTool(args = {}) {
+async function executeMarketHistoryTool(args = {}) {
   const symbol = args.symbol || '';
-  const days = Math.min(Number(args.days) || 30, 365);
+  const days = Math.min(Number(args.days) || 90, 365);
   if (!symbol) {
     return { ok: false, tool: 'market.history.get', summary: 'Symbol is required.', data: {} };
   }
-  // Historical data will come from Alpaca in P0-6; for now return a note
+  const result = await getHistoricalBars(symbol, days);
   return {
-    ok: true,
+    ok: result.ok,
     tool: 'market.history.get',
-    summary: `Historical data for ${symbol} over ${days} days. (Alpaca integration in progress)`,
+    summary: `Loaded ${result.bars?.length || 0} bars for ${symbol} (${days} days, source: ${result.source}).`,
     data: {
-      symbol: symbol.toUpperCase(),
-      days,
-      note: 'Real historical data available after Alpaca Market Data integration.',
-      bars: [],
+      symbol: result.symbol,
+      bars: result.bars || [],
+      source: result.source,
+      timeframe: result.timeframe || '1Day',
     },
   };
 }
@@ -321,7 +322,7 @@ function executeBacktestQueueTool(args = {}) {
 
 // ─── Main dispatcher ──────────────────────────────────────────────────────────
 
-export function executeAgentTool(payload = {}) {
+export async function executeAgentTool(payload = {}) {
   const tool = payload.tool || '';
   const args = payload.args || {};
 
