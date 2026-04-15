@@ -1,0 +1,13 @@
+{
+  "name": "@quantpilot/llm-provider",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.54.0",
+    "openai": "^4.104.0"
+  }
+}
