@@ -100,7 +100,7 @@ export function runBacktestEngine(config: BacktestConfig): BacktestResult {
       volatilityParam: params.volatility,
       bars,
       tradingDates,
-      history: [],
+      history: [] as number[],
     };
   });
 

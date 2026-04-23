@@ -6,6 +6,18 @@ QuantPilot 是一个以 AI 为核心能力的量化交易平台，采用 TypeScr
 
 QuantPilot 不是一个可直接用于实盘的生产交易系统。它当前定位为一套面向受控量化交易流程的平台骨架与运营界面，而不是无人值守自动交易机器人。
 
+## 技术栈
+
+| 类别 | 技术 |
+|------|------|
+| 语言 | TypeScript 5（第一方源码 100%，禁止新增 JavaScript 源文件） |
+| 前端 | React 18 + react-router-dom 6 |
+| 构建 | Vite 5 |
+| 样式 | vanilla-extract |
+| 后端 | Node.js ESM + tsx |
+| 测试 | Vitest + node --test |
+| 包管理 | npm workspaces |
+
 ## QuantPilot 包含什么
 
 - 一个覆盖 dashboard、market、strategy、backtest、risk、execution、trading terminal、agent、notifications 和 settings 的多工作台前端控制台
@@ -19,7 +31,6 @@ QuantPilot 不是一个可直接用于实盘的生产交易系统。它当前定
 - 基于 `jose` 的 JWT 认证与 AES-256-GCM broker API key 静态加密
 - Server-Sent Events 实时推送，将轮询降级为 15 秒 fallback
 - 用于保护平台、研究、执行、风险、调度、Agent 与生产化基线合同的自动化验证体系
-
 ## 平台范围
 
 QuantPilot 当前围绕四条平台级运行主链路组织能力：

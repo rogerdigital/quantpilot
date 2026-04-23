@@ -6,6 +6,18 @@ QuantPilot is an AI-native quantitative trading platform built as a TypeScript m
 
 QuantPilot is not a production live-trading system. It is a platform skeleton and operating surface for controlled quantitative trading workflows, not an unattended trading bot.
 
+## Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| Language | TypeScript 5 (100% first-party source, no new JavaScript source files) |
+| Frontend | React 18 + react-router-dom 6 |
+| Build | Vite 5 |
+| Styling | vanilla-extract |
+| Backend | Node.js ESM + tsx |
+| Testing | Vitest + node --test |
+| Package Manager | npm workspaces |
+
 ## What QuantPilot Includes
 
 - A multi-workbench web console for dashboard, market, strategy, backtest, risk, execution, trading terminal, agent, notifications, and settings workflows
@@ -19,7 +31,6 @@ QuantPilot is not a production live-trading system. It is a platform skeleton an
 - JWT authentication (`jose`) and AES-256-GCM broker API key encryption for credentials at rest
 - Server-Sent Events push for live state updates, reducing polling to a 15-second fallback
 - Verification baselines that protect closed roadmap contracts across platform, research, execution, risk, scheduler, agent, and production-readiness surfaces
-
 ## Platform Scope
 
 QuantPilot is designed around four platform-level operating loops:

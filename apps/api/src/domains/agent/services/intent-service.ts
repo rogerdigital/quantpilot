@@ -1,24 +1,53 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { createLLMProvider } from '../../../../../../packages/llm-provider/src/index.js';
 import { INTENT_SYSTEM_PROMPT } from './prompts.js';
 
-function normalizePrompt(prompt = '') {
+type ExtractedStrategy = {
+  description: string;
+  symbols: string[];
+  style: string;
+};
+
+type ExtractedTrade = {
+  symbol: string;
+  side: string;
+  sizeHint: string;
+};
+
+export type AgentIntent = {
+  kind: string;
+  summary: string;
+  targetType: string;
+  targetId: string;
+  extractedStrategy: ExtractedStrategy | null;
+  extractedTrade: ExtractedTrade | null;
+  urgency: string;
+  requiresApproval: boolean;
+  requestedMode: string;
+  confidence: number;
+  metadata: Record<string, unknown>;
+};
+
+type ParseAgentIntentPayload = {
+  prompt?: string;
+  requestedBy?: string;
+  sessionId?: string;
+  targetId?: string;
+};
+
+function normalizePrompt(prompt = ''): string {
   return String(prompt || '')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
-function createSessionTitle(prompt) {
+function createSessionTitle(prompt: string): string {
   const trimmed = normalizePrompt(prompt);
   if (!trimmed) return 'Agent collaboration session';
   return trimmed.length > 72 ? `${trimmed.slice(0, 69)}...` : trimmed;
 }
 
-/**
- * Rule-based fallback intent inference (used when LLM is unavailable).
- */
-function inferIntentFromRules(prompt, explicitTargetId = '') {
+function inferIntentFromRules(prompt: string, explicitTargetId = ''): AgentIntent {
   const normalized = prompt.toLowerCase();
   const urgency = /(urgent|immediately|asap|now|立刻|马上|尽快)/.test(normalized)
     ? 'high'
@@ -32,7 +61,12 @@ function inferIntentFromRules(prompt, explicitTargetId = '') {
       summary: 'User wants to execute a trade.',
       targetType: 'symbol',
       targetId: explicitTargetId || '',
-      extractedTrade: { symbol: '', side: /sell|卖/.test(normalized) ? 'sell' : 'buy', sizeHint: 'unspecified' },
+      extractedStrategy: null,
+      extractedTrade: {
+        symbol: '',
+        side: /sell|卖/.test(normalized) ? 'sell' : 'buy',
+        sizeHint: 'unspecified',
+      },
       urgency,
       requiresApproval: false,
       requestedMode: 'execute_paper',
@@ -41,9 +75,14 @@ function inferIntentFromRules(prompt, explicitTargetId = '') {
     };
   }
 
-  if (/(执行计划|准备执行|execution prep|prepare execution|execution plan|execution-prep|exec prep)/.test(normalized)) {
-    const requiresApproval = /(审批|approval|approve|需要审批|is.*approval|confirm.*approval)/.test(normalized);
-    // Try to extract a strategy ID from the prompt (kebab-case or dotted identifiers)
+  if (
+    /(执行计划|准备执行|execution prep|prepare execution|execution plan|execution-prep|exec prep)/.test(
+      normalized
+    )
+  ) {
+    const requiresApproval = /(审批|approval|approve|需要审批|is.*approval|confirm.*approval)/.test(
+      normalized
+    );
     const idMatch = prompt.match(/[\w-]{4,}(?:[-.][\w-]+)+/);
     const targetId = explicitTargetId || (idMatch ? idMatch[0] : '');
     return {
@@ -51,6 +90,8 @@ function inferIntentFromRules(prompt, explicitTargetId = '') {
       summary: 'Prepare an execution plan for a strategy.',
       targetType: 'strategy',
       targetId,
+      extractedStrategy: null,
+      extractedTrade: null,
       urgency,
       requiresApproval,
       requestedMode: requiresApproval ? 'request_live' : 'execute_paper',
@@ -59,13 +100,16 @@ function inferIntentFromRules(prompt, explicitTargetId = '') {
     };
   }
 
-  if (/(策略|strategy|构建|build|设计|create.*strat|momentum|value|mean reversion)/.test(normalized)) {
+  if (
+    /(策略|strategy|构建|build|设计|create.*strat|momentum|value|mean reversion)/.test(normalized)
+  ) {
     return {
       kind: 'build_strategy',
       summary: 'User wants to build a trading strategy.',
       targetType: 'unknown',
       targetId: explicitTargetId || '',
       extractedStrategy: { description: prompt, symbols: [], style: 'general' },
+      extractedTrade: null,
       urgency,
       requiresApproval: false,
       requestedMode: 'read_only',
@@ -80,6 +124,8 @@ function inferIntentFromRules(prompt, explicitTargetId = '') {
       summary: 'Review research and backtest posture.',
       targetType: 'backtest_run',
       targetId: explicitTargetId || '',
+      extractedStrategy: null,
+      extractedTrade: null,
       urgency,
       requiresApproval: false,
       requestedMode: 'read_only',
@@ -94,6 +140,8 @@ function inferIntentFromRules(prompt, explicitTargetId = '') {
       summary: 'Explain the current risk posture.',
       targetType: 'unknown',
       targetId: explicitTargetId || '',
+      extractedStrategy: null,
+      extractedTrade: null,
       urgency,
       requiresApproval: false,
       requestedMode: 'read_only',
@@ -107,6 +155,8 @@ function inferIntentFromRules(prompt, explicitTargetId = '') {
     summary: 'Read current platform context and summarize findings.',
     targetType: 'unknown',
     targetId: explicitTargetId || '',
+    extractedStrategy: null,
+    extractedTrade: null,
     urgency,
     requiresApproval: false,
     requestedMode: 'read_only',
@@ -115,10 +165,7 @@ function inferIntentFromRules(prompt, explicitTargetId = '') {
   };
 }
 
-/**
- * LLM-powered intent parsing with rule-based fallback.
- */
-async function inferIntentWithLLM(prompt, explicitTargetId = '') {
+async function inferIntentWithLLM(prompt: string, explicitTargetId = ''): Promise<AgentIntent> {
   const llm = createLLMProvider();
   if (!llm) {
     return inferIntentFromRules(prompt, explicitTargetId);
@@ -143,7 +190,7 @@ async function inferIntentWithLLM(prompt, explicitTargetId = '') {
   }
 
   try {
-    const parsed = JSON.parse(response.content.trim());
+    const parsed = JSON.parse(response.content.trim()) as Partial<AgentIntent>;
     return {
       kind: parsed.kind || 'read_only_analysis',
       summary: parsed.summary || prompt,
@@ -155,15 +202,22 @@ async function inferIntentWithLLM(prompt, explicitTargetId = '') {
       requiresApproval: Boolean(parsed.requiresApproval),
       requestedMode: parsed.requestedMode || 'read_only',
       confidence: parsed.confidence || 0.8,
-      metadata: { source: 'llm', model: llm.model, provider: llm.provider },
+      metadata: {
+        source: 'llm',
+        model: llm.model,
+        provider: llm.provider,
+      },
     };
-  } catch (parseErr) {
-    console.error('[intent-service] JSON parse error, falling back to rules:', parseErr.message);
+  } catch (parseErr: unknown) {
+    console.error(
+      '[intent-service] JSON parse error, falling back to rules:',
+      parseErr instanceof Error ? parseErr.message : 'unknown_error'
+    );
     return inferIntentFromRules(prompt, explicitTargetId);
   }
 }
 
-export async function parseAgentIntent(payload = {}) {
+export async function parseAgentIntent(payload: ParseAgentIntentPayload = {}) {
   const prompt = normalizePrompt(payload.prompt);
   if (!prompt) {
     return {
@@ -177,7 +231,6 @@ export async function parseAgentIntent(payload = {}) {
   const existingSession = payload.sessionId
     ? controlPlaneRuntime.getAgentSession(payload.sessionId)
     : null;
-
   const intent = await inferIntentWithLLM(prompt, payload.targetId || '');
 
   const session = existingSession

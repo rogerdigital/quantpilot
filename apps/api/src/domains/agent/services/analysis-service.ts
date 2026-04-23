@@ -1,33 +1,72 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import type { LLMMessage, LLMTool } from '../../../../../../packages/llm-provider/src/index.js';
 import { createLLMProvider } from '../../../../../../packages/llm-provider/src/index.js';
 import { listActiveAgentInstructions } from './instruction-service.js';
+import type { AgentIntent } from './intent-service.js';
 import { createAgentPlan } from './planning-service.js';
-import { executeAgentTool } from './tools-service.js';
 import { ANALYSIS_SYSTEM_PROMPT } from './prompts.js';
+import { executeAgentTool } from './tools-service.js';
 
-/**
- * Tool definitions for LLM function/tool calling.
- * These map to executeAgentTool() implementations.
- */
-const LLM_TOOLS = [
+type ToolExecutionResult = {
+  ok: boolean;
+  tool: string;
+  summary: string;
+  data?: Record<string, unknown>;
+};
+
+type ToolCallLogEntry = {
+  tool: string;
+  input: Record<string, unknown>;
+  result: ToolExecutionResult;
+};
+
+type AnalysisNarrative = {
+  thesis: string;
+  rationale: string[];
+  warnings: string[];
+  strategy?: Record<string, unknown> | null;
+  recommendedNextStep: string;
+  requiresAction: boolean;
+  actionType: string;
+};
+
+type AnalysisLoopResult = {
+  narrative: AnalysisNarrative;
+  toolCallLog: ToolCallLogEntry[];
+};
+
+type RunAgentAnalysisPayload = {
+  planId?: string;
+  sessionId?: string;
+  requestedBy?: string;
+  intent?: AgentIntent;
+};
+
+const LLM_TOOLS: LLMTool[] = [
   {
     name: 'strategy_catalog_list',
-    description: 'List all trading strategies in the catalog with their current status and metrics.',
+    description:
+      'List all trading strategies in the catalog with their current status and metrics.',
     inputSchema: { type: 'object', properties: {}, required: [] },
   },
   {
     name: 'backtest_summary_get',
-    description: 'Get the backtest center summary: total runs, pending reviews, and health metrics.',
+    description:
+      'Get the backtest center summary: total runs, pending reviews, and health metrics.',
     inputSchema: { type: 'object', properties: {}, required: [] },
   },
   {
     name: 'backtest_runs_list',
-    description: 'List recent backtest runs with performance metrics like Sharpe ratio and max drawdown.',
+    description:
+      'List recent backtest runs with performance metrics like Sharpe ratio and max drawdown.',
     inputSchema: {
       type: 'object',
       properties: {
-        status: { type: 'string', description: 'Filter by status: needs_review, completed, failed', enum: ['needs_review', 'completed', 'failed'] },
+        status: {
+          type: 'string',
+          description: 'Filter by status: needs_review, completed, failed',
+          enum: ['needs_review', 'completed', 'failed'],
+        },
       },
       required: [],
     },
@@ -60,7 +99,11 @@ const LLM_TOOLS = [
     inputSchema: {
       type: 'object',
       properties: {
-        symbols: { type: 'array', items: { type: 'string' }, description: 'List of ticker symbols e.g. ["AAPL", "NVDA"]' },
+        symbols: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'List of ticker symbols e.g. ["AAPL", "NVDA"]',
+        },
       },
       required: ['symbols'],
     },
@@ -72,55 +115,56 @@ const LLM_TOOLS = [
       type: 'object',
       properties: {
         symbol: { type: 'string', description: 'Ticker symbol e.g. "AAPL"' },
-        days: { type: 'number', description: 'Number of calendar days of history (default 30)' },
+        days: {
+          type: 'number',
+          description: 'Number of calendar days of history (default 30)',
+        },
       },
       required: ['symbol'],
     },
   },
 ];
 
-/**
- * Map LLM tool name (underscore format) to executeAgentTool dot-format names.
- */
-function llmToolNameToAgentTool(name) {
-  return name.replace(/_/g, '.').replace(/\.list$/, 's.list').replace(/\.get$/, '.get');
-}
-
-/**
- * Execute a single tool call from LLM and return the result.
- */
-async function executeLLMToolCall(toolName, toolInput) {
+async function executeLLMToolCall(
+  toolName: string,
+  toolInput: Record<string, unknown>
+): Promise<ToolExecutionResult> {
   const dotName = (() => {
     switch (toolName) {
-      case 'strategy_catalog_list': return 'strategy.catalog.list';
-      case 'backtest_summary_get': return 'backtest.summary.get';
-      case 'backtest_runs_list': return 'backtest.runs.list';
-      case 'risk_events_list': return 'risk.events.list';
-      case 'execution_plans_list': return 'execution.plans.list';
-      case 'market_quotes_get': return 'market.quotes.get';
-      case 'market_history_get': return 'market.history.get';
-      default: return toolName;
+      case 'strategy_catalog_list':
+        return 'strategy.catalog.list';
+      case 'backtest_summary_get':
+        return 'backtest.summary.get';
+      case 'backtest_runs_list':
+        return 'backtest.runs.list';
+      case 'risk_events_list':
+        return 'risk.events.list';
+      case 'execution_plans_list':
+        return 'execution.plans.list';
+      case 'market_quotes_get':
+        return 'market.quotes.get';
+      case 'market_history_get':
+        return 'market.history.get';
+      default:
+        return toolName;
     }
   })();
 
-  return executeAgentTool({ tool: dotName, args: toolInput || {} });
+  return executeAgentTool({
+    tool: dotName,
+    args: toolInput || {},
+  }) as Promise<ToolExecutionResult>;
 }
 
-/**
- * Serialize tool results for LLM context (keep it concise).
- */
-function serializeToolResult(result) {
+function serializeToolResult(result: ToolExecutionResult): string {
   if (!result.ok) return `Error: ${result.summary}`;
   const data = result.data || {};
   return JSON.stringify(data, null, 2).slice(0, 3000);
 }
 
-/**
- * Build the initial analysis prompt with intent context.
- */
-function buildAnalysisPrompt(intent, dailyBias) {
-  const biasNote = dailyBias?.length
-    ? `\n\nActive daily bias instructions:\n${dailyBias.map((b) => `- ${b.body}`).join('\n')}`
+function buildAnalysisPrompt(intent: AgentIntent, dailyBias: Array<{ body: string }>): string {
+  const biasNote = dailyBias.length
+    ? `\n\nActive daily bias instructions:\n${dailyBias.map((item) => `- ${item.body}`).join('\n')}`
     : '';
 
   return `Analyze the user's trading request and provide actionable recommendations.
@@ -134,17 +178,19 @@ ${biasNote}
 Please use the available tools to gather relevant data, then provide your analysis in the required JSON format.`;
 }
 
-/**
- * Rule-based fallback narrative when LLM is unavailable.
- */
-function buildFallbackNarrative(intent, toolResults = []) {
-  const resultMap = Object.fromEntries(toolResults.map((r) => [r.tool, r]));
-  const strategies = resultMap['strategy.catalog.list']?.data?.strategies || [];
+function buildFallbackNarrative(
+  _intent: AgentIntent,
+  toolResults: ToolExecutionResult[] = []
+): AnalysisNarrative {
+  const resultMap = Object.fromEntries(toolResults.map((result) => [result.tool, result]));
+  const strategies = (resultMap['strategy.catalog.list']?.data?.strategies as unknown[]) || [];
   const backtestSummary = resultMap['backtest.summary.get']?.data || {};
-  const riskEvents = resultMap['risk.events.list']?.data?.events || [];
-  const executionPlans = resultMap['execution.plans.list']?.data?.plans || [];
+  const riskEvents =
+    (resultMap['risk.events.list']?.data?.events as Array<{ status?: string }>) || [];
 
-  const elevatedRisk = riskEvents.some((e) => e.status === 'risk-off' || e.status === 'attention');
+  const elevatedRisk = riskEvents.some(
+    (event) => event.status === 'risk-off' || event.status === 'attention'
+  );
   const thesis = elevatedRisk
     ? 'Risk posture is elevated. Review risk events before taking action.'
     : `Analysis complete. Found ${strategies.length} strategies and ${Number(backtestSummary.completedRuns || 0)} completed backtests.`;
@@ -165,22 +211,20 @@ function buildFallbackNarrative(intent, toolResults = []) {
   };
 }
 
-/**
- * Run the LLM tool-use loop: gather data → analyze → produce structured report.
- * Max 5 tool call rounds to prevent runaway loops.
- */
-async function runLLMAnalysisLoop(intent, dailyBias, sessionId) {
+async function runLLMAnalysisLoop(
+  intent: AgentIntent,
+  dailyBias: Array<{ body: string }>
+): Promise<AnalysisLoopResult | null> {
   const llm = createLLMProvider();
   if (!llm) return null;
 
-  const messages = [
+  const messages: LLMMessage[] = [
     { role: 'user', content: buildAnalysisPrompt(intent, dailyBias) },
   ];
+  const toolCallLog: ToolCallLogEntry[] = [];
+  const maxRounds = 5;
 
-  const toolCallLog = [];
-  const MAX_ROUNDS = 5;
-
-  for (let round = 0; round < MAX_ROUNDS; round++) {
+  for (let round = 0; round < maxRounds; round++) {
     const response = await llm.chatWithTools(messages, LLM_TOOLS, {
       systemPrompt: ANALYSIS_SYSTEM_PROMPT,
       maxTokens: 4096,
@@ -192,27 +236,28 @@ async function runLLMAnalysisLoop(intent, dailyBias, sessionId) {
       return null;
     }
 
-    // If LLM has tool calls, execute them and continue
-    if (response.stopReason === 'tool_use' && response.toolCalls?.length > 0) {
-      // Add assistant message with tool calls
-      const assistantContent = [];
+    if (response.stopReason === 'tool_use' && response.toolCalls?.length) {
+      const assistantContent: Array<Record<string, unknown>> = [];
       if (response.content) {
         assistantContent.push({ type: 'text', text: response.content });
       }
-      for (const tc of response.toolCalls) {
-        assistantContent.push({ type: 'tool_use', id: tc.id, name: tc.name, input: tc.input });
+      for (const toolCall of response.toolCalls) {
+        assistantContent.push({
+          type: 'tool_use',
+          id: toolCall.id,
+          name: toolCall.name,
+          input: toolCall.input,
+        });
       }
       messages.push({ role: 'assistant', content: assistantContent });
 
-      // Execute all tool calls and collect results
-      const toolResultContent = [];
-      for (const tc of response.toolCalls) {
-        const result = await executeLLMToolCall(tc.name, tc.input);
-        toolCallLog.push({ tool: tc.name, input: tc.input, result });
-
+      const toolResultContent: Array<Record<string, unknown>> = [];
+      for (const toolCall of response.toolCalls) {
+        const result = await executeLLMToolCall(toolCall.name, toolCall.input);
+        toolCallLog.push({ tool: toolCall.name, input: toolCall.input, result });
         toolResultContent.push({
           type: 'tool_result',
-          tool_use_id: tc.id,
+          tool_use_id: toolCall.id,
           content: serializeToolResult(result),
         });
       }
@@ -220,12 +265,10 @@ async function runLLMAnalysisLoop(intent, dailyBias, sessionId) {
       continue;
     }
 
-    // LLM has stopped using tools — parse the final JSON response
     const finalContent = response.content?.trim() || '';
     try {
-      // Handle markdown code blocks if LLM wraps JSON in ```
       const jsonStr = finalContent.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-      const parsed = JSON.parse(jsonStr);
+      const parsed = JSON.parse(jsonStr) as Partial<AnalysisNarrative>;
       return {
         narrative: {
           thesis: parsed.thesis || 'Analysis complete.',
@@ -238,8 +281,11 @@ async function runLLMAnalysisLoop(intent, dailyBias, sessionId) {
         },
         toolCallLog,
       };
-    } catch (parseErr) {
-      console.error('[analysis-service] Failed to parse LLM JSON response:', parseErr.message);
+    } catch (parseErr: unknown) {
+      console.error(
+        '[analysis-service] Failed to parse LLM JSON response:',
+        parseErr instanceof Error ? parseErr.message : 'unknown_error'
+      );
       console.error('[analysis-service] Raw content:', finalContent.slice(0, 500));
       return null;
     }
@@ -249,8 +295,8 @@ async function runLLMAnalysisLoop(intent, dailyBias, sessionId) {
   return null;
 }
 
-export async function runAgentAnalysis(payload = {}) {
-  const planned = payload.planId
+export async function runAgentAnalysis(payload: RunAgentAnalysisPayload = {}) {
+  const planned: any = payload.planId
     ? {
         ok: true,
         session: payload.sessionId ? controlPlaneRuntime.getAgentSession(payload.sessionId) : null,
@@ -275,7 +321,6 @@ export async function runAgentAnalysis(payload = {}) {
     };
   }
 
-  // Mark session and plan as running
   controlPlaneRuntime.updateAgentSession(session.id, { status: 'running' });
   controlPlaneRuntime.recordAgentSessionMessage({
     sessionId: session.id,
@@ -288,17 +333,20 @@ export async function runAgentAnalysis(payload = {}) {
   });
   controlPlaneRuntime.updateAgentPlan(plan.id, {
     status: 'running',
-    steps: plan.steps.map((s) => ({ ...s, status: s.toolName ? 'running' : s.status })),
+    steps: plan.steps.map((step: Record<string, unknown>) => ({
+      ...step,
+      status: step.toolName ? 'running' : step.status,
+    })),
   });
 
-  // Load daily bias instructions
-  const dailyBias = listActiveAgentInstructions({ sessionId: session.id, kind: 'daily_bias' });
+  const dailyBias = listActiveAgentInstructions({
+    sessionId: session.id,
+    kind: 'daily_bias',
+  }) as Array<{ body: string }>;
 
-  // Run LLM analysis loop (with tool calls)
-  let analysisResult = await runLLMAnalysisLoop(intent, dailyBias, session.id);
+  let analysisResult = await runLLMAnalysisLoop(intent as AgentIntent, dailyBias);
 
-  // Fallback: gather tool data the old way and use rule-based narrative
-  const toolResults = [];
+  const toolResults: ToolExecutionResult[] = [];
   if (!analysisResult) {
     controlPlaneRuntime.recordAgentSessionMessage({
       sessionId: session.id,
@@ -310,25 +358,35 @@ export async function runAgentAnalysis(payload = {}) {
       metadata: { agentPlanId: plan.id },
     });
 
-    for (const step of plan.steps) {
+    for (const step of plan.steps as Array<Record<string, unknown>>) {
       if (!step.toolName) continue;
-      const args = step.toolName === 'risk.events.list' ? { limit: 12 }
-        : step.toolName === 'execution.plans.list' ? { limit: 12 }
-        : step.toolName === 'backtest.runs.list' && intent.kind === 'request_backtest_review' ? { status: 'needs_review' }
-        : {};
-      const result = await executeAgentTool({ tool: step.toolName, args });
+      const args =
+        step.toolName === 'risk.events.list'
+          ? { limit: 12 }
+          : step.toolName === 'execution.plans.list'
+            ? { limit: 12 }
+            : step.toolName === 'backtest.runs.list' && intent.kind === 'request_backtest_review'
+              ? { status: 'needs_review' }
+              : {};
+      const result = (await executeAgentTool({
+        tool: String(step.toolName),
+        args,
+      })) as ToolExecutionResult;
       toolResults.push(result);
     }
 
     analysisResult = {
-      narrative: buildFallbackNarrative(intent, toolResults),
-      toolCallLog: toolResults.map((r) => ({ tool: r.tool, input: {}, result: r })),
+      narrative: buildFallbackNarrative(intent as AgentIntent, toolResults),
+      toolCallLog: toolResults.map((result) => ({
+        tool: result.tool,
+        input: {},
+        result,
+      })),
     };
   }
 
   const { narrative, toolCallLog } = analysisResult;
 
-  // Build tool call records for storage
   const llmToolCalls = toolCallLog.map((entry) => ({
     tool: entry.tool,
     status: entry.result?.ok ? 'completed' : 'failed',
@@ -347,20 +405,19 @@ export async function runAgentAnalysis(payload = {}) {
       metadata: { keys: Object.keys(entry.result?.data || {}) },
     }));
 
-  // Mark steps as completed
-  const finalizedSteps = plan.steps.map((step) => ({
+  const finalizedSteps = (plan.steps as Array<Record<string, unknown>>).map((step) => ({
     ...step,
     status: 'completed',
-    outputSummary: step.kind === 'explain' ? narrative.thesis
-      : step.kind === 'request_action' ? narrative.recommendedNextStep
-      : llmToolCalls.find((tc) => tc.tool === step.toolName)?.summary || 'Completed.',
+    outputSummary:
+      step.kind === 'explain'
+        ? narrative.thesis
+        : step.kind === 'request_action'
+          ? narrative.recommendedNextStep
+          : llmToolCalls.find((toolCall) => toolCall.tool === step.toolName)?.summary ||
+            'Completed.',
   }));
 
-  const planStatus = 'completed';
-  const runStatus = 'completed';
   const completedAt = new Date().toISOString();
-
-  // Build the full explanation object (compatible with existing UI)
   const explanation = {
     thesis: narrative.thesis,
     rationale: narrative.rationale,
@@ -374,7 +431,7 @@ export async function runAgentAnalysis(payload = {}) {
   const run = controlPlaneRuntime.recordAgentAnalysisRun({
     sessionId: session.id,
     planId: plan.id,
-    status: runStatus,
+    status: 'completed',
     summary: narrative.thesis,
     conclusion: narrative.thesis,
     requestedBy: payload.requestedBy || session.requestedBy || 'operator',
@@ -392,7 +449,7 @@ export async function runAgentAnalysis(payload = {}) {
   });
 
   const updatedPlan = controlPlaneRuntime.updateAgentPlan(plan.id, {
-    status: planStatus,
+    status: 'completed',
     steps: finalizedSteps,
     metadata: { latestAnalysisRunId: run.id },
   });
@@ -402,7 +459,6 @@ export async function runAgentAnalysis(payload = {}) {
     metadata: { latestAnalysisCompletedAt: completedAt },
   });
 
-  // Record summarizing status before final result
   controlPlaneRuntime.recordAgentSessionMessage({
     sessionId: session.id,
     role: 'system',
@@ -413,7 +469,6 @@ export async function runAgentAnalysis(payload = {}) {
     metadata: { agentPlanId: plan.id, agentAnalysisRunId: run.id },
   });
 
-  // Record the main assistant response message
   controlPlaneRuntime.recordAgentSessionMessage({
     sessionId: session.id,
     role: 'assistant',
@@ -421,15 +476,17 @@ export async function runAgentAnalysis(payload = {}) {
     title: narrative.thesis,
     body: [
       narrative.thesis,
-      ...(narrative.rationale || []),
-      ...(narrative.warnings || []),
+      ...narrative.rationale,
+      ...narrative.warnings,
       narrative.recommendedNextStep ? `Next: ${narrative.recommendedNextStep}` : '',
-    ].filter(Boolean).join(' '),
+    ]
+      .filter(Boolean)
+      .join(' '),
     requestedBy: payload.requestedBy || session.requestedBy || 'agent',
     metadata: {
       agentPlanId: plan.id,
       agentAnalysisRunId: run.id,
-      status: runStatus,
+      status: 'completed',
       toolCallCount: llmToolCalls.length,
       hasStrategy: Boolean(narrative.strategy),
       requiresAction: narrative.requiresAction,
