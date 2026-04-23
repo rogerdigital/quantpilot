@@ -26,6 +26,7 @@ jobs:
       - run: npm ci
       - run: npm run check:workspaces
       - run: npm run check:lockfile
+      - run: npm run check:no-js-source
       - run: npm run check:stage-docs
       - run: npm run check:runtime-env
       - run: npm run lint

@@ -13,7 +13,7 @@
 
 | Layer | Tech |
 |-------|------|
-| Language | TypeScript (ES2022)，前后端全量 `.ts` |
+| Language | TypeScript (ES2022)，第一方源码目录保持 100% TypeScript |
 | Frontend | React 18, react-router-dom v6 |
 | Bundler | Vite 5 (`@vitejs/plugin-react` + `@vanilla-extract/vite-plugin`) |
 | Test | Vitest (web), `node --test` (backend) |
@@ -93,6 +93,8 @@ npm run verify           # 完整验证 (所有检查 + 所有测试 + typecheck
 
 ## Important Guardrails
 
+- 第一方源码目录 `apps/`、`packages/`、`scripts/` 必须使用 TypeScript；禁止新增 `.js`、`.mjs`、`.cjs` 源文件
+- 生成产物、第三方代码、依赖目录不计入上述规则；当前检查会忽略 `dist`、`node_modules`、`coverage`、`.git`、`.vite`
 - 样式改动在对应的 `.css.ts` 文件中进行（`apps/web/src/app/styles/` 或组件同目录），不引入任何 `.css` 文件
 - Canvas 图表颜色硬编码在 `ConsoleChrome.tsx` 的 `ChartCanvas` 中
 - `.env` / `.env.local` 不提交，参考 `.env.example`
