@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node src/main.mjs"
+    "dev": "node --import tsx/esm src/main.ts"
   }
 }
