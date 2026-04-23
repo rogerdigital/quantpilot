@@ -639,7 +639,7 @@ export function startGatewayServer(options = {}) {
   const config = createGatewayConfig(options);
   const server = createGatewayServer(config);
   server.listen(config.gatewayPort, '127.0.0.1', () => {
-    console.log(`Quant Studio gateway listening on http://127.0.0.1:${config.gatewayPort}`);
+    console.log(`QuantPilot gateway listening on http://127.0.0.1:${config.gatewayPort}`);
   });
   return server;
 }
