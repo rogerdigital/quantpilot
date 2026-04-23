@@ -1,20 +1,51 @@
-// @ts-nocheck
 /**
  * Market data service — fetches from Alpaca when configured, falls back to
  * trading-engine synthetic data when QUANTPILOT_USE_MOCK_DATA=true or no credentials.
  */
 import { generateHistoricalOhlcv } from '../../../../../../packages/trading-engine/src/backtest/data.js';
 
+type OhlcvBar = {
+  time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+
+type HistoricalBarsResult = {
+  ok: boolean;
+  symbol: string;
+  bars: OhlcvBar[];
+  source: string;
+  timeframe?: string;
+  error?: string;
+};
+
+type MarketQuote = {
+  symbol: string;
+  price: number;
+  change: number;
+  changePct: number;
+  volume: number;
+};
+
+type MarketQuotesResult = {
+  ok: boolean;
+  quotes: MarketQuote[];
+  source?: string;
+  note?: string;
+  error?: string;
+};
+
 const ALPACA_DATA_BASE = 'https://data.alpaca.markets';
 const ALPACA_KEY_ID = () => process.env.ALPACA_KEY_ID || '';
 const ALPACA_SECRET_KEY = () => process.env.ALPACA_SECRET_KEY || '';
 const ALPACA_DATA_FEED = () => process.env.ALPACA_DATA_FEED || 'iex';
 const USE_MOCK = () =>
-  process.env.QUANTPILOT_USE_MOCK_DATA === 'true' ||
-  !ALPACA_KEY_ID() ||
-  !ALPACA_SECRET_KEY();
+  process.env.QUANTPILOT_USE_MOCK_DATA === 'true' || !ALPACA_KEY_ID() || !ALPACA_SECRET_KEY();
 
-function alpacaHeaders() {
+function alpacaHeaders(): Record<string, string> {
   return {
     Accept: 'application/json',
     'APCA-API-KEY-ID': ALPACA_KEY_ID(),
@@ -22,9 +53,9 @@ function alpacaHeaders() {
   };
 }
 
-function normalizeAlpacaBar(bar) {
+function normalizeAlpacaBar(bar: Record<string, unknown>): OhlcvBar {
   return {
-    time: bar.t ? bar.t.split('T')[0] : '',
+    time: typeof bar.t === 'string' ? bar.t.split('T')[0] : '',
     open: Number(bar.o || 0),
     high: Number(bar.h || 0),
     low: Number(bar.l || 0),
@@ -42,7 +73,11 @@ function normalizeAlpacaBar(bar) {
  * @param {string} [timeframe] - "1Day" | "1Hour" | "15Min" (default: "1Day")
  * @returns {Promise<{ok: boolean, symbol: string, bars: Array, source: string}>}
  */
-export async function getHistoricalBars(symbol, days = 90, timeframe = '1Day') {
+export async function getHistoricalBars(
+  symbol: string,
+  days = 90,
+  timeframe = '1Day'
+): Promise<HistoricalBarsResult> {
   if (!symbol) {
     return { ok: false, symbol: '', bars: [], source: 'none', error: 'symbol is required' };
   }
@@ -78,15 +113,21 @@ export async function getHistoricalBars(symbol, days = 90, timeframe = '1Day') {
 
     if (!response.ok) {
       // Fallback to synthetic data on API error
-      console.warn(`[market-data] Alpaca bars error HTTP ${response.status} for ${upperSymbol}, using synthetic fallback`);
+      console.warn(
+        `[market-data] Alpaca bars error HTTP ${response.status} for ${upperSymbol}, using synthetic fallback`
+      );
       const endD = new Date();
       const startD = new Date();
       startD.setDate(startD.getDate() - days);
-      const bars = generateHistoricalOhlcv(upperSymbol, startD.toISOString().split('T')[0], endD.toISOString().split('T')[0]);
+      const bars = generateHistoricalOhlcv(
+        upperSymbol,
+        startD.toISOString().split('T')[0],
+        endD.toISOString().split('T')[0]
+      );
       return { ok: true, symbol: upperSymbol, bars, source: 'synthetic_fallback', timeframe };
     }
 
-    const payload = await response.json();
+    const payload = (await response.json()) as { bars?: Record<string, unknown>[] };
     const bars = Array.isArray(payload?.bars) ? payload.bars.map(normalizeAlpacaBar) : [];
 
     if (bars.length === 0) {
@@ -94,17 +135,34 @@ export async function getHistoricalBars(symbol, days = 90, timeframe = '1Day') {
       const endD = new Date();
       const startD = new Date();
       startD.setDate(startD.getDate() - days);
-      const syntheticBars = generateHistoricalOhlcv(upperSymbol, startD.toISOString().split('T')[0], endD.toISOString().split('T')[0]);
-      return { ok: true, symbol: upperSymbol, bars: syntheticBars, source: 'synthetic_fallback', timeframe };
+      const syntheticBars = generateHistoricalOhlcv(
+        upperSymbol,
+        startD.toISOString().split('T')[0],
+        endD.toISOString().split('T')[0]
+      );
+      return {
+        ok: true,
+        symbol: upperSymbol,
+        bars: syntheticBars,
+        source: 'synthetic_fallback',
+        timeframe,
+      };
     }
 
     return { ok: true, symbol: upperSymbol, bars, source: 'alpaca', timeframe };
-  } catch (err) {
-    console.error('[market-data] Error fetching bars:', err.message);
+  } catch (err: unknown) {
+    console.error(
+      '[market-data] Error fetching bars:',
+      err instanceof Error ? err.message : 'unknown_error'
+    );
     const endD = new Date();
     const startD = new Date();
     startD.setDate(startD.getDate() - days);
-    const bars = generateHistoricalOhlcv(upperSymbol, startD.toISOString().split('T')[0], endD.toISOString().split('T')[0]);
+    const bars = generateHistoricalOhlcv(
+      upperSymbol,
+      startD.toISOString().split('T')[0],
+      endD.toISOString().split('T')[0]
+    );
     return { ok: true, symbol: upperSymbol, bars, source: 'synthetic_fallback', timeframe };
   }
 }
@@ -113,9 +171,15 @@ export async function getHistoricalBars(symbol, days = 90, timeframe = '1Day') {
  * Get current market snapshots for multiple symbols.
  * Returns from Alpaca when configured, otherwise returns empty (upstream from Worker sync).
  */
-export async function getMarketQuotes(symbols = []) {
+export async function getMarketQuotes(symbols: string[] = []): Promise<MarketQuotesResult> {
   if (!symbols.length) return { ok: false, quotes: [], error: 'No symbols provided' };
-  if (USE_MOCK()) return { ok: true, quotes: [], source: 'none', note: 'Mock mode: quotes come from Worker market sync' };
+  if (USE_MOCK())
+    return {
+      ok: true,
+      quotes: [],
+      source: 'none',
+      note: 'Mock mode: quotes come from Worker market sync',
+    };
 
   try {
     const url = new URL('/v2/stocks/snapshots', ALPACA_DATA_BASE);
@@ -123,12 +187,19 @@ export async function getMarketQuotes(symbols = []) {
     url.searchParams.set('feed', ALPACA_DATA_FEED());
 
     const response = await fetch(url.toString(), { headers: alpacaHeaders() });
-    if (!response.ok) return { ok: false, quotes: [], error: `Alpaca snapshots HTTP ${response.status}` };
+    if (!response.ok)
+      return { ok: false, quotes: [], error: `Alpaca snapshots HTTP ${response.status}` };
 
-    const payload = await response.json();
+    const payload = (await response.json()) as {
+      snapshots?: Record<string, Record<string, unknown>>;
+    };
     const quotes = Object.entries(payload?.snapshots || {}).map(([sym, snap]) => {
-      const price = Number(snap?.minuteBar?.c ?? snap?.latestTrade?.p ?? snap?.dailyBar?.c ?? 0);
-      const prevClose = Number(snap?.prevDailyBar?.c ?? snap?.dailyBar?.o ?? price);
+      const minuteBar = snap.minuteBar as Record<string, unknown> | undefined;
+      const latestTrade = snap.latestTrade as Record<string, unknown> | undefined;
+      const dailyBar = snap.dailyBar as Record<string, unknown> | undefined;
+      const prevDailyBar = snap.prevDailyBar as Record<string, unknown> | undefined;
+      const price = Number(minuteBar?.c ?? latestTrade?.p ?? dailyBar?.c ?? 0);
+      const prevClose = Number(prevDailyBar?.c ?? dailyBar?.o ?? price);
       const change = price - prevClose;
       const changePct = prevClose > 0 ? (change / prevClose) * 100 : 0;
       return {
@@ -136,12 +207,16 @@ export async function getMarketQuotes(symbols = []) {
         price,
         change: parseFloat(change.toFixed(2)),
         changePct: parseFloat(changePct.toFixed(2)),
-        volume: Number(snap?.dailyBar?.v ?? 0),
+        volume: Number(dailyBar?.v ?? 0),
       };
     });
 
     return { ok: true, quotes, source: 'alpaca' };
-  } catch (err) {
-    return { ok: false, quotes: [], error: err.message };
+  } catch (err: unknown) {
+    return {
+      ok: false,
+      quotes: [],
+      error: err instanceof Error ? err.message : 'unknown_error',
+    };
   }
 }

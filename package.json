@@ -20,6 +20,7 @@
     "preview": "vite preview --config apps/web/vite.config.ts --host 0.0.0.0 --port 8080",
     "check:workspaces": "node --import tsx/esm scripts/check-workspace-integrity.ts",
     "check:lockfile": "node --import tsx/esm scripts/check-lockfile-sync.ts",
+    "check:no-js-source": "node --import tsx/esm scripts/check-no-js-source.ts",
     "check:stage-docs": "node --import tsx/esm scripts/check-stage-1-docs.ts",
     "check:runtime-env": "node --import tsx/esm scripts/check-runtime-env.ts",
     "control-plane:maintenance": "node --import tsx/esm scripts/control-plane-maintenance.ts",
@@ -33,7 +34,7 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit -p apps/web/tsconfig.json",
-    "verify": "npm run check:workspaces && npm run check:lockfile && npm run check:stage-docs && npm run check:runtime-env && npm run lint && npm run test:control-plane && npm run test:runtime && npm run test:engine && npm run test:api && npm run test:worker && npm run test:web && npm run typecheck && npm run build",
+    "verify": "npm run check:workspaces && npm run check:lockfile && npm run check:no-js-source && npm run check:stage-docs && npm run check:runtime-env && npm run lint && npm run test:control-plane && npm run test:runtime && npm run test:engine && npm run test:api && npm run test:worker && npm run test:web && npm run typecheck && npm run build",
     "gateway": "node --import tsx/esm apps/api/src/main.ts",
     "worker": "node --import tsx/esm apps/worker/src/main.ts"
   },
