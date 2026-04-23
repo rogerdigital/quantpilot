@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node src/main.mjs"
+    "dev": "node --import tsx/esm src/main.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.14",
