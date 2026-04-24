@@ -10,7 +10,7 @@ QuantPilot is not a production live-trading system. It is a platform skeleton an
 
 | Category | Technology |
 |----------|------------|
-| Language | TypeScript 5 (100% first-party source, no new JavaScript source files) |
+| Language | TypeScript 5 (TypeScript-first first-party source; no new JavaScript source files in `apps`, `packages`, or `scripts`) |
 | Frontend | React 18 + react-router-dom 6 |
 | Build | Vite 5 |
 | Styling | vanilla-extract |
