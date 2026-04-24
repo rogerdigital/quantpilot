@@ -10,7 +10,7 @@ QuantPilot 不是一个可直接用于实盘的生产交易系统。它当前定
 
 | 类别 | 技术 |
 |------|------|
-| 语言 | TypeScript 5（第一方源码 100%，禁止新增 JavaScript 源文件） |
+| 语言 | TypeScript 5（第一方源码 TypeScript-first；`apps`、`packages`、`scripts` 中禁止新增 JavaScript 源文件） |
 | 前端 | React 18 + react-router-dom 6 |
 | 构建 | Vite 5 |
 | 样式 | vanilla-extract |
