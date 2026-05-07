@@ -29,5 +29,11 @@ export default defineConfig({
     alias: {
       '@vanilla-extract/css': veMock,
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      include: ['src/**/*.ts', 'src/**/*.tsx'],
+      exclude: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/vite-env.d.ts'],
+    },
   },
 });
