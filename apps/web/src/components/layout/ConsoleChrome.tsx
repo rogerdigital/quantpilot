@@ -57,7 +57,9 @@ export function SectionHeader({ routeKey }: { routeKey: ConsolePageKey }) {
   return (
     <header className="topbar">
       <div>
-        <div className="eyebrow">{copy[locale].desk[routeKey]}</div>
+        <div className="eyebrow">
+          {(copy[locale].desk as Record<string, string>)[routeKey] ?? ''}
+        </div>
         <h1>{title}</h1>
         <p className="topbar-copy">{desc}</p>
       </div>

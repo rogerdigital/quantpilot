@@ -3922,24 +3922,24 @@ function NotificationsPage() {
                 }
               />
             ) : null}
-            {operationsRecentItems.map((item) => (
+            {operationsRecentItems.filter(Boolean).map((item) => (
               <button
                 type="button"
                 className="focus-row status-row-button"
-                key={item.id}
-                onClick={item.onClick}
+                key={item!.id}
+                onClick={item!.onClick}
               >
                 <div className="symbol-cell">
-                  <strong>{item.title}</strong>
-                  <span>{item.detail}</span>
+                  <strong>{item!.title}</strong>
+                  <span>{item!.detail}</span>
                 </div>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '泳道' : 'Lane'}</span>
-                  <strong>{translateOperationsLane(locale, item.kind)}</strong>
+                  <strong>{translateOperationsLane(locale, item!.kind)}</strong>
                 </div>
                 <div className="focus-metric">
                   <span>{locale === 'zh' ? '时间' : 'Time'}</span>
-                  <strong>{fmtDateTime(item.timestamp, locale)}</strong>
+                  <strong>{fmtDateTime(item!.timestamp, locale)}</strong>
                 </div>
               </button>
             ))}

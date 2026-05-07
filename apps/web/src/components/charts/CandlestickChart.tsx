@@ -2,6 +2,10 @@ import type { OhlcvBar } from '@shared-types/trading.ts';
 import { CandlestickSeries, createChart, HistogramSeries } from 'lightweight-charts';
 import { useEffect, useRef } from 'react';
 
+type ChartInstance = ReturnType<typeof createChart>;
+type CandleSeriesInstance = ReturnType<ChartInstance['addSeries']>;
+type VolumeSeriesInstance = ReturnType<ChartInstance['addSeries']>;
+
 type Props = {
   data: OhlcvBar[];
   timeframe?: string;
@@ -9,10 +13,9 @@ type Props = {
 
 export function CandlestickChart({ data, timeframe }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  // Keep refs so we can update data without re-creating the chart
-  const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
-  const candleRef = useRef<ReturnType<typeof chartRef.current.addSeries> | null>(null);
-  const volumeRef = useRef<ReturnType<typeof chartRef.current.addSeries> | null>(null);
+  const chartRef = useRef<ChartInstance | null>(null);
+  const candleRef = useRef<CandleSeriesInstance | null>(null);
+  const volumeRef = useRef<VolumeSeriesInstance | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;

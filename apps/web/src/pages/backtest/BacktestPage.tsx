@@ -52,7 +52,7 @@ import { useResearchWorkspaceData } from '../../modules/research/useResearchWork
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { InspectionStatus } from '../console/components/InspectionPanels.tsx';
 
-function fmtDateTime(value: string, locale: 'zh' | 'en') {
+function fmtDateTime(value?: string, locale?: 'zh' | 'en') {
   if (!value) return '--';
   const date = new Date(value);
   return Number.isNaN(date.getTime())

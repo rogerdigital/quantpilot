@@ -27,7 +27,7 @@ const EMPTY_WORKBENCH: OperationsWorkbenchResponse = {
     queueBacklogStatus: 'healthy',
     oldestQueuedAgeSeconds: null,
     oldestRetryAgeSeconds: null,
-    lastCompletedWorkflowAt: null,
+    lastCompletedWorkflowAt: '',
     workerLagSeconds: null,
   },
   persistence: {

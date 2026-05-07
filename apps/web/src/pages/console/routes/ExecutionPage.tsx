@@ -1901,8 +1901,8 @@ export function ExecutionPage() {
                       });
                       setPlanMessage(
                         locale === 'zh'
-                          ? `已执行恢复动作：${result.recoveryAction || selectedRecovery.recommendedAction}。`
-                          : `Executed recovery action: ${result.recoveryAction || selectedRecovery.recommendedAction}.`
+                          ? `已执行恢复动作：${result.recoveryAction || selectedRecovery?.recommendedAction || ''}。`
+                          : `Executed recovery action: ${result.recoveryAction || selectedRecovery?.recommendedAction || ''}.`
                       );
                       setRefreshKey((current) => current + 1);
                     } catch (error) {
