@@ -1,5 +1,5 @@
 import type { AgentToolDefinition, AgentToolExecutionResult } from '@shared-types/trading.ts';
-import { fetchJson, jsonHeaders } from '../../app/api/http.ts';
+import { API_PREFIX, fetchJson, jsonHeaders } from '../../app/api/http.ts';
 
 export type AgentWorkbenchPayload = {
   ok: boolean;
@@ -212,7 +212,7 @@ export type AgentSessionActionRequestPayload = {
 };
 
 export async function fetchAgentTools(): Promise<{ ok: boolean; tools: AgentToolDefinition[] }> {
-  return fetchJson('/api/agent/tools', {
+  return fetchJson(`${API_PREFIX}/agent/tools`, {
     method: 'GET',
     headers: { Accept: 'application/json' },
   });
@@ -222,7 +222,7 @@ export async function executeAgentTool(payload: {
   tool: string;
   args?: Record<string, unknown>;
 }): Promise<AgentToolExecutionResult> {
-  return fetchJson('/api/agent/tools/execute', {
+  return fetchJson(`${API_PREFIX}/agent/tools/execute`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -230,7 +230,7 @@ export async function executeAgentTool(payload: {
 }
 
 export async function fetchAgentWorkbench(): Promise<AgentWorkbenchPayload> {
-  return fetchJson('/api/agent/workbench', {
+  return fetchJson(`${API_PREFIX}/agent/workbench`, {
     method: 'GET',
     headers: { Accept: 'application/json' },
   });
@@ -239,7 +239,7 @@ export async function fetchAgentWorkbench(): Promise<AgentWorkbenchPayload> {
 export async function fetchAgentSessionDetail(
   sessionId: string
 ): Promise<AgentSessionDetailPayload> {
-  return fetchJson(`/api/agent/sessions/${sessionId}`, {
+  return fetchJson(`${API_PREFIX}/agent/sessions/${sessionId}`, {
     method: 'GET',
     headers: { Accept: 'application/json' },
   });
@@ -250,7 +250,7 @@ export async function createAgentIntent(payload: {
   requestedBy?: string;
   sessionId?: string;
 }): Promise<AgentIntentPayload> {
-  return fetchJson('/api/agent/intent', {
+  return fetchJson(`${API_PREFIX}/agent/intent`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -262,7 +262,7 @@ export async function createAgentPlan(payload: {
   requestedBy?: string;
   intent?: AgentAnalysisRunPayload['intent'];
 }): Promise<AgentPlanPayload> {
-  return fetchJson('/api/agent/plans', {
+  return fetchJson(`${API_PREFIX}/agent/plans`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -275,7 +275,7 @@ export async function runAgentAnalysis(payload: {
   planId?: string;
   requestedBy?: string;
 }): Promise<AgentAnalysisRunPayload> {
-  return fetchJson('/api/agent/analysis-runs', {
+  return fetchJson(`${API_PREFIX}/agent/analysis-runs`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -290,7 +290,7 @@ export async function createAgentSessionActionRequest(
     rationale?: string;
   } = {}
 ): Promise<AgentSessionActionRequestPayload> {
-  return fetchJson(`/api/agent/sessions/${sessionId}/action-requests`, {
+  return fetchJson(`${API_PREFIX}/agent/sessions/${sessionId}/action-requests`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),

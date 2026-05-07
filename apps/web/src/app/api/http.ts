@@ -1,3 +1,5 @@
+export const API_PREFIX = '/api/v1';
+
 export class ApiPermissionError extends Error {
   missingPermission?: string;
   permission?: {

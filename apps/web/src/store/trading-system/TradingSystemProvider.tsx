@@ -9,6 +9,7 @@ import {
   reportOperatorAction,
   runStateCycle,
 } from '../../app/api/controlPlane.ts';
+import { API_PREFIX } from '../../app/api/http.ts';
 import { runtimeConfig } from '../../app/config/runtime.ts';
 import { createBrokerProvider } from '../../app/providers/broker.ts';
 import { createMarketDataProvider } from '../../app/providers/marketData.ts';
@@ -82,7 +83,7 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
     }),
     [runCycle]
   );
-  const { connected: sseConnected } = useSSE('/api/sse/state', sseHandlers());
+  const { connected: sseConnected } = useSSE(`${API_PREFIX}/sse/state`, sseHandlers());
 
   useEffect(() => {
     sseConnectedRef.current = sseConnected;

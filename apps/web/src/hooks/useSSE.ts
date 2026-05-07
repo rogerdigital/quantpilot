@@ -5,7 +5,7 @@ type SseHandlers = Record<string, (data: unknown) => void>;
 /**
  * Generic SSE subscription hook with exponential back-off reconnect.
  *
- * @param url      - The SSE endpoint URL (e.g. '/api/sse/state')
+ * @param url      - The SSE endpoint URL (e.g. `${API_PREFIX}/sse/state`)
  * @param handlers - Map of event name → callback. Stable references recommended.
  */
 export function useSSE(url: string, handlers: SseHandlers): { connected: boolean } {

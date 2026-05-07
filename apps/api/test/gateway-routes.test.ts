@@ -82,10 +82,10 @@ test('GET /api/notification/events returns seeded notifications', async () => {
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/notification/events',
+    path: '/api/v1/notification/events',
   });
   const filteredResponse = await invokeGatewayRoute(handler, {
-    path: '/api/notification/events?source=scheduler&level=warn&hours=48&limit=5',
+    path: '/api/v1/notification/events?source=scheduler&level=warn&hours=48&limit=5',
   });
 
   assert.equal(response.statusCode, 200);
@@ -107,7 +107,7 @@ test('GET /api/risk/events returns seeded risk events', async () => {
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/risk/events',
+    path: '/api/v1/risk/events',
   });
 
   assert.equal(response.statusCode, 200);
@@ -221,7 +221,7 @@ test('GET /api/risk/workbench returns the consolidated risk workbench snapshot',
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/risk/workbench?hours=168&limit=10',
+    path: '/api/v1/risk/workbench?hours=168&limit=10',
   });
 
   assert.equal(response.statusCode, 200);
@@ -317,7 +317,7 @@ test('POST /api/risk/actions executes risk policy actions and leaves policy trac
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/risk/actions',
+    path: '/api/v1/risk/actions',
     body: {
       actionKey: 'release-emergency-brake',
       actor: 'risk-operator',
@@ -362,7 +362,7 @@ test('GET /api/risk/events/:id returns a single risk event', async () => {
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/risk/events/risk-api-detail',
+    path: '/api/v1/risk/events/risk-api-detail',
   });
 
   assert.equal(response.statusCode, 200);
@@ -371,7 +371,7 @@ test('GET /api/risk/events/:id returns a single risk event', async () => {
 
 test('GET /api/strategy/catalog returns research strategies', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/strategy/catalog',
+    path: '/api/v1/strategy/catalog',
   });
 
   assert.equal(response.statusCode, 200);
@@ -386,7 +386,7 @@ test('GET /api/strategy/catalog returns research strategies', async () => {
 test('POST /api/strategy/catalog saves strategy catalog entries', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/strategy/catalog',
+    path: '/api/v1/strategy/catalog',
     body: {
       id: 'stat-arb-us',
       name: 'US Stat Arb',
@@ -420,7 +420,7 @@ test('POST /api/strategy/catalog saves strategy catalog entries', async () => {
 
 test('GET /api/strategy/catalog/:id returns strategy detail with recent runs', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/strategy/catalog/ema-cross-us',
+    path: '/api/v1/strategy/catalog/ema-cross-us',
   });
 
   assert.equal(response.statusCode, 200);
@@ -459,7 +459,7 @@ test('GET /api/market/provider-status returns backend market provider status', a
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/market/provider-status',
+    path: '/api/v1/market/provider-status',
   });
 
   assert.equal(response.statusCode, 200);
@@ -470,7 +470,7 @@ test('GET /api/market/provider-status returns backend market provider status', a
 
 test('GET /api/backtest/summary returns structured research summary', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/backtest/summary',
+    path: '/api/v1/backtest/summary',
   });
 
   assert.equal(response.statusCode, 200);
@@ -481,7 +481,7 @@ test('GET /api/backtest/summary returns structured research summary', async () =
 
 test('GET /api/backtest/runs returns structured backtest runs', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/backtest/runs',
+    path: '/api/v1/backtest/runs',
   });
 
   assert.equal(response.statusCode, 200);
@@ -496,7 +496,7 @@ test('GET /api/backtest/runs returns structured backtest runs', async () => {
 test('GET /api/backtest/runs/:id returns run detail with linked strategy and workflow context', async () => {
   const created = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/backtest/runs',
+    path: '/api/v1/backtest/runs',
     body: {
       strategyId: 'ema-cross-us',
       windowLabel: '2024-01-01 -> 2024-12-31',
@@ -505,7 +505,7 @@ test('GET /api/backtest/runs/:id returns run detail with linked strategy and wor
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: `/api/backtest/runs/${created.json.run.id}`,
+    path: `/api/v1/backtest/runs/${created.json.run.id}`,
   });
 
   assert.equal(response.statusCode, 200);
@@ -520,7 +520,7 @@ test('GET /api/backtest/runs/:id returns run detail with linked strategy and wor
 test('GET /api/research/tasks returns research backbone tasks and related summary routes', async () => {
   const created = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/backtest/runs',
+    path: '/api/v1/backtest/runs',
     body: {
       strategyId: 'ema-cross-us',
       windowLabel: '2024-01-01 -> 2024-12-31',
@@ -529,19 +529,19 @@ test('GET /api/research/tasks returns research backbone tasks and related summar
   });
 
   const tasksResponse = await invokeGatewayRoute(handler, {
-    path: `/api/research/tasks?strategyId=ema-cross-us&workflowRunId=${created.json.workflow.id}&limit=5`,
+    path: `/api/v1/research/tasks?strategyId=ema-cross-us&workflowRunId=${created.json.workflow.id}&limit=5`,
   });
   const summaryResponse = await invokeGatewayRoute(handler, {
-    path: '/api/research/tasks/summary?hours=168&limit=20',
+    path: '/api/v1/research/tasks/summary?hours=168&limit=20',
   });
   const hubResponse = await invokeGatewayRoute(handler, {
-    path: '/api/research/hub?hours=168&limit=20',
+    path: '/api/v1/research/hub?hours=168&limit=20',
   });
   const workbenchResponse = await invokeGatewayRoute(handler, {
-    path: '/api/research/workbench?hours=168&limit=20',
+    path: '/api/v1/research/workbench?hours=168&limit=20',
   });
   const detailResponse = await invokeGatewayRoute(handler, {
-    path: `/api/research/tasks/${created.json.researchTask.id}`,
+    path: `/api/v1/research/tasks/${created.json.researchTask.id}`,
   });
 
   assert.equal(tasksResponse.statusCode, 200);
@@ -573,7 +573,7 @@ test('GET /api/research/tasks returns research backbone tasks and related summar
 test('POST /api/backtest/runs/:id/evaluate persists a research evaluation and exposes summary routes', async () => {
   const created = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/backtest/runs',
+    path: '/api/v1/backtest/runs',
     body: {
       strategyId: 'ema-cross-us',
       windowLabel: '2024-01-01 -> 2024-12-31',
@@ -583,7 +583,7 @@ test('POST /api/backtest/runs/:id/evaluate persists a research evaluation and ex
 
   await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/backtest/runs/${created.json.run.id}/review`,
+    path: `/api/v1/backtest/runs/${created.json.run.id}/review`,
     body: {
       reviewedBy: 'risk-operator',
       summary: 'Reviewed and ready for evaluation.',
@@ -592,20 +592,20 @@ test('POST /api/backtest/runs/:id/evaluate persists a research evaluation and ex
 
   const evaluated = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/backtest/runs/${created.json.run.id}/evaluate`,
+    path: `/api/v1/backtest/runs/${created.json.run.id}/evaluate`,
     body: {
       actor: 'research-lead',
       summary: 'Research lead marked this result ready for promotion.',
     },
   });
   const detail = await invokeGatewayRoute(handler, {
-    path: `/api/backtest/runs/${created.json.run.id}`,
+    path: `/api/v1/backtest/runs/${created.json.run.id}`,
   });
   const feed = await invokeGatewayRoute(handler, {
-    path: `/api/research/evaluations?runId=${created.json.run.id}`,
+    path: `/api/v1/research/evaluations?runId=${created.json.run.id}`,
   });
   const summary = await invokeGatewayRoute(handler, {
-    path: '/api/research/evaluations/summary?strategyId=ema-cross-us',
+    path: '/api/v1/research/evaluations/summary?strategyId=ema-cross-us',
   });
 
   assert.equal(evaluated.statusCode, 200);
@@ -623,7 +623,7 @@ test('POST /api/backtest/runs/:id/evaluate persists a research evaluation and ex
 test('POST /api/research/governance/actions runs batch governance actions and exposes them through the workbench', async () => {
   const created = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/backtest/runs',
+    path: '/api/v1/backtest/runs',
     body: {
       strategyId: 'ema-cross-us',
       windowLabel: '2024-01-01 -> 2024-12-31',
@@ -633,7 +633,7 @@ test('POST /api/research/governance/actions runs batch governance actions and ex
 
   await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/backtest/runs/${created.json.run.id}/review`,
+    path: `/api/v1/backtest/runs/${created.json.run.id}/review`,
     body: {
       reviewedBy: 'risk-operator',
       summary: 'Reviewed for governance evaluation.',
@@ -642,7 +642,7 @@ test('POST /api/research/governance/actions runs batch governance actions and ex
 
   const evaluateResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/research/governance/actions',
+    path: '/api/v1/research/governance/actions',
     body: {
       action: 'evaluate_runs',
       actor: 'research-governance',
@@ -651,7 +651,7 @@ test('POST /api/research/governance/actions runs batch governance actions and ex
   });
   const refreshResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/research/governance/actions',
+    path: '/api/v1/research/governance/actions',
     body: {
       action: 'queue_backtests',
       actor: 'research-governance',
@@ -661,7 +661,7 @@ test('POST /api/research/governance/actions runs batch governance actions and ex
   });
   const baselineResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/research/governance/actions',
+    path: '/api/v1/research/governance/actions',
     body: {
       action: 'set_baseline',
       actor: 'research-governance',
@@ -670,7 +670,7 @@ test('POST /api/research/governance/actions runs batch governance actions and ex
   });
   const championResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/research/governance/actions',
+    path: '/api/v1/research/governance/actions',
     body: {
       action: 'set_champion',
       actor: 'research-governance',
@@ -678,7 +678,7 @@ test('POST /api/research/governance/actions runs batch governance actions and ex
     },
   });
   const workbenchResponse = await invokeGatewayRoute(handler, {
-    path: '/api/research/workbench?hours=168&limit=20',
+    path: '/api/v1/research/workbench?hours=168&limit=20',
   });
 
   assert.equal(evaluateResponse.statusCode, 200);
@@ -703,7 +703,7 @@ test('POST /api/research/governance/actions runs batch governance actions and ex
 test('POST /api/research/execution-candidates creates a persisted handoff and queues execution workflow from it', async () => {
   const created = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/research/execution-candidates',
+    path: '/api/v1/research/execution-candidates',
     body: {
       strategyId: 'ema-cross-us',
       actor: 'research-lead',
@@ -712,11 +712,11 @@ test('POST /api/research/execution-candidates creates a persisted handoff and qu
     },
   });
   const listed = await invokeGatewayRoute(handler, {
-    path: '/api/research/execution-candidates?limit=10',
+    path: '/api/v1/research/execution-candidates?limit=10',
   });
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/research/execution-candidates/${created.json.handoff.id}/queue`,
+    path: `/api/v1/research/execution-candidates/${created.json.handoff.id}/queue`,
     body: {
       actor: 'execution-desk',
       owner: 'execution-desk',
@@ -739,10 +739,10 @@ test('POST /api/research/execution-candidates creates a persisted handoff and qu
 
 test('GET /api/research/reports and summary return report assets generated for research operations', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/research/reports?strategyId=ema-cross-us&limit=10',
+    path: '/api/v1/research/reports?strategyId=ema-cross-us&limit=10',
   });
   const summary = await invokeGatewayRoute(handler, {
-    path: '/api/research/reports/summary?strategyId=ema-cross-us&limit=20',
+    path: '/api/v1/research/reports/summary?strategyId=ema-cross-us&limit=20',
   });
 
   assert.equal(response.statusCode, 200);
@@ -755,7 +755,7 @@ test('GET /api/research/reports and summary return report assets generated for r
 test('POST /api/strategy/catalog/:id/promote uses the latest research evaluation as a guardrail', async () => {
   const reviewed = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/backtest/runs/bt-ema-cross-20260310/review',
+    path: '/api/v1/backtest/runs/bt-ema-cross-20260310/review',
     body: {
       reviewedBy: 'risk-operator',
       summary: 'Reviewed seed run for promotion guardrail.',
@@ -766,7 +766,7 @@ test('POST /api/strategy/catalog/:id/promote uses the latest research evaluation
 
   const evaluated = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/backtest/runs/bt-ema-cross-20260310/evaluate',
+    path: '/api/v1/backtest/runs/bt-ema-cross-20260310/evaluate',
     body: {
       actor: 'research-lead',
       summary: 'Seed strategy is ready for paper promotion.',
@@ -774,7 +774,7 @@ test('POST /api/strategy/catalog/:id/promote uses the latest research evaluation
   });
   const promoted = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/strategy/catalog/ema-cross-us/promote',
+    path: '/api/v1/strategy/catalog/ema-cross-us/promote',
     body: {
       actor: 'api-test',
       nextStatus: 'paper',
@@ -791,7 +791,7 @@ test('POST /api/strategy/catalog/:id/promote uses the latest research evaluation
 test('GET /api/backtest/results exposes versioned backtest results and detail context', async () => {
   const created = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/backtest/runs',
+    path: '/api/v1/backtest/runs',
     body: {
       strategyId: 'ema-cross-us',
       windowLabel: '2024-01-01 -> 2024-12-31',
@@ -812,7 +812,7 @@ test('GET /api/backtest/results exposes versioned backtest results and detail co
 
   const reviewResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/backtest/runs/${created.json.run.id}/review`,
+    path: `/api/v1/backtest/runs/${created.json.run.id}/review`,
     body: {
       reviewedBy: 'risk-operator',
       summary: 'Operator accepted the result after reviewing the drawdown explanation.',
@@ -820,13 +820,13 @@ test('GET /api/backtest/results exposes versioned backtest results and detail co
   });
 
   const listResponse = await invokeGatewayRoute(handler, {
-    path: `/api/backtest/results?runId=${created.json.run.id}&limit=10`,
+    path: `/api/v1/backtest/results?runId=${created.json.run.id}&limit=10`,
   });
   const summaryResponse = await invokeGatewayRoute(handler, {
-    path: `/api/backtest/results/summary?strategyId=ema-cross-us&limit=20`,
+    path: `/api/v1/backtest/results/summary?strategyId=ema-cross-us&limit=20`,
   });
   const detailResponse = await invokeGatewayRoute(handler, {
-    path: `/api/backtest/results/${reviewResponse.json.latestResult.id}`,
+    path: `/api/v1/backtest/results/${reviewResponse.json.latestResult.id}`,
   });
 
   assert.equal(listResponse.statusCode, 200);
@@ -845,7 +845,7 @@ test('GET /api/backtest/results exposes versioned backtest results and detail co
 test('POST /api/backtest/runs queues a persisted research workflow run', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/backtest/runs',
+    path: '/api/v1/backtest/runs',
     body: {
       strategyId: 'ema-cross-us',
       windowLabel: '2024-01-01 -> 2024-12-31',
@@ -863,7 +863,7 @@ test('POST /api/backtest/runs queues a persisted research workflow run', async (
 test('POST /api/backtest/runs/:id/review updates reviewable backtest runs', async () => {
   const created = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/backtest/runs',
+    path: '/api/v1/backtest/runs',
     body: {
       strategyId: 'rsi-revert-index',
       windowLabel: '2023-01-01 -> 2024-12-31',
@@ -879,7 +879,7 @@ test('POST /api/backtest/runs/:id/review updates reviewable backtest runs', asyn
 
   const reviewResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/backtest/runs/${created.json.run.id}/review`,
+    path: `/api/v1/backtest/runs/${created.json.run.id}/review`,
     body: {
       reviewedBy: 'risk-operator',
       summary: 'Operator accepted the run for promotion review.',
@@ -902,7 +902,7 @@ test('POST /api/backtest/runs/:id/review updates reviewable backtest runs', asyn
 
 test('GET /api/agent/tools returns allowlisted read-only tools', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/agent/tools',
+    path: '/api/v1/agent/tools',
   });
 
   assert.equal(response.statusCode, 200);
@@ -920,7 +920,7 @@ test('GET /api/agent/tools returns allowlisted read-only tools', async () => {
 
 test('GET /api/architecture returns the seven-layer architecture summary', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/architecture',
+    path: '/api/v1/architecture',
   });
 
   assert.equal(response.statusCode, 200);
@@ -946,7 +946,7 @@ test('GET /api/architecture returns the seven-layer architecture summary', async
 
 test('GET /api/auth/session returns account-backed session data', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/auth/session',
+    path: '/api/v1/auth/session',
   });
 
   assert.equal(response.statusCode, 200);
@@ -959,7 +959,7 @@ test('GET /api/auth/session returns account-backed session data', async () => {
 
 test('GET /api/auth/permissions returns the shared permission catalog', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/auth/permissions',
+    path: '/api/v1/auth/permissions',
   });
 
   assert.equal(response.statusCode, 200);
@@ -981,7 +981,7 @@ test('GET /api/auth/permissions returns the shared permission catalog', async ()
 
 test('GET /api/user-account/profile returns profile and preferences', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/user-account/profile',
+    path: '/api/v1/user-account/profile',
   });
 
   assert.equal(response.statusCode, 200);
@@ -997,7 +997,7 @@ test('GET /api/user-account/profile returns profile and preferences', async () =
 
 test('GET /api/user-account/roles returns persisted role templates', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/user-account/roles',
+    path: '/api/v1/user-account/roles',
   });
 
   assert.equal(response.statusCode, 200);
@@ -1011,7 +1011,7 @@ test('GET /api/user-account/roles returns persisted role templates', async () =>
 
 test('GET /api/user-account returns consolidated account workspace data', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/user-account',
+    path: '/api/v1/user-account',
   });
 
   assert.equal(response.statusCode, 200);
@@ -1028,7 +1028,7 @@ test('GET /api/user-account returns consolidated account workspace data', async 
 
 test('GET /api/user-account/workspaces returns tenant and workspace memberships', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/user-account/workspaces',
+    path: '/api/v1/user-account/workspaces',
   });
 
   assert.equal(response.statusCode, 200);
@@ -1041,7 +1041,7 @@ test('GET /api/user-account/workspaces returns tenant and workspace memberships'
 test('POST /api/user-account/access updates persisted access policy and session permissions', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/user-account/access',
+    path: '/api/v1/user-account/access',
     body: {
       role: 'operator',
       grants: ['execution:approve'],
@@ -1064,7 +1064,7 @@ test('POST /api/user-account/access updates persisted access policy and session 
   assert.equal(response.json.session.user.role, 'operator');
 
   const sessionResponse = await invokeGatewayRoute(handler, {
-    path: '/api/auth/session',
+    path: '/api/v1/auth/session',
   });
   assert.equal(sessionResponse.statusCode, 200);
   assert.equal(sessionResponse.json.user.role, 'operator');
@@ -1074,7 +1074,7 @@ test('POST /api/user-account/access updates persisted access policy and session 
   assert.equal(sessionResponse.json.user.permissions.includes('strategy:write'), false);
 
   const auditResponse = await invokeGatewayRoute(handler, {
-    path: '/api/audit/records',
+    path: '/api/v1/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
   assert.equal(
@@ -1100,7 +1100,7 @@ test('POST /api/user-account/access updates persisted access policy and session 
 test('POST and DELETE /api/user-account/roles persist custom role templates', async () => {
   const createResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/user-account/roles',
+    path: '/api/v1/user-account/roles',
     body: {
       id: 'quant-analyst',
       label: 'Quant Analyst',
@@ -1119,7 +1119,7 @@ test('POST and DELETE /api/user-account/roles persist custom role templates', as
 
   const deleteResponse = await invokeGatewayRoute(handler, {
     method: 'DELETE',
-    path: '/api/user-account/roles/quant-analyst',
+    path: '/api/v1/user-account/roles/quant-analyst',
   });
 
   assert.equal(deleteResponse.statusCode, 200);
@@ -1133,7 +1133,7 @@ test('POST and DELETE /api/user-account/roles persist custom role templates', as
 test('POST /api/user-account/workspaces and /current persist workspace scope selection', async () => {
   const createResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/user-account/workspaces',
+    path: '/api/v1/user-account/workspaces',
     body: {
       id: 'workspace-live-ops',
       key: 'live-ops',
@@ -1154,7 +1154,7 @@ test('POST /api/user-account/workspaces and /current persist workspace scope sel
 
   const selectResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/user-account/workspaces/current',
+    path: '/api/v1/user-account/workspaces/current',
     body: {
       workspaceId: 'workspace-live-ops',
     },
@@ -1180,7 +1180,7 @@ test('POST /api/user-account/workspaces and /current persist workspace scope sel
   );
 
   const auditResponse = await invokeGatewayRoute(handler, {
-    path: '/api/audit/records',
+    path: '/api/v1/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
   assert.equal(
@@ -1193,14 +1193,14 @@ test('POST /api/user-account/workspaces and /current persist workspace scope sel
   );
 
   const sessionResponse = await invokeGatewayRoute(handler, {
-    path: '/api/auth/session',
+    path: '/api/v1/auth/session',
   });
   assert.equal(sessionResponse.statusCode, 200);
   assert.equal(sessionResponse.json.workspace.id, 'workspace-live-ops');
 
   await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/user-account/workspaces/current',
+    path: '/api/v1/user-account/workspaces/current',
     body: {
       workspaceId: 'workspace-operations',
     },
@@ -1210,7 +1210,7 @@ test('POST /api/user-account/workspaces and /current persist workspace scope sel
 test('POST /api/user-account/profile updates persisted profile data', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/user-account/profile',
+    path: '/api/v1/user-account/profile',
     body: {
       name: 'Operator One',
       organization: 'QuantPilot Research',
@@ -1223,7 +1223,7 @@ test('POST /api/user-account/profile updates persisted profile data', async () =
   assert.equal(response.json.profile.organization, 'QuantPilot Research');
 
   const auditResponse = await invokeGatewayRoute(handler, {
-    path: '/api/audit/records',
+    path: '/api/v1/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
   assert.equal(
@@ -1238,7 +1238,7 @@ test('POST /api/user-account/profile updates persisted profile data', async () =
 test('POST /api/user-account/preferences updates persisted preferences', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/user-account/preferences',
+    path: '/api/v1/user-account/preferences',
     body: {
       locale: 'en-US',
       notificationChannels: ['inbox', 'email'],
@@ -1251,7 +1251,7 @@ test('POST /api/user-account/preferences updates persisted preferences', async (
   assert.equal(response.json.preferences.notificationChannels.includes('email'), true);
 
   const auditResponse = await invokeGatewayRoute(handler, {
-    path: '/api/audit/records',
+    path: '/api/v1/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
   assert.equal(
@@ -1271,7 +1271,7 @@ test('account write routes reject requests without account:write permission', as
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/user-account/preferences',
+    path: '/api/v1/user-account/preferences',
     body: {
       locale: 'zh-CN',
     },
@@ -1300,7 +1300,7 @@ test('account write routes reject requests without account:write permission', as
 test('POST /api/user-account/broker-bindings upserts broker bindings', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/user-account/broker-bindings',
+    path: '/api/v1/user-account/broker-bindings',
     body: {
       id: 'binding-live',
       provider: 'custom-http',
@@ -1319,7 +1319,7 @@ test('POST /api/user-account/broker-bindings upserts broker bindings', async () 
   assert.equal(response.json.summary.total >= 1, true);
 
   const listResponse = await invokeGatewayRoute(handler, {
-    path: '/api/user-account/broker-bindings',
+    path: '/api/v1/user-account/broker-bindings',
   });
   assert.equal(listResponse.statusCode, 200);
   assert.equal(listResponse.json.ok, true);
@@ -1330,7 +1330,7 @@ test('POST /api/user-account/broker-bindings upserts broker bindings', async () 
   assert.equal(typeof listResponse.json.summary.requiresAttention, 'number');
 
   const auditResponse = await invokeGatewayRoute(handler, {
-    path: '/api/audit/records',
+    path: '/api/v1/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
   assert.equal(
@@ -1346,7 +1346,7 @@ test('POST /api/user-account/broker-bindings upserts broker bindings', async () 
 test('POST /api/user-account/broker-bindings/:id/default switches the default binding', async () => {
   await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/user-account/broker-bindings',
+    path: '/api/v1/user-account/broker-bindings',
     body: {
       id: 'binding-paper',
       provider: 'alpaca',
@@ -1361,7 +1361,7 @@ test('POST /api/user-account/broker-bindings/:id/default switches the default bi
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/user-account/broker-bindings/binding-paper/default',
+    path: '/api/v1/user-account/broker-bindings/binding-paper/default',
     body: {},
   });
 
@@ -1372,7 +1372,7 @@ test('POST /api/user-account/broker-bindings/:id/default switches the default bi
   assert.equal(response.json.bindings.filter((item) => item.isDefault).length, 1);
 
   const auditResponse = await invokeGatewayRoute(handler, {
-    path: '/api/audit/records',
+    path: '/api/v1/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
   assert.equal(
@@ -1388,7 +1388,7 @@ test('POST /api/user-account/broker-bindings/:id/default switches the default bi
 test('DELETE /api/user-account/broker-bindings/:id removes a non-default binding', async () => {
   await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/user-account/broker-bindings',
+    path: '/api/v1/user-account/broker-bindings',
     body: {
       id: 'binding-delete',
       provider: 'custom-http',
@@ -1403,7 +1403,7 @@ test('DELETE /api/user-account/broker-bindings/:id removes a non-default binding
 
   const response = await invokeGatewayRoute(handler, {
     method: 'DELETE',
-    path: '/api/user-account/broker-bindings/binding-delete',
+    path: '/api/v1/user-account/broker-bindings/binding-delete',
   });
 
   assert.equal(response.statusCode, 200);
@@ -1415,7 +1415,7 @@ test('DELETE /api/user-account/broker-bindings/:id removes a non-default binding
   );
 
   const auditResponse = await invokeGatewayRoute(handler, {
-    path: '/api/audit/records',
+    path: '/api/v1/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
   assert.equal(
@@ -1430,13 +1430,13 @@ test('DELETE /api/user-account/broker-bindings/:id removes a non-default binding
 
 test('DELETE /api/user-account/broker-bindings/:id rejects deleting the default binding', async () => {
   const listResponse = await invokeGatewayRoute(handler, {
-    path: '/api/user-account/broker-bindings',
+    path: '/api/v1/user-account/broker-bindings',
   });
   const defaultBinding = listResponse.json.bindings.find((item) => item.isDefault);
 
   const response = await invokeGatewayRoute(handler, {
     method: 'DELETE',
-    path: `/api/user-account/broker-bindings/${defaultBinding.id}`,
+    path: `/api/v1/user-account/broker-bindings/${defaultBinding.id}`,
   });
 
   assert.equal(response.statusCode, 409);
@@ -1446,7 +1446,7 @@ test('DELETE /api/user-account/broker-bindings/:id rejects deleting the default 
 
 test('GET /api/user-account/broker-bindings/runtime returns default binding runtime health', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/user-account/broker-bindings/runtime',
+    path: '/api/v1/user-account/broker-bindings/runtime',
   });
 
   assert.equal(response.statusCode, 200);
@@ -1458,7 +1458,7 @@ test('GET /api/user-account/broker-bindings/runtime returns default binding runt
 test('POST /api/user-account/broker-bindings/sync updates default binding runtime status', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/user-account/broker-bindings/sync',
+    path: '/api/v1/user-account/broker-bindings/sync',
     body: {},
   });
 
@@ -1469,7 +1469,7 @@ test('POST /api/user-account/broker-bindings/sync updates default binding runtim
   assert.equal(typeof response.json.binding.lastSyncAt, 'string');
 
   const auditResponse = await invokeGatewayRoute(handler, {
-    path: '/api/audit/records',
+    path: '/api/v1/audit/records',
   });
   assert.equal(auditResponse.statusCode, 200);
   assert.equal(
@@ -1485,7 +1485,7 @@ test('POST /api/user-account/broker-bindings/sync updates default binding runtim
 test('POST /api/agent/tools/execute runs an allowlisted read-only tool', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/tools/execute',
+    path: '/api/v1/agent/tools/execute',
     body: {
       tool: 'backtest.summary.get',
     },
@@ -1500,7 +1500,7 @@ test('POST /api/agent/tools/execute runs an allowlisted read-only tool', async (
 test('POST /api/agent/tools/execute rejects non-allowlisted tools', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/tools/execute',
+    path: '/api/v1/agent/tools/execute',
     body: {
       tool: 'execution.plan.create',
     },
@@ -1513,7 +1513,7 @@ test('POST /api/agent/tools/execute rejects non-allowlisted tools', async () => 
 test('POST /api/agent/intent parses execution-prep prompts into persisted agent sessions', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/intent',
+    path: '/api/v1/agent/intent',
     body: {
       prompt: '请在开盘前为 ema-cross-us 准备执行计划，并确认是否需要审批。',
       requestedBy: 'operator-demo',
@@ -1536,7 +1536,7 @@ test('POST /api/agent/intent parses execution-prep prompts into persisted agent 
 test('POST /api/agent/intent rejects empty prompts', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/intent',
+    path: '/api/v1/agent/intent',
     body: {
       prompt: '   ',
     },
@@ -1550,7 +1550,7 @@ test('POST /api/agent/intent rejects empty prompts', async () => {
 test('POST /api/agent/plans creates a persisted plan with structured steps', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/plans',
+    path: '/api/v1/agent/plans',
     body: {
       prompt: 'Explain the latest risk posture for ema-cross-us and tell me what to review next.',
       requestedBy: 'operator-demo',
@@ -1582,7 +1582,7 @@ test('POST /api/agent/plans creates a persisted plan with structured steps', asy
 test('POST /api/agent/analysis-runs executes a planned read-only analysis and persists the run', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/analysis-runs',
+    path: '/api/v1/agent/analysis-runs',
     body: {
       prompt:
         'Prepare execution for ema-cross-us and explain whether anything is still blocking it.',
@@ -1613,7 +1613,7 @@ test('POST /api/agent/analysis-runs executes a planned read-only analysis and pe
 test('GET /api/agent/sessions and detail expose persisted plans and analysis runs', async () => {
   const createResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/analysis-runs',
+    path: '/api/v1/agent/analysis-runs',
     body: {
       prompt: 'Explain the latest risk posture for ema-cross-us.',
       requestedBy: 'operator-demo',
@@ -1621,10 +1621,10 @@ test('GET /api/agent/sessions and detail expose persisted plans and analysis run
   });
 
   const listResponse = await invokeGatewayRoute(handler, {
-    path: '/api/agent/sessions?limit=5',
+    path: '/api/v1/agent/sessions?limit=5',
   });
   const detailResponse = await invokeGatewayRoute(handler, {
-    path: `/api/agent/sessions/${createResponse.json.session.id}`,
+    path: `/api/v1/agent/sessions/${createResponse.json.session.id}`,
   });
 
   assert.equal(listResponse.statusCode, 200);
@@ -1671,7 +1671,7 @@ test('GET /api/agent/sessions respects the current workspace scope by default', 
   context.userAccount.setCurrentWorkspace('workspace-operations');
   const operationsResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/analysis-runs',
+    path: '/api/v1/agent/analysis-runs',
     body: {
       prompt: 'Explain the latest risk posture for workspace operations.',
       requestedBy: 'operator-demo',
@@ -1688,7 +1688,7 @@ test('GET /api/agent/sessions respects the current workspace scope by default', 
   context.userAccount.setCurrentWorkspace('workspace-live-ops-scope');
   const liveResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/analysis-runs',
+    path: '/api/v1/agent/analysis-runs',
     body: {
       prompt: 'Explain the latest execution posture for live ops.',
       requestedBy: 'operator-demo',
@@ -1696,10 +1696,10 @@ test('GET /api/agent/sessions respects the current workspace scope by default', 
   });
 
   const scopedList = await invokeGatewayRoute(handler, {
-    path: '/api/agent/sessions?limit=10',
+    path: '/api/v1/agent/sessions?limit=10',
   });
   const hiddenDetail = await invokeGatewayRoute(handler, {
-    path: `/api/agent/sessions/${operationsResponse.json.session.id}`,
+    path: `/api/v1/agent/sessions/${operationsResponse.json.session.id}`,
   });
 
   assert.equal(scopedList.statusCode, 200);
@@ -1719,7 +1719,7 @@ test('GET /api/agent/sessions respects the current workspace scope by default', 
 test('GET /api/agent/workbench returns explanation queues and operator trail', async () => {
   const createResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/analysis-runs',
+    path: '/api/v1/agent/analysis-runs',
     body: {
       prompt: 'Explain the latest risk posture for ema-cross-us.',
       requestedBy: 'operator-demo',
@@ -1741,7 +1741,7 @@ test('GET /api/agent/workbench returns explanation queues and operator trail', a
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/agent/workbench?limit=10',
+    path: '/api/v1/agent/workbench?limit=10',
   });
 
   assert.equal(response.statusCode, 200);
@@ -1765,7 +1765,7 @@ test('GET /api/agent/workbench returns explanation queues and operator trail', a
 test('GET /api/agent/sessions/:id/timeline returns linked operator events', async () => {
   const analysisResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/analysis-runs',
+    path: '/api/v1/agent/analysis-runs',
     body: {
       prompt: 'Prepare execution for ema-cross-us and explain whether it is still gated.',
       requestedBy: 'operator-demo',
@@ -1786,7 +1786,7 @@ test('GET /api/agent/sessions/:id/timeline returns linked operator events', asyn
   });
   await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/agent/action-requests/${request.id}/approve`,
+    path: `/api/v1/agent/action-requests/${request.id}/approve`,
     body: {
       approvedBy: 'risk-operator',
       mode: 'paper',
@@ -1795,10 +1795,10 @@ test('GET /api/agent/sessions/:id/timeline returns linked operator events', asyn
   });
 
   const timelineResponse = await invokeGatewayRoute(handler, {
-    path: `/api/agent/sessions/${analysisResponse.json.session.id}/timeline?limit=10`,
+    path: `/api/v1/agent/sessions/${analysisResponse.json.session.id}/timeline?limit=10`,
   });
   const detailResponse = await invokeGatewayRoute(handler, {
-    path: `/api/agent/sessions/${analysisResponse.json.session.id}`,
+    path: `/api/v1/agent/sessions/${analysisResponse.json.session.id}`,
   });
 
   assert.equal(timelineResponse.statusCode, 200);
@@ -1828,7 +1828,7 @@ test('GET /api/agent/sessions/:id/timeline returns linked operator events', asyn
 test('POST /api/agent/action-requests queues an agent action request workflow', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/action-requests',
+    path: '/api/v1/agent/action-requests',
     body: {
       requestType: 'prepare_execution_plan',
       targetId: 'ema-cross-us',
@@ -1915,7 +1915,7 @@ test('POST /api/agent/sessions/:id/action-requests queues a controlled handoff f
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/agent/sessions/${session.id}/action-requests`,
+    path: `/api/v1/agent/sessions/${session.id}/action-requests`,
     body: {
       requestedBy: 'operator-demo',
     },
@@ -1935,7 +1935,7 @@ test('POST /api/agent/sessions/:id/action-requests queues a controlled handoff f
 test('POST /api/agent/action-requests rejects unsupported request types', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/action-requests',
+    path: '/api/v1/agent/action-requests',
     body: {
       requestType: 'direct_execute',
       targetId: 'ema-cross-us',
@@ -1956,7 +1956,7 @@ test('POST /api/agent/action-requests requires strategy:write permission', async
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/action-requests',
+    path: '/api/v1/agent/action-requests',
     body: {
       requestType: 'prepare_execution_plan',
       targetId: 'ema-cross-us',
@@ -1994,7 +1994,7 @@ test('GET /api/agent/action-requests returns persisted requests', async () => {
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/agent/action-requests',
+    path: '/api/v1/agent/action-requests',
   });
 
   assert.equal(response.statusCode, 200);
@@ -2006,7 +2006,7 @@ test('GET /api/agent/action-requests returns persisted requests', async () => {
 test('POST /api/agent/action-requests/approve queues downstream workflow only after approval', async () => {
   const createResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/action-requests',
+    path: '/api/v1/agent/action-requests',
     body: {
       requestType: 'prepare_execution_plan',
       targetId: 'ema-cross-us',
@@ -2034,7 +2034,7 @@ test('POST /api/agent/action-requests/approve queues downstream workflow only af
 
   const approveResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/agent/action-requests/${request.id}/approve`,
+    path: `/api/v1/agent/action-requests/${request.id}/approve`,
     body: {
       approvedBy: 'risk-operator',
       mode: 'paper',
@@ -2080,7 +2080,7 @@ test('POST /api/agent/action-requests/:id/approve links the approved request bac
 
   const approveResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/agent/action-requests/${request.id}/approve`,
+    path: `/api/v1/agent/action-requests/${request.id}/approve`,
     body: {
       approvedBy: 'risk-operator',
       mode: 'paper',
@@ -2109,7 +2109,7 @@ test('POST /api/agent/action-requests/reject marks the request as rejected', asy
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/agent/action-requests/${request.id}/reject`,
+    path: `/api/v1/agent/action-requests/${request.id}/reject`,
     body: {
       rejectedBy: 'risk-operator',
       reason: 'Not enough context',
@@ -2141,7 +2141,7 @@ test('POST /api/agent/action-requests/:id/approve requires risk:review permissio
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/agent/action-requests/${request.id}/approve`,
+    path: `/api/v1/agent/action-requests/${request.id}/approve`,
     body: {
       approvedBy: 'operator-without-risk-review',
       mode: 'paper',
@@ -2170,7 +2170,7 @@ test('POST /api/agent/action-requests/:id/approve requires risk:review permissio
 test('POST /api/strategy/execute queues a strategy execution workflow', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/strategy/execute',
+    path: '/api/v1/strategy/execute',
     body: {
       strategyId: 'ema-cross-us',
       mode: 'paper',
@@ -2194,7 +2194,7 @@ test('POST /api/strategy/execute requires strategy:write permission', async () =
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/strategy/execute',
+    path: '/api/v1/strategy/execute',
     body: {
       strategyId: 'ema-cross-us',
       mode: 'paper',
@@ -2237,7 +2237,7 @@ test('GET /api/execution/plans returns persisted execution plans', async () => {
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/execution/plans',
+    path: '/api/v1/execution/plans',
   });
 
   assert.equal(response.statusCode, 200);
@@ -2287,7 +2287,7 @@ test('GET /api/execution/plans/:id returns a single execution plan with workflow
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/execution/plans/exec-plan-detail',
+    path: '/api/v1/execution/plans/exec-plan-detail',
   });
 
   assert.equal(response.statusCode, 200);
@@ -2299,7 +2299,7 @@ test('GET /api/execution/plans/:id returns a single execution plan with workflow
 
 test('GET /api/execution/plans/:id returns 404 for unknown plans', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/execution/plans/unknown-plan-id',
+    path: '/api/v1/execution/plans/unknown-plan-id',
   });
 
   assert.equal(response.statusCode, 404);
@@ -2320,7 +2320,7 @@ test('GET /api/execution/runtime returns persisted execution runtime events', as
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/execution/runtime',
+    path: '/api/v1/execution/runtime',
   });
 
   assert.equal(response.statusCode, 200);
@@ -2340,7 +2340,7 @@ test('GET /api/execution/account-snapshots returns broker account snapshots', as
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/execution/account-snapshots',
+    path: '/api/v1/execution/account-snapshots',
   });
 
   assert.equal(response.statusCode, 200);
@@ -2371,7 +2371,7 @@ test('GET /api/execution/account-snapshots/latest returns the latest broker snap
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/execution/account-snapshots/latest',
+    path: '/api/v1/execution/account-snapshots/latest',
   });
 
   assert.equal(response.statusCode, 200);
@@ -2397,7 +2397,7 @@ test('GET /api/execution/broker-events returns persisted broker execution events
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/execution/broker-events?executionPlanId=broker-event-plan&eventType=acknowledged&limit=5',
+    path: '/api/v1/execution/broker-events?executionPlanId=broker-event-plan&eventType=acknowledged&limit=5',
   });
 
   assert.equal(response.statusCode, 200);
@@ -2441,7 +2441,7 @@ test('GET /api/execution/ledger returns plans joined with workflow and runtime s
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/execution/ledger',
+    path: '/api/v1/execution/ledger',
   });
 
   assert.equal(response.statusCode, 200);
@@ -2506,7 +2506,7 @@ test('GET /api/execution/workbench returns lifecycle summary and execution ledge
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/execution/workbench',
+    path: '/api/v1/execution/workbench',
   });
 
   assert.equal(response.statusCode, 200);
@@ -2599,7 +2599,7 @@ test('POST /api/execution/plans/:id/approve transitions awaiting plans into subm
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/execution/plans/exec-approve-plan/approve',
+    path: '/api/v1/execution/plans/exec-approve-plan/approve',
     body: {
       actor: 'execution-desk',
     },
@@ -2676,7 +2676,7 @@ test('POST /api/execution/plans/bulk runs approval actions across multiple execu
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/execution/plans/bulk',
+    path: '/api/v1/execution/plans/bulk',
     body: {
       actor: 'execution-desk',
       action: 'approve',
@@ -2746,7 +2746,7 @@ test('POST /api/execution/plans/:id/settle moves submitted plans into filled lif
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/execution/plans/exec-settle-plan/settle',
+    path: '/api/v1/execution/plans/exec-settle-plan/settle',
     body: {
       actor: 'execution-desk',
       outcome: 'filled',
@@ -2805,7 +2805,7 @@ test('POST /api/execution/plans/:id/sync advances submitted plans into broker ac
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/execution/plans/exec-sync-plan/sync',
+    path: '/api/v1/execution/plans/exec-sync-plan/sync',
     body: {
       actor: 'execution-desk',
       scenario: 'acknowledge',
@@ -2865,7 +2865,7 @@ test('POST /api/execution/plans/:id/cancel cancels active plans before settlemen
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/execution/plans/exec-cancel-plan/cancel',
+    path: '/api/v1/execution/plans/exec-cancel-plan/cancel',
     body: {
       actor: 'execution-desk',
       reason: 'operator_cancelled',
@@ -2973,7 +2973,7 @@ test('POST /api/execution/plans/:id/reconcile records structured reconciliation 
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/execution/plans/exec-reconcile-plan/reconcile',
+    path: '/api/v1/execution/plans/exec-reconcile-plan/reconcile',
     body: {
       actor: 'execution-desk',
     },
@@ -3040,7 +3040,7 @@ test('POST /api/execution/plans/:id/recover reroutes cancelled plans back into e
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/execution/plans/exec-recover-plan/recover',
+    path: '/api/v1/execution/plans/exec-recover-plan/recover',
     body: {
       actor: 'execution-desk',
     },
@@ -3149,7 +3149,7 @@ test('POST /api/execution/plans/:id/compensate runs execution compensation autom
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/execution/plans/exec-compensate-plan/compensate',
+    path: '/api/v1/execution/plans/exec-compensate-plan/compensate',
     body: {
       actor: 'execution-desk',
     },
@@ -3214,7 +3214,7 @@ test('POST /api/execution/plans/:id/broker-events ingests a broker fill event in
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/execution/plans/exec-broker-event-plan/broker-events',
+    path: '/api/v1/execution/plans/exec-broker-event-plan/broker-events',
     body: {
       actor: 'broker-webhook',
       source: 'broker-webhook',
@@ -3286,7 +3286,7 @@ test('repeated broker rejects escalate execution exceptions into incident linkag
 
   const firstReject = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/execution/plans/exec-broker-reject-plan/broker-events',
+    path: '/api/v1/execution/plans/exec-broker-reject-plan/broker-events',
     body: {
       actor: 'broker-webhook',
       source: 'broker-webhook',
@@ -3301,7 +3301,7 @@ test('repeated broker rejects escalate execution exceptions into incident linkag
 
   const secondReject = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/execution/plans/exec-broker-reject-plan/broker-events',
+    path: '/api/v1/execution/plans/exec-broker-reject-plan/broker-events',
     body: {
       actor: 'broker-webhook',
       source: 'broker-webhook',
@@ -3325,7 +3325,7 @@ test('repeated broker rejects escalate execution exceptions into incident linkag
   assert.equal(secondReject.json.incident.source, 'execution');
 
   const detail = await invokeGatewayRoute(handler, {
-    path: '/api/execution/plans/exec-broker-reject-plan',
+    path: '/api/v1/execution/plans/exec-broker-reject-plan',
   });
 
   assert.equal(detail.statusCode, 200);
@@ -3336,7 +3336,7 @@ test('repeated broker rejects escalate execution exceptions into incident linkag
 test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control notification for recovery', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/strategy/execute',
+    path: '/api/v1/strategy/execute',
     body: {
       strategyId: 'ema-cross-us',
       mode: 'live',
@@ -3352,7 +3352,7 @@ test('POST /api/task-orchestrator/workflows/:id/resume emits workflow-control no
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/task-orchestrator/workflows/${queued.json.workflow.id}/resume`,
+    path: `/api/v1/task-orchestrator/workflows/${queued.json.workflow.id}/resume`,
     body: {},
   });
 
@@ -3389,10 +3389,10 @@ test('GET /api/scheduler/ticks returns scheduler ticks from shared store', async
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/scheduler/ticks',
+    path: '/api/v1/scheduler/ticks',
   });
   const filteredResponse = await invokeGatewayRoute(handler, {
-    path: '/api/scheduler/ticks?phase=INTRADAY&hours=168&limit=5',
+    path: '/api/v1/scheduler/ticks?phase=INTRADAY&hours=168&limit=5',
   });
 
   assert.equal(response.statusCode, 200);
@@ -3477,7 +3477,7 @@ test('GET /api/scheduler/workbench returns the scheduler operations snapshot', a
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/scheduler/workbench?hours=168&limit=10',
+    path: '/api/v1/scheduler/workbench?hours=168&limit=10',
   });
 
   assert.equal(response.statusCode, 200);
@@ -3595,7 +3595,7 @@ test('POST /api/scheduler/actions executes scheduler orchestration actions and l
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/scheduler/actions',
+    path: '/api/v1/scheduler/actions',
     body: {
       actionKey: 'align-risk-window',
       actor: 'scheduler-operator',
@@ -3640,7 +3640,7 @@ test('POST then GET /api/task-orchestrator/actions persists operator actions', a
   const recentWarnIso = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
   const createResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/actions',
+    path: '/api/v1/task-orchestrator/actions',
     body: {
       type: 'approve-intent',
       actor: 'api-test',
@@ -3651,7 +3651,7 @@ test('POST then GET /api/task-orchestrator/actions persists operator actions', a
     },
   });
   const listResponse = await invokeGatewayRoute(handler, {
-    path: '/api/task-orchestrator/actions',
+    path: '/api/v1/task-orchestrator/actions',
   });
 
   assert.equal(createResponse.statusCode, 200);
@@ -3674,7 +3674,7 @@ test('POST then GET /api/task-orchestrator/actions persists operator actions', a
   });
 
   const filteredResponse = await invokeGatewayRoute(handler, {
-    path: '/api/task-orchestrator/actions?level=warn&hours=48&limit=20',
+    path: '/api/v1/task-orchestrator/actions?level=warn&hours=48&limit=20',
   });
 
   assert.equal(filteredResponse.statusCode, 200);
@@ -3693,7 +3693,7 @@ test('POST /api/task-orchestrator/actions requires execution:approve permission'
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/actions',
+    path: '/api/v1/task-orchestrator/actions',
     body: {
       type: 'approve-intent',
       actor: 'api-test',
@@ -3724,7 +3724,7 @@ test('POST /api/task-orchestrator/actions requires execution:approve permission'
 
 test('GET /api/health exposes gateway module status', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/health',
+    path: '/api/v1/health',
   });
 
   assert.equal(response.statusCode, 200);
@@ -3837,7 +3837,7 @@ test('GET /api/monitoring/status returns runtime health and queue summary', asyn
   ]);
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/monitoring/status',
+    path: '/api/v1/monitoring/status',
   });
 
   assert.equal(response.statusCode, 200);
@@ -3912,10 +3912,10 @@ test('GET /api/monitoring/snapshots and alerts return persisted monitoring histo
   });
 
   const snapshotsResponse = await invokeGatewayRoute(handler, {
-    path: '/api/monitoring/snapshots',
+    path: '/api/v1/monitoring/snapshots',
   });
   const alertsResponse = await invokeGatewayRoute(handler, {
-    path: '/api/monitoring/alerts',
+    path: '/api/v1/monitoring/alerts',
   });
 
   assert.equal(snapshotsResponse.statusCode, 200);
@@ -3926,10 +3926,10 @@ test('GET /api/monitoring/snapshots and alerts return persisted monitoring histo
   assert.equal(alertsResponse.json.alerts[0].id, 'monitoring-alert-test');
 
   const filteredSnapshots = await invokeGatewayRoute(handler, {
-    path: '/api/monitoring/snapshots?status=warn&hours=168&limit=5',
+    path: '/api/v1/monitoring/snapshots?status=warn&hours=168&limit=5',
   });
   const filteredAlerts = await invokeGatewayRoute(handler, {
-    path: '/api/monitoring/alerts?source=worker&level=warn&snapshotId=monitoring-snapshot-test&hours=168&limit=5',
+    path: '/api/v1/monitoring/alerts?source=worker&level=warn&snapshotId=monitoring-snapshot-test&hours=168&limit=5',
   });
 
   assert.equal(filteredSnapshots.statusCode, 200);
@@ -4036,7 +4036,7 @@ test('GET /api/operations/workbench returns unified operations overview', async 
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/operations/workbench?hours=24&limit=50',
+    path: '/api/v1/operations/workbench?hours=24&limit=50',
   });
 
   assert.equal(response.statusCode, 200);
@@ -4128,7 +4128,7 @@ test('GET /api/operations/maintenance returns backup posture and integrity summa
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/operations/maintenance?limit=5',
+    path: '/api/v1/operations/maintenance?limit=5',
   });
 
   assert.equal(response.statusCode, 200);
@@ -4166,7 +4166,7 @@ test('operations maintenance routes export backups, dry-run restores, and repair
 
   const backupResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/operations/maintenance/backup',
+    path: '/api/v1/operations/maintenance/backup',
   });
 
   assert.equal(backupResponse.statusCode, 200);
@@ -4178,7 +4178,7 @@ test('operations maintenance routes export backups, dry-run restores, and repair
 
   const restoreResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/operations/maintenance/restore',
+    path: '/api/v1/operations/maintenance/restore',
     body: {
       dryRun: true,
       backup: backupResponse.json.backup,
@@ -4192,7 +4192,7 @@ test('operations maintenance routes export backups, dry-run restores, and repair
 
   const repairResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/operations/maintenance/repair/workflows',
+    path: '/api/v1/operations/maintenance/repair/workflows',
     body: {
       worker: 'api-maintenance-worker',
       limit: 5,
@@ -4224,7 +4224,7 @@ test('operations maintenance routes reject requests without operations:maintain 
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/operations/maintenance?limit=5',
+    path: '/api/v1/operations/maintenance?limit=5',
   });
 
   assert.equal(response.statusCode, 403);
@@ -4341,7 +4341,7 @@ test('incident routes create, update, and return incident details', async () => 
 
   const created = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/incidents',
+    path: '/api/v1/incidents',
     body: {
       id: 'incident-api-test',
       title: 'Queue backlog incident',
@@ -4381,14 +4381,14 @@ test('incident routes create, update, and return incident details', async () => 
     },
   });
   const listed = await invokeGatewayRoute(handler, {
-    path: '/api/incidents?status=open&severity=warn&source=monitoring&hours=168&limit=5',
+    path: '/api/v1/incidents?status=open&severity=warn&source=monitoring&hours=168&limit=5',
   });
   const summary = await invokeGatewayRoute(handler, {
-    path: '/api/incidents/summary?hours=168&limit=20',
+    path: '/api/v1/incidents/summary?hours=168&limit=20',
   });
   const updated = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/incidents/incident-api-test',
+    path: '/api/v1/incidents/incident-api-test',
     body: {
       status: 'investigating',
       actor: 'api-operator',
@@ -4396,7 +4396,7 @@ test('incident routes create, update, and return incident details', async () => 
   });
   const noted = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/incidents/incident-api-test/notes',
+    path: '/api/v1/incidents/incident-api-test/notes',
     body: {
       author: 'api-operator',
       body: 'Queue was drained by worker retry.',
@@ -4404,7 +4404,7 @@ test('incident routes create, update, and return incident details', async () => 
   });
   const bulk = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/incidents/bulk',
+    path: '/api/v1/incidents/bulk',
     body: {
       actor: 'api-operator',
       incidentIds: ['incident-api-test'],
@@ -4416,7 +4416,7 @@ test('incident routes create, update, and return incident details', async () => 
   const seededTaskId = context.incidents.listIncidentTasks('incident-api-test', 10)[0].id;
   const createdTask = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/incidents/incident-api-test/tasks',
+    path: '/api/v1/incidents/incident-api-test/tasks',
     body: {
       actor: 'api-operator',
       detail: 'Double-check fallback queue drain metrics.',
@@ -4426,14 +4426,14 @@ test('incident routes create, update, and return incident details', async () => 
   });
   const updatedTask = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/incidents/incident-api-test/tasks/${seededTaskId}`,
+    path: `/api/v1/incidents/incident-api-test/tasks/${seededTaskId}`,
     body: {
       actor: 'api-operator',
       status: 'done',
     },
   });
   const detail = await invokeGatewayRoute(handler, {
-    path: '/api/incidents/incident-api-test',
+    path: '/api/v1/incidents/incident-api-test',
   });
 
   assert.equal(created.statusCode, 200);
@@ -4542,7 +4542,7 @@ test('POST then GET /api/audit/records persists audit entries', async () => {
   const recentAuditAt = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
   const createResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/audit/records',
+    path: '/api/v1/audit/records',
     body: {
       type: 'test-audit',
       actor: 'api-test',
@@ -4551,7 +4551,7 @@ test('POST then GET /api/audit/records persists audit entries', async () => {
     },
   });
   const listResponse = await invokeGatewayRoute(handler, {
-    path: '/api/audit/records',
+    path: '/api/v1/audit/records',
   });
 
   assert.equal(createResponse.statusCode, 200);
@@ -4572,7 +4572,7 @@ test('POST then GET /api/audit/records persists audit entries', async () => {
   });
 
   const filteredResponse = await invokeGatewayRoute(handler, {
-    path: '/api/audit/records?type=workflow&hours=48&limit=50',
+    path: '/api/v1/audit/records?type=workflow&hours=48&limit=50',
   });
 
   assert.equal(filteredResponse.statusCode, 200);
@@ -4585,7 +4585,7 @@ test('POST then GET /api/audit/records persists audit entries', async () => {
 test('POST then GET /api/task-orchestrator/cycles persists cycle records', async () => {
   const createResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/cycles',
+    path: '/api/v1/task-orchestrator/cycles',
     body: {
       cycle: 21,
       mode: 'hybrid',
@@ -4599,7 +4599,7 @@ test('POST then GET /api/task-orchestrator/cycles persists cycle records', async
     },
   });
   const listResponse = await invokeGatewayRoute(handler, {
-    path: '/api/task-orchestrator/cycles',
+    path: '/api/v1/task-orchestrator/cycles',
   });
 
   assert.equal(createResponse.statusCode, 200);
@@ -4619,7 +4619,7 @@ test('POST then GET /api/task-orchestrator/cycles persists cycle records', async
 test('POST /api/task-orchestrator/cycles/run returns control plane resolution', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/cycles/run',
+    path: '/api/v1/task-orchestrator/cycles/run',
     body: {
       cycle: 22,
       mode: 'autopilot',
@@ -4646,7 +4646,7 @@ test('POST /api/task-orchestrator/cycles/run returns control plane resolution', 
 test('POST /api/task-orchestrator/cycles queues review notifications when approvals are pending', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/cycles',
+    path: '/api/v1/task-orchestrator/cycles',
     body: {
       cycle: 23,
       mode: 'autopilot',
@@ -4672,7 +4672,7 @@ test('POST /api/task-orchestrator/cycles queues review notifications when approv
 test('POST /api/task-orchestrator/state/run returns next state and enqueues risk scan', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/state/run',
+    path: '/api/v1/task-orchestrator/state/run',
     body: {
       state: createTradingState(),
     },
@@ -4694,7 +4694,7 @@ test('POST /api/task-orchestrator/state/run returns next state and enqueues risk
 test('GET /api/task-orchestrator/workflows returns persisted workflow runs', async () => {
   await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/cycles/run',
+    path: '/api/v1/task-orchestrator/cycles/run',
     body: {
       cycle: 24,
       mode: 'autopilot',
@@ -4711,7 +4711,7 @@ test('GET /api/task-orchestrator/workflows returns persisted workflow runs', asy
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/task-orchestrator/workflows',
+    path: '/api/v1/task-orchestrator/workflows',
   });
 
   assert.equal(response.statusCode, 200);
@@ -4724,7 +4724,7 @@ test('GET /api/task-orchestrator/workflows returns persisted workflow runs', asy
 test('GET /api/task-orchestrator/workflows/:id returns a persisted workflow run', async () => {
   const cycleRun = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/cycles/run',
+    path: '/api/v1/task-orchestrator/cycles/run',
     body: {
       cycle: 25,
       mode: 'autopilot',
@@ -4741,7 +4741,7 @@ test('GET /api/task-orchestrator/workflows/:id returns a persisted workflow run'
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: `/api/task-orchestrator/workflows/${cycleRun.json.workflow.id}`,
+    path: `/api/v1/task-orchestrator/workflows/${cycleRun.json.workflow.id}`,
   });
 
   assert.equal(response.statusCode, 200);
@@ -4752,7 +4752,7 @@ test('GET /api/task-orchestrator/workflows/:id returns a persisted workflow run'
 test('POST /api/task-orchestrator/workflows/queue creates a queued workflow run', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/workflows/queue',
+    path: '/api/v1/task-orchestrator/workflows/queue',
     body: {
       workflowId: 'task-orchestrator.manual-review',
       workflowType: 'task-orchestrator',
@@ -4771,7 +4771,7 @@ test('POST /api/task-orchestrator/workflows/queue creates a queued workflow run'
 test('POST /api/task-orchestrator/cycles/queue creates a queued cycle workflow', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/cycles/queue',
+    path: '/api/v1/task-orchestrator/cycles/queue',
     body: {
       cycle: 26,
       mode: 'hybrid',
@@ -4795,7 +4795,7 @@ test('POST /api/task-orchestrator/cycles/queue creates a queued cycle workflow',
 test('POST /api/task-orchestrator/state/queue creates a queued state workflow', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/state/queue',
+    path: '/api/v1/task-orchestrator/state/queue',
     body: {
       state: createTradingState(),
     },
@@ -4809,7 +4809,7 @@ test('POST /api/task-orchestrator/state/queue creates a queued state workflow', 
 test('POST /api/task-orchestrator/workflows/:id/resume resumes a failed workflow run', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/workflows/queue',
+    path: '/api/v1/task-orchestrator/workflows/queue',
     body: {
       workflowId: 'task-orchestrator.resume-test',
       workflowType: 'task-orchestrator',
@@ -4826,7 +4826,7 @@ test('POST /api/task-orchestrator/workflows/:id/resume resumes a failed workflow
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/task-orchestrator/workflows/${queued.json.workflow.id}/resume`,
+    path: `/api/v1/task-orchestrator/workflows/${queued.json.workflow.id}/resume`,
     body: {},
   });
 
@@ -4838,7 +4838,7 @@ test('POST /api/task-orchestrator/workflows/:id/resume resumes a failed workflow
 test('POST /api/task-orchestrator/workflows/:id/resume requires execution:approve permission', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/workflows/queue',
+    path: '/api/v1/task-orchestrator/workflows/queue',
     body: {
       workflowId: 'task-orchestrator.resume-gate-test',
       workflowType: 'task-orchestrator',
@@ -4861,7 +4861,7 @@ test('POST /api/task-orchestrator/workflows/:id/resume requires execution:approv
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/task-orchestrator/workflows/${queued.json.workflow.id}/resume`,
+    path: `/api/v1/task-orchestrator/workflows/${queued.json.workflow.id}/resume`,
     body: {},
   });
 
@@ -4886,7 +4886,7 @@ test('POST /api/task-orchestrator/workflows/:id/resume requires execution:approv
 test('POST /api/task-orchestrator/workflows/:id/cancel cancels a workflow run', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/workflows/queue',
+    path: '/api/v1/task-orchestrator/workflows/queue',
     body: {
       workflowId: 'task-orchestrator.cancel-test',
       workflowType: 'task-orchestrator',
@@ -4897,7 +4897,7 @@ test('POST /api/task-orchestrator/workflows/:id/cancel cancels a workflow run', 
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/task-orchestrator/workflows/${queued.json.workflow.id}/cancel`,
+    path: `/api/v1/task-orchestrator/workflows/${queued.json.workflow.id}/cancel`,
     body: {},
   });
 
@@ -4908,7 +4908,7 @@ test('POST /api/task-orchestrator/workflows/:id/cancel cancels a workflow run', 
 test('POST /api/task-orchestrator/workflows/:id/cancel requires execution:approve permission', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/workflows/queue',
+    path: '/api/v1/task-orchestrator/workflows/queue',
     body: {
       workflowId: 'task-orchestrator.cancel-gate-test',
       workflowType: 'task-orchestrator',
@@ -4925,7 +4925,7 @@ test('POST /api/task-orchestrator/workflows/:id/cancel requires execution:approv
 
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/task-orchestrator/workflows/${queued.json.workflow.id}/cancel`,
+    path: `/api/v1/task-orchestrator/workflows/${queued.json.workflow.id}/cancel`,
     body: {},
   });
 
@@ -4950,7 +4950,7 @@ test('POST /api/task-orchestrator/workflows/:id/cancel requires execution:approv
 test('POST /api/agent/instructions records a daily bias instruction', async () => {
   const response = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/instructions',
+    path: '/api/v1/agent/instructions',
     body: {
       sessionId: 'session-governance-1',
       kind: 'daily_bias',
@@ -4967,7 +4967,7 @@ test('POST /api/agent/instructions records a daily bias instruction', async () =
 
 test('GET /api/agent/authority resolves the most restrictive mode', async () => {
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/agent/authority?accountId=paper-main&strategyId=trend&actionType=enter&environment=paper',
+    path: '/api/v1/agent/authority?accountId=paper-main&strategyId=trend&actionType=enter&environment=paper',
   });
 
   assert.equal(response.statusCode, 200);
@@ -4980,7 +4980,7 @@ test('GET /api/agent/authority resolves the most restrictive mode', async () => 
 test('POST /api/agent/policies saves a policy and GET /api/agent/authority reflects it', async () => {
   const saveResponse = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/policies',
+    path: '/api/v1/agent/policies',
     body: {
       id: 'policy-gateway-bounded',
       accountId: 'paper-bounded',
@@ -4996,7 +4996,7 @@ test('POST /api/agent/policies saves a policy and GET /api/agent/authority refle
   assert.equal(saveResponse.json.policy.authority, 'bounded_auto');
 
   const authResponse = await invokeGatewayRoute(handler, {
-    path: '/api/agent/authority?accountId=paper-bounded&strategyId=trend-bounded&actionType=enter&environment=paper',
+    path: '/api/v1/agent/authority?accountId=paper-bounded&strategyId=trend-bounded&actionType=enter&environment=paper',
   });
 
   assert.equal(authResponse.statusCode, 200);

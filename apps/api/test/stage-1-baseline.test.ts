@@ -63,9 +63,9 @@ test.after(() => {
 
 test('stage 1 baseline exposes account workspace, session, and permission catalog contracts', async () => {
   const [workspace, session, permissions] = await Promise.all([
-    invokeGatewayRoute(handler, { path: '/api/user-account' }),
-    invokeGatewayRoute(handler, { path: '/api/auth/session' }),
-    invokeGatewayRoute(handler, { path: '/api/auth/permissions' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/user-account' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/auth/session' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/auth/permissions' }),
   ]);
 
   assert.equal(workspace.statusCode, 200);
@@ -126,7 +126,7 @@ test('stage 1 baseline exposes incident console summary and detail contracts', a
 
   await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/incidents',
+    path: '/api/v1/incidents',
     body: {
       id: 'stage1-incident',
       title: 'Stage 1 incident baseline',
@@ -148,8 +148,8 @@ test('stage 1 baseline exposes incident console summary and detail contracts', a
   });
 
   const [summary, detail] = await Promise.all([
-    invokeGatewayRoute(handler, { path: '/api/incidents/summary?hours=168&limit=20' }),
-    invokeGatewayRoute(handler, { path: '/api/incidents/stage1-incident' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/incidents/summary?hours=168&limit=20' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/incidents/stage1-incident' }),
   ]);
 
   assert.equal(summary.statusCode, 200);
@@ -208,7 +208,7 @@ test('stage 1 baseline exposes operations workbench aggregation contracts', asyn
   });
 
   const response = await invokeGatewayRoute(handler, {
-    path: '/api/operations/workbench?hours=24&limit=50',
+    path: '/api/v1/operations/workbench?hours=24&limit=50',
   });
 
   assert.equal(response.statusCode, 200);

@@ -240,10 +240,10 @@ test('stage 3 baseline exposes execution workbench queues, linked incidents, and
   const { planId, incidentId } = seedExecutionChain('a');
 
   const [workbench, ledger, brokerEvents] = await Promise.all([
-    invokeGatewayRoute(handler, { path: '/api/execution/workbench' }),
-    invokeGatewayRoute(handler, { path: '/api/execution/ledger' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/execution/workbench' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/execution/ledger' }),
     invokeGatewayRoute(handler, {
-      path: `/api/execution/broker-events?executionPlanId=${planId}&limit=10`,
+      path: `/api/v1/execution/broker-events?executionPlanId=${planId}&limit=10`,
     }),
   ]);
 
@@ -280,7 +280,7 @@ test('stage 3 baseline exposes execution detail, compensation and incident triag
   const { planId, incidentId } = seedExecutionChain('b');
 
   const detail = await invokeGatewayRoute(handler, {
-    path: `/api/execution/plans/${planId}`,
+    path: `/api/v1/execution/plans/${planId}`,
   });
 
   assert.equal(detail.statusCode, 200);
@@ -294,7 +294,7 @@ test('stage 3 baseline exposes execution detail, compensation and incident triag
 
   const bulk = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/incidents/bulk',
+    path: '/api/v1/incidents/bulk',
     body: {
       incidentIds: [incidentId],
       owner: 'ops-stage3',
@@ -311,7 +311,7 @@ test('stage 3 baseline exposes execution detail, compensation and incident triag
   assert.equal(bulk.json.notesAdded, 1);
 
   const incident = await invokeGatewayRoute(handler, {
-    path: `/api/incidents/${incidentId}`,
+    path: `/api/v1/incidents/${incidentId}`,
   });
 
   assert.equal(incident.statusCode, 200);

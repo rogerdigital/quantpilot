@@ -175,7 +175,7 @@ describe('WorkspaceAccessScopePanel', () => {
     expect(html).toContain('2 → 3');
     expect(html).toContain('Pending Migrations');
     expect(html).toContain('npm run control-plane:maintenance -- migrate --adapter db');
-    expect(html).toContain('GET /api/operations/maintenance');
+    expect(html).toContain('GET /api/v1/operations/maintenance');
   });
 });
 

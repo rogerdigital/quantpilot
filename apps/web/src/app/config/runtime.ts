@@ -1,4 +1,5 @@
 import type { RuntimeConfig } from '@shared-types/trading.ts';
+import { API_PREFIX } from '../api/http.ts';
 
 function numberFromEnv(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
@@ -13,5 +14,5 @@ export const runtimeConfig: RuntimeConfig = {
   brokerProvider: (import.meta.env.VITE_BROKER_PROVIDER ||
     'simulated') as RuntimeConfig['brokerProvider'],
   brokerHttpUrl: import.meta.env.VITE_BROKER_HTTP_URL || '',
-  alpacaProxyBase: import.meta.env.VITE_ALPACA_PROXY_BASE || '/api/alpaca',
+  alpacaProxyBase: import.meta.env.VITE_ALPACA_PROXY_BASE || `${API_PREFIX}/alpaca`,
 };

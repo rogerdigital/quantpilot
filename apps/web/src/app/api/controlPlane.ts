@@ -43,22 +43,22 @@ import type {
 
 export { ApiPermissionError } from './http.ts';
 
-import { assertOk, fetchJson, jsonHeaders } from './http.ts';
+import { API_PREFIX, assertOk, fetchJson, jsonHeaders } from './http.ts';
 
 export async function fetchOperatorSession(): Promise<OperatorSession> {
-  return fetchJson('/api/auth/session', {
+  return fetchJson(`${API_PREFIX}/auth/session`, {
     headers: { Accept: 'application/json' },
   });
 }
 
 export async function fetchUserAccountProfile(): Promise<UserAccountProfileSnapshot> {
-  return fetchJson('/api/user-account/profile', {
+  return fetchJson(`${API_PREFIX}/user-account/profile`, {
     headers: { Accept: 'application/json' },
   });
 }
 
 export async function fetchUserAccount(): Promise<UserAccountSnapshot> {
-  return fetchJson('/api/user-account', {
+  return fetchJson(`${API_PREFIX}/user-account`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -66,7 +66,7 @@ export async function fetchUserAccount(): Promise<UserAccountSnapshot> {
 export async function updateUserAccountProfile(
   payload: Record<string, unknown>
 ): Promise<UserProfileUpdateSnapshot> {
-  const response = await fetch('/api/user-account/profile', {
+  const response = await fetch(`${API_PREFIX}/user-account/profile`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -78,7 +78,7 @@ export async function updateUserAccountProfile(
 export async function updateUserAccountPreferences(
   payload: Record<string, unknown>
 ): Promise<UserPreferencesUpdateSnapshot> {
-  const response = await fetch('/api/user-account/preferences', {
+  const response = await fetch(`${API_PREFIX}/user-account/preferences`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -90,7 +90,7 @@ export async function updateUserAccountPreferences(
 export async function updateUserAccountAccess(
   payload: Record<string, unknown>
 ): Promise<UserAccessUpdateSnapshot> {
-  const response = await fetch('/api/user-account/access', {
+  const response = await fetch(`${API_PREFIX}/user-account/access`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -100,7 +100,7 @@ export async function updateUserAccountAccess(
 }
 
 export async function fetchBrokerBindings(): Promise<UserBrokerBindingsSnapshot> {
-  const response = await fetch('/api/user-account/broker-bindings', {
+  const response = await fetch(`${API_PREFIX}/user-account/broker-bindings`, {
     headers: { Accept: 'application/json' },
   });
   await assertOk(response);
@@ -110,7 +110,7 @@ export async function fetchBrokerBindings(): Promise<UserBrokerBindingsSnapshot>
 export async function saveBrokerBinding(
   payload: Record<string, unknown>
 ): Promise<UserBrokerBindingSaveSnapshot> {
-  const response = await fetch('/api/user-account/broker-bindings', {
+  const response = await fetch(`${API_PREFIX}/user-account/broker-bindings`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -122,7 +122,7 @@ export async function saveBrokerBinding(
 export async function setDefaultBrokerBinding(
   bindingId: string
 ): Promise<UserBrokerBindingSaveSnapshot> {
-  const response = await fetch(`/api/user-account/broker-bindings/${bindingId}/default`, {
+  const response = await fetch(`${API_PREFIX}/user-account/broker-bindings/${bindingId}/default`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify({}),
@@ -134,7 +134,7 @@ export async function setDefaultBrokerBinding(
 export async function deleteBrokerBinding(
   bindingId: string
 ): Promise<UserBrokerBindingDeleteSnapshot> {
-  const response = await fetch(`/api/user-account/broker-bindings/${bindingId}`, {
+  const response = await fetch(`${API_PREFIX}/user-account/broker-bindings/${bindingId}`, {
     method: 'DELETE',
     headers: { Accept: 'application/json' },
   });
@@ -143,7 +143,7 @@ export async function deleteBrokerBinding(
 }
 
 export async function fetchBrokerBindingRuntime(): Promise<UserBrokerBindingRuntimeSnapshot> {
-  const response = await fetch('/api/user-account/broker-bindings/runtime', {
+  const response = await fetch(`${API_PREFIX}/user-account/broker-bindings/runtime`, {
     headers: { Accept: 'application/json' },
   });
   await assertOk(response);
@@ -151,7 +151,7 @@ export async function fetchBrokerBindingRuntime(): Promise<UserBrokerBindingRunt
 }
 
 export async function syncBrokerBindingRuntime(): Promise<UserBrokerBindingRuntimeSnapshot> {
-  const response = await fetch('/api/user-account/broker-bindings/sync', {
+  const response = await fetch(`${API_PREFIX}/user-account/broker-bindings/sync`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify({}),
@@ -177,7 +177,7 @@ function buildCyclePayload(state: TradingState): CycleRunPayload {
 }
 
 export async function runCycle(state: TradingState): Promise<ControlPlaneResolution> {
-  const response = await fetch('/api/task-orchestrator/cycles/run', {
+  const response = await fetch(`${API_PREFIX}/task-orchestrator/cycles/run`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(buildCyclePayload(state)),
@@ -187,7 +187,7 @@ export async function runCycle(state: TradingState): Promise<ControlPlaneResolut
 }
 
 export async function runStateCycle(state: TradingState): Promise<StateCycleResult> {
-  const response = await fetch('/api/task-orchestrator/state/run', {
+  const response = await fetch(`${API_PREFIX}/task-orchestrator/state/run`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify({ state }),
@@ -203,7 +203,7 @@ export async function reportOperatorAction(payload: {
   symbol?: string;
   level?: string;
 }) {
-  const response = await fetch('/api/task-orchestrator/actions', {
+  const response = await fetch(`${API_PREFIX}/task-orchestrator/actions`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -250,7 +250,7 @@ export async function fetchNotifications(options: NotificationsQuery = {}): Prom
     createdAt: string;
   }>;
 }> {
-  return fetchJson(`/api/notification/events${buildNotificationsQuery(options)}`, {
+  return fetchJson(`${API_PREFIX}/notification/events${buildNotificationsQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -290,7 +290,7 @@ export async function fetchAuditRecords(options: AuditRecordsQuery = {}): Promis
     metadata?: Record<string, unknown>;
   }>;
 }> {
-  return fetchJson(`/api/audit/records${buildAuditRecordsQuery(options)}`, {
+  return fetchJson(`${API_PREFIX}/audit/records${buildAuditRecordsQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -309,7 +309,7 @@ export async function fetchRiskEvents(): Promise<{
     createdAt: string;
   }>;
 }> {
-  return fetchJson('/api/risk/events', {
+  return fetchJson(`${API_PREFIX}/risk/events`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -325,7 +325,7 @@ export async function fetchRiskWorkbench(
     params.set('hours', String(options.hours));
   }
   const query = params.toString();
-  return fetchJson(`/api/risk/workbench${query ? `?${query}` : ''}`, {
+  return fetchJson(`${API_PREFIX}/risk/workbench${query ? `?${query}` : ''}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -336,7 +336,7 @@ export async function runRiskPolicyAction(payload: {
   hours?: number | null;
   limit?: number;
 }): Promise<RiskPolicyActionResponse> {
-  const response = await fetch('/api/risk/actions', {
+  const response = await fetch(`${API_PREFIX}/risk/actions`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -346,7 +346,7 @@ export async function runRiskPolicyAction(payload: {
 }
 
 export async function fetchRiskEventDetail(eventId: string): Promise<RiskEventDetailResponse> {
-  return fetchJson(`/api/risk/events/${eventId}`, {
+  return fetchJson(`${API_PREFIX}/risk/events/${eventId}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -360,7 +360,7 @@ export type RiskParameters = {
 };
 
 export async function fetchRiskParameters(): Promise<{ ok: boolean; parameters: RiskParameters }> {
-  return fetchJson('/api/risk/parameters', {
+  return fetchJson(`${API_PREFIX}/risk/parameters`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -368,7 +368,7 @@ export async function fetchRiskParameters(): Promise<{ ok: boolean; parameters: 
 export async function saveRiskParameters(
   patch: Partial<RiskParameters>
 ): Promise<{ ok: boolean; parameters: RiskParameters }> {
-  return fetchJson('/api/risk/parameters', {
+  return fetchJson(`${API_PREFIX}/risk/parameters`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(patch),
@@ -379,7 +379,7 @@ export async function resetRiskParametersToDefaults(): Promise<{
   ok: boolean;
   parameters: RiskParameters;
 }> {
-  return fetchJson('/api/risk/parameters/reset', {
+  return fetchJson(`${API_PREFIX}/risk/parameters/reset`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: '{}',
@@ -421,7 +421,7 @@ export async function fetchSchedulerTicks(options: SchedulerTicksQuery = {}): Pr
     createdAt: string;
   }>;
 }> {
-  return fetchJson(`/api/scheduler/ticks${buildSchedulerTicksQuery(options)}`, {
+  return fetchJson(`${API_PREFIX}/scheduler/ticks${buildSchedulerTicksQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -429,7 +429,7 @@ export async function fetchSchedulerTicks(options: SchedulerTicksQuery = {}): Pr
 export async function fetchSchedulerWorkbench(
   options: SchedulerTicksQuery = {}
 ): Promise<SchedulerWorkbenchResponse> {
-  return fetchJson(`/api/scheduler/workbench${buildSchedulerTicksQuery(options)}`, {
+  return fetchJson(`${API_PREFIX}/scheduler/workbench${buildSchedulerTicksQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -440,7 +440,7 @@ export async function runSchedulerOrchestrationAction(payload: {
   hours?: number | null;
   limit?: number;
 }): Promise<SchedulerOrchestrationActionResponse> {
-  const response = await fetch('/api/scheduler/actions', {
+  const response = await fetch(`${API_PREFIX}/scheduler/actions`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -485,13 +485,13 @@ export async function fetchOperatorActions(options: OperatorActionsQuery = {}): 
     createdAt: string;
   }>;
 }> {
-  return fetchJson(`/api/task-orchestrator/actions${buildOperatorActionsQuery(options)}`, {
+  return fetchJson(`${API_PREFIX}/task-orchestrator/actions${buildOperatorActionsQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
 
 export async function fetchTaskWorkflows(): Promise<WorkflowRunsSnapshot> {
-  return fetchJson('/api/task-orchestrator/workflows', {
+  return fetchJson(`${API_PREFIX}/task-orchestrator/workflows`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -499,7 +499,7 @@ export async function fetchTaskWorkflows(): Promise<WorkflowRunsSnapshot> {
 export async function fetchWorkflowRunDetail(
   workflowRunId: string
 ): Promise<WorkflowRunDetailResponse> {
-  return fetchJson(`/api/task-orchestrator/workflows/${workflowRunId}`, {
+  return fetchJson(`${API_PREFIX}/task-orchestrator/workflows/${workflowRunId}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -508,7 +508,7 @@ export async function fetchExecutionRuntime(): Promise<{
   ok: boolean;
   events: ExecutionRuntimeEvent[];
 }> {
-  return fetchJson('/api/execution/runtime', {
+  return fetchJson(`${API_PREFIX}/execution/runtime`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -517,7 +517,7 @@ export async function fetchExecutionAccountSnapshots(): Promise<{
   ok: boolean;
   snapshots: BrokerAccountSnapshotRecord[];
 }> {
-  return fetchJson('/api/execution/account-snapshots', {
+  return fetchJson(`${API_PREFIX}/execution/account-snapshots`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -526,19 +526,19 @@ export async function fetchExecutionLedger(): Promise<{
   ok: boolean;
   entries: ExecutionLedgerEntry[];
 }> {
-  return fetchJson('/api/execution/ledger', {
+  return fetchJson(`${API_PREFIX}/execution/ledger`, {
     headers: { Accept: 'application/json' },
   });
 }
 
 export async function fetchExecutionWorkbench(): Promise<ExecutionWorkbenchResponse> {
-  return fetchJson('/api/execution/workbench', {
+  return fetchJson(`${API_PREFIX}/execution/workbench`, {
     headers: { Accept: 'application/json' },
   });
 }
 
 export async function fetchExecutionCandidateHandoffs(): Promise<ExecutionCandidateHandoffSnapshot> {
-  return fetchJson('/api/research/execution-candidates', {
+  return fetchJson(`${API_PREFIX}/research/execution-candidates`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -550,7 +550,7 @@ export async function queueExecutionCandidateHandoff(
     owner?: string;
   } = {}
 ) {
-  const response = await fetch(`/api/research/execution-candidates/${handoffId}/queue`, {
+  const response = await fetch(`${API_PREFIX}/research/execution-candidates/${handoffId}/queue`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -562,7 +562,7 @@ export async function queueExecutionCandidateHandoff(
 export async function fetchExecutionPlanDetail(
   planId: string
 ): Promise<ExecutionPlanDetailResponse> {
-  return fetchJson(`/api/execution/plans/${planId}`, {
+  return fetchJson(`${API_PREFIX}/execution/plans/${planId}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -573,7 +573,7 @@ export async function approveExecutionPlan(
     actor?: string;
   } = {}
 ) {
-  const response = await fetch(`/api/execution/plans/${planId}/approve`, {
+  const response = await fetch(`${API_PREFIX}/execution/plans/${planId}/approve`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -589,7 +589,7 @@ export async function settleExecutionPlan(
     outcome?: 'filled' | 'partial_fill' | 'cancelled' | 'failed';
   } = {}
 ) {
-  const response = await fetch(`/api/execution/plans/${planId}/settle`, {
+  const response = await fetch(`${API_PREFIX}/execution/plans/${planId}/settle`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -605,7 +605,7 @@ export async function syncExecutionPlan(
     scenario?: 'acknowledge' | 'partial_fill' | 'filled' | 'failed';
   } = {}
 ) {
-  const response = await fetch(`/api/execution/plans/${planId}/sync`, {
+  const response = await fetch(`${API_PREFIX}/execution/plans/${planId}/sync`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -629,7 +629,7 @@ export async function ingestBrokerExecutionEvent(
     reason?: string;
   }
 ) {
-  const response = await fetch(`/api/execution/plans/${planId}/broker-events`, {
+  const response = await fetch(`${API_PREFIX}/execution/plans/${planId}/broker-events`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -645,7 +645,7 @@ export async function cancelExecutionPlan(
     reason?: string;
   } = {}
 ) {
-  const response = await fetch(`/api/execution/plans/${planId}/cancel`, {
+  const response = await fetch(`${API_PREFIX}/execution/plans/${planId}/cancel`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -660,7 +660,7 @@ export async function reconcileExecutionPlan(
     actor?: string;
   } = {}
 ) {
-  const response = await fetch(`/api/execution/plans/${planId}/reconcile`, {
+  const response = await fetch(`${API_PREFIX}/execution/plans/${planId}/reconcile`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -675,7 +675,7 @@ export async function compensateExecutionPlan(
     actor?: string;
   } = {}
 ) {
-  const response = await fetch(`/api/execution/plans/${planId}/compensate`, {
+  const response = await fetch(`${API_PREFIX}/execution/plans/${planId}/compensate`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -690,7 +690,7 @@ export async function recoverExecutionPlan(
     actor?: string;
   } = {}
 ) {
-  const response = await fetch(`/api/execution/plans/${planId}/recover`, {
+  const response = await fetch(`${API_PREFIX}/execution/plans/${planId}/recover`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -704,7 +704,7 @@ export async function bulkUpdateExecutionQueue(payload: {
   planIds: string[];
   actor?: string;
 }): Promise<ExecutionBulkActionResponse> {
-  const response = await fetch('/api/execution/plans/bulk', {
+  const response = await fetch(`${API_PREFIX}/execution/plans/bulk`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -714,7 +714,7 @@ export async function bulkUpdateExecutionQueue(payload: {
 }
 
 export async function fetchLatestBrokerAccountSnapshot(): Promise<LatestBrokerAccountSnapshotResponse> {
-  return fetchJson('/api/execution/account-snapshots/latest', {
+  return fetchJson(`${API_PREFIX}/execution/account-snapshots/latest`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -723,13 +723,13 @@ export async function fetchMarketProviderStatus(): Promise<{
   ok: boolean;
   status: MarketProviderStatusSnapshot;
 }> {
-  return fetchJson('/api/market/provider-status', {
+  return fetchJson(`${API_PREFIX}/market/provider-status`, {
     headers: { Accept: 'application/json' },
   });
 }
 
 export async function fetchMonitoringStatus(): Promise<MonitoringStatusSnapshot> {
-  return fetchJson('/api/monitoring/status', {
+  return fetchJson(`${API_PREFIX}/monitoring/status`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -772,7 +772,7 @@ function buildMonitoringHistoryQuery(options: MonitoringHistoryQuery = {}) {
 export async function fetchMonitoringAlerts(
   options: MonitoringHistoryQuery = {}
 ): Promise<MonitoringAlertsResponse> {
-  return fetchJson(`/api/monitoring/alerts${buildMonitoringHistoryQuery(options)}`, {
+  return fetchJson(`${API_PREFIX}/monitoring/alerts${buildMonitoringHistoryQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -780,7 +780,7 @@ export async function fetchMonitoringAlerts(
 export async function fetchMonitoringSnapshots(
   options: MonitoringHistoryQuery = {}
 ): Promise<MonitoringSnapshotsResponse> {
-  return fetchJson(`/api/monitoring/snapshots${buildMonitoringHistoryQuery(options)}`, {
+  return fetchJson(`${API_PREFIX}/monitoring/snapshots${buildMonitoringHistoryQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -796,7 +796,7 @@ export async function fetchOperationsWorkbench(
     params.set('hours', String(options.hours));
   }
   const query = params.toString();
-  return fetchJson(`/api/operations/workbench${query ? `?${query}` : ''}`, {
+  return fetchJson(`${API_PREFIX}/operations/workbench${query ? `?${query}` : ''}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -809,7 +809,7 @@ export async function fetchOperationsMaintenance(
     params.set('limit', String(options.limit));
   }
   const query = params.toString();
-  return fetchJson(`/api/operations/maintenance${query ? `?${query}` : ''}`, {
+  return fetchJson(`${API_PREFIX}/operations/maintenance${query ? `?${query}` : ''}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -850,7 +850,7 @@ function buildIncidentsQuery(options: IncidentsQuery = {}) {
 }
 
 export async function fetchIncidents(options: IncidentsQuery = {}): Promise<IncidentsResponse> {
-  return fetchJson(`/api/incidents${buildIncidentsQuery(options)}`, {
+  return fetchJson(`${API_PREFIX}/incidents${buildIncidentsQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -858,7 +858,7 @@ export async function fetchIncidents(options: IncidentsQuery = {}): Promise<Inci
 export async function fetchIncidentSummary(
   options: IncidentsQuery = {}
 ): Promise<IncidentSummaryResponse> {
-  return fetchJson(`/api/incidents/summary${buildIncidentsQuery(options)}`, {
+  return fetchJson(`${API_PREFIX}/incidents/summary${buildIncidentsQuery(options)}`, {
     headers: { Accept: 'application/json' },
   });
 }
@@ -870,7 +870,7 @@ export async function fetchIncidentDetail(
   taskLimit = 100
 ): Promise<IncidentDetailResponse> {
   return fetchJson(
-    `/api/incidents/${incidentId}?noteLimit=${noteLimit}&activityLimit=${activityLimit}&taskLimit=${taskLimit}`,
+    `${API_PREFIX}/incidents/${incidentId}?noteLimit=${noteLimit}&activityLimit=${activityLimit}&taskLimit=${taskLimit}`,
     {
       headers: { Accept: 'application/json' },
     }
@@ -880,7 +880,7 @@ export async function fetchIncidentDetail(
 export async function createIncident(
   payload: Record<string, unknown>
 ): Promise<{ ok: boolean; incident: IncidentDetailResponse['incident'] }> {
-  const response = await fetch('/api/incidents', {
+  const response = await fetch(`${API_PREFIX}/incidents`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -893,7 +893,7 @@ export async function updateIncident(
   incidentId: string,
   payload: Record<string, unknown>
 ): Promise<{ ok: boolean; incident: IncidentDetailResponse['incident'] }> {
-  const response = await fetch(`/api/incidents/${incidentId}`, {
+  const response = await fetch(`${API_PREFIX}/incidents/${incidentId}`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -905,7 +905,7 @@ export async function updateIncident(
 export async function bulkUpdateIncidentQueue(
   payload: Record<string, unknown>
 ): Promise<IncidentBulkUpdateResponse> {
-  const response = await fetch('/api/incidents/bulk', {
+  const response = await fetch(`${API_PREFIX}/incidents/bulk`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -922,7 +922,7 @@ export async function appendIncidentNote(
   incident: IncidentDetailResponse['incident'] | null;
   note: IncidentDetailResponse['notes'][number];
 }> {
-  const response = await fetch(`/api/incidents/${incidentId}/notes`, {
+  const response = await fetch(`${API_PREFIX}/incidents/${incidentId}/notes`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -938,7 +938,7 @@ export async function appendIncidentTask(
   ok: boolean;
   task: IncidentDetailResponse['tasks']['items'][number];
 }> {
-  const response = await fetch(`/api/incidents/${incidentId}/tasks`, {
+  const response = await fetch(`${API_PREFIX}/incidents/${incidentId}/tasks`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -955,7 +955,7 @@ export async function updateIncidentTask(
   ok: boolean;
   task: IncidentDetailResponse['tasks']['items'][number];
 }> {
-  const response = await fetch(`/api/incidents/${incidentId}/tasks/${taskId}`, {
+  const response = await fetch(`${API_PREFIX}/incidents/${incidentId}/tasks/${taskId}`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -970,7 +970,7 @@ export async function fetchOhlcv(
   limit = 100
 ): Promise<OhlcvResponse> {
   const params = new URLSearchParams({ symbol, timeframe, limit: String(limit) });
-  const response = await fetch(`/api/market/ohlcv?${params}`);
+  const response = await fetch(`${API_PREFIX}/market/ohlcv?${params}`);
   await assertOk(response);
   return response.json();
 }
