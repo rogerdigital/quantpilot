@@ -125,6 +125,14 @@ export const copy = {
       maxPosition: '单票上限',
       cashBuffer: '现金缓冲',
       riskProtection: '风险保护',
+      algoOrders: '算法委托',
+      algoStrategy: '算法策略',
+      algoProgress: '执行进度',
+      twap: 'TWAP',
+      vwap: 'VWAP',
+      iceberg: '冰山单',
+      legs: '分笔',
+      fillPct: '成交比例',
     },
     pages: {
       dashboard: [
@@ -309,6 +317,14 @@ export const copy = {
       maxPosition: 'Max Position',
       cashBuffer: 'Cash Buffer',
       riskProtection: 'Risk Guard',
+      algoOrders: 'Algo Orders',
+      algoStrategy: 'Algo Strategy',
+      algoProgress: 'Progress',
+      twap: 'TWAP',
+      vwap: 'VWAP',
+      iceberg: 'Iceberg',
+      legs: 'Legs',
+      fillPct: 'Fill %',
     },
     pages: {
       dashboard: [
