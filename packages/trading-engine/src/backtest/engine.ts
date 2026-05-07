@@ -1,3 +1,4 @@
+import { type CommissionConfig, calcCommission } from './commission.js';
 import { generateHistoricalOhlcv } from './data.js';
 import {
   calcAnnualizedReturn,
@@ -7,6 +8,7 @@ import {
   calcTurnover,
   calcWinRate,
 } from './metrics.js';
+import { calcSlippage, type SlippageConfig } from './slippage.js';
 import type {
   BacktestConfig,
   BacktestResult,
@@ -69,6 +71,15 @@ export function runBacktestEngine(config: BacktestConfig): BacktestResult {
     slippagePct,
     commissionPct,
   } = config;
+
+  // Build slippage and commission configs
+  const slippageConfig: SlippageConfig = config.slippageModel
+    ? { ...config.slippageModel }
+    : { model: 'fixed', fixedPct: slippagePct };
+
+  const commissionConfig: CommissionConfig = config.commissionModel
+    ? { ...config.commissionModel }
+    : { model: 'percentage', percentage: commissionPct };
 
   // Build per-symbol OHLCV maps
   const symbolStates: SymbolState[] = universe.map((symbol) => {
@@ -164,8 +175,18 @@ export function runBacktestEngine(config: BacktestConfig): BacktestResult {
         const targetValue = portfolioValue * maxPositionWeight;
         const buyValue = Math.min(targetValue - currentPositionValue, cash * 0.95);
         if (buyValue > 100) {
-          const execPrice = currentPrice * (1 + slippagePct);
-          const commission = buyValue * commissionPct;
+          // Estimate quantity for slippage calculation
+          const estimatedQty = Math.floor(buyValue / currentPrice);
+          const slippageResult = calcSlippage(
+            { price: currentPrice, quantity: estimatedQty, side: 'buy', volume: bar.volume },
+            slippageConfig
+          );
+          const execPrice = slippageResult.executionPrice;
+          const commissionResult = calcCommission(
+            { quantity: estimatedQty, price: execPrice, side: 'buy' },
+            commissionConfig
+          );
+          const commission = commissionResult.commission;
           const qty = Math.floor((buyValue - commission) / execPrice);
           if (qty > 0) {
             const cost = qty * execPrice + commission;
@@ -185,8 +206,16 @@ export function runBacktestEngine(config: BacktestConfig): BacktestResult {
         // Sell 50% of position
         const sellQty = Math.floor(holding.qty * 0.5);
         if (sellQty > 0) {
-          const execPrice = currentPrice * (1 - slippagePct);
-          const commission = sellQty * execPrice * commissionPct;
+          const slippageResult = calcSlippage(
+            { price: currentPrice, quantity: sellQty, side: 'sell', volume: bar.volume },
+            slippageConfig
+          );
+          const execPrice = slippageResult.executionPrice;
+          const commissionResult = calcCommission(
+            { quantity: sellQty, price: execPrice, side: 'sell' },
+            commissionConfig
+          );
+          const commission = commissionResult.commission;
           const proceeds = sellQty * execPrice - commission;
           const pnl = (execPrice - holding.avgCost) * sellQty - commission;
           cash += proceeds;

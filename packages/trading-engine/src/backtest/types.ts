@@ -7,6 +7,22 @@ export type OhlcvBar = {
   volume: number;
 };
 
+export type SlippageModel = {
+  model: 'fixed' | 'volume' | 'spread';
+  fixedPct?: number;
+  volumeImpact?: number;
+  spreadBps?: number;
+};
+
+export type CommissionModel = {
+  model: 'fixed' | 'per_share' | 'percentage' | 'tiered';
+  fixedAmount?: number;
+  perShareAmount?: number;
+  percentage?: number;
+  minCommission?: number;
+  maxCommission?: number;
+};
+
 export type BacktestConfig = {
   strategyId: string;
   runId: string;
@@ -17,8 +33,12 @@ export type BacktestConfig = {
   buyThreshold: number; // default 74
   sellThreshold: number; // default 38
   maxPositionWeight: number; // default 0.24
-  slippagePct: number; // default 0.001
-  commissionPct: number; // default 0.001
+  slippagePct: number; // default 0.001 (for backward compatibility)
+  commissionPct: number; // default 0.001 (for backward compatibility)
+  /** Advanced slippage model. If provided, overrides slippagePct. */
+  slippageModel?: SlippageModel;
+  /** Advanced commission model. If provided, overrides commissionPct. */
+  commissionModel?: CommissionModel;
   /** Optional pre-fetched bars per symbol. If provided, skips synthetic data generation. */
   externalBars?: Record<string, OhlcvBar[]>;
 };
