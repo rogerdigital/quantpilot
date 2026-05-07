@@ -2,7 +2,39 @@
 import { buildRemoteSellIntent, sellPosition } from '../execution/index.js';
 
 export { calcBeta, calcHHI } from './beta-calculator.js';
-export { calcCVaR, calcHistoricalVaR } from './var-calculator.js';
+export {
+  analyzeSectorConcentration,
+  type CorrelationAlert,
+  type CorrelationMatrix,
+  type CorrelationMethod,
+  type CorrelationPair,
+  calcCorrelationMatrix,
+  calcRollingCorrelation,
+  detectCorrelationRegimeChange,
+  type SectorConcentration,
+} from './correlation-matrix.js';
+export {
+  buildCustomScenario,
+  getPredefinedScenarios,
+  getScenarioById,
+  type PositionInput,
+  runMultiScenarioTest,
+  runStressTest,
+  type StressScenario,
+  type StressTestResult,
+} from './stress-test.js';
+export {
+  type ConfidenceLevel,
+  calcCVaR,
+  calcHistoricalVaR,
+  calcMonteCarloVaR,
+  calcParametricVaR,
+  calcPortfolioVaR,
+  scaleVaRHorizon,
+  type TimeHorizon,
+  type VaRMethod,
+  type VaRResult,
+} from './var-calculator.js';
 
 export function riskOffIfNeeded(state, brokerSupportsRemoteExecution) {
   const liveRiskIntents = [];
