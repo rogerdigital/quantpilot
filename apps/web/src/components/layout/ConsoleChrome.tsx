@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useThemeContext } from '../../hooks/ThemeProvider.tsx';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useSettingsNavigation } from '../../modules/console/console.hooks.ts';
 import { type ConsolePageKey, copy, useLocale } from '../../modules/console/console.i18n.tsx';
@@ -181,6 +182,7 @@ function GlobalToolbar() {
   const { state } = useTradingSystem();
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const goToSettings = useSettingsNavigation();
+  const { resolved, toggle } = useThemeContext();
   const [localeOpen, setLocaleOpen] = useState(false);
   const localeMenuRef = useRef<HTMLDivElement | null>(null);
   const localeLabel = locale === 'zh' ? '中文' : 'English';
@@ -276,6 +278,16 @@ function GlobalToolbar() {
             </div>
           ) : null}
         </div>
+        <button
+          type="button"
+          className="toolbar-pill toolbar-pill-button"
+          onClick={toggle}
+          title={resolved === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          <span className="toolbar-pill-main">
+            <span className="toolbar-pill-label">{resolved === 'dark' ? '☀' : '☾'}</span>
+          </span>
+        </button>
       </div>
     </div>
   );
