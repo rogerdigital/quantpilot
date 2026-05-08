@@ -12,6 +12,7 @@ import { createAgentSessionRepository } from './repositories/agent-session-repo.
 import { createAuditRepository } from './repositories/audit-repo.js';
 import { createBacktestResultRepository } from './repositories/backtest-result-repo.js';
 import { createBacktestRunRepository } from './repositories/backtest-run-repo.js';
+import { createCollaborationRepository } from './repositories/collaboration-repo.js';
 import { createCycleRepository } from './repositories/cycle-repo.js';
 import { createExecutionCandidateHandoffRepository } from './repositories/execution-candidate-handoff-repo.js';
 import { createExecutionPlanRepository } from './repositories/execution-plan-repo.js';
@@ -57,6 +58,7 @@ export function createControlPlaneContext(store = controlPlaneStore) {
     audit: createAuditRepository(store),
     backtestResults: createBacktestResultRepository(store),
     backtestRuns: createBacktestRunRepository(store),
+    collaboration: createCollaborationRepository(store),
     cycles: createCycleRepository(store),
     executionPlans: createExecutionPlanRepository(store),
     executionRuns: createExecutionRunRepository(store),

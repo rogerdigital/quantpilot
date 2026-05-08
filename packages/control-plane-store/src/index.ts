@@ -20,6 +20,7 @@ export { createAgentSessionMessageRepository } from './repositories/agent-sessio
 export { createAgentSessionRepository } from './repositories/agent-session-repo.js';
 export { createAuditRepository } from './repositories/audit-repo.js';
 export { createBacktestRunRepository } from './repositories/backtest-run-repo.js';
+export { createCollaborationRepository } from './repositories/collaboration-repo.js';
 export { createCycleRepository } from './repositories/cycle-repo.js';
 export { createExecutionCandidateHandoffRepository } from './repositories/execution-candidate-handoff-repo.js';
 export { createExecutionPlanRepository } from './repositories/execution-plan-repo.js';
