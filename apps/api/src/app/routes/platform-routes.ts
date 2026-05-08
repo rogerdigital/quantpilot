@@ -6,6 +6,7 @@ import { handleBacktestRoutes } from './routers/backtest-router.js';
 import { handleExecutionRoutes } from './routers/execution-router.js';
 import { handleHealthRoutes } from './routers/health-router.js';
 import { handleMarketRoutes } from './routers/market-router.js';
+import { handleMarketplaceRoutes } from './routers/marketplace-router.js';
 import { handleMonitoringRoutes } from './routers/monitoring-router.js';
 import { handleOperationsRoutes } from './routers/operations-router.js';
 import { handleResearchRoutes } from './routers/research-router.js';
@@ -28,6 +29,7 @@ const routers = [
   handleExecutionRoutes,
   handleTradingRoutes,
   handleMarketRoutes,
+  handleMarketplaceRoutes,
 ];
 
 export async function handlePlatformRoutes(context) {
