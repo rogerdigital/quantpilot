@@ -12,24 +12,17 @@
 
 ## Features
 
-### Core Trading
-
 | Domain | What It Does |
 |--------|-------------|
 | **Research & Strategy** | Strategy catalog, event-driven backtest engine (Sharpe, max drawdown, win-rate), evaluation, comparison, and governance |
 | **Execution** | Plan → approve → submit → reconcile → recover lifecycle, broker-event ingestion, queue-based operations console |
 | **Risk** | Live VaR/CVaR/Beta/HHI analytics, approval boundaries, policy actions, risk-parameter tuning panel |
 | **Agent Collaboration** | Session → intent → plan → analysis → action handoff pipeline, daily-run loops (pre-market / intraday / post-market), ask-first queue |
-
-### Platform & UX
-
-| Domain | What It Does |
-|--------|-------------|
 | **Real-Time Push** | SSE state stream with exponential-backoff reconnect; polling drops to 15 s fallback |
 | **Auth & Security** | JWT (HS256, 8h), AES-256-GCM broker key encryption at rest, workspace-aware RBAC |
 | **Operations** | Monitoring, incidents, audit trail, backup/restore, integrity checks, SQLite WAL persistence |
 | **Charts** | lightweight-charts v5 — equity curve, candlestick, signal bar |
-| **UX Extras** | `Cmd+K` command palette, approval drawer, toast notifications |
+| **UX** | `Cmd+K` command palette, approval drawer, toast notifications |
 
 ---
 
@@ -64,7 +57,6 @@ npm run check:runtime-env -- --env-file .env
 | `JWT_SECRET` | HS256 signing key (min 32 chars) |
 | `BROKER_KEY_ENCRYPTION_KEY` | 64-char hex for AES-256-GCM |
 | `DEMO_USERNAME` / `DEMO_PASSWORD` | Login credentials (`admin` / `changeme`) |
-| `USE_HONO` | Set `true` for Hono gateway layer (alternative to native Node.js HTTP) |
 
 ---
 
@@ -73,10 +65,12 @@ npm run check:runtime-env -- --env-file .env
 ### Commands
 
 ```bash
+# Development
 npm run dev                 # Vite dev server (HMR)
 npm run gateway             # API gateway
 npm run worker              # Background worker
 
+# Testing
 npm run test:web            # Vitest (frontend)
 npm run test:api            # node --test (API)
 npm run test:engine         # Workflow engine
@@ -84,22 +78,11 @@ npm run test:runtime        # Runtime
 npm run test:control-plane  # Store layer
 npm run test:worker         # Worker
 
+# Validation
 npm run typecheck           # tsc --noEmit
 npm run build               # Production build
-npm run verify              # Full pipeline (all of the above)
+npm run verify              # Full pipeline (lint + tests + typecheck + build)
 ```
-
-### Verify Pipeline
-
-`npm run verify` runs sequentially:
-
-1. Workspace & lockfile integrity
-2. Documentation consistency
-3. Runtime env checks
-4. Lint (Biome)
-5. All test suites (control-plane → runtime → engine → API → worker → web)
-6. TypeScript typecheck
-7. Production build
 
 A `pre-push` git hook runs `verify` automatically.
 
@@ -117,8 +100,6 @@ A `pre-push` git hook runs `verify` automatically.
 ---
 
 ## Architecture
-
-### Monorepo Structure
 
 ```text
 quantpilot/
@@ -140,27 +121,6 @@ quantpilot/
 └── CONTRIBUTING.md
 ```
 
-### Platform Operating Loops
-
-1. **Research** — strategy catalog → backtest → evaluation → governance → execution handoff
-2. **Execution** — plan → broker event → reconciliation → compensation → incident linkage
-3. **Middleware** — risk workbench + scheduler workbench → reviewed actions → control-plane fanout
-4. **Agent** — prompt → intent → plan → analysis → handoff → approval → daily-run cycle
-
-### Key Entry Points
-
-| What | Where |
-|------|-------|
-| Web app | `apps/web/src/app/App.tsx` |
-| Dashboard | `apps/web/src/pages/console/DashboardConsole.tsx` |
-| State provider | `apps/web/src/store/trading-system/TradingSystemProvider.tsx` |
-| API server | `apps/api/src/main.ts` |
-| Worker | `apps/worker/src/main.ts` |
-| Trading engine | `packages/trading-engine/src/runtime.ts` |
-| Backtest engine | `packages/trading-engine/src/backtest/index.ts` |
-| Control-plane | `packages/control-plane-runtime/src/index.ts` |
-| Workflow engine | `packages/task-workflow-engine/src/index.ts` |
-
 ---
 
 ## Documentation
@@ -170,26 +130,29 @@ quantpilot/
 | [Contributing Guide](./CONTRIBUTING.md) | Dev workflow, PR rules |
 | [Operations Handbook](./docs/operations-handbook.md) | Backup, restore, incidents |
 | [Deployment Guide](./docs/deployment.md) | Build, env, deploy checklist |
-| [Migration Runbook](./docs/control-plane-migrations.md) | Control-plane schema changes |
 | [Project Structure](./docs/architecture/project-structure.md) | Detailed module map |
-| [Layered Architecture](./docs/architecture/layered-architecture.md) | Design philosophy |
-
-### Stage Closeout Documents
-
-The staged delivery roadmap (Stages 1–7) is closed. These documents remain as architecture references and contract baselines:
-
-[Stage 1](./docs/architecture/stage-1-closeout.md) · [Stage 2](./docs/architecture/stage-2-closeout.md) · [Stage 3](./docs/architecture/stage-3-closeout.md) · [Stage 4](./docs/architecture/stage-4-closeout.md) · [Stage 5](./docs/architecture/stage-5-closeout.md) · [Stage 6](./docs/architecture/stage-6-closeout.md) · [Stage 7](./docs/architecture/stage-7-closeout.md)
 
 ---
 
-## Contributing
+## Roadmap
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for:
+### Current Status
 
-- Development workflow
-- PR rules and review process
-- Code style and conventions
-- Testing requirements
+Stage 1-7 completed. Platform skeleton is fully functional with research, backtest, execution, risk, and agent collaboration modules.
+
+### Near-term (1-3 months)
+
+- Broker integration: Alpaca, Interactive Brokers API connectors
+- Agent governance: Fine-grained permission control, risk policy configuration
+- Monitoring & alerts: Real-time risk metrics, anomaly detection, notifications
+- Documentation: API docs, user manual, contribution guide
+
+### Long-term (6-12 months)
+
+- Multi-strategy multi-account: Strategy portfolio management, account isolation
+- Institutional-grade risk: Stress testing, scenario analysis, compliance reports
+- Open-source ecosystem: Plugin architecture, third-party strategy marketplace
+- Cloud-native deployment: Docker, Kubernetes, multi-tenancy
 
 ---
 
