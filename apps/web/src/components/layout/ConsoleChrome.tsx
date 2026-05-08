@@ -45,6 +45,7 @@ import {
   toolbarTitle,
   topbarMeta,
 } from './ConsoleChrome.css.ts';
+import { MobileBottomNav } from './MobileBottomNav.tsx';
 
 export type TopMetaItem = {
   label: string;
@@ -386,6 +387,7 @@ export function Layout() {
         <Outlet />
       </main>
       {cmdOpen && <CommandPalette locale={locale} onClose={() => setCmdOpen(false)} />}
+      <MobileBottomNav />
       <ApprovalDrawer
         locale={locale}
         queue={state.approvalQueue}

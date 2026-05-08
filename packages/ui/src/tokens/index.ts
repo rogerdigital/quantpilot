@@ -1,3 +1,4 @@
+export { breakpoints, media } from './breakpoints.css.js';
 export { colors, darkColors, lightColors } from './colors.css.js';
 export { duration, easing } from './motion.css.js';
 export { radii } from './radii.css.js';
