@@ -1,18 +1,95 @@
 import type { OhlcvBar } from '@shared-types/trading.ts';
-import { CandlestickSeries, createChart, HistogramSeries } from 'lightweight-charts';
+import { CandlestickSeries, createChart, HistogramSeries, LineSeries } from 'lightweight-charts';
 import { useEffect, useRef } from 'react';
+
+type ChartInstance = ReturnType<typeof createChart>;
+type SeriesInstance = ReturnType<ChartInstance['addSeries']>;
+
+export type IndicatorConfig = {
+  sma?: number[];
+  ema?: number[];
+  bollinger?: { period: number; stdDev: number };
+};
 
 type Props = {
   data: OhlcvBar[];
   timeframe?: string;
+  indicators?: IndicatorConfig;
 };
 
-export function CandlestickChart({ data, timeframe }: Props) {
+function calcSMA(closes: number[], period: number): (number | null)[] {
+  const result: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period - 1) {
+      result.push(null);
+    } else {
+      let sum = 0;
+      for (let j = i - period + 1; j <= i; j++) sum += closes[j];
+      result.push(sum / period);
+    }
+  }
+  return result;
+}
+
+function calcEMA(closes: number[], period: number): (number | null)[] {
+  const result: (number | null)[] = [];
+  const k = 2 / (period + 1);
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period - 1) {
+      result.push(null);
+    } else if (i === period - 1) {
+      let sum = 0;
+      for (let j = 0; j < period; j++) sum += closes[j];
+      result.push(sum / period);
+    } else {
+      result.push(closes[i] * k + (result[i - 1] as number) * (1 - k));
+    }
+  }
+  return result;
+}
+
+function calcBollinger(
+  closes: number[],
+  period: number,
+  stdDev: number
+): { upper: (number | null)[]; middle: (number | null)[]; lower: (number | null)[] } {
+  const middle = calcSMA(closes, period);
+  const upper: (number | null)[] = [];
+  const lower: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (middle[i] === null) {
+      upper.push(null);
+      lower.push(null);
+    } else {
+      let variance = 0;
+      for (let j = i - period + 1; j <= i; j++) {
+        variance += (closes[j] - (middle[i] as number)) ** 2;
+      }
+      const sd = Math.sqrt(variance / period);
+      upper.push((middle[i] as number) + sd * stdDev);
+      lower.push((middle[i] as number) - sd * stdDev);
+    }
+  }
+  return { upper, middle, lower };
+}
+
+const INDICATOR_COLORS: Record<string, string> = {
+  sma20: '#ffb700',
+  sma50: '#8b5cf6',
+  sma200: '#ef5350',
+  ema12: '#00e89d',
+  ema26: '#6366f1',
+  bb_upper: 'rgba(99, 102, 241, 0.5)',
+  bb_middle: 'rgba(99, 102, 241, 0.7)',
+  bb_lower: 'rgba(99, 102, 241, 0.5)',
+};
+
+export function CandlestickChart({ data, timeframe, indicators }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  // Keep refs so we can update data without re-creating the chart
-  const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
-  const candleRef = useRef<ReturnType<typeof chartRef.current.addSeries> | null>(null);
-  const volumeRef = useRef<ReturnType<typeof chartRef.current.addSeries> | null>(null);
+  const chartRef = useRef<ChartInstance | null>(null);
+  const candleRef = useRef<SeriesInstance | null>(null);
+  const volumeRef = useRef<SeriesInstance | null>(null);
+  const indicatorRefs = useRef<SeriesInstance[]>([]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -81,12 +158,21 @@ export function CandlestickChart({ data, timeframe }: Props) {
       chartRef.current = null;
       candleRef.current = null;
       volumeRef.current = null;
+      indicatorRefs.current = [];
     };
   }, []);
 
-  // Update data when it changes
+  // Update data and indicators when they change
   useEffect(() => {
-    if (!candleRef.current || !volumeRef.current || !data.length) return;
+    if (!candleRef.current || !volumeRef.current || !data.length || !chartRef.current) return;
+
+    const chart = chartRef.current;
+
+    // Remove old indicator series
+    for (const s of indicatorRefs.current) {
+      chart.removeSeries(s);
+    }
+    indicatorRefs.current = [];
 
     const candleData = data.map((b) => ({
       time: b.time as unknown as string,
@@ -104,8 +190,78 @@ export function CandlestickChart({ data, timeframe }: Props) {
 
     candleRef.current.setData(candleData);
     volumeRef.current.setData(volumeData);
-    chartRef.current?.timeScale().fitContent();
-  }, [data]);
+
+    const times = data.map((b) => b.time as unknown as string);
+    const closes = data.map((b) => b.close);
+
+    // SMA indicators
+    if (indicators?.sma) {
+      for (const period of indicators.sma) {
+        const values = calcSMA(closes, period);
+        const series = chart.addSeries(LineSeries, {
+          color: INDICATOR_COLORS[`sma${period}`] ?? '#ffb700',
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
+          title: `SMA ${period}`,
+        });
+        series.setData(
+          values
+            .map((v, i) => (v !== null ? { time: times[i], value: v } : null))
+            .filter(Boolean) as { time: string; value: number }[]
+        );
+        indicatorRefs.current.push(series);
+      }
+    }
+
+    // EMA indicators
+    if (indicators?.ema) {
+      for (const period of indicators.ema) {
+        const values = calcEMA(closes, period);
+        const series = chart.addSeries(LineSeries, {
+          color: INDICATOR_COLORS[`ema${period}`] ?? '#00e89d',
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
+          title: `EMA ${period}`,
+        });
+        series.setData(
+          values
+            .map((v, i) => (v !== null ? { time: times[i], value: v } : null))
+            .filter(Boolean) as { time: string; value: number }[]
+        );
+        indicatorRefs.current.push(series);
+      }
+    }
+
+    // Bollinger Bands
+    if (indicators?.bollinger) {
+      const { period, stdDev } = indicators.bollinger;
+      const bb = calcBollinger(closes, period, stdDev);
+      for (const [key, values] of [
+        ['upper', bb.upper],
+        ['middle', bb.middle],
+        ['lower', bb.lower],
+      ] as const) {
+        const series = chart.addSeries(LineSeries, {
+          color: INDICATOR_COLORS[`bb_${key}`],
+          lineWidth: 1,
+          lineStyle: key === 'middle' ? 0 : 2,
+          priceLineVisible: false,
+          lastValueVisible: false,
+          title: key === 'middle' ? `BB ${period}` : '',
+        });
+        series.setData(
+          values
+            .map((v, i) => (v !== null ? { time: times[i], value: v } : null))
+            .filter(Boolean) as { time: string; value: number }[]
+        );
+        indicatorRefs.current.push(series);
+      }
+    }
+
+    chart.timeScale().fitContent();
+  }, [data, indicators]);
 
   // Fit content when timeframe changes
   useEffect(() => {

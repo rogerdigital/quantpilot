@@ -1,10 +1,10 @@
 import type { TerminalOrderRequest, TerminalOrderResponse } from '@shared-types/trading.ts';
-import { jsonHeaders } from '../../app/api/http.ts';
+import { API_PREFIX, jsonHeaders } from '../../app/api/http.ts';
 
 export async function submitTerminalOrder(
   req: TerminalOrderRequest
 ): Promise<TerminalOrderResponse> {
-  const response = await fetch('/api/trading/orders', {
+  const response = await fetch(`${API_PREFIX}/trading/orders`, {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(req),

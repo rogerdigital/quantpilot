@@ -1901,8 +1901,8 @@ export function ExecutionPage() {
                       });
                       setPlanMessage(
                         locale === 'zh'
-                          ? `已执行恢复动作：${result.recoveryAction || selectedRecovery.recommendedAction}。`
-                          : `Executed recovery action: ${result.recoveryAction || selectedRecovery.recommendedAction}.`
+                          ? `已执行恢复动作：${result.recoveryAction || selectedRecovery?.recommendedAction || ''}。`
+                          : `Executed recovery action: ${result.recoveryAction || selectedRecovery?.recommendedAction || ''}.`
                       );
                       setRefreshKey((current) => current + 1);
                     } catch (error) {
@@ -2785,6 +2785,128 @@ export function ExecutionPage() {
           {actionGuardNotice?.action === 'cancel-live-order' ? (
             <div className="status-copy">{formatActionGuardNotice(locale, actionGuardNotice)}</div>
           ) : null}
+        </article>
+      </section>
+
+      <section className="panel-grid panel-grid-3">
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{copy[locale].terms.algoOrders}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '支持 TWAP、VWAP、冰山单三种算法策略，将大额委托拆分为多笔小单执行。'
+                  : 'Supports TWAP, VWAP, and Iceberg strategies to split large orders into smaller legs.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-muted">ALGO</div>
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>{copy[locale].terms.algoStrategy}</th>
+                  <th>{locale === 'zh' ? '说明' : 'Description'}</th>
+                  <th>{copy[locale].terms.legs}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <strong>{copy[locale].terms.twap}</strong>
+                  </td>
+                  <td className="table-note">
+                    {locale === 'zh'
+                      ? '等时切片，均匀分配数量'
+                      : 'Equal time slices, uniform qty split'}
+                  </td>
+                  <td>{locale === 'zh' ? '可配置' : 'Configurable'}</td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>{copy[locale].terms.vwap}</strong>
+                  </td>
+                  <td className="table-note">
+                    {locale === 'zh' ? '按成交量分布加权' : 'Weighted by volume profile'}
+                  </td>
+                  <td>{locale === 'zh' ? '按分布' : 'By profile'}</td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>{copy[locale].terms.iceberg}</strong>
+                  </td>
+                  <td className="table-note">
+                    {locale === 'zh'
+                      ? '仅显示部分数量，隐藏真实规模'
+                      : 'Display partial qty, hide true size'}
+                  </td>
+                  <td>{locale === 'zh' ? '按显示量' : 'By display qty'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">
+                {locale === 'zh' ? '订单生命周期' : 'Order Lifecycle'}
+              </div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '算法委托经过状态机流转，支持部分成交、超时和取消。'
+                  : 'Algo orders go through state machine with partial fills, timeout, and cancel support.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-muted">FSM</div>
+          </div>
+          <div style={{ padding: '12px 16px', fontSize: '13px', lineHeight: '1.8' }}>
+            <div>
+              <code>pending</code> → <code>submitted</code> → <code>partial_fill</code> →{' '}
+              <code>filled</code>
+            </div>
+            <div style={{ marginTop: '4px', opacity: 0.7 }}>
+              ↳ <code>cancelled</code> | <code>rejected</code> | <code>expired</code>
+            </div>
+            <div style={{ marginTop: '12px', fontSize: '12px', opacity: 0.6 }}>
+              {locale === 'zh'
+                ? '每个 leg 独立跟踪成交，整体状态由所有 leg 聚合决定。'
+                : 'Each leg tracks fills independently; overall status is aggregated from all legs.'}
+            </div>
+          </div>
+        </article>
+
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">{locale === 'zh' ? '智能路由' : 'Smart Router'}</div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '基于紧急度、费用、延迟和成交率选择最优交易所。'
+                  : 'Selects optimal venue based on urgency, fees, latency, and fill rate.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-muted">ROUTE</div>
+          </div>
+          <div style={{ padding: '12px 16px', fontSize: '13px', lineHeight: '1.8' }}>
+            <div>
+              <strong>{locale === 'zh' ? '支持交易所' : 'Venues'}:</strong> Alpaca, ARCA, NASDAQ,
+              NYSE, BATS, IEX
+            </div>
+            <div style={{ marginTop: '8px' }}>
+              <strong>{locale === 'zh' ? '评分因素' : 'Scoring'}:</strong>
+            </div>
+            <div style={{ fontSize: '12px', opacity: 0.7 }}>
+              • {locale === 'zh' ? '高紧急度优先低延迟' : 'High urgency → low latency'}
+            </div>
+            <div style={{ fontSize: '12px', opacity: 0.7 }}>
+              • {locale === 'zh' ? '限价单优先 maker 返佣' : 'Limit orders → maker rebates'}
+            </div>
+            <div style={{ fontSize: '12px', opacity: 0.7 }}>
+              • {locale === 'zh' ? '低紧急度优先低费用' : 'Low urgency → low fees'}
+            </div>
+          </div>
         </article>
       </section>
     </>

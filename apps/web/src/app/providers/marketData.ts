@@ -66,7 +66,7 @@ function customHttpProvider(config: RuntimeConfig): MarketDataProvider {
           }
         );
         const rawQuotes = Array.isArray(payload?.data) ? payload.data : [];
-        const quotes = rawQuotes.map(normalizeQuote).filter(Boolean);
+        const quotes = rawQuotes.map(normalizeQuote).filter((q): q is Quote => q !== null);
         return {
           connected: true,
           fallback: false,
@@ -104,7 +104,7 @@ function alpacaProvider(config: RuntimeConfig): MarketDataProvider {
           }
         );
         const quotes = Array.isArray(payload?.quotes)
-          ? payload.quotes.map(normalizeQuote).filter(Boolean)
+          ? payload.quotes.map(normalizeQuote).filter((q): q is Quote => q !== null)
           : [];
         return {
           connected: true,

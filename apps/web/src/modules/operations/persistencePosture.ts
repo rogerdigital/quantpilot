@@ -2,6 +2,7 @@ import type {
   OperationsMaintenanceResponse,
   OperationsPersistencePosture,
 } from '@shared-types/trading.ts';
+import { API_PREFIX } from '../../app/api/http.ts';
 
 export function derivePersistencePostureFromMaintenance(
   maintenance: OperationsMaintenanceResponse | null | undefined
@@ -79,9 +80,9 @@ export function buildPersistenceCliCommands(adapterKind = 'db') {
 
 export function buildPersistenceApiExamples() {
   return [
-    'GET /api/operations/maintenance',
-    'POST /api/operations/maintenance/backup',
-    'POST /api/operations/maintenance/repair/workflows',
+    `GET ${API_PREFIX}/operations/maintenance`,
+    `POST ${API_PREFIX}/operations/maintenance/backup`,
+    `POST ${API_PREFIX}/operations/maintenance/repair/workflows`,
   ];
 }
 

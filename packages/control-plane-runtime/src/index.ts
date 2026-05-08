@@ -1414,3 +1414,35 @@ export {
   assessExecutionCandidate,
 } from '../../../apps/api/src/domains/risk/services/assessment-service.js';
 export { buildStrategyExecutionCandidate } from '../../../apps/api/src/domains/strategy/services/execution-candidate-service.js';
+
+// Notification channels
+export {
+  buildWebhookPayload,
+  createDefaultPreference,
+  createWebSocketMessage,
+  type EmailConfig,
+  type EmailDeliveryResult,
+  type EmailMessage,
+  type EmailTemplate,
+  getEnabledChannels,
+  isQuietHours,
+  type NotificationChannel,
+  type NotificationEventType,
+  type NotificationPreference,
+  renderEmailTemplate,
+  sendEmail,
+  sendWebhook,
+  setEventRouting,
+  shouldSendNotification,
+  signPayload,
+  updateChannelConfig,
+  verifySignature,
+  type WebhookConfig,
+  type WebhookDeliveryResult,
+  type WebhookPayload,
+  WebSocketChannelManager,
+  type WebSocketClient,
+  type WebSocketConfig,
+  type WebSocketDeliveryResult,
+  type WebSocketMessage,
+} from './domains/notifications/index.js';

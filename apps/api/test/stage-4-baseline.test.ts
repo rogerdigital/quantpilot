@@ -168,8 +168,8 @@ test('stage 4 baseline exposes stable risk and scheduler workbench contracts', a
   seedRiskSchedulerMiddleware();
 
   const [riskWorkbench, schedulerWorkbench] = await Promise.all([
-    invokeGatewayRoute(handler, { path: '/api/risk/workbench?hours=168&limit=8' }),
-    invokeGatewayRoute(handler, { path: '/api/scheduler/workbench?hours=168&limit=8' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/risk/workbench?hours=168&limit=8' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/scheduler/workbench?hours=168&limit=8' }),
   ]);
 
   assert.equal(riskWorkbench.statusCode, 200);
@@ -195,7 +195,7 @@ test('stage 4 baseline exposes stable risk and scheduler action contracts', asyn
   const [riskAction, schedulerAction] = await Promise.all([
     invokeGatewayRoute(handler, {
       method: 'POST',
-      path: '/api/risk/actions',
+      path: '/api/v1/risk/actions',
       body: {
         actionKey: 'release-emergency-brake',
         actor: 'stage4-risk-operator',
@@ -205,7 +205,7 @@ test('stage 4 baseline exposes stable risk and scheduler action contracts', asyn
     }),
     invokeGatewayRoute(handler, {
       method: 'POST',
-      path: '/api/scheduler/actions',
+      path: '/api/v1/scheduler/actions',
       body: {
         actionKey: 'align-risk-window',
         actor: 'stage4-scheduler-operator',

@@ -58,7 +58,7 @@ test.after(() => {
 test('stage 7 baseline exposes agent governance contracts', async () => {
   const response = await invokeGateway(handler, {
     method: 'GET',
-    path: '/api/agent/workbench',
+    path: '/api/v1/agent/workbench',
   });
 
   assert.equal(response.statusCode, 200);

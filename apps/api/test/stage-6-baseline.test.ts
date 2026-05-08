@@ -99,9 +99,9 @@ test('stage 6 baseline exposes productionization posture across account scope an
   seedStage6ProductionizationState();
 
   const [account, maintenance, monitoring] = await Promise.all([
-    invokeGatewayRoute(handler, { path: '/api/user-account' }),
-    invokeGatewayRoute(handler, { path: '/api/operations/maintenance?limit=10' }),
-    invokeGatewayRoute(handler, { path: '/api/monitoring/status' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/user-account' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/operations/maintenance?limit=10' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/monitoring/status' }),
   ]);
 
   assert.equal(account.statusCode, 200);
@@ -127,10 +127,10 @@ test('stage 6 baseline exposes backup, restore dry-run, workflow repair, and obs
   seedStage6ProductionizationState();
 
   const [workbench, backup] = await Promise.all([
-    invokeGatewayRoute(handler, { path: '/api/operations/workbench?hours=48&limit=20' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/operations/workbench?hours=48&limit=20' }),
     invokeGatewayRoute(handler, {
       method: 'POST',
-      path: '/api/operations/maintenance/backup',
+      path: '/api/v1/operations/maintenance/backup',
     }),
   ]);
 
@@ -151,7 +151,7 @@ test('stage 6 baseline exposes backup, restore dry-run, workflow repair, and obs
 
   const restorePreview = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/operations/maintenance/restore',
+    path: '/api/v1/operations/maintenance/restore',
     body: {
       dryRun: true,
       backup: backup.json.backup,
@@ -160,7 +160,7 @@ test('stage 6 baseline exposes backup, restore dry-run, workflow repair, and obs
 
   const repair = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/operations/maintenance/repair/workflows',
+    path: '/api/v1/operations/maintenance/repair/workflows',
     body: {
       worker: 'stage6-baseline-worker',
       limit: 10,

@@ -1,5 +1,10 @@
 import { globalStyle, style } from '@vanilla-extract/css';
 
+/* ── BREAKPOINTS ────────────────────────────────────────── */
+
+const mobile = 'screen and (max-width: 640px)';
+const tablet = 'screen and (max-width: 1024px)';
+
 /* ── APP SHELL ──────────────────────────────────────────── */
 
 export const appShell = style({
@@ -12,10 +17,20 @@ export const appShell = style({
   gap: 0,
   padding: 0,
   transition: 'grid-template-columns 0.25s ease',
+  '@media': {
+    [tablet]: {
+      gridTemplateColumns: '1fr',
+    },
+  },
 });
 
 export const appShellCollapsed = style({
   gridTemplateColumns: '60px 1fr',
+  '@media': {
+    [tablet]: {
+      gridTemplateColumns: '1fr',
+    },
+  },
 });
 
 globalStyle(`${appShell}::before`, {
@@ -41,6 +56,11 @@ export const mainPanel = style({
   maxWidth: '1480px',
   marginLeft: 'auto',
   marginRight: 'auto',
+  '@media': {
+    [mobile]: {
+      padding: '12px 12px 80px',
+    },
+  },
 });
 
 globalStyle(`${mainPanel}::before`, {
@@ -65,6 +85,11 @@ export const sidebar = style({
   display: 'flex',
   flexDirection: 'column',
   overflow: 'visible',
+  '@media': {
+    [tablet]: {
+      display: 'none',
+    },
+  },
 });
 
 globalStyle(`${sidebar}::after`, {
@@ -261,6 +286,12 @@ export const topbarMeta = style({
   gridTemplateColumns: 'repeat(3, minmax(112px, 1fr))',
   gap: '10px',
   minWidth: '360px',
+  '@media': {
+    [mobile]: {
+      gridTemplateColumns: '1fr',
+      minWidth: 0,
+    },
+  },
 });
 
 export const metaCard = style({
@@ -304,4 +335,50 @@ export const metaValue = style({
 export const metaValueAccent = style({
   color: 'var(--accent)',
   textShadow: '0 0 20px rgba(0, 212, 255, 0.25)',
+});
+
+/* ── MOBILE BOTTOM NAV ──────────────────────────────────── */
+
+export const bottomNav = style({
+  display: 'none',
+  '@media': {
+    [mobile]: {
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      zIndex: 100,
+      display: 'flex',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      height: '56px',
+      background: 'rgba(10, 20, 46, 0.98)',
+      borderTop: '1px solid var(--line)',
+      backdropFilter: 'blur(12px)',
+    },
+  },
+});
+
+export const bottomNavItem = style({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '2px',
+  padding: '6px 12px',
+  background: 'transparent',
+  border: 'none',
+  color: 'var(--muted)',
+  fontSize: '10px',
+  fontFamily: 'var(--font-data)',
+  letterSpacing: '0.06em',
+  cursor: 'pointer',
+  textDecoration: 'none',
+  transition: 'color 150ms ease',
+  ':hover': {
+    color: 'var(--text)',
+  },
+});
+
+export const bottomNavItemActive = style({
+  color: 'var(--accent)',
 });

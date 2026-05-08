@@ -876,6 +876,163 @@ function RiskPage() {
           ) : null}
         </article>
       </section>
+
+      <div style={{ marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: 600, margin: '0 0 4px' }}>
+          {locale === 'zh' ? '组合风险分析' : 'Portfolio Risk Analytics'}
+        </h2>
+        <div style={{ fontSize: '13px', opacity: 0.6 }}>
+          {locale === 'zh'
+            ? 'VaR/CVaR 计算、压力测试和相关性分析。'
+            : 'VaR/CVaR calculations, stress testing, and correlation analysis.'}
+        </div>
+      </div>
+      <section className="panel-grid panel-grid-3">
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">
+                {locale === 'zh' ? 'VaR / CVaR 指标' : 'VaR / CVaR Metrics'}
+              </div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '支持历史模拟、参数化和蒙特卡洛三种方法，置信度 95%/99%，时间跨度 1-30 天。'
+                  : 'Historical, parametric, and Monte Carlo methods. 95%/99% confidence, 1-30 day horizons.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-muted">VAR</div>
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>{locale === 'zh' ? '方法' : 'Method'}</th>
+                  <th>VaR 95%</th>
+                  <th>VaR 99%</th>
+                  <th>CVaR 95%</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{locale === 'zh' ? '历史模拟' : 'Historical'}</td>
+                  <td className="text-down">--</td>
+                  <td className="text-down">--</td>
+                  <td className="text-down">--</td>
+                </tr>
+                <tr>
+                  <td>{locale === 'zh' ? '参数化' : 'Parametric'}</td>
+                  <td className="text-down">--</td>
+                  <td className="text-down">--</td>
+                  <td className="text-down">--</td>
+                </tr>
+                <tr>
+                  <td>Monte Carlo</td>
+                  <td className="text-down">--</td>
+                  <td className="text-down">--</td>
+                  <td className="text-down">--</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="status-copy">
+            {locale === 'zh'
+              ? '数据来源于回测引擎的收益率序列。'
+              : 'Data sourced from backtest engine return series.'}
+          </div>
+        </article>
+
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">
+                {locale === 'zh' ? '压力测试场景' : 'Stress Test Scenarios'}
+              </div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '预设历史危机场景，评估组合在极端行情下的表现。'
+                  : 'Predefined crisis scenarios to evaluate portfolio under extreme conditions.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-muted">STRESS</div>
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>{locale === 'zh' ? '场景' : 'Scenario'}</th>
+                  <th>{locale === 'zh' ? '权益冲击' : 'Equity Shock'}</th>
+                  <th>{locale === 'zh' ? '恢复期' : 'Recovery'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2008 GFC</td>
+                  <td className="text-down">-45%</td>
+                  <td>{locale === 'zh' ? '约 12 个月' : '~12 months'}</td>
+                </tr>
+                <tr>
+                  <td>COVID</td>
+                  <td className="text-down">-34%</td>
+                  <td>{locale === 'zh' ? '约 6 个月' : '~6 months'}</td>
+                </tr>
+                <tr>
+                  <td>{locale === 'zh' ? '闪崩' : 'Flash Crash'}</td>
+                  <td className="text-down">-10%</td>
+                  <td>{locale === 'zh' ? '约 1 个月' : '~1 month'}</td>
+                </tr>
+                <tr>
+                  <td>{locale === 'zh' ? '加息冲击' : 'Rate Hike'}</td>
+                  <td className="text-down">-15%</td>
+                  <td>{locale === 'zh' ? '约 3 个月' : '~3 months'}</td>
+                </tr>
+                <tr>
+                  <td>{locale === 'zh' ? '滞胀' : 'Stagflation'}</td>
+                  <td className="text-down">-25%</td>
+                  <td>{locale === 'zh' ? '约 6 个月' : '~6 months'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">
+                {locale === 'zh' ? '相关性矩阵' : 'Correlation Matrix'}
+              </div>
+              <div className="panel-copy">
+                {locale === 'zh'
+                  ? '持仓间相关性分析，检测高相关集中度和regime变化。'
+                  : 'Position correlation analysis with concentration and regime change detection.'}
+              </div>
+            </div>
+            <div className="panel-badge badge-muted">CORR</div>
+          </div>
+          <div style={{ padding: '12px 16px', fontSize: '13px', lineHeight: '1.8' }}>
+            <div>
+              <strong>{locale === 'zh' ? '方法' : 'Methods'}:</strong> Pearson, Spearman
+            </div>
+            <div style={{ marginTop: '8px' }}>
+              <strong>{locale === 'zh' ? '检测项' : 'Detections'}:</strong>
+            </div>
+            <div style={{ fontSize: '12px', opacity: 0.7 }}>
+              • {locale === 'zh' ? '高相关对 (>0.7)' : 'High correlation pairs (>0.7)'}
+            </div>
+            <div style={{ fontSize: '12px', opacity: 0.7 }}>
+              • {locale === 'zh' ? '行业集中度预警' : 'Sector concentration alerts'}
+            </div>
+            <div style={{ fontSize: '12px', opacity: 0.7 }}>
+              • {locale === 'zh' ? '相关性regime变化' : 'Correlation regime change'}
+            </div>
+            <div style={{ marginTop: '12px', fontSize: '12px', opacity: 0.6 }}>
+              {locale === 'zh'
+                ? '数据来源于回测引擎的收益率序列。'
+                : 'Data sourced from backtest engine return series.'}
+            </div>
+          </div>
+        </article>
+      </section>
     </>
   );
 }

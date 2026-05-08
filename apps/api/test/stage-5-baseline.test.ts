@@ -55,7 +55,7 @@ test('stage 5 baseline exposes agent sessions, intent, plan, and analysis run co
   // POST /api/agent/analysis-runs — full pipeline: intent → plan → analysis
   const analysisRes = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/analysis-runs',
+    path: '/api/v1/agent/analysis-runs',
     body: {
       prompt: 'Explain the current risk posture and suggest next steps.',
       requestedBy: 'stage5-operator',
@@ -80,7 +80,7 @@ test('stage 5 baseline exposes agent sessions, intent, plan, and analysis run co
 
   // Session list exposes the newly created session
   const sessionListRes = await invokeGatewayRoute(handler, {
-    path: '/api/agent/sessions?limit=5',
+    path: '/api/v1/agent/sessions?limit=5',
   });
 
   assert.equal(sessionListRes.statusCode, 200);
@@ -93,7 +93,7 @@ test('stage 5 baseline exposes agent sessions, intent, plan, and analysis run co
 
   // Session detail exposes latest plan, analysis run, and message thread
   const detailRes = await invokeGatewayRoute(handler, {
-    path: `/api/agent/sessions/${sessionId}`,
+    path: `/api/v1/agent/sessions/${sessionId}`,
   });
 
   assert.equal(detailRes.statusCode, 200);
@@ -117,7 +117,7 @@ test('stage 5 baseline exposes agent sessions, intent, plan, and analysis run co
 test('stage 5 baseline exposes agent workbench collaboration queues', async () => {
   const analysisRes = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/analysis-runs',
+    path: '/api/v1/agent/analysis-runs',
     body: {
       prompt: 'Explain the risk posture for ema-cross-us.',
       requestedBy: 'stage5-operator',
@@ -141,7 +141,7 @@ test('stage 5 baseline exposes agent workbench collaboration queues', async () =
   });
 
   const workbenchRes = await invokeGatewayRoute(handler, {
-    path: '/api/agent/workbench?hours=168&limit=10',
+    path: '/api/v1/agent/workbench?hours=168&limit=10',
   });
 
   assert.equal(workbenchRes.statusCode, 200);
@@ -228,7 +228,7 @@ test('stage 5 baseline exposes controlled action handoff from completed session'
   // Create controlled action request from the completed session
   const handoffRes = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/agent/sessions/${session.id}/action-requests`,
+    path: `/api/v1/agent/sessions/${session.id}/action-requests`,
     body: { requestedBy: 'stage5-operator' },
   });
 
@@ -240,14 +240,14 @@ test('stage 5 baseline exposes controlled action handoff from completed session'
 
   // Action request appears in the list
   const actionListRes = await invokeGatewayRoute(handler, {
-    path: '/api/agent/action-requests',
+    path: '/api/v1/agent/action-requests',
   });
   assert.equal(actionListRes.statusCode, 200);
   assert.equal(Array.isArray(actionListRes.json.requests), true);
 
   // Operator timeline for the session is accessible
   const timelineRes = await invokeGatewayRoute(handler, {
-    path: `/api/agent/sessions/${session.id}/timeline`,
+    path: `/api/v1/agent/sessions/${session.id}/timeline`,
   });
   assert.equal(timelineRes.statusCode, 200);
   assert.equal(timelineRes.json.ok, true);
@@ -269,7 +269,7 @@ test('stage 5 baseline exposes approval and rejection of agent action requests w
 
   const approveRes = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/agent/action-requests/${approveRequest.id}/approve`,
+    path: `/api/v1/agent/action-requests/${approveRequest.id}/approve`,
     body: { approvedBy: 'stage5-risk-operator', mode: 'paper', capital: 50000 },
   });
 
@@ -292,7 +292,7 @@ test('stage 5 baseline exposes approval and rejection of agent action requests w
 
   const rejectRes = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/agent/action-requests/${rejectRequest.id}/reject`,
+    path: `/api/v1/agent/action-requests/${rejectRequest.id}/reject`,
     body: { rejectedBy: 'stage5-risk-operator', reason: 'Risk posture is not yet cleared.' },
   });
 
@@ -323,7 +323,7 @@ test('stage 5 baseline enforces risk:review permission guardrail on action reque
 
   const unauthorizedApprove = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/agent/action-requests/${request.id}/approve`,
+    path: `/api/v1/agent/action-requests/${request.id}/approve`,
     body: { reviewedBy: 'unauthorized-user' },
   });
 
@@ -333,7 +333,7 @@ test('stage 5 baseline enforces risk:review permission guardrail on action reque
 
   const unauthorizedReject = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/agent/action-requests/${request.id}/reject`,
+    path: `/api/v1/agent/action-requests/${request.id}/reject`,
     body: { reviewedBy: 'unauthorized-user', reason: 'No.' },
   });
 

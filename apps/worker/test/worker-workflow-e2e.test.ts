@@ -114,7 +114,7 @@ test.after(() => {
 test('queued state workflow executes end-to-end through worker and persists downstream risk scan results', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/task-orchestrator/state/queue',
+    path: '/api/v1/task-orchestrator/state/queue',
     body: {
       state: createTradingState(),
     },
@@ -160,7 +160,7 @@ test('queued state workflow executes end-to-end through worker and persists down
 test('queued strategy execution workflow persists execution plan and downstream risk event', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/strategy/execute',
+    path: '/api/v1/strategy/execute',
     body: {
       strategyId: 'multi-factor-rotation',
       mode: 'live',
@@ -205,7 +205,7 @@ test('queued strategy execution workflow persists execution plan and downstream 
 test('failed strategy execution workflow is scheduled for retry and re-queued by maintenance task', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/strategy/execute',
+    path: '/api/v1/strategy/execute',
     body: {
       strategyId: 'unknown-strategy',
       mode: 'paper',
@@ -252,7 +252,7 @@ test('queued agent action request workflow persists a review request without cha
   const executionPlanCountBefore = context.executionPlans.listExecutionPlans().length;
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/action-requests',
+    path: '/api/v1/agent/action-requests',
     body: {
       requestType: 'prepare_execution_plan',
       targetId: 'ema-cross-us',
@@ -295,7 +295,7 @@ test('queued agent action request workflow persists a review request without cha
 test('research evaluation queues a report workflow and worker execution persists a research report asset', async () => {
   const reviewed = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/backtest/runs/bt-ema-cross-20260310/review',
+    path: '/api/v1/backtest/runs/bt-ema-cross-20260310/review',
     body: {
       reviewedBy: 'risk-operator',
       summary: 'Reviewed for downstream report generation.',
@@ -306,7 +306,7 @@ test('research evaluation queues a report workflow and worker execution persists
 
   const evaluated = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/backtest/runs/bt-ema-cross-20260310/evaluate',
+    path: '/api/v1/backtest/runs/bt-ema-cross-20260310/evaluate',
     body: {
       actor: 'research-lead',
       summary: 'Queue the asynchronous research memo.',
@@ -346,7 +346,7 @@ test('research evaluation queues a report workflow and worker execution persists
 test('blocked agent action request is rejected by risk gate before approval stage', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/action-requests',
+    path: '/api/v1/agent/action-requests',
     body: {
       requestType: 'prepare_execution_plan',
       targetId: 'breakout-crypto',
@@ -379,7 +379,7 @@ test('approved agent action request is the only path that queues downstream stra
     .filter((item) => item.workflowId === 'task-orchestrator.strategy-execution').length;
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/agent/action-requests',
+    path: '/api/v1/agent/action-requests',
     body: {
       requestType: 'prepare_execution_plan',
       targetId: 'ema-cross-us',
@@ -431,7 +431,7 @@ test('approved agent action request is the only path that queues downstream stra
 test('queued backtest workflow persists research run and summary through worker execution', async () => {
   const queued = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/backtest/runs',
+    path: '/api/v1/backtest/runs',
     body: {
       strategyId: 'ema-cross-us',
       windowLabel: '2024-01-01 -> 2024-12-31',

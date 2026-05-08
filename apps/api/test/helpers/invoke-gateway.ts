@@ -32,6 +32,9 @@ export async function invokeGatewayRoute(
       statusCode = code;
       responseHeaders = nextHeaders;
     },
+    setHeader(name, value) {
+      responseHeaders[name] = value;
+    },
     end(chunk = '') {
       if (ended) return;
       ended = true;

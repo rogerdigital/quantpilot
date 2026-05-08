@@ -215,7 +215,7 @@ test('stage 2 baseline exposes the research hub with governance and execution ha
 
   const createHandoff = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: '/api/research/execution-candidates',
+    path: '/api/v1/research/execution-candidates',
     body: {
       strategyId: 'stage2-strategy',
       actor: 'research-lead',
@@ -230,7 +230,7 @@ test('stage 2 baseline exposes the research hub with governance and execution ha
   assert.equal(createHandoff.json.handoff.strategyId, 'stage2-strategy');
 
   const hub = await invokeGatewayRoute(handler, {
-    path: '/api/research/hub?hours=168&limit=20',
+    path: '/api/v1/research/hub?hours=168&limit=20',
   });
 
   assert.equal(hub.statusCode, 200);
@@ -257,14 +257,14 @@ test('stage 2 baseline exposes research replay and queued execution handoff cont
   seedResearchChain();
 
   let list = await invokeGatewayRoute(handler, {
-    path: '/api/research/execution-candidates?hours=168&limit=20',
+    path: '/api/v1/research/execution-candidates?hours=168&limit=20',
   });
   let handoffId = list.json.handoffs.find((item) => item.strategyId === 'stage2-strategy')?.id;
 
   if (!handoffId) {
     const createHandoff = await invokeGatewayRoute(handler, {
       method: 'POST',
-      path: '/api/research/execution-candidates',
+      path: '/api/v1/research/execution-candidates',
       body: {
         strategyId: 'stage2-strategy',
         actor: 'research-lead',
@@ -276,7 +276,7 @@ test('stage 2 baseline exposes research replay and queued execution handoff cont
     assert.equal(createHandoff.statusCode, 200);
     handoffId = createHandoff.json.handoff?.id;
     list = await invokeGatewayRoute(handler, {
-      path: '/api/research/execution-candidates?hours=168&limit=20',
+      path: '/api/v1/research/execution-candidates?hours=168&limit=20',
     });
   }
 
@@ -284,7 +284,7 @@ test('stage 2 baseline exposes research replay and queued execution handoff cont
 
   const queue = await invokeGatewayRoute(handler, {
     method: 'POST',
-    path: `/api/research/execution-candidates/${handoffId}/queue`,
+    path: `/api/v1/research/execution-candidates/${handoffId}/queue`,
     body: {
       actor: 'execution-approver',
       owner: 'execution-desk',
@@ -297,8 +297,8 @@ test('stage 2 baseline exposes research replay and queued execution handoff cont
   assert.equal(queue.json.workflow.workflowId, 'task-orchestrator.strategy-execution');
 
   const [strategyDetail, workbench] = await Promise.all([
-    invokeGatewayRoute(handler, { path: '/api/strategy/catalog/stage2-strategy' }),
-    invokeGatewayRoute(handler, { path: '/api/research/workbench?hours=168&limit=20' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/strategy/catalog/stage2-strategy' }),
+    invokeGatewayRoute(handler, { path: '/api/v1/research/workbench?hours=168&limit=20' }),
   ]);
 
   assert.equal(strategyDetail.statusCode, 200);

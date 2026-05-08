@@ -54,7 +54,7 @@ test.after(() => {
 test('POST /api/agent/daily-runs queues a pre_market run', async () => {
   const response = await invokeGateway(handler, {
     method: 'POST',
-    path: '/api/agent/daily-runs',
+    path: '/api/v1/agent/daily-runs',
     body: { kind: 'pre_market', trigger: 'manual', requestedBy: 'operator' },
   });
 
@@ -68,13 +68,13 @@ test('POST /api/agent/daily-runs queues a pre_market run', async () => {
 test('GET /api/agent/daily-runs returns runs list', async () => {
   await invokeGateway(handler, {
     method: 'POST',
-    path: '/api/agent/daily-runs',
+    path: '/api/v1/agent/daily-runs',
     body: { kind: 'intraday_monitor', trigger: 'manual', requestedBy: 'system' },
   });
 
   const response = await invokeGateway(handler, {
     method: 'GET',
-    path: '/api/agent/daily-runs',
+    path: '/api/v1/agent/daily-runs',
   });
 
   assert.equal(response.statusCode, 200);
@@ -92,7 +92,7 @@ test('POST /api/agent/daily-runs returns 403 without strategy:write permission',
 
   const response = await invokeGateway(handler, {
     method: 'POST',
-    path: '/api/agent/daily-runs',
+    path: '/api/v1/agent/daily-runs',
     body: { kind: 'pre_market', trigger: 'manual', requestedBy: 'operator' },
   });
 
@@ -115,7 +115,7 @@ test('POST /api/agent/daily-runs returns 403 without strategy:write permission',
 test('POST /api/agent/action-requests accepts agent_trim request type', async () => {
   const response = await invokeGateway(handler, {
     method: 'POST',
-    path: '/api/agent/action-requests',
+    path: '/api/v1/agent/action-requests',
     body: {
       requestType: 'agent_trim',
       targetId: `strategy-${randomUUID()}`,
@@ -133,7 +133,7 @@ test('POST /api/agent/action-requests accepts agent_trim request type', async ()
 test('POST /api/agent/action-requests rejects unknown request type', async () => {
   const response = await invokeGateway(handler, {
     method: 'POST',
-    path: '/api/agent/action-requests',
+    path: '/api/v1/agent/action-requests',
     body: {
       requestType: 'agent_fly_to_moon',
       targetId: 'strategy-1',

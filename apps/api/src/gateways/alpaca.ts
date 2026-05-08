@@ -5,6 +5,15 @@ import { createServer } from 'node:http';
 import { join } from 'node:path';
 import { handleControlPlaneRoutes } from '../app/routes/control-plane-routes.js';
 import { handlePlatformRoutes } from '../app/routes/platform-routes.js';
+import {
+  apiCache,
+  buildCacheKey,
+  getCacheStats,
+  getCacheTtl,
+  getInvalidationPatterns,
+  shouldCache,
+  shouldInvalidate,
+} from '../middleware/cache.js';
 
 function loadEnvFile(pathname) {
   if (!existsSync(pathname)) return;
@@ -561,7 +570,18 @@ export function createGatewayHandler(options = {}) {
         writeJson(res, 204, {});
         return;
       }
-      const reqUrl = new URL(req.url || '/', `http://${req.headers.host || '127.0.0.1'}`);
+      const originalUrl = new URL(req.url || '/', `http://${req.headers.host || '127.0.0.1'}`);
+      // Versioned API: /api/v1/... → /api/... for router matching
+      let isVersioned = false;
+      let pathname = originalUrl.pathname;
+      if (pathname.startsWith('/api/v1/')) {
+        pathname = pathname.replace('/api/v1/', '/api/');
+        isVersioned = true;
+      }
+      const reqUrl = originalUrl;
+      // Override pathname for versioned routes without mutating the URL object
+      const versionedPathname = pathname;
+      Object.defineProperty(reqUrl, 'pathname', { value: versionedPathname, writable: false });
       const routeContext = {
         req,
         reqUrl,
@@ -571,10 +591,67 @@ export function createGatewayHandler(options = {}) {
         writeJson,
         gatewayDependencies,
       };
+      // Add deprecation warning for unversioned API routes
+      if (!isVersioned && reqUrl.pathname.startsWith('/api/')) {
+        res.setHeader('Deprecation', 'true');
+        res.setHeader('Sunset', 'Sat, 01 Nov 2025 00:00:00 GMT');
+        res.setHeader('Link', '</api/v1' + reqUrl.pathname.slice(4) + '>; rel="successor-version"');
+      }
+
+      // Cache stats endpoint
+      if (req.method === 'GET' && reqUrl.pathname === '/api/system/cache-stats') {
+        writeJson(res, 200, { ok: true, cache: getCacheStats() });
+        return;
+      }
+
+      // Invalidate cache on mutations
+      if (shouldInvalidate(req.method)) {
+        const patterns = getInvalidationPatterns(reqUrl.pathname);
+        for (const pattern of patterns) {
+          apiCache.invalidatePattern(pattern);
+        }
+      }
+
+      // Check cache for cacheable GET requests
+      let cachedResponse = null;
+      let cacheKey = '';
+      const isCacheable = shouldCache(req.method, reqUrl.pathname);
+      if (isCacheable) {
+        cacheKey = buildCacheKey(req.method, reqUrl.pathname, reqUrl.search);
+        const cached = apiCache.get(cacheKey);
+        if (cached) {
+          res.setHeader('X-Cache', 'HIT');
+          res.setHeader('X-Cache-Key', cacheKey);
+          writeJson(res, 200, cached.data);
+          return;
+        }
+        // Cache miss - intercept response to cache it
+        res.setHeader('X-Cache', 'MISS');
+        const originalWriteJson = writeJson;
+        const cachingWriteJson = (res, statusCode, data) => {
+          if (statusCode === 200) {
+            cachedResponse = data;
+          }
+          originalWriteJson(res, statusCode, data);
+        };
+        // Replace writeJson in context
+        routeContext.writeJson = cachingWriteJson;
+      }
+
       if (await handlePlatformRoutes(routeContext)) {
+        // Cache the response if we intercepted it
+        if (isCacheable && cachedResponse) {
+          const ttl = getCacheTtl(reqUrl.pathname);
+          apiCache.set(cacheKey, cachedResponse, ttl);
+        }
         return;
       }
       if (await handleControlPlaneRoutes(routeContext)) {
+        // Cache the response if we intercepted it
+        if (isCacheable && cachedResponse) {
+          const ttl = getCacheTtl(reqUrl.pathname);
+          apiCache.set(cacheKey, cachedResponse, ttl);
+        }
         return;
       }
       if (req.method === 'GET' && reqUrl.pathname === '/api/broker/health') {

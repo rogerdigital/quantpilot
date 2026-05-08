@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useThemeContext } from '../../hooks/ThemeProvider.tsx';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useSettingsNavigation } from '../../modules/console/console.hooks.ts';
 import { type ConsolePageKey, copy, useLocale } from '../../modules/console/console.i18n.tsx';
@@ -44,6 +45,8 @@ import {
   toolbarTitle,
   topbarMeta,
 } from './ConsoleChrome.css.ts';
+import { MobileBottomNav } from './MobileBottomNav.tsx';
+import { ShortcutHelp } from './ShortcutHelp.tsx';
 
 export type TopMetaItem = {
   label: string;
@@ -57,7 +60,9 @@ export function SectionHeader({ routeKey }: { routeKey: ConsolePageKey }) {
   return (
     <header className="topbar">
       <div>
-        <div className="eyebrow">{copy[locale].desk[routeKey]}</div>
+        <div className="eyebrow">
+          {(copy[locale].desk as Record<string, string>)[routeKey] ?? ''}
+        </div>
         <h1>{title}</h1>
         <p className="topbar-copy">{desc}</p>
       </div>
@@ -179,6 +184,7 @@ function GlobalToolbar() {
   const { state } = useTradingSystem();
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const goToSettings = useSettingsNavigation();
+  const { resolved, toggle } = useThemeContext();
   const [localeOpen, setLocaleOpen] = useState(false);
   const localeMenuRef = useRef<HTMLDivElement | null>(null);
   const localeLabel = locale === 'zh' ? '中文' : 'English';
@@ -274,6 +280,16 @@ function GlobalToolbar() {
             </div>
           ) : null}
         </div>
+        <button
+          type="button"
+          className="toolbar-pill toolbar-pill-button"
+          onClick={toggle}
+          title={resolved === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          <span className="toolbar-pill-main">
+            <span className="toolbar-pill-label">{resolved === 'dark' ? '☀' : '☾'}</span>
+          </span>
+        </button>
       </div>
     </div>
   );
@@ -320,14 +336,21 @@ export type EmptyStateProps = {
   icon?: string;
   message: string;
   detail?: string;
+  actionLabel?: string;
+  onAction?: () => void;
 };
 
-export function EmptyState({ icon, message, detail }: EmptyStateProps) {
+export function EmptyState({ icon, message, detail, actionLabel, onAction }: EmptyStateProps) {
   return (
     <div className="empty-state">
       {icon ? <span className="empty-state-icon">{icon}</span> : null}
       <span className="empty-state-message">{message}</span>
       {detail ? <span className="empty-state-detail">{detail}</span> : null}
+      {actionLabel && onAction ? (
+        <button type="button" className="empty-state-action" onClick={onAction}>
+          {actionLabel}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -340,6 +363,7 @@ export function Layout() {
     return window.localStorage.getItem('quantpilot-sidebar-collapsed') === 'true';
   });
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const handleToggle = () => {
     setCollapsed((prev) => {
@@ -353,13 +377,44 @@ export function Layout() {
     document.title = getConsoleDocumentTitle(locale, location.pathname);
   }, [locale, location.pathname]);
 
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      const meta = e.metaKey || e.ctrlKey;
+
+      // Cmd+K: command palette
+      if (meta && e.key === 'k') {
         e.preventDefault();
         setCmdOpen((prev) => !prev);
+        return;
+      }
+
+      // Cmd+/: shortcut help
+      if (meta && e.key === '/') {
+        e.preventDefault();
+        setShortcutsOpen((prev) => !prev);
+        return;
+      }
+
+      // Escape: close modals
+      if (e.key === 'Escape') {
+        setCmdOpen(false);
+        setShortcutsOpen(false);
+        return;
+      }
+
+      // Cmd+1-9: navigation
+      if (meta && e.key >= '1' && e.key <= '9') {
+        e.preventDefault();
+        const routes = listSidebarRoutes();
+        const idx = Number(e.key) - 1;
+        if (routes[idx]) {
+          window.location.hash = `#${routes[idx].path}`;
+        }
+        return;
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
@@ -372,6 +427,8 @@ export function Layout() {
         <Outlet />
       </main>
       {cmdOpen && <CommandPalette locale={locale} onClose={() => setCmdOpen(false)} />}
+      <ShortcutHelp open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <MobileBottomNav />
       <ApprovalDrawer
         locale={locale}
         queue={state.approvalQueue}

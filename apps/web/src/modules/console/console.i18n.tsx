@@ -28,6 +28,8 @@ export const copy = {
       execution: '执行',
       portfolio: '组合',
       settings: '设置',
+      marketplace: '策略市场',
+      analytics: '绩效分析',
     },
     labels: {
       language: '语言',
@@ -125,6 +127,14 @@ export const copy = {
       maxPosition: '单票上限',
       cashBuffer: '现金缓冲',
       riskProtection: '风险保护',
+      algoOrders: '算法委托',
+      algoStrategy: '算法策略',
+      algoProgress: '执行进度',
+      twap: 'TWAP',
+      vwap: 'VWAP',
+      iceberg: '冰山单',
+      legs: '分笔',
+      fillPct: '成交比例',
     },
     pages: {
       dashboard: [
@@ -152,6 +162,8 @@ export const copy = {
       execution: ['执行中心', '跟踪订单状态、撤单动作和最新成交回报。'],
       portfolio: ['组合中心', '查看账户净值、现金、持仓和当前组合暴露。'],
       settings: ['系统设置', '管理运行模式、执行开关、参数和接入状态。'],
+      marketplace: ['策略市场', '浏览和复制社区分享的量化策略。'],
+      analytics: ['绩效分析', '查看策略绩效指标、风险分析和交易分布。'],
     },
     desk: {
       dashboard: 'Command Deck',
@@ -212,6 +224,8 @@ export const copy = {
       execution: 'Execution',
       portfolio: 'Portfolio',
       settings: 'Settings',
+      marketplace: 'Marketplace',
+      analytics: 'Analytics',
     },
     labels: {
       language: 'Language',
@@ -309,6 +323,14 @@ export const copy = {
       maxPosition: 'Max Position',
       cashBuffer: 'Cash Buffer',
       riskProtection: 'Risk Guard',
+      algoOrders: 'Algo Orders',
+      algoStrategy: 'Algo Strategy',
+      algoProgress: 'Progress',
+      twap: 'TWAP',
+      vwap: 'VWAP',
+      iceberg: 'Iceberg',
+      legs: 'Legs',
+      fillPct: 'Fill %',
     },
     pages: {
       dashboard: [
@@ -360,6 +382,11 @@ export const copy = {
         'Review NAV, cash, holdings, and current portfolio exposure.',
       ],
       settings: ['Settings', 'Manage modes, switches, thresholds, and provider connectivity.'],
+      marketplace: ['Marketplace', 'Browse and fork community-shared quantitative strategies.'],
+      analytics: [
+        'Analytics',
+        'Review strategy performance metrics, risk analysis, and trade distribution.',
+      ],
     },
     desk: {
       dashboard: 'Command Deck',

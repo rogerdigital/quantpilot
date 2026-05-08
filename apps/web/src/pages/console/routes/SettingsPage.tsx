@@ -447,7 +447,7 @@ export function RiskParametersPanel({ locale }: { locale: 'zh' | 'en' }) {
   };
 
   const numField = (
-    key: keyof typeof params,
+    key: 'maxPositionWeight' | 'maxDrawdownPct' | 'dailyLossStopPct' | 'sharpeFloor',
     label: string,
     hint: string,
     step = 0.1,

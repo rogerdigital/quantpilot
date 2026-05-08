@@ -253,6 +253,11 @@ export const chartSignalStrip = style({
   gridTemplateColumns: 'repeat(3, 1fr)',
   gap: '10px',
   flexShrink: 0,
+  '@media': {
+    '(max-width: 640px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
 });
 
 export const chartSignalCard = style({

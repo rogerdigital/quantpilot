@@ -11,6 +11,7 @@ import {
   settleExecutionPlan,
   syncExecutionPlan,
 } from '../../../domains/execution/services/lifecycle-service.js';
+import { createPaperPromotionService } from '../../../domains/execution/services/paper-promotion-service.js';
 import {
   getExecutionPlanDetail,
   getExecutionWorkbench,
@@ -198,6 +199,22 @@ export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, wr
     const body = await readJsonBody(req);
     const result = recoverExecutionPlan(planId, body);
     writeJson(res, result.ok ? 200 : 409, result);
+    return true;
+  }
+
+  // Paper promotion evaluation
+  if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/execution/paper-promotion/')) {
+    const strategyId = reqUrl.pathname.split('/').at(-1) || 'default';
+    const { controlPlaneContext } = await import(
+      '../../../../../../packages/control-plane-store/src/context.js'
+    );
+    const paperJournalRepo = controlPlaneContext.paperJournal;
+    const promotionService = createPaperPromotionService({ paperJournalRepo });
+
+    const readiness = promotionService.evaluatePromotionReadiness(strategyId);
+    const report = promotionService.getPromotionReport(strategyId);
+
+    writeJson(res, 200, { ok: true, readiness, report });
     return true;
   }
 

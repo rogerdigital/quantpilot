@@ -562,6 +562,23 @@ globalStyle('.empty-state-detail', {
   maxWidth: '260px',
 } as any);
 
+globalStyle('.empty-state-action', {
+  marginTop: '8px',
+  padding: '6px 16px',
+  background: 'var(--accent-subtle)',
+  border: '1px solid var(--accent)',
+  borderRadius: 'var(--radius)',
+  color: 'var(--accent)',
+  font: '600 12px/1 var(--font-ui)',
+  cursor: 'pointer',
+  transition: 'all 150ms ease',
+} as any);
+
+globalStyle('.empty-state-action:hover', {
+  background: 'var(--accent)',
+  color: '#fff',
+} as any);
+
 /* ============================================================
    TAB PANEL
    ============================================================ */

@@ -14,7 +14,9 @@ import {
   kbdHint,
   overlay,
   panel,
+  recentBadge,
   resultEnter,
+  resultHint,
   resultIcon,
   resultItem,
   resultItemActive,
@@ -31,9 +33,30 @@ type CommandItem = {
   label: string;
   hint: string;
   icon: string;
+  category: 'page' | 'action' | 'symbol';
   path?: string;
   action?: () => void;
 };
+
+/* ── Recent history ──────────────────────────────────── */
+
+const RECENT_KEY = 'qp-cmd-recent';
+const MAX_RECENT = 5;
+
+function loadRecent(): string[] {
+  try {
+    const raw = localStorage.getItem(RECENT_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecent(id: string) {
+  const recent = loadRecent().filter((r) => r !== id);
+  recent.unshift(id);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)));
+}
 
 /* ── Icon map ─────────────────────────────────────────── */
 
@@ -78,14 +101,30 @@ const HINTS_EN: Record<string, string> = {
 
 /* ── Scoring ──────────────────────────────────────────── */
 
-function score(label: string, hint: string, query: string): number {
+function fuzzyMatch(text: string, query: string): number {
+  const t = text.toLowerCase();
   const q = query.toLowerCase();
-  const l = label.toLowerCase();
-  const h = hint.toLowerCase();
-  if (l.startsWith(q)) return 3;
-  if (l.includes(q)) return 2;
-  if (h.includes(q)) return 1;
+
+  // Exact prefix match
+  if (t.startsWith(q)) return 4;
+  // Word boundary match (e.g., "bk" matches "Backtest")
+  const words = t.split(/[\s-/]+/);
+  if (words.some((w) => w.startsWith(q))) return 3;
+  // Contains match
+  if (t.includes(q)) return 2;
+  // Fuzzy: all query chars appear in order
+  let qi = 0;
+  for (let ti = 0; ti < t.length && qi < q.length; ti++) {
+    if (t[ti] === q[qi]) qi++;
+  }
+  if (qi === q.length) return 1;
   return 0;
+}
+
+function score(label: string, hint: string, query: string): number {
+  const labelScore = fuzzyMatch(label, query);
+  if (labelScore > 0) return labelScore + 2; // Prefer label matches
+  return fuzzyMatch(hint, query);
 }
 
 /* ── Component ────────────────────────────────────────── */
@@ -111,8 +150,14 @@ export function CommandPalette({ locale, onClose }: Props) {
       label: navCopy[r.id] ?? r.id,
       hint: hints[r.id] ?? '',
       icon: ICONS[r.id] ?? r.id.slice(0, 2).toUpperCase(),
+      category: 'page' as const,
       path: r.path,
     }));
+
+  const recentIds = loadRecent();
+  const recentItems = recentIds
+    .map((id) => allItems.find((item) => item.id === id))
+    .filter(Boolean) as CommandItem[];
 
   const filtered = query.trim()
     ? allItems
@@ -120,7 +165,9 @@ export function CommandPalette({ locale, onClose }: Props) {
         .filter(({ s }) => s > 0)
         .sort((a, b) => b.s - a.s)
         .map(({ item }) => item)
-    : allItems;
+    : recentItems.length > 0
+      ? [...recentItems, ...allItems.filter((item) => !recentIds.includes(item.id))]
+      : allItems;
 
   // Reset active index when filtered list changes
   useEffect(() => {
@@ -134,6 +181,7 @@ export function CommandPalette({ locale, onClose }: Props) {
 
   const commit = useCallback(
     (item: CommandItem) => {
+      saveRecent(item.id);
       if (item.path) navigate(item.path);
       if (item.action) item.action();
       onClose();
@@ -184,24 +232,52 @@ export function CommandPalette({ locale, onClose }: Props) {
         <div className={results} role="listbox">
           {filtered.length > 0 ? (
             <>
-              <div className={sectionLabel}>{locale === 'zh' ? '页面' : 'Pages'}</div>
-              {filtered.map((item, idx) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`${resultItem}${idx === activeIdx ? ` ${resultItemActive}` : ''}`}
-                  role="option"
-                  aria-selected={idx === activeIdx}
-                  onMouseEnter={() => setActiveIdx(idx)}
-                  onMouseDown={() => commit(item)}
-                >
-                  <div className={resultIcon}>{item.icon}</div>
-                  <div className={resultText}>
-                    <div className={resultName}>{item.label}</div>
-                  </div>
-                  {idx === activeIdx && <span className={resultEnter}>↵</span>}
-                </button>
-              ))}
+              {!query.trim() && recentItems.length > 0 && (
+                <>
+                  <div className={sectionLabel}>{locale === 'zh' ? '最近访问' : 'Recent'}</div>
+                  {recentItems.map((item, idx) => (
+                    <button
+                      key={`recent-${item.id}`}
+                      type="button"
+                      className={`${resultItem}${idx === activeIdx ? ` ${resultItemActive}` : ''}`}
+                      role="option"
+                      aria-selected={idx === activeIdx}
+                      onMouseEnter={() => setActiveIdx(idx)}
+                      onMouseDown={() => commit(item)}
+                    >
+                      <div className={resultIcon}>{item.icon}</div>
+                      <div className={resultText}>
+                        <div className={resultName}>{item.label}</div>
+                        <div className={resultHint}>{item.hint}</div>
+                      </div>
+                      <span className={recentBadge}>{locale === 'zh' ? '最近' : 'recent'}</span>
+                      {idx === activeIdx && <span className={resultEnter}>↵</span>}
+                    </button>
+                  ))}
+                  <div className={sectionLabel}>{locale === 'zh' ? '全部页面' : 'All Pages'}</div>
+                </>
+              )}
+              {(query.trim() ? filtered : filtered.slice(recentItems.length)).map((item, idx) => {
+                const adjustedIdx = query.trim() ? idx : idx + recentItems.length;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`${resultItem}${adjustedIdx === activeIdx ? ` ${resultItemActive}` : ''}`}
+                    role="option"
+                    aria-selected={adjustedIdx === activeIdx}
+                    onMouseEnter={() => setActiveIdx(adjustedIdx)}
+                    onMouseDown={() => commit(item)}
+                  >
+                    <div className={resultIcon}>{item.icon}</div>
+                    <div className={resultText}>
+                      <div className={resultName}>{item.label}</div>
+                      <div className={resultHint}>{item.hint}</div>
+                    </div>
+                    {adjustedIdx === activeIdx && <span className={resultEnter}>↵</span>}
+                  </button>
+                );
+              })}
             </>
           ) : (
             <div className={emptyState}>

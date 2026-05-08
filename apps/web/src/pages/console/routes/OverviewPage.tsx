@@ -1,3 +1,4 @@
+import { PnLAnimator, PriceFlash, SignalAlert } from '../../../components/common/index.ts';
 import { ChartCanvas, EmptyState, TopMeta } from '../../../components/layout/ConsoleChrome.tsx';
 import { useLatestBrokerSnapshot } from '../../../hooks/useLatestBrokerSnapshot.ts';
 import { useMarketProviderStatus } from '../../../hooks/useMarketProviderStatus.ts';
@@ -143,11 +144,8 @@ export function OverviewPage() {
         </div>
         <div className={overviewResultsKpi}>
           <span className="kpi-label">{locale === 'zh' ? '今日盈亏' : 'Daily P&L'}</span>
-          <span
-            className="kpi-value"
-            style={{ color: totalPnlPct >= 0 ? 'var(--buy)' : 'var(--sell)' }}
-          >
-            {fmtPct(totalPnlPct)}
+          <span className="kpi-value">
+            <PnLAnimator target={totalPnlPct} precision={2} suffix="%" />
           </span>
           <span className="kpi-sub">
             {totalPnlPct >= 0
@@ -502,15 +500,28 @@ export function OverviewPage() {
                     <span>{stock.name}</span>
                   </div>
                   <div className="focus-metric">
-                    <span>{stock.price.toFixed(2)}</span>
+                    <PriceFlash value={stock.price} precision={2} />
                     <span className={pct >= 0 ? 'text-up' : 'text-down'}>{fmtPct(pct)}</span>
                   </div>
                   <div className="focus-metric">
                     <span>{copy[locale].labels.score}</span>
                     <strong>{stock.score.toFixed(1)}</strong>
                   </div>
-                  <span className={`signal-chip signal-${stock.signal.toLowerCase()}`}>
-                    {translateSignal(locale, stock.signal)}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <SignalAlert
+                      variant={
+                        stock.signal === 'BUY'
+                          ? 'buy'
+                          : stock.signal === 'SELL'
+                            ? 'sell'
+                            : 'warning'
+                      }
+                      size={6}
+                      pulse={false}
+                    />
+                    <span className={`signal-chip signal-${stock.signal.toLowerCase()}`}>
+                      {translateSignal(locale, stock.signal)}
+                    </span>
                   </span>
                 </div>
               );

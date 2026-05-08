@@ -4,11 +4,11 @@ import type {
   BrokerSnapshot,
   RuntimeConfig,
 } from '@shared-types/trading.ts';
-import { fetchJson, jsonHeaders } from '../api/http.ts';
+import { API_PREFIX, fetchJson, jsonHeaders } from '../api/http.ts';
 
 function resolveBrowserBrokerBase(config: RuntimeConfig): string {
   if (config.brokerHttpUrl) return config.brokerHttpUrl.replace(/\/$/, '');
-  return new URL('/api/broker', window.location.origin).toString();
+  return new URL(`${API_PREFIX}/broker`, window.location.origin).toString();
 }
 
 function simulatedBroker(): BrokerProvider {

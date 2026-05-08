@@ -40,6 +40,6 @@ describe('OperationsPersistencePanel', () => {
     expect(html).toContain('2 → 3');
     expect(html).toContain('/settings#persistence-migration');
     expect(html).toContain('npm run control-plane:maintenance -- backup --adapter db');
-    expect(html).toContain('POST /api/operations/maintenance/backup');
+    expect(html).toContain('POST /api/v1/operations/maintenance/backup');
   });
 });

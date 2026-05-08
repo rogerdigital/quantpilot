@@ -154,6 +154,18 @@ export const resultEnter = style({
   userSelect: 'none',
 });
 
+export const recentBadge = style({
+  flexShrink: 0,
+  font: '600 9px/1 var(--font-data)',
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+  color: 'rgba(99, 102, 241, 0.6)',
+  background: 'rgba(99, 102, 241, 0.08)',
+  borderRadius: 'var(--radius-sm)',
+  padding: '3px 6px',
+  userSelect: 'none',
+});
+
 export const emptyState = style({
   padding: '32px 20px',
   textAlign: 'center',

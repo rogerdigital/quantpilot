@@ -12,6 +12,7 @@ import { createAgentSessionRepository } from './repositories/agent-session-repo.
 import { createAuditRepository } from './repositories/audit-repo.js';
 import { createBacktestResultRepository } from './repositories/backtest-result-repo.js';
 import { createBacktestRunRepository } from './repositories/backtest-run-repo.js';
+import { createCollaborationRepository } from './repositories/collaboration-repo.js';
 import { createCycleRepository } from './repositories/cycle-repo.js';
 import { createExecutionCandidateHandoffRepository } from './repositories/execution-candidate-handoff-repo.js';
 import { createExecutionPlanRepository } from './repositories/execution-plan-repo.js';
@@ -22,12 +23,14 @@ import { createMarketProviderRepository } from './repositories/market-provider-r
 import { createMonitoringRepository } from './repositories/monitoring-repo.js';
 import { createNotificationRepository } from './repositories/notification-repo.js';
 import { createOperatorActionRepository } from './repositories/operator-action-repo.js';
+import { createPaperJournalRepository } from './repositories/paper-journal-repo.js';
 import { createResearchEvaluationRepository } from './repositories/research-evaluation-repo.js';
 import { createResearchReportRepository } from './repositories/research-report-repo.js';
 import { createResearchSummaryRepository } from './repositories/research-summary-repo.js';
 import { createResearchTaskRepository } from './repositories/research-task-repo.js';
 import { createRiskRepository } from './repositories/risk-repo.js';
 import { createSchedulerRepository } from './repositories/scheduler-repo.js';
+import { createStrategyMarketplaceRepository } from './repositories/strategy-marketplace-repo.js';
 import { createStrategyRepository } from './repositories/strategy-repo.js';
 import { createUserAccountRepository } from './repositories/user-account-repo.js';
 import { createWorkerHeartbeatRepository } from './repositories/worker-heartbeat-repo.js';
@@ -55,6 +58,7 @@ export function createControlPlaneContext(store = controlPlaneStore) {
     audit: createAuditRepository(store),
     backtestResults: createBacktestResultRepository(store),
     backtestRuns: createBacktestRunRepository(store),
+    collaboration: createCollaborationRepository(store),
     cycles: createCycleRepository(store),
     executionPlans: createExecutionPlanRepository(store),
     executionRuns: createExecutionRunRepository(store),
@@ -65,7 +69,9 @@ export function createControlPlaneContext(store = controlPlaneStore) {
     monitoring: createMonitoringRepository(store),
     notifications: createNotificationRepository(store),
     operatorActions: createOperatorActionRepository(store),
+    paperJournal: createPaperJournalRepository(store),
     researchEvaluations: createResearchEvaluationRepository(store),
+    strategyMarketplace: createStrategyMarketplaceRepository(store),
     researchReports: createResearchReportRepository(store),
     researchSummary: createResearchSummaryRepository(store),
     researchTasks: createResearchTaskRepository(store),
