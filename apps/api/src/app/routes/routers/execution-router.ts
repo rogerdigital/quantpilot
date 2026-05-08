@@ -11,6 +11,7 @@ import {
   settleExecutionPlan,
   syncExecutionPlan,
 } from '../../../domains/execution/services/lifecycle-service.js';
+import { createPaperPromotionService } from '../../../domains/execution/services/paper-promotion-service.js';
 import {
   getExecutionPlanDetail,
   getExecutionWorkbench,
@@ -23,6 +24,7 @@ import {
 } from '../../../domains/execution/services/query-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 
 export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   const writeForbidden = (permission, action = '') =>
@@ -198,6 +200,20 @@ export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, wr
     const body = await readJsonBody(req);
     const result = recoverExecutionPlan(planId, body);
     writeJson(res, result.ok ? 200 : 409, result);
+    return true;
+  }
+
+  // Paper promotion evaluation
+  if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/execution/paper-promotion/')) {
+    const strategyId = reqUrl.pathname.split('/').at(-1) || 'default';
+    const store = controlPlaneRuntime.getStore();
+    const paperJournalRepo = store.createPaperJournalRepository();
+    const promotionService = createPaperPromotionService({ paperJournalRepo });
+
+    const readiness = promotionService.evaluatePromotionReadiness(strategyId);
+    const report = promotionService.getPromotionReport(strategyId);
+
+    writeJson(res, 200, { ok: true, readiness, report });
     return true;
   }
 
