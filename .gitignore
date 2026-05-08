@@ -36,3 +36,5 @@ npm-debug.log*
 # Testing
 coverage/
 .quantpilot/
+test-results/
+playwright-report/

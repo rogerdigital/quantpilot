@@ -67,6 +67,11 @@ class LRUCache {
     this.accessOrder.push(key);
   }
 
+  private moveToEnd(key: string): void {
+    this.accessOrder = this.accessOrder.filter((k) => k !== key);
+    this.accessOrder.push(key);
+  }
+
   delete(key: string): boolean {
     const existed = this.cache.delete(key);
     if (existed) {

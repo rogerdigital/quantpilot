@@ -1,32 +1,21 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from '../../components/layout/ConsoleChrome.tsx';
 import { TradingSystemProvider } from '../../store/trading-system/TradingSystemProvider.tsx';
-import { LocaleProvider } from './console.i18n.tsx';
 import { listConsoleRoutes } from './console.routes.tsx';
 
 export default function DashboardConsole() {
   const routes = listConsoleRoutes();
 
   return (
-    <LocaleProvider>
-      <TradingSystemProvider>
-        <Routes>
-          <Route element={<Layout />}>
-            {routes.flatMap((route) => {
-              const canonicalRoute = (
-                <Route key={route.path} path={route.path} element={route.element} />
-              );
-              const aliasRoutes = (route.aliases || []).map((aliasPath) => {
-                if (aliasPath === '/') {
-                  return (
-                    <Route
-                      key={aliasPath}
-                      path={aliasPath}
-                      element={<Navigate to={route.path} replace />}
-                    />
-                  );
-                }
-
+    <TradingSystemProvider>
+      <Routes>
+        <Route element={<Layout />}>
+          {routes.flatMap((route) => {
+            const canonicalRoute = (
+              <Route key={route.path} path={route.path} element={route.element} />
+            );
+            const aliasRoutes = (route.aliases || []).map((aliasPath) => {
+              if (aliasPath === '/') {
                 return (
                   <Route
                     key={aliasPath}
@@ -34,13 +23,21 @@ export default function DashboardConsole() {
                     element={<Navigate to={route.path} replace />}
                   />
                 );
-              });
+              }
 
-              return [canonicalRoute, ...aliasRoutes];
-            })}
-          </Route>
-        </Routes>
-      </TradingSystemProvider>
-    </LocaleProvider>
+              return (
+                <Route
+                  key={aliasPath}
+                  path={aliasPath}
+                  element={<Navigate to={route.path} replace />}
+                />
+              );
+            });
+
+            return [canonicalRoute, ...aliasRoutes];
+          })}
+        </Route>
+      </Routes>
+    </TradingSystemProvider>
   );
 }
