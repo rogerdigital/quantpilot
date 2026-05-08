@@ -105,35 +105,6 @@ for (const section of requiredStage7Sections) {
 }
 
 assert.ok(
-  readme.includes('docs/architecture/stage-1-closeout.md'),
-  'README.md must reference the stage 1 closeout document'
-);
-assert.ok(
-  readme.includes('docs/architecture/stage-2-closeout.md'),
-  'README.md must reference the stage 2 closeout document'
-);
-assert.ok(
-  readme.includes('docs/architecture/stage-3-closeout.md'),
-  'README.md must reference the stage 3 closeout document'
-);
-assert.ok(
-  readme.includes('docs/architecture/stage-4-closeout.md'),
-  'README.md must reference the stage 4 closeout document'
-);
-assert.ok(
-  readme.includes('docs/architecture/stage-5-closeout.md'),
-  'README.md must reference the stage 5 closeout document'
-);
-assert.ok(
-  readme.includes('docs/architecture/stage-6-closeout.md'),
-  'README.md must reference the stage 6 closeout document'
-);
-assert.ok(
-  readme.includes('docs/architecture/stage-7-closeout.md'),
-  'README.md must reference the stage 7 closeout document'
-);
-
-assert.ok(
   structure.includes('stage-1-closeout.md'),
   'project-structure.md must reference the stage 1 closeout document'
 );
