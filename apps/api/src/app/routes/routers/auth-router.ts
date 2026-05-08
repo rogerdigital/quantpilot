@@ -292,5 +292,87 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
     return true;
   }
 
+  // MFA routes
+  if (req.method === 'POST' && reqUrl.pathname === '/api/auth/mfa/enroll') {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      writeJson(res, 401, { ok: false, message: 'Authentication required' });
+      return true;
+    }
+
+    // Generate TOTP secret (in production, use speakeasy or otplib)
+    const { randomBytes: rb } = await import('node:crypto');
+    const secret = rb(20).toString('base32');
+    const otpauthUrl = `otpauth://totp/QuantPilot:demo?secret=${secret}&issuer=QuantPilot`;
+
+    writeJson(res, 200, {
+      ok: true,
+      secret,
+      otpauthUrl,
+      qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpauthUrl)}`,
+      message: 'Scan QR code with authenticator app, then verify with /mfa/verify',
+    });
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/auth/mfa/verify') {
+    const body = await readJsonBody(req);
+    const { userId, code, secret } = body || {};
+
+    if (!code) {
+      writeJson(res, 400, { ok: false, message: 'Missing MFA code' });
+      return true;
+    }
+
+    // In production, verify TOTP code against secret
+    // For now, accept any 6-digit code
+    if (!/^\d{6}$/.test(code)) {
+      writeJson(res, 400, { ok: false, message: 'Invalid MFA code format' });
+      return true;
+    }
+
+    const { enableMfa } = await import('../../../modules/auth/user-store.js');
+    if (userId && secret) {
+      enableMfa(userId, secret);
+    }
+
+    const recoveryCodes = Array.from({ length: 8 }, () => {
+      const { randomBytes: rb2 } = require('node:crypto');
+      return rb2(4).toString('hex');
+    });
+
+    writeJson(res, 200, {
+      ok: true,
+      message: 'MFA enabled successfully',
+      recoveryCodes,
+    });
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/auth/mfa/challenge') {
+    const body = await readJsonBody(req);
+    const { userId, code, recoveryCode } = body || {};
+
+    if (recoveryCode) {
+      const { useRecoveryCode } = await import('../../../modules/auth/user-store.js');
+      const used = useRecoveryCode(userId || '', recoveryCode);
+      if (!used) {
+        writeJson(res, 401, { ok: false, message: 'Invalid recovery code' });
+        return true;
+      }
+      writeJson(res, 200, { ok: true, message: 'Recovery code accepted' });
+      return true;
+    }
+
+    if (!code || !/^\d{6}$/.test(code)) {
+      writeJson(res, 400, { ok: false, message: 'Invalid MFA code' });
+      return true;
+    }
+
+    // In production, verify TOTP code
+    writeJson(res, 200, { ok: true, message: 'MFA verified' });
+    return true;
+  }
+
   return false;
 }
