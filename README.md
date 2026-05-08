@@ -12,12 +12,19 @@
 
 ## Features
 
+### Core Trading
+
 | Domain | What It Does |
 |--------|-------------|
 | **Research & Strategy** | Strategy catalog, event-driven backtest engine (Sharpe, max drawdown, win-rate), evaluation, comparison, and governance |
 | **Execution** | Plan → approve → submit → reconcile → recover lifecycle, broker-event ingestion, queue-based operations console |
 | **Risk** | Live VaR/CVaR/Beta/HHI analytics, approval boundaries, policy actions, risk-parameter tuning panel |
 | **Agent Collaboration** | Session → intent → plan → analysis → action handoff pipeline, daily-run loops (pre-market / intraday / post-market), ask-first queue |
+
+### Platform & UX
+
+| Domain | What It Does |
+|--------|-------------|
 | **Real-Time Push** | SSE state stream with exponential-backoff reconnect; polling drops to 15 s fallback |
 | **Auth & Security** | JWT (HS256, 8h), AES-256-GCM broker key encryption at rest, workspace-aware RBAC |
 | **Operations** | Monitoring, incidents, audit trail, backup/restore, integrity checks, SQLite WAL persistence |
@@ -30,8 +37,8 @@
 
 ### Prerequisites
 
-- Node.js ≥ 20
-- npm ≥ 10
+- Node.js >=20.5.0
+- npm >= 10
 
 ### Install & Run
 
@@ -44,50 +51,20 @@ npm run gateway    # API gateway → http://localhost:8787
 npm run worker     # Background worker
 ```
 
-For real broker or LLM integration, copy `.env.example` to `.env` and configure providers. Validate with:
+### Environment Variables
+
+Copy `.env.example` to `.env` and configure providers. Validate with:
 
 ```bash
 npm run check:runtime-env -- --env-file .env
 ```
-
-Key env vars:
 
 | Variable | Purpose |
 |----------|---------|
 | `JWT_SECRET` | HS256 signing key (min 32 chars) |
 | `BROKER_KEY_ENCRYPTION_KEY` | 64-char hex for AES-256-GCM |
 | `DEMO_USERNAME` / `DEMO_PASSWORD` | Login credentials (`admin` / `changeme`) |
-| `USE_HONO` | Set `true` for Hono gateway layer |
-
----
-
-## Architecture
-
-```text
-┌─────────────────────────────────────────────────────┐
-│  apps/web          React 18 SPA (Vite, VE styles)   │
-├─────────────────────────────────────────────────────┤
-│  apps/api          Node.js API gateway (ESM + tsx)   │
-├─────────────────────────────────────────────────────┤
-│  apps/worker       Background task runner            │
-├─────────────────────────────────────────────────────┤
-│  packages/                                           │
-│  ├── trading-engine        Strategy, backtest, risk  │
-│  ├── task-workflow-engine  Workflow orchestration     │
-│  ├── control-plane-runtime Runtime context & fanout  │
-│  ├── control-plane-store   Persistence (file / SQLite) │
-│  ├── llm-provider          Provider-agnostic LLM     │
-│  ├── shared-types          Cross-package contracts   │
-│  └── db                    SQLite adapter + Drizzle  │
-└─────────────────────────────────────────────────────┘
-```
-
-### Platform Operating Loops
-
-1. **Research** — strategy catalog → backtest → evaluation → governance → execution handoff
-2. **Execution** — plan → broker event → reconciliation → compensation → incident linkage
-3. **Middleware** — risk workbench + scheduler workbench → reviewed actions → control-plane fanout
-4. **Agent** — prompt → intent → plan → analysis → handoff → approval → daily-run cycle
+| `USE_HONO` | Set `true` for Hono gateway layer (alternative to native Node.js HTTP) |
 
 ---
 
@@ -139,27 +116,36 @@ A `pre-push` git hook runs `verify` automatically.
 
 ---
 
-## Project Structure
+## Architecture
 
-```
+### Monorepo Structure
+
+```text
 quantpilot/
 ├── apps/
-│   ├── api/                 API gateway
-│   ├── web/                 React SPA
-│   │   └── src/
-│   │       ├── app/         Shell, global styles
-│   │       ├── components/  Shared UI (charts, command-palette, toast, approval-drawer)
-│   │       ├── modules/     Domain modules (agent, console, research, risk, permissions)
-│   │       ├── pages/       9 route pages
-│   │       ├── services/    API client layer
-│   │       ├── store/       TradingSystemProvider
-│   │       └── hooks/       useOhlcvData, useSSE
-│   └── worker/              Background tasks
-├── packages/                Shared engines & contracts
-├── docs/                    Architecture, ops, deployment
-├── scripts/                 Tooling & CI helpers
+│   ├── web/          React 18 SPA (Vite, VE styles)
+│   ├── api/          Node.js API gateway (ESM + tsx)
+│   └── worker/       Background task runner
+├── packages/
+│   ├── trading-engine        Strategy, backtest, risk
+│   ├── task-workflow-engine  Workflow orchestration
+│   ├── control-plane-runtime Runtime context & fanout
+│   ├── control-plane-store   Persistence (file / SQLite)
+│   ├── llm-provider          Provider-agnostic LLM
+│   ├── shared-types          Cross-package contracts
+│   ├── ui                    Shared UI components
+│   └── db                    SQLite adapter + Drizzle
+├── docs/             Architecture, ops, deployment
+├── scripts/          Tooling & CI helpers
 └── CONTRIBUTING.md
 ```
+
+### Platform Operating Loops
+
+1. **Research** — strategy catalog → backtest → evaluation → governance → execution handoff
+2. **Execution** — plan → broker event → reconciliation → compensation → incident linkage
+3. **Middleware** — risk workbench + scheduler workbench → reviewed actions → control-plane fanout
+4. **Agent** — prompt → intent → plan → analysis → handoff → approval → daily-run cycle
 
 ### Key Entry Points
 
@@ -188,13 +174,22 @@ quantpilot/
 | [Project Structure](./docs/architecture/project-structure.md) | Detailed module map |
 | [Layered Architecture](./docs/architecture/layered-architecture.md) | Design philosophy |
 
----
+### Stage Closeout Documents
 
-## Roadmap & History
-
-The staged delivery roadmap (Stages 1–7) is **closed**. Stage closeout documents remain as architecture references and contract baselines enforced by `verify`:
+The staged delivery roadmap (Stages 1–7) is closed. These documents remain as architecture references and contract baselines:
 
 [Stage 1](./docs/architecture/stage-1-closeout.md) · [Stage 2](./docs/architecture/stage-2-closeout.md) · [Stage 3](./docs/architecture/stage-3-closeout.md) · [Stage 4](./docs/architecture/stage-4-closeout.md) · [Stage 5](./docs/architecture/stage-5-closeout.md) · [Stage 6](./docs/architecture/stage-6-closeout.md) · [Stage 7](./docs/architecture/stage-7-closeout.md)
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for:
+
+- Development workflow
+- PR rules and review process
+- Code style and conventions
+- Testing requirements
 
 ---
 
