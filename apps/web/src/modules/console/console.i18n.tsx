@@ -29,6 +29,7 @@ export const copy = {
       portfolio: '组合',
       settings: '设置',
       marketplace: '策略市场',
+      analytics: '绩效分析',
     },
     labels: {
       language: '语言',
@@ -162,6 +163,7 @@ export const copy = {
       portfolio: ['组合中心', '查看账户净值、现金、持仓和当前组合暴露。'],
       settings: ['系统设置', '管理运行模式、执行开关、参数和接入状态。'],
       marketplace: ['策略市场', '浏览和复制社区分享的量化策略。'],
+      analytics: ['绩效分析', '查看策略绩效指标、风险分析和交易分布。'],
     },
     desk: {
       dashboard: 'Command Deck',
@@ -223,6 +225,7 @@ export const copy = {
       portfolio: 'Portfolio',
       settings: 'Settings',
       marketplace: 'Marketplace',
+      analytics: 'Analytics',
     },
     labels: {
       language: 'Language',
@@ -380,6 +383,7 @@ export const copy = {
       ],
       settings: ['Settings', 'Manage modes, switches, thresholds, and provider connectivity.'],
       marketplace: ['Marketplace', 'Browse and fork community-shared quantitative strategies.'],
+      analytics: ['Analytics', 'Review strategy performance metrics, risk analysis, and trade distribution.'],
     },
     desk: {
       dashboard: 'Command Deck',

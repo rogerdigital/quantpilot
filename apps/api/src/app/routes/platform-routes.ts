@@ -4,6 +4,7 @@ import { handleAgentRoutes } from './routers/agent-router.js';
 import { handleAuthRoutes } from './routers/auth-router.js';
 import { handleBacktestRoutes } from './routers/backtest-router.js';
 import { handleCollaborationRoutes } from './routers/collaboration-router.js';
+import { handleAnalyticsRoutes } from './routers/analytics-router.js';
 import { handleExecutionRoutes } from './routers/execution-router.js';
 import { handleHealthRoutes } from './routers/health-router.js';
 import { handleMarketRoutes } from './routers/market-router.js';
@@ -32,6 +33,7 @@ const routers = [
   handleMarketRoutes,
   handleMarketplaceRoutes,
   handleCollaborationRoutes,
+  handleAnalyticsRoutes,
 ];
 
 export async function handlePlatformRoutes(context) {
