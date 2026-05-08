@@ -1,5 +1,4 @@
 import { style } from '@vanilla-extract/css';
-import { vars } from '../theme.css.js';
 import { duration, easing } from '../tokens/motion.css.js';
 import { radii } from '../tokens/radii.css.js';
 import { spacing } from '../tokens/spacing.css.js';
@@ -10,18 +9,18 @@ export const trigger = style({
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: spacing.sm,
-  border: `1px solid ${vars.border}`,
+  border: `1px solid ${'var(--border)'}`,
   borderRadius: radii.md,
-  background: vars.surface,
+  background: 'var(--surface)',
   padding: `0 ${spacing.md}`,
   height: '34px',
   cursor: 'pointer',
   fontSize: fontSize.md,
-  color: vars.text,
+  color: 'var(--text)',
   transition: `border-color ${duration.normal} ${easing.out}`,
   selectors: {
     '&:hover': {
-      borderColor: vars.borderStrong,
+      borderColor: 'var(--borderStrong)',
     },
   },
 });
@@ -32,8 +31,8 @@ export const dropdown = style({
   left: 0,
   right: 0,
   marginTop: spacing.xs,
-  background: vars.surfaceRaised,
-  border: `1px solid ${vars.border}`,
+  background: 'var(--surfaceRaised)',
+  border: `1px solid ${'var(--border)'}`,
   borderRadius: radii.md,
   boxShadow: '0 8px 28px rgba(0, 0, 0, 0.5)',
   zIndex: 100,
@@ -47,23 +46,23 @@ export const option = style({
   padding: `${spacing.sm} ${spacing.md}`,
   background: 'transparent',
   border: 'none',
-  color: vars.text,
+  color: 'var(--text)',
   fontSize: fontSize.md,
   cursor: 'pointer',
   textAlign: 'left',
   selectors: {
     '&:hover': {
-      background: vars.accentSubtle,
+      background: 'var(--accentSubtle)',
     },
   },
 });
 
 export const optionSelected = style({
-  color: vars.accent,
+  color: 'var(--accent)',
   fontWeight: '600',
 });
 
 export const placeholder = style({
-  color: vars.textMuted,
+  color: 'var(--textMuted)',
   opacity: 0.5,
 });

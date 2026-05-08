@@ -1,5 +1,4 @@
 import { style, styleVariants } from '@vanilla-extract/css';
-import { vars } from '../theme.css.js';
 import { duration, easing } from '../tokens/motion.css.js';
 import { radii } from '../tokens/radii.css.js';
 import { spacing } from '../tokens/spacing.css.js';
@@ -24,8 +23,8 @@ export const sizes = styleVariants({
 });
 
 export const panel = style({
-  background: vars.surfaceRaised,
-  border: `1px solid ${vars.border}`,
+  background: 'var(--surfaceRaised)',
+  border: `1px solid ${'var(--border)'}`,
   borderRadius: radii.lg,
   boxShadow: '0 24px 64px rgba(0, 0, 0, 0.75), 0 4px 16px rgba(0, 0, 0, 0.55)',
   display: 'flex',
@@ -39,14 +38,14 @@ export const header = style({
   alignItems: 'center',
   justifyContent: 'space-between',
   padding: `${spacing.lg} ${spacing.xl}`,
-  borderBottom: `1px solid ${vars.border}`,
+  borderBottom: `1px solid ${'var(--border)'}`,
 });
 
 export const title = style({
   margin: 0,
   fontSize: fontSize.xl,
   fontWeight: fontWeight.semibold,
-  color: vars.textStrong,
+  color: 'var(--textStrong)',
 });
 
 export const body = style({
@@ -60,19 +59,19 @@ export const footer = style({
   justifyContent: 'flex-end',
   gap: spacing.sm,
   padding: `${spacing.lg} ${spacing.xl}`,
-  borderTop: `1px solid ${vars.border}`,
+  borderTop: `1px solid ${'var(--border)'}`,
 });
 
 export const closeBtn = style({
   background: 'transparent',
   border: 'none',
-  color: vars.textMuted,
+  color: 'var(--textMuted)',
   cursor: 'pointer',
   padding: spacing.xs,
   fontSize: fontSize.xl,
   selectors: {
     '&:hover': {
-      color: vars.text,
+      color: 'var(--text)',
     },
   },
 });

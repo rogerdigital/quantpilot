@@ -1,5 +1,4 @@
 import { style, styleVariants } from '@vanilla-extract/css';
-import { vars } from '../theme.css.js';
 import { duration, easing } from '../tokens/motion.css.js';
 import { radii } from '../tokens/radii.css.js';
 import { spacing } from '../tokens/spacing.css.js';
@@ -30,11 +29,11 @@ export const variants = styleVariants({
   primary: [
     base,
     {
-      background: vars.accent,
+      background: 'var(--accent)',
       color: '#fff',
       selectors: {
         '&:hover:not(:disabled)': {
-          background: vars.accentHover,
+          background: 'var(--accentHover)',
         },
       },
     },
@@ -43,12 +42,12 @@ export const variants = styleVariants({
     base,
     {
       background: 'transparent',
-      color: vars.text,
-      borderColor: vars.border,
+      color: 'var(--text)',
+      borderColor: 'var(--border)',
       selectors: {
         '&:hover:not(:disabled)': {
-          borderColor: vars.borderStrong,
-          background: vars.accentSubtle,
+          borderColor: 'var(--borderStrong)',
+          background: 'var(--accentSubtle)',
         },
       },
     },
@@ -57,11 +56,11 @@ export const variants = styleVariants({
     base,
     {
       background: 'transparent',
-      color: vars.textMuted,
+      color: 'var(--textMuted)',
       selectors: {
         '&:hover:not(:disabled)': {
-          color: vars.text,
-          background: vars.accentSubtle,
+          color: 'var(--text)',
+          background: 'var(--accentSubtle)',
         },
       },
     },
@@ -69,7 +68,7 @@ export const variants = styleVariants({
   danger: [
     base,
     {
-      background: vars.danger,
+      background: 'var(--danger)',
       color: '#fff',
       selectors: {
         '&:hover:not(:disabled)': {
