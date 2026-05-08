@@ -46,6 +46,7 @@ import {
   topbarMeta,
 } from './ConsoleChrome.css.ts';
 import { MobileBottomNav } from './MobileBottomNav.tsx';
+import { ShortcutHelp } from './ShortcutHelp.tsx';
 
 export type TopMetaItem = {
   label: string;
@@ -355,6 +356,7 @@ export function Layout() {
     return window.localStorage.getItem('quantpilot-sidebar-collapsed') === 'true';
   });
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const handleToggle = () => {
     setCollapsed((prev) => {
@@ -368,13 +370,44 @@ export function Layout() {
     document.title = getConsoleDocumentTitle(locale, location.pathname);
   }, [locale, location.pathname]);
 
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      const meta = e.metaKey || e.ctrlKey;
+
+      // Cmd+K: command palette
+      if (meta && e.key === 'k') {
         e.preventDefault();
         setCmdOpen((prev) => !prev);
+        return;
+      }
+
+      // Cmd+/: shortcut help
+      if (meta && e.key === '/') {
+        e.preventDefault();
+        setShortcutsOpen((prev) => !prev);
+        return;
+      }
+
+      // Escape: close modals
+      if (e.key === 'Escape') {
+        setCmdOpen(false);
+        setShortcutsOpen(false);
+        return;
+      }
+
+      // Cmd+1-9: navigation
+      if (meta && e.key >= '1' && e.key <= '9') {
+        e.preventDefault();
+        const routes = listSidebarRoutes();
+        const idx = Number(e.key) - 1;
+        if (routes[idx]) {
+          window.location.hash = `#${routes[idx].path}`;
+        }
+        return;
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
@@ -387,6 +420,7 @@ export function Layout() {
         <Outlet />
       </main>
       {cmdOpen && <CommandPalette locale={locale} onClose={() => setCmdOpen(false)} />}
+      <ShortcutHelp open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <MobileBottomNav />
       <ApprovalDrawer
         locale={locale}
