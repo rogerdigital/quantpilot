@@ -219,7 +219,12 @@ export const overviewKpiNote = style({
 
 /* ── OVERVIEW DESK GRID ─────────────────────────────────── */
 
-export const overviewDeskGrid = style({ gridTemplateColumns: '1.65fr 0.95fr' });
+export const overviewDeskGrid = style({
+  gridTemplateColumns: '1.65fr 0.95fr',
+  '@media': {
+    '(max-width: 640px)': { gridTemplateColumns: '1fr' },
+  },
+});
 export const overviewPrimaryPanel = style({ minHeight: '468px' });
 export const overviewSidePanel = style({ minHeight: '468px' });
 export const overviewPanelFlow = style({ display: 'grid', gap: '16px' });
