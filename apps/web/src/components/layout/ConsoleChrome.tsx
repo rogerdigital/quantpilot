@@ -336,14 +336,21 @@ export type EmptyStateProps = {
   icon?: string;
   message: string;
   detail?: string;
+  actionLabel?: string;
+  onAction?: () => void;
 };
 
-export function EmptyState({ icon, message, detail }: EmptyStateProps) {
+export function EmptyState({ icon, message, detail, actionLabel, onAction }: EmptyStateProps) {
   return (
     <div className="empty-state">
       {icon ? <span className="empty-state-icon">{icon}</span> : null}
       <span className="empty-state-message">{message}</span>
       {detail ? <span className="empty-state-detail">{detail}</span> : null}
+      {actionLabel && onAction ? (
+        <button type="button" className="empty-state-action" onClick={onAction}>
+          {actionLabel}
+        </button>
+      ) : null}
     </div>
   );
 }
