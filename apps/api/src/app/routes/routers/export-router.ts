@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { controlPlaneContext } from '../../../../../../packages/control-plane-store/src/context.js';
 import { createExportService } from '../../../domains/export/services/export-service.js';
 
 function sendExport(res, result) {
@@ -17,7 +17,7 @@ function sendExport(res, result) {
 }
 
 export async function handleExportRoutes({ req, reqUrl, res, writeJson }) {
-  const store = controlPlaneRuntime.getStore();
+  const store = controlPlaneContext.store;
   const exportService = createExportService(store);
 
   // GET /api/export/strategies/:id

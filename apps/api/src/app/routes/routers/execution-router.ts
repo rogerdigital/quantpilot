@@ -1,6 +1,5 @@
 // @ts-nocheck
 
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import {
   approveExecutionPlan,
   bulkOperateExecutionPlans,
@@ -206,8 +205,10 @@ export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, wr
   // Paper promotion evaluation
   if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/execution/paper-promotion/')) {
     const strategyId = reqUrl.pathname.split('/').at(-1) || 'default';
-    const store = controlPlaneRuntime.getStore();
-    const paperJournalRepo = store.createPaperJournalRepository();
+    const { controlPlaneContext } = await import(
+      '../../../../../../packages/control-plane-store/src/context.js'
+    );
+    const paperJournalRepo = controlPlaneContext.paperJournal;
     const promotionService = createPaperPromotionService({ paperJournalRepo });
 
     const readiness = promotionService.evaluatePromotionReadiness(strategyId);

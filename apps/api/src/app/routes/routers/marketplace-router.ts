@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { controlPlaneContext } from '../../../../../../packages/control-plane-store/src/context.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
 
@@ -15,8 +15,8 @@ export async function handleMarketplaceRoutes({
   const writeForbidden = (permission, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 
-  const marketplaceRepo = controlPlaneRuntime.getStore().createStrategyMarketplaceRepository();
-  const strategyRepo = controlPlaneRuntime.getStore();
+  const marketplaceRepo = controlPlaneContext.strategyMarketplace;
+  const store = controlPlaneContext;
 
   // GET /api/marketplace/strategies - browse published strategies
   if (req.method === 'GET' && reqUrl.pathname === '/api/marketplace/strategies') {
@@ -167,7 +167,7 @@ export async function handleMarketplaceRoutes({
 
     try {
       // Get strategy from catalog
-      const catalog = strategyRepo.readCollection('strategy-catalog.json');
+      const catalog = store.store.readCollection('strategy-catalog.json');
       const strategy = catalog.find((s) => s.id === body.strategyId);
 
       if (!strategy) {

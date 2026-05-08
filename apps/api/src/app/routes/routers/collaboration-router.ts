@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
+import { controlPlaneContext } from '../../../../../../packages/control-plane-store/src/context.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
 
@@ -15,8 +15,7 @@ export async function handleCollaborationRoutes({
   const writeForbidden = (permission, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 
-  const store = controlPlaneRuntime.getStore();
-  const collaborationRepo = store.createCollaborationRepository();
+  const collaborationRepo = controlPlaneContext.collaboration;
 
   // POST /api/strategies/:id/share - share strategy
   if (
