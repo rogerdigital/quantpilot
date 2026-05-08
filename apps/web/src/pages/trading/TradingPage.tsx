@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CandlestickChart } from '../../components/charts/CandlestickChart.tsx';
 import { EmptyState, TabPanel } from '../../components/layout/ConsoleChrome.tsx';
+import { QuickOrderBar } from '../../components/trading/QuickOrderBar.tsx';
 import { useOhlcvData } from '../../hooks/useOhlcvData.ts';
 import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
 import {
@@ -545,6 +546,11 @@ export function TradingPage() {
           ]}
         />
       </div>
+      <QuickOrderBar
+        onSubmit={(order) => {
+          handleSubmitOrder(order.direction);
+        }}
+      />
     </div>
   );
 }
