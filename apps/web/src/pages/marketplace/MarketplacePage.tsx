@@ -323,7 +323,13 @@ export function MarketplacePage() {
                   <div style={{ font: '600 14px/1 var(--font-data)', color: 'var(--buy)' }}>
                     {formatPercent(strategy.metrics.cagr)}
                   </div>
-                  <div style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '2px' }}>
+                  <div
+                    style={{
+                      font: '400 10px/1 var(--font-ui)',
+                      color: 'var(--muted)',
+                      marginTop: '2px',
+                    }}
+                  >
                     CAGR
                   </div>
                 </div>
@@ -331,7 +337,13 @@ export function MarketplacePage() {
                   <div style={{ font: '600 14px/1 var(--font-data)', color: 'var(--text)' }}>
                     {formatMetric(strategy.metrics.sharpe)}
                   </div>
-                  <div style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '2px' }}>
+                  <div
+                    style={{
+                      font: '400 10px/1 var(--font-ui)',
+                      color: 'var(--muted)',
+                      marginTop: '2px',
+                    }}
+                  >
                     Sharpe
                   </div>
                 </div>
@@ -339,7 +351,13 @@ export function MarketplacePage() {
                   <div style={{ font: '600 14px/1 var(--font-data)', color: 'var(--sell)' }}>
                     {formatPercent(strategy.metrics.maxDrawdown)}
                   </div>
-                  <div style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '2px' }}>
+                  <div
+                    style={{
+                      font: '400 10px/1 var(--font-ui)',
+                      color: 'var(--muted)',
+                      marginTop: '2px',
+                    }}
+                  >
                     Max DD
                   </div>
                 </div>
@@ -431,17 +449,36 @@ export function MarketplacePage() {
             }}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
+            role="document"
           >
-            <h2 style={{ font: '700 20px/1.2 var(--font-ui)', color: 'var(--text)', marginBottom: '8px' }}>
+            <h2
+              style={{
+                font: '700 20px/1.2 var(--font-ui)',
+                color: 'var(--text)',
+                marginBottom: '8px',
+              }}
+            >
               {selectedStrategy.name}
             </h2>
-            <p style={{ font: '400 13px/1.5 var(--font-ui)', color: 'var(--muted)', marginBottom: '20px' }}>
+            <p
+              style={{
+                font: '400 13px/1.5 var(--font-ui)',
+                color: 'var(--muted)',
+                marginBottom: '20px',
+              }}
+            >
               {selectedStrategy.description}
             </p>
 
             {/* Rating */}
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ font: '600 13px/1 var(--font-ui)', color: 'var(--text)', marginBottom: '8px' }}>
+              <div
+                style={{
+                  font: '600 13px/1 var(--font-ui)',
+                  color: 'var(--text)',
+                  marginBottom: '8px',
+                }}
+              >
                 {locale === 'zh' ? '评分' : 'Rating'}
               </div>
               <div style={{ display: 'flex', gap: '4px' }}>
@@ -455,13 +492,20 @@ export function MarketplacePage() {
                       border: 'none',
                       fontSize: '24px',
                       cursor: 'pointer',
-                      color: star <= selectedStrategy.rating ? 'var(--accent-secondary)' : 'var(--line)',
+                      color:
+                        star <= selectedStrategy.rating ? 'var(--accent-secondary)' : 'var(--line)',
                     }}
                   >
                     ★
                   </button>
                 ))}
-                <span style={{ font: '400 12px/1 var(--font-ui)', color: 'var(--muted)', marginLeft: '8px' }}>
+                <span
+                  style={{
+                    font: '400 12px/1 var(--font-ui)',
+                    color: 'var(--muted)',
+                    marginLeft: '8px',
+                  }}
+                >
                   ({selectedStrategy.ratingCount})
                 </span>
               </div>
@@ -469,30 +513,44 @@ export function MarketplacePage() {
 
             {/* Metrics */}
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ font: '600 13px/1 var(--font-ui)', color: 'var(--text)', marginBottom: '8px' }}>
+              <div
+                style={{
+                  font: '600 13px/1 var(--font-ui)',
+                  color: 'var(--text)',
+                  marginBottom: '8px',
+                }}
+              >
                 {locale === 'zh' ? '表现指标' : 'Performance Metrics'}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                 <div>
-                  <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)' }}>CAGR</div>
+                  <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)' }}>
+                    CAGR
+                  </div>
                   <div style={{ font: '600 16px/1 var(--font-data)', color: 'var(--buy)' }}>
                     {formatPercent(selectedStrategy.metrics.cagr)}
                   </div>
                 </div>
                 <div>
-                  <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)' }}>Sharpe Ratio</div>
+                  <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)' }}>
+                    Sharpe Ratio
+                  </div>
                   <div style={{ font: '600 16px/1 var(--font-data)', color: 'var(--text)' }}>
                     {formatMetric(selectedStrategy.metrics.sharpe)}
                   </div>
                 </div>
                 <div>
-                  <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)' }}>Max Drawdown</div>
+                  <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)' }}>
+                    Max Drawdown
+                  </div>
                   <div style={{ font: '600 16px/1 var(--font-data)', color: 'var(--sell)' }}>
                     {formatPercent(selectedStrategy.metrics.maxDrawdown)}
                   </div>
                 </div>
                 <div>
-                  <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)' }}>Win Rate</div>
+                  <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)' }}>
+                    Win Rate
+                  </div>
                   <div style={{ font: '600 16px/1 var(--font-data)', color: 'var(--text)' }}>
                     {formatPercent(selectedStrategy.metrics.winRate)}
                   </div>

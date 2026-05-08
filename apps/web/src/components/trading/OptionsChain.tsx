@@ -31,7 +31,11 @@ interface OptionsChainProps {
   className?: string;
 }
 
-export function OptionsChain({ underlying = 'AAPL', onStrikeSelect, className = '' }: OptionsChainProps) {
+export function OptionsChain({
+  underlying = 'AAPL',
+  onStrikeSelect,
+  className = '',
+}: OptionsChainProps) {
   const { locale } = useLocale();
   const [chainData, setChainData] = useState<OptionChainData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,7 +47,9 @@ export function OptionsChain({ underlying = 'AAPL', onStrikeSelect, className = 
     try {
       // In real implementation, this would call the API
       // For now, generate locally
-      const res = await fetch(`/api/market/option-chain?underlying=${underlying}&days=${selectedExpiry}`);
+      const res = await fetch(
+        `/api/market/option-chain?underlying=${underlying}&days=${selectedExpiry}`
+      );
       const data = await res.json();
 
       if (data.ok) {
@@ -62,7 +68,10 @@ export function OptionsChain({ underlying = 'AAPL', onStrikeSelect, className = 
 
   if (loading) {
     return (
-      <div className={className} style={{ padding: '20px', textAlign: 'center', color: 'var(--muted)' }}>
+      <div
+        className={className}
+        style={{ padding: '20px', textAlign: 'center', color: 'var(--muted)' }}
+      >
         {locale === 'zh' ? '加载期权链...' : 'Loading option chain...'}
       </div>
     );
@@ -70,7 +79,10 @@ export function OptionsChain({ underlying = 'AAPL', onStrikeSelect, className = 
 
   if (!chainData) {
     return (
-      <div className={className} style={{ padding: '20px', textAlign: 'center', color: 'var(--muted)' }}>
+      <div
+        className={className}
+        style={{ padding: '20px', textAlign: 'center', color: 'var(--muted)' }}
+      >
         {locale === 'zh' ? '无法加载期权链' : 'Failed to load option chain'}
       </div>
     );
@@ -94,10 +106,12 @@ export function OptionsChain({ underlying = 'AAPL', onStrikeSelect, className = 
           <h3 style={{ font: '700 16px/1.3 var(--font-ui)', color: 'var(--text)' }}>
             {underlying} {locale === 'zh' ? '期权链' : 'Options Chain'}
           </h3>
-          <div style={{ font: '400 12px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}>
+          <div
+            style={{ font: '400 12px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}
+          >
             {locale === 'zh' ? '当前价格' : 'Price'}: ${chainData.currentPrice.toFixed(2)} |{' '}
-            {locale === 'zh' ? '到期天数' : 'Days'}: {chainData.daysToExpiry} |{' '}
-            IV: {(chainData.volatility * 100).toFixed(1)}%
+            {locale === 'zh' ? '到期天数' : 'Days'}: {chainData.daysToExpiry} | IV:{' '}
+            {(chainData.volatility * 100).toFixed(1)}%
           </div>
         </div>
 
@@ -154,24 +168,88 @@ export function OptionsChain({ underlying = 'AAPL', onStrikeSelect, className = 
           <thead>
             <tr>
               {/* Call columns */}
-              <th style={{ padding: '8px', textAlign: 'right', color: 'var(--buy)', borderBottom: '1px solid var(--line)' }}>
+              <th
+                style={{
+                  padding: '8px',
+                  textAlign: 'right',
+                  color: 'var(--buy)',
+                  borderBottom: '1px solid var(--line)',
+                }}
+              >
                 {locale === 'zh' ? '买入价' : 'Bid'}
               </th>
-              <th style={{ padding: '8px', textAlign: 'right', color: 'var(--buy)', borderBottom: '1px solid var(--line)' }}>
+              <th
+                style={{
+                  padding: '8px',
+                  textAlign: 'right',
+                  color: 'var(--buy)',
+                  borderBottom: '1px solid var(--line)',
+                }}
+              >
                 {locale === 'zh' ? '卖出价' : 'Ask'}
               </th>
-              <th style={{ padding: '8px', textAlign: 'right', color: 'var(--buy)', borderBottom: '1px solid var(--line)' }}>
+              <th
+                style={{
+                  padding: '8px',
+                  textAlign: 'right',
+                  color: 'var(--buy)',
+                  borderBottom: '1px solid var(--line)',
+                }}
+              >
                 {locale === 'zh' ? '最新价' : 'Last'}
               </th>
-              <th style={{ padding: '8px', textAlign: 'right', color: 'var(--buy)', borderBottom: '1px solid var(--line)' }}>
+              <th
+                style={{
+                  padding: '8px',
+                  textAlign: 'right',
+                  color: 'var(--buy)',
+                  borderBottom: '1px solid var(--line)',
+                }}
+              >
                 IV
               </th>
               {viewMode === 'greeks' && (
                 <>
-                  <th style={{ padding: '8px', textAlign: 'right', color: 'var(--buy)', borderBottom: '1px solid var(--line)' }}>Delta</th>
-                  <th style={{ padding: '8px', textAlign: 'right', color: 'var(--buy)', borderBottom: '1px solid var(--line)' }}>Gamma</th>
-                  <th style={{ padding: '8px', textAlign: 'right', color: 'var(--buy)', borderBottom: '1px solid var(--line)' }}>Theta</th>
-                  <th style={{ padding: '8px', textAlign: 'right', color: 'var(--buy)', borderBottom: '1px solid var(--line)' }}>Vega</th>
+                  <th
+                    style={{
+                      padding: '8px',
+                      textAlign: 'right',
+                      color: 'var(--buy)',
+                      borderBottom: '1px solid var(--line)',
+                    }}
+                  >
+                    Delta
+                  </th>
+                  <th
+                    style={{
+                      padding: '8px',
+                      textAlign: 'right',
+                      color: 'var(--buy)',
+                      borderBottom: '1px solid var(--line)',
+                    }}
+                  >
+                    Gamma
+                  </th>
+                  <th
+                    style={{
+                      padding: '8px',
+                      textAlign: 'right',
+                      color: 'var(--buy)',
+                      borderBottom: '1px solid var(--line)',
+                    }}
+                  >
+                    Theta
+                  </th>
+                  <th
+                    style={{
+                      padding: '8px',
+                      textAlign: 'right',
+                      color: 'var(--buy)',
+                      borderBottom: '1px solid var(--line)',
+                    }}
+                  >
+                    Vega
+                  </th>
                 </>
               )}
 
@@ -190,24 +268,88 @@ export function OptionsChain({ underlying = 'AAPL', onStrikeSelect, className = 
               </th>
 
               {/* Put columns */}
-              <th style={{ padding: '8px', textAlign: 'right', color: 'var(--sell)', borderBottom: '1px solid var(--line)' }}>
+              <th
+                style={{
+                  padding: '8px',
+                  textAlign: 'right',
+                  color: 'var(--sell)',
+                  borderBottom: '1px solid var(--line)',
+                }}
+              >
                 IV
               </th>
-              <th style={{ padding: '8px', textAlign: 'right', color: 'var(--sell)', borderBottom: '1px solid var(--line)' }}>
+              <th
+                style={{
+                  padding: '8px',
+                  textAlign: 'right',
+                  color: 'var(--sell)',
+                  borderBottom: '1px solid var(--line)',
+                }}
+              >
                 {locale === 'zh' ? '最新价' : 'Last'}
               </th>
-              <th style={{ padding: '8px', textAlign: 'right', color: 'var(--sell)', borderBottom: '1px solid var(--line)' }}>
+              <th
+                style={{
+                  padding: '8px',
+                  textAlign: 'right',
+                  color: 'var(--sell)',
+                  borderBottom: '1px solid var(--line)',
+                }}
+              >
                 {locale === 'zh' ? '买入价' : 'Bid'}
               </th>
-              <th style={{ padding: '8px', textAlign: 'right', color: 'var(--sell)', borderBottom: '1px solid var(--line)' }}>
+              <th
+                style={{
+                  padding: '8px',
+                  textAlign: 'right',
+                  color: 'var(--sell)',
+                  borderBottom: '1px solid var(--line)',
+                }}
+              >
                 {locale === 'zh' ? '卖出价' : 'Ask'}
               </th>
               {viewMode === 'greeks' && (
                 <>
-                  <th style={{ padding: '8px', textAlign: 'right', color: 'var(--sell)', borderBottom: '1px solid var(--line)' }}>Delta</th>
-                  <th style={{ padding: '8px', textAlign: 'right', color: 'var(--sell)', borderBottom: '1px solid var(--line)' }}>Gamma</th>
-                  <th style={{ padding: '8px', textAlign: 'right', color: 'var(--sell)', borderBottom: '1px solid var(--line)' }}>Theta</th>
-                  <th style={{ padding: '8px', textAlign: 'right', color: 'var(--sell)', borderBottom: '1px solid var(--line)' }}>Vega</th>
+                  <th
+                    style={{
+                      padding: '8px',
+                      textAlign: 'right',
+                      color: 'var(--sell)',
+                      borderBottom: '1px solid var(--line)',
+                    }}
+                  >
+                    Delta
+                  </th>
+                  <th
+                    style={{
+                      padding: '8px',
+                      textAlign: 'right',
+                      color: 'var(--sell)',
+                      borderBottom: '1px solid var(--line)',
+                    }}
+                  >
+                    Gamma
+                  </th>
+                  <th
+                    style={{
+                      padding: '8px',
+                      textAlign: 'right',
+                      color: 'var(--sell)',
+                      borderBottom: '1px solid var(--line)',
+                    }}
+                  >
+                    Theta
+                  </th>
+                  <th
+                    style={{
+                      padding: '8px',
+                      textAlign: 'right',
+                      color: 'var(--sell)',
+                      borderBottom: '1px solid var(--line)',
+                    }}
+                  >
+                    Vega
+                  </th>
                 </>
               )}
             </tr>
@@ -221,21 +363,32 @@ export function OptionsChain({ underlying = 'AAPL', onStrikeSelect, className = 
                 <tr
                   key={row.strike}
                   style={{
-                    background: row.strike === Math.round(chainData.currentPrice)
-                      ? 'var(--accent-subtle)'
-                      : 'transparent',
+                    background:
+                      row.strike === Math.round(chainData.currentPrice)
+                        ? 'var(--accent-subtle)'
+                        : 'transparent',
                   }}
                 >
                   {/* Call side */}
                   <td
                     style={{ padding: '6px 8px', textAlign: 'right', cursor: 'pointer' }}
                     onClick={() => onStrikeSelect?.(row.strike, 'CALL', row.call)}
+                    onKeyDown={(e) =>
+                      e.key === 'Enter' && onStrikeSelect?.(row.strike, 'CALL', row.call)
+                    }
+                    role="button"
+                    tabIndex={0}
                   >
                     {(row.call.price * 0.98).toFixed(2)}
                   </td>
                   <td
                     style={{ padding: '6px 8px', textAlign: 'right', cursor: 'pointer' }}
                     onClick={() => onStrikeSelect?.(row.strike, 'CALL', row.call)}
+                    onKeyDown={(e) =>
+                      e.key === 'Enter' && onStrikeSelect?.(row.strike, 'CALL', row.call)
+                    }
+                    role="button"
+                    tabIndex={0}
                   >
                     {(row.call.price * 1.02).toFixed(2)}
                   </td>
@@ -248,6 +401,11 @@ export function OptionsChain({ underlying = 'AAPL', onStrikeSelect, className = 
                       fontWeight: isITMCall ? 600 : 400,
                     }}
                     onClick={() => onStrikeSelect?.(row.strike, 'CALL', row.call)}
+                    onKeyDown={(e) =>
+                      e.key === 'Enter' && onStrikeSelect?.(row.strike, 'CALL', row.call)
+                    }
+                    role="button"
+                    tabIndex={0}
                   >
                     {row.call.price.toFixed(2)}
                   </td>
@@ -256,10 +414,18 @@ export function OptionsChain({ underlying = 'AAPL', onStrikeSelect, className = 
                   </td>
                   {viewMode === 'greeks' && (
                     <>
-                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{row.call.delta.toFixed(3)}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{row.call.gamma.toFixed(4)}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{row.call.theta.toFixed(2)}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{row.call.vega.toFixed(2)}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>
+                        {row.call.delta.toFixed(3)}
+                      </td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>
+                        {row.call.gamma.toFixed(4)}
+                      </td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>
+                        {row.call.theta.toFixed(2)}
+                      </td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>
+                        {row.call.vega.toFixed(2)}
+                      </td>
                     </>
                   )}
 
@@ -288,27 +454,50 @@ export function OptionsChain({ underlying = 'AAPL', onStrikeSelect, className = 
                       fontWeight: isITMPut ? 600 : 400,
                     }}
                     onClick={() => onStrikeSelect?.(row.strike, 'PUT', row.put)}
+                    onKeyDown={(e) =>
+                      e.key === 'Enter' && onStrikeSelect?.(row.strike, 'PUT', row.put)
+                    }
+                    role="button"
+                    tabIndex={0}
                   >
                     {row.put.price.toFixed(2)}
                   </td>
                   <td
                     style={{ padding: '6px 8px', textAlign: 'right', cursor: 'pointer' }}
                     onClick={() => onStrikeSelect?.(row.strike, 'PUT', row.put)}
+                    onKeyDown={(e) =>
+                      e.key === 'Enter' && onStrikeSelect?.(row.strike, 'PUT', row.put)
+                    }
+                    role="button"
+                    tabIndex={0}
                   >
                     {(row.put.price * 0.98).toFixed(2)}
                   </td>
                   <td
                     style={{ padding: '6px 8px', textAlign: 'right', cursor: 'pointer' }}
                     onClick={() => onStrikeSelect?.(row.strike, 'PUT', row.put)}
+                    onKeyDown={(e) =>
+                      e.key === 'Enter' && onStrikeSelect?.(row.strike, 'PUT', row.put)
+                    }
+                    role="button"
+                    tabIndex={0}
                   >
                     {(row.put.price * 1.02).toFixed(2)}
                   </td>
                   {viewMode === 'greeks' && (
                     <>
-                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{row.put.delta.toFixed(3)}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{row.put.gamma.toFixed(4)}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{row.put.theta.toFixed(2)}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{row.put.vega.toFixed(2)}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>
+                        {row.put.delta.toFixed(3)}
+                      </td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>
+                        {row.put.gamma.toFixed(4)}
+                      </td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>
+                        {row.put.theta.toFixed(2)}
+                      </td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>
+                        {row.put.vega.toFixed(2)}
+                      </td>
                     </>
                   )}
                 </tr>

@@ -509,7 +509,13 @@ export function OverviewPage() {
                   </div>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <SignalAlert
-                      variant={stock.signal === 'BUY' ? 'buy' : stock.signal === 'SELL' ? 'sell' : 'warning'}
+                      variant={
+                        stock.signal === 'BUY'
+                          ? 'buy'
+                          : stock.signal === 'SELL'
+                            ? 'sell'
+                            : 'warning'
+                      }
                       size={6}
                       pulse={false}
                     />

@@ -78,17 +78,33 @@ export function ShareDialog({ strategyId, onClose, onShare }: ShareDialogProps) 
         }}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
+        role="document"
       >
-        <h3 style={{ font: '700 16px/1.3 var(--font-ui)', color: 'var(--text)', marginBottom: '16px' }}>
+        <h3
+          style={{
+            font: '700 16px/1.3 var(--font-ui)',
+            color: 'var(--text)',
+            marginBottom: '16px',
+          }}
+        >
           {locale === 'zh' ? '分享策略' : 'Share Strategy'}
         </h3>
 
         {/* User ID */}
         <div style={{ marginBottom: '12px' }}>
-          <label style={{ display: 'block', font: '500 12px/1 var(--font-ui)', color: 'var(--muted)', marginBottom: '6px' }}>
+          <label
+            htmlFor="share-user-id"
+            style={{
+              display: 'block',
+              font: '500 12px/1 var(--font-ui)',
+              color: 'var(--muted)',
+              marginBottom: '6px',
+            }}
+          >
             {locale === 'zh' ? '用户 ID' : 'User ID'}
           </label>
           <input
+            id="share-user-id"
             type="text"
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
@@ -108,10 +124,19 @@ export function ShareDialog({ strategyId, onClose, onShare }: ShareDialogProps) 
 
         {/* User Name */}
         <div style={{ marginBottom: '12px' }}>
-          <label style={{ display: 'block', font: '500 12px/1 var(--font-ui)', color: 'var(--muted)', marginBottom: '6px' }}>
+          <label
+            htmlFor="share-username"
+            style={{
+              display: 'block',
+              font: '500 12px/1 var(--font-ui)',
+              color: 'var(--muted)',
+              marginBottom: '6px',
+            }}
+          >
             {locale === 'zh' ? '用户名' : 'Username'}
           </label>
           <input
+            id="share-username"
             type="text"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
@@ -131,10 +156,19 @@ export function ShareDialog({ strategyId, onClose, onShare }: ShareDialogProps) 
 
         {/* Permission */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', font: '500 12px/1 var(--font-ui)', color: 'var(--muted)', marginBottom: '6px' }}>
+          <label
+            htmlFor="share-permission"
+            style={{
+              display: 'block',
+              font: '500 12px/1 var(--font-ui)',
+              color: 'var(--muted)',
+              marginBottom: '6px',
+            }}
+          >
             {locale === 'zh' ? '权限级别' : 'Permission Level'}
           </label>
           <select
+            id="share-permission"
             value={permission}
             onChange={(e) => setPermission(e.target.value as 'view' | 'comment' | 'edit')}
             style={{
@@ -156,7 +190,16 @@ export function ShareDialog({ strategyId, onClose, onShare }: ShareDialogProps) 
 
         {/* Error */}
         {error && (
-          <div style={{ marginBottom: '12px', padding: '8px', background: 'var(--danger-subtle)', borderRadius: 'var(--radius)', color: 'var(--danger)', font: '400 12px/1.4 var(--font-ui)' }}>
+          <div
+            style={{
+              marginBottom: '12px',
+              padding: '8px',
+              background: 'var(--danger-subtle)',
+              borderRadius: 'var(--radius)',
+              color: 'var(--danger)',
+              font: '400 12px/1.4 var(--font-ui)',
+            }}
+          >
             {error}
           </div>
         )}

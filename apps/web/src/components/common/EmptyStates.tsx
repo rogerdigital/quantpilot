@@ -57,7 +57,7 @@ export function EmptyBacktests({ locale = 'en', onAction }: ContextualEmptyProps
       detail={
         locale === 'zh'
           ? '运行回测来评估策略的历史表现。'
-          : 'Run a backtest to evaluate your strategy\'s historical performance.'
+          : "Run a backtest to evaluate your strategy's historical performance."
       }
       actionLabel={locale === 'zh' ? '运行回测' : 'Run Backtest'}
       onAction={onAction}

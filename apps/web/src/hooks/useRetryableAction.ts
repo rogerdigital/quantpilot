@@ -15,7 +15,7 @@ interface UseRetryableActionOptions {
 
 export function useRetryableAction<T>(
   action: () => Promise<T>,
-  options: UseRetryableActionOptions = {},
+  options: UseRetryableActionOptions = {}
 ) {
   const { maxRetries = 3, baseDelay = 1000, onMaxRetriesReached } = options;
   const [state, setState] = useState<RetryState<T>>({

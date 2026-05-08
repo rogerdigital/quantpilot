@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { actions, banner, btn, content, detail, dismissBtn, icon, message } from './ErrorBanner.css.js';
+import {
+  actions,
+  banner,
+  btn,
+  content,
+  detail,
+  dismissBtn,
+  icon,
+  message,
+} from './ErrorBanner.css.js';
 
 interface ErrorBannerProps {
   title: string;

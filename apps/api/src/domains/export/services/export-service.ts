@@ -85,7 +85,9 @@ export function createExportService(store) {
     lines.push([]);
     lines.push(['Day', 'Equity']);
     if (backtest.equityCurve) {
-      backtest.equityCurve.forEach((eq, i) => lines.push([String(i), String(eq)]));
+      for (let i = 0; i < backtest.equityCurve.length; i++) {
+        lines.push([String(i), String(backtest.equityCurve[i])]);
+      }
     }
     return {
       contentType: 'text/csv',
@@ -139,14 +141,20 @@ export function createExportService(store) {
       return {
         contentType: 'application/json',
         filename: 'analytics-report.json',
-        body: JSON.stringify({ generatedAt: new Date().toISOString(), strategies: summary }, null, 2),
+        body: JSON.stringify(
+          { generatedAt: new Date().toISOString(), strategies: summary },
+          null,
+          2
+        ),
       };
     }
 
     // CSV
     const headers = ['ID', 'Name', 'Status', 'CAGR', 'Sharpe', 'Max Drawdown', 'Win Rate'];
     const rows = summary.map((s) => [
-      s.id, s.name, s.status || '',
+      s.id,
+      s.name,
+      s.status || '',
       s.cagr !== null ? String(s.cagr) : '',
       s.sharpe !== null ? String(s.sharpe) : '',
       s.maxDrawdown !== null ? String(s.maxDrawdown) : '',

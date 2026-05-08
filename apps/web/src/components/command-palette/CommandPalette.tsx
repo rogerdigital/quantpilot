@@ -250,9 +250,7 @@ export function CommandPalette({ locale, onClose }: Props) {
                         <div className={resultName}>{item.label}</div>
                         <div className={resultHint}>{item.hint}</div>
                       </div>
-                      <span className={recentBadge}>
-                        {locale === 'zh' ? '最近' : 'recent'}
-                      </span>
+                      <span className={recentBadge}>{locale === 'zh' ? '最近' : 'recent'}</span>
                       {idx === activeIdx && <span className={resultEnter}>↵</span>}
                     </button>
                   ))}

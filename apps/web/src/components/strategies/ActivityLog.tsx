@@ -92,7 +92,10 @@ export function ActivityLog({ strategyId, className = '' }: ActivityLogProps) {
 
   if (loading) {
     return (
-      <div className={className} style={{ padding: '20px', textAlign: 'center', color: 'var(--muted)' }}>
+      <div
+        className={className}
+        style={{ padding: '20px', textAlign: 'center', color: 'var(--muted)' }}
+      >
         {locale === 'zh' ? '加载活动记录...' : 'Loading activity...'}
       </div>
     );
@@ -180,7 +183,13 @@ export function ActivityLog({ strategyId, className = '' }: ActivityLogProps) {
                   <span style={{ fontWeight: 600 }}>{item.userName}</span>{' '}
                   {getActionLabel(item.action)}
                 </div>
-                <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '2px' }}>
+                <div
+                  style={{
+                    font: '400 11px/1 var(--font-ui)',
+                    color: 'var(--muted)',
+                    marginTop: '2px',
+                  }}
+                >
                   {formatDate(item.createdAt)}
                 </div>
               </div>

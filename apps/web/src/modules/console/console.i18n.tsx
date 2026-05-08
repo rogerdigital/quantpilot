@@ -383,7 +383,10 @@ export const copy = {
       ],
       settings: ['Settings', 'Manage modes, switches, thresholds, and provider connectivity.'],
       marketplace: ['Marketplace', 'Browse and fork community-shared quantitative strategies.'],
-      analytics: ['Analytics', 'Review strategy performance metrics, risk analysis, and trade distribution.'],
+      analytics: [
+        'Analytics',
+        'Review strategy performance metrics, risk analysis, and trade distribution.',
+      ],
     },
     desk: {
       dashboard: 'Command Deck',

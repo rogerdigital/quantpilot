@@ -79,12 +79,14 @@ export function AnalyticsPage() {
     {
       label: 'Sharpe',
       value: summary.sharpe.toFixed(2),
-      color: summary.sharpe >= 1 ? 'var(--buy)' : summary.sharpe >= 0 ? 'var(--text)' : 'var(--sell)',
+      color:
+        summary.sharpe >= 1 ? 'var(--buy)' : summary.sharpe >= 0 ? 'var(--text)' : 'var(--sell)',
     },
     {
       label: 'Sortino',
       value: summary.sortino.toFixed(2),
-      color: summary.sortino >= 1 ? 'var(--buy)' : summary.sortino >= 0 ? 'var(--text)' : 'var(--sell)',
+      color:
+        summary.sortino >= 1 ? 'var(--buy)' : summary.sortino >= 0 ? 'var(--text)' : 'var(--sell)',
     },
     {
       label: locale === 'zh' ? '最大回撤' : 'Max Drawdown',
@@ -99,7 +101,12 @@ export function AnalyticsPage() {
     {
       label: locale === 'zh' ? '盈亏比' : 'Profit Factor',
       value: summary.profitFactor === Infinity ? '∞' : summary.profitFactor.toFixed(2),
-      color: summary.profitFactor >= 1.5 ? 'var(--buy)' : summary.profitFactor >= 1 ? 'var(--text)' : 'var(--sell)',
+      color:
+        summary.profitFactor >= 1.5
+          ? 'var(--buy)'
+          : summary.profitFactor >= 1
+            ? 'var(--text)'
+            : 'var(--sell)',
     },
     {
       label: locale === 'zh' ? '交易天数' : 'Trading Days',
@@ -179,7 +186,13 @@ export function AnalyticsPage() {
               textAlign: 'center',
             }}
           >
-            <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)', marginBottom: '8px' }}>
+            <div
+              style={{
+                font: '400 11px/1 var(--font-ui)',
+                color: 'var(--muted)',
+                marginBottom: '8px',
+              }}
+            >
               {metric.label}
             </div>
             <div style={{ font: '700 20px/1 var(--font-data)', color: metric.color }}>
@@ -190,7 +203,14 @@ export function AnalyticsPage() {
       </div>
 
       {/* Charts placeholder */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '16px',
+          marginBottom: '24px',
+        }}
+      >
         {/* Equity curve */}
         <div
           style={{
@@ -201,7 +221,13 @@ export function AnalyticsPage() {
             minHeight: '300px',
           }}
         >
-          <h3 style={{ font: '600 14px/1.3 var(--font-ui)', color: 'var(--text)', marginBottom: '16px' }}>
+          <h3
+            style={{
+              font: '600 14px/1.3 var(--font-ui)',
+              color: 'var(--text)',
+              marginBottom: '16px',
+            }}
+          >
             {locale === 'zh' ? '净值曲线' : 'Equity Curve'}
           </h3>
           <div
@@ -228,7 +254,13 @@ export function AnalyticsPage() {
             minHeight: '300px',
           }}
         >
-          <h3 style={{ font: '600 14px/1.3 var(--font-ui)', color: 'var(--text)', marginBottom: '16px' }}>
+          <h3
+            style={{
+              font: '600 14px/1.3 var(--font-ui)',
+              color: 'var(--text)',
+              marginBottom: '16px',
+            }}
+          >
             {locale === 'zh' ? '回撤曲线' : 'Drawdown Chart'}
           </h3>
           <div
@@ -256,31 +288,61 @@ export function AnalyticsPage() {
           marginBottom: '24px',
         }}
       >
-        <h3 style={{ font: '600 14px/1.3 var(--font-ui)', color: 'var(--text)', marginBottom: '16px' }}>
+        <h3
+          style={{
+            font: '600 14px/1.3 var(--font-ui)',
+            color: 'var(--text)',
+            marginBottom: '16px',
+          }}
+        >
           {locale === 'zh' ? '月度收益热力图' : 'Monthly Returns Heatmap'}
         </h3>
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', font: '400 12px/1.4 var(--font-data)' }}>
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              font: '400 12px/1.4 var(--font-data)',
+            }}
+          >
             <thead>
               <tr>
-                <th style={{ padding: '8px', textAlign: 'left', color: 'var(--muted)', borderBottom: '1px solid var(--line)' }}>
+                <th
+                  style={{
+                    padding: '8px',
+                    textAlign: 'left',
+                    color: 'var(--muted)',
+                    borderBottom: '1px solid var(--line)',
+                  }}
+                >
                   {locale === 'zh' ? '年份' : 'Year'}
                 </th>
-                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(
-                  (month) => (
-                    <th
-                      key={month}
-                      style={{
-                        padding: '8px',
-                        textAlign: 'center',
-                        color: 'var(--muted)',
-                        borderBottom: '1px solid var(--line)',
-                      }}
-                    >
-                      {month}
-                    </th>
-                  )
-                )}
+                {[
+                  'Jan',
+                  'Feb',
+                  'Mar',
+                  'Apr',
+                  'May',
+                  'Jun',
+                  'Jul',
+                  'Aug',
+                  'Sep',
+                  'Oct',
+                  'Nov',
+                  'Dec',
+                ].map((month) => (
+                  <th
+                    key={month}
+                    style={{
+                      padding: '8px',
+                      textAlign: 'center',
+                      color: 'var(--muted)',
+                      borderBottom: '1px solid var(--line)',
+                    }}
+                  >
+                    {month}
+                  </th>
+                ))}
                 <th
                   style={{
                     padding: '8px',
@@ -301,13 +363,24 @@ export function AnalyticsPage() {
                   const yearTotal = Object.values(months).reduce((s, r) => s + r, 0);
                   return (
                     <tr key={year}>
-                      <td style={{ padding: '8px', fontWeight: 600, borderBottom: '1px solid var(--line)' }}>
+                      <td
+                        style={{
+                          padding: '8px',
+                          fontWeight: 600,
+                          borderBottom: '1px solid var(--line)',
+                        }}
+                      >
                         {year}
                       </td>
                       {Array.from({ length: 12 }, (_, i) => {
                         const monthKey = String(i + 1).padStart(2, '0');
                         const ret = months[monthKey] || 0;
-                        const bgColor = ret > 0 ? 'rgba(0, 232, 157, 0.2)' : ret < 0 ? 'rgba(255, 51, 88, 0.2)' : 'transparent';
+                        const bgColor =
+                          ret > 0
+                            ? 'rgba(0, 232, 157, 0.2)'
+                            : ret < 0
+                              ? 'rgba(255, 51, 88, 0.2)'
+                              : 'transparent';
                         return (
                           <td
                             key={monthKey}
@@ -315,7 +388,12 @@ export function AnalyticsPage() {
                               padding: '8px',
                               textAlign: 'center',
                               background: bgColor,
-                              color: ret !== 0 ? (ret > 0 ? 'var(--buy)' : 'var(--sell)') : 'var(--muted)',
+                              color:
+                                ret !== 0
+                                  ? ret > 0
+                                    ? 'var(--buy)'
+                                    : 'var(--sell)'
+                                  : 'var(--muted)',
                               borderBottom: '1px solid var(--line)',
                             }}
                           >
@@ -351,7 +429,13 @@ export function AnalyticsPage() {
           borderRadius: 'var(--radius)',
         }}
       >
-        <h3 style={{ font: '600 14px/1.3 var(--font-ui)', color: 'var(--text)', marginBottom: '16px' }}>
+        <h3
+          style={{
+            font: '600 14px/1.3 var(--font-ui)',
+            color: 'var(--text)',
+            marginBottom: '16px',
+          }}
+        >
           {locale === 'zh' ? '交易分布' : 'Trade Distribution'}
         </h3>
         <div
@@ -371,7 +455,13 @@ export function AnalyticsPage() {
                 textAlign: 'center',
               }}
             >
-              <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)', marginBottom: '4px' }}>
+              <div
+                style={{
+                  font: '400 11px/1 var(--font-ui)',
+                  color: 'var(--muted)',
+                  marginBottom: '4px',
+                }}
+              >
                 {bucket.range}
               </div>
               <div style={{ font: '600 16px/1 var(--font-data)', color: 'var(--text)' }}>

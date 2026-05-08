@@ -225,7 +225,13 @@ export function TradingPage() {
             >
               {selectedStock && (
                 <SignalAlert
-                  variant={selectedStock.signal === 'BUY' ? 'buy' : selectedStock.signal === 'SELL' ? 'sell' : 'warning'}
+                  variant={
+                    selectedStock.signal === 'BUY'
+                      ? 'buy'
+                      : selectedStock.signal === 'SELL'
+                        ? 'sell'
+                        : 'warning'
+                  }
                   size={6}
                 />
               )}
@@ -269,7 +275,9 @@ export function TradingPage() {
                       <div className="wl-name">{stock.name}</div>
                     </div>
                     <div>
-                      <div className="wl-price"><PriceFlash value={stock.price} precision={2} /></div>
+                      <div className="wl-price">
+                        <PriceFlash value={stock.price} precision={2} />
+                      </div>
                       <div
                         className="wl-change"
                         style={{ color: chg >= 0 ? 'var(--buy)' : 'var(--sell)' }}
@@ -320,7 +328,10 @@ export function TradingPage() {
 
             <div className={chartSignalStrip}>
               <div className={chartSignalCard}>
-                <div className="sig-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div
+                  className="sig-label"
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
                   <SignalAlert variant="buy" size={6} pulse={false} /> BUY
                 </div>
                 <div className="sig-value" style={{ color: 'var(--buy)' }}>
@@ -328,7 +339,10 @@ export function TradingPage() {
                 </div>
               </div>
               <div className={chartSignalCard}>
-                <div className="sig-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div
+                  className="sig-label"
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
                   <SignalAlert variant="warning" size={6} pulse={false} /> HOLD
                 </div>
                 <div className="sig-value" style={{ color: 'var(--hold)' }}>
@@ -336,7 +350,10 @@ export function TradingPage() {
                 </div>
               </div>
               <div className={chartSignalCard}>
-                <div className="sig-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div
+                  className="sig-label"
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
                   <SignalAlert variant="sell" size={6} pulse={false} /> SELL
                 </div>
                 <div className="sig-value" style={{ color: 'var(--sell)' }}>

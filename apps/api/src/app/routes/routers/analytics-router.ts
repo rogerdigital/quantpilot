@@ -16,7 +16,7 @@ function generateDemoPerformanceData(range) {
   const finalEquity = equityCurve[equityCurve.length - 1];
   const totalReturn = (finalEquity - equityCurve[0]) / equityCurve[0];
   const years = days / 252;
-  const cagr = Math.pow(1 + totalReturn, 1 / years) - 1;
+  const cagr = (1 + totalReturn) ** (1 / years) - 1;
 
   // Generate daily returns
   const dailyReturns = [];
@@ -30,10 +30,10 @@ function generateDemoPerformanceData(range) {
   const sharpe = std > 0 ? (mean / std) * Math.sqrt(252) : 0;
 
   const negReturns = dailyReturns.filter((r) => r < 0);
-  const downVar = negReturns.length > 0
-    ? negReturns.reduce((s, r) => s + r * r, 0) / negReturns.length
-    : 0;
-  const sortino = downVar > 0 ? (mean / Math.sqrt(downVar)) * Math.sqrt(252) : sharpe > 0 ? Infinity : 0;
+  const downVar =
+    negReturns.length > 0 ? negReturns.reduce((s, r) => s + r * r, 0) / negReturns.length : 0;
+  const sortino =
+    downVar > 0 ? (mean / Math.sqrt(downVar)) * Math.sqrt(252) : sharpe > 0 ? Infinity : 0;
 
   // Max drawdown
   let peak = equityCurve[0];
@@ -74,7 +74,8 @@ function generateDemoPerformanceData(range) {
   const year = 2024 + Math.floor(currentMonth / 12);
   const m = String((currentMonth % 12) + 1).padStart(2, '0');
   if (!monthlyReturns[year]) monthlyReturns[year] = {};
-  monthlyReturns[year][m] = monthStart > 0 ? (equityCurve[equityCurve.length - 1] - monthStart) / monthStart : 0;
+  monthlyReturns[year][m] =
+    monthStart > 0 ? (equityCurve[equityCurve.length - 1] - monthStart) / monthStart : 0;
 
   // Trade distribution
   const buckets = [

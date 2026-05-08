@@ -25,7 +25,10 @@ interface PaperPerformancePanelProps {
   className?: string;
 }
 
-export function PaperPerformancePanel({ strategyId = 'default', className = '' }: PaperPerformancePanelProps) {
+export function PaperPerformancePanel({
+  strategyId = 'default',
+  className = '',
+}: PaperPerformancePanelProps) {
   const { locale } = useLocale();
   const [readiness, setReadiness] = useState<PromotionReadiness | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +54,10 @@ export function PaperPerformancePanel({ strategyId = 'default', className = '' }
 
   if (loading) {
     return (
-      <div className={className} style={{ padding: '20px', color: 'var(--muted)', textAlign: 'center' }}>
+      <div
+        className={className}
+        style={{ padding: '20px', color: 'var(--muted)', textAlign: 'center' }}
+      >
         {locale === 'zh' ? '加载中...' : 'Loading...'}
       </div>
     );
@@ -59,7 +65,10 @@ export function PaperPerformancePanel({ strategyId = 'default', className = '' }
 
   if (!readiness || !readiness.metrics) {
     return (
-      <div className={className} style={{ padding: '20px', color: 'var(--muted)', textAlign: 'center' }}>
+      <div
+        className={className}
+        style={{ padding: '20px', color: 'var(--muted)', textAlign: 'center' }}
+      >
         {locale === 'zh' ? '暂无模拟交易数据' : 'No paper trading data available'}
       </div>
     );
@@ -71,7 +80,9 @@ export function PaperPerformancePanel({ strategyId = 'default', className = '' }
     <div className={className} style={{ padding: '20px' }}>
       {/* Header */}
       <div style={{ marginBottom: '20px' }}>
-        <h3 style={{ font: '700 16px/1.3 var(--font-ui)', color: 'var(--text)', marginBottom: '4px' }}>
+        <h3
+          style={{ font: '700 16px/1.3 var(--font-ui)', color: 'var(--text)', marginBottom: '4px' }}
+        >
           {locale === 'zh' ? '模拟交易表现' : 'Paper Trading Performance'}
         </h3>
         <p style={{ font: '400 12px/1.4 var(--font-ui)', color: 'var(--muted)' }}>
@@ -94,7 +105,9 @@ export function PaperPerformancePanel({ strategyId = 'default', className = '' }
           <div style={{ font: '600 18px/1 var(--font-data)', color: 'var(--buy)' }}>
             {metrics.tradingDays}
           </div>
-          <div style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}>
+          <div
+            style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}
+          >
             {locale === 'zh' ? '交易天数' : 'Trading Days'}
           </div>
         </div>
@@ -102,7 +115,9 @@ export function PaperPerformancePanel({ strategyId = 'default', className = '' }
           <div style={{ font: '600 18px/1 var(--font-data)', color: 'var(--text)' }}>
             {metrics.sharpe.toFixed(2)}
           </div>
-          <div style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}>
+          <div
+            style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}
+          >
             Sharpe
           </div>
         </div>
@@ -110,7 +125,9 @@ export function PaperPerformancePanel({ strategyId = 'default', className = '' }
           <div style={{ font: '600 18px/1 var(--font-data)', color: 'var(--sell)' }}>
             {(metrics.maxDrawdown * 100).toFixed(1)}%
           </div>
-          <div style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}>
+          <div
+            style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}
+          >
             {locale === 'zh' ? '最大回撤' : 'Max DD'}
           </div>
         </div>
@@ -118,7 +135,9 @@ export function PaperPerformancePanel({ strategyId = 'default', className = '' }
           <div style={{ font: '600 18px/1 var(--font-data)', color: 'var(--buy)' }}>
             {(metrics.winRate * 100).toFixed(1)}%
           </div>
-          <div style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}>
+          <div
+            style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}
+          >
             {locale === 'zh' ? '胜率' : 'Win Rate'}
           </div>
         </div>
@@ -146,11 +165,7 @@ export function PaperPerformancePanel({ strategyId = 'default', className = '' }
               color: ready ? 'var(--success)' : 'var(--warning)',
             }}
           >
-            {ready
-              ? locale === 'zh'
-                ? '已就绪'
-                : 'Ready'
-              : `${score}%`}
+            {ready ? (locale === 'zh' ? '已就绪' : 'Ready') : `${score}%`}
           </div>
         </div>
 
@@ -192,9 +207,7 @@ export function PaperPerformancePanel({ strategyId = 'default', className = '' }
                   border: `1px solid ${check.met ? 'var(--success)' : 'var(--line)'}`,
                 }}
               >
-                <span style={{ fontSize: '16px', lineHeight: 1 }}>
-                  {check.met ? '✓' : '○'}
-                </span>
+                <span style={{ fontSize: '16px', lineHeight: 1 }}>{check.met ? '✓' : '○'}</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ font: '500 13px/1.3 var(--font-ui)', color: 'var(--text)' }}>
                     {locale === 'zh' ? check.labelZh : check.label}

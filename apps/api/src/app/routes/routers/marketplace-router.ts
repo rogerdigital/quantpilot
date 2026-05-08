@@ -4,7 +4,14 @@ import { controlPlaneRuntime } from '../../../../../../packages/control-plane-ru
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
 
-export async function handleMarketplaceRoutes({ req, reqUrl, res, readJsonBody, writeJson, userAccount }) {
+export async function handleMarketplaceRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+  userAccount,
+}) {
   const writeForbidden = (permission, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 

@@ -43,8 +43,7 @@ export function SplitPane({
 
       const handleMouseMove = (ev: MouseEvent) => {
         if (!dragging.current) return;
-        const delta =
-          (direction === 'horizontal' ? ev.clientX : ev.clientY) - startRef.current.pos;
+        const delta = (direction === 'horizontal' ? ev.clientX : ev.clientY) - startRef.current.pos;
         const newSize = Math.max(minSize, Math.min(maxSize, startRef.current.size + delta));
         setSize(newSize);
         onResize?.(newSize);
@@ -59,7 +58,7 @@ export function SplitPane({
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     },
-    [direction, size, minSize, maxSize, onResize],
+    [direction, size, minSize, maxSize, onResize]
   );
 
   const isHorizontal = direction === 'horizontal';
@@ -73,6 +72,12 @@ export function SplitPane({
       <div
         className={`${divider} ${isHorizontal ? dividerHorizontal : dividerVertical}`}
         onMouseDown={handleMouseDown}
+        role="separator"
+        aria-orientation={isHorizontal ? 'horizontal' : 'vertical'}
+        aria-valuenow={50}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        tabIndex={0}
       />
       <div className={pane} style={{ flex: 1 }}>
         {children[1]}

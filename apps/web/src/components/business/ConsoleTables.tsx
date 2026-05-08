@@ -45,13 +45,21 @@ export function UniverseTable() {
                     <span>{stock.name}</span>
                   </div>
                 </td>
-                <td><PriceFlash value={stock.price} precision={2} /></td>
+                <td>
+                  <PriceFlash value={stock.price} precision={2} />
+                </td>
                 <td className={pct >= 0 ? 'text-up' : 'text-down'}>{fmtPct(pct)}</td>
                 <td>{stock.score.toFixed(1)}</td>
                 <td>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <SignalAlert
-                      variant={stock.signal === 'BUY' ? 'buy' : stock.signal === 'SELL' ? 'sell' : 'warning'}
+                      variant={
+                        stock.signal === 'BUY'
+                          ? 'buy'
+                          : stock.signal === 'SELL'
+                            ? 'sell'
+                            : 'warning'
+                      }
                       size={6}
                       pulse={false}
                     />
@@ -98,9 +106,15 @@ export function PositionsTable({ accountKey }: { accountKey: 'paper' | 'live' })
                   </div>
                 </td>
                 <td>{row.shares}</td>
-                <td><PriceFlash value={row.avgCost} precision={2} /></td>
-                <td><PriceFlash value={row.marketValue} precision={2} prefix="$" /></td>
-                <td><PnLAnimator target={row.pnl} precision={2} prefix="$" /></td>
+                <td>
+                  <PriceFlash value={row.avgCost} precision={2} />
+                </td>
+                <td>
+                  <PriceFlash value={row.marketValue} precision={2} prefix="$" />
+                </td>
+                <td>
+                  <PnLAnimator target={row.pnl} precision={2} prefix="$" />
+                </td>
               </tr>
             ))
           ) : (

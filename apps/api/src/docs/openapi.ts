@@ -5,7 +5,8 @@ export function generateOpenApiSpec(baseUrl = '') {
     openapi: '3.0.3',
     info: {
       title: 'QuantPilot API',
-      description: 'AI-native quantitative trading platform API. Covers strategies, backtesting, execution, risk, analytics, and agent governance.',
+      description:
+        'AI-native quantitative trading platform API. Covers strategies, backtesting, execution, risk, analytics, and agent governance.',
       version: '1.0.0',
       contact: { name: 'QuantPilot Team' },
       license: { name: 'MIT' },
@@ -39,7 +40,14 @@ export function generateOpenApiSpec(baseUrl = '') {
           responses: {
             200: {
               description: 'Strategy list',
-              content: { 'application/json': { schema: { type: 'object', properties: { ok: { type: 'boolean' }, strategies: { type: 'array' } } } } },
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: { ok: { type: 'boolean' }, strategies: { type: 'array' } },
+                  },
+                },
+              },
             },
           },
         },
@@ -77,7 +85,10 @@ export function generateOpenApiSpec(baseUrl = '') {
               },
             },
           },
-          responses: { 200: { description: 'Backtest started' }, 400: { description: 'Invalid request' } },
+          responses: {
+            200: { description: 'Backtest started' },
+            400: { description: 'Invalid request' },
+          },
         },
       },
       '/api/execution/orders': {
@@ -85,7 +96,11 @@ export function generateOpenApiSpec(baseUrl = '') {
           tags: ['Execution'],
           summary: 'List orders',
           parameters: [
-            { name: 'status', in: 'query', schema: { type: 'string', enum: ['pending', 'filled', 'cancelled', 'rejected'] } },
+            {
+              name: 'status',
+              in: 'query',
+              schema: { type: 'string', enum: ['pending', 'filled', 'cancelled', 'rejected'] },
+            },
           ],
           responses: { 200: { description: 'Orders list' } },
         },
@@ -121,11 +136,17 @@ export function generateOpenApiSpec(baseUrl = '') {
           tags: ['Analytics'],
           summary: 'Get performance analytics data',
           parameters: [
-            { name: 'range', in: 'query', schema: { type: 'string', enum: ['1M', '3M', '6M', '1Y', 'ALL'] }, description: 'Time range' },
+            {
+              name: 'range',
+              in: 'query',
+              schema: { type: 'string', enum: ['1M', '3M', '6M', '1Y', 'ALL'] },
+              description: 'Time range',
+            },
           ],
           responses: {
             200: {
-              description: 'Performance data including summary metrics, equity curve, drawdown, monthly returns, and trade distribution',
+              description:
+                'Performance data including summary metrics, equity curve, drawdown, monthly returns, and trade distribution',
               content: {
                 'application/json': {
                   schema: {
@@ -158,7 +179,11 @@ export function generateOpenApiSpec(baseUrl = '') {
             { name: 'q', in: 'query', schema: { type: 'string' }, description: 'Search query' },
             { name: 'category', in: 'query', schema: { type: 'string' } },
             { name: 'minRating', in: 'query', schema: { type: 'number' } },
-            { name: 'sortBy', in: 'query', schema: { type: 'string', enum: ['popular', 'rating', 'newest'] } },
+            {
+              name: 'sortBy',
+              in: 'query',
+              schema: { type: 'string', enum: ['popular', 'rating', 'newest'] },
+            },
           ],
           responses: { 200: { description: 'Marketplace strategies' } },
         },
@@ -169,7 +194,12 @@ export function generateOpenApiSpec(baseUrl = '') {
           summary: 'Export strategy data',
           parameters: [
             { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
-            { name: 'format', in: 'query', schema: { type: 'string', enum: ['json', 'csv'] }, description: 'Export format' },
+            {
+              name: 'format',
+              in: 'query',
+              schema: { type: 'string', enum: ['json', 'csv'] },
+              description: 'Export format',
+            },
           ],
           responses: { 200: { description: 'Exported file' }, 404: { description: 'Not found' } },
         },

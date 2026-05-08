@@ -32,7 +32,7 @@ export function calculateDailyReturns(equityCurve) {
 export function calculateCumulativeReturns(returns) {
   let cumulative = 1;
   return returns.map((r) => {
-    cumulative *= (1 + r);
+    cumulative *= 1 + r;
     return cumulative - 1;
   });
 }
@@ -46,7 +46,7 @@ export function calculateCumulativeReturns(returns) {
 export function calculateCAGR(totalReturn, tradingDays) {
   if (tradingDays <= 0) return 0;
   const years = tradingDays / 252;
-  return Math.pow(1 + totalReturn, 1 / years) - 1;
+  return (1 + totalReturn) ** (1 / years) - 1;
 }
 
 /**
@@ -262,8 +262,12 @@ export function calculateCaptureRatio(strategyReturns, benchmarkReturns) {
     }
   }
 
-  const upCapture = upCount > 0 && upBenchmark !== 0 ? (upStrategy / upBenchmark) * (upCount / upCount) : 0;
-  const downCapture = downCount > 0 && downBenchmark !== 0 ? (downStrategy / downBenchmark) * (downCount / downCount) : 0;
+  const upCapture =
+    upCount > 0 && upBenchmark !== 0 ? (upStrategy / upBenchmark) * (upCount / upCount) : 0;
+  const downCapture =
+    downCount > 0 && downBenchmark !== 0
+      ? (downStrategy / downBenchmark) * (downCount / downCount)
+      : 0;
 
   return { upCapture, downCapture };
 }
@@ -277,11 +281,17 @@ export function calculateCaptureRatio(strategyReturns, benchmarkReturns) {
  * @param {number[]} [params.benchmarkReturns] - Benchmark returns
  * @returns {Object} Performance report
  */
-export function generatePerformanceReport({ equityCurve, dates, tradePnLs = [], benchmarkReturns = [] }) {
+export function generatePerformanceReport({
+  equityCurve,
+  dates,
+  tradePnLs = [],
+  benchmarkReturns = [],
+}) {
   const dailyReturns = calculateDailyReturns(equityCurve);
-  const totalReturn = equityCurve.length > 1
-    ? (equityCurve[equityCurve.length - 1] - equityCurve[0]) / equityCurve[0]
-    : 0;
+  const totalReturn =
+    equityCurve.length > 1
+      ? (equityCurve[equityCurve.length - 1] - equityCurve[0]) / equityCurve[0]
+      : 0;
   const tradingDays = dailyReturns.length;
   const cagr = calculateCAGR(totalReturn, tradingDays);
   const sharpe = calculateSharpeRatio(dailyReturns);

@@ -1,6 +1,12 @@
 import { type ReactNode, useCallback, useState } from 'react';
 import { SplitPane } from './SplitPane.js';
-import { layoutArea, toolbar, toolbarBtn, toolbarBtnActive, workspace } from './TradingWorkspace.css.js';
+import {
+  layoutArea,
+  toolbar,
+  toolbarBtn,
+  toolbarBtnActive,
+  workspace,
+} from './TradingWorkspace.css.js';
 
 export type LayoutPreset = 'default' | 'chart-focus' | 'order-focus' | 'monitor';
 
@@ -71,7 +77,9 @@ export function TradingWorkspace({ panels, className = '' }: TradingWorkspacePro
       <div className={layoutArea}>
         <SplitPane direction={direction} defaultSize={split}>
           {left}
-          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'auto' }}>
+          <div
+            style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'auto' }}
+          >
             {right}
           </div>
         </SplitPane>

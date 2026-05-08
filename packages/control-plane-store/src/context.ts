@@ -29,8 +29,8 @@ import { createResearchReportRepository } from './repositories/research-report-r
 import { createResearchSummaryRepository } from './repositories/research-summary-repo.js';
 import { createResearchTaskRepository } from './repositories/research-task-repo.js';
 import { createRiskRepository } from './repositories/risk-repo.js';
-import { createStrategyMarketplaceRepository } from './repositories/strategy-marketplace-repo.js';
 import { createSchedulerRepository } from './repositories/scheduler-repo.js';
+import { createStrategyMarketplaceRepository } from './repositories/strategy-marketplace-repo.js';
 import { createStrategyRepository } from './repositories/strategy-repo.js';
 import { createUserAccountRepository } from './repositories/user-account-repo.js';
 import { createWorkerHeartbeatRepository } from './repositories/worker-heartbeat-repo.js';

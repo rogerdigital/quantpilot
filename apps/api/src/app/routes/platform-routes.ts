@@ -1,13 +1,13 @@
 // @ts-nocheck
 
 import { handleAgentRoutes } from './routers/agent-router.js';
+import { handleAnalyticsRoutes } from './routers/analytics-router.js';
 import { handleAuthRoutes } from './routers/auth-router.js';
 import { handleBacktestRoutes } from './routers/backtest-router.js';
 import { handleCollaborationRoutes } from './routers/collaboration-router.js';
-import { handleAnalyticsRoutes } from './routers/analytics-router.js';
 import { handleDocsRoutes } from './routers/docs-router.js';
-import { handleExportRoutes } from './routers/export-router.js';
 import { handleExecutionRoutes } from './routers/execution-router.js';
+import { handleExportRoutes } from './routers/export-router.js';
 import { handleHealthRoutes } from './routers/health-router.js';
 import { handleMarketRoutes } from './routers/market-router.js';
 import { handleMarketplaceRoutes } from './routers/marketplace-router.js';

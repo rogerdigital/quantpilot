@@ -69,9 +69,7 @@ export function createCollaborationRepository(store) {
       }
 
       const shares = getAllShares();
-      const existing = shares.find(
-        (s) => s.strategyId === strategyId && s.userId === userId
-      );
+      const existing = shares.find((s) => s.strategyId === strategyId && s.userId === userId);
 
       if (existing) {
         // Update existing share
@@ -103,9 +101,7 @@ export function createCollaborationRepository(store) {
     },
 
     getUserPermission(strategyId, userId) {
-      const share = getAllShares().find(
-        (s) => s.strategyId === strategyId && s.userId === userId
-      );
+      const share = getAllShares().find((s) => s.strategyId === strategyId && s.userId === userId);
       return share ? share.permission : null;
     },
 
@@ -227,9 +223,7 @@ export function createCollaborationRepository(store) {
         activity = activity.filter((a) => new Date(a.createdAt).getTime() >= sinceMs);
       }
 
-      return activity
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, limit);
+      return activity.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, limit);
     },
   };
 }

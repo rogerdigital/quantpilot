@@ -33,8 +33,8 @@ export { createOperatorActionRepository } from './repositories/operator-action-r
 export { createPaperJournalRepository } from './repositories/paper-journal-repo.js';
 export { createResearchSummaryRepository } from './repositories/research-summary-repo.js';
 export { createRiskRepository } from './repositories/risk-repo.js';
-export { createStrategyMarketplaceRepository } from './repositories/strategy-marketplace-repo.js';
 export { createSchedulerRepository } from './repositories/scheduler-repo.js';
+export { createStrategyMarketplaceRepository } from './repositories/strategy-marketplace-repo.js';
 export { createStrategyRepository } from './repositories/strategy-repo.js';
 export { createUserAccountRepository } from './repositories/user-account-repo.js';
 export { createWorkflowRepository } from './repositories/workflow-repo.js';

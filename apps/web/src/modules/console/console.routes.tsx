@@ -28,7 +28,9 @@ const TradingPage = lazy(() =>
   import('../../pages/trading/TradingPage.tsx').then((m) => ({ default: m.TradingPage }))
 );
 const MarketplacePage = lazy(() =>
-  import('../../pages/marketplace/MarketplacePage.tsx').then((m) => ({ default: m.MarketplacePage }))
+  import('../../pages/marketplace/MarketplacePage.tsx').then((m) => ({
+    default: m.MarketplacePage,
+  }))
 );
 const AnalyticsPage = lazy(() =>
   import('../../pages/analytics/AnalyticsPage.tsx').then((m) => ({ default: m.AnalyticsPage }))

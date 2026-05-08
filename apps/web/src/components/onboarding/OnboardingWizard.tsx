@@ -14,9 +14,9 @@ import {
   footer,
   header,
   overlay,
+  progress,
   progressBar,
   progressBarActive,
-  progress,
   stepContent,
   subtitle,
   title,
@@ -61,10 +61,22 @@ const FEATURES_ZH = [
 ];
 
 const FEATURES_EN = [
-  { icon: '📊', title: 'Strategy Backtesting', desc: 'Validate your strategies against historical data' },
+  {
+    icon: '📊',
+    title: 'Strategy Backtesting',
+    desc: 'Validate your strategies against historical data',
+  },
   { icon: '⚡', title: 'Real-time Signals', desc: 'AI-driven buy/sell signals in real-time' },
-  { icon: '🛡️', title: 'Risk Management', desc: 'Multi-layer risk parameters to protect your capital' },
-  { icon: '🤖', title: 'Agent Collaboration', desc: 'AI agent assisted analysis and decision-making' },
+  {
+    icon: '🛡️',
+    title: 'Risk Management',
+    desc: 'Multi-layer risk parameters to protect your capital',
+  },
+  {
+    icon: '🤖',
+    title: 'Agent Collaboration',
+    desc: 'AI agent assisted analysis and decision-making',
+  },
 ];
 
 export function OnboardingWizard({ locale = 'en', onComplete }: OnboardingWizardProps) {
@@ -74,9 +86,10 @@ export function OnboardingWizard({ locale = 'en', onComplete }: OnboardingWizard
     {
       id: 'welcome',
       title: locale === 'zh' ? '欢迎使用 QuantPilot' : 'Welcome to QuantPilot',
-      subtitle: locale === 'zh'
-        ? 'AI 原生量化交易平台，让策略研究、回测和执行变得简单高效。'
-        : 'The AI-native quantitative trading platform that simplifies strategy research, backtesting, and execution.',
+      subtitle:
+        locale === 'zh'
+          ? 'AI 原生量化交易平台，让策略研究、回测和执行变得简单高效。'
+          : 'The AI-native quantitative trading platform that simplifies strategy research, backtesting, and execution.',
       content: (
         <div className={featureList}>
           {(locale === 'zh' ? FEATURES_ZH : FEATURES_EN).map((f) => (
@@ -94,9 +107,10 @@ export function OnboardingWizard({ locale = 'en', onComplete }: OnboardingWizard
     {
       id: 'broker',
       title: locale === 'zh' ? '连接券商' : 'Connect Broker',
-      subtitle: locale === 'zh'
-        ? '在设置页面配置你的券商 API 密钥，连接实盘或模拟账户。'
-        : 'Configure your broker API keys in Settings to connect live or paper accounts.',
+      subtitle:
+        locale === 'zh'
+          ? '在设置页面配置你的券商 API 密钥，连接实盘或模拟账户。'
+          : 'Configure your broker API keys in Settings to connect live or paper accounts.',
       content: (
         <div className={featureList}>
           <div className={featureItem}>
@@ -127,9 +141,10 @@ export function OnboardingWizard({ locale = 'en', onComplete }: OnboardingWizard
     {
       id: 'risk',
       title: locale === 'zh' ? '设置风控参数' : 'Set Risk Parameters',
-      subtitle: locale === 'zh'
-        ? '配置止损、仓位限制等风控参数，保护你的资金安全。'
-        : 'Configure stop-loss, position limits, and other risk parameters to protect your capital.',
+      subtitle:
+        locale === 'zh'
+          ? '配置止损、仓位限制等风控参数，保护你的资金安全。'
+          : 'Configure stop-loss, position limits, and other risk parameters to protect your capital.',
       content: (
         <div className={featureList}>
           <div className={featureItem}>
@@ -160,9 +175,10 @@ export function OnboardingWizard({ locale = 'en', onComplete }: OnboardingWizard
     {
       id: 'backtest',
       title: locale === 'zh' ? '运行第一次回测' : 'Run Your First Backtest',
-      subtitle: locale === 'zh'
-        ? '选择策略和历史数据区间，评估策略表现。'
-        : 'Select a strategy and historical date range to evaluate performance.',
+      subtitle:
+        locale === 'zh'
+          ? '选择策略和历史数据区间，评估策略表现。'
+          : 'Select a strategy and historical date range to evaluate performance.',
       content: (
         <div className={featureList}>
           <div className={featureItem}>
@@ -179,7 +195,9 @@ export function OnboardingWizard({ locale = 'en', onComplete }: OnboardingWizard
           <div className={featureItem}>
             <div className={featureIcon}>📅</div>
             <div className={featureText}>
-              <div className={featureTitle}>{locale === 'zh' ? '设置时间区间' : 'Set Date Range'}</div>
+              <div className={featureTitle}>
+                {locale === 'zh' ? '设置时间区间' : 'Set Date Range'}
+              </div>
               <div className={featureDesc}>
                 {locale === 'zh'
                   ? '建议使用 1-3 年的历史数据进行回测'

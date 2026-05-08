@@ -118,9 +118,7 @@ export function createPaperJournalRepository(store) {
       const winRate = totalTrades > 0 ? totalWins / totalTrades : 0;
 
       // Calculate profit factor
-      const grossProfit = entries
-        .filter((e) => e.pnl > 0)
-        .reduce((sum, e) => sum + e.pnl, 0);
+      const grossProfit = entries.filter((e) => e.pnl > 0).reduce((sum, e) => sum + e.pnl, 0);
       const grossLoss = Math.abs(
         entries.filter((e) => e.pnl < 0).reduce((sum, e) => sum + e.pnl, 0)
       );

@@ -105,7 +105,10 @@ export function CommentThread({ strategyId, className = '' }: CommentThreadProps
 
   if (loading) {
     return (
-      <div className={className} style={{ padding: '20px', textAlign: 'center', color: 'var(--muted)' }}>
+      <div
+        className={className}
+        style={{ padding: '20px', textAlign: 'center', color: 'var(--muted)' }}
+      >
         {locale === 'zh' ? '加载评论...' : 'Loading comments...'}
       </div>
     );
@@ -113,7 +116,9 @@ export function CommentThread({ strategyId, className = '' }: CommentThreadProps
 
   return (
     <div className={className} style={{ padding: '16px' }}>
-      <h3 style={{ font: '700 14px/1.3 var(--font-ui)', color: 'var(--text)', marginBottom: '16px' }}>
+      <h3
+        style={{ font: '700 14px/1.3 var(--font-ui)', color: 'var(--text)', marginBottom: '16px' }}
+      >
         {locale === 'zh' ? '评论' : 'Comments'} ({comments.length})
       </h3>
 
@@ -134,12 +139,19 @@ export function CommentThread({ strategyId, className = '' }: CommentThreadProps
             }}
           >
             <span>
-              {locale === 'zh' ? '回复' : 'Replying to'} {comments.find((c) => c.id === replyTo)?.userName}
+              {locale === 'zh' ? '回复' : 'Replying to'}{' '}
+              {comments.find((c) => c.id === replyTo)?.userName}
             </span>
             <button
               type="button"
               onClick={() => setReplyTo(null)}
-              style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '14px' }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--muted)',
+                cursor: 'pointer',
+                fontSize: '14px',
+              }}
             >
               ×
             </button>
@@ -192,7 +204,14 @@ export function CommentThread({ strategyId, className = '' }: CommentThreadProps
       {/* Comments list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {rootComments.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '20px', color: 'var(--muted)', font: '400 13px/1.5 var(--font-ui)' }}>
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '20px',
+              color: 'var(--muted)',
+              font: '400 13px/1.5 var(--font-ui)',
+            }}
+          >
             {locale === 'zh' ? '暂无评论' : 'No comments yet'}
           </div>
         ) : (
@@ -278,7 +297,15 @@ export function CommentThread({ strategyId, className = '' }: CommentThreadProps
 
               {/* Replies */}
               {getReplies(comment.id).length > 0 && (
-                <div style={{ marginLeft: '24px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div
+                  style={{
+                    marginLeft: '24px',
+                    marginTop: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
                   {getReplies(comment.id).map((reply) => (
                     <div
                       key={reply.id}
@@ -289,7 +316,14 @@ export function CommentThread({ strategyId, className = '' }: CommentThreadProps
                         borderLeft: '3px solid var(--accent)',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          marginBottom: '6px',
+                        }}
+                      >
                         <span style={{ font: '600 12px/1 var(--font-ui)', color: 'var(--text)' }}>
                           {reply.userName}
                         </span>
@@ -297,7 +331,13 @@ export function CommentThread({ strategyId, className = '' }: CommentThreadProps
                           {formatDate(reply.createdAt)}
                         </span>
                       </div>
-                      <p style={{ font: '400 13px/1.5 var(--font-ui)', color: 'var(--text)', margin: 0 }}>
+                      <p
+                        style={{
+                          font: '400 13px/1.5 var(--font-ui)',
+                          color: 'var(--text)',
+                          margin: 0,
+                        }}
+                      >
                         {reply.content}
                       </p>
                     </div>

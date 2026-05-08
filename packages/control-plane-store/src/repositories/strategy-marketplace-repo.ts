@@ -193,9 +193,8 @@ export function createStrategyMarketplaceRepository(store) {
       const allRatings = reviews
         .filter((r) => r.marketplaceId === marketplaceId)
         .map((r) => r.rating);
-      const avgRating = allRatings.length > 0
-        ? allRatings.reduce((sum, r) => sum + r, 0) / allRatings.length
-        : 0;
+      const avgRating =
+        allRatings.length > 0 ? allRatings.reduce((sum, r) => sum + r, 0) / allRatings.length : 0;
 
       const stratIdx = strategies.findIndex((s) => s.id === marketplaceId);
       strategies[stratIdx] = {

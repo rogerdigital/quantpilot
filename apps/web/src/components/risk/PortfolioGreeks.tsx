@@ -14,7 +14,11 @@ interface PortfolioGreeksProps {
   className?: string;
 }
 
-export function PortfolioGreeks({ greeks, underlyingPrice = 100, className = '' }: PortfolioGreeksProps) {
+export function PortfolioGreeks({
+  greeks,
+  underlyingPrice = 100,
+  className = '',
+}: PortfolioGreeksProps) {
   const { locale } = useLocale();
 
   const metrics = [
@@ -22,9 +26,8 @@ export function PortfolioGreeks({ greeks, underlyingPrice = 100, className = '' 
       label: 'Delta',
       labelZh: 'Delta',
       value: greeks.delta,
-      description: locale === 'zh'
-        ? '标的价格变动 1 美元时的损益变化'
-        : 'P&L change when underlying moves $1',
+      description:
+        locale === 'zh' ? '标的价格变动 1 美元时的损益变化' : 'P&L change when underlying moves $1',
       format: (v: number) => v.toFixed(2),
       color: greeks.delta >= 0 ? 'var(--buy)' : 'var(--sell)',
     },
@@ -32,9 +35,8 @@ export function PortfolioGreeks({ greeks, underlyingPrice = 100, className = '' 
       label: 'Gamma',
       labelZh: 'Gamma',
       value: greeks.gamma,
-      description: locale === 'zh'
-        ? 'Delta 的变化率（凸性）'
-        : 'Rate of change of delta (convexity)',
+      description:
+        locale === 'zh' ? 'Delta 的变化率（凸性）' : 'Rate of change of delta (convexity)',
       format: (v: number) => v.toFixed(4),
       color: 'var(--text)',
     },
@@ -42,9 +44,7 @@ export function PortfolioGreeks({ greeks, underlyingPrice = 100, className = '' 
       label: 'Theta',
       labelZh: 'Theta',
       value: greeks.theta,
-      description: locale === 'zh'
-        ? '每日时间衰减'
-        : 'Daily time decay',
+      description: locale === 'zh' ? '每日时间衰减' : 'Daily time decay',
       format: (v: number) => v.toFixed(2),
       color: greeks.theta <= 0 ? 'var(--sell)' : 'var(--buy)',
     },
@@ -52,9 +52,8 @@ export function PortfolioGreeks({ greeks, underlyingPrice = 100, className = '' 
       label: 'Vega',
       labelZh: 'Vega',
       value: greeks.vega,
-      description: locale === 'zh'
-        ? '波动率变动 1% 时的损益变化'
-        : 'P&L change when volatility moves 1%',
+      description:
+        locale === 'zh' ? '波动率变动 1% 时的损益变化' : 'P&L change when volatility moves 1%',
       format: (v: number) => v.toFixed(2),
       color: 'var(--text)',
     },
@@ -62,9 +61,8 @@ export function PortfolioGreeks({ greeks, underlyingPrice = 100, className = '' 
       label: 'Rho',
       labelZh: 'Rho',
       value: greeks.rho,
-      description: locale === 'zh'
-        ? '利率变动 1% 时的损益变化'
-        : 'P&L change when interest rate moves 1%',
+      description:
+        locale === 'zh' ? '利率变动 1% 时的损益变化' : 'P&L change when interest rate moves 1%',
       format: (v: number) => v.toFixed(2),
       color: 'var(--text)',
     },
@@ -75,7 +73,9 @@ export function PortfolioGreeks({ greeks, underlyingPrice = 100, className = '' 
 
   return (
     <div className={className} style={{ padding: '16px' }}>
-      <h3 style={{ font: '700 14px/1.3 var(--font-ui)', color: 'var(--text)', marginBottom: '16px' }}>
+      <h3
+        style={{ font: '700 14px/1.3 var(--font-ui)', color: 'var(--text)', marginBottom: '16px' }}
+      >
         {locale === 'zh' ? '组合 Greeks' : 'Portfolio Greeks'}
       </h3>
 
@@ -102,7 +102,8 @@ export function PortfolioGreeks({ greeks, underlyingPrice = 100, className = '' 
               marginTop: '4px',
             }}
           >
-            {dollarDelta >= 0 ? '+' : ''}{dollarDelta.toFixed(0)}
+            {dollarDelta >= 0 ? '+' : ''}
+            {dollarDelta.toFixed(0)}
           </div>
         </div>
         <div>
@@ -116,7 +117,8 @@ export function PortfolioGreeks({ greeks, underlyingPrice = 100, className = '' 
               marginTop: '4px',
             }}
           >
-            {greeks.theta <= 0 ? '' : '+'}{greeks.theta.toFixed(2)}
+            {greeks.theta <= 0 ? '' : '+'}
+            {greeks.theta.toFixed(2)}
           </div>
         </div>
       </div>
@@ -152,7 +154,9 @@ export function PortfolioGreeks({ greeks, underlyingPrice = 100, className = '' 
 
       {/* Greeks exposure bar */}
       <div style={{ marginTop: '16px' }}>
-        <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)', marginBottom: '8px' }}>
+        <div
+          style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)', marginBottom: '8px' }}
+        >
           {locale === 'zh' ? 'Delta 暴露' : 'Delta Exposure'}
         </div>
         <div

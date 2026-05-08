@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import {
+  isOnboardingComplete,
+  OnboardingWizard,
+} from '../components/onboarding/OnboardingWizard.tsx';
+import { useLocale } from '../modules/console/console.i18n.tsx';
 import { AppProviders } from './providers/AppProviders.tsx';
 import { AppRouter } from './routes/AppRouter.tsx';
-import { OnboardingWizard, isOnboardingComplete } from '../components/onboarding/OnboardingWizard.tsx';
-import { useLocale } from '../modules/console/console.i18n.tsx';
 
 function AppContent() {
   const { locale } = useLocale();
@@ -12,10 +15,7 @@ function AppContent() {
     <>
       <AppRouter />
       {showOnboarding && (
-        <OnboardingWizard
-          locale={locale}
-          onComplete={() => setShowOnboarding(false)}
-        />
+        <OnboardingWizard locale={locale} onComplete={() => setShowOnboarding(false)} />
       )}
     </>
   );

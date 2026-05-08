@@ -18,7 +18,7 @@ function normCDF(x) {
   x = Math.abs(x) / Math.sqrt(2);
 
   const t = 1.0 / (1.0 + p * x);
-  const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  const y = 1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
 
   return 0.5 * (1.0 + sign * y);
 }
@@ -45,7 +45,7 @@ export function blackScholes({ S, K, T, r, sigma, optionType = 'CALL' }) {
     const intrinsic = optionType === 'CALL' ? Math.max(0, S - K) : Math.max(0, K - S);
     return {
       price: intrinsic,
-      delta: optionType === 'CALL' ? (S > K ? 1 : 0) : (S < K ? -1 : 0),
+      delta: optionType === 'CALL' ? (S > K ? 1 : 0) : S < K ? -1 : 0,
       gamma: 0,
       theta: 0,
       vega: 0,
@@ -66,18 +66,21 @@ export function blackScholes({ S, K, T, r, sigma, optionType = 'CALL' }) {
   if (optionType === 'CALL') {
     price = S * Nd1 - K * Math.exp(-r * T) * Nd2;
     delta = Nd1;
-    rho = K * T * Math.exp(-r * T) * Nd2 / 100;
+    rho = (K * T * Math.exp(-r * T) * Nd2) / 100;
   } else {
     const NnegD1 = normCDF(-d1);
     const NnegD2 = normCDF(-d2);
     price = K * Math.exp(-r * T) * NnegD2 - S * NnegD1;
     delta = Nd1 - 1;
-    rho = -K * T * Math.exp(-r * T) * NnegD2 / 100;
+    rho = (-K * T * Math.exp(-r * T) * NnegD2) / 100;
   }
 
   const gamma = nd1 / (S * sigma * sqrtT);
-  const theta = (-(S * nd1 * sigma) / (2 * sqrtT) - r * K * Math.exp(-r * T) * (optionType === 'CALL' ? Nd2 : normCDF(-d2))) / 365;
-  const vega = S * nd1 * sqrtT / 100;
+  const theta =
+    (-(S * nd1 * sigma) / (2 * sqrtT) -
+      r * K * Math.exp(-r * T) * (optionType === 'CALL' ? Nd2 : normCDF(-d2))) /
+    365;
+  const vega = (S * nd1 * sqrtT) / 100;
 
   return {
     price,
@@ -168,7 +171,12 @@ export function calculatePortfolioGreeks(positions) {
  * @param {number} params.daysForward - Days to project forward
  * @returns {Object} Risk metrics
  */
-export function calculateOptionsRisk({ positions, underlyingPrice, underlyingMove = 0.05, daysForward = 1 }) {
+export function calculateOptionsRisk({
+  positions,
+  underlyingPrice,
+  underlyingMove = 0.05,
+  daysForward = 1,
+}) {
   const portfolioGreeks = calculatePortfolioGreeks(positions);
 
   // Delta exposure: P&L from 1% underlying move
