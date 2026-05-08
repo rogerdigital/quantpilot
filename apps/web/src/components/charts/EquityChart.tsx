@@ -1,4 +1,4 @@
-import { AreaSeries, createChart } from 'lightweight-charts';
+import { AreaSeries, createChart, HistogramSeries, LineSeries } from 'lightweight-charts';
 import { useEffect, useRef } from 'react';
 
 export type EquityPoint = {
@@ -9,9 +9,20 @@ export type EquityPoint = {
 type Props = {
   paper: EquityPoint[];
   live: EquityPoint[];
+  showDrawdown?: boolean;
+  benchmark?: EquityPoint[];
 };
 
-export function EquityChart({ paper, live }: Props) {
+function calcDrawdown(points: EquityPoint[]): { value: number; label: string }[] {
+  let peak = -Infinity;
+  return points.map((p) => {
+    peak = Math.max(peak, p.value);
+    const dd = peak > 0 ? ((p.value - peak) / peak) * 100 : 0;
+    return { value: dd, label: p.label };
+  });
+}
+
+export function EquityChart({ paper, live, showDrawdown = false, benchmark }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -65,13 +76,46 @@ export function EquityChart({ paper, live }: Props) {
       title: 'Live',
     });
 
-    // Convert equity points to lightweight-charts time series format
-    // Use sequential integer timestamps since labels may not be ISO dates
     const toData = (points: EquityPoint[]) =>
       points.map((p, i) => ({ time: (i + 1) as unknown as string, value: p.value }));
 
     if (paper.length) paperSeries.setData(toData(paper));
     if (live.length) liveSeries.setData(toData(live));
+
+    // Benchmark line
+    if (benchmark?.length) {
+      const benchSeries = chart.addSeries(LineSeries, {
+        color: 'rgba(160, 162, 210, 0.4)',
+        lineWidth: 1,
+        lineStyle: 2,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        title: 'Benchmark',
+      });
+      benchSeries.setData(toData(benchmark));
+    }
+
+    // Drawdown overlay
+    if (showDrawdown && paper.length) {
+      const ddData = calcDrawdown(paper);
+      const ddSeries = chart.addSeries(HistogramSeries, {
+        color: 'rgba(255, 51, 88, 0.25)',
+        priceScaleId: 'dd',
+        priceLineVisible: false,
+        lastValueVisible: false,
+        title: 'Drawdown',
+      });
+      ddSeries.setData(
+        ddData.map((d, i) => ({
+          time: (i + 1) as unknown as string,
+          value: d.value,
+          color: d.value < -10 ? 'rgba(255, 51, 88, 0.4)' : 'rgba(255, 51, 88, 0.2)',
+        }))
+      );
+      chart.priceScale('dd').applyOptions({
+        scaleMargins: { top: 0.85, bottom: 0 },
+      });
+    }
 
     chart.timeScale().fitContent();
 
@@ -84,7 +128,7 @@ export function EquityChart({ paper, live }: Props) {
       ro.disconnect();
       chart.remove();
     };
-  }, [paper, live]);
+  }, [paper, live, showDrawdown, benchmark]);
 
   return (
     <div ref={containerRef} style={{ width: '100%', height: '280px', position: 'relative' }} />
