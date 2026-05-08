@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CandlestickChart } from '../../components/charts/CandlestickChart.tsx';
+import { PriceFlash, SignalAlert } from '../../components/common/index.ts';
 import { EmptyState, TabPanel } from '../../components/layout/ConsoleChrome.tsx';
 import { QuickOrderBar } from '../../components/trading/QuickOrderBar.tsx';
 import { useOhlcvData } from '../../hooks/useOhlcvData.ts';
@@ -186,7 +187,7 @@ export function TradingPage() {
                 {selectedSymbol}
               </span>
               <span className={tradingHeaderPrice}>
-                {selectedStock ? selectedStock.price.toFixed(2) : '--'}
+                {selectedStock ? <PriceFlash value={selectedStock.price} precision={2} /> : '--'}
               </span>
               <span className={tradingHeaderChange[changeTone]}>
                 {priceChange >= 0 ? '+' : ''}
@@ -217,8 +218,17 @@ export function TradingPage() {
                     : selectedStock?.signal === 'SELL'
                       ? 'var(--sell)'
                       : 'var(--hold)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
               }}
             >
+              {selectedStock && (
+                <SignalAlert
+                  variant={selectedStock.signal === 'BUY' ? 'buy' : selectedStock.signal === 'SELL' ? 'sell' : 'warning'}
+                  size={6}
+                />
+              )}
               {selectedStock ? translateSignal(locale, selectedStock.signal) : '--'}
             </strong>
           </div>
@@ -259,7 +269,7 @@ export function TradingPage() {
                       <div className="wl-name">{stock.name}</div>
                     </div>
                     <div>
-                      <div className="wl-price">{stock.price.toFixed(2)}</div>
+                      <div className="wl-price"><PriceFlash value={stock.price} precision={2} /></div>
                       <div
                         className="wl-change"
                         style={{ color: chg >= 0 ? 'var(--buy)' : 'var(--sell)' }}
@@ -310,19 +320,25 @@ export function TradingPage() {
 
             <div className={chartSignalStrip}>
               <div className={chartSignalCard}>
-                <div className="sig-label">BUY</div>
+                <div className="sig-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <SignalAlert variant="buy" size={6} pulse={false} /> BUY
+                </div>
                 <div className="sig-value" style={{ color: 'var(--buy)' }}>
                   {buyCount}
                 </div>
               </div>
               <div className={chartSignalCard}>
-                <div className="sig-label">HOLD</div>
+                <div className="sig-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <SignalAlert variant="warning" size={6} pulse={false} /> HOLD
+                </div>
                 <div className="sig-value" style={{ color: 'var(--hold)' }}>
                   {holdCount}
                 </div>
               </div>
               <div className={chartSignalCard}>
-                <div className="sig-label">SELL</div>
+                <div className="sig-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <SignalAlert variant="sell" size={6} pulse={false} /> SELL
+                </div>
                 <div className="sig-value" style={{ color: 'var(--sell)' }}>
                   {sellCount}
                 </div>
