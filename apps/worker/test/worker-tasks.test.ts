@@ -5,6 +5,7 @@ import test from 'node:test';
 import { createControlPlaneRuntime } from '../../../packages/control-plane-runtime/src/index.js';
 import { createControlPlaneContext } from '../../../packages/control-plane-store/src/context.js';
 import { createMemoryStore } from '../../../packages/control-plane-store/test/helpers/memory-store.js';
+import { runTick } from '../src/runtime/worker-runtime.js';
 import { runHeartbeatTask } from '../src/tasks/heartbeat-task.js';
 import { runMonitoringScanTask } from '../src/tasks/monitoring-scan-task.js';
 import { runNotificationDispatchTask } from '../src/tasks/notification-dispatch-task.js';
@@ -18,6 +19,8 @@ const workerConfig = {
   notificationBatchSize: 20,
   riskScanBatchSize: 20,
   workflowBatchSize: 20,
+  taskTimeoutMs: 10000,
+  continueOnTaskFailure: true,
 };
 
 const TEST_CLAIM_NOW = '2099-01-01T00:10:00.000Z';
@@ -145,6 +148,101 @@ test('monitoring scan task records monitoring snapshots and alerts', async () =>
     runtime.listMonitoringAlerts().some((item) => item.source === 'workflow'),
     true
   );
+});
+
+test('worker tick continues after a task failure by default', async () => {
+  const results = await runTick(workerConfig, [
+    {
+      kind: 'failing-task',
+      run: async () => {
+        throw new Error('simulated worker failure');
+      },
+    },
+    {
+      kind: 'follow-up-task',
+      run: async () => ({
+        worker: workerConfig.name,
+        kind: 'follow-up-task',
+        timestamp: new Date().toISOString(),
+        summary: 'follow-up completed',
+      }),
+    },
+  ]);
+
+  assert.equal(results.length, 2);
+  assert.equal(results[0].ok, false);
+  assert.equal(results[0].summary, 'simulated worker failure');
+  assert.equal(results[1].ok, true);
+  assert.equal(results[1].kind, 'follow-up-task');
+});
+
+test('worker tick stops after a task failure when configured', async () => {
+  const results = await runTick(
+    {
+      ...workerConfig,
+      continueOnTaskFailure: false,
+    },
+    [
+      {
+        kind: 'failing-task',
+        run: async () => {
+          throw new Error('stop after this failure');
+        },
+      },
+      {
+        kind: 'skipped-task',
+        run: async () => ({
+          worker: workerConfig.name,
+          kind: 'skipped-task',
+          timestamp: new Date().toISOString(),
+          summary: 'should not run',
+        }),
+      },
+    ]
+  );
+
+  assert.equal(results.length, 1);
+  assert.equal(results[0].ok, false);
+  assert.equal(results[0].summary, 'stop after this failure');
+});
+
+test('worker tick records timeout failures without blocking the tick', async () => {
+  const results = await runTick(
+    {
+      ...workerConfig,
+      taskTimeoutMs: 5,
+    },
+    [
+      {
+        kind: 'slow-task',
+        run: () =>
+          new Promise((resolve) => {
+            setTimeout(() => {
+              resolve({
+                worker: workerConfig.name,
+                kind: 'slow-task',
+                timestamp: new Date().toISOString(),
+                summary: 'too slow',
+              });
+            }, 25);
+          }),
+      },
+      {
+        kind: 'follow-up-task',
+        run: async () => ({
+          worker: workerConfig.name,
+          kind: 'follow-up-task',
+          timestamp: new Date().toISOString(),
+          summary: 'follow-up completed',
+        }),
+      },
+    ]
+  );
+
+  assert.equal(results.length, 2);
+  assert.equal(results[0].ok, false);
+  assert.match(results[0].summary, /timed out after 5ms/);
+  assert.equal(results[1].ok, true);
 });
 
 test('workflow maintenance task re-queues scheduled workflow runs', async () => {

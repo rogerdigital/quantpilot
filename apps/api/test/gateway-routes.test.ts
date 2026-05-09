@@ -3729,9 +3729,46 @@ test('GET /api/health exposes gateway module status', async () => {
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
+  assert.equal(response.json.tradingMode, 'simulated');
   assert.equal(response.json.brokerAdapter, 'alpaca');
+  assert.equal(response.json.brokerConfigured, false);
+  assert.equal(response.json.liveTradingEnabled, false);
   assert.equal(response.json.architectureLayers, 7);
   assert.equal(typeof response.json.modules, 'number');
+});
+
+test('gateway dispatch returns 404 for unknown routes', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    path: '/api/v1/unknown-route',
+  });
+
+  assert.equal(response.statusCode, 404);
+  assert.equal(response.json.message, 'not found');
+});
+
+test('gateway dispatch keeps platform and control-plane routes distinct', async () => {
+  const platformResponse = await invokeGatewayRoute(handler, {
+    path: '/api/v1/health',
+  });
+  const controlPlaneResponse = await invokeGatewayRoute(handler, {
+    path: '/api/v1/notification/events?limit=1',
+  });
+
+  assert.equal(platformResponse.statusCode, 200);
+  assert.equal(platformResponse.json.architectureLayers, 7);
+  assert.equal(controlPlaneResponse.statusCode, 200);
+  assert.equal(Array.isArray(controlPlaneResponse.json.events), true);
+});
+
+test('gateway dispatch returns a stable error for malformed JSON bodies', async () => {
+  const response = await invokeGatewayRoute(handler, {
+    method: 'POST',
+    path: '/api/v1/trading/orders',
+    rawBody: '{',
+  });
+
+  assert.equal(response.statusCode, 500);
+  assert.equal(response.json.message, 'invalid json');
 });
 
 test('GET /api/monitoring/status returns runtime health and queue summary', async () => {

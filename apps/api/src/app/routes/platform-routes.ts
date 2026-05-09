@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { handleAgentRoutes } from './routers/agent-router.js';
 import { handleAnalyticsRoutes } from './routers/analytics-router.js';
 import { handleAuthRoutes } from './routers/auth-router.js';
@@ -18,8 +16,9 @@ import { handleSseRoutes } from './routers/sse-router.js';
 import { handleStrategyRoutes } from './routers/strategy-router.js';
 import { handleTradingRoutes } from './routers/trading-router.js';
 import { handleUserAccountRoutes } from './routers/user-account-router.js';
+import type { GatewayRouteContext, RouteHandler } from './types.js';
 
-const routers = [
+const routers: RouteHandler[] = [
   handleSseRoutes,
   handleHealthRoutes,
   handleMonitoringRoutes,
@@ -40,7 +39,7 @@ const routers = [
   handleDocsRoutes,
 ];
 
-export async function handlePlatformRoutes(context) {
+export async function handlePlatformRoutes(context: GatewayRouteContext) {
   for (const router of routers) {
     const handled = await router(context);
     if (handled) return true;

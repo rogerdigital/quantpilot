@@ -3,9 +3,14 @@ import { Readable } from 'node:stream';
 
 export async function invokeGatewayRoute(
   handler,
-  { method = 'GET', path = '/', body, headers = {} } = {}
+  { method = 'GET', path = '/', body, rawBody: rawRequestBody, headers = {} } = {}
 ) {
-  const payload = body === undefined ? null : JSON.stringify(body);
+  const payload =
+    rawRequestBody !== undefined
+      ? rawRequestBody
+      : body === undefined
+        ? null
+        : JSON.stringify(body);
   const req = Readable.from(payload ? [payload] : []);
   req.method = method;
   req.url = path;

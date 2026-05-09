@@ -5,6 +5,7 @@ import { createServer } from 'node:http';
 import { join } from 'node:path';
 import { handleControlPlaneRoutes } from '../app/routes/control-plane-routes.js';
 import { handlePlatformRoutes } from '../app/routes/platform-routes.js';
+import type { GatewayRouteContext } from '../app/routes/types.js';
 import {
   apiCache,
   buildCacheKey,
@@ -44,8 +45,21 @@ function createGatewayConfig(overrides = {}) {
     process.env.BROKER_UPSTREAM_URL ??
     ''
   ).replace(/\/$/, '');
+  const tradingMode = ['paper', 'live'].includes(
+    String(overrides.tradingMode ?? process.env.QUANTPILOT_TRADING_MODE ?? '')
+  )
+    ? String(overrides.tradingMode ?? process.env.QUANTPILOT_TRADING_MODE)
+    : 'simulated';
+  const liveTradingEnabled =
+    tradingMode === 'live' &&
+    !alpacaUsePaper &&
+    Boolean(alpacaKeyId && alpacaSecretKey) &&
+    (overrides.liveTradingAck ?? process.env.QUANTPILOT_LIVE_TRADING_ACK) ===
+      'I_UNDERSTAND_LIVE_TRADING_RISK';
   return {
     gatewayPort,
+    tradingMode,
+    liveTradingEnabled,
     alpacaKeyId,
     alpacaSecretKey,
     alpacaUsePaper,
@@ -582,14 +596,17 @@ export function createGatewayHandler(options = {}) {
       // Override pathname for versioned routes without mutating the URL object
       const versionedPathname = pathname;
       Object.defineProperty(reqUrl, 'pathname', { value: versionedPathname, writable: false });
-      const routeContext = {
+      const routeContext: GatewayRouteContext = {
         req,
+        method: req.method || 'GET',
+        url: reqUrl,
         reqUrl,
         res,
         config,
         readJsonBody,
         writeJson,
         gatewayDependencies,
+        userAccount: null,
       };
       // Add deprecation warning for unversioned API routes
       if (!isVersioned && reqUrl.pathname.startsWith('/api/')) {

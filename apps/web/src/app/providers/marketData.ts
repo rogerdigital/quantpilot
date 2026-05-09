@@ -88,9 +88,10 @@ function customHttpProvider(config: RuntimeConfig): MarketDataProvider {
 }
 
 function alpacaProvider(config: RuntimeConfig): MarketDataProvider {
+  const modeLabel = config.tradingMode === 'live' ? 'Live' : 'Paper';
   return {
     id: 'alpaca',
-    label: 'Alpaca Market Data via Gateway',
+    label: `${modeLabel} via Alpaca Market Data`,
     async getQuotePatch(stockStates: StockState[]): Promise<MarketDataSnapshot> {
       try {
         const query = new URL(`${config.alpacaProxyBase}/market/snapshots`, window.location.origin);
