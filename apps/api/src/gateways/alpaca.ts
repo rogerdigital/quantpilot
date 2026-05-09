@@ -45,8 +45,21 @@ function createGatewayConfig(overrides = {}) {
     process.env.BROKER_UPSTREAM_URL ??
     ''
   ).replace(/\/$/, '');
+  const tradingMode = ['paper', 'live'].includes(
+    String(overrides.tradingMode ?? process.env.QUANTPILOT_TRADING_MODE ?? '')
+  )
+    ? String(overrides.tradingMode ?? process.env.QUANTPILOT_TRADING_MODE)
+    : 'simulated';
+  const liveTradingEnabled =
+    tradingMode === 'live' &&
+    !alpacaUsePaper &&
+    Boolean(alpacaKeyId && alpacaSecretKey) &&
+    (overrides.liveTradingAck ?? process.env.QUANTPILOT_LIVE_TRADING_ACK) ===
+      'I_UNDERSTAND_LIVE_TRADING_RISK';
   return {
     gatewayPort,
+    tradingMode,
+    liveTradingEnabled,
     alpacaKeyId,
     alpacaSecretKey,
     alpacaUsePaper,

@@ -3729,7 +3729,10 @@ test('GET /api/health exposes gateway module status', async () => {
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json.ok, true);
+  assert.equal(response.json.tradingMode, 'simulated');
   assert.equal(response.json.brokerAdapter, 'alpaca');
+  assert.equal(response.json.brokerConfigured, false);
+  assert.equal(response.json.liveTradingEnabled, false);
   assert.equal(response.json.architectureLayers, 7);
   assert.equal(typeof response.json.modules, 'number');
 });

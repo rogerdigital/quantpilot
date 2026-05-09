@@ -1,7 +1,9 @@
 export type ProviderKind = 'simulated' | 'custom-http' | 'alpaca';
+export type TradingRuntimeMode = 'simulated' | 'paper' | 'live';
 
 export type RuntimeConfig = {
   refreshMs: number;
+  tradingMode: TradingRuntimeMode;
   marketDataProvider: ProviderKind;
   marketDataHttpUrl: string;
   brokerProvider: ProviderKind;

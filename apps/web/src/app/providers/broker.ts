@@ -160,9 +160,10 @@ function normalizeAlpacaPosition(position: any) {
 
 function alpacaBroker(config: RuntimeConfig): BrokerProvider {
   const baseUrl = `${config.alpacaProxyBase}/broker`;
+  const modeLabel = config.tradingMode === 'live' ? 'Live' : 'Paper';
   return {
     id: 'alpaca',
-    label: 'Alpaca Trading API via Gateway',
+    label: `${modeLabel} via Alpaca`,
     supportsRemoteExecution: true,
     async submitOrders({ orders }: { orders: BrokerOrder[] }): Promise<{
       connected: boolean;

@@ -6,8 +6,13 @@ function numberFromEnv(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+function tradingModeFromEnv(value: string | undefined): RuntimeConfig['tradingMode'] {
+  return value === 'paper' || value === 'live' ? value : 'simulated';
+}
+
 export const runtimeConfig: RuntimeConfig = {
   refreshMs: numberFromEnv(import.meta.env.VITE_REFRESH_MS, 1800),
+  tradingMode: tradingModeFromEnv(import.meta.env.VITE_TRADING_MODE),
   marketDataProvider: (import.meta.env.VITE_MARKET_DATA_PROVIDER ||
     'simulated') as RuntimeConfig['marketDataProvider'],
   marketDataHttpUrl: import.meta.env.VITE_MARKET_DATA_HTTP_URL || '',
