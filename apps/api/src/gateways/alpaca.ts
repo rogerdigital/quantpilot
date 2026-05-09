@@ -5,6 +5,7 @@ import { createServer } from 'node:http';
 import { join } from 'node:path';
 import { handleControlPlaneRoutes } from '../app/routes/control-plane-routes.js';
 import { handlePlatformRoutes } from '../app/routes/platform-routes.js';
+import type { GatewayRouteContext } from '../app/routes/types.js';
 import {
   apiCache,
   buildCacheKey,
@@ -582,14 +583,17 @@ export function createGatewayHandler(options = {}) {
       // Override pathname for versioned routes without mutating the URL object
       const versionedPathname = pathname;
       Object.defineProperty(reqUrl, 'pathname', { value: versionedPathname, writable: false });
-      const routeContext = {
+      const routeContext: GatewayRouteContext = {
         req,
+        method: req.method || 'GET',
+        url: reqUrl,
         reqUrl,
         res,
         config,
         readJsonBody,
         writeJson,
         gatewayDependencies,
+        userAccount: null,
       };
       // Add deprecation warning for unversioned API routes
       if (!isVersioned && reqUrl.pathname.startsWith('/api/')) {

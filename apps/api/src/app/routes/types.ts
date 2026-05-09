@@ -8,6 +8,8 @@ export type GatewayJsonWriter = (
 
 export type GatewayRouteContext = {
   req: IncomingMessage;
+  method: string;
+  url: URL;
   reqUrl: URL;
   res: ServerResponse;
   config: unknown;
