@@ -54,9 +54,20 @@ npm run check:runtime-env -- --env-file .env
 
 | Variable | Purpose |
 |----------|---------|
+| `QUANTPILOT_TRADING_MODE` / `VITE_TRADING_MODE` | Runtime mode: `simulated`, `paper`, or `live`; both values must match when both are set |
+| `ALPACA_KEY_ID` / `ALPACA_SECRET_KEY` | Required for `paper` and `live` modes; not required for `simulated` |
+| `QUANTPILOT_LIVE_TRADING_ACK` | Must be `I_UNDERSTAND_LIVE_TRADING_RISK` before `live` mode can start |
 | `JWT_SECRET` | HS256 signing key (min 32 chars) |
 | `BROKER_KEY_ENCRYPTION_KEY` | 64-char hex for AES-256-GCM |
 | `DEMO_USERNAME` / `DEMO_PASSWORD` | Login credentials (`admin` / `changeme`) |
+
+### Trading Modes
+
+| Mode | Behavior |
+|------|----------|
+| `simulated` | Uses local simulated broker and market-data fallbacks. Alpaca credentials may be blank. |
+| `paper` | Requires Alpaca credentials and `ALPACA_USE_PAPER=true`. Orders route through the gateway to a paper account. |
+| `live` | Requires Alpaca credentials, `ALPACA_USE_PAPER=false`, and the explicit live-trading acknowledgement. |
 
 ---
 
@@ -162,6 +173,7 @@ Stage 1-7 completed. Platform skeleton is fully functional with research, backte
 - Remote order placement goes through the server gateway only
 - Agents cannot place real trades directly
 - Risk and approval controls cannot be bypassed
+- `simulated`, `paper`, and `live` modes are surfaced through API health and the operator UI
 - This is not a production unattended live-trading deployment
 
 ---
