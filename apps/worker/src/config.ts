@@ -5,6 +5,8 @@ export type WorkerConfig = {
   notificationBatchSize: number;
   riskScanBatchSize: number;
   workflowBatchSize: number;
+  taskTimeoutMs: number;
+  continueOnTaskFailure: boolean;
 };
 
 function readNumber(value: string | undefined, fallback: number) {
@@ -20,5 +22,7 @@ export function readWorkerConfig(): WorkerConfig {
     notificationBatchSize: readNumber(process.env.QUANTPILOT_WORKER_NOTIFICATION_BATCH, 20),
     riskScanBatchSize: readNumber(process.env.QUANTPILOT_WORKER_RISK_SCAN_BATCH, 20),
     workflowBatchSize: readNumber(process.env.QUANTPILOT_WORKER_WORKFLOW_BATCH, 20),
+    taskTimeoutMs: readNumber(process.env.QUANTPILOT_WORKER_TASK_TIMEOUT_MS, 10000),
+    continueOnTaskFailure: process.env.QUANTPILOT_WORKER_CONTINUE_ON_FAILURE !== '0',
   };
 }

@@ -15,16 +15,69 @@ export type WorkerTaskResult = {
   ok?: boolean;
 };
 
-export async function runTick(config: WorkerConfig): Promise<WorkerTaskResult[]> {
-  const results = [
-    await runWorkflowMaintenanceTask(config),
-    await runWorkflowExecutionTask(config),
-    await runSchedulerTickTask(config),
-    await runRiskScanTask(config),
-    await runHeartbeatTask(config),
-    await runMonitoringScanTask(config),
-    await runNotificationDispatchTask(config),
+export type WorkerTaskEntry = {
+  kind: string;
+  run: () => Promise<WorkerTaskResult>;
+};
+
+function createDefaultTaskEntries(config: WorkerConfig): WorkerTaskEntry[] {
+  return [
+    { kind: 'workflow-maintenance', run: () => runWorkflowMaintenanceTask(config) },
+    { kind: 'workflow-execution', run: () => runWorkflowExecutionTask(config) },
+    { kind: 'scheduler-tick', run: () => runSchedulerTickTask(config) },
+    { kind: 'risk-scan', run: () => runRiskScanTask(config) },
+    { kind: 'heartbeat', run: () => runHeartbeatTask(config) },
+    { kind: 'monitoring-scan', run: () => runMonitoringScanTask(config) },
+    { kind: 'notification-dispatch', run: () => runNotificationDispatchTask(config) },
   ];
+}
+
+function failureResult(config: WorkerConfig, kind: string, summary: string): WorkerTaskResult {
+  return {
+    worker: config.name,
+    kind,
+    timestamp: new Date().toISOString(),
+    summary,
+    ok: false,
+  };
+}
+
+export async function runTaskWithTimeout(
+  entry: WorkerTaskEntry,
+  config: WorkerConfig
+): Promise<WorkerTaskResult> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  const timeout = new Promise<WorkerTaskResult>((resolve) => {
+    timeoutId = setTimeout(() => {
+      resolve(
+        failureResult(config, entry.kind, `Task timed out after ${config.taskTimeoutMs}ms`)
+      );
+    }, config.taskTimeoutMs);
+  });
+
+  try {
+    const result = await Promise.race([entry.run(), timeout]);
+    return { ...result, ok: result.ok !== false };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown worker task failure';
+    return failureResult(config, entry.kind, message);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
+export async function runTick(
+  config: WorkerConfig,
+  taskEntries: WorkerTaskEntry[] = createDefaultTaskEntries(config)
+): Promise<WorkerTaskResult[]> {
+  const results: WorkerTaskResult[] = [];
+
+  for (const entry of taskEntries) {
+    const result = await runTaskWithTimeout(entry, config);
+    results.push(result);
+    if (result.ok === false && !config.continueOnTaskFailure) break;
+  }
+
   results.forEach((result) => {
     console.info(`[worker:${result.worker}] ${result.kind} ${result.timestamp} ${result.summary}`);
   });
