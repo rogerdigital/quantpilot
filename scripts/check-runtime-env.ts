@@ -79,6 +79,10 @@ function requirePathPrefix(errors, values, key) {
   }
 }
 
+function resolveTradingMode(values) {
+  return values.QUANTPILOT_TRADING_MODE || values.VITE_TRADING_MODE || 'simulated';
+}
+
 function main() {
   const options = parseArgs(process.argv.slice(2));
   const envPath = resolve(repoRoot, options['env-file'] || defaultEnvPath);
@@ -96,6 +100,8 @@ function main() {
   const warnings = [];
 
   requireAllowed(errors, values, 'QUANTPILOT_CONTROL_PLANE_ADAPTER', ['file', 'db']);
+  requireAllowed(errors, values, 'QUANTPILOT_TRADING_MODE', ['simulated', 'paper', 'live']);
+  requireAllowed(errors, values, 'VITE_TRADING_MODE', ['simulated', 'paper', 'live']);
   requirePositiveInteger(errors, values, 'GATEWAY_PORT');
   requirePositiveInteger(errors, values, 'VITE_REFRESH_MS');
   requireAllowed(errors, values, 'BROKER_ADAPTER', ['alpaca', 'custom-http']);
@@ -107,6 +113,15 @@ function main() {
   requireAllowed(errors, values, 'VITE_BROKER_PROVIDER', ['simulated', 'custom-http', 'alpaca']);
   requireBooleanString(errors, values, 'ALPACA_USE_PAPER');
   requirePathPrefix(errors, values, 'VITE_ALPACA_PROXY_BASE');
+
+  const tradingMode = resolveTradingMode(values);
+  if (
+    values.QUANTPILOT_TRADING_MODE &&
+    values.VITE_TRADING_MODE &&
+    values.QUANTPILOT_TRADING_MODE !== values.VITE_TRADING_MODE
+  ) {
+    errors.push('VITE_TRADING_MODE must match QUANTPILOT_TRADING_MODE when both are set');
+  }
 
   if (values.BROKER_UPSTREAM_API_KEY && !values.BROKER_UPSTREAM_AUTH_SCHEME) {
     errors.push('BROKER_UPSTREAM_AUTH_SCHEME is required when BROKER_UPSTREAM_API_KEY is set');
@@ -130,16 +145,42 @@ function main() {
     );
   }
 
-  if (values.BROKER_ADAPTER === 'alpaca') {
-    if (templateMode) {
-      if (!values.ALPACA_KEY_ID || !values.ALPACA_SECRET_KEY) {
-        warnings.push(
-          'ALPACA_KEY_ID and ALPACA_SECRET_KEY are blank in the template; fill them before paper/live gateway startup'
-        );
-      }
-    } else {
-      requireNonEmpty(errors, values, 'ALPACA_KEY_ID');
-      requireNonEmpty(errors, values, 'ALPACA_SECRET_KEY');
+  if (tradingMode === 'paper') {
+    requireNonEmpty(errors, values, 'ALPACA_KEY_ID', 'ALPACA_KEY_ID is required in paper mode');
+    requireNonEmpty(
+      errors,
+      values,
+      'ALPACA_SECRET_KEY',
+      'ALPACA_SECRET_KEY is required in paper mode'
+    );
+    if (String(values.ALPACA_USE_PAPER).toLowerCase() !== 'true') {
+      errors.push('ALPACA_USE_PAPER must be true in paper mode');
+    }
+  }
+
+  if (tradingMode === 'live') {
+    requireNonEmpty(errors, values, 'ALPACA_KEY_ID', 'ALPACA_KEY_ID is required in live mode');
+    requireNonEmpty(
+      errors,
+      values,
+      'ALPACA_SECRET_KEY',
+      'ALPACA_SECRET_KEY is required in live mode'
+    );
+    if (String(values.ALPACA_USE_PAPER).toLowerCase() !== 'false') {
+      errors.push('ALPACA_USE_PAPER must be false in live mode');
+    }
+    if (values.QUANTPILOT_LIVE_TRADING_ACK !== 'I_UNDERSTAND_LIVE_TRADING_RISK') {
+      errors.push(
+        'QUANTPILOT_LIVE_TRADING_ACK must be I_UNDERSTAND_LIVE_TRADING_RISK in live mode'
+      );
+    }
+  }
+
+  if (values.BROKER_ADAPTER === 'alpaca' && tradingMode === 'simulated' && templateMode) {
+    if (!values.ALPACA_KEY_ID || !values.ALPACA_SECRET_KEY) {
+      warnings.push(
+        'ALPACA_KEY_ID and ALPACA_SECRET_KEY are blank in the template; fill them before paper/live gateway startup'
+      );
     }
   }
 
