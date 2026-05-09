@@ -1,10 +1,18 @@
-// @ts-nocheck
-function readNumber(value, fallback) {
+export type WorkerConfig = {
+  name: string;
+  intervalMs: number;
+  once: boolean;
+  notificationBatchSize: number;
+  riskScanBatchSize: number;
+  workflowBatchSize: number;
+};
+
+function readNumber(value: string | undefined, fallback: number) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-export function readWorkerConfig() {
+export function readWorkerConfig(): WorkerConfig {
   return {
     name: process.env.QUANTPILOT_WORKER_NAME || 'quantpilot-task-worker',
     intervalMs: readNumber(process.env.QUANTPILOT_WORKER_INTERVAL_MS, 15000),
