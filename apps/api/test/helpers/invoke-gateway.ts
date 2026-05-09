@@ -6,7 +6,11 @@ export async function invokeGatewayRoute(
   { method = 'GET', path = '/', body, rawBody: rawRequestBody, headers = {} } = {}
 ) {
   const payload =
-    rawRequestBody !== undefined ? rawRequestBody : body === undefined ? null : JSON.stringify(body);
+    rawRequestBody !== undefined
+      ? rawRequestBody
+      : body === undefined
+        ? null
+        : JSON.stringify(body);
   const req = Readable.from(payload ? [payload] : []);
   req.method = method;
   req.url = path;

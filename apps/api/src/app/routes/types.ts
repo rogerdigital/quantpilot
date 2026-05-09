@@ -1,10 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-export type GatewayJsonWriter = (
-  res: ServerResponse,
-  statusCode: number,
-  payload: unknown
-) => void;
+export type GatewayJsonWriter = (res: ServerResponse, statusCode: number, payload: unknown) => void;
 
 export type GatewayRouteContext = {
   req: IncomingMessage;
@@ -23,6 +19,4 @@ export type GatewayRouteContext = {
   userAccount: unknown;
 };
 
-export type RouteHandler = (
-  context: GatewayRouteContext
-) => boolean | Promise<boolean>;
+export type RouteHandler = (context: GatewayRouteContext) => boolean | Promise<boolean>;

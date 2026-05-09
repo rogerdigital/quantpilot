@@ -49,9 +49,7 @@ export async function runTaskWithTimeout(
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   const timeout = new Promise<WorkerTaskResult>((resolve) => {
     timeoutId = setTimeout(() => {
-      resolve(
-        failureResult(config, entry.kind, `Task timed out after ${config.taskTimeoutMs}ms`)
-      );
+      resolve(failureResult(config, entry.kind, `Task timed out after ${config.taskTimeoutMs}ms`));
     }, config.taskTimeoutMs);
   });
 
