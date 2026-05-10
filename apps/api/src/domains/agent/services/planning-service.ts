@@ -313,6 +313,13 @@ export async function createAgentPlan(payload: CreateAgentPlanPayload = {}) {
   }
 
   const intent = parsed.intent;
+  if (!intent) {
+    return {
+      ok: false,
+      error: 'missing_intent',
+      message: 'Parsed payload did not contain a valid intent.',
+    };
+  }
   const steps = await buildLLMSteps(intent);
   const requiresApproval = intent.requiresApproval || intent.requestedMode === 'request_live';
 
