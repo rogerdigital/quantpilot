@@ -4,8 +4,6 @@
 
 > AI-native quantitative trading platform — research, backtest, execute, manage risk, and collaborate with controlled agents, all from one operator console.
 
-![QuantPilot Dashboard](./docs/media/quantpilot-overview.gif)
-
 **QuantPilot is a platform skeleton and operating surface for controlled quantitative trading workflows, not a production unattended trading bot.**
 
 ---
