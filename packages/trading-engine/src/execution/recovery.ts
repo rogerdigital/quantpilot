@@ -1,6 +1,6 @@
-import type { BrokerAdapter } from './broker-adapter.ts';
-import type { AlgoOrder } from './order-lifecycle.ts';
-import { createRetryState, shouldRetry } from './retry-handler.ts';
+import type { BrokerAdapter } from './broker-adapter.js';
+import type { AlgoOrder } from './order-lifecycle.js';
+import { createRetryState, shouldRetry } from './retry-handler.js';
 
 export type RecoveryCase =
   | 'submit_failed'
@@ -55,22 +55,58 @@ export function buildRecoveryPlan(order: AlgoOrder, cases: RecoveryCase[]): Reco
   for (const c of cases) {
     switch (c) {
       case 'submit_failed':
-        actions.push({ case: c, orderId: order.id, action: 'retry_submit', detail: 'Retry order submission with backoff', timestamp: now });
+        actions.push({
+          case: c,
+          orderId: order.id,
+          action: 'retry_submit',
+          detail: 'Retry order submission with backoff',
+          timestamp: now,
+        });
         break;
       case 'ack_lost':
-        actions.push({ case: c, orderId: order.id, action: 'query_status', detail: 'Query broker for order status', timestamp: now });
+        actions.push({
+          case: c,
+          orderId: order.id,
+          action: 'query_status',
+          detail: 'Query broker for order status',
+          timestamp: now,
+        });
         break;
       case 'partial_fill':
-        actions.push({ case: c, orderId: order.id, action: 'query_status', detail: 'Check for additional fills', timestamp: now });
+        actions.push({
+          case: c,
+          orderId: order.id,
+          action: 'query_status',
+          detail: 'Check for additional fills',
+          timestamp: now,
+        });
         break;
       case 'cancel_rejected':
-        actions.push({ case: c, orderId: order.id, action: 'force_cancel', detail: 'Attempt force cancel with broker', timestamp: now });
+        actions.push({
+          case: c,
+          orderId: order.id,
+          action: 'force_cancel',
+          detail: 'Attempt force cancel with broker',
+          timestamp: now,
+        });
         break;
       case 'position_mismatch':
-        actions.push({ case: c, orderId: order.id, action: 'reconcile', detail: 'Run full position reconciliation', timestamp: now });
+        actions.push({
+          case: c,
+          orderId: order.id,
+          action: 'reconcile',
+          detail: 'Run full position reconciliation',
+          timestamp: now,
+        });
         break;
       case 'gateway_restart':
-        actions.push({ case: c, orderId: order.id, action: 'resume', detail: 'Resume from last known state after gateway restart', timestamp: now });
+        actions.push({
+          case: c,
+          orderId: order.id,
+          action: 'resume',
+          detail: 'Resume from last known state after gateway restart',
+          timestamp: now,
+        });
         break;
     }
   }
@@ -103,7 +139,10 @@ export async function executeRecoveryAction(
         });
         return { success: status.status !== 'rejected', detail: `Resubmitted: ${status.status}` };
       } catch (e) {
-        return { success: false, detail: `Submit failed: ${e instanceof Error ? e.message : 'unknown'}` };
+        return {
+          success: false,
+          detail: `Submit failed: ${e instanceof Error ? e.message : 'unknown'}`,
+        };
       }
     }
     case 'query_status': {
@@ -111,7 +150,10 @@ export async function executeRecoveryAction(
       if (!status) {
         return { success: false, detail: 'Order not found at broker' };
       }
-      return { success: true, detail: `Broker status: ${status.status}, filled: ${status.filledQty}` };
+      return {
+        success: true,
+        detail: `Broker status: ${status.status}, filled: ${status.filledQty}`,
+      };
     }
     case 'force_cancel': {
       const result = await adapter.cancelOrder(order.clientOrderId);
@@ -119,9 +161,18 @@ export async function executeRecoveryAction(
     }
     case 'reconcile': {
       const result = await adapter.reconcileFills([
-        { clientOrderId: order.clientOrderId, filledQty: order.filledQty, avgFillPrice: order.avgFillPrice },
+        {
+          clientOrderId: order.clientOrderId,
+          filledQty: order.filledQty,
+          avgFillPrice: order.avgFillPrice,
+        },
       ]);
-      return { success: result.aligned, detail: result.aligned ? 'Positions aligned' : `${result.mismatches.length} mismatches found` };
+      return {
+        success: result.aligned,
+        detail: result.aligned
+          ? 'Positions aligned'
+          : `${result.mismatches.length} mismatches found`,
+      };
     }
     case 'resume': {
       const status = await adapter.fetchOrderStatus(order.clientOrderId);

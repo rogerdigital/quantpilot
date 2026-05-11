@@ -1,4 +1,4 @@
-import type { OrderSide } from './order-lifecycle.ts';
+import type { OrderSide } from './order-lifecycle.js';
 
 export interface BrokerOrderRequest {
   clientOrderId: string;
@@ -60,7 +60,10 @@ export interface BrokerAdapter {
   ): Promise<ReconciliationResult>;
 }
 
-export function validateBrokerEnv(env: Record<string, string | undefined>, required: string[]): { valid: boolean; missing: string[] } {
+export function validateBrokerEnv(
+  env: Record<string, string | undefined>,
+  required: string[]
+): { valid: boolean; missing: string[] } {
   const missing = required.filter((key) => !env[key]);
   return { valid: missing.length === 0, missing };
 }

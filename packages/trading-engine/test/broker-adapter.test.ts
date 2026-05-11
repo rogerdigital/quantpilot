@@ -138,19 +138,20 @@ test('simulated broker adapter: requiresServerEnv is false', () => {
 });
 
 test('validateBrokerEnv: identifies missing keys', () => {
-  const result = validateBrokerEnv(
-    { API_KEY: 'abc', API_SECRET: undefined },
-    ['API_KEY', 'API_SECRET', 'BASE_URL']
-  );
+  const result = validateBrokerEnv({ API_KEY: 'abc', API_SECRET: undefined }, [
+    'API_KEY',
+    'API_SECRET',
+    'BASE_URL',
+  ]);
   assert.equal(result.valid, false);
   assert.deepEqual(result.missing, ['API_SECRET', 'BASE_URL']);
 });
 
 test('validateBrokerEnv: passes with all keys present', () => {
-  const result = validateBrokerEnv(
-    { API_KEY: 'abc', API_SECRET: 'def' },
-    ['API_KEY', 'API_SECRET']
-  );
+  const result = validateBrokerEnv({ API_KEY: 'abc', API_SECRET: 'def' }, [
+    'API_KEY',
+    'API_SECRET',
+  ]);
   assert.equal(result.valid, true);
   assert.equal(result.missing.length, 0);
 });

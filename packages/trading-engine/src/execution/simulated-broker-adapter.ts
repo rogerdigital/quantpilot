@@ -5,7 +5,7 @@ import type {
   BrokerOrderStatus,
   BrokerPosition,
   ReconciliationResult,
-} from './broker-adapter.ts';
+} from './broker-adapter.js';
 
 export function createSimulatedBrokerAdapter(opts?: {
   latencyMs?: number;
@@ -72,7 +72,8 @@ export function createSimulatedBrokerAdapter(opts?: {
         const prevQty = existing?.qty ?? 0;
         const prevCost = existing?.avgCost ?? 0;
         const newQty = prevQty + request.qty;
-        const newAvgCost = newQty > 0 ? (prevCost * prevQty + fillPrice * request.qty) / newQty : fillPrice;
+        const newAvgCost =
+          newQty > 0 ? (prevCost * prevQty + fillPrice * request.qty) / newQty : fillPrice;
         positions.set(request.symbol, { qty: newQty, avgCost: newAvgCost, side: 'long' });
         cash -= fillPrice * request.qty;
       } else {
@@ -81,7 +82,11 @@ export function createSimulatedBrokerAdapter(opts?: {
         if (newQty <= 0) {
           positions.delete(request.symbol);
         } else {
-          positions.set(request.symbol, { qty: newQty, avgCost: existing?.avgCost ?? 0, side: 'long' });
+          positions.set(request.symbol, {
+            qty: newQty,
+            avgCost: existing?.avgCost ?? 0,
+            side: 'long',
+          });
         }
         cash += fillPrice * request.qty;
       }
