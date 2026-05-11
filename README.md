@@ -2,9 +2,9 @@
 
 [English](./README.md) | [中文](./README.zh-CN.md)
 
-> AI-native quantitative trading platform — research, backtest, execute, manage risk, and collaborate with controlled agents, all from one operator console.
+> AI-native quantitative research and execution control plane — research, backtest, execute, manage risk, and collaborate with controlled agents, all from one operator console.
 
-**QuantPilot is a platform skeleton and operating surface for controlled quantitative trading workflows, not a production unattended trading bot.**
+**QuantPilot is a controlled quantitative research and execution platform covering the full lifecycle from hypothesis to live trading, with evidence-based promotion gates, risk enforcement, and agent governance at every boundary.**
 
 ---
 
@@ -12,13 +12,18 @@
 
 | Domain | What It Does |
 |--------|-------------|
-| **Research & Strategy** | Strategy catalog, event-driven backtest engine (Sharpe, max drawdown, win-rate), evaluation, comparison, and governance |
-| **Execution** | Plan → approve → submit → reconcile → recover lifecycle, broker-event ingestion, queue-based operations console |
-| **Risk** | Live VaR/CVaR/Beta/HHI analytics, approval boundaries, policy actions, risk-parameter tuning panel |
-| **Agent Collaboration** | Session → intent → plan → analysis → action handoff pipeline, daily-run loops (pre-market / intraday / post-market), ask-first queue |
-| **Real-Time Push** | SSE state stream with exponential-backoff reconnect; polling drops to 15 s fallback |
-| **Auth & Security** | JWT (HS256, 8h), AES-256-GCM broker key encryption at rest, workspace-aware RBAC |
-| **Operations** | Monitoring, incidents, audit trail, backup/restore, integrity checks, SQLite WAL persistence |
+| **Data Science** | Dataset registry, 7 automated quality checks, feature registry with lineage tracking, version-controlled ingestion |
+| **Research & Strategy** | Research workspaces with hypothesis management, experiment registry, model registry, structured decision records |
+| **Backtest Lab** | Reproducible specs (hash-stable), commission/slippage models, regime attribution, walk-forward analysis, robustness diagnostics |
+| **Strategy Lifecycle** | 8 promotion gates, evidence-based transitions (research → candidate → paper → live), strategy package manifest |
+| **Execution** | Order lifecycle state machine (algo orders + legs), broker adapter boundary, recovery workflows, reconciliation |
+| **Risk** | Policy engine (11 rules), pre-trade assessment, VaR/CVaR/Beta/HHI analytics, kill switch, approval boundaries |
+| **Agent Collaboration** | Governed tool registry, 5 review workflow types, session → intent → plan → analysis → action pipeline, authority ladder |
+| **Compute Platform** | Job scheduler, artifact management, async task runner, backtest dispatcher |
+| **Connectors** | Data/broker/model connector registry, strategy package validator, environment-aware health checks |
+| **Observability** | Platform event bus (13 event types), system health matrix, artifact integrity checks (6 types) |
+| **Operations** | Monitoring, incidents, audit trail, compliance reports, backup/restore, maintenance CLI |
+| **Auth & Security** | JWT (HS256, 8h), AES-256-GCM broker key encryption at rest, workspace-aware RBAC, institutional permissions (9 actions × 5 roles) |
 | **Charts** | lightweight-charts v5 — equity curve, candlestick, signal bar |
 | **UX** | `Cmd+K` command palette, approval drawer, toast notifications |
 
@@ -115,16 +120,16 @@ quantpilot/
 ├── apps/
 │   ├── web/          React 18 SPA (Vite, VE styles)
 │   ├── api/          Node.js API gateway (ESM + tsx)
-│   └── worker/       Background task runner
+│   └── worker/       Background task runner (job handlers)
 ├── packages/
-│   ├── trading-engine        Strategy, backtest, risk
-│   ├── task-workflow-engine  Workflow orchestration
-│   ├── control-plane-runtime Runtime context & fanout
-│   ├── control-plane-store   Persistence (file / SQLite)
-│   ├── llm-provider          Provider-agnostic LLM
-│   ├── shared-types          Cross-package contracts
-│   ├── ui                    Shared UI components
-│   └── db                    SQLite adapter + Drizzle
+│   ├── trading-engine/          Backtest, risk policy, execution, strategy lifecycle, connectors
+│   ├── task-workflow-engine/    Workflow orchestration, agent review workflows
+│   ├── control-plane-runtime/  Runtime context, event bus, permission policy, connector registry
+│   ├── control-plane-store/    Persistence: datasets, features, experiments, models, orgs, audits
+│   ├── llm-provider/           Provider-agnostic LLM abstraction
+│   ├── shared-types/           Cross-package domain contracts (14 type modules)
+│   ├── ui/                     Shared UI components and design tokens
+│   └── db/                     SQLite adapter + Drizzle
 ├── docs/             Architecture, ops, deployment
 ├── scripts/          Tooling & CI helpers
 └── CONTRIBUTING.md
@@ -149,7 +154,7 @@ quantpilot/
 
 ### Current Status
 
-Platform skeleton is fully functional with research, backtest, execution, risk, and agent collaboration modules. The institutional research platform roadmap (Stages 8-12) is complete, covering domain contracts, data science platform, research OS, backtest lab, strategy lifecycle, risk control plane, execution control plane, compute platform, agent collaboration, institutional operations, open ecosystem, and observability hardening.
+The institutional research platform roadmap (Stages 0-12) is complete: domain contracts, data science platform, research OS, backtest lab, strategy lifecycle, risk control plane, execution control plane, compute platform, agent collaboration, institutional operations, open ecosystem, and observability hardening.
 
 ### Near-term
 
