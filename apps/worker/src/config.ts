@@ -7,6 +7,11 @@ export type WorkerConfig = {
   workflowBatchSize: number;
   taskTimeoutMs: number;
   continueOnTaskFailure: boolean;
+  jobRunner: {
+    enabled: boolean;
+    leaseDurationMs: number;
+    maxJobsPerTick: number;
+  };
 };
 
 function readNumber(value: string | undefined, fallback: number) {
@@ -24,5 +29,10 @@ export function readWorkerConfig(): WorkerConfig {
     workflowBatchSize: readNumber(process.env.QUANTPILOT_WORKER_WORKFLOW_BATCH, 20),
     taskTimeoutMs: readNumber(process.env.QUANTPILOT_WORKER_TASK_TIMEOUT_MS, 10000),
     continueOnTaskFailure: process.env.QUANTPILOT_WORKER_CONTINUE_ON_FAILURE !== '0',
+    jobRunner: {
+      enabled: process.env.QUANTPILOT_WORKER_JOB_RUNNER !== '0',
+      leaseDurationMs: readNumber(process.env.QUANTPILOT_WORKER_JOB_LEASE_MS, 300_000),
+      maxJobsPerTick: readNumber(process.env.QUANTPILOT_WORKER_JOB_MAX_PER_TICK, 1),
+    },
   };
 }

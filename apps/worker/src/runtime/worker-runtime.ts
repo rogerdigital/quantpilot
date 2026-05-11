@@ -1,4 +1,5 @@
 import { readWorkerConfig, type WorkerConfig } from '../config.js';
+import { runJobRunnerTask } from '../job-runner.js';
 import { runHeartbeatTask } from '../tasks/heartbeat-task.js';
 import { runMonitoringScanTask } from '../tasks/monitoring-scan-task.js';
 import { runNotificationDispatchTask } from '../tasks/notification-dispatch-task.js';
@@ -21,7 +22,7 @@ export type WorkerTaskEntry = {
 };
 
 function createDefaultTaskEntries(config: WorkerConfig): WorkerTaskEntry[] {
-  return [
+  const entries: WorkerTaskEntry[] = [
     { kind: 'workflow-maintenance', run: () => runWorkflowMaintenanceTask(config) },
     { kind: 'workflow-execution', run: () => runWorkflowExecutionTask(config) },
     { kind: 'scheduler-tick', run: () => runSchedulerTickTask(config) },
@@ -30,6 +31,21 @@ function createDefaultTaskEntries(config: WorkerConfig): WorkerTaskEntry[] {
     { kind: 'monitoring-scan', run: () => runMonitoringScanTask(config) },
     { kind: 'notification-dispatch', run: () => runNotificationDispatchTask(config) },
   ];
+  if (config.jobRunner.enabled) {
+    entries.push({
+      kind: 'compute-job-runner',
+      run: () =>
+        runJobRunnerTask(
+          config,
+          {},
+          {
+            leaseDurationMs: config.jobRunner.leaseDurationMs,
+            maxJobsPerTick: config.jobRunner.maxJobsPerTick,
+          }
+        ),
+    });
+  }
+  return entries;
 }
 
 function failureResult(config: WorkerConfig, kind: string, summary: string): WorkerTaskResult {
