@@ -1308,6 +1308,10 @@ export type ExecutionPlanRecord = {
   executionRunId: string;
   strategyId: string;
   strategyName: string;
+  strategyVersion?: string;
+  promotionRequestId?: string;
+  riskAssessmentId?: string;
+  brokerAccountId?: string;
   mode: 'paper' | 'live';
   status: 'draft' | 'ready' | 'blocked';
   lifecycleStatus:
@@ -1320,7 +1324,9 @@ export type ExecutionPlanRecord = {
     | 'filled'
     | 'blocked'
     | 'cancelled'
-    | 'failed';
+    | 'failed'
+    | 'reconciled'
+    | 'mismatch';
   approvalState: 'pending' | 'not_required' | 'required';
   riskStatus: 'approved' | 'review' | 'blocked';
   summary: string;
