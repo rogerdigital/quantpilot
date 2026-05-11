@@ -771,6 +771,13 @@ export type ExecutionWorkbenchResponse = {
     }>;
   };
   entries: ExecutionLedgerEntry[];
+  recoveryPlan?: {
+    orderId: string;
+    cases: string[];
+    actions: Array<{ case: string; action: string; detail: string; timestamp: string }>;
+    resolved: boolean;
+    escalated: boolean;
+  } | null;
 };
 
 export type ExecutionBulkActionResult = {

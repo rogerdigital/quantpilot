@@ -7,6 +7,8 @@ describe('execution collection configs', () => {
       audit: 3,
       actions: 2,
       versions: 4,
+      evidence: 1,
+      recovery: 0,
     });
 
     expect(configs.audit.badge).toBe(3);
@@ -22,6 +24,8 @@ describe('execution collection configs', () => {
       audit: 0,
       actions: 0,
       versions: 0,
+      evidence: 0,
+      recovery: 0,
     });
 
     expect(configs.audit.loadingMessage).toBe('正在加载执行审计...');
