@@ -11,3 +11,4 @@ export * from './research.ts';
 export * from './risk-policy.ts';
 export * from './strategy-package.ts';
 export * from './trading.ts';
+export * from './platform-events.ts';
