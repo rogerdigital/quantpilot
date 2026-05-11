@@ -1,4 +1,5 @@
 export * from './backtest.ts';
+export * from './compute.ts';
 export * from './data-science.ts';
 export * from './errors.ts';
 export * from './experiments.ts';
