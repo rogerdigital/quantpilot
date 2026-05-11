@@ -3,6 +3,7 @@ import { handleAnalyticsRoutes } from './routers/analytics-router.js';
 import { handleAuthRoutes } from './routers/auth-router.js';
 import { handleBacktestRoutes } from './routers/backtest-router.js';
 import { handleCollaborationRoutes } from './routers/collaboration-router.js';
+import { handleDataRoutes } from './routers/data-router.js';
 import { handleDocsRoutes } from './routers/docs-router.js';
 import { handleExecutionRoutes } from './routers/execution-router.js';
 import { handleExportRoutes } from './routers/export-router.js';
@@ -35,6 +36,7 @@ const routers: RouteHandler[] = [
   handleMarketplaceRoutes,
   handleCollaborationRoutes,
   handleAnalyticsRoutes,
+  handleDataRoutes,
   handleExportRoutes,
   handleDocsRoutes,
 ];
