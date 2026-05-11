@@ -113,64 +113,23 @@ quantpilot/
 
 ## 研发迭代阶段
 
-### 当前阶段：阶段 1 到阶段 7 已收官
+### 阶段 1 到阶段 7 → 已收官
 
-当前仓库已经完成阶段 1 的平台底座产品化、阶段 2 的研究与策略闭环、阶段 3 的执行闭环与交易中台、阶段 4 的风险与调度中台深化、阶段 5 的 Agent 受控协作落地、阶段 6 的生产化与专业化基线，以及阶段 7 的 Agent 治理骨架（P0）：
+### Institutional Research Platform (阶段 8-12) → 已收官
 
-1. `auth / user-account / scheduler / notification / audit / task-orchestrator / incident / operations / risk workbench` 这批基础模块已具备稳定服务边界。
-2. `research task / backtest result / research evaluation / research report / governance / replay / execution handoff` 这批研究对象已具备稳定服务边界。
-3. `execution lifecycle / broker events / reconciliation / compensation / triage` 与 `risk / scheduler linkage / reviewed actions` 已形成稳定中台契约。
-4. `agent policy / agent instruction / agent daily run / agent authority event` 已形成阶段 7 P0 治理骨架契约：authority 模式可由策略驱动并经 risk/anomaly 条件降级，daily bias 指令每日生效，daily run 混合触发并通过 worker 执行。
-5. 下一阶段重点将转向真实 Agent autonomy 扩展（P1/P2）、数据库升级、权限与可观测性深化。
+Stage 8-12 完成了从专业量化研究平台到机构级部署的完整链路：
 
-阶段 1 的收官标准已经单独整理为 [stage-1-closeout.md](./stage-1-closeout.md)，后续判断是否进入阶段 2 以该文档为准。
-阶段 2 的收官标准已经单独整理为 [stage-2-closeout.md](./stage-2-closeout.md)，后续判断是否进入阶段 3 以该文档为准。
-阶段 3 的收官标准已经单独整理为 [stage-3-closeout.md](./stage-3-closeout.md)，后续判断是否进入阶段 4 以该文档为准。
-阶段 4 的收官标准已经单独整理为 [stage-4-closeout.md](./stage-4-closeout.md)，后续判断是否进入阶段 5 以该文档为准。
-阶段 5 的收官标准已经单独整理为 [stage-5-closeout.md](./stage-5-closeout.md)，后续判断是否进入阶段 6 以该文档为准。
-阶段 6 的收官标准已经单独整理为 [stage-6-closeout.md](./stage-6-closeout.md)，后续判断是否继续进入更高阶平台化扩展以前者为准。
-阶段 7 的收官标准已经单独整理为 [stage-7-closeout.md](./stage-7-closeout.md)，后续判断是否进入 Agent 自主扩展 P1 以该文档为准。
+1. **Domain Contracts (Stage 8)**：定义了 AI Research、Data Science、Experiments、Lifecycle、Organization 和 Compute 六大共享类型体系。
+2. **Data Science Platform (Stage 9)**：Dataset Registry、Feature Registry、Data Quality 七项自动化检查、数据版本激活策略、Feature Lineage 血缘追踪。
+3. **Research OS (Stage 9)**：Research Workspace 带假设管理、Experiment Registry、Model Registry。
+4. **Backtest Lab (Stage 9)**：Reproducible backtest specs (hash-stable)、Commission/Slippage models、Regime Attribution、Walk-Forward Analysis、Robustness Diagnostics。
+5. **Strategy Lifecycle (Stage 10)**：8 个 Promotion Gates、Evidence-based 晋升(research→paper→live)、Strategy Registry。
+6. **Risk Control Plane (Stage 10)**：Policy Engine (11 条规则)、Pre-trade Risk Assessment (promotion/execution/order batch)、Kill Switch。
+7. **Execution Control Plane (Stage 10)**：Order Lifecycle State Machine (algo orders + legs)、Recovery Workflows (diagnose → plan → execute)、Broker Adapter。
+8. **Compute Platform (Stage 10)**：Compute Job Store、Backtest Dispatcher、Worker Job Handlers。
+9. **Agent Collaboration (Stage 10)**：Agent Tools Registry、Review Workflows (5 types)、Multi-Agent Review。
+10. **Institutional Operations (Stage 10)**：Organization/Workspace/Team Store、Permission Policy (9 institutional actions × 5 roles)、Audit Report Store (6 report types + export lifecycle)。
+11. **Open Ecosystem (Stage 11)**：Connector Registry、Data Connector + Ingestion Jobs、Broker Connector、Strategy Package Manifest + Validator。
+12. **Observability & Hardening (Stage 12)**：PlatformEventBus (13 event types)、Observability Dashboard (health matrix + event stream + artifact integrity)、6 Artifact Integrity Checks、Maintenance CLI。
 
-### 阶段 2 研究与策略闭环
-
-1. 把 `strategy / backtest` 从静态 research snapshot 升级为真实任务执行与结果持久化模块。
-2. 沉淀统一的策略注册、回测运行、绩效评估、参数优化和研究报告模型。
-3. 让策略输出稳定进入风控和执行前的候选决策接口。
-
-### 阶段 3 执行闭环与交易中台
-
-1. 把 `execution` 从计划骨架升级为真实订单状态机、持仓同步和失败补偿体系。
-2. 扩展 broker 适配边界，形成多券商接入和环境切换能力。
-3. 让审计、通知、风险、执行状态在控制面内形成完整闭环。
-
-### 阶段 4 风控与调度中台深化（已收官）
-
-1. 风险页已形成 `Risk Governance Workbench` 与 `Risk Middleware Policy Actions`，可围绕 drawdown、compliance、scheduler attention 和 incident 做统一治理。
-2. 调度侧已形成 `Scheduler Operations Workbench` 与 `Scheduler Orchestration Actions`，可围绕 scheduler windows、cycle drift、notifications 和 incidents 做统一编排。
-3. Risk 与 scheduler 现已共享 linkage 中台上下文，可围绕同一条 scheduler window、risk event、incident 和 notification 做统一排查与处置。
-
-### 阶段 5 Agent 受控协作（已收官）
-
-1. Agent 现已稳定落在 `session / intent / plan / analysis run / action request` 正式合同内。
-2. Agent workbench 已具备 `prompt studio / recent sessions / explanation detail / pending requests / operator timeline / runbook` 协作界面。
-3. 完成的 analysis session 现已可通过 `controlled handoff` 正式提交 action request，并继续走 risk、approval 和 downstream workflow contracts。
-4. Agent 的建议、请求、审批和留痕已稳定沉淀到 audit、notification、operator action 和 session timeline。
-
-### 阶段 6 生产化与专业化（已收官）
-
-1. control-plane storage 已具备 `file / db` adapter foundation，后续数据库化迁移可以在既有仓储合同内推进。
-2. 账户域已正式持久化 role template 与 access policy，权限不再只由 demo 常量驱动，而是支持默认权限、额外授予和显式移除。
-3. 账户域已补上 tenant / workspace foundation：session、account workspace、workspace memberships、workspace-level `role + grants + revokes` 与 current workspace 切换都已形成正式合同。
-4. 新的 control-plane 写入会自动附带当前 tenant / workspace scope metadata，为后续真正的多工作区过滤和隔离做准备。
-5. monitoring 与 operations workbench 已补齐 worker freshness、workflow retry posture、queue backlog posture 和 observability summary，为值守与运维界面提供统一运行姿态。
-6. control-plane maintenance 已具备 backup export、restore dry run、integrity check 和 workflow retry repair，并提供 API 与 CLI 双入口。
-7. `docs/deployment.md` 与 `check:runtime-env` 已把环境变量、adapter 选择、启动顺序、backup/restore 和 readiness checklist 收敛为统一运行基线。
-8. 阶段 6 baseline tests 与 closeout 文档已把 production readiness contracts 正式纳入验收基线。
-9. `docs/control-plane-migrations.md` 已把 adapter 切换、migration planning、backup-before-migrate、rollback posture 和 repair sequencing 收敛成单独 runbook。
-
-## 当前阶段的具体建议
-
-1. 以阶段 1 到阶段 5 已稳定的 contracts 为前提，开始推进数据库、权限、缓存、可观测性和运维能力，不返工 Agent 的最小协作闭环。
-2. 继续让 Agent 消费现有 `research / execution / risk / scheduler / incidents / notifications` 的稳定 workbench 和 detail 数据，不新增绕过中台的平行链路。
-3. 把更高自主性能力留到后续阶段，在此之前继续守住 `risk / approval / execution` guardrails。
-4. 在阶段 6 推进过程中，持续用基线测试守住阶段 1 到阶段 5 已关闭阶段的合同稳定性。
+## 当前差距

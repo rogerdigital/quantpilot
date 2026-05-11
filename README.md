@@ -149,28 +149,28 @@ quantpilot/
 
 ### Current Status
 
-Platform skeleton is fully functional with research, backtest, execution, risk, and agent collaboration modules.
+Platform skeleton is fully functional with research, backtest, execution, risk, and agent collaboration modules. The institutional research platform roadmap (Stages 8-12) is complete, covering domain contracts, data science platform, research OS, backtest lab, strategy lifecycle, risk control plane, execution control plane, compute platform, agent collaboration, institutional operations, open ecosystem, and observability hardening.
 
-### Near-term (1-3 months)
+### Near-term
 
-- Domain contracts: Unified research, data science, experiment, and lifecycle shared types
-- Data science platform: Dataset registry, data quality checks, feature lineage
-- Research OS: Research workspace lifecycle, experiment registry, model registry
-- Backtest lab: Reproducible specs, cost models, regime attribution, robustness diagnostics
+- Real database migration (SQLite WAL → PostgreSQL)
+- Agent autonomy expansion (P1/P2)
+- Multi-tenant workspace isolation
+- Real-time market data integration
 
-### Mid-term (3-6 months)
+### Mid-term
 
-- Strategy lifecycle: Evidence-based promotion gates (paper → live)
-- Risk control plane: Policy engine, pre-trade assessment, kill switch
-- Execution control plane: Order lifecycle, broker adapter boundary, recovery workflows
-- Compute platform: Job scheduler, artifact management, async task runner
+- Production broker integration (multiple providers)
+- Advanced portfolio optimization
+- ML model serving pipeline
+- Cross-strategy correlation analysis
 
-### Long-term (6-12 months)
+### Long-term
 
-- AI research platform: Governed agent tools, review workflows, evidence citations
-- Institutional operations: Multi-account, fine-grained permissions, compliance audit
-- Open ecosystem: Data/broker/model connectors, strategy package marketplace
-- Observability and hardening: Structured events, integrity checks, deployment governance
+- Multi-asset class support (options, futures, crypto)
+- Distributed compute cluster
+- External strategy marketplace
+- Regulatory reporting automation
 
 ---
 
