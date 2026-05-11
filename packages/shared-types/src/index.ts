@@ -9,4 +9,5 @@ export * from './lifecycle.ts';
 export * from './organization.ts';
 export * from './research.ts';
 export * from './risk-policy.ts';
+export * from './strategy-package.ts';
 export * from './trading.ts';
