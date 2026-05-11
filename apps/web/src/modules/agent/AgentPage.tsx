@@ -3,6 +3,7 @@ import { EmptyState, SectionHeader, TopMeta } from '../../components/layout/Cons
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import { copy, useLocale } from '../console/console.i18n.tsx';
 import { translateRiskLevel } from '../console/console.utils.ts';
+import { AgentBoundaryPanel } from './AgentBoundaryPanel.tsx';
 import {
   agentActionBtn,
   agentActionBtnIcon,
@@ -61,6 +62,7 @@ import {
   agentThesis,
   agentWarningItem,
 } from './AgentPage.css.ts';
+import { AgentReviewQueue } from './AgentReviewQueue.tsx';
 import { useAgentTools } from './useAgentTools.ts';
 
 const promptSuggestions = {
@@ -322,6 +324,7 @@ export default function AgentPage() {
   const transcriptRef = useRef<HTMLDivElement>(null);
   const {
     tools: _tools,
+    toolPolicy,
     workbench,
     sessionDetail,
     selectedSessionId,
@@ -956,6 +959,23 @@ export default function AgentPage() {
               </div>
             ))}
           </div>
+        </article>
+      </section>
+
+      {/* Agent Boundaries & Review Queue */}
+      <section
+        className="panel-grid panel-grid-wide"
+        id="agent-boundaries"
+        style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}
+      >
+        <article className="panel" style={{ padding: '16px' }}>
+          <AgentBoundaryPanel
+            allowedTools={toolPolicy?.allowed || []}
+            forbiddenTools={toolPolicy?.forbidden || []}
+          />
+        </article>
+        <article className="panel" style={{ padding: '16px' }}>
+          <AgentReviewQueue reviews={[]} loading={loading} />
         </article>
       </section>
 

@@ -8,11 +8,13 @@ import {
   type AgentPlanPayload,
   type AgentSessionActionRequestPayload,
   type AgentSessionDetailPayload,
+  type AgentToolPolicyPayload,
   type AgentWorkbenchPayload,
   createAgentIntent,
   createAgentPlan,
   createAgentSessionActionRequest,
   fetchAgentSessionDetail,
+  fetchAgentToolPolicy,
   fetchAgentTools,
   fetchAgentWorkbench,
   runAgentAnalysis,
@@ -20,6 +22,7 @@ import {
 
 type AgentToolsState = {
   tools: AgentToolDefinition[];
+  toolPolicy: AgentToolPolicyPayload | null;
   workbench: AgentWorkbenchPayload | null;
   sessionDetail: AgentSessionDetailPayload | null;
   selectedSessionId: string;
@@ -33,6 +36,7 @@ export function useAgentTools() {
   const { locale } = useLocale();
   const [state, setState] = useState<AgentToolsState>({
     tools: [],
+    toolPolicy: null,
     workbench: null,
     sessionDetail: null,
     selectedSessionId: '',
@@ -74,7 +78,11 @@ export function useAgentTools() {
   };
 
   const load = async (sessionId = '') => {
-    const [toolList, workbench] = await Promise.all([fetchAgentTools(), fetchAgentWorkbench()]);
+    const [toolList, workbench, toolPolicy] = await Promise.all([
+      fetchAgentTools(),
+      fetchAgentWorkbench(),
+      fetchAgentToolPolicy(),
+    ]);
     const nextSessionId =
       sessionId || state.selectedSessionId || String(workbench.queues.recentSessions[0]?.id || '');
     const detail = nextSessionId ? await fetchAgentSessionDetail(nextSessionId) : null;
@@ -82,6 +90,7 @@ export function useAgentTools() {
     setState((current) => ({
       ...current,
       tools: toolList.tools,
+      toolPolicy,
       workbench,
       sessionDetail: detail,
       selectedSessionId: nextSessionId,

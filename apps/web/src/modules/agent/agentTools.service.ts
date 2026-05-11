@@ -296,3 +296,16 @@ export async function createAgentSessionActionRequest(
     body: JSON.stringify(payload),
   });
 }
+
+export type AgentToolPolicyPayload = {
+  ok: boolean;
+  allowed: Array<{ name: string; category: string; description: string }>;
+  forbidden: Array<{ name: string; reason: string }>;
+};
+
+export async function fetchAgentToolPolicy(): Promise<AgentToolPolicyPayload> {
+  return fetchJson(`${API_PREFIX}/agent/tools/policy`, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  });
+}

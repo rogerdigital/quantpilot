@@ -96,6 +96,17 @@ const baseWorkbenchWithGovernance = {
 
 const baseToolsState = {
   tools: [],
+  toolPolicy: {
+    ok: true,
+    allowed: [
+      { name: 'read_research_workspace', category: 'read', description: 'Read research workspace' },
+      { name: 'summarize_dataset_quality', category: 'read', description: 'Summarize quality' },
+    ],
+    forbidden: [
+      { name: 'place_live_order', reason: 'Agent cannot place live orders' },
+      { name: 'approve_live_promotion', reason: 'Agent cannot be final approver' },
+    ],
+  },
   workbench: baseWorkbenchWithGovernance,
   sessionDetail: null,
   selectedSessionId: '',
@@ -137,5 +148,38 @@ describe('AgentPage governance panel', () => {
 
     expect(html).toContain('Agent Governance');
     expect(html).toContain('manual_only');
+  });
+});
+
+describe('AgentPage boundary panel', () => {
+  it('renders allowed and forbidden tool lists from policy', () => {
+    mockUseAgentTools.mockReturnValue(baseToolsState);
+
+    const html = renderToStaticMarkup(<AgentPage />);
+
+    expect(html).toContain('Agent Boundaries');
+    expect(html).toContain('Allowed (2)');
+    expect(html).toContain('Forbidden (2)');
+    expect(html).toContain('read research workspace');
+    expect(html).toContain('place live order');
+    expect(html).toContain('Agent cannot place live orders');
+  });
+
+  it('shows human-controlled disclaimer', () => {
+    mockUseAgentTools.mockReturnValue(baseToolsState);
+
+    const html = renderToStaticMarkup(<AgentPage />);
+
+    expect(html).toContain('Approval actions remain human/policy controlled');
+  });
+});
+
+describe('AgentPage review queue', () => {
+  it('renders empty review queue when no reviews exist', () => {
+    mockUseAgentTools.mockReturnValue(baseToolsState);
+
+    const html = renderToStaticMarkup(<AgentPage />);
+
+    expect(html).toContain('No agent reviews pending');
   });
 });
