@@ -28,6 +28,9 @@ const EMPTY_WORKBENCH: RiskWorkbenchResponse = {
   },
   lanes: [],
   runbook: [],
+  policies: [],
+  assessments: [],
+  killSwitch: { active: false, activatedAt: null, activatedBy: null, reason: null },
   reviewQueue: {
     riskEvents: [],
     executionPlans: [],

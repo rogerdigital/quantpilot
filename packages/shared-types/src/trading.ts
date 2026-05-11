@@ -2099,6 +2099,25 @@ export type RiskWorkbenchResponse = {
     detail: string;
     count: number;
   }>;
+  policies?: Array<{
+    id: string;
+    name: string;
+    rules: { dimension: string; limit: unknown; severity: string }[];
+    isActive: boolean;
+  }>;
+  assessments?: Array<{
+    entityId: string;
+    entityType: string;
+    passed: boolean;
+    overallSeverity: string;
+    findings: { dimension: string; message: string; severity: string }[];
+  }>;
+  killSwitch?: {
+    active: boolean;
+    activatedAt: string | null;
+    activatedBy: string | null;
+    reason: string | null;
+  };
   reviewQueue: {
     riskEvents: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestRiskEvent']>>;
     executionPlans: ExecutionPlanRecord[];
