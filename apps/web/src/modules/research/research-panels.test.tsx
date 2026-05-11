@@ -1,3 +1,4 @@
+import type { PromotionGate } from '@shared-types/lifecycle.ts';
 import type { BacktestRunItem, StrategyCatalogItem } from '@shared-types/trading.ts';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -956,5 +957,120 @@ describe('ExperimentComparisonPanel', () => {
     const { ExperimentComparisonPanel } = await import('./ExperimentComparisonPanel.tsx');
     const html = renderToStaticMarkup(<ExperimentComparisonPanel runs={[]} locale="en" />);
     expect(html).toContain('No experiment runs to compare');
+  });
+});
+
+describe('StrategyPromotionPanel', () => {
+  it('renders empty state', async () => {
+    const { StrategyPromotionPanel } = await import('./StrategyPromotionPanel.tsx');
+    const html = renderToStaticMarkup(<StrategyPromotionPanel promotion={null} locale="en" />);
+    expect(html).toContain('No promotion request');
+  });
+
+  it('renders promotion status and decisions', async () => {
+    const { StrategyPromotionPanel } = await import('./StrategyPromotionPanel.tsx');
+    const promotion = {
+      id: 'p1',
+      strategyCandidateId: 's1',
+      strategyVersionId: 'sv1',
+      status: 'approved_for_paper' as const,
+      gates: [],
+      decisions: [
+        {
+          id: 'd1',
+          promotionRequestId: 'p1',
+          actor: 'risk-mgr',
+          actorType: 'human' as const,
+          role: 'risk_manager',
+          action: 'approve_paper' as const,
+          reason: 'Metrics acceptable',
+          evidenceLinks: [],
+          timestamp: '2026-05-10T10:00:00Z',
+          metadata: {},
+        },
+      ],
+      requestedBy: 'researcher-1',
+      createdAt: '2026-05-10T09:00:00Z',
+      updatedAt: '2026-05-10T10:00:00Z',
+      metadata: {},
+    };
+    const html = renderToStaticMarkup(<StrategyPromotionPanel promotion={promotion} locale="en" />);
+    expect(html).toContain('approved for paper');
+    expect(html).toContain('risk-mgr');
+    expect(html).toContain('Metrics acceptable');
+  });
+});
+
+describe('PromotionGateChecklist', () => {
+  it('renders empty state', async () => {
+    const { PromotionGateChecklist } = await import('./PromotionGateChecklist.tsx');
+    const html = renderToStaticMarkup(<PromotionGateChecklist gates={[]} locale="en" />);
+    expect(html).toContain('No gate data');
+  });
+
+  it('renders gates with status', async () => {
+    const { PromotionGateChecklist } = await import('./PromotionGateChecklist.tsx');
+    const gates = [
+      {
+        key: 'dataset_quality',
+        label: 'Dataset Quality',
+        status: 'passed' as const,
+        evidenceId: 'dq-1',
+        evaluatedAt: '2026-05-10T08:00:00Z',
+        evaluatedBy: 'system',
+        reason: 'All checks pass',
+        metadata: {},
+      },
+      {
+        key: 'robustness_diagnostics',
+        label: 'Robustness',
+        status: 'failed' as const,
+        evidenceId: null,
+        evaluatedAt: '2026-05-10T08:00:00Z',
+        evaluatedBy: 'system',
+        reason: 'High overfit risk',
+        metadata: {},
+      },
+    ];
+    const html = renderToStaticMarkup(
+      <PromotionGateChecklist gates={gates as PromotionGate[]} locale="en" />
+    );
+    expect(html).toContain('Dataset Quality');
+    expect(html).toContain('passed');
+    expect(html).toContain('Robustness');
+    expect(html).toContain('failed');
+    expect(html).toContain('High overfit risk');
+  });
+});
+
+describe('DecisionRecordTimeline', () => {
+  it('renders empty state', async () => {
+    const { DecisionRecordTimeline } = await import('./DecisionRecordTimeline.tsx');
+    const html = renderToStaticMarkup(<DecisionRecordTimeline records={[]} locale="en" />);
+    expect(html).toContain('No decision records');
+  });
+
+  it('renders timeline entries', async () => {
+    const { DecisionRecordTimeline } = await import('./DecisionRecordTimeline.tsx');
+    const records = [
+      {
+        id: 'dr-1',
+        entityType: 'promotion' as const,
+        entityId: 'p-1',
+        actor: 'risk-mgr',
+        actorType: 'human' as const,
+        role: 'risk_manager',
+        action: 'approve_paper',
+        reason: 'Meets criteria',
+        evidenceLinks: [],
+        timestamp: '2026-05-10T10:00:00Z',
+        metadata: {},
+      },
+    ];
+    const html = renderToStaticMarkup(<DecisionRecordTimeline records={records} locale="en" />);
+    expect(html).toContain('risk-mgr');
+    expect(html).toContain('risk_manager');
+    expect(html).toContain('approve_paper');
+    expect(html).toContain('Meets criteria');
   });
 });
