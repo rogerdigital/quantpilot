@@ -749,3 +749,212 @@ describe('research panel primitives', () => {
     expect(html).toContain('Inspect');
   });
 });
+
+describe('ResearchIdeaLifecyclePanel', () => {
+  it('renders pipeline summary with stage counts', async () => {
+    const { ResearchIdeaLifecyclePanel } = await import('./ResearchIdeaLifecyclePanel.tsx');
+    const html = renderToStaticMarkup(
+      <ResearchIdeaLifecyclePanel
+        ideas={[
+          {
+            id: 'idea-1',
+            workspaceId: 'ws-1',
+            title: 'Mom Factor',
+            hypothesis: {
+              statement: 'Momentum works',
+              rationale: 'R',
+              expectedOutcome: 'E',
+              falsificationCriteria: 'F',
+              relatedLiterature: [],
+            },
+            market: 'US',
+            assetUniverse: [],
+            timeHorizon: '1Y',
+            status: 'idea',
+            owner: 'r1',
+            ownerRole: 'researcher',
+            tags: [],
+            decisionRecords: [],
+            linkedDatasetIds: [],
+            linkedFeatureSetIds: [],
+            linkedExperimentIds: [],
+            linkedBacktestIds: [],
+            createdAt: '',
+            updatedAt: '',
+            metadata: {},
+          },
+          {
+            id: 'idea-2',
+            workspaceId: 'ws-1',
+            title: 'Value Factor',
+            hypothesis: {
+              statement: 'Value stocks outperform',
+              rationale: 'R',
+              expectedOutcome: 'E',
+              falsificationCriteria: 'F',
+              relatedLiterature: [],
+            },
+            market: 'US',
+            assetUniverse: [],
+            timeHorizon: '1Y',
+            status: 'experiment_running',
+            owner: 'r1',
+            ownerRole: 'researcher',
+            tags: [],
+            decisionRecords: [],
+            linkedDatasetIds: ['ds-1'],
+            linkedFeatureSetIds: ['fs-1'],
+            linkedExperimentIds: ['exp-1'],
+            linkedBacktestIds: [],
+            createdAt: '',
+            updatedAt: '',
+            metadata: {},
+          },
+        ]}
+        locale="en"
+      />
+    );
+    expect(html).toContain('Research Pipeline');
+    expect(html).toContain('Idea: 1');
+    expect(html).toContain('Experiment Running: 1');
+    expect(html).toContain('Momentum works');
+    expect(html).toContain('Value stocks outperform');
+  });
+
+  it('renders empty state', async () => {
+    const { ResearchIdeaLifecyclePanel } = await import('./ResearchIdeaLifecyclePanel.tsx');
+    const html = renderToStaticMarkup(<ResearchIdeaLifecyclePanel ideas={[]} locale="en" />);
+    expect(html).toContain('No research ideas');
+  });
+});
+
+describe('ResearchEvidencePanel', () => {
+  it('renders evidence chain for an idea', async () => {
+    const { ResearchEvidencePanel } = await import('./ResearchEvidencePanel.tsx');
+    const html = renderToStaticMarkup(
+      <ResearchEvidencePanel
+        idea={{
+          id: 'idea-1',
+          workspaceId: 'ws-1',
+          title: 'Test',
+          hypothesis: {
+            statement: 'Momentum persists',
+            rationale: 'R',
+            expectedOutcome: 'E',
+            falsificationCriteria: 'F',
+            relatedLiterature: [],
+          },
+          market: 'US',
+          assetUniverse: [],
+          timeHorizon: '1Y',
+          status: 'experiment_reviewed',
+          owner: 'r1',
+          ownerRole: 'researcher',
+          tags: [],
+          decisionRecords: [],
+          linkedDatasetIds: ['ds-001', 'ds-002'],
+          linkedFeatureSetIds: ['fs-001'],
+          linkedExperimentIds: ['exp-001'],
+          linkedBacktestIds: ['bt-001'],
+          createdAt: '',
+          updatedAt: '',
+          metadata: {},
+        }}
+        locale="en"
+      />
+    );
+    expect(html).toContain('Evidence Chain');
+    expect(html).toContain('Momentum persists');
+    expect(html).toContain('ds-001, ds-002');
+    expect(html).toContain('fs-001');
+    expect(html).toContain('exp-001');
+    expect(html).toContain('bt-001');
+  });
+
+  it('renders empty state when no idea selected', async () => {
+    const { ResearchEvidencePanel } = await import('./ResearchEvidencePanel.tsx');
+    const html = renderToStaticMarkup(<ResearchEvidencePanel idea={null} locale="en" />);
+    expect(html).toContain('Select a research idea to view evidence chain');
+  });
+});
+
+describe('ExperimentComparisonPanel', () => {
+  it('renders comparison table with metrics', async () => {
+    const { ExperimentComparisonPanel } = await import('./ExperimentComparisonPanel.tsx');
+    const html = renderToStaticMarkup(
+      <ExperimentComparisonPanel
+        runs={[
+          {
+            id: 'run-001',
+            experimentId: 'exp-001',
+            status: 'completed',
+            snapshot: {
+              datasetVersionId: 'dsv-001',
+              featureVersionId: 'fv-001',
+              codeVersion: 'abc',
+              parameters: [],
+              seed: 42,
+              runtimeEnvironment: 'node-22',
+            },
+            metrics: [
+              {
+                name: 'sharpe',
+                direction: 'higher_is_better',
+                value: { kind: 'scalar', value: 1.5 },
+                metadata: {},
+              },
+            ],
+            artifactIds: ['art-001'],
+            isCandidate: true,
+            startedAt: '',
+            completedAt: '',
+            createdAt: '',
+            metadata: {},
+          },
+          {
+            id: 'run-002',
+            experimentId: 'exp-001',
+            status: 'completed',
+            snapshot: {
+              datasetVersionId: 'dsv-001',
+              featureVersionId: 'fv-002',
+              codeVersion: 'def',
+              parameters: [],
+              seed: 42,
+              runtimeEnvironment: 'node-22',
+            },
+            metrics: [
+              {
+                name: 'sharpe',
+                direction: 'higher_is_better',
+                value: { kind: 'scalar', value: 1.2 },
+                metadata: {},
+              },
+            ],
+            artifactIds: [],
+            isCandidate: false,
+            startedAt: '',
+            completedAt: '',
+            createdAt: '',
+            metadata: {},
+          },
+        ]}
+        locale="en"
+      />
+    );
+    expect(html).toContain('Experiment Comparison');
+    expect(html).toContain('run-001');
+    expect(html).toContain('run-002');
+    expect(html).toContain('sharpe');
+    expect(html).toContain('1.5000');
+    expect(html).toContain('1.2000');
+    expect(html).toContain('dsv-001');
+    expect(html).toContain('fv-002');
+  });
+
+  it('renders empty state', async () => {
+    const { ExperimentComparisonPanel } = await import('./ExperimentComparisonPanel.tsx');
+    const html = renderToStaticMarkup(<ExperimentComparisonPanel runs={[]} locale="en" />);
+    expect(html).toContain('No experiment runs to compare');
+  });
+});
