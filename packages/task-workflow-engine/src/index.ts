@@ -7,6 +7,7 @@ import {
   applyControlPlaneResolution,
   buildCyclePayload,
 } from '../../trading-engine/src/runtime.js';
+import { executeAgentReviewWorkflow } from './agent-review-workflows.js';
 
 const USE_MOCK = () => process.env.QUANTPILOT_USE_MOCK_DATA === 'true';
 
@@ -1514,6 +1515,12 @@ export async function executeQueuedWorkflow(workflowRun, context) {
         result: { ok: true, manual: true },
       }),
     };
+  }
+  if (workflowRun.workflowId?.startsWith('task-orchestrator.agent-review.')) {
+    return executeAgentReviewWorkflow(workflowRun.payload, context, {
+      workflow: workflowRun,
+      trigger: 'worker',
+    });
   }
   return {
     ok: false,
