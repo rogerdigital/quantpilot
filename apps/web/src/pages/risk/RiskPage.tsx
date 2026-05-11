@@ -18,6 +18,9 @@ import {
 } from '../../modules/console/console.utils.ts';
 import { buildDeepLink } from '../../modules/console/deepLinks.ts';
 import { formatActionGuardNotice } from '../../modules/permissions/permissionCopy.ts';
+import { KillSwitchPanel } from '../../modules/risk/KillSwitchPanel.tsx';
+import { RiskAssessmentPanel } from '../../modules/risk/RiskAssessmentPanel.tsx';
+import { RiskPolicyEditor } from '../../modules/risk/RiskPolicyEditor.tsx';
 import { useRiskWorkbench } from '../../modules/risk/useRiskWorkbench.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import {
@@ -887,6 +890,22 @@ function RiskPage() {
             : 'VaR/CVaR calculations, stress testing, and correlation analysis.'}
         </div>
       </div>
+      <section className="panel-grid">
+        <RiskPolicyEditor policies={workbench.policies || []} locale={locale} />
+        <RiskAssessmentPanel assessments={workbench.assessments || []} locale={locale} />
+        <KillSwitchPanel
+          state={
+            workbench.killSwitch || {
+              active: false,
+              activatedAt: null,
+              activatedBy: null,
+              reason: null,
+            }
+          }
+          locale={locale}
+        />
+      </section>
+
       <section className="panel-grid panel-grid-3">
         <article className="panel">
           <div className="panel-head">

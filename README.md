@@ -145,23 +145,32 @@ quantpilot/
 
 ## Roadmap
 
+**Long-term direction:** AI-native quantitative research and execution control plane.
+
 ### Current Status
 
-Stage 1-7 completed. Platform skeleton is fully functional with research, backtest, execution, risk, and agent collaboration modules.
+Platform skeleton is fully functional with research, backtest, execution, risk, and agent collaboration modules. The institutional research platform roadmap (Stages 8-12) is complete, covering domain contracts, data science platform, research OS, backtest lab, strategy lifecycle, risk control plane, execution control plane, compute platform, agent collaboration, institutional operations, open ecosystem, and observability hardening.
 
-### Near-term (1-3 months)
+### Near-term
 
-- Broker integration: Alpaca, Interactive Brokers API connectors
-- Agent governance: Fine-grained permission control, risk policy configuration
-- Monitoring & alerts: Real-time risk metrics, anomaly detection, notifications
-- Documentation: API docs, user manual, contribution guide
+- Real database migration (SQLite WAL → PostgreSQL)
+- Agent autonomy expansion (P1/P2)
+- Multi-tenant workspace isolation
+- Real-time market data integration
 
-### Long-term (6-12 months)
+### Mid-term
 
-- Multi-strategy multi-account: Strategy portfolio management, account isolation
-- Institutional-grade risk: Stress testing, scenario analysis, compliance reports
-- Open-source ecosystem: Plugin architecture, third-party strategy marketplace
-- Cloud-native deployment: Docker, Kubernetes, multi-tenancy
+- Production broker integration (multiple providers)
+- Advanced portfolio optimization
+- ML model serving pipeline
+- Cross-strategy correlation analysis
+
+### Long-term
+
+- Multi-asset class support (options, futures, crypto)
+- Distributed compute cluster
+- External strategy marketplace
+- Regulatory reporting automation
 
 ---
 
@@ -169,10 +178,13 @@ Stage 1-7 completed. Platform skeleton is fully functional with research, backte
 
 - Browser never holds real broker credentials
 - Remote order placement goes through the server gateway only
-- Agents cannot place real trades directly
-- Risk and approval controls cannot be bypassed
+- Agents cannot place real trades directly — all agent actions are advisory until accepted by a human or policy
+- Risk and approval controls cannot be bypassed; kill switch is server-side enforced
 - `simulated`, `paper`, and `live` modes are surfaced through API health and the operator UI
-- This is not a production unattended live-trading deployment
+- `live` mode requires server-side environment validation, explicit risk acknowledgement, and promotion evidence (research record, backtest record, risk assessment, execution plan)
+- All strategy promotions must carry research evidence, backtest evidence, risk evidence, and execution evidence
+- This platform is a controlled research and execution control plane, not a production unattended trading bot or stock recommendation tool
+- QuantPilot does not promise alpha, returns, or unsupervised live trading capability
 
 ---
 

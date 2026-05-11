@@ -2,6 +2,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createControlPlaneRuntime } from '../packages/control-plane-runtime/src/index.js';
+import { runIntegrityChecks } from '../packages/control-plane-store/src/artifact-integrity.js';
 import { createControlPlaneContext } from '../packages/control-plane-store/src/context.js';
 import {
   createControlPlaneStore,
@@ -103,6 +104,16 @@ async function main() {
         startedAt: options.now || new Date().toISOString(),
       })
     );
+    return;
+  }
+
+  if (command === 'artifact-integrity') {
+    const report = runIntegrityChecks({
+      artifacts: [],
+      datasets: [],
+      promotions: [],
+    });
+    printJson(report);
     return;
   }
 

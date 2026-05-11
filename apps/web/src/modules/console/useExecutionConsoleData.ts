@@ -36,6 +36,22 @@ type ExecutionConsoleDataState = {
   workbench: ExecutionWorkbenchResponse | null;
   workflowRuns: WorkflowRunRecord[];
   operatorActions: OperatorActionItem[];
+  evidence: {
+    strategyVersion?: string;
+    promotionRequestId?: string;
+    riskAssessmentId?: string;
+    brokerAccountId?: string;
+    approvalState?: string;
+    riskStatus?: string;
+    reconciliationStatus?: string;
+  } | null;
+  recoveryPlan: {
+    orderId: string;
+    cases: string[];
+    actions: Array<{ case: string; action: string; detail: string; timestamp: string }>;
+    resolved: boolean;
+    escalated: boolean;
+  } | null;
   loading: boolean;
   error: string;
 };
@@ -49,6 +65,8 @@ export function useExecutionConsoleData(refreshKey?: string | number) {
     workbench: null,
     workflowRuns: [],
     operatorActions: [],
+    evidence: null,
+    recoveryPlan: null,
     loading: true,
     error: '',
   });
@@ -81,22 +99,35 @@ export function useExecutionConsoleData(refreshKey?: string | number) {
           actionResponse,
         ]) => {
           if (!active) return;
+          const entries = Array.isArray(workbenchResponse?.entries)
+            ? workbenchResponse.entries
+            : Array.isArray(ledgerResponse?.entries)
+              ? ledgerResponse.entries
+              : [];
+          const firstPlan = entries[0]?.plan;
           setState({
             runtimeEvents: Array.isArray(runtimeResponse?.events) ? runtimeResponse.events : [],
             accountSnapshots: Array.isArray(snapshotResponse?.snapshots)
               ? snapshotResponse.snapshots
               : [],
             handoffs: Array.isArray(handoffResponse?.handoffs) ? handoffResponse.handoffs : [],
-            ledgerEntries: Array.isArray(workbenchResponse?.entries)
-              ? workbenchResponse.entries
-              : Array.isArray(ledgerResponse?.entries)
-                ? ledgerResponse.entries
-                : [],
+            ledgerEntries: entries,
             workbench: workbenchResponse?.ok ? workbenchResponse : null,
             workflowRuns: Array.isArray(workflowResponse?.workflows)
               ? workflowResponse.workflows
               : [],
             operatorActions: Array.isArray(actionResponse?.actions) ? actionResponse.actions : [],
+            evidence: firstPlan
+              ? {
+                  strategyVersion: firstPlan.strategyVersion,
+                  promotionRequestId: firstPlan.promotionRequestId,
+                  riskAssessmentId: firstPlan.riskAssessmentId,
+                  brokerAccountId: firstPlan.brokerAccountId,
+                  approvalState: firstPlan.approvalState,
+                  riskStatus: firstPlan.riskStatus,
+                }
+              : null,
+            recoveryPlan: workbenchResponse?.recoveryPlan ?? null,
             loading: false,
             error: '',
           });
@@ -112,6 +143,8 @@ export function useExecutionConsoleData(refreshKey?: string | number) {
           workbench: null,
           workflowRuns: [],
           operatorActions: [],
+          evidence: null,
+          recoveryPlan: null,
           loading: false,
           error: error instanceof Error ? error.message : 'unknown error',
         });

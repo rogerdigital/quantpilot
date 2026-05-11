@@ -2,6 +2,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ChartCanvas, EmptyState } from '../../components/layout/ConsoleChrome.tsx';
 import { useLocale } from '../../modules/console/console.i18n.tsx';
 import { translateRuntimeText } from '../../modules/console/console.utils.ts';
+import { DecisionRecordTimeline } from '../../modules/research/DecisionRecordTimeline.tsx';
+import { PromotionGateChecklist } from '../../modules/research/PromotionGateChecklist.tsx';
+import { StrategyPromotionPanel } from '../../modules/research/StrategyPromotionPanel.tsx';
 import { useStrategyDetail } from '../../modules/research/useStrategyDetail.ts';
 import {
   detailBackRow,

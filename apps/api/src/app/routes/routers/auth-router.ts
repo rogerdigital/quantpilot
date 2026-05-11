@@ -1,5 +1,10 @@
 // @ts-nocheck
 import { createHash } from 'node:crypto';
+import {
+  evaluatePermissions,
+  getPermissionPolicy,
+  listAllActions,
+} from '../../../../../../packages/control-plane-runtime/src/permission-policy.js';
 import { signToken, verifyToken } from '../../../modules/auth/jwt-service.js';
 import { listPermissionDescriptors } from '../../../modules/auth/permission-catalog.js';
 import { getSession } from '../../../modules/auth/service.js';
@@ -371,6 +376,30 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
 
     // In production, verify TOTP code
     writeJson(res, 200, { ok: true, message: 'MFA verified' });
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/auth/permission-policy') {
+    const role = reqUrl.searchParams.get('role') || 'viewer';
+    const policy = getPermissionPolicy(role);
+    writeJson(res, 200, { ok: true, policy });
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/auth/permission-policy/evaluate') {
+    const body = await readJsonBody(req);
+    const { role, actions } = body || {};
+    if (!role || !Array.isArray(actions)) {
+      writeJson(res, 400, { ok: false, message: 'Missing role or actions array' });
+      return true;
+    }
+    const result = evaluatePermissions(role, actions);
+    writeJson(res, 200, { ok: true, ...result });
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/auth/permission-policy/actions') {
+    writeJson(res, 200, { ok: true, actions: listAllActions() });
     return true;
   }
 

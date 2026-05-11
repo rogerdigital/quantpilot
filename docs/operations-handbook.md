@@ -104,6 +104,7 @@ npm run control-plane:maintenance -- backup --output ./backups/control-plane.jso
 npm run control-plane:maintenance -- restore --input ./backups/control-plane.json --dry-run
 npm run control-plane:maintenance -- restore --input ./backups/control-plane.json
 npm run control-plane:maintenance -- repair-workflows --limit 20
+npm run control-plane:maintenance -- artifact-integrity
 ```
 
 If you are validating the embedded db path explicitly:
@@ -214,6 +215,84 @@ Authority mode ladder (most-restrictive-wins across all matching policies):
 
 `risk_off` or critical anomaly forces `stopped`; warn anomaly forces at least `ask_first`.
 
+## Platform Events
+
+The platform emits structured events for all major lifecycle changes. Events are categorized by type and severity:
+
+**Event types:** `dataset_ingested`, `data_quality_failed`, `experiment_started`, `experiment_completed`, `backtest_completed`, `promotion_submitted`, `promotion_approved`, `promotion_rejected`, `risk_breach_detected`, `execution_plan_submitted`, `order_lifecycle_changed`, `agent_review_produced`, `kill_switch_triggered`.
+
+**Severity levels:** `info`, `warning`, `critical`.
+
+Events can be filtered by type, severity, source, and namespace. The observability dashboard exposes system health matrix (healthy/degraded/blocked per service), live event stream, and artifact integrity status.
+
+## Artifact Integrity
+
+The `artifact-integrity` maintenance command runs 6 checks:
+
+1. **Missing metadata** — artifacts without descriptive metadata (warning)
+2. **Missing payload** — artifacts with no content body (error)
+3. **Hash mismatch** — payload hash doesn't match stored hash (error)
+4. **Orphaned** — artifact references a non-existent parent (warning)
+5. **Stale active dataset** — dataset version active beyond threshold (warning)
+6. **Promotion missing evidence** — promotion record with no attached evidence (error)
+
+```bash
+npm run control-plane:maintenance -- artifact-integrity
+```
+
+## Research & Strategy Lifecycle
+
+### Research Lifecycle
+
+1. **Workspace creation** — create research workspace with hypothesis
+2. **Idea management** — add ideas, transition status, record decisions
+3. **Experiment tracking** — link datasets, features, experiments
+4. **Model registry** — register and version models
+
+### Data Lifecycle
+
+1. **Dataset registration** — register datasets with schema and quality expectations
+2. **Ingestion** — run data quality checks (missing values, duplicates, monotonicity, staleness, extreme spikes, schema mismatch, symbol coverage)
+3. **Version activation** — only quality-passing ingestions activate new versions
+4. **Feature lineage** — track derivation chains from raw datasets to computed features
+
+### Strategy Promotion
+
+Strategies follow a gated promotion lifecycle: `research → candidate → paper_limited → paper_full → live_limited → live_full`.
+
+Each transition requires specific gates to pass:
+- `research_evidence` — validated hypothesis required
+- `dataset_quality` — no blocker-severity quality issues
+- `feature_leakage_check` — no target leakage detected
+- `backtest_reproducibility` — deterministic spec hash
+- `robustness_diagnostics` — acceptable overfit risk
+- `risk_compliance` — passes risk policy engine
+- `paper_observation` — sufficient paper trading days
+- `live_acknowledgement` — explicit operator sign-off
+
+### Paper / Live Boundaries
+
+- Paper and live modes are strictly isolated at the broker connector level
+- Live mode requires: `BROKER_API_KEY`, `BROKER_API_SECRET`, `BROKER_ACCOUNT_ID` env vars
+- Strategy packages cannot request `live:execute` permission by default
+- Max leverage capped at 5x, max drawdown at 50%
+
+## Agent Boundaries
+
+- Agents produce advisory outputs only — cannot directly execute trades
+- Agent actions go through risk assessment before execution
+- Agent tools registry controls which capabilities are available
+- Review workflows require evidence citations
+- Agent governance (authority ladder) can restrict agent autonomy based on risk conditions
+
+## Job Runner and Artifacts
+
+- Compute jobs track status: `queued → running → completed / failed`
+- Jobs produce artifacts stored with metadata + payload + content hash
+- Backtest dispatcher queues reproducible backtest specs
+- Data ingestion jobs run quality checks before activating versions
+- Worker job handlers process queued jobs asynchronously
+
 ## Related Documents
 
 - [README.md](../README.md)
@@ -221,3 +300,16 @@ Authority mode ladder (most-restrictive-wins across all matching policies):
 - [deployment.md](./deployment.md)
 - [control-plane-migrations.md](./control-plane-migrations.md)
 - [architecture/project-structure.md](./architecture/project-structure.md)
+
+## Platform Boundaries
+
+QuantPilot is a controlled quantitative research and execution control plane. It is not a stock recommendation tool, unattended live-trading bot, or retail trading app.
+
+**Non-negotiable constraints:**
+
+- Agents cannot directly place live orders. All agent outputs are advisory until a human or server-side policy accepts them.
+- `live` mode requires server-side environment validation, explicit operator acknowledgement, and complete promotion evidence (research → backtest → risk → execution).
+- Paper and live execution paths are strictly isolated. Mode confusion is treated as a critical incident.
+- Risk policies and kill switch are server-side enforced and cannot be bypassed by UI, agent, or API caller.
+- All strategy promotions require four categories of evidence: research record, backtest record, risk assessment, and execution plan.
+- Audit records are append-only. No deletion API exists for audit, decision, or governance events.

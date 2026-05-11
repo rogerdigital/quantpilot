@@ -7,6 +7,15 @@ const PERMISSION_LABELS: Record<string, { zh: string; en: string }> = {
   'execution:approve': { zh: '执行审批', en: 'execution approvals' },
   'account:write': { zh: '账户设置', en: 'account updates' },
   'operations:maintain': { zh: '运维维护', en: 'operations maintenance' },
+  'research:read': { zh: '研究查看', en: 'research read' },
+  'research:modify': { zh: '研究修改', en: 'research modify' },
+  'backtest:run': { zh: '回测执行', en: 'backtest execution' },
+  'promotion:approve_paper': { zh: 'Paper 环境审批', en: 'paper promotion approval' },
+  'promotion:approve_live': { zh: 'Live 环境审批', en: 'live promotion approval' },
+  'risk:edit_policy': { zh: '风控策略编辑', en: 'risk policy editing' },
+  'risk:kill_switch': { zh: '风控熔断触发', en: 'kill switch trigger' },
+  'broker:manage_credentials': { zh: '券商凭证管理', en: 'broker credential management' },
+  'audit:export_report': { zh: '审计报告导出', en: 'audit report export' },
 };
 
 const ACTION_LABELS: Record<string, { zh: string; en: string }> = {

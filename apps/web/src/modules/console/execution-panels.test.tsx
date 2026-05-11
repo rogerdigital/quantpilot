@@ -274,3 +274,104 @@ describe('useExecutionDetailPanels', () => {
     expect(result.selectedWorkflowStep).toBeNull();
   });
 });
+
+describe('ExecutionEvidencePanel', () => {
+  it('renders empty state', async () => {
+    const { renderToStaticMarkup } = await import('react-dom/server');
+    const { ExecutionEvidencePanel } = await import('./ExecutionEvidencePanel.tsx');
+    const html = renderToStaticMarkup(<ExecutionEvidencePanel evidence={null} locale="en" />);
+    expect(html).toContain('No evidence chain data');
+  });
+
+  it('renders evidence chain fields', async () => {
+    const { renderToStaticMarkup } = await import('react-dom/server');
+    const { ExecutionEvidencePanel } = await import('./ExecutionEvidencePanel.tsx');
+    const html = renderToStaticMarkup(
+      <ExecutionEvidencePanel
+        evidence={{
+          strategyVersion: 'v2.1',
+          promotionRequestId: 'promo-1',
+          riskAssessmentId: 'ra-1',
+          brokerAccountId: 'broker-1',
+          approvalState: 'required',
+          riskStatus: 'approved',
+          reconciliationStatus: 'aligned',
+        }}
+        locale="en"
+      />
+    );
+    expect(html).toContain('v2.1');
+    expect(html).toContain('promo-1');
+    expect(html).toContain('ra-1');
+    expect(html).toContain('broker-1');
+    expect(html).toContain('aligned');
+  });
+});
+
+describe('ExecutionRecoveryPanel', () => {
+  it('renders empty state', async () => {
+    const { renderToStaticMarkup } = await import('react-dom/server');
+    const { ExecutionRecoveryPanel } = await import('./ExecutionRecoveryPanel.tsx');
+    const html = renderToStaticMarkup(<ExecutionRecoveryPanel recoveryPlan={null} locale="en" />);
+    expect(html).toContain('No executions require recovery');
+  });
+
+  it('renders recovery plan with actions', async () => {
+    const { renderToStaticMarkup } = await import('react-dom/server');
+    const { ExecutionRecoveryPanel } = await import('./ExecutionRecoveryPanel.tsx');
+    const html = renderToStaticMarkup(
+      <ExecutionRecoveryPanel
+        recoveryPlan={{
+          orderId: 'order-1',
+          cases: ['submit_failed', 'position_mismatch'],
+          actions: [
+            {
+              case: 'submit_failed',
+              action: 'retry_submit',
+              detail: 'Retry with backoff',
+              timestamp: '2026-05-10T10:00:00Z',
+            },
+            {
+              case: 'position_mismatch',
+              action: 'reconcile',
+              detail: 'Full reconciliation',
+              timestamp: '2026-05-10T10:01:00Z',
+            },
+          ],
+          resolved: false,
+          escalated: false,
+        }}
+        locale="en"
+      />
+    );
+    expect(html).toContain('order-1');
+    expect(html).toContain('submit_failed');
+    expect(html).toContain('retry_submit');
+    expect(html).toContain('Pending');
+  });
+
+  it('renders resolved recovery plan', async () => {
+    const { renderToStaticMarkup } = await import('react-dom/server');
+    const { ExecutionRecoveryPanel } = await import('./ExecutionRecoveryPanel.tsx');
+    const html = renderToStaticMarkup(
+      <ExecutionRecoveryPanel
+        recoveryPlan={{
+          orderId: 'order-2',
+          cases: ['ack_lost'],
+          actions: [
+            {
+              case: 'ack_lost',
+              action: 'query_status',
+              detail: 'Query broker',
+              timestamp: '2026-05-10T10:00:00Z',
+            },
+          ],
+          resolved: true,
+          escalated: false,
+        }}
+        locale="en"
+      />
+    );
+    expect(html).toContain('Resolved');
+  });
+});

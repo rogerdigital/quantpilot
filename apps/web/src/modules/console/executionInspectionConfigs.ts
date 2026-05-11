@@ -160,3 +160,35 @@ export function getExecutionSnapshotInspectionConfig(
         : null,
   };
 }
+
+export function getExecutionEvidenceInspectionConfig(
+  locale: 'zh' | 'en',
+  selectedEntry: ExecutionLedgerEntry | null
+) {
+  return {
+    title: locale === 'zh' ? '执行证据链' : 'Execution Evidence Chain',
+    copy:
+      locale === 'zh'
+        ? '策略版本、升级申请、风控评估和券商账户的完整执行关联。'
+        : 'Full execution linkage: strategy version, promotion, risk assessment, and broker account.',
+    emptyMessage: !selectedEntry
+      ? locale === 'zh'
+        ? '先从执行计划账本选择一条记录。'
+        : 'Select an execution plan from the ledger first.'
+      : null,
+    fields: selectedEntry
+      ? {
+          strategyVersion: selectedEntry.plan.strategyVersion || '--',
+          promotionRequestId: selectedEntry.plan.promotionRequestId || '--',
+          riskAssessmentId: selectedEntry.plan.riskAssessmentId || '--',
+          brokerAccountId: selectedEntry.plan.brokerAccountId || '--',
+          reconciliationStatus:
+            selectedEntry.plan.lifecycleStatus === 'reconciled'
+              ? 'aligned'
+              : selectedEntry.plan.lifecycleStatus === 'mismatch'
+                ? 'mismatch'
+                : 'pending',
+        }
+      : null,
+  };
+}

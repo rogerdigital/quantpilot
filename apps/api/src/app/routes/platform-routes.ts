@@ -3,6 +3,9 @@ import { handleAnalyticsRoutes } from './routers/analytics-router.js';
 import { handleAuthRoutes } from './routers/auth-router.js';
 import { handleBacktestRoutes } from './routers/backtest-router.js';
 import { handleCollaborationRoutes } from './routers/collaboration-router.js';
+import { handleComplianceRoutes } from './routers/compliance-router.js';
+import { handleComputeRoutes } from './routers/compute-router.js';
+import { handleDataRoutes } from './routers/data-router.js';
 import { handleDocsRoutes } from './routers/docs-router.js';
 import { handleExecutionRoutes } from './routers/execution-router.js';
 import { handleExportRoutes } from './routers/export-router.js';
@@ -11,6 +14,7 @@ import { handleMarketRoutes } from './routers/market-router.js';
 import { handleMarketplaceRoutes } from './routers/marketplace-router.js';
 import { handleMonitoringRoutes } from './routers/monitoring-router.js';
 import { handleOperationsRoutes } from './routers/operations-router.js';
+import { handlePromotionRoutes } from './routers/promotion-router.js';
 import { handleResearchRoutes } from './routers/research-router.js';
 import { handleSseRoutes } from './routers/sse-router.js';
 import { handleStrategyRoutes } from './routers/strategy-router.js';
@@ -29,13 +33,17 @@ const routers: RouteHandler[] = [
   handleStrategyRoutes,
   handleBacktestRoutes,
   handleResearchRoutes,
+  handlePromotionRoutes,
   handleExecutionRoutes,
   handleTradingRoutes,
   handleMarketRoutes,
   handleMarketplaceRoutes,
   handleCollaborationRoutes,
+  handleComputeRoutes,
   handleAnalyticsRoutes,
+  handleDataRoutes,
   handleExportRoutes,
+  handleComplianceRoutes,
   handleDocsRoutes,
 ];
 

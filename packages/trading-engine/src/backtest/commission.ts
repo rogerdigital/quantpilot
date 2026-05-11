@@ -1,8 +1,9 @@
 export interface CommissionConfig {
-  model: 'fixed' | 'per_share' | 'percentage' | 'tiered';
+  model: 'fixed' | 'per_share' | 'percentage' | 'tiered' | 'bps';
   fixedAmount?: number; // For fixed model: flat fee per trade
   perShareAmount?: number; // For per_share model: e.g., 0.005 = $0.005/share
   percentage?: number; // For percentage model: e.g., 0.001 = 0.1%
+  bps?: number; // For bps model: basis points (e.g., 5 = 0.05%)
   minCommission?: number; // Minimum commission per trade
   maxCommission?: number; // Maximum commission per trade
 }
@@ -103,6 +104,25 @@ export function calcTieredCommission(
 }
 
 /**
+ * BPS commission model: fee in basis points of trade value.
+ * E.g., bps=5 means 0.05% of trade value.
+ */
+export function calcBpsCommission(
+  input: CommissionInput,
+  config: CommissionConfig
+): CommissionResult {
+  const bps = config.bps ?? 5;
+  const tradeValue = input.quantity * input.price;
+  const rawCommission = tradeValue * (bps / 10_000);
+  const commission = applyCaps(rawCommission, config);
+
+  return {
+    commission,
+    commissionPct: tradeValue > 0 ? commission / tradeValue : 0,
+  };
+}
+
+/**
  * Apply min/max caps to commission.
  */
 function applyCaps(commission: number, config: CommissionConfig): number {
@@ -127,6 +147,8 @@ export function calcCommission(input: CommissionInput, config: CommissionConfig)
       return calcPercentageCommission(input, config);
     case 'tiered':
       return calcTieredCommission(input, config);
+    case 'bps':
+      return calcBpsCommission(input, config);
     case 'fixed':
     default:
       return calcFixedCommission(input, config);

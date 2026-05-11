@@ -30,6 +30,7 @@ export const copy = {
       settings: '设置',
       marketplace: '策略市场',
       analytics: '绩效分析',
+      data: '数据平台',
     },
     labels: {
       language: '语言',
@@ -164,6 +165,7 @@ export const copy = {
       settings: ['系统设置', '管理运行模式、执行开关、参数和接入状态。'],
       marketplace: ['策略市场', '浏览和复制社区分享的量化策略。'],
       analytics: ['绩效分析', '查看策略绩效指标、风险分析和交易分布。'],
+      data: ['数据平台', '管理数据资产、数据质量报告和特征血缘，为策略研究提供可靠数据基础。'],
     },
     desk: {
       dashboard: 'Command Deck',
@@ -178,6 +180,7 @@ export const copy = {
       execution: 'Execution Desk',
       portfolio: 'Portfolio Desk',
       settings: 'Control Desk',
+      data: 'Data Desk',
     },
     slogans: {
       heroEyebrow: 'Autonomous Intelligence for Quantitative Trading',
@@ -226,6 +229,7 @@ export const copy = {
       settings: 'Settings',
       marketplace: 'Marketplace',
       analytics: 'Analytics',
+      data: 'Data',
     },
     labels: {
       language: 'Language',
@@ -387,6 +391,10 @@ export const copy = {
         'Analytics',
         'Review strategy performance metrics, risk analysis, and trade distribution.',
       ],
+      data: [
+        'Data Science',
+        'Manage data assets, quality reports, and feature lineage for reliable research foundations.',
+      ],
     },
     desk: {
       dashboard: 'Command Deck',
@@ -402,6 +410,7 @@ export const copy = {
       execution: 'Execution Desk',
       portfolio: 'Portfolio Desk',
       settings: 'Control Desk',
+      data: 'Data Desk',
     },
     slogans: {
       heroEyebrow: 'Autonomous Intelligence for Quantitative Trading',

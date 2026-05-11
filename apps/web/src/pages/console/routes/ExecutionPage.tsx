@@ -185,6 +185,8 @@ export function ExecutionPage() {
     audit: selectedExecutionAuditItems.length,
     actions: selectedExecutionActions.length,
     versions: selectedExecutionVersionItems.length,
+    evidence: selectedEntry ? 1 : 0,
+    recovery: 0,
   });
   const selectedLifecycleStatus =
     selectedEntry?.executionRun?.lifecycleStatus || selectedEntry?.plan.lifecycleStatus || '--';

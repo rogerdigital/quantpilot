@@ -11,6 +11,25 @@ export type OrderSide = 'BUY' | 'SELL';
 export type OrderType = 'market' | 'limit' | 'stop' | 'stop_limit';
 export type TimeInForce = 'day' | 'gtc' | 'ioc' | 'fok';
 
+export type LifecycleEventType =
+  | 'created'
+  | 'submitted'
+  | 'acknowledged'
+  | 'partial_fill'
+  | 'filled'
+  | 'cancelled'
+  | 'rejected'
+  | 'expired'
+  | 'reconciled'
+  | 'mismatch';
+
+export interface LifecycleEvent {
+  type: LifecycleEventType;
+  timestamp: string;
+  detail?: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface OrderLeg {
   symbol: string;
   side: OrderSide;
@@ -36,6 +55,12 @@ export interface AlgoOrder {
   status: OrderStatus;
   legs: OrderLeg[];
   params: Record<string, number | string>;
+  lifecycleEvents: LifecycleEvent[];
+  strategyVersion?: string;
+  promotionRequestId?: string;
+  riskAssessmentId?: string;
+  brokerAccountId?: string;
+  reconciliationStatus?: 'aligned' | 'mismatch' | 'pending';
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
@@ -82,6 +107,12 @@ export function transitionOrder(
 
   order.status = newStatus;
   order.updatedAt = new Date().toISOString();
+
+  order.lifecycleEvents.push({
+    type: newStatus as LifecycleEventType,
+    timestamp: order.updatedAt,
+    detail: reason,
+  });
 
   if (newStatus === 'cancelled') {
     order.cancelReason = reason;
@@ -185,7 +216,13 @@ export function createAlgoOrder(
   side: OrderSide,
   totalQty: number,
   params: Record<string, number | string>,
-  timeout?: number
+  timeout?: number,
+  evidence?: {
+    strategyVersion?: string;
+    promotionRequestId?: string;
+    riskAssessmentId?: string;
+    brokerAccountId?: string;
+  }
 ): AlgoOrder {
   const now = new Date().toISOString();
   return {
@@ -200,8 +237,42 @@ export function createAlgoOrder(
     status: 'pending',
     legs: [],
     params,
+    lifecycleEvents: [{ type: 'created', timestamp: now }],
+    strategyVersion: evidence?.strategyVersion,
+    promotionRequestId: evidence?.promotionRequestId,
+    riskAssessmentId: evidence?.riskAssessmentId,
+    brokerAccountId: evidence?.brokerAccountId,
+    reconciliationStatus: 'pending',
     createdAt: now,
     updatedAt: now,
     timeout,
   };
+}
+
+export function reconcileOrder(
+  order: AlgoOrder,
+  brokerFilledQty: number,
+  brokerAvgPrice: number
+): { aligned: boolean; detail: string } {
+  const localFilled = order.filledQty;
+  const qtyMatch = localFilled === brokerFilledQty;
+  const priceMatch =
+    order.avgFillPrice === 0 ||
+    brokerAvgPrice === 0 ||
+    Math.abs(order.avgFillPrice - brokerAvgPrice) < 0.01;
+  const aligned = qtyMatch && priceMatch;
+
+  order.reconciliationStatus = aligned ? 'aligned' : 'mismatch';
+  const eventType = aligned ? 'reconciled' : 'mismatch';
+  const detail = aligned
+    ? `Reconciled: ${brokerFilledQty} @ ${brokerAvgPrice}`
+    : `Mismatch: local ${localFilled} @ ${order.avgFillPrice}, broker ${brokerFilledQty} @ ${brokerAvgPrice}`;
+
+  order.lifecycleEvents.push({
+    type: eventType,
+    timestamp: new Date().toISOString(),
+    detail,
+  });
+
+  return { aligned, detail };
 }

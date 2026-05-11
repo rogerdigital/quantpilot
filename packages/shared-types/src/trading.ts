@@ -771,6 +771,13 @@ export type ExecutionWorkbenchResponse = {
     }>;
   };
   entries: ExecutionLedgerEntry[];
+  recoveryPlan?: {
+    orderId: string;
+    cases: string[];
+    actions: Array<{ case: string; action: string; detail: string; timestamp: string }>;
+    resolved: boolean;
+    escalated: boolean;
+  } | null;
 };
 
 export type ExecutionBulkActionResult = {
@@ -1308,6 +1315,10 @@ export type ExecutionPlanRecord = {
   executionRunId: string;
   strategyId: string;
   strategyName: string;
+  strategyVersion?: string;
+  promotionRequestId?: string;
+  riskAssessmentId?: string;
+  brokerAccountId?: string;
   mode: 'paper' | 'live';
   status: 'draft' | 'ready' | 'blocked';
   lifecycleStatus:
@@ -1320,7 +1331,9 @@ export type ExecutionPlanRecord = {
     | 'filled'
     | 'blocked'
     | 'cancelled'
-    | 'failed';
+    | 'failed'
+    | 'reconciled'
+    | 'mismatch';
   approvalState: 'pending' | 'not_required' | 'required';
   riskStatus: 'approved' | 'review' | 'blocked';
   summary: string;
@@ -2099,6 +2112,25 @@ export type RiskWorkbenchResponse = {
     detail: string;
     count: number;
   }>;
+  policies?: Array<{
+    id: string;
+    name: string;
+    rules: { dimension: string; limit: unknown; severity: string }[];
+    isActive: boolean;
+  }>;
+  assessments?: Array<{
+    entityId: string;
+    entityType: string;
+    passed: boolean;
+    overallSeverity: string;
+    findings: { dimension: string; message: string; severity: string }[];
+  }>;
+  killSwitch?: {
+    active: boolean;
+    activatedAt: string | null;
+    activatedBy: string | null;
+    reason: string | null;
+  };
   reviewQueue: {
     riskEvents: Array<NonNullable<MonitoringStatusSnapshot['recent']['latestRiskEvent']>>;
     executionPlans: ExecutionPlanRecord[];

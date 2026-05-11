@@ -75,6 +75,17 @@ npm run check:runtime-env -- --env-file .env
 - `QUANTPILOT_CONTROL_PLANE_NAMESPACE`
   控制面命名空间，不填时默认 `control-plane`
 
+### Broker Connector 变量 (Live Mode)
+
+- `BROKER_PROVIDER`
+  Broker connector provider identifier (required for all modes)
+- `BROKER_API_KEY`
+  Broker API key (required for live mode)
+- `BROKER_API_SECRET`
+  Broker API secret (required for live mode)
+- `BROKER_ACCOUNT_ID`
+  Broker account identifier (required for live mode)
+
 ## 推荐启动形态
 
 ### 1. 本地模拟环境

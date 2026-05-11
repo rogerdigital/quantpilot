@@ -35,6 +35,9 @@ const MarketplacePage = lazy(() =>
 const AnalyticsPage = lazy(() =>
   import('../../pages/analytics/AnalyticsPage.tsx').then((m) => ({ default: m.AnalyticsPage }))
 );
+const DataPage = lazy(() =>
+  import('../../pages/data/DataPage.tsx').then((m) => ({ default: m.DataPage }))
+);
 
 type ConsoleNavKey =
   | 'dashboard'
@@ -49,7 +52,8 @@ type ConsoleNavKey =
   | 'notifications'
   | 'settings'
   | 'marketplace'
-  | 'analytics';
+  | 'analytics'
+  | 'data';
 
 export type ConsoleRouteDefinition = {
   id: ConsoleNavKey;
@@ -166,6 +170,14 @@ export const CONSOLE_ROUTES: ConsoleRouteDefinition[] = [
     path: '/analytics',
     includeInSidebar: true,
     element: renderLazyRoute(<AnalyticsPage />),
+  },
+  {
+    id: 'data',
+    pageKey: 'data',
+    path: '/data',
+    aliases: ['/datasets', '/features'],
+    includeInSidebar: true,
+    element: renderLazyRoute(<DataPage />),
   },
 ];
 

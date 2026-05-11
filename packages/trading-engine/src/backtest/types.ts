@@ -8,17 +8,19 @@ export type OhlcvBar = {
 };
 
 export type SlippageModel = {
-  model: 'fixed' | 'volume' | 'spread';
+  model: 'fixed' | 'volume' | 'spread' | 'volatility_adjusted';
   fixedPct?: number;
   volumeImpact?: number;
   spreadBps?: number;
+  volatilityMultiplier?: number;
 };
 
 export type CommissionModel = {
-  model: 'fixed' | 'per_share' | 'percentage' | 'tiered';
+  model: 'fixed' | 'per_share' | 'percentage' | 'tiered' | 'bps';
   fixedAmount?: number;
   perShareAmount?: number;
   percentage?: number;
+  bps?: number;
   minCommission?: number;
   maxCommission?: number;
 };

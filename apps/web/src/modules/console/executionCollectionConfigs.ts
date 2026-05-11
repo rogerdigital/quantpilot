@@ -4,6 +4,8 @@ export function getExecutionCollectionConfigs(
     audit: number;
     actions: number;
     versions: number;
+    evidence: number;
+    recovery: number;
   }
 ) {
   return {
@@ -59,6 +61,27 @@ export function getExecutionCollectionConfigs(
         locale === 'zh'
           ? '当前执行计划还没有可回放的版本快照。'
           : 'No version snapshots are available for the selected execution plan yet.',
+    },
+    evidence: {
+      title: locale === 'zh' ? '执行证据链' : 'Execution Evidence Chain',
+      copy:
+        locale === 'zh'
+          ? '展示当前执行计划的策略版本、升级申请、风控评估和券商账户关联。'
+          : 'Display strategy version, promotion request, risk assessment, and broker account linkage for the current execution plan.',
+      badge: counts.evidence,
+      badgeClassName: 'badge-info',
+      emptyMessage: locale === 'zh' ? '暂无证据链数据。' : 'No evidence chain data available.',
+    },
+    recovery: {
+      title: locale === 'zh' ? '执行恢复控制台' : 'Execution Recovery Console',
+      copy:
+        locale === 'zh'
+          ? '诊断并恢复提交失败、确认丢失、部分成交、取消拒绝和仓位不匹配等异常。'
+          : 'Diagnose and recover from submit failures, lost acknowledgements, partial fills, cancel rejections, and position mismatches.',
+      badge: counts.recovery,
+      badgeClassName: counts.recovery > 0 ? 'badge-warn' : 'badge-muted',
+      emptyMessage:
+        locale === 'zh' ? '当前没有需要恢复的执行。' : 'No executions require recovery.',
     },
   };
 }
