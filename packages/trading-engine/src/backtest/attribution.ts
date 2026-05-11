@@ -1,3 +1,9 @@
+export type AttributionBreakdown = {
+  source: string;
+  contribution: number;
+  weight: number;
+};
+
 export interface FactorExposure {
   factor: string;
   exposure: number; // Beta or weight (-1 to 1+)
@@ -137,4 +143,59 @@ export function calcRollingExposures(
   }
 
   return rolling;
+}
+
+export type SectorHolding = {
+  sector: string;
+  weight: number;
+  return: number;
+};
+
+export function calcSectorAttribution(holdings: SectorHolding[]): AttributionBreakdown[] {
+  const totalReturn = holdings.reduce((s, h) => s + h.weight * h.return, 0);
+  return holdings.map((h) => ({
+    source: h.sector,
+    contribution: parseFloat((h.weight * h.return).toFixed(6)),
+    weight: h.weight,
+  }));
+}
+
+export type SignalContribution = {
+  signal: string;
+  weight: number;
+  return: number;
+};
+
+export function calcSignalAttribution(signals: SignalContribution[]): AttributionBreakdown[] {
+  return signals.map((s) => ({
+    source: s.signal,
+    contribution: parseFloat((s.weight * s.return).toFixed(6)),
+    weight: s.weight,
+  }));
+}
+
+export function calcTurnoverAttribution(
+  periodWeights: Array<{ date: string; weights: number[] }>
+): { avgTurnover: number; turnoverByPeriod: Array<{ date: string; turnover: number }> } {
+  if (periodWeights.length < 2) {
+    return { avgTurnover: 0, turnoverByPeriod: [] };
+  }
+
+  const turnoverByPeriod: Array<{ date: string; turnover: number }> = [];
+
+  for (let i = 1; i < periodWeights.length; i++) {
+    const prev = periodWeights[i - 1].weights;
+    const curr = periodWeights[i].weights;
+    const n = Math.max(prev.length, curr.length);
+    let turnover = 0;
+    for (let j = 0; j < n; j++) {
+      turnover += Math.abs((curr[j] || 0) - (prev[j] || 0));
+    }
+    turnoverByPeriod.push({ date: periodWeights[i].date, turnover: turnover / 2 });
+  }
+
+  const avgTurnover =
+    turnoverByPeriod.reduce((s, t) => s + t.turnover, 0) / turnoverByPeriod.length;
+
+  return { avgTurnover: parseFloat(avgTurnover.toFixed(4)), turnoverByPeriod };
 }
