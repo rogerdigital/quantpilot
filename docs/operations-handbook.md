@@ -221,3 +221,16 @@ Authority mode ladder (most-restrictive-wins across all matching policies):
 - [deployment.md](./deployment.md)
 - [control-plane-migrations.md](./control-plane-migrations.md)
 - [architecture/project-structure.md](./architecture/project-structure.md)
+
+## Platform Boundaries
+
+QuantPilot is a controlled quantitative research and execution control plane. It is not a stock recommendation tool, unattended live-trading bot, or retail trading app.
+
+**Non-negotiable constraints:**
+
+- Agents cannot directly place live orders. All agent outputs are advisory until a human or server-side policy accepts them.
+- `live` mode requires server-side environment validation, explicit operator acknowledgement, and complete promotion evidence (research → backtest → risk → execution).
+- Paper and live execution paths are strictly isolated. Mode confusion is treated as a critical incident.
+- Risk policies and kill switch are server-side enforced and cannot be bypassed by UI, agent, or API caller.
+- All strategy promotions require four categories of evidence: research record, backtest record, risk assessment, and execution plan.
+- Audit records are append-only. No deletion API exists for audit, decision, or governance events.
