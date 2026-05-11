@@ -1,6 +1,12 @@
 // @ts-nocheck
 
 import {
+  evaluateToolPolicy,
+  filterAllowedFromRequest,
+  getAllowedTools,
+  getForbiddenTools,
+} from '../../../../../../packages/control-plane-runtime/src/agent-tool-policy.js';
+import {
   approveAgentActionRequest,
   createSessionActionRequest,
   listAgentActionRequests,
@@ -72,6 +78,26 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
     const body = await readJsonBody(req);
     const result = await executeAgentTool(body);
     writeJson(res, result.ok ? 200 : 403, result);
+    return true;
+  }
+
+  if (req.method === 'GET' && reqUrl.pathname === '/api/agent/tools/policy') {
+    writeJson(res, 200, {
+      ok: true,
+      allowed: getAllowedTools(),
+      forbidden: getForbiddenTools(),
+    });
+    return true;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/agent/tools/policy/evaluate') {
+    const body = await readJsonBody(req);
+    if (!body?.tools || !Array.isArray(body.tools)) {
+      writeJson(res, 400, { ok: false, error: 'Missing required field: tools (array)' });
+      return true;
+    }
+    const result = filterAllowedFromRequest(body.tools);
+    writeJson(res, 200, { ok: true, ...result });
     return true;
   }
 

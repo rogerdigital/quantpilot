@@ -76,3 +76,13 @@ export const DEFAULT_MODELS: Record<ProviderName, string> = {
   [PROVIDERS.CLAUDE]: 'claude-sonnet-4-6',
   [PROVIDERS.OPENAI]: 'gpt-4o',
 };
+
+export type AgentToolCategory = 'read' | 'write' | 'approve' | 'execute' | 'delete';
+
+export type AgentToolDefinition = {
+  name: string;
+  description: string;
+  category: AgentToolCategory;
+  allowed: boolean;
+  requiresEvidence: boolean;
+};
