@@ -18,8 +18,8 @@ export const overlay = style({
   alignItems: 'flex-start',
   justifyContent: 'center',
   paddingTop: 'clamp(60px, 12vh, 140px)',
-  background: 'rgba(3, 4, 18, 0.75)',
-  backdropFilter: 'blur(6px)',
+  background: 'rgba(0, 0, 0, 0.25)',
+  backdropFilter: 'blur(4px)',
   animation: `${backdropIn} 120ms ease both`,
 });
 
@@ -27,10 +27,9 @@ export const panel = style({
   width: '100%',
   maxWidth: '560px',
   borderRadius: 'var(--radius-lg)',
-  border: '1px solid rgba(99, 102, 241, 0.22)',
-  background: 'rgba(12, 15, 40, 0.98)',
-  boxShadow:
-    '0 32px 80px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(0, 0, 0, 0.4), 0 0 60px rgba(99, 102, 241, 0.08)',
+  border: '1px solid var(--line)',
+  background: 'var(--panel)',
+  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--line)',
   overflow: 'hidden',
   animation: `${panelIn} 160ms cubic-bezier(0.16, 1, 0.3, 1) both`,
 });
@@ -40,12 +39,12 @@ export const inputWrap = style({
   alignItems: 'center',
   gap: '10px',
   padding: '14px 18px',
-  borderBottom: '1px solid rgba(99, 102, 241, 0.12)',
+  borderBottom: '1px solid var(--line)',
 });
 
 export const inputIcon = style({
   flexShrink: 0,
-  color: 'rgba(99, 102, 241, 0.65)',
+  color: 'var(--accent)',
   fontSize: '16px',
   lineHeight: 1,
   fontFamily: 'var(--font-data)',
@@ -61,7 +60,7 @@ export const input = style({
   font: '500 15px/1 var(--font-ui)',
   caretColor: 'var(--accent)',
   '::placeholder': {
-    color: 'rgba(160, 162, 210, 0.38)',
+    color: 'var(--muted)',
   },
 } as any);
 
@@ -69,9 +68,9 @@ export const kbdHint = style({
   flexShrink: 0,
   font: '600 10px/1 var(--font-data)',
   letterSpacing: '0.08em',
-  color: 'rgba(160, 162, 210, 0.45)',
-  background: 'rgba(99, 102, 241, 0.06)',
-  border: '1px solid rgba(99, 102, 241, 0.14)',
+  color: 'var(--muted)',
+  background: 'var(--panel-2)',
+  border: '1px solid var(--line)',
   borderRadius: 'var(--radius-sm)',
   padding: '4px 7px',
   userSelect: 'none',
@@ -88,7 +87,7 @@ export const sectionLabel = style({
   font: '600 10px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
-  color: 'rgba(160, 162, 210, 0.45)',
+  color: 'var(--muted)',
   userSelect: 'none',
 });
 
@@ -104,12 +103,12 @@ export const resultItem = style({
 });
 
 export const resultItemActive = style({
-  background: 'rgba(99, 102, 241, 0.12)',
-  borderColor: 'rgba(99, 102, 241, 0.18)',
+  background: 'var(--panel-2)',
+  borderColor: 'var(--line)',
 });
 
 globalStyle(`${resultItem}:hover`, {
-  background: 'rgba(99, 102, 241, 0.08)',
+  background: 'var(--panel-2)',
 });
 
 export const resultIcon = style({
@@ -117,14 +116,14 @@ export const resultIcon = style({
   width: '28px',
   height: '28px',
   borderRadius: 'var(--radius-sm)',
-  background: 'rgba(99, 102, 241, 0.1)',
-  border: '1px solid rgba(99, 102, 241, 0.16)',
+  background: 'var(--accent-subtle)',
+  border: '1px solid var(--line)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   font: '700 11px/1 var(--font-data)',
   letterSpacing: '0.04em',
-  color: 'rgba(99, 102, 241, 0.9)',
+  color: 'var(--accent)',
 });
 
 export const resultText = style({
@@ -140,15 +139,15 @@ export const resultName = style({
 export const resultHint = style({
   marginTop: '3px',
   font: '400 12px/1 var(--font-ui)',
-  color: 'rgba(160, 162, 210, 0.55)',
+  color: 'var(--muted)',
 });
 
 export const resultEnter = style({
   flexShrink: 0,
   font: '600 10px/1 var(--font-data)',
-  color: 'rgba(160, 162, 210, 0.35)',
-  background: 'rgba(99, 102, 241, 0.06)',
-  border: '1px solid rgba(99, 102, 241, 0.12)',
+  color: 'var(--muted)',
+  background: 'var(--panel-2)',
+  border: '1px solid var(--line)',
   borderRadius: 'var(--radius-sm)',
   padding: '4px 7px',
   userSelect: 'none',
@@ -159,8 +158,8 @@ export const recentBadge = style({
   font: '600 9px/1 var(--font-data)',
   letterSpacing: '0.06em',
   textTransform: 'uppercase',
-  color: 'rgba(99, 102, 241, 0.6)',
-  background: 'rgba(99, 102, 241, 0.08)',
+  color: 'var(--accent)',
+  background: 'var(--accent-subtle)',
   borderRadius: 'var(--radius-sm)',
   padding: '3px 6px',
   userSelect: 'none',
@@ -169,7 +168,7 @@ export const recentBadge = style({
 export const emptyState = style({
   padding: '32px 20px',
   textAlign: 'center',
-  color: 'rgba(160, 162, 210, 0.4)',
+  color: 'var(--muted)',
   font: '400 13px/1.5 var(--font-ui)',
 });
 
@@ -177,8 +176,8 @@ export const footer = style({
   display: 'flex',
   gap: '16px',
   padding: '10px 18px',
-  borderTop: '1px solid rgba(99, 102, 241, 0.10)',
-  background: 'rgba(99, 102, 241, 0.03)',
+  borderTop: '1px solid var(--line)',
+  background: 'var(--panel-2)',
 });
 
 export const footerHint = style({
@@ -186,15 +185,15 @@ export const footerHint = style({
   alignItems: 'center',
   gap: '6px',
   font: '400 11px/1 var(--font-ui)',
-  color: 'rgba(160, 162, 210, 0.38)',
+  color: 'var(--muted)',
 });
 
 export const footerKbd = style({
   font: '600 9px/1 var(--font-data)',
   letterSpacing: '0.06em',
-  color: 'rgba(160, 162, 210, 0.55)',
-  background: 'rgba(99, 102, 241, 0.07)',
-  border: '1px solid rgba(99, 102, 241, 0.14)',
+  color: 'var(--muted-strong)',
+  background: 'var(--panel-3)',
+  border: '1px solid var(--line)',
   borderRadius: 'var(--radius-sm)',
   padding: '3px 6px',
 });

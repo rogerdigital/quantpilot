@@ -1,8 +1,9 @@
 import { style, styleVariants } from '@vanilla-extract/css';
+import { colors } from '../tokens/colors.css.js';
 import { duration, easing } from '../tokens/motion.css.js';
 import { radii } from '../tokens/radii.css.js';
 import { spacing } from '../tokens/spacing.css.js';
-import { fontFamily, fontSize } from '../tokens/typography.css.js';
+import { fontFamily, fontSize, fontWeight } from '../tokens/typography.css.js';
 
 export const wrapper = style({
   display: 'flex',
@@ -12,23 +13,23 @@ export const wrapper = style({
 
 export const label = style({
   fontSize: fontSize.sm,
-  fontWeight: '500',
-  color: 'var(--textMuted)',
+  fontWeight: fontWeight.medium,
+  color: colors.textMuted,
 });
 
 export const inputContainer = style({
   display: 'flex',
   alignItems: 'center',
   gap: spacing.sm,
-  border: `1px solid ${'var(--border)'}`,
+  border: `1px solid ${colors.border}`,
   borderRadius: radii.md,
-  background: 'var(--surface)',
+  background: colors.surface,
   padding: `0 ${spacing.md}`,
-  height: '34px',
+  height: '40px',
   transition: `border-color ${duration.normal} ${easing.out}`,
   selectors: {
     '&:focus-within': {
-      borderColor: 'var(--accent)',
+      borderColor: colors.accent,
     },
   },
 });
@@ -37,14 +38,15 @@ export const input = style({
   flex: 1,
   border: 'none',
   background: 'transparent',
-  color: 'var(--text)',
+  color: colors.text,
   fontFamily: fontFamily.ui,
   fontSize: fontSize.md,
   outline: 'none',
+  height: '100%',
   selectors: {
     '&::placeholder': {
-      color: 'var(--textMuted)',
-      opacity: 0.5,
+      color: colors.textMuted,
+      opacity: 0.6,
     },
   },
 });
@@ -52,14 +54,14 @@ export const input = style({
 export const validationState = styleVariants({
   default: {},
   error: {
-    borderColor: `${'var(--danger)'} !important`,
+    borderColor: `${colors.danger} !important`,
   },
   success: {
-    borderColor: `${'var(--success)'} !important`,
+    borderColor: `${colors.success} !important`,
   },
 });
 
 export const errorText = style({
   fontSize: fontSize.xs,
-  color: 'var(--danger)',
+  color: colors.danger,
 });

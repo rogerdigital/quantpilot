@@ -14,38 +14,9 @@ globalStyle('.meta-card, .hero-card, .metric-tile, .panel', {
   transition: 'border-color 200ms ease, box-shadow 200ms ease',
 } as any);
 
-globalStyle('.meta-card::before, .hero-card::before, .metric-tile::before, .panel::before', {
-  content: '""',
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  width: '100%',
-  height: '1px',
-  background:
-    'linear-gradient(90deg, rgba(99, 102, 241, 0.22), rgba(99, 102, 241, 0.07) 55%, transparent)',
-  pointerEvents: 'none',
-} as any);
-
-globalStyle('.panel::after', {
-  content: '""',
-  position: 'absolute',
-  bottom: '7px',
-  right: '7px',
-  width: '10px',
-  height: '10px',
-  borderRight: '1px solid rgba(99, 102, 241, 0.14)',
-  borderBottom: '1px solid rgba(99, 102, 241, 0.14)',
-  pointerEvents: 'none',
-  transition: 'border-color 200ms ease',
-} as any);
-
 globalStyle('.panel:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.22)',
+  borderColor: 'var(--line-strong)',
   boxShadow: 'var(--shadow-panel-hover)',
-} as any);
-
-globalStyle('.panel:hover::after', {
-  borderColor: 'rgba(99, 102, 241, 0.35)',
 } as any);
 
 globalStyle('.meta-card', {
@@ -61,7 +32,6 @@ globalStyle('.meta-value', {
 
 globalStyle('.meta-value.accent', {
   color: 'var(--accent)',
-  textShadow: '0 0 20px rgba(99, 102, 241, 0.30)',
 } as any);
 
 globalStyle('.panel', {
@@ -128,8 +98,7 @@ globalStyle('.overview-command-summary', { display: 'grid', gap: '14px' } as any
 globalStyle('.overview-command-title', {
   marginTop: '6px',
   font: '700 24px/1 var(--font-display)',
-  letterSpacing: '0.04em',
-  textTransform: 'uppercase',
+  letterSpacing: '-0.01em',
 } as any);
 
 globalStyle('.overview-command-copy', {
@@ -148,7 +117,7 @@ globalStyle('.overview-brief-card, .overview-primary-note', {
   padding: '12px 14px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(14, 26, 58, 0.85)',
+  background: 'var(--panel-2)',
 } as any);
 
 globalStyle('.overview-brief-card span, .overview-command-note span, .overview-primary-note span', {
@@ -204,8 +173,7 @@ globalStyle('.overview-kpi-card', { minHeight: '230px' } as any);
 globalStyle('.overview-kpi-title', {
   marginTop: '8px',
   font: '700 18px/1.05 var(--font-display)',
-  letterSpacing: '0.04em',
-  textTransform: 'uppercase',
+  letterSpacing: '-0.01em',
 } as any);
 
 globalStyle('.overview-kpi-grid', {
@@ -255,29 +223,29 @@ globalStyle('.shortcut-surface', {
 } as any);
 
 globalStyle('.shortcut-surface:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.28) !important',
-  boxShadow: '0 0 22px rgba(99, 102, 241, 0.12)',
-  background: 'rgba(99, 102, 241, 0.05) !important',
+  borderColor: 'var(--line-strong) !important',
+  boxShadow: 'var(--shadow-panel-hover)',
+  background: 'var(--panel-2) !important',
   transform: 'translateY(-2px)',
 } as any);
 
 globalStyle('.toolbar-pill-button:hover, .status-row-button:hover, .inline-link:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.30)',
+  borderColor: 'var(--line-strong)',
   color: 'var(--text)',
 } as any);
 
 globalStyle('.toolbar-pill-button:hover, .shortcut-surface:hover', {
-  boxShadow: '0 0 20px rgba(99, 102, 241, 0.12)',
+  boxShadow: 'var(--shadow-panel-hover)',
 } as any);
 
 globalStyle('.status-row-button:hover, .inline-link:hover', {
-  background: 'rgba(99, 102, 241, 0.04)',
+  background: 'var(--panel-2)',
 } as any);
 
 globalStyle(
   '.shortcut-surface:focus-visible, .toolbar-pill-button:focus-visible, .status-row-button:focus-visible, .inline-link:focus-visible, .locale-trigger:focus-visible, .locale-option:focus-visible, .mode-pill:focus-visible',
   {
-    outline: '2px solid rgba(99, 102, 241, 0.65)',
+    outline: '2px solid var(--accent)',
     outlineOffset: '2px',
   } as any
 );
@@ -287,26 +255,7 @@ globalStyle(
    ============================================================ */
 
 globalStyle('.hero-card-primary', {
-  background: [
-    'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, transparent 45%)',
-    'linear-gradient(220deg, rgba(139, 92, 246, 0.06) 0%, transparent 60%)',
-    'var(--panel)',
-  ].join(', '),
-} as any);
-
-globalStyle('.hero-card-primary::after', {
-  content: '""',
-  position: 'absolute',
-  bottom: '-30%',
-  right: '-10%',
-  width: '200px',
-  height: '200px',
-  borderRadius: '50%',
-  background: 'radial-gradient(circle, rgba(99, 102, 241, 0.14), transparent 60%)',
-  pointerEvents: 'none',
-  filter: 'blur(16px)',
-  opacity: 0.7,
-  animation: 'float 7s ease-in-out infinite',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.hero-headline', {
@@ -318,7 +267,6 @@ globalStyle('.hero-headline', {
 globalStyle('.hero-value', {
   font: '700 clamp(30px, 5vw, 52px)/0.88 var(--font-data)',
   letterSpacing: '-0.04em',
-  textShadow: '0 0 36px rgba(99, 102, 241, 0.28)',
   animation: 'tick-up 320ms ease 150ms both',
 } as any);
 
@@ -380,7 +328,7 @@ globalStyle('.metric-card', {
   padding: '14px 16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'linear-gradient(140deg, rgba(14, 28, 56, 0.95), rgba(8, 16, 36, 0.98))',
+  background: 'var(--panel-2)',
   display: 'grid',
   gap: '8px',
   position: 'relative',
@@ -388,19 +336,9 @@ globalStyle('.metric-card', {
   transition: 'border-color 180ms ease, box-shadow 180ms ease, transform 160ms ease',
 } as any);
 
-globalStyle('.metric-card::before', {
-  content: '""',
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  width: '55%',
-  height: '1px',
-  background: 'linear-gradient(90deg, rgba(99, 102, 241, 0.30), transparent)',
-} as any);
-
 globalStyle('.metric-card:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.28)',
-  boxShadow: '0 0 20px rgba(99, 102, 241, 0.09)',
+  borderColor: 'var(--line-strong)',
+  boxShadow: 'var(--shadow-panel-hover)',
   transform: 'translateY(-2px)',
 } as any);
 
@@ -437,12 +375,12 @@ globalStyle('.terminal-tile', {
 } as any);
 
 globalStyle('.terminal-tile:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.22)',
-  boxShadow: '0 0 16px rgba(99, 102, 241, 0.07)',
+  borderColor: 'var(--line-strong)',
+  boxShadow: 'var(--shadow-panel-hover)',
 } as any);
 
 globalStyle('.terminal-tile-primary', {
-  background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.07), transparent 36%), var(--panel)',
+  background: 'var(--panel-2)',
 } as any);
 
 globalStyle('.metric-tile', {
@@ -666,12 +604,12 @@ globalStyle('.overview-ops-cluster', {
   padding: '14px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(10, 22, 50, 0.9)',
+  background: 'var(--panel-2)',
   transition: 'border-color 180ms ease',
 } as any);
 
 globalStyle('.overview-ops-cluster:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.2)',
+  borderColor: 'var(--line-strong)',
 } as any);
 
 globalStyle('.overview-blotter-grid', { gridTemplateColumns: '1.06fr 0.94fr' } as any);
@@ -699,7 +637,7 @@ globalStyle('.status-row', {
 } as any);
 
 globalStyle('.status-row:hover', {
-  borderBottomColor: 'rgba(99, 102, 241, 0.2)',
+  borderBottomColor: 'var(--line-strong)',
 } as any);
 
 globalStyle('.status-row-button, .inline-link', {
@@ -742,6 +680,6 @@ globalStyle('.focus-list', {
 globalStyle('.focus-list-terminal', {
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(4, 8, 22, 0.75)',
+  background: 'var(--panel-3)',
   padding: '4px 14px',
 } as any);

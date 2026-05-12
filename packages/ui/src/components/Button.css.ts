@@ -1,6 +1,8 @@
 import { style, styleVariants } from '@vanilla-extract/css';
+import { colors } from '../tokens/colors.css.js';
 import { duration, easing } from '../tokens/motion.css.js';
 import { radii } from '../tokens/radii.css.js';
+import { shadows } from '../tokens/shadows.css.js';
 import { spacing } from '../tokens/spacing.css.js';
 import { fontSize, fontWeight } from '../tokens/typography.css.js';
 
@@ -29,11 +31,16 @@ export const variants = styleVariants({
   primary: [
     base,
     {
-      background: 'var(--accent)',
+      background: colors.accent,
       color: '#fff',
+      boxShadow: shadows.sm,
       selectors: {
         '&:hover:not(:disabled)': {
-          background: 'var(--accentHover)',
+          background: colors.accentHover,
+          boxShadow: shadows.md,
+        },
+        '&:active:not(:disabled)': {
+          boxShadow: shadows.sm,
         },
       },
     },
@@ -42,12 +49,12 @@ export const variants = styleVariants({
     base,
     {
       background: 'transparent',
-      color: 'var(--text)',
-      borderColor: 'var(--border)',
+      color: colors.text,
+      borderColor: colors.border,
       selectors: {
         '&:hover:not(:disabled)': {
-          borderColor: 'var(--borderStrong)',
-          background: 'var(--accentSubtle)',
+          borderColor: colors.borderStrong,
+          background: colors.accentSubtle,
         },
       },
     },
@@ -56,11 +63,11 @@ export const variants = styleVariants({
     base,
     {
       background: 'transparent',
-      color: 'var(--textMuted)',
+      color: colors.textMuted,
       selectors: {
         '&:hover:not(:disabled)': {
-          color: 'var(--text)',
-          background: 'var(--accentSubtle)',
+          color: colors.text,
+          background: colors.accentSubtle,
         },
       },
     },
@@ -68,11 +75,17 @@ export const variants = styleVariants({
   danger: [
     base,
     {
-      background: 'var(--danger)',
+      background: colors.danger,
       color: '#fff',
+      boxShadow: shadows.sm,
       selectors: {
         '&:hover:not(:disabled)': {
-          background: '#e02e4d',
+          background: colors.danger,
+          filter: 'brightness(0.9)',
+          boxShadow: shadows.md,
+        },
+        '&:active:not(:disabled)': {
+          boxShadow: shadows.sm,
         },
       },
     },
@@ -86,7 +99,7 @@ export const sizes = styleVariants({
     fontSize: fontSize.sm,
   },
   md: {
-    height: '34px',
+    height: '36px',
     padding: `0 ${spacing.lg}`,
   },
   lg: {
@@ -107,7 +120,7 @@ export const loading = style({
       height: '14px',
       border: '2px solid currentColor',
       borderTopColor: 'transparent',
-      borderRadius: '50%',
+      borderRadius: radii.full,
       animation: 'spin 0.6s linear infinite',
     },
   },

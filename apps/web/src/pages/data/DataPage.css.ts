@@ -17,8 +17,7 @@ export const dataPageHeader = style({
 
 export const dataPageTitle = style({
   font: '700 22px/1 var(--font-display)',
-  letterSpacing: '0.04em',
-  textTransform: 'uppercase',
+  letterSpacing: '-0.01em',
   color: 'var(--text)',
 });
 
@@ -38,7 +37,8 @@ export const dataPageSection = style({
   padding: '20px',
   borderRadius: 'var(--radius-lg)',
   border: '1px solid var(--line)',
-  background: 'rgba(8,10,24,0.85)',
+  background: 'var(--panel)',
+  boxShadow: 'var(--shadow-panel)',
 });
 
 export const dataPageLoading = style({
@@ -51,8 +51,8 @@ export const dataPageLoading = style({
 export const dataPageError = style({
   padding: '24px',
   borderRadius: 'var(--radius)',
-  border: '1px solid rgba(239,68,68,0.3)',
-  background: 'rgba(239,68,68,0.05)',
-  color: '#ef4444',
+  border: '1px solid color-mix(in srgb, var(--sell) 30%, transparent)',
+  background: 'color-mix(in srgb, var(--sell) 5%, transparent)',
+  color: 'var(--sell)',
   fontSize: '13px',
 });

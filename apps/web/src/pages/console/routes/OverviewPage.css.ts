@@ -1,6 +1,6 @@
 import { globalStyle, style } from '@vanilla-extract/css';
 
-/* ── RESULTS BANNER (result-first hero row) ─────────────── */
+/* -- RESULTS BANNER (result-first hero row) ------------- */
 
 export const overviewResultsBanner = style({
   display: 'grid',
@@ -11,16 +11,10 @@ export const overviewResultsBanner = style({
   padding: '20px 24px',
   borderRadius: 'var(--radius-lg)',
   border: '1px solid var(--line)',
-  background: 'rgba(8,10,24,0.85)',
+  background: 'var(--panel)',
+  boxShadow: 'var(--shadow-panel)',
   position: 'relative',
   overflow: 'hidden',
-  '::before': {
-    content: '""',
-    position: 'absolute',
-    inset: 0,
-    background: 'linear-gradient(135deg, rgba(99,102,241,0.04) 0%, transparent 60%)',
-    pointerEvents: 'none',
-  } as any,
 });
 
 export const overviewResultsKpi = style({
@@ -50,7 +44,6 @@ globalStyle(`${overviewResultsKpi} .kpi-value`, {
   font: '700 clamp(24px, 3vw, 36px)/1 var(--font-data)',
   letterSpacing: '-0.04em',
   color: 'var(--text)',
-  animation: 'tick-up 300ms ease 80ms both',
 });
 
 globalStyle(`${overviewResultsKpi} .kpi-sub`, {
@@ -69,7 +62,7 @@ export const overviewHeroGrid = style({
   },
 });
 
-/* ── OVERVIEW COMMAND CARD ──────────────────────────────── */
+/* -- OVERVIEW COMMAND CARD ------------------------------ */
 
 export const overviewCommandCard = style({ minHeight: '230px' });
 
@@ -100,8 +93,7 @@ export const overviewCommandSummary = style({ display: 'grid', gap: '14px' });
 export const overviewCommandTitle = style({
   marginTop: '6px',
   font: '700 24px/1 var(--font-display)',
-  letterSpacing: '0.04em',
-  textTransform: 'uppercase',
+  letterSpacing: '-0.01em',
 });
 
 export const overviewCommandCopy = style({
@@ -120,7 +112,7 @@ export const overviewBriefCard = style({
   padding: '12px 14px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(10, 20, 44, 0.8)',
+  background: 'var(--panel-2)',
 });
 
 export const overviewPrimaryNote = style([overviewBriefCard]);
@@ -161,7 +153,7 @@ export const overviewCommandStrip = style({
   },
 });
 
-/* ── OVERVIEW STAT ──────────────────────────────────────── */
+/* -- OVERVIEW STAT -------------------------------------- */
 
 export const overviewStat = style({ display: 'grid', gap: '6px' });
 
@@ -175,18 +167,16 @@ globalStyle(`${overviewStat} span`, {
 globalStyle(`${overviewStat} strong`, {
   font: '700 16px/1.1 var(--font-data)',
   letterSpacing: '-0.02em',
-  animation: 'tick-up 280ms ease 300ms both',
 });
 
-/* ── OVERVIEW KPI CARD ──────────────────────────────────── */
+/* -- OVERVIEW KPI CARD ---------------------------------- */
 
 export const overviewKpiCard = style({ minHeight: '230px' });
 
 export const overviewKpiTitle = style({
   marginTop: '8px',
   font: '700 18px/1.05 var(--font-display)',
-  letterSpacing: '0.04em',
-  textTransform: 'uppercase',
+  letterSpacing: '-0.01em',
 });
 
 export const overviewKpiGrid = style({
@@ -217,7 +207,7 @@ export const overviewKpiNote = style({
   lineHeight: '1.6',
 });
 
-/* ── OVERVIEW DESK GRID ─────────────────────────────────── */
+/* -- OVERVIEW DESK GRID --------------------------------- */
 
 export const overviewDeskGrid = style({
   gridTemplateColumns: '1.65fr 0.95fr',
@@ -229,7 +219,7 @@ export const overviewPrimaryPanel = style({ minHeight: '468px' });
 export const overviewSidePanel = style({ minHeight: '468px' });
 export const overviewPanelFlow = style({ display: 'grid', gap: '16px' });
 
-/* ── OVERVIEW INLINE METRICS ────────────────────────────── */
+/* -- OVERVIEW INLINE METRICS ---------------------------- */
 
 export const overviewInlineMetrics = style({
   display: 'grid',
@@ -255,10 +245,9 @@ globalStyle(`${overviewInlineMetric} span`, {
 globalStyle(`${overviewInlineMetric} strong`, {
   font: '700 14px/1.1 var(--font-data)',
   color: 'var(--text)',
-  animation: 'tick-up 260ms ease 280ms both',
 });
 
-/* ── OVERVIEW OPS CLUSTER ───────────────────────────────── */
+/* -- OVERVIEW OPS CLUSTER ------------------------------- */
 
 export const overviewOpsCluster = style({
   display: 'grid',
@@ -266,12 +255,15 @@ export const overviewOpsCluster = style({
   padding: '14px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(8, 18, 40, 0.85)',
-  transition: 'border-color 180ms ease',
-  ':hover': { borderColor: 'rgba(40, 120, 220, 0.2)' },
+  background: 'var(--panel-2)',
+  transition: 'border-color 180ms ease, box-shadow 180ms ease',
+  ':hover': {
+    borderColor: 'var(--line-strong)',
+    boxShadow: 'var(--shadow-panel)',
+  },
 });
 
-/* ── OVERVIEW BLOTTER ───────────────────────────────────── */
+/* -- OVERVIEW BLOTTER ----------------------------------- */
 
 export const overviewBlotterGrid = style({ gridTemplateColumns: '1.06fr 0.94fr' });
 export const overviewBlotterCard = style({ display: 'grid', gap: '14px' });

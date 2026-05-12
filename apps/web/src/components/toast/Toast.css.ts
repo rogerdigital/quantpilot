@@ -29,10 +29,10 @@ export const toast = style({
   gap: '10px',
   padding: '12px 14px',
   borderRadius: 'var(--radius)',
-  border: '1px solid',
-  background: 'rgba(10, 12, 30, 0.97)',
+  border: '1px solid var(--line)',
+  background: 'var(--panel)',
   backdropFilter: 'blur(8px)',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.55)',
+  boxShadow: 'var(--shadow-panel-hover)',
   pointerEvents: 'auto',
   animation: `${slideIn} 200ms cubic-bezier(0.16, 1, 0.3, 1) both`,
 });
@@ -42,23 +42,19 @@ export const toastExiting = style({
 });
 
 export const toastSuccess = style({
-  borderColor: 'rgba(0, 232, 157, 0.25)',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.55), 0 0 20px rgba(0, 232, 157, 0.06)',
+  borderColor: 'var(--buy)',
 });
 
 export const toastError = style({
-  borderColor: 'rgba(255, 51, 88, 0.25)',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.55), 0 0 20px rgba(255, 51, 88, 0.06)',
+  borderColor: 'var(--sell)',
 });
 
 export const toastInfo = style({
-  borderColor: 'rgba(99, 102, 241, 0.25)',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.55), 0 0 20px rgba(99, 102, 241, 0.06)',
+  borderColor: 'var(--accent)',
 });
 
 export const toastWarn = style({
-  borderColor: 'rgba(255, 183, 0, 0.25)',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.55), 0 0 20px rgba(255, 183, 0, 0.06)',
+  borderColor: 'var(--hold)',
 });
 
 export const toastIcon = style({
@@ -77,14 +73,14 @@ export const toastTitle = style({
 export const toastDetail = style({
   marginTop: '3px',
   font: '400 12px/1.4 var(--font-ui)',
-  color: 'rgba(160, 162, 210, 0.65)',
+  color: 'var(--muted)',
 });
 
 export const toastClose = style({
   flexShrink: 0,
   background: 'transparent',
   border: 'none',
-  color: 'rgba(160, 162, 210, 0.4)',
+  color: 'var(--muted)',
   cursor: 'pointer',
   font: '16px/1 var(--font-ui)',
   padding: '0 2px',

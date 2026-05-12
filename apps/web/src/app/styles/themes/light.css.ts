@@ -5,56 +5,55 @@ export const lightTheme = createTheme(themeVars, {
   /* Canvas layers */
   bgCanvas: '#f8f9fc',
   bgPanel: '#ffffff',
-  bgPanel2: '#f1f3f9',
-  bgPanel3: '#e8ebf4',
-  bgPanelFrame: 'rgba(99, 102, 241, 0.15)',
+  bgPanel2: '#f3f4f8',
+  bgPanel3: '#eceef5',
+  bgPanelFrame: 'rgba(79, 70, 229, 0.06)',
 
   /* Lines & borders */
-  line: 'rgba(99, 102, 241, 0.15)',
-  lineStrong: 'rgba(99, 102, 241, 0.30)',
-  lineVivid: 'rgba(99, 102, 241, 0.50)',
+  line: '#e5e7eb',
+  lineStrong: '#d1d5db',
+  lineVivid: '#9ca3af',
 
   /* Typography */
-  text: '#1e1e2e',
-  textStrong: '#0f0f1a',
-  muted: 'rgba(60, 60, 90, 0.72)',
-  mutedStrong: 'rgba(40, 40, 70, 0.88)',
+  text: '#1f2937',
+  textStrong: '#111827',
+  muted: '#6b7280',
+  mutedStrong: '#4b5563',
 
   /* Accent */
   accent: '#4f46e5',
   accentHover: '#4338ca',
-  accentSubtle: 'rgba(79, 70, 229, 0.08)',
-  accentSecondary: '#d97706',
-  accentTertiary: '#7c3aed',
+  accentSubtle: 'rgba(79, 70, 229, 0.06)',
+  accentSecondary: '#0ea5e9',
+  accentTertiary: '#8b5cf6',
 
   /* Semantic */
-  success: '#059669',
-  successSubtle: 'rgba(5, 150, 105, 0.08)',
-  warning: '#d97706',
-  warningSubtle: 'rgba(217, 119, 6, 0.08)',
-  danger: '#dc2626',
-  dangerSubtle: 'rgba(220, 38, 38, 0.08)',
-  info: '#4f46e5',
-  infoSubtle: 'rgba(79, 70, 229, 0.08)',
+  success: '#10b981',
+  successSubtle: 'rgba(16, 185, 129, 0.08)',
+  warning: '#f59e0b',
+  warningSubtle: 'rgba(245, 158, 11, 0.08)',
+  danger: '#ef4444',
+  dangerSubtle: 'rgba(239, 68, 68, 0.08)',
+  info: '#6366f1',
+  infoSubtle: 'rgba(99, 102, 241, 0.06)',
 
   /* Trading signals */
-  buy: '#059669',
-  sell: '#dc2626',
-  hold: '#d97706',
+  buy: '#10b981',
+  sell: '#ef4444',
+  hold: '#f59e0b',
 
   /* Shadows */
-  shadowSm: '0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06)',
-  shadowMd: '0 4px 12px rgba(0, 0, 0, 0.10), 0 2px 4px rgba(0, 0, 0, 0.06)',
-  shadowLg: '0 8px 28px rgba(0, 0, 0, 0.12)',
-  shadowXl: '0 24px 64px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(0, 0, 0, 0.10)',
+  shadowSm: '0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.03)',
+  shadowMd: '0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)',
+  shadowLg: '0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04)',
+  shadowXl: '0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06)',
 
-  /* Glows */
-  glowAccent: '0 0 14px rgba(79, 70, 229, 0.30)',
-  glowGreen: '0 0 12px rgba(5, 150, 105, 0.30)',
-  glowAmber: '0 0 12px rgba(217, 119, 6, 0.30)',
-  glowRed: '0 0 12px rgba(220, 38, 38, 0.30)',
+  /* Glows — disabled in clean design */
+  glowAccent: 'none',
+  glowGreen: 'none',
+  glowAmber: 'none',
+  glowRed: 'none',
 
-  /* Background image (light: minimal) */
-  bgOverlay:
-    'radial-gradient(ellipse 130% 65% at 50% -5%, rgba(79, 70, 229, 0.06) 0%, transparent 65%)',
+  /* Background overlay — minimal */
+  bgOverlay: 'none',
 });

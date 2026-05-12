@@ -12,7 +12,7 @@ export const overlay = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  background: 'rgba(3, 4, 18, 0.85)',
+  background: 'color-mix(in srgb, var(--panel) 85%, transparent)',
   backdropFilter: 'blur(8px)',
   animation: `${fadeIn} 200ms ease both`,
 });
@@ -21,9 +21,9 @@ export const wizard = style({
   width: '100%',
   maxWidth: '520px',
   borderRadius: 'var(--radius-lg)',
-  border: '1px solid rgba(99, 102, 241, 0.2)',
-  background: 'rgba(12, 15, 40, 0.98)',
-  boxShadow: '0 32px 80px rgba(0, 0, 0, 0.75), 0 0 60px rgba(99, 102, 241, 0.08)',
+  border: '1px solid var(--line)',
+  background: 'var(--panel)',
+  boxShadow: 'var(--shadow-panel-hover)',
   overflow: 'hidden',
   animation: `${fadeIn} 250ms cubic-bezier(0.16, 1, 0.3, 1) both`,
 });
@@ -42,7 +42,7 @@ export const progressBar = style({
   flex: 1,
   height: '3px',
   borderRadius: '2px',
-  background: 'rgba(99, 102, 241, 0.12)',
+  background: 'var(--panel-3)',
   transition: 'background 200ms ease',
 });
 
@@ -75,8 +75,8 @@ export const footer = style({
   justifyContent: 'space-between',
   alignItems: 'center',
   padding: '16px 28px',
-  borderTop: '1px solid rgba(99, 102, 241, 0.1)',
-  background: 'rgba(99, 102, 241, 0.03)',
+  borderTop: '1px solid var(--line)',
+  background: 'var(--panel-2)',
 });
 
 export const btn = style({
@@ -138,8 +138,8 @@ export const featureItem = style({
   gap: '10px',
   padding: '12px',
   borderRadius: 'var(--radius)',
-  background: 'rgba(99, 102, 241, 0.06)',
-  border: '1px solid rgba(99, 102, 241, 0.1)',
+  background: 'var(--panel-2)',
+  border: '1px solid var(--line)',
 });
 
 export const featureIcon = style({
@@ -147,7 +147,7 @@ export const featureIcon = style({
   width: '32px',
   height: '32px',
   borderRadius: 'var(--radius-sm)',
-  background: 'rgba(99, 102, 241, 0.12)',
+  background: 'var(--panel-3)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',

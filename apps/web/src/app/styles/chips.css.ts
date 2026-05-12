@@ -29,7 +29,7 @@ globalStyle('.status-chip-large', {
 } as any);
 
 /* ============================================================
-   SIGNAL & ORDER CHIPS
+   SIGNAL & ORDER CHIPS — soft pastel fills, no glows
    ============================================================ */
 
 globalStyle('.signal-chip', {
@@ -47,55 +47,50 @@ globalStyle('.order-status', {
 } as any);
 
 globalStyle('.order-status-open', {
-  background: 'rgba(99, 102, 241, 0.12)',
+  background: 'rgba(99, 102, 241, 0.08)',
   color: 'var(--info)',
-  border: '1px solid rgba(99, 102, 241, 0.18)',
+  border: '1px solid rgba(99, 102, 241, 0.15)',
 } as any);
 
 globalStyle('.order-status-filled', {
-  background: 'rgba(0, 232, 157, 0.1)',
+  background: 'rgba(16, 185, 129, 0.08)',
   color: 'var(--buy)',
-  boxShadow: '0 0 8px rgba(0, 232, 157, 0.12)',
 } as any);
 
 globalStyle('.order-status-canceled', {
-  background: 'rgba(255, 51, 88, 0.1)',
+  background: 'rgba(239, 68, 68, 0.08)',
   color: 'var(--sell)',
 } as any);
 
 globalStyle('.order-status-muted', {
-  background: 'rgba(255, 255, 255, 0.04)',
+  background: 'var(--panel-2)',
   color: 'var(--muted)',
 } as any);
 
 globalStyle('.signal-buy', {
-  background: 'rgba(0, 232, 157, 0.1)',
+  background: 'rgba(16, 185, 129, 0.08)',
   color: 'var(--buy)',
-  border: '1px solid rgba(0, 232, 157, 0.2)',
-  boxShadow: '0 0 8px rgba(0, 232, 157, 0.12)',
+  border: '1px solid rgba(16, 185, 129, 0.18)',
 } as any);
 
 globalStyle('.signal-hold', {
-  background: 'rgba(255, 183, 0, 0.08)',
+  background: 'rgba(245, 158, 11, 0.08)',
   color: 'var(--hold)',
-  border: '1px solid rgba(255, 183, 0, 0.18)',
+  border: '1px solid rgba(245, 158, 11, 0.15)',
 } as any);
 
 globalStyle('.signal-sell', {
-  background: 'rgba(255, 51, 88, 0.1)',
+  background: 'rgba(239, 68, 68, 0.08)',
   color: 'var(--sell)',
-  border: '1px solid rgba(255, 51, 88, 0.2)',
-  boxShadow: '0 0 8px rgba(255, 51, 88, 0.1)',
+  border: '1px solid rgba(239, 68, 68, 0.15)',
 } as any);
 
 globalStyle('.text-up', {
   color: 'var(--buy)',
-  textShadow: '0 0 16px rgba(0, 232, 157, 0.3)',
 } as any);
 
 globalStyle('.text-down', {
   color: 'var(--sell)',
-  textShadow: '0 0 16px rgba(255, 51, 88, 0.3)',
 } as any);
 
 globalStyle('.empty-cell', {
