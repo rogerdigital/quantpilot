@@ -27,7 +27,7 @@ globalStyle('.settings-field input, .settings-field select', {
   width: '100%',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(1, 3, 12, 0.75)',
+  background: 'var(--panel-2)',
   color: 'var(--text)',
   padding: '10px 12px',
   font: '14px var(--font-data)',
@@ -36,9 +36,9 @@ globalStyle('.settings-field input, .settings-field select', {
 } as any);
 
 globalStyle('.settings-field input:focus, .settings-field select:focus', {
-  borderColor: 'rgba(99, 102, 241, 0.45)',
-  boxShadow: '0 0 14px rgba(99, 102, 241, 0.12), inset 0 0 10px rgba(99, 102, 241, 0.03)',
-  background: 'rgba(99, 102, 241, 0.03)',
+  borderColor: 'var(--accent)',
+  boxShadow: '0 0 0 3px var(--accent-subtle)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.settings-field-wide', {
@@ -59,7 +59,7 @@ globalStyle('.text-input, .detail-textarea', {
   width: '100%',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(1, 3, 12, 0.75)',
+  background: 'var(--panel-2)',
   color: 'var(--text)',
   padding: '10px 12px',
   font: '14px var(--font-data)',
@@ -68,9 +68,9 @@ globalStyle('.text-input, .detail-textarea', {
 } as any);
 
 globalStyle('.text-input:focus, .detail-textarea:focus', {
-  borderColor: 'rgba(99, 102, 241, 0.45)',
-  boxShadow: '0 0 14px rgba(99, 102, 241, 0.12), inset 0 0 10px rgba(99, 102, 241, 0.03)',
-  background: 'rgba(99, 102, 241, 0.03)',
+  borderColor: 'var(--accent)',
+  boxShadow: '0 0 0 3px var(--accent-subtle)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.detail-textarea', {
@@ -94,9 +94,9 @@ globalStyle('.settings-actions', {
 globalStyle('.settings-button', {
   position: 'relative',
   overflow: 'hidden',
-  border: '1px solid rgba(99, 102, 241, 0.22)',
+  border: '1px solid var(--line-strong)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(99, 102, 241, 0.055)',
+  background: 'var(--panel-2)',
   color: 'var(--text)',
   padding: '10px 16px',
   cursor: 'pointer',
@@ -107,24 +107,11 @@ globalStyle('.settings-button', {
     'border-color 150ms ease, box-shadow 150ms ease, transform 120ms ease, background 150ms ease',
 } as any);
 
-globalStyle('.settings-button::after', {
-  content: '""',
-  position: 'absolute',
-  inset: 0,
-  background: 'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.12), transparent)',
-  transform: 'translateX(-100%)',
-  transition: 'none',
-} as any);
-
 globalStyle('.settings-button:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.5)',
-  boxShadow: '0 0 18px rgba(99, 102, 241, 0.22), inset 0 1px 0 rgba(99, 102, 241, 0.08)',
-  background: 'rgba(99, 102, 241, 0.08)',
+  borderColor: 'var(--accent)',
+  boxShadow: 'var(--shadow-panel-hover)',
+  background: 'var(--panel-3)',
   transform: 'translateY(-1px)',
-} as any);
-
-globalStyle('.settings-button:hover::after', {
-  animation: 'shimmer-sweep 700ms ease',
 } as any);
 
 globalStyle('.settings-button:active', {
@@ -133,14 +120,14 @@ globalStyle('.settings-button:active', {
 } as any);
 
 globalStyle('.settings-button-secondary', {
-  borderColor: 'rgba(255, 183, 0, 0.22)',
-  background: 'rgba(255, 183, 0, 0.04)',
+  borderColor: 'var(--line)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.settings-button-secondary:hover', {
-  borderColor: 'rgba(255, 183, 0, 0.5)',
-  boxShadow: '0 0 18px rgba(255, 183, 0, 0.2)',
-  background: 'rgba(255, 183, 0, 0.08)',
+  borderColor: 'var(--hold)',
+  boxShadow: 'var(--shadow-panel-hover)',
+  background: 'var(--panel-2)',
 } as any);
 
 globalStyle('.policy-row-split', {
@@ -159,9 +146,9 @@ globalStyle('.policy-row-actions', {
 globalStyle('.settings-inline-button', {
   position: 'relative',
   overflow: 'hidden',
-  border: '1px solid rgba(99, 102, 241, 0.13)',
+  border: '1px solid var(--line)',
   borderRadius: 'var(--radius-sm)',
-  background: 'rgba(99, 102, 241, 0.035)',
+  background: 'var(--panel-2)',
   color: 'var(--muted)',
   padding: '6px 10px',
   cursor: 'pointer',
@@ -173,8 +160,8 @@ globalStyle('.settings-inline-button', {
 } as any);
 
 globalStyle('.settings-inline-button:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.3)',
-  boxShadow: '0 0 10px rgba(99, 102, 241, 0.12)',
+  borderColor: 'var(--line-strong)',
+  boxShadow: 'var(--shadow-panel)',
   color: 'var(--text)',
   transform: 'translateY(-1px)',
 } as any);
@@ -184,14 +171,14 @@ globalStyle('.settings-inline-button:active', {
 } as any);
 
 globalStyle('.settings-inline-button-danger', {
-  borderColor: 'rgba(255, 51, 88, 0.2)',
-  background: 'rgba(255, 51, 88, 0.05)',
-  color: 'rgba(255, 80, 110, 0.85)',
+  borderColor: 'var(--line)',
+  background: 'var(--panel)',
+  color: 'var(--sell)',
 } as any);
 
 globalStyle('.settings-inline-button-danger:hover', {
-  borderColor: 'rgba(255, 51, 88, 0.45)',
-  boxShadow: '0 0 10px rgba(255, 51, 88, 0.15)',
+  borderColor: 'var(--sell)',
+  boxShadow: 'var(--shadow-panel)',
   color: 'var(--sell)',
 } as any);
 
@@ -204,9 +191,9 @@ globalStyle('.settings-chip-row', {
 } as any);
 
 globalStyle('.settings-chip', {
-  border: '1px solid rgba(99, 102, 241, 0.1)',
+  border: '1px solid var(--line)',
   borderRadius: 'var(--radius-sm)',
-  background: 'rgba(99, 102, 241, 0.03)',
+  background: 'var(--panel)',
   color: 'var(--muted)',
   padding: '8px 12px',
   cursor: 'pointer',
@@ -218,16 +205,16 @@ globalStyle('.settings-chip', {
 } as any);
 
 globalStyle('.settings-chip:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.22)',
-  background: 'rgba(99, 102, 241, 0.07)',
+  borderColor: 'var(--line-strong)',
+  background: 'var(--panel-2)',
   color: 'var(--text)',
 } as any);
 
 globalStyle('.settings-chip.active', {
-  borderColor: 'rgba(99, 102, 241, 0.38)',
-  background: 'rgba(99, 102, 241, 0.1)',
+  borderColor: 'var(--accent)',
+  background: 'var(--accent-subtle)',
   color: 'var(--text)',
-  boxShadow: '0 0 10px rgba(99, 102, 241, 0.1)',
+  boxShadow: 'var(--shadow-panel)',
 } as any);
 
 globalStyle('.policy-card', {
@@ -237,7 +224,7 @@ globalStyle('.policy-card', {
 
 globalStyle('.policy-card-inline', {
   marginTop: '14px',
-  background: 'rgba(10, 20, 40, 0.75)',
+  background: 'var(--panel-2)',
 } as any);
 
 /* ============================================================
@@ -278,16 +265,16 @@ globalStyle('.agent-stage-header', {
   gap: '18px',
   alignItems: 'flex-start',
   padding: '14px 16px',
-  border: '1px solid rgba(99, 102, 241, 0.12)',
+  border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(99, 102, 241, 0.03)',
+  background: 'var(--panel-2)',
   transition: 'border-color 160ms ease',
   flexShrink: 0,
   marginBottom: '12px',
 } as any);
 
 globalStyle('.agent-stage-header:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.2)',
+  borderColor: 'var(--line-strong)',
 } as any);
 
 globalStyle('.agent-stage-pills', {
@@ -311,13 +298,13 @@ globalStyle('.agent-insight-card', {
   padding: '16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(8, 18, 38, 0.85)',
+  background: 'var(--panel)',
   transition: 'border-color 160ms ease, box-shadow 160ms ease',
 } as any);
 
 globalStyle('.agent-insight-card:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.2)',
-  boxShadow: '0 0 16px rgba(99, 102, 241, 0.05)',
+  borderColor: 'var(--line-strong)',
+  boxShadow: 'var(--shadow-panel-hover)',
 } as any);
 
 globalStyle('.agent-insight-header', {
@@ -339,12 +326,12 @@ globalStyle('.agent-pulse-item', {
   padding: '12px 13px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'rgba(2, 6, 18, 0.75)',
+  background: 'var(--panel-2)',
   transition: 'border-color 150ms ease',
 } as any);
 
 globalStyle('.agent-pulse-item:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.22)',
+  borderColor: 'var(--line-strong)',
 } as any);
 
 globalStyle('.agent-pulse-item span', {
@@ -368,13 +355,13 @@ globalStyle('.agent-step-card', {
   padding: '12px 13px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'rgba(2, 6, 18, 0.75)',
+  background: 'var(--panel-2)',
   transition: 'border-color 150ms ease, background 150ms ease',
 } as any);
 
 globalStyle('.agent-step-card:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.22)',
-  background: 'rgba(99, 102, 241, 0.02)',
+  borderColor: 'var(--line-strong)',
+  background: 'var(--panel-3)',
 } as any);
 
 globalStyle('.agent-step-top', {
@@ -406,7 +393,7 @@ globalStyle('.agent-suggestion-button', {
   padding: '12px 13px 12px 15px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'rgba(2, 6, 18, 0.75)',
+  background: 'var(--panel-2)',
   color: 'var(--text)',
   font: 'inherit',
   cursor: 'pointer',
@@ -430,9 +417,9 @@ globalStyle('.agent-suggestion-button::before', {
 } as any);
 
 globalStyle('.agent-suggestion-button:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.22)',
-  boxShadow: '0 0 14px rgba(99, 102, 241, 0.08)',
-  background: 'rgba(99, 102, 241, 0.03)',
+  borderColor: 'var(--line-strong)',
+  boxShadow: 'var(--shadow-panel)',
+  background: 'var(--panel-3)',
   transform: 'translateX(3px)',
 } as any);
 
@@ -448,22 +435,21 @@ globalStyle('.agent-chat-transcript', {
   flex: 1,
   minHeight: 0,
   overflowY: 'auto',
-  border: '1px solid rgba(99, 102, 241, 0.16)',
+  border: '1px solid var(--line)',
   borderRadius: 'var(--radius-lg)',
-  background: 'rgba(1, 3, 10, 0.92)',
+  background: 'var(--panel)',
   padding: '20px',
   display: 'flex',
   flexDirection: 'column',
   gap: '12px',
   animation: 'fade-in 200ms ease',
-  boxShadow:
-    'inset 0 0 60px rgba(0, 0, 0, 0.5), 0 0 28px rgba(99, 102, 241, 0.06), 0 0 0 1px rgba(99, 102, 241, 0.04)',
+  boxShadow: 'var(--shadow-panel)',
 } as any);
 
 globalStyle('.agent-chat-sidecar', {
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(8, 18, 38, 0.85)',
+  background: 'var(--panel)',
   padding: '14px',
 } as any);
 
@@ -477,37 +463,35 @@ globalStyle('.agent-chat-message', {
 } as any);
 
 globalStyle('.agent-chat-message:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.22)',
+  borderColor: 'var(--line-strong)',
 } as any);
 
 globalStyle('.agent-chat-user', {
   justifySelf: 'end',
-  background: 'rgba(99, 102, 241, 0.06)',
-  borderColor: 'rgba(99, 102, 241, 0.18)',
+  background: 'var(--accent-subtle)',
+  borderColor: 'var(--accent)',
   borderLeft: '2px solid var(--accent)',
-  boxShadow: 'inset -4px 0 20px rgba(99, 102, 241, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3)',
 } as any);
 
 globalStyle('.agent-chat-assistant', {
   justifySelf: 'start',
-  background: 'rgba(255, 183, 0, 0.04)',
-  borderColor: 'rgba(255, 183, 0, 0.12)',
+  background: 'var(--panel-2)',
+  borderColor: 'var(--line)',
   borderLeft: '2px solid var(--accent-2)',
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
 } as any);
 
 globalStyle('.agent-chat-system', {
   justifySelf: 'center',
   width: '100%',
   maxWidth: 'none',
-  background: 'rgba(8, 18, 38, 0.8)',
+  background: 'var(--panel-3)',
   borderLeft: '2px solid var(--muted)',
 } as any);
 
 globalStyle('.agent-chat-muted', { borderColor: 'var(--line)' } as any);
 
 globalStyle('.agent-chat-warn', {
-  borderColor: 'rgba(255, 183, 0, 0.2)',
+  borderColor: 'var(--hold)',
   borderLeft: '2px solid var(--hold)',
 } as any);
 
@@ -532,9 +516,9 @@ globalStyle('.agent-chat-composer', {
   display: 'grid',
   gap: '12px',
   padding: '16px',
-  border: '1px solid rgba(99, 102, 241, 0.1)',
+  border: '1px solid var(--line)',
   borderRadius: 'var(--radius-lg)',
-  background: 'rgba(4, 10, 24, 0.8)',
+  background: 'var(--panel-2)',
   flexShrink: 0,
   marginTop: '12px',
 } as any);

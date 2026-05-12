@@ -1,6 +1,6 @@
 import { globalStyle, keyframes, style } from '@vanilla-extract/css';
 
-/* ── AGENT PAGE LAYOUT ──────────────────────────────────── */
+/* -- AGENT PAGE LAYOUT ---------------------------------- */
 
 export const agentPageHero = style({
   display: 'grid',
@@ -20,7 +20,7 @@ export const agentHeroSub = style({
   marginTop: '2px',
 });
 
-/* ── QUICK CHIPS ────────────────────────────────────────── */
+/* -- QUICK CHIPS ---------------------------------------- */
 
 export const agentQuickChips = style({
   display: 'flex',
@@ -33,21 +33,21 @@ export const agentQuickChip = style({
   padding: '6px 14px',
   borderRadius: '999px',
   border: '1px solid var(--line)',
-  background: 'rgba(255,255,255,0.03)',
+  background: 'var(--panel)',
   color: 'var(--muted-strong)',
   font: '13px/1 var(--font-ui)',
   cursor: 'pointer',
   transition: 'border-color 140ms ease, background 140ms ease, color 140ms ease',
   whiteSpace: 'nowrap',
   ':hover': {
-    borderColor: 'rgba(99,102,241,0.5)',
-    background: 'rgba(99,102,241,0.08)',
+    borderColor: 'var(--accent)',
+    background: 'color-mix(in srgb, var(--accent) 6%, transparent)',
     color: 'var(--text)',
   },
   ':active': { transform: 'scale(0.97)' },
 });
 
-/* ── ANALYSIS STEPPER ───────────────────────────────────── */
+/* -- ANALYSIS STEPPER ----------------------------------- */
 
 const pulse = keyframes({
   '0%,100%': { opacity: 1 },
@@ -61,7 +61,7 @@ export const agentStepper = style({
   padding: '14px 20px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'rgba(8,10,24,0.6)',
+  background: 'var(--panel-2)',
   marginBottom: '16px',
   overflow: 'hidden',
 });
@@ -84,16 +84,14 @@ export const agentStepperDot = style({
 });
 
 export const agentStepperDotActive = style({
-  background: '#6366f1',
-  boxShadow: '0 0 8px rgba(99,102,241,0.6)',
+  background: 'var(--accent)',
   animationName: pulse,
   animationDuration: '1.2s',
   animationIterationCount: 'infinite',
 });
 
 export const agentStepperDotDone = style({
-  background: '#22c55e',
-  boxShadow: '0 0 6px rgba(34,197,94,0.4)',
+  background: 'var(--buy)',
 });
 
 export const agentStepperLabel = style({
@@ -108,11 +106,11 @@ export const agentStepperLabel = style({
 });
 
 export const agentStepperLabelActive = style({
-  color: '#818cf8',
+  color: 'var(--accent)',
 });
 
 export const agentStepperLabelDone = style({
-  color: '#4ade80',
+  color: 'var(--buy)',
 });
 
 export const agentStepperConnector = style({
@@ -123,7 +121,7 @@ export const agentStepperConnector = style({
   margin: '0 8px',
 });
 
-/* ── MAIN DUAL VIEW ─────────────────────────────────────── */
+/* -- MAIN DUAL VIEW ------------------------------------- */
 
 export const agentDialogueSection = style({ marginTop: '0' });
 
@@ -144,7 +142,7 @@ export const agentDialogueStage = style({
   minHeight: '480px',
 });
 
-/* ── CHAT TRANSCRIPT ─────────────────────────────────────── */
+/* -- CHAT TRANSCRIPT ------------------------------------ */
 
 export const agentChatTranscript = style({
   flex: 1,
@@ -152,12 +150,11 @@ export const agentChatTranscript = style({
   overflowY: 'auto',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-lg)',
-  background: 'rgba(4,5,14,0.9)',
+  background: 'var(--panel)',
   padding: '20px',
   display: 'flex',
   flexDirection: 'column',
   gap: '10px',
-  animation: 'fade-in 200ms ease',
 });
 
 export const agentChatMessage = style({
@@ -165,30 +162,29 @@ export const agentChatMessage = style({
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
   padding: '12px 15px',
-  animation: 'fade-up 200ms ease both',
 });
 
 export const agentChatUser = style({
   justifySelf: 'end',
-  background: 'rgba(99,102,241,0.08)',
-  borderColor: 'rgba(99,102,241,0.28)',
-  borderLeft: '2px solid #6366f1',
+  background: 'color-mix(in srgb, var(--accent) 6%, transparent)',
+  borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)',
+  borderLeft: '2px solid var(--accent)',
 });
 
 export const agentChatAssistant = style({
   justifySelf: 'start',
-  background: 'rgba(255,255,255,0.03)',
-  borderColor: 'rgba(255,255,255,0.08)',
-  borderLeft: '2px solid rgba(255,255,255,0.2)',
+  background: 'var(--panel-2)',
+  borderColor: 'var(--line)',
+  borderLeft: '2px solid var(--line-strong)',
 });
 
 export const agentChatSystem = style({
   justifySelf: 'center',
   width: '100%',
   maxWidth: 'none',
-  background: 'rgba(8,10,24,0.5)',
+  background: 'var(--panel-3)',
   borderLeft: '2px solid var(--muted)',
-  borderColor: 'rgba(255,255,255,0.06)',
+  borderColor: 'var(--line)',
 });
 
 export const agentChatMuted = style({
@@ -196,9 +192,9 @@ export const agentChatMuted = style({
 });
 
 export const agentChatWarn = style({
-  borderColor: 'rgba(251,191,36,0.3)',
-  borderLeft: '2px solid #f59e0b',
-  background: 'rgba(251,191,36,0.05)',
+  borderColor: 'color-mix(in srgb, var(--accent-2) 30%, transparent)',
+  borderLeft: '2px solid var(--accent-2)',
+  background: 'color-mix(in srgb, var(--accent-2) 4%, transparent)',
 });
 
 export const agentChatMeta = style({
@@ -218,7 +214,7 @@ export const agentChatBody = style({
   lineHeight: '1.7',
 });
 
-/* ── STICKY COMPOSER (viewport bottom) ─────────────────── */
+/* -- STICKY COMPOSER (viewport bottom) ----------------- */
 
 export const agentStickyComposer = style({
   position: 'fixed',
@@ -229,9 +225,9 @@ export const agentStickyComposer = style({
   display: 'grid',
   gap: '10px',
   padding: '14px 24px 16px',
-  borderTop: '1px solid rgba(99,102,241,0.2)',
-  background: 'rgba(8,10,24,0.95)',
-  backdropFilter: 'blur(12px)',
+  borderTop: '1px solid var(--line)',
+  background: 'var(--panel)',
+  boxShadow: '0 -4px 12px color-mix(in srgb, var(--text) 4%, transparent)',
   '@media': {
     '(max-width: 1180px)': {
       left: 0,
@@ -239,7 +235,7 @@ export const agentStickyComposer = style({
   },
 });
 
-/* ── COMPOSER (legacy, inside dialogue stage) ──────────── */
+/* -- COMPOSER (legacy, inside dialogue stage) ----------- */
 
 export const agentChatComposer = style({
   display: 'grid',
@@ -247,12 +243,12 @@ export const agentChatComposer = style({
   padding: '14px 16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-lg)',
-  background: 'rgba(8,10,24,0.7)',
+  background: 'var(--panel-2)',
   flexShrink: 0,
   marginTop: '10px',
   transition: 'border-color 160ms ease',
   ':focus-within': {
-    borderColor: 'rgba(99,102,241,0.35)',
+    borderColor: 'var(--accent)',
   },
 });
 
@@ -284,18 +280,18 @@ export const agentSendButton = style({
   padding: '9px 20px',
   borderRadius: 'var(--radius)',
   border: 'none',
-  background: '#6366f1',
+  background: 'var(--accent)',
   color: '#fff',
   font: '600 13px/1 var(--font-ui)',
   cursor: 'pointer',
   flexShrink: 0,
-  transition: 'background 150ms ease, transform 120ms ease, opacity 150ms ease',
-  ':hover': { background: '#4f46e5' },
+  transition: 'opacity 150ms ease, transform 120ms ease',
+  ':hover': { opacity: 0.9 },
   ':active': { transform: 'scale(0.97)' },
   ':disabled': { opacity: 0.45, cursor: 'not-allowed', transform: 'none' },
 });
 
-/* ── INSIGHT RAIL ────────────────────────────────────────── */
+/* -- INSIGHT RAIL --------------------------------------- */
 
 export const agentInsightRail = style({
   display: 'grid',
@@ -311,9 +307,12 @@ export const agentInsightCard = style({
   padding: '18px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(8,10,24,0.7)',
-  transition: 'border-color 150ms ease',
-  ':hover': { borderColor: 'rgba(99,102,241,0.2)' },
+  background: 'var(--panel)',
+  transition: 'border-color 150ms ease, box-shadow 150ms ease',
+  ':hover': {
+    borderColor: 'var(--line-strong)',
+    boxShadow: 'var(--shadow-panel)',
+  },
 });
 
 export const agentInsightHeader = style({
@@ -323,7 +322,7 @@ export const agentInsightHeader = style({
   alignItems: 'flex-start',
 });
 
-/* ── INSIGHT ANALYSIS RESULT ─────────────────────────────── */
+/* -- INSIGHT ANALYSIS RESULT ---------------------------- */
 
 export const agentThesis = style({
   font: '600 15px/1.5 var(--font-ui)',
@@ -346,7 +345,7 @@ export const agentRationaleItem = style({
   color: 'var(--muted-strong)',
   '::before': {
     content: '"·"',
-    color: '#6366f1',
+    color: 'var(--accent)',
     fontWeight: 700,
     flexShrink: 0,
     marginTop: '1px',
@@ -359,10 +358,10 @@ export const agentWarningItem = style({
   gap: '8px',
   padding: '8px 10px',
   borderRadius: 'var(--radius)',
-  background: 'rgba(251,191,36,0.06)',
-  border: '1px solid rgba(251,191,36,0.15)',
+  background: 'color-mix(in srgb, var(--accent-2) 6%, transparent)',
+  border: '1px solid color-mix(in srgb, var(--accent-2) 15%, transparent)',
   font: '13px/1.5 var(--font-ui)',
-  color: '#fbbf24',
+  color: 'var(--accent-2)',
   '::before': {
     content: '"⚠"',
     flexShrink: 0,
@@ -374,13 +373,13 @@ export const agentWarningItem = style({
 export const agentNextStep = style({
   padding: '10px 12px',
   borderRadius: 'var(--radius)',
-  background: 'rgba(99,102,241,0.06)',
-  border: '1px solid rgba(99,102,241,0.18)',
+  background: 'color-mix(in srgb, var(--accent) 6%, transparent)',
+  border: '1px solid color-mix(in srgb, var(--accent) 18%, transparent)',
   font: '13px/1.5 var(--font-ui)',
-  color: '#a5b4fc',
+  color: 'var(--accent)',
 });
 
-/* ── ACTION BUTTONS ──────────────────────────────────────── */
+/* -- ACTION BUTTONS ------------------------------------- */
 
 export const agentActionButtons = style({
   display: 'grid',
@@ -397,12 +396,12 @@ export const agentActionBtn = style({
   padding: '12px 8px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'rgba(255,255,255,0.025)',
+  background: 'var(--panel)',
   cursor: 'pointer',
-  transition: 'border-color 140ms ease, background 140ms ease, transform 120ms ease',
+  transition: 'border-color 140ms ease, box-shadow 140ms ease, transform 120ms ease',
   ':hover': {
-    borderColor: 'rgba(99,102,241,0.4)',
-    background: 'rgba(99,102,241,0.07)',
+    borderColor: 'var(--line-strong)',
+    boxShadow: 'var(--shadow-panel)',
     transform: 'translateY(-1px)',
   },
   ':active': { transform: 'translateY(0) scale(0.98)' },
@@ -428,7 +427,7 @@ export const agentActionBtnIcon = style({
   marginBottom: '2px',
 });
 
-/* ── PULSE GRID ──────────────────────────────────────────── */
+/* -- PULSE GRID ----------------------------------------- */
 
 export const agentPulseGrid = style({
   display: 'grid',
@@ -442,9 +441,9 @@ export const agentPulseItem = style({
   padding: '10px 12px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'rgba(4,5,14,0.6)',
+  background: 'var(--panel-2)',
   transition: 'border-color 140ms ease',
-  ':hover': { borderColor: 'rgba(99,102,241,0.2)' },
+  ':hover': { borderColor: 'var(--line-strong)' },
 });
 
 globalStyle(`${agentPulseItem} span`, {
@@ -460,7 +459,7 @@ globalStyle(`${agentPulseItem} strong`, {
   wordBreak: 'break-all',
 });
 
-/* ── PLAN STEPS ──────────────────────────────────────────── */
+/* -- PLAN STEPS ----------------------------------------- */
 
 export const agentStepStack = style({ display: 'grid', gap: '8px' });
 
@@ -470,9 +469,9 @@ export const agentStepCard = style({
   padding: '10px 12px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'rgba(4,5,14,0.6)',
+  background: 'var(--panel-2)',
   transition: 'border-color 140ms ease',
-  ':hover': { borderColor: 'rgba(99,102,241,0.2)' },
+  ':hover': { borderColor: 'var(--line-strong)' },
 });
 
 export const agentStepTop = style({
@@ -503,7 +502,7 @@ export const agentStepCopy = style({
   lineHeight: '1.5',
 });
 
-/* ── HANDOFF SECTION ─────────────────────────────────────── */
+/* -- HANDOFF SECTION ------------------------------------ */
 
 export const agentHandoffActions = style({ display: 'grid', gap: '10px' });
 
@@ -511,20 +510,20 @@ export const agentRequestApprovalBtn = style({
   width: '100%',
   padding: '11px',
   borderRadius: 'var(--radius)',
-  border: '1px solid rgba(251,191,36,0.3)',
-  background: 'rgba(251,191,36,0.06)',
-  color: '#fbbf24',
+  border: '1px solid color-mix(in srgb, var(--accent-2) 30%, transparent)',
+  background: 'color-mix(in srgb, var(--accent-2) 6%, transparent)',
+  color: 'var(--accent-2)',
   font: '600 13px/1 var(--font-ui)',
   cursor: 'pointer',
   transition: 'border-color 140ms ease, background 140ms ease',
   ':hover': {
-    borderColor: 'rgba(251,191,36,0.5)',
-    background: 'rgba(251,191,36,0.1)',
+    borderColor: 'color-mix(in srgb, var(--accent-2) 50%, transparent)',
+    background: 'color-mix(in srgb, var(--accent-2) 10%, transparent)',
   },
   ':disabled': { opacity: 0.4, cursor: 'not-allowed' },
 });
 
-/* ── SUGGESTION LIST ─────────────────────────────────────── */
+/* -- SUGGESTION LIST ------------------------------------ */
 
 export const agentSuggestionList = style({ display: 'grid', gap: '6px' });
 
@@ -534,7 +533,7 @@ export const agentSuggestionButton = style({
   padding: '10px 12px 10px 14px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'rgba(4,5,14,0.5)',
+  background: 'var(--panel-2)',
   color: 'var(--muted-strong)',
   font: '13px/1.4 var(--font-ui)',
   cursor: 'pointer',
@@ -542,8 +541,8 @@ export const agentSuggestionButton = style({
   overflow: 'hidden',
   transition: 'border-color 130ms ease, background 130ms ease, color 130ms ease',
   ':hover': {
-    borderColor: 'rgba(99,102,241,0.35)',
-    background: 'rgba(99,102,241,0.06)',
+    borderColor: 'var(--accent)',
+    background: 'color-mix(in srgb, var(--accent) 4%, transparent)',
     color: 'var(--text)',
   },
   ':active': { transform: 'scale(0.99)' },
@@ -556,7 +555,7 @@ globalStyle(`${agentSuggestionButton}::before`, {
   top: 0,
   bottom: 0,
   width: '2px',
-  background: '#6366f1',
+  background: 'var(--accent)',
   transform: 'scaleY(0)',
   transformOrigin: 'center',
   transition: 'transform 130ms ease',
@@ -566,7 +565,7 @@ globalStyle(`${agentSuggestionButton}:hover::before`, {
   transform: 'scaleY(1)',
 });
 
-/* ── SESSION STAGE HEADER ────────────────────────────────── */
+/* -- SESSION STAGE HEADER ------------------------------- */
 
 export const agentStageHeader = style({
   display: 'flex',
@@ -576,7 +575,7 @@ export const agentStageHeader = style({
   padding: '12px 14px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(8,10,24,0.5)',
+  background: 'var(--panel-2)',
   flexShrink: 0,
   marginBottom: '10px',
 });
@@ -589,6 +588,6 @@ export const agentStagePills = style({
   alignItems: 'center',
 });
 
-/* ── KEEP LEGACY EXPORTS for compatibility ───────────────── */
+/* -- KEEP LEGACY EXPORTS for compatibility -------------- */
 // (used in governance / other panels that reference old names)
 export const agentInsightRailLegacy = agentInsightRail;

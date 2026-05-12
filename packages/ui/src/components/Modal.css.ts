@@ -1,13 +1,15 @@
 import { style, styleVariants } from '@vanilla-extract/css';
+import { colors } from '../tokens/colors.css.js';
 import { duration, easing } from '../tokens/motion.css.js';
 import { radii } from '../tokens/radii.css.js';
+import { shadows } from '../tokens/shadows.css.js';
 import { spacing } from '../tokens/spacing.css.js';
 import { fontSize, fontWeight } from '../tokens/typography.css.js';
 
 export const overlay = style({
   position: 'fixed',
   inset: 0,
-  background: 'rgba(0, 0, 0, 0.6)',
+  background: 'rgba(0, 0, 0, 0.3)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -23,10 +25,10 @@ export const sizes = styleVariants({
 });
 
 export const panel = style({
-  background: 'var(--surfaceRaised)',
-  border: `1px solid ${'var(--border)'}`,
-  borderRadius: radii.lg,
-  boxShadow: '0 24px 64px rgba(0, 0, 0, 0.75), 0 4px 16px rgba(0, 0, 0, 0.55)',
+  background: colors.surface,
+  border: `1px solid ${colors.border}`,
+  borderRadius: radii.xl,
+  boxShadow: shadows.xl,
   display: 'flex',
   flexDirection: 'column',
   maxHeight: '85vh',
@@ -38,14 +40,14 @@ export const header = style({
   alignItems: 'center',
   justifyContent: 'space-between',
   padding: `${spacing.lg} ${spacing.xl}`,
-  borderBottom: `1px solid ${'var(--border)'}`,
+  borderBottom: `1px solid ${colors.border}`,
 });
 
 export const title = style({
   margin: 0,
   fontSize: fontSize.xl,
   fontWeight: fontWeight.semibold,
-  color: 'var(--textStrong)',
+  color: colors.textStrong,
 });
 
 export const body = style({
@@ -59,19 +61,22 @@ export const footer = style({
   justifyContent: 'flex-end',
   gap: spacing.sm,
   padding: `${spacing.lg} ${spacing.xl}`,
-  borderTop: `1px solid ${'var(--border)'}`,
+  borderTop: `1px solid ${colors.border}`,
 });
 
 export const closeBtn = style({
   background: 'transparent',
   border: 'none',
-  color: 'var(--textMuted)',
+  color: colors.textMuted,
   cursor: 'pointer',
   padding: spacing.xs,
   fontSize: fontSize.xl,
+  borderRadius: radii.sm,
+  transition: `color ${duration.fast} ${easing.out}, background ${duration.fast} ${easing.out}`,
   selectors: {
     '&:hover': {
-      color: 'var(--text)',
+      color: colors.text,
+      background: colors.accentSubtle,
     },
   },
 });

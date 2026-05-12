@@ -16,29 +16,27 @@ globalStyle('.focus-row', {
   borderRadius: 'var(--radius)',
   background: 'var(--panel)',
   overflow: 'clip',
-  transition:
-    'border-color 150ms ease, background 150ms ease, box-shadow 150ms ease, transform 150ms ease',
+  transition: 'border-color 180ms ease, background 180ms ease, transform 180ms ease',
 } as any);
 
 globalStyle('.focus-row::before', {
   content: '""',
   position: 'absolute',
   inset: '0 auto 0 0',
-  width: '2px',
-  borderRadius: 0,
+  width: '3px',
+  borderRadius: '0 2px 2px 0',
   background: 'var(--accent)',
-  opacity: 0.28,
-  transition: 'opacity 150ms ease',
+  opacity: 0.2,
+  transition: 'opacity 180ms ease',
 } as any);
 
 globalStyle('.focus-row:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.2)',
-  background: 'rgba(99, 102, 241, 0.035)',
-  boxShadow: '0 0 18px rgba(99, 102, 241, 0.06)',
-  transform: 'translateX(3px)',
+  borderColor: 'var(--line-strong)',
+  background: 'var(--panel-2)',
+  transform: 'translateX(2px)',
 } as any);
 
-globalStyle('.focus-row:hover::before', { opacity: 0.9 } as any);
+globalStyle('.focus-row:hover::before', { opacity: 0.8 } as any);
 
 globalStyle('.focus-row:last-child', { marginBottom: 0 } as any);
 
@@ -103,7 +101,7 @@ globalStyle('.inspection-json', {
   padding: '14px 16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(3, 6, 18, 0.8)',
+  background: 'var(--panel-2)',
   color: 'var(--muted)',
   font: '12px/1.6 var(--font-data)',
   whiteSpace: 'pre-wrap',
@@ -111,64 +109,62 @@ globalStyle('.inspection-json', {
 } as any);
 
 globalStyle('.panel-title', {
-  font: '700 17px/1.1 var(--font-display)',
-  letterSpacing: '0.05em',
-  textTransform: 'uppercase',
+  font: '600 16px/1.3 var(--font-display)',
   color: 'var(--text-strong)',
 } as any);
 
 globalStyle('.panel-badge', {
   padding: '6px 11px',
-  background: 'rgba(99, 102, 241, 0.07)',
+  background: 'rgba(99, 102, 241, 0.06)',
   color: 'var(--accent)',
-  border: '1px solid rgba(99, 102, 241, 0.14)',
+  border: '1px solid rgba(99, 102, 241, 0.12)',
   borderRadius: 'var(--radius-sm)',
 } as any);
 
 globalStyle('.panel-badge.accent', {
-  background: 'rgba(99, 102, 241, 0.09)',
+  background: 'rgba(99, 102, 241, 0.08)',
   color: 'var(--info)',
-  borderColor: 'rgba(99, 102, 241, 0.16)',
+  borderColor: 'rgba(99, 102, 241, 0.14)',
 } as any);
 
 globalStyle('.panel-badge.muted', {
-  background: 'rgba(255, 255, 255, 0.035)',
+  background: 'var(--panel-2)',
   color: 'var(--muted)',
-  borderColor: 'rgba(255, 255, 255, 0.06)',
+  borderColor: 'var(--line)',
 } as any);
 
 globalStyle('.badge-info', {
-  background: 'rgba(99, 102, 241, 0.09)',
+  background: 'rgba(99, 102, 241, 0.08)',
   color: 'var(--info)',
-  borderColor: 'rgba(99, 102, 241, 0.16)',
+  borderColor: 'rgba(99, 102, 241, 0.14)',
 } as any);
 
 globalStyle('.badge-ok, .badge-success', {
-  background: 'rgba(0, 232, 157, 0.08)',
+  background: 'rgba(16, 185, 129, 0.08)',
   color: 'var(--buy)',
-  borderColor: 'rgba(0, 232, 157, 0.15)',
+  borderColor: 'rgba(16, 185, 129, 0.15)',
 } as any);
 
 globalStyle('.badge-warn', {
-  background: 'rgba(255, 183, 0, 0.08)',
+  background: 'rgba(245, 158, 11, 0.08)',
   color: 'var(--hold)',
-  borderColor: 'rgba(255, 183, 0, 0.15)',
+  borderColor: 'rgba(245, 158, 11, 0.15)',
 } as any);
 
 globalStyle('.badge-danger', {
-  background: 'rgba(255, 51, 88, 0.08)',
+  background: 'rgba(239, 68, 68, 0.08)',
   color: 'var(--sell)',
-  borderColor: 'rgba(255, 51, 88, 0.15)',
+  borderColor: 'rgba(239, 68, 68, 0.15)',
 } as any);
 
 globalStyle('.badge-muted', {
-  background: 'rgba(255, 255, 255, 0.035)',
+  background: 'var(--panel-2)',
   color: 'var(--muted)',
-  borderColor: 'rgba(255, 255, 255, 0.06)',
+  borderColor: 'var(--line)',
 } as any);
 
 /* ============================================================
-   TABLES
+   TABLES — clean minimal design
    ============================================================ */
 
 globalStyle('.table-wrap', {
@@ -176,7 +172,7 @@ globalStyle('.table-wrap', {
   overflowX: 'auto',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(8, 16, 38, 0.9)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.table-wrap table', {
@@ -193,10 +189,10 @@ globalStyle('th, td', {
 
 globalStyle('th', {
   font: '600 10px/1 var(--font-data)',
-  color: 'var(--muted-strong)',
+  color: 'var(--muted)',
   textTransform: 'uppercase',
-  letterSpacing: '0.12em',
-  background: 'rgba(0, 180, 255, 0.04)',
+  letterSpacing: '0.1em',
+  background: 'var(--panel-2)',
   borderBottomColor: 'var(--line)',
 } as any);
 
@@ -211,15 +207,15 @@ globalStyle('.table-row-hover', {
 } as any);
 
 globalStyle('.table-row-hover:hover, .table-row-hover:focus-within', {
-  background: 'rgba(99, 102, 241, 0.04)',
+  background: 'var(--panel-2)',
 } as any);
 
 globalStyle('.table-row-hover:hover td, .table-row-hover:focus-within td', {
-  borderBottomColor: 'rgba(99, 102, 241, 0.1)',
+  borderBottomColor: 'var(--line-strong)',
 } as any);
 
 globalStyle('.table-row-hover:hover td:first-child, .table-row-hover:focus-within td:first-child', {
-  boxShadow: 'inset 2px 0 0 var(--accent)',
+  boxShadow: 'inset 3px 0 0 var(--accent)',
 } as any);
 
 globalStyle('.symbol-cell', {
@@ -247,22 +243,20 @@ globalStyle('.table-note', {
 globalStyle('.inline-action', {
   position: 'relative',
   overflow: 'hidden',
-  border: '1px solid rgba(255, 51, 88, 0.2)',
-  background: 'rgba(255, 51, 88, 0.06)',
+  border: '1px solid rgba(239, 68, 68, 0.2)',
+  background: 'rgba(239, 68, 68, 0.06)',
   color: 'var(--sell)',
   borderRadius: 'var(--radius-sm)',
   padding: '6px 10px',
   cursor: 'pointer',
   font: '600 11px/1 var(--font-ui)',
   letterSpacing: '0.02em',
-  transition:
-    'border-color 140ms ease, background 140ms ease, box-shadow 140ms ease, transform 120ms ease',
+  transition: 'border-color 140ms ease, background 140ms ease, transform 120ms ease',
 } as any);
 
 globalStyle('.inline-action:hover', {
-  background: 'rgba(255, 51, 88, 0.12)',
-  borderColor: 'rgba(255, 51, 88, 0.38)',
-  boxShadow: '0 0 10px rgba(255, 51, 88, 0.15)',
+  background: 'rgba(239, 68, 68, 0.10)',
+  borderColor: 'rgba(239, 68, 68, 0.35)',
   transform: 'translateY(-1px)',
 } as any);
 
@@ -280,15 +274,14 @@ globalStyle(
 );
 
 globalStyle('.inline-action-approve', {
-  borderColor: 'rgba(0, 232, 157, 0.2)',
-  background: 'rgba(0, 232, 157, 0.06)',
+  borderColor: 'rgba(16, 185, 129, 0.2)',
+  background: 'rgba(16, 185, 129, 0.06)',
   color: 'var(--buy)',
 } as any);
 
 globalStyle('.inline-action-approve:hover', {
-  background: 'rgba(0, 232, 157, 0.12)',
-  borderColor: 'rgba(0, 232, 157, 0.38)',
-  boxShadow: '0 0 10px rgba(0, 232, 157, 0.15)',
+  background: 'rgba(16, 185, 129, 0.10)',
+  borderColor: 'rgba(16, 185, 129, 0.35)',
 } as any);
 
 globalStyle('.action-group', {
@@ -317,34 +310,32 @@ globalStyle('.log-item', {
   borderRadius: 'var(--radius)',
   background: 'var(--panel)',
   overflow: 'hidden',
-  transition:
-    'border-color 150ms ease, background 150ms ease, box-shadow 150ms ease, transform 150ms ease',
+  transition: 'border-color 180ms ease, background 180ms ease, transform 180ms ease',
 } as any);
 
 globalStyle('.log-item::before', {
   content: '""',
   position: 'absolute',
   inset: '0 auto 0 0',
-  width: '2px',
-  borderRadius: 0,
+  width: '3px',
+  borderRadius: '0 2px 2px 0',
   background: 'var(--accent)',
-  opacity: 0.28,
-  transition: 'opacity 150ms ease',
+  opacity: 0.2,
+  transition: 'opacity 180ms ease',
 } as any);
 
 globalStyle('.log-item:hover', {
-  borderColor: 'rgba(99, 102, 241, 0.18)',
-  background: 'rgba(99, 102, 241, 0.03)',
-  boxShadow: '0 0 16px rgba(99, 102, 241, 0.05)',
-  transform: 'translateX(3px)',
+  borderColor: 'var(--line-strong)',
+  background: 'var(--panel-2)',
+  transform: 'translateX(2px)',
 } as any);
 
-globalStyle('.log-item:hover::before', { opacity: 0.9 } as any);
+globalStyle('.log-item:hover::before', { opacity: 0.8 } as any);
 
 globalStyle('.log-item:last-child', { marginBottom: 0 } as any);
 
 globalStyle('.log-time', {
-  color: 'var(--muted-strong)',
+  color: 'var(--muted)',
   font: '600 11px/1.2 var(--font-data)',
 } as any);
 
@@ -355,7 +346,7 @@ globalStyle('.log-title', {
 
 globalStyle('.log-copy', {
   marginTop: '4px',
-  color: 'var(--muted-strong)',
+  color: 'var(--muted)',
   fontSize: '12px',
   lineHeight: '1.6',
 } as any);
@@ -367,21 +358,21 @@ globalStyle('.log-tag', {
 } as any);
 
 globalStyle('.log-tag.buy', {
-  background: 'rgba(0, 232, 157, 0.1)',
+  background: 'rgba(16, 185, 129, 0.08)',
   color: 'var(--buy)',
-  border: '1px solid rgba(0, 232, 157, 0.18)',
+  border: '1px solid rgba(16, 185, 129, 0.15)',
 } as any);
 
 globalStyle('.log-tag.sell', {
-  background: 'rgba(255, 51, 88, 0.1)',
+  background: 'rgba(239, 68, 68, 0.08)',
   color: 'var(--sell)',
-  border: '1px solid rgba(255, 51, 88, 0.18)',
+  border: '1px solid rgba(239, 68, 68, 0.15)',
 } as any);
 
 globalStyle('.log-tag.info', {
-  background: 'rgba(99, 102, 241, 0.1)',
+  background: 'rgba(99, 102, 241, 0.08)',
   color: 'var(--info)',
-  border: '1px solid rgba(99, 102, 241, 0.16)',
+  border: '1px solid rgba(99, 102, 241, 0.12)',
 } as any);
 
 /* ============================================================

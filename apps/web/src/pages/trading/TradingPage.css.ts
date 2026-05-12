@@ -1,6 +1,6 @@
 import { globalStyle, style, styleVariants } from '@vanilla-extract/css';
 
-/* ── TRADING PAGE SHELL ─────────────────────────────────── */
+/* -- TRADING PAGE SHELL --------------------------------- */
 
 export const tradingShell = style({
   display: 'flex',
@@ -16,8 +16,7 @@ export const tradingHeader = style({
   padding: '16px 20px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-xl)',
-  background:
-    'linear-gradient(140deg, rgba(8, 18, 40, 0.97) 0%, rgba(5, 10, 26, 0.98) 60%, rgba(8, 5, 28, 0.97) 100%)',
+  background: 'var(--panel)',
   boxShadow: 'var(--shadow-panel)',
   flexWrap: 'wrap',
 });
@@ -86,7 +85,7 @@ globalStyle(`${tradingHeaderStat} strong`, {
   fontWeight: 600,
 });
 
-/* ── THREE-COLUMN GRID ──────────────────────────────────── */
+/* -- THREE-COLUMN GRID ---------------------------------- */
 
 export const tradingGrid = style({
   display: 'grid',
@@ -103,7 +102,7 @@ export const tradingGrid = style({
   },
 });
 
-/* ── WATCHLIST PANEL ────────────────────────────────────── */
+/* -- WATCHLIST PANEL ------------------------------------ */
 
 export const watchlistPanel = style({
   border: '1px solid var(--line)',
@@ -144,7 +143,7 @@ export const watchlistItem = style({
   cursor: 'pointer',
   transition: 'background 150ms ease',
   ':hover': {
-    background: 'rgba(0, 212, 255, 0.04)',
+    background: 'var(--panel-2)',
   },
   ':last-child': {
     borderBottom: 'none',
@@ -152,8 +151,8 @@ export const watchlistItem = style({
 });
 
 export const watchlistItemActive = style({
-  background: 'rgba(0, 212, 255, 0.07)',
-  borderLeft: '2px solid var(--accent-live)',
+  background: 'var(--panel-3)',
+  borderLeft: '2px solid var(--accent)',
 });
 
 globalStyle(`${watchlistItem} .wl-symbol`, {
@@ -189,7 +188,7 @@ globalStyle(`${watchlistItem} .wl-change`, {
   marginTop: '2px',
 });
 
-/* ── CHART PANEL ────────────────────────────────────────── */
+/* -- CHART PANEL ---------------------------------------- */
 
 export const chartPanel = style({
   border: '1px solid var(--line)',
@@ -234,9 +233,9 @@ export const chartTimeframeBtn = style({
 });
 
 export const chartTimeframeBtnActive = style({
-  borderColor: 'rgba(0, 212, 255, 0.4)',
-  background: 'rgba(0, 212, 255, 0.08)',
-  color: 'var(--accent-live)',
+  borderColor: 'var(--accent)',
+  background: 'color-mix(in srgb, var(--accent) 8%, transparent)',
+  color: 'var(--accent)',
 });
 
 export const chartBody = style({
@@ -264,7 +263,7 @@ export const chartSignalCard = style({
   padding: '12px 14px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'rgba(0, 212, 255, 0.02)',
+  background: 'var(--panel-2)',
   textAlign: 'center',
 });
 
@@ -284,7 +283,7 @@ globalStyle(`${chartSignalCard} .sig-value`, {
   color: 'var(--text-strong)',
 });
 
-/* ── TRADE PANEL ────────────────────────────────────────── */
+/* -- TRADE PANEL ---------------------------------------- */
 
 export const tradePanel = style({
   border: '1px solid var(--line)',
@@ -312,7 +311,7 @@ export const orderTypeTabs = style({
   display: 'grid',
   gridTemplateColumns: 'repeat(3, 1fr)',
   padding: '3px',
-  background: 'rgba(2, 6, 18, 0.8)',
+  background: 'var(--panel-3)',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
   gap: '3px',
@@ -334,14 +333,15 @@ export const orderTypeTab = style({
   transition: 'all 140ms ease',
   ':hover': {
     color: 'var(--text)',
-    background: 'rgba(0, 212, 255, 0.05)',
+    background: 'var(--panel-2)',
   },
 });
 
 export const orderTypeTabActive = style({
-  borderColor: 'rgba(0, 212, 255, 0.28)',
-  background: 'rgba(0, 212, 255, 0.1)',
+  borderColor: 'var(--line-strong)',
+  background: 'var(--panel)',
   color: 'var(--text-strong)',
+  boxShadow: 'var(--shadow-panel)',
 });
 
 export const tradeInputGroup = style({
@@ -361,7 +361,7 @@ export const tradeInputLabel = style({
 export const tradeInput = style({
   width: '100%',
   padding: '10px 12px',
-  background: 'rgba(2, 6, 18, 0.8)',
+  background: 'var(--panel-2)',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
   color: 'var(--text-strong)',
@@ -369,11 +369,11 @@ export const tradeInput = style({
   fontSize: '14px',
   fontWeight: 600,
   outline: 'none',
-  transition: 'border-color 150ms ease',
+  transition: 'border-color 150ms ease, box-shadow 150ms ease',
   boxSizing: 'border-box',
   ':focus': {
-    borderColor: 'var(--accent-live)',
-    boxShadow: '0 0 0 2px rgba(0, 212, 255, 0.12)',
+    borderColor: 'var(--accent)',
+    boxShadow: '0 0 0 2px color-mix(in srgb, var(--accent) 12%, transparent)',
   },
 });
 
@@ -383,17 +383,15 @@ export const tradeBuyBtn = style({
   background: 'var(--buy)',
   border: 'none',
   borderRadius: 'var(--radius)',
-  color: '#01030c',
+  color: '#fff',
   fontFamily: 'var(--font-display)',
   fontSize: '15px',
   fontWeight: 700,
-  textTransform: 'uppercase',
-  letterSpacing: '1px',
+  letterSpacing: '0.5px',
   cursor: 'pointer',
-  transition: 'all 150ms ease',
+  transition: 'opacity 150ms ease, transform 100ms ease',
   ':hover': {
-    background: '#0dd889',
-    boxShadow: '0 0 20px rgba(0, 232, 157, 0.4)',
+    opacity: 0.9,
   },
   ':active': {
     transform: 'scale(0.98)',
@@ -410,13 +408,11 @@ export const tradeSellBtn = style({
   fontFamily: 'var(--font-display)',
   fontSize: '15px',
   fontWeight: 700,
-  textTransform: 'uppercase',
-  letterSpacing: '1px',
+  letterSpacing: '0.5px',
   cursor: 'pointer',
-  transition: 'all 150ms ease',
+  transition: 'opacity 150ms ease, transform 100ms ease',
   ':hover': {
-    background: '#f75c6e',
-    boxShadow: '0 0 20px rgba(255, 51, 88, 0.4)',
+    opacity: 0.9,
   },
   ':active': {
     transform: 'scale(0.98)',
@@ -429,15 +425,13 @@ export const tradeBuyBtnDisabled = style({
   background: 'var(--buy)',
   border: 'none',
   borderRadius: 'var(--radius)',
-  color: '#01030c',
+  color: '#fff',
   fontFamily: 'var(--font-display)',
   fontSize: '15px',
   fontWeight: 700,
-  textTransform: 'uppercase',
-  letterSpacing: '1px',
+  letterSpacing: '0.5px',
   cursor: 'not-allowed',
   opacity: 0.45,
-  transition: 'all 150ms ease',
 });
 
 export const tradeSellBtnDisabled = style({
@@ -450,11 +444,9 @@ export const tradeSellBtnDisabled = style({
   fontFamily: 'var(--font-display)',
   fontSize: '15px',
   fontWeight: 700,
-  textTransform: 'uppercase',
-  letterSpacing: '1px',
+  letterSpacing: '0.5px',
   cursor: 'not-allowed',
   opacity: 0.45,
-  transition: 'all 150ms ease',
 });
 
 export const tradeBtnRow = style({
@@ -492,7 +484,7 @@ globalStyle(`${tradeInfoRow} strong`, {
   color: 'var(--text-strong)',
 });
 
-/* ── BOTTOM BLOTTER ─────────────────────────────────────── */
+/* -- BOTTOM BLOTTER ------------------------------------- */
 
 export const blotterPanel = style({
   border: '1px solid var(--line)',

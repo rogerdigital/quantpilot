@@ -1,6 +1,6 @@
 export const fontFamily = {
-  display: '"Rajdhani", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
-  ui: '"Plus Jakarta Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
+  display: '"Sora", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
+  ui: '"Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
   data: '"JetBrains Mono", "SF Mono", "Consolas", monospace',
 } as const;
 

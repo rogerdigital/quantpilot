@@ -30,12 +30,11 @@ describe('command-deck theme stylesheet', () => {
   });
 
   it('includes the upgraded shell framing selectors', () => {
-    expect(layout).toContain('.app-shell::before');
-    expect(layout).toContain('.sidebar::after');
+    expect(layout).toContain('.app-shell');
+    expect(layout).toContain('.sidebar');
     expect(layout).toContain('.toolbar-pill');
-    expect(layout).toContain('.main-panel::before');
-    expect(layout).toContain("'.topbar'");
-    expect(layout).toContain('.topbar::before');
+    expect(layout).toContain('.main-panel');
+    expect(layout).toContain('.topbar');
   });
 
   it('includes shared data-surface selectors for tables, logs, and inspection rows', () => {
@@ -50,7 +49,7 @@ describe('command-deck theme stylesheet', () => {
     expect(panels).toContain('.overview-command-card');
     expect(panels).toContain('.overview-kpi-card');
     expect(panels).toContain('.overview-blotter-grid');
-    expect(panels).toContain('.hero-card-primary::after');
+    expect(panels).toContain('.hero-card-primary');
   });
 
   it('keeps route harmonization selectors wired into the priority console pages', () => {

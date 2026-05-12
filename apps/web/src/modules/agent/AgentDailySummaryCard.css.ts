@@ -9,9 +9,10 @@ export const summaryCard = style({
   flexDirection: 'column',
   gap: '10px',
   cursor: 'pointer',
-  transition: 'border-color 150ms ease',
+  transition: 'border-color 150ms ease, box-shadow 150ms ease',
   ':hover': {
-    borderColor: 'rgba(0, 212, 255, 0.25)',
+    borderColor: 'var(--line-strong)',
+    boxShadow: 'var(--shadow-panel-hover)',
   },
 });
 
@@ -58,8 +59,8 @@ export const summaryKindChip = styleVariants({
   pre_market: {
     padding: '2px 8px',
     borderRadius: 'var(--radius-sm)',
-    background: 'rgba(0, 212, 255, 0.1)',
-    color: 'var(--accent-live)',
+    background: 'color-mix(in srgb, var(--accent) 10%, transparent)',
+    color: 'var(--accent)',
     fontSize: '10px',
     fontFamily: 'var(--font-data)',
     fontWeight: 700,
@@ -69,8 +70,8 @@ export const summaryKindChip = styleVariants({
   intraday_monitor: {
     padding: '2px 8px',
     borderRadius: 'var(--radius-sm)',
-    background: 'rgba(255, 183, 0, 0.1)',
-    color: '#ffb700',
+    background: 'color-mix(in srgb, var(--accent-2) 10%, transparent)',
+    color: 'var(--accent-2)',
     fontSize: '10px',
     fontFamily: 'var(--font-data)',
     fontWeight: 700,
@@ -80,7 +81,7 @@ export const summaryKindChip = styleVariants({
   post_market: {
     padding: '2px 8px',
     borderRadius: 'var(--radius-sm)',
-    background: 'rgba(0, 232, 157, 0.1)',
+    background: 'color-mix(in srgb, var(--buy) 10%, transparent)',
     color: 'var(--buy)',
     fontSize: '10px',
     fontFamily: 'var(--font-data)',
@@ -91,7 +92,7 @@ export const summaryKindChip = styleVariants({
   other: {
     padding: '2px 8px',
     borderRadius: 'var(--radius-sm)',
-    background: 'rgba(100, 140, 195, 0.1)',
+    background: 'var(--panel-3)',
     color: 'var(--muted)',
     fontSize: '10px',
     fontFamily: 'var(--font-data)',
@@ -105,7 +106,7 @@ export const summaryStatusChip = styleVariants({
   completed: {
     padding: '2px 8px',
     borderRadius: 'var(--radius-sm)',
-    background: 'rgba(0, 232, 157, 0.08)',
+    background: 'color-mix(in srgb, var(--buy) 8%, transparent)',
     color: 'var(--buy)',
     fontSize: '10px',
     fontFamily: 'var(--font-data)',
@@ -114,8 +115,8 @@ export const summaryStatusChip = styleVariants({
   running: {
     padding: '2px 8px',
     borderRadius: 'var(--radius-sm)',
-    background: 'rgba(0, 212, 255, 0.08)',
-    color: 'var(--accent-live)',
+    background: 'color-mix(in srgb, var(--accent) 8%, transparent)',
+    color: 'var(--accent)',
     fontSize: '10px',
     fontFamily: 'var(--font-data)',
     fontWeight: 600,
@@ -123,7 +124,7 @@ export const summaryStatusChip = styleVariants({
   failed: {
     padding: '2px 8px',
     borderRadius: 'var(--radius-sm)',
-    background: 'rgba(255, 51, 88, 0.08)',
+    background: 'color-mix(in srgb, var(--sell) 8%, transparent)',
     color: 'var(--sell)',
     fontSize: '10px',
     fontFamily: 'var(--font-data)',
@@ -132,7 +133,7 @@ export const summaryStatusChip = styleVariants({
   queued: {
     padding: '2px 8px',
     borderRadius: 'var(--radius-sm)',
-    background: 'rgba(100, 140, 195, 0.08)',
+    background: 'var(--panel-3)',
     color: 'var(--muted)',
     fontSize: '10px',
     fontFamily: 'var(--font-data)',
@@ -143,7 +144,7 @@ export const summaryStatusChip = styleVariants({
 export const summarySkeletonLine = style({
   height: '12px',
   borderRadius: '4px',
-  background: 'rgba(100, 140, 195, 0.1)',
+  background: 'var(--panel-3)',
   animation: 'pulse 1.5s ease-in-out infinite',
 });
 
@@ -154,5 +155,5 @@ globalStyle(`${summaryCard} .cta-arrow`, {
 });
 
 globalStyle(`${summaryCard}:hover .cta-arrow`, {
-  color: 'var(--accent-live)',
+  color: 'var(--accent)',
 });

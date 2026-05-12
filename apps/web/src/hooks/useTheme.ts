@@ -5,8 +5,8 @@ export type ThemeMode = 'dark' | 'light' | 'system';
 const STORAGE_KEY = 'qp-theme';
 
 function getSystemPreference(): 'dark' | 'light' {
-  if (typeof window === 'undefined') return 'dark';
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  if (typeof window === 'undefined') return 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 function getStored(): ThemeMode {

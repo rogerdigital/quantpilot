@@ -20,11 +20,10 @@ export const drawerRoot = style({
 
 export const drawerPanel = style({
   borderRadius: 'var(--radius-lg)',
-  border: '1px solid rgba(255, 183, 0, 0.28)',
-  background: 'rgba(10, 12, 30, 0.97)',
+  border: '1px solid var(--hold)',
+  background: 'var(--panel)',
   backdropFilter: 'blur(12px)',
-  boxShadow:
-    '0 -8px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 183, 0, 0.06)',
+  boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.08), var(--shadow-panel)',
   overflow: 'hidden',
 });
 
@@ -33,8 +32,8 @@ export const drawerHead = style({
   alignItems: 'center',
   justifyContent: 'space-between',
   padding: '12px 18px 10px',
-  borderBottom: '1px solid rgba(255, 183, 0, 0.12)',
-  background: 'rgba(255, 183, 0, 0.03)',
+  borderBottom: '1px solid var(--line)',
+  background: 'var(--panel-2)',
 });
 
 export const drawerTitle = style({
@@ -52,8 +51,6 @@ export const drawerDot = style({
   height: '6px',
   borderRadius: '50%',
   background: 'var(--hold)',
-  boxShadow: '0 0 8px rgba(255, 183, 0, 0.7)',
-  animation: 'pulse-glow 1.8s ease-in-out infinite',
   flexShrink: 0,
 });
 
@@ -61,8 +58,8 @@ export const drawerCount = style({
   minWidth: '20px',
   height: '20px',
   borderRadius: '10px',
-  background: 'rgba(255, 183, 0, 0.18)',
-  border: '1px solid rgba(255, 183, 0, 0.28)',
+  background: 'var(--panel-2)',
+  border: '1px solid var(--hold)',
   padding: '0 7px',
   display: 'inline-flex',
   alignItems: 'center',
@@ -74,7 +71,7 @@ export const drawerCount = style({
 export const drawerDismiss = style({
   background: 'transparent',
   border: 'none',
-  color: 'rgba(160, 162, 210, 0.5)',
+  color: 'var(--muted)',
   cursor: 'pointer',
   font: '600 11px/1 var(--font-ui)',
   padding: '4px 8px',
@@ -97,10 +94,10 @@ export const orderCard = style({
   minWidth: '200px',
   padding: '12px 14px',
   borderRadius: 'var(--radius)',
-  border: '1px solid rgba(255, 183, 0, 0.16)',
-  background: 'rgba(255, 183, 0, 0.04)',
-  transition: 'border-color 160ms ease',
-  ':hover': { borderColor: 'rgba(255, 183, 0, 0.28)' },
+  border: '1px solid var(--line)',
+  background: 'var(--panel-2)',
+  transition: 'border-color 160ms ease, box-shadow 160ms ease',
+  ':hover': { borderColor: 'var(--line-strong)', boxShadow: 'var(--shadow-panel-hover)' },
 } as any);
 
 export const orderMeta = style({ display: 'grid', gap: '4px' });
@@ -115,7 +112,7 @@ export const orderDetail = style({
   font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
-  color: 'rgba(160, 162, 210, 0.55)',
+  color: 'var(--muted)',
 });
 
 export const orderSideBuy = style({ color: 'var(--buy)' });
@@ -141,12 +138,12 @@ const actionBase = style({
 export const approveBtn = style([
   actionBase,
   {
-    background: 'rgba(0, 232, 157, 0.1)',
-    borderColor: 'rgba(0, 232, 157, 0.25)',
+    background: 'var(--panel)',
+    borderColor: 'var(--buy)',
     color: 'var(--buy)',
     ':hover': {
-      background: 'rgba(0, 232, 157, 0.18)',
-      boxShadow: '0 0 12px rgba(0, 232, 157, 0.12)',
+      background: 'var(--panel-2)',
+      boxShadow: 'var(--shadow-panel)',
     },
   } as any,
 ]);
@@ -154,12 +151,12 @@ export const approveBtn = style([
 export const rejectBtn = style([
   actionBase,
   {
-    background: 'rgba(255, 51, 88, 0.08)',
-    borderColor: 'rgba(255, 51, 88, 0.22)',
+    background: 'var(--panel)',
+    borderColor: 'var(--sell)',
     color: 'var(--sell)',
     ':hover': {
-      background: 'rgba(255, 51, 88, 0.14)',
-      boxShadow: '0 0 12px rgba(255, 51, 88, 0.1)',
+      background: 'var(--panel-2)',
+      boxShadow: 'var(--shadow-panel)',
     },
   } as any,
 ]);
@@ -167,6 +164,6 @@ export const rejectBtn = style([
 globalStyle(`${drawerBody}::-webkit-scrollbar`, { height: '4px' });
 globalStyle(`${drawerBody}::-webkit-scrollbar-track`, { background: 'transparent' });
 globalStyle(`${drawerBody}::-webkit-scrollbar-thumb`, {
-  background: 'rgba(255, 183, 0, 0.2)',
+  background: 'var(--line-strong)',
   borderRadius: '2px',
 });

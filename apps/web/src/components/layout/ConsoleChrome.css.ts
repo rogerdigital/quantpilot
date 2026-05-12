@@ -33,43 +33,26 @@ export const appShellCollapsed = style({
   },
 });
 
-globalStyle(`${appShell}::before`, {
-  content: '""',
-  position: 'fixed',
-  left: 0,
-  right: 0,
-  top: '-80px',
-  height: '80px',
-  zIndex: 9998,
-  pointerEvents: 'none',
-  background:
-    'linear-gradient(180deg, transparent 0%, rgba(0, 212, 255, 0.022) 50%, transparent 100%)',
-  animation: 'scan-sweep 16s linear infinite',
-});
-
 /* ── MAIN PANEL ─────────────────────────────────────────── */
 
 export const mainPanel = style({
   position: 'relative',
   isolation: 'isolate',
-  padding: '20px 24px 40px',
+  height: '100vh',
+  overflowY: 'auto',
+  padding: '0 24px 40px',
   maxWidth: '1480px',
   marginLeft: 'auto',
   marginRight: 'auto',
   '@media': {
+    [tablet]: {
+      height: 'auto',
+      overflowY: 'visible',
+    },
     [mobile]: {
-      padding: '12px 12px 80px',
+      padding: '0 12px 80px',
     },
   },
-});
-
-globalStyle(`${mainPanel}::before`, {
-  content: '""',
-  position: 'absolute',
-  inset: 0,
-  zIndex: -1,
-  pointerEvents: 'none',
-  background: 'transparent',
 });
 
 /* ── SIDEBAR ────────────────────────────────────────────── */
@@ -78,9 +61,9 @@ export const sidebar = style({
   position: 'sticky',
   top: 0,
   height: '100vh',
-  padding: '24px 16px',
+  padding: '0 12px 16px',
   borderRight: '1px solid var(--line)',
-  background: 'linear-gradient(180deg, rgba(10, 20, 46, 0.99) 0%, rgba(8, 16, 36, 0.99) 100%)',
+  background: 'var(--panel)',
   display: 'flex',
   flexDirection: 'column',
   overflowY: 'auto',
@@ -92,159 +75,102 @@ export const sidebar = style({
   },
 });
 
-globalStyle(`${sidebar}::after`, {
-  content: '""',
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  width: '200%',
-  height: '1px',
-  background:
-    'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.65) 25%, rgba(255, 183, 0, 0.35) 55%, rgba(139, 92, 246, 0.25) 75%, transparent)',
-  animation: 'gradient-flow 5s linear infinite',
-  pointerEvents: 'none',
-});
-
-globalStyle(`${sidebar}::before`, {
-  content: '""',
-  position: 'absolute',
-  bottom: 0,
-  right: 0,
-  width: '120px',
-  height: '120px',
-  background: 'radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.06), transparent 70%)',
-  pointerEvents: 'none',
-});
-
 export const sidebarCollapsed = style({
   width: '60px',
-  padding: '24px 10px',
+  padding: '0 10px 16px',
   alignItems: 'center',
+  overflow: 'visible',
 });
 
 export const sidebarToggle = style({
-  position: 'absolute',
-  top: '24px',
-  right: '-13px',
-  zIndex: 50,
-  width: '26px',
-  height: '26px',
-  borderRadius: '50%',
-  border: '1px solid var(--line-strong)',
-  background: 'var(--panel-2)',
+  marginLeft: 'auto',
+  flexShrink: 0,
+  width: '24px',
+  height: '24px',
+  borderRadius: 'var(--radius-sm)',
+  border: '1px solid var(--line)',
+  background: 'var(--panel)',
   color: 'var(--muted)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   cursor: 'pointer',
-  fontSize: '12px',
+  fontSize: '11px',
   transition: 'border-color 160ms ease, color 160ms ease, background 160ms ease',
-  flexShrink: 0,
   ':hover': {
-    borderColor: 'var(--accent-live)',
-    color: 'var(--accent-live)',
-    background: 'rgba(0, 212, 255, 0.08)',
+    borderColor: 'var(--accent)',
+    color: 'var(--accent)',
+    background: 'var(--panel-2)',
   },
 });
 
 export const brand = style({
   display: 'flex',
-  gap: '12px',
-  alignItems: 'flex-start',
-  marginBottom: '24px',
-  paddingBottom: '18px',
+  gap: '10px',
+  alignItems: 'center',
+  padding: '10px 4px',
+  marginBottom: '12px',
   borderBottom: '1px solid var(--line)',
-  animation: 'slide-right 400ms ease 100ms both',
 });
 
 export const brandMark = style({
-  width: '20px',
-  height: '20px',
-  marginTop: '3px',
-  borderRadius: 0,
-  clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-  background:
-    'conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent))',
-  boxShadow: 'var(--glow-cyan)',
-  animation: 'diamond-spin 10s linear infinite',
+  width: '24px',
+  height: '24px',
+  borderRadius: 'var(--radius-sm)',
+  background: 'var(--accent)',
   flexShrink: 0,
-  transition: 'animation-duration 300ms',
-  ':hover': {
-    animationDuration: '2s',
-  },
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
 });
 
 export const brandName = style({
   color: 'var(--text-strong)',
-  font: '700 20px/1 var(--font-data)',
-  letterSpacing: '0.02em',
-  animation: 'fade-in 500ms ease 200ms both',
+  font: '700 15px/1 var(--font-display)',
+  letterSpacing: '0.01em',
 });
 
 export const brandSub = style({
-  marginTop: '6px',
+  marginTop: '4px',
   fontSize: '11px',
-  letterSpacing: '0.08em',
-  textTransform: 'none',
-  color: 'var(--muted-strong)',
+  color: 'var(--muted)',
 });
 
 export const sidebarBlock = style({
-  marginBottom: '18px',
-  padding: '13px 12px 11px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)',
-  background: 'linear-gradient(135deg, rgba(16, 30, 66, 0.90), rgba(10, 20, 46, 0.95))',
-  transition: 'border-color 180ms ease',
-  ':hover': {
-    borderColor: 'rgba(60, 140, 240, 0.35)',
-  },
+  marginBottom: '8px',
+  padding: '0 4px',
 });
 
 export const sidebarLabel = style({
   color: 'var(--muted)',
   textTransform: 'uppercase',
-  letterSpacing: '0.14em',
+  letterSpacing: '0.12em',
   fontSize: '10px',
   fontFamily: 'var(--font-data)',
 });
 
 export const navStack = style({
   display: 'grid',
-  gap: '2px',
-  marginTop: '10px',
+  gap: '1px',
+  marginTop: '4px',
   marginBottom: 0,
 });
 
 /* ── GLOBAL TOOLBAR ─────────────────────────────────────── */
 
 export const globalToolbar = style({
-  position: 'relative',
+  position: 'sticky',
+  top: 0,
   zIndex: 40,
   overflow: 'visible',
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
   gap: '18px',
-  marginBottom: '22px',
   padding: '10px 16px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius-lg)',
-  background: 'linear-gradient(135deg, rgba(10, 20, 46, 0.98), rgba(8, 16, 36, 0.99))',
-  boxShadow: '0 2px 16px rgba(0, 0, 0, 0.45)',
-  animation: 'panel-enter 250ms ease both',
-});
-
-globalStyle(`${globalToolbar}::before`, {
-  content: '""',
-  position: 'absolute',
-  top: 0,
-  left: '10%',
-  width: '80%',
-  height: '1px',
-  background:
-    'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.25), rgba(255, 183, 0, 0.12), transparent)',
-  pointerEvents: 'none',
+  borderBottom: '1px solid var(--line)',
+  background: 'var(--panel)',
+  backdropFilter: 'blur(8px)',
 });
 
 export const toolbarCopy = style({
@@ -255,13 +181,14 @@ export const toolbarCopy = style({
 export const toolbarKicker = style({
   color: 'var(--muted)',
   font: '500 10px/1 var(--font-data)',
-  letterSpacing: '0.14em',
+  letterSpacing: '0.12em',
   textTransform: 'uppercase',
 });
 
 export const toolbarTitle = style({
   font: '700 15px/1 var(--font-data)',
   letterSpacing: '0.01em',
+  color: 'var(--text-strong)',
 });
 
 export const toolbarSub = style({
@@ -303,24 +230,16 @@ export const metaCard = style({
   boxShadow: 'var(--shadow-panel)',
   transition: 'border-color 200ms ease, box-shadow 200ms ease',
   padding: '14px 16px',
-});
-
-globalStyle(`${metaCard}::before`, {
-  content: '""',
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  width: '100%',
-  height: '1px',
-  background:
-    'linear-gradient(90deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.06) 55%, transparent)',
-  pointerEvents: 'none',
+  ':hover': {
+    borderColor: 'var(--line-strong)',
+    boxShadow: 'var(--shadow-panel-hover)',
+  },
 });
 
 export const metaLabel = style({
   color: 'var(--muted)',
   textTransform: 'uppercase',
-  letterSpacing: '0.14em',
+  letterSpacing: '0.12em',
   fontSize: '10px',
   fontFamily: 'var(--font-data)',
 });
@@ -329,12 +248,11 @@ export const metaValue = style({
   marginTop: '8px',
   font: '700 18px/1 var(--font-data)',
   letterSpacing: '-0.02em',
-  animation: 'tick-up 300ms ease 200ms both',
+  color: 'var(--text-strong)',
 });
 
 export const metaValueAccent = style({
   color: 'var(--accent)',
-  textShadow: '0 0 20px rgba(0, 212, 255, 0.25)',
 });
 
 /* ── MOBILE BOTTOM NAV ──────────────────────────────────── */
@@ -352,9 +270,8 @@ export const bottomNav = style({
       justifyContent: 'space-around',
       alignItems: 'center',
       height: '56px',
-      background: 'rgba(10, 20, 46, 0.98)',
+      background: 'var(--panel)',
       borderTop: '1px solid var(--line)',
-      backdropFilter: 'blur(12px)',
     },
   },
 });

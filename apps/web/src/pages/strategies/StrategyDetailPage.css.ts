@@ -5,8 +5,7 @@ export const detailHeader = style({
   padding: '20px 24px 18px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-xl)',
-  background:
-    'linear-gradient(140deg, rgba(8, 18, 40, 0.97) 0%, rgba(5, 10, 26, 0.98) 60%, rgba(8, 5, 28, 0.97) 100%)',
+  background: 'var(--panel)',
   boxShadow: 'var(--shadow-panel)',
 });
 
@@ -18,7 +17,7 @@ export const detailBackRow = style({
   padding: '6px 12px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'rgba(0, 212, 255, 0.04)',
+  background: 'var(--panel-2)',
   color: 'var(--muted)',
   fontSize: '12px',
   fontFamily: 'var(--font-data)',
@@ -26,8 +25,8 @@ export const detailBackRow = style({
   cursor: 'pointer',
   transition: 'border-color 160ms ease, color 160ms ease',
   ':hover': {
-    borderColor: 'var(--accent-live)',
-    color: 'var(--accent-live)',
+    borderColor: 'var(--accent)',
+    color: 'var(--accent)',
   },
 });
 
@@ -62,28 +61,28 @@ export const detailStageBadge = style({
 export const detailStageBadgeVariants = styleVariants({
   live: {
     color: 'var(--buy)',
-    borderColor: 'rgba(0, 232, 157, 0.4)',
-    background: 'rgba(0, 232, 157, 0.08)',
+    borderColor: 'var(--buy)',
+    background: 'color-mix(in srgb, var(--buy) 8%, transparent)',
   },
   paper: {
-    color: 'var(--accent-live)',
-    borderColor: 'rgba(0, 212, 255, 0.4)',
-    background: 'rgba(0, 212, 255, 0.08)',
+    color: 'var(--accent)',
+    borderColor: 'var(--accent)',
+    background: 'color-mix(in srgb, var(--accent) 8%, transparent)',
   },
   candidate: {
     color: 'var(--accent-2)',
-    borderColor: 'rgba(255, 183, 0, 0.4)',
-    background: 'rgba(255, 183, 0, 0.08)',
+    borderColor: 'var(--accent-2)',
+    background: 'color-mix(in srgb, var(--accent-2) 8%, transparent)',
   },
   researching: {
     color: 'var(--accent-3)',
-    borderColor: 'rgba(139, 92, 246, 0.4)',
-    background: 'rgba(139, 92, 246, 0.08)',
+    borderColor: 'var(--accent-3)',
+    background: 'color-mix(in srgb, var(--accent-3) 8%, transparent)',
   },
   draft: {
     color: 'var(--muted)',
     borderColor: 'var(--line)',
-    background: 'rgba(0, 212, 255, 0.02)',
+    background: 'var(--panel-2)',
   },
 });
 
@@ -219,10 +218,10 @@ export const detailRunRow = style({
   padding: '10px 12px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'rgba(0, 212, 255, 0.02)',
-  transition: 'border-color 160ms ease, background 160ms ease',
+  background: 'var(--panel-2)',
+  transition: 'border-color 160ms ease, box-shadow 160ms ease',
   ':hover': {
     borderColor: 'var(--line-strong)',
-    background: 'rgba(0, 212, 255, 0.04)',
+    boxShadow: 'var(--shadow-panel)',
   },
 });
