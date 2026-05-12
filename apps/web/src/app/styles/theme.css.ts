@@ -64,6 +64,31 @@ globalStyle(':root', {
   '--radius-sm': '6px',
   '--radius-lg': '14px',
   '--radius-xl': '18px',
+
+  /* Spacing scale (4px grid) */
+  '--space-1': '4px',
+  '--space-2': '8px',
+  '--space-3': '12px',
+  '--space-4': '16px',
+  '--space-5': '20px',
+  '--space-6': '24px',
+  '--space-7': '32px',
+  '--space-8': '40px',
+
+  /* Layout */
+  '--content-max-width': '1480px',
+
+  /* Z-index layers */
+  '--z-dropdown': '100',
+  '--z-sticky': '200',
+  '--z-overlay': '1000',
+  '--z-modal': '5000',
+  '--z-toast': '9000',
+
+  /* Overlay */
+  '--overlay-dim': 'rgba(0, 0, 0, 0.4)',
+  '--overlay-heavy': 'rgba(0, 0, 0, 0.65)',
+  '--overlay-blur': 'blur(6px)',
 } as any);
 
 /* ============================================================

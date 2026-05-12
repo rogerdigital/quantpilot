@@ -46,6 +46,6 @@ export const dividerVertical = style({
 export const dragOverlay = style({
   position: 'fixed',
   inset: 0,
-  zIndex: 9999,
+  zIndex: 'var(--z-toast)' as any,
   cursor: 'col-resize',
 });

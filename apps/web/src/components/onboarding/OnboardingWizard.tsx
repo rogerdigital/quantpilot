@@ -1,9 +1,7 @@
+import { Button } from '@quantpilot/ui';
 import { type ReactNode, useCallback, useState } from 'react';
 import {
   body,
-  btn,
-  btnPrimary,
-  btnSecondary,
   btnSkip,
   featureDesc,
   featureIcon,
@@ -256,16 +254,16 @@ export function OnboardingWizard({ locale = 'en', onComplete }: OnboardingWizard
         <div className={footer}>
           <div>
             {currentStep > 0 && (
-              <button type="button" className={`${btn} ${btnSecondary}`} onClick={handleBack}>
+              <Button variant="secondary" size="md" onClick={handleBack}>
                 {locale === 'zh' ? '上一步' : 'Back'}
-              </button>
+              </Button>
             )}
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button type="button" className={btnSkip} onClick={handleSkip}>
               {locale === 'zh' ? '跳过引导' : 'Skip tour'}
             </button>
-            <button type="button" className={`${btn} ${btnPrimary}`} onClick={handleNext}>
+            <Button variant="primary" size="md" onClick={handleNext}>
               {isLast
                 ? locale === 'zh'
                   ? '开始使用'
@@ -273,7 +271,7 @@ export function OnboardingWizard({ locale = 'en', onComplete }: OnboardingWizard
                 : locale === 'zh'
                   ? '下一步'
                   : 'Next'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

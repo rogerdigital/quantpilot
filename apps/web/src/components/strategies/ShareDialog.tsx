@@ -1,3 +1,4 @@
+import { Button } from '@quantpilot/ui';
 import { useCallback, useState } from 'react';
 import { useLocale } from '../../modules/console/console.i18n.tsx';
 
@@ -43,7 +44,7 @@ export function ShareDialog({ strategyId, onClose, onShare }: ShareDialogProps) 
       } else {
         setError(data.message || 'Failed to share strategy');
       }
-    } catch (err) {
+    } catch {
       setError('Network error');
     } finally {
       setLoading(false);
@@ -55,12 +56,12 @@ export function ShareDialog({ strategyId, onClose, onShare }: ShareDialogProps) 
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 9000,
+        zIndex: 'var(--z-modal)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'rgba(3, 4, 18, 0.85)',
-        backdropFilter: 'blur(8px)',
+        background: 'var(--overlay-heavy)',
+        backdropFilter: 'var(--overlay-blur)',
       }}
       onClick={onClose}
       onKeyDown={(e) => e.key === 'Escape' && onClose()}
@@ -206,44 +207,12 @@ export function ShareDialog({ strategyId, onClose, onShare }: ShareDialogProps) 
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              padding: '8px 16px',
-              background: 'transparent',
-              border: '1px solid var(--line)',
-              borderRadius: 'var(--radius)',
-              color: 'var(--muted)',
-              font: '600 13px/1 var(--font-ui)',
-              cursor: 'pointer',
-            }}
-          >
+          <Button variant="secondary" size="md" onClick={onClose}>
             {locale === 'zh' ? '取消' : 'Cancel'}
-          </button>
-          <button
-            type="button"
-            onClick={handleShare}
-            disabled={loading}
-            style={{
-              padding: '8px 16px',
-              background: 'var(--accent)',
-              border: 'none',
-              borderRadius: 'var(--radius)',
-              color: '#fff',
-              font: '600 13px/1 var(--font-ui)',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.6 : 1,
-            }}
-          >
-            {loading
-              ? locale === 'zh'
-                ? '分享中...'
-                : 'Sharing...'
-              : locale === 'zh'
-                ? '分享'
-                : 'Share'}
-          </button>
+          </Button>
+          <Button variant="primary" size="md" onClick={handleShare} isLoading={loading}>
+            {locale === 'zh' ? '分享' : 'Share'}
+          </Button>
         </div>
       </div>
     </div>

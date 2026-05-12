@@ -1,6 +1,8 @@
+import { Button } from '@quantpilot/ui';
 import { useCallback, useEffect, useState } from 'react';
 import { EmptyState } from '../../components/layout/ConsoleChrome.tsx';
 import { useLocale } from '../../modules/console/console.i18n.tsx';
+import * as s from './MarketplacePage.css.js';
 
 interface MarketplaceStrategy {
   id: string;
@@ -117,24 +119,11 @@ export function MarketplacePage() {
   };
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className={s.pageLayout}>
       {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <h1
-          style={{
-            font: '700 24px/1.2 var(--font-ui)',
-            color: 'var(--text)',
-            marginBottom: '8px',
-          }}
-        >
-          {locale === 'zh' ? '策略市场' : 'Strategy Marketplace'}
-        </h1>
-        <p
-          style={{
-            font: '400 14px/1.5 var(--font-ui)',
-            color: 'var(--muted)',
-          }}
-        >
+      <div className={s.pageHeader}>
+        <h1 className={s.pageTitle}>{locale === 'zh' ? '策略市场' : 'Strategy Marketplace'}</h1>
+        <p className={s.pageSubtitle}>
           {locale === 'zh'
             ? '浏览和复制社区分享的量化策略'
             : 'Browse and fork community-shared quantitative strategies'}
@@ -142,46 +131,18 @@ export function MarketplacePage() {
       </div>
 
       {/* Filters */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '12px',
-          marginBottom: '24px',
-          flexWrap: 'wrap',
-        }}
-      >
-        {/* Search */}
+      <div className={s.filterRow}>
         <input
           type="text"
           placeholder={locale === 'zh' ? '搜索策略...' : 'Search strategies...'}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          style={{
-            flex: 1,
-            minWidth: '200px',
-            padding: '8px 12px',
-            background: 'var(--panel)',
-            border: '1px solid var(--line)',
-            borderRadius: 'var(--radius)',
-            color: 'var(--text)',
-            font: '400 13px/1 var(--font-ui)',
-            outline: 'none',
-          }}
+          className={s.searchInput}
         />
-
-        {/* Category */}
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as Category)}
-          style={{
-            padding: '8px 12px',
-            background: 'var(--panel)',
-            border: '1px solid var(--line)',
-            borderRadius: 'var(--radius)',
-            color: 'var(--text)',
-            font: '400 13px/1 var(--font-ui)',
-            outline: 'none',
-          }}
+          className={s.selectInput}
         >
           {CATEGORIES.map((cat) => (
             <option key={cat.value} value={cat.value}>
@@ -189,20 +150,10 @@ export function MarketplacePage() {
             </option>
           ))}
         </select>
-
-        {/* Sort */}
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortBy)}
-          style={{
-            padding: '8px 12px',
-            background: 'var(--panel)',
-            border: '1px solid var(--line)',
-            borderRadius: 'var(--radius)',
-            color: 'var(--text)',
-            font: '400 13px/1 var(--font-ui)',
-            outline: 'none',
-          }}
+          className={s.selectInput}
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -214,9 +165,7 @@ export function MarketplacePage() {
 
       {/* Strategy Grid */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>
-          {locale === 'zh' ? '加载中...' : 'Loading...'}
-        </div>
+        <div className={s.loadingState}>{locale === 'zh' ? '加载中...' : 'Loading...'}</div>
       ) : strategies.length === 0 ? (
         <EmptyState
           icon="📊"
@@ -228,190 +177,73 @@ export function MarketplacePage() {
           }
         />
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: '16px',
-          }}
-        >
+        <div className={s.strategyGrid}>
           {strategies.map((strategy) => (
             <div
               key={strategy.id}
-              style={{
-                background: 'var(--panel)',
-                border: '1px solid var(--line)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '20px',
-                cursor: 'pointer',
-                transition: 'all 150ms ease',
-              }}
+              className={s.strategyCard}
               onClick={() => setSelectedStrategy(strategy)}
               onKeyDown={(e) => e.key === 'Enter' && setSelectedStrategy(strategy)}
               role="button"
               tabIndex={0}
             >
-              {/* Header */}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  marginBottom: '12px',
-                }}
-              >
+              <div className={s.cardHeader}>
                 <div>
-                  <h3
-                    style={{
-                      font: '600 16px/1.3 var(--font-ui)',
-                      color: 'var(--text)',
-                      marginBottom: '4px',
-                    }}
-                  >
-                    {strategy.name}
-                  </h3>
-                  <div
-                    style={{
-                      font: '400 12px/1 var(--font-ui)',
-                      color: 'var(--muted)',
-                    }}
-                  >
+                  <h3 className={s.cardTitle}>{strategy.name}</h3>
+                  <div className={s.cardAuthor}>
                     {locale === 'zh' ? '作者' : 'by'} {strategy.authorName}
                   </div>
                 </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    padding: '4px 8px',
-                    background: 'var(--accent-subtle)',
-                    borderRadius: 'var(--radius-sm)',
-                    font: '600 12px/1 var(--font-data)',
-                    color: 'var(--accent)',
-                  }}
-                >
-                  ★ {strategy.rating.toFixed(1)}
-                </div>
+                <div className={s.ratingBadge}>★ {strategy.rating.toFixed(1)}</div>
               </div>
 
-              {/* Description */}
-              <p
-                style={{
-                  font: '400 13px/1.5 var(--font-ui)',
-                  color: 'var(--muted)',
-                  marginBottom: '16px',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}
-              >
+              <p className={s.cardDescription}>
                 {strategy.description || (locale === 'zh' ? '暂无描述' : 'No description')}
               </p>
 
-              {/* Metrics */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '8px',
-                  marginBottom: '16px',
-                }}
-              >
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ font: '600 14px/1 var(--font-data)', color: 'var(--buy)' }}>
+              <div className={s.cardMetrics}>
+                <div>
+                  <div className={s.cardMetricValue} style={{ color: 'var(--buy)' }}>
                     {formatPercent(strategy.metrics.cagr)}
                   </div>
-                  <div
-                    style={{
-                      font: '400 10px/1 var(--font-ui)',
-                      color: 'var(--muted)',
-                      marginTop: '2px',
-                    }}
-                  >
-                    CAGR
-                  </div>
+                  <div className={s.cardMetricLabel}>CAGR</div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ font: '600 14px/1 var(--font-data)', color: 'var(--text)' }}>
+                <div>
+                  <div className={s.cardMetricValue} style={{ color: 'var(--text)' }}>
                     {formatMetric(strategy.metrics.sharpe)}
                   </div>
-                  <div
-                    style={{
-                      font: '400 10px/1 var(--font-ui)',
-                      color: 'var(--muted)',
-                      marginTop: '2px',
-                    }}
-                  >
-                    Sharpe
-                  </div>
+                  <div className={s.cardMetricLabel}>Sharpe</div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ font: '600 14px/1 var(--font-data)', color: 'var(--sell)' }}>
+                <div>
+                  <div className={s.cardMetricValue} style={{ color: 'var(--sell)' }}>
                     {formatPercent(strategy.metrics.maxDrawdown)}
                   </div>
-                  <div
-                    style={{
-                      font: '400 10px/1 var(--font-ui)',
-                      color: 'var(--muted)',
-                      marginTop: '2px',
-                    }}
-                  >
-                    Max DD
-                  </div>
+                  <div className={s.cardMetricLabel}>Max DD</div>
                 </div>
               </div>
 
-              {/* Tags */}
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              <div className={s.tagList}>
                 {strategy.tags.slice(0, 3).map((tag) => (
-                  <span
-                    key={tag}
-                    style={{
-                      padding: '2px 8px',
-                      background: 'var(--panel-2)',
-                      borderRadius: 'var(--radius-sm)',
-                      font: '400 11px/1 var(--font-ui)',
-                      color: 'var(--muted)',
-                    }}
-                  >
+                  <span key={tag} className={s.tag}>
                     {tag}
                   </span>
                 ))}
               </div>
 
-              {/* Footer */}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  paddingTop: '12px',
-                  borderTop: '1px solid var(--line)',
-                }}
-              >
-                <div style={{ font: '400 12px/1 var(--font-ui)', color: 'var(--muted)' }}>
+              <div className={s.cardFooter}>
+                <div className={s.cardFooterMeta}>
                   {strategy.forkCount} {locale === 'zh' ? '次复制' : 'forks'}
                 </div>
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleFork(strategy.id);
                   }}
-                  style={{
-                    padding: '6px 12px',
-                    background: 'var(--accent)',
-                    border: 'none',
-                    borderRadius: 'var(--radius)',
-                    color: '#fff',
-                    font: '600 12px/1 var(--font-ui)',
-                    cursor: 'pointer',
-                  }}
                 >
                   {locale === 'zh' ? '复制策略' : 'Fork'}
-                </button>
+                </Button>
               </div>
             </div>
           ))}
@@ -421,79 +253,33 @@ export function MarketplacePage() {
       {/* Strategy Detail Modal */}
       {selectedStrategy && (
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(3, 4, 18, 0.85)',
-            backdropFilter: 'blur(8px)',
-          }}
+          className={s.modalOverlay}
           onClick={() => setSelectedStrategy(null)}
           onKeyDown={(e) => e.key === 'Escape' && setSelectedStrategy(null)}
           role="dialog"
           aria-modal="true"
         >
           <div
-            style={{
-              width: '90%',
-              maxWidth: '600px',
-              maxHeight: '80vh',
-              overflow: 'auto',
-              background: 'var(--panel)',
-              border: '1px solid var(--line)',
-              borderRadius: 'var(--radius-lg)',
-              padding: '28px',
-            }}
+            className={s.modalPanel}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
             role="document"
           >
-            <h2
-              style={{
-                font: '700 20px/1.2 var(--font-ui)',
-                color: 'var(--text)',
-                marginBottom: '8px',
-              }}
-            >
-              {selectedStrategy.name}
-            </h2>
-            <p
-              style={{
-                font: '400 13px/1.5 var(--font-ui)',
-                color: 'var(--muted)',
-                marginBottom: '20px',
-              }}
-            >
-              {selectedStrategy.description}
-            </p>
+            <h2 className={s.modalTitle}>{selectedStrategy.name}</h2>
+            <p className={s.modalDescription}>{selectedStrategy.description}</p>
 
             {/* Rating */}
-            <div style={{ marginBottom: '20px' }}>
-              <div
-                style={{
-                  font: '600 13px/1 var(--font-ui)',
-                  color: 'var(--text)',
-                  marginBottom: '8px',
-                }}
-              >
-                {locale === 'zh' ? '评分' : 'Rating'}
-              </div>
-              <div style={{ display: 'flex', gap: '4px' }}>
+            <div className={s.modalSection}>
+              <div className={s.modalSectionTitle}>{locale === 'zh' ? '评分' : 'Rating'}</div>
+              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
                     type="button"
                     onClick={() => handleRate(selectedStrategy.id, star)}
+                    className={s.starBtn}
                     style={{
-                      background: 'none',
-                      border: 'none',
-                      fontSize: '24px',
-                      cursor: 'pointer',
-                      color:
-                        star <= selectedStrategy.rating ? 'var(--accent-secondary)' : 'var(--line)',
+                      color: star <= selectedStrategy.rating ? 'var(--accent)' : 'var(--line)',
                     }}
                   >
                     ★
@@ -512,46 +298,32 @@ export function MarketplacePage() {
             </div>
 
             {/* Metrics */}
-            <div style={{ marginBottom: '20px' }}>
-              <div
-                style={{
-                  font: '600 13px/1 var(--font-ui)',
-                  color: 'var(--text)',
-                  marginBottom: '8px',
-                }}
-              >
+            <div className={s.modalSection}>
+              <div className={s.modalSectionTitle}>
                 {locale === 'zh' ? '表现指标' : 'Performance Metrics'}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+              <div className={s.modalMetricsGrid}>
                 <div>
-                  <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)' }}>
-                    CAGR
-                  </div>
-                  <div style={{ font: '600 16px/1 var(--font-data)', color: 'var(--buy)' }}>
+                  <div className={s.modalMetricLabel}>CAGR</div>
+                  <div className={s.modalMetricValue} style={{ color: 'var(--buy)' }}>
                     {formatPercent(selectedStrategy.metrics.cagr)}
                   </div>
                 </div>
                 <div>
-                  <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)' }}>
-                    Sharpe Ratio
-                  </div>
-                  <div style={{ font: '600 16px/1 var(--font-data)', color: 'var(--text)' }}>
+                  <div className={s.modalMetricLabel}>Sharpe Ratio</div>
+                  <div className={s.modalMetricValue} style={{ color: 'var(--text)' }}>
                     {formatMetric(selectedStrategy.metrics.sharpe)}
                   </div>
                 </div>
                 <div>
-                  <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)' }}>
-                    Max Drawdown
-                  </div>
-                  <div style={{ font: '600 16px/1 var(--font-data)', color: 'var(--sell)' }}>
+                  <div className={s.modalMetricLabel}>Max Drawdown</div>
+                  <div className={s.modalMetricValue} style={{ color: 'var(--sell)' }}>
                     {formatPercent(selectedStrategy.metrics.maxDrawdown)}
                   </div>
                 </div>
                 <div>
-                  <div style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)' }}>
-                    Win Rate
-                  </div>
-                  <div style={{ font: '600 16px/1 var(--font-data)', color: 'var(--text)' }}>
+                  <div className={s.modalMetricLabel}>Win Rate</div>
+                  <div className={s.modalMetricValue} style={{ color: 'var(--text)' }}>
                     {formatPercent(selectedStrategy.metrics.winRate)}
                   </div>
                 </div>
@@ -559,40 +331,20 @@ export function MarketplacePage() {
             </div>
 
             {/* Actions */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                onClick={() => setSelectedStrategy(null)}
-                style={{
-                  padding: '8px 16px',
-                  background: 'transparent',
-                  border: '1px solid var(--line)',
-                  borderRadius: 'var(--radius)',
-                  color: 'var(--muted)',
-                  font: '600 13px/1 var(--font-ui)',
-                  cursor: 'pointer',
-                }}
-              >
+            <div className={s.modalActions}>
+              <Button variant="secondary" size="md" onClick={() => setSelectedStrategy(null)}>
                 {locale === 'zh' ? '关闭' : 'Close'}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
                 onClick={() => {
                   handleFork(selectedStrategy.id);
                   setSelectedStrategy(null);
                 }}
-                style={{
-                  padding: '8px 16px',
-                  background: 'var(--accent)',
-                  border: 'none',
-                  borderRadius: 'var(--radius)',
-                  color: '#fff',
-                  font: '600 13px/1 var(--font-ui)',
-                  cursor: 'pointer',
-                }}
               >
                 {locale === 'zh' ? '复制策略' : 'Fork Strategy'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

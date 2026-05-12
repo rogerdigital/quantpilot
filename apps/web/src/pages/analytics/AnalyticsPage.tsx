@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocale } from '../../modules/console/console.i18n.tsx';
+import * as s from './AnalyticsPage.css.js';
 
 interface PerformanceSummary {
   totalReturn: number;
@@ -49,7 +50,7 @@ export function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>
+      <div className={s.loadingState}>
         {locale === 'zh' ? '加载分析数据...' : 'Loading analytics...'}
       </div>
     );
@@ -57,7 +58,7 @@ export function AnalyticsPage() {
 
   if (!data) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>
+      <div className={s.loadingState}>
         {locale === 'zh' ? '暂无分析数据' : 'No analytics data available'}
       </div>
     );
@@ -116,27 +117,12 @@ export function AnalyticsPage() {
   ];
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className={s.pageLayout}>
       {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-        }}
-      >
+      <div className={s.pageHeader}>
         <div>
-          <h1
-            style={{
-              font: '700 24px/1.2 var(--font-ui)',
-              color: 'var(--text)',
-              marginBottom: '8px',
-            }}
-          >
-            {locale === 'zh' ? '绩效分析' : 'Performance Analytics'}
-          </h1>
-          <p style={{ font: '400 14px/1.5 var(--font-ui)', color: 'var(--muted)' }}>
+          <h1 className={s.pageTitle}>{locale === 'zh' ? '绩效分析' : 'Performance Analytics'}</h1>
+          <p className={s.pageSubtitle}>
             {locale === 'zh'
               ? '全面的策略绩效指标和风险分析'
               : 'Comprehensive strategy performance metrics and risk analysis'}
@@ -144,21 +130,13 @@ export function AnalyticsPage() {
         </div>
 
         {/* Time range selector */}
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div className={s.timeRangeGroup}>
           {['1M', '3M', '6M', '1Y', 'ALL'].map((range) => (
             <button
               key={range}
               type="button"
               onClick={() => setTimeRange(range)}
-              style={{
-                padding: '6px 12px',
-                background: timeRange === range ? 'var(--accent)' : 'var(--panel)',
-                border: '1px solid var(--line)',
-                borderRadius: 'var(--radius)',
-                color: timeRange === range ? '#fff' : 'var(--muted)',
-                font: '600 12px/1 var(--font-data)',
-                cursor: 'pointer',
-              }}
+              className={`${s.timeRangeBtn} ${timeRange === range ? s.timeRangeBtnActive : ''}`}
             >
               {range}
             </button>
@@ -167,154 +145,44 @@ export function AnalyticsPage() {
       </div>
 
       {/* Summary cards */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: '12px',
-          marginBottom: '24px',
-        }}
-      >
+      <div className={s.metricsGrid}>
         {metrics.map((metric) => (
-          <div
-            key={metric.label}
-            style={{
-              padding: '16px',
-              background: 'var(--panel)',
-              border: '1px solid var(--line)',
-              borderRadius: 'var(--radius)',
-              textAlign: 'center',
-            }}
-          >
-            <div
-              style={{
-                font: '400 11px/1 var(--font-ui)',
-                color: 'var(--muted)',
-                marginBottom: '8px',
-              }}
-            >
-              {metric.label}
-            </div>
-            <div style={{ font: '700 20px/1 var(--font-data)', color: metric.color }}>
+          <div key={metric.label} className={s.metricCard}>
+            <div className={s.metricLabel}>{metric.label}</div>
+            <div className={s.metricValue} style={{ color: metric.color }}>
               {metric.value}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Charts placeholder */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '16px',
-          marginBottom: '24px',
-        }}
-      >
-        {/* Equity curve */}
-        <div
-          style={{
-            padding: '20px',
-            background: 'var(--panel)',
-            border: '1px solid var(--line)',
-            borderRadius: 'var(--radius)',
-            minHeight: '300px',
-          }}
-        >
-          <h3
-            style={{
-              font: '600 14px/1.3 var(--font-ui)',
-              color: 'var(--text)',
-              marginBottom: '16px',
-            }}
-          >
-            {locale === 'zh' ? '净值曲线' : 'Equity Curve'}
-          </h3>
-          <div
-            style={{
-              height: '250px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--muted)',
-              font: '400 13px/1 var(--font-ui)',
-            }}
-          >
+      {/* Charts */}
+      <div className={s.chartsGrid}>
+        <div className={s.chartPanel}>
+          <h3 className={s.chartTitle}>{locale === 'zh' ? '净值曲线' : 'Equity Curve'}</h3>
+          <div className={s.chartPlaceholder}>
             {locale === 'zh' ? '图表组件待集成' : 'Chart component to be integrated'}
           </div>
         </div>
 
-        {/* Drawdown chart */}
-        <div
-          style={{
-            padding: '20px',
-            background: 'var(--panel)',
-            border: '1px solid var(--line)',
-            borderRadius: 'var(--radius)',
-            minHeight: '300px',
-          }}
-        >
-          <h3
-            style={{
-              font: '600 14px/1.3 var(--font-ui)',
-              color: 'var(--text)',
-              marginBottom: '16px',
-            }}
-          >
-            {locale === 'zh' ? '回撤曲线' : 'Drawdown Chart'}
-          </h3>
-          <div
-            style={{
-              height: '250px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--muted)',
-              font: '400 13px/1 var(--font-ui)',
-            }}
-          >
+        <div className={s.chartPanel}>
+          <h3 className={s.chartTitle}>{locale === 'zh' ? '回撤曲线' : 'Drawdown Chart'}</h3>
+          <div className={s.chartPlaceholder}>
             {locale === 'zh' ? '图表组件待集成' : 'Chart component to be integrated'}
           </div>
         </div>
       </div>
 
       {/* Monthly returns heatmap */}
-      <div
-        style={{
-          padding: '20px',
-          background: 'var(--panel)',
-          border: '1px solid var(--line)',
-          borderRadius: 'var(--radius)',
-          marginBottom: '24px',
-        }}
-      >
-        <h3
-          style={{
-            font: '600 14px/1.3 var(--font-ui)',
-            color: 'var(--text)',
-            marginBottom: '16px',
-          }}
-        >
+      <div className={s.heatmapPanel}>
+        <h3 className={s.chartTitle}>
           {locale === 'zh' ? '月度收益热力图' : 'Monthly Returns Heatmap'}
         </h3>
         <div style={{ overflowX: 'auto' }}>
-          <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              font: '400 12px/1.4 var(--font-data)',
-            }}
-          >
+          <table className={s.heatmapTable}>
             <thead>
               <tr>
-                <th
-                  style={{
-                    padding: '8px',
-                    textAlign: 'left',
-                    color: 'var(--muted)',
-                    borderBottom: '1px solid var(--line)',
-                  }}
-                >
+                <th className={`${s.heatmapTh} ${s.heatmapThLeft}`}>
                   {locale === 'zh' ? '年份' : 'Year'}
                 </th>
                 {[
@@ -331,27 +199,11 @@ export function AnalyticsPage() {
                   'Nov',
                   'Dec',
                 ].map((month) => (
-                  <th
-                    key={month}
-                    style={{
-                      padding: '8px',
-                      textAlign: 'center',
-                      color: 'var(--muted)',
-                      borderBottom: '1px solid var(--line)',
-                    }}
-                  >
+                  <th key={month} className={s.heatmapTh}>
                     {month}
                   </th>
                 ))}
-                <th
-                  style={{
-                    padding: '8px',
-                    textAlign: 'center',
-                    color: 'var(--muted)',
-                    borderBottom: '1px solid var(--line)',
-                    fontWeight: 700,
-                  }}
-                >
+                <th className={s.heatmapTh} style={{ fontWeight: 700 }}>
                   {locale === 'zh' ? '全年' : 'YTD'}
                 </th>
               </tr>
@@ -360,16 +212,10 @@ export function AnalyticsPage() {
               {Object.entries(data.monthlyReturns)
                 .sort(([a], [b]) => Number(b) - Number(a))
                 .map(([year, months]) => {
-                  const yearTotal = Object.values(months).reduce((s, r) => s + r, 0);
+                  const yearTotal = Object.values(months).reduce((acc, r) => acc + r, 0);
                   return (
                     <tr key={year}>
-                      <td
-                        style={{
-                          padding: '8px',
-                          fontWeight: 600,
-                          borderBottom: '1px solid var(--line)',
-                        }}
-                      >
+                      <td className={s.heatmapTd} style={{ textAlign: 'left', fontWeight: 600 }}>
                         {year}
                       </td>
                       {Array.from({ length: 12 }, (_, i) => {
@@ -377,16 +223,15 @@ export function AnalyticsPage() {
                         const ret = months[monthKey] || 0;
                         const bgColor =
                           ret > 0
-                            ? 'rgba(0, 232, 157, 0.2)'
+                            ? 'rgba(16, 185, 129, 0.15)'
                             : ret < 0
-                              ? 'rgba(255, 51, 88, 0.2)'
+                              ? 'rgba(239, 68, 68, 0.15)'
                               : 'transparent';
                         return (
                           <td
                             key={monthKey}
+                            className={s.heatmapTd}
                             style={{
-                              padding: '8px',
-                              textAlign: 'center',
                               background: bgColor,
                               color:
                                 ret !== 0
@@ -394,7 +239,6 @@ export function AnalyticsPage() {
                                     ? 'var(--buy)'
                                     : 'var(--sell)'
                                   : 'var(--muted)',
-                              borderBottom: '1px solid var(--line)',
                             }}
                           >
                             {ret !== 0 ? `${(ret * 100).toFixed(1)}%` : '-'}
@@ -402,12 +246,10 @@ export function AnalyticsPage() {
                         );
                       })}
                       <td
+                        className={s.heatmapTd}
                         style={{
-                          padding: '8px',
-                          textAlign: 'center',
                           fontWeight: 700,
                           color: yearTotal >= 0 ? 'var(--buy)' : 'var(--sell)',
-                          borderBottom: '1px solid var(--line)',
                         }}
                       >
                         {`${(yearTotal * 100).toFixed(1)}%`}
@@ -421,52 +263,13 @@ export function AnalyticsPage() {
       </div>
 
       {/* Trade distribution */}
-      <div
-        style={{
-          padding: '20px',
-          background: 'var(--panel)',
-          border: '1px solid var(--line)',
-          borderRadius: 'var(--radius)',
-        }}
-      >
-        <h3
-          style={{
-            font: '600 14px/1.3 var(--font-ui)',
-            color: 'var(--text)',
-            marginBottom: '16px',
-          }}
-        >
-          {locale === 'zh' ? '交易分布' : 'Trade Distribution'}
-        </h3>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
-            gap: '8px',
-          }}
-        >
+      <div className={s.distributionSection}>
+        <h3 className={s.chartTitle}>{locale === 'zh' ? '交易分布' : 'Trade Distribution'}</h3>
+        <div className={s.distributionGrid}>
           {data.tradeDistribution.map((bucket) => (
-            <div
-              key={bucket.range}
-              style={{
-                padding: '12px',
-                background: 'var(--panel-2)',
-                borderRadius: 'var(--radius)',
-                textAlign: 'center',
-              }}
-            >
-              <div
-                style={{
-                  font: '400 11px/1 var(--font-ui)',
-                  color: 'var(--muted)',
-                  marginBottom: '4px',
-                }}
-              >
-                {bucket.range}
-              </div>
-              <div style={{ font: '600 16px/1 var(--font-data)', color: 'var(--text)' }}>
-                {bucket.count}
-              </div>
+            <div key={bucket.range} className={s.distributionItem}>
+              <div className={s.distributionLabel}>{bucket.range}</div>
+              <div className={s.distributionValue}>{bucket.count}</div>
             </div>
           ))}
         </div>

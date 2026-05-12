@@ -2,9 +2,9 @@ import { style } from '@vanilla-extract/css';
 
 export const dataPageLayout = style({
   display: 'grid',
-  gap: '24px',
-  padding: '24px',
-  maxWidth: '1400px',
+  gap: 'var(--space-6)',
+  padding: 'var(--space-6)',
+  maxWidth: 'var(--content-max-width)',
   margin: '0 auto',
 });
 
@@ -30,11 +30,11 @@ export const dataPageSubtitle = style({
 
 export const dataPageGrid = style({
   display: 'grid',
-  gap: '20px',
+  gap: 'var(--space-5)',
 });
 
 export const dataPageSection = style({
-  padding: '20px',
+  padding: 'var(--space-5)',
   borderRadius: 'var(--radius-lg)',
   border: '1px solid var(--line)',
   background: 'var(--panel)',

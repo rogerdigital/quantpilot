@@ -62,7 +62,7 @@ export function QuickOrderBar({ onSubmit }: QuickOrderBarProps) {
         alignItems: 'center',
         gap: '10px',
         padding: '10px 16px',
-        background: 'linear-gradient(135deg, rgba(10, 20, 46, 0.98), rgba(8, 16, 36, 0.99))',
+        background: 'var(--panel)',
         borderTop: '1px solid var(--line)',
         backdropFilter: 'blur(12px)',
       }}

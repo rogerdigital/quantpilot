@@ -162,7 +162,7 @@ globalStyle('.main-panel', {
   height: '100vh',
   overflowY: 'auto',
   padding: '0 24px 40px',
-  maxWidth: '1480px',
+  maxWidth: 'var(--content-max-width)',
   marginLeft: 'auto',
   marginRight: 'auto',
 } as any);
