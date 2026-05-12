@@ -1,5 +1,6 @@
 import { AreaSeries, createChart, HistogramSeries, LineSeries } from 'lightweight-charts';
 import { useEffect, useRef } from 'react';
+import { useChartColors } from '../../hooks/useChartColors';
 
 export type EquityPoint = {
   value: number;
@@ -24,6 +25,7 @@ function calcDrawdown(points: EquityPoint[]): { value: number; label: string }[]
 
 export function EquityChart({ paper, live, showDrawdown = false, benchmark }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const colors = useChartColors();
 
   useEffect(() => {
     const el = containerRef.current;
@@ -32,34 +34,34 @@ export function EquityChart({ paper, live, showDrawdown = false, benchmark }: Pr
     const chart = createChart(el, {
       layout: {
         background: { color: 'transparent' },
-        textColor: 'rgba(160, 162, 210, 0.65)',
+        textColor: colors.textColor,
         fontFamily: '"JetBrains Mono", monospace',
         fontSize: 10,
       },
       grid: {
-        vertLines: { color: 'rgba(99, 102, 241, 0.05)', style: 1 },
-        horzLines: { color: 'rgba(99, 102, 241, 0.08)' },
+        vertLines: { color: colors.gridLight, style: 1 },
+        horzLines: { color: colors.gridMedium },
       },
       rightPriceScale: {
-        borderColor: 'rgba(99, 102, 241, 0.12)',
-        textColor: 'rgba(160, 162, 210, 0.65)',
+        borderColor: colors.borderColor,
+        textColor: colors.textColor,
       },
       timeScale: {
-        borderColor: 'rgba(99, 102, 241, 0.12)',
+        borderColor: colors.borderColor,
         timeVisible: false,
       },
       crosshair: {
-        vertLine: { color: 'rgba(99, 102, 241, 0.40)' },
-        horzLine: { color: 'rgba(99, 102, 241, 0.40)' },
+        vertLine: { color: colors.crosshairColor },
+        horzLine: { color: colors.crosshairColor },
       },
       handleScroll: false,
       handleScale: false,
     });
 
     const paperSeries = chart.addSeries(AreaSeries, {
-      lineColor: '#6366f1',
-      topColor: 'rgba(99, 102, 241, 0.12)',
-      bottomColor: 'rgba(99, 102, 241, 0)',
+      lineColor: colors.accentLine,
+      topColor: colors.accentFillTop,
+      bottomColor: colors.accentFillBottom,
       lineWidth: 2,
       priceLineVisible: false,
       lastValueVisible: true,
@@ -67,9 +69,9 @@ export function EquityChart({ paper, live, showDrawdown = false, benchmark }: Pr
     });
 
     const liveSeries = chart.addSeries(AreaSeries, {
-      lineColor: '#ffb700',
-      topColor: 'rgba(255, 183, 0, 0.07)',
-      bottomColor: 'rgba(255, 183, 0, 0)',
+      lineColor: colors.liveAccent,
+      topColor: colors.liveFillTop,
+      bottomColor: colors.liveFillBottom,
       lineWidth: 2,
       priceLineVisible: false,
       lastValueVisible: true,
@@ -82,10 +84,9 @@ export function EquityChart({ paper, live, showDrawdown = false, benchmark }: Pr
     if (paper.length) paperSeries.setData(toData(paper));
     if (live.length) liveSeries.setData(toData(live));
 
-    // Benchmark line
     if (benchmark?.length) {
       const benchSeries = chart.addSeries(LineSeries, {
-        color: 'rgba(160, 162, 210, 0.4)',
+        color: colors.benchmarkLine,
         lineWidth: 1,
         lineStyle: 2,
         priceLineVisible: false,
@@ -95,11 +96,10 @@ export function EquityChart({ paper, live, showDrawdown = false, benchmark }: Pr
       benchSeries.setData(toData(benchmark));
     }
 
-    // Drawdown overlay
     if (showDrawdown && paper.length) {
       const ddData = calcDrawdown(paper);
       const ddSeries = chart.addSeries(HistogramSeries, {
-        color: 'rgba(255, 51, 88, 0.25)',
+        color: colors.drawdownLight,
         priceScaleId: 'dd',
         priceLineVisible: false,
         lastValueVisible: false,
@@ -109,7 +109,7 @@ export function EquityChart({ paper, live, showDrawdown = false, benchmark }: Pr
         ddData.map((d, i) => ({
           time: (i + 1) as unknown as string,
           value: d.value,
-          color: d.value < -10 ? 'rgba(255, 51, 88, 0.4)' : 'rgba(255, 51, 88, 0.2)',
+          color: d.value < -10 ? colors.drawdownHeavy : colors.drawdownLight,
         }))
       );
       chart.priceScale('dd').applyOptions({
@@ -128,7 +128,7 @@ export function EquityChart({ paper, live, showDrawdown = false, benchmark }: Pr
       ro.disconnect();
       chart.remove();
     };
-  }, [paper, live, showDrawdown, benchmark]);
+  }, [paper, live, showDrawdown, benchmark, colors]);
 
   return (
     <div ref={containerRef} style={{ width: '100%', height: '280px', position: 'relative' }} />

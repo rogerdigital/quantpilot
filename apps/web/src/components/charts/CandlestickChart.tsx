@@ -1,6 +1,7 @@
 import type { OhlcvBar } from '@shared-types/trading.ts';
 import { CandlestickSeries, createChart, HistogramSeries, LineSeries } from 'lightweight-charts';
 import { useEffect, useRef } from 'react';
+import { useChartColors } from '../../hooks/useChartColors';
 
 type ChartInstance = ReturnType<typeof createChart>;
 type SeriesInstance = ReturnType<ChartInstance['addSeries']>;
@@ -73,23 +74,13 @@ function calcBollinger(
   return { upper, middle, lower };
 }
 
-const INDICATOR_COLORS: Record<string, string> = {
-  sma20: '#ffb700',
-  sma50: '#8b5cf6',
-  sma200: '#ef5350',
-  ema12: '#00e89d',
-  ema26: '#6366f1',
-  bb_upper: 'rgba(99, 102, 241, 0.5)',
-  bb_middle: 'rgba(99, 102, 241, 0.7)',
-  bb_lower: 'rgba(99, 102, 241, 0.5)',
-};
-
 export function CandlestickChart({ data, timeframe, indicators }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<ChartInstance | null>(null);
   const candleRef = useRef<SeriesInstance | null>(null);
   const volumeRef = useRef<SeriesInstance | null>(null);
   const indicatorRefs = useRef<SeriesInstance[]>([]);
+  const colors = useChartColors();
 
   useEffect(() => {
     const el = containerRef.current;
@@ -98,42 +89,42 @@ export function CandlestickChart({ data, timeframe, indicators }: Props) {
     const chart = createChart(el, {
       layout: {
         background: { color: 'transparent' },
-        textColor: 'rgba(160, 162, 210, 0.65)',
+        textColor: colors.textColor,
         fontFamily: '"JetBrains Mono", monospace',
         fontSize: 10,
       },
       grid: {
-        vertLines: { color: 'rgba(99, 102, 241, 0.05)', style: 1 },
-        horzLines: { color: 'rgba(99, 102, 241, 0.07)' },
+        vertLines: { color: colors.gridLight, style: 1 },
+        horzLines: { color: colors.gridMedium },
       },
       rightPriceScale: {
-        borderColor: 'rgba(99, 102, 241, 0.12)',
-        textColor: 'rgba(160, 162, 210, 0.65)',
+        borderColor: colors.borderColor,
+        textColor: colors.textColor,
       },
       timeScale: {
-        borderColor: 'rgba(99, 102, 241, 0.12)',
+        borderColor: colors.borderColor,
         timeVisible: true,
       },
       crosshair: {
-        vertLine: { color: 'rgba(99, 102, 241, 0.40)' },
-        horzLine: { color: 'rgba(99, 102, 241, 0.40)' },
+        vertLine: { color: colors.crosshairColor },
+        horzLine: { color: colors.crosshairColor },
       },
       handleScroll: true,
       handleScale: true,
     });
 
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#26a69a',
-      downColor: '#ef5350',
-      borderUpColor: '#26a69a',
-      borderDownColor: '#ef5350',
-      wickUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
+      upColor: colors.candleUp,
+      downColor: colors.candleDown,
+      borderUpColor: colors.candleUp,
+      borderDownColor: colors.candleDown,
+      wickUpColor: colors.candleUp,
+      wickDownColor: colors.candleDown,
       priceLineVisible: true,
     });
 
     const volumeSeries = chart.addSeries(HistogramSeries, {
-      color: 'rgba(99, 102, 241, 0.22)',
+      color: colors.volumeDefault,
       priceScaleId: 'volume',
       priceLineVisible: false,
       lastValueVisible: false,
@@ -160,15 +151,13 @@ export function CandlestickChart({ data, timeframe, indicators }: Props) {
       volumeRef.current = null;
       indicatorRefs.current = [];
     };
-  }, []);
+  }, [colors]);
 
-  // Update data and indicators when they change
   useEffect(() => {
     if (!candleRef.current || !volumeRef.current || !data.length || !chartRef.current) return;
 
     const chart = chartRef.current;
 
-    // Remove old indicator series
     for (const s of indicatorRefs.current) {
       chart.removeSeries(s);
     }
@@ -185,7 +174,7 @@ export function CandlestickChart({ data, timeframe, indicators }: Props) {
     const volumeData = data.map((b) => ({
       time: b.time as unknown as string,
       value: b.volume,
-      color: b.close >= b.open ? 'rgba(38, 166, 154, 0.3)' : 'rgba(239, 83, 80, 0.3)',
+      color: b.close >= b.open ? colors.volumeUp : colors.volumeDown,
     }));
 
     candleRef.current.setData(candleData);
@@ -194,12 +183,11 @@ export function CandlestickChart({ data, timeframe, indicators }: Props) {
     const times = data.map((b) => b.time as unknown as string);
     const closes = data.map((b) => b.close);
 
-    // SMA indicators
     if (indicators?.sma) {
       for (const period of indicators.sma) {
         const values = calcSMA(closes, period);
         const series = chart.addSeries(LineSeries, {
-          color: INDICATOR_COLORS[`sma${period}`] ?? '#ffb700',
+          color: colors.indicators[`sma${period}`] ?? colors.liveAccent,
           lineWidth: 1,
           priceLineVisible: false,
           lastValueVisible: false,
@@ -214,12 +202,11 @@ export function CandlestickChart({ data, timeframe, indicators }: Props) {
       }
     }
 
-    // EMA indicators
     if (indicators?.ema) {
       for (const period of indicators.ema) {
         const values = calcEMA(closes, period);
         const series = chart.addSeries(LineSeries, {
-          color: INDICATOR_COLORS[`ema${period}`] ?? '#00e89d',
+          color: colors.indicators[`ema${period}`] ?? colors.candleUp,
           lineWidth: 1,
           priceLineVisible: false,
           lastValueVisible: false,
@@ -234,7 +221,6 @@ export function CandlestickChart({ data, timeframe, indicators }: Props) {
       }
     }
 
-    // Bollinger Bands
     if (indicators?.bollinger) {
       const { period, stdDev } = indicators.bollinger;
       const bb = calcBollinger(closes, period, stdDev);
@@ -244,7 +230,7 @@ export function CandlestickChart({ data, timeframe, indicators }: Props) {
         ['lower', bb.lower],
       ] as const) {
         const series = chart.addSeries(LineSeries, {
-          color: INDICATOR_COLORS[`bb_${key}`],
+          color: colors.indicators[`bb_${key}`],
           lineWidth: 1,
           lineStyle: key === 'middle' ? 0 : 2,
           priceLineVisible: false,
@@ -261,7 +247,7 @@ export function CandlestickChart({ data, timeframe, indicators }: Props) {
     }
 
     chart.timeScale().fitContent();
-  }, [data, indicators]);
+  }, [data, indicators, colors]);
 
   // Fit content when timeframe changes
   useEffect(() => {
