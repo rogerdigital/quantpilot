@@ -110,10 +110,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
   const routes = listSidebarRoutes();
 
   return (
-    <aside
-      className={`${sidebar}${collapsed ? ` ${sidebarCollapsed}` : ''}`}
-      style={{ position: 'relative' }}
-    >
+    <aside className={`${sidebar}${collapsed ? ` ${sidebarCollapsed}` : ''}`}>
       <button
         type="button"
         className={sidebarToggle}

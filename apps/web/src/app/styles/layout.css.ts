@@ -38,14 +38,14 @@ globalStyle('.app-shell::before', {
 globalStyle('.sidebar', {
   position: 'sticky',
   top: 0,
-  alignSelf: 'start',
-  minHeight: '100vh',
+  height: '100vh',
   padding: '24px 16px',
   borderRight: '1px solid var(--line)',
   background: 'linear-gradient(180deg, rgba(8, 18, 42, 0.99) 0%, rgba(6, 12, 28, 0.99) 100%)',
   display: 'flex',
   flexDirection: 'column',
-  overflow: 'visible',
+  overflowY: 'auto',
+  zIndex: 50,
 } as any);
 
 globalStyle('.sidebar::after', {
@@ -717,8 +717,9 @@ globalStyle(`.sidebar`, {
     '(max-width: 1180px)': {
       borderRight: 0,
       borderBottom: '1px solid var(--line)',
-      minHeight: 'auto',
       position: 'relative',
+      width: 'auto',
+      height: 'auto',
       top: 0,
     },
     '(max-width: 720px)': {

@@ -140,7 +140,8 @@ export const agentDialogueStage = style({
   display: 'flex',
   flexDirection: 'column',
   minWidth: 0,
-  height: '640px',
+  height: 'calc(100vh - 180px)',
+  minHeight: '480px',
 });
 
 /* ── CHAT TRANSCRIPT ─────────────────────────────────────── */
@@ -217,7 +218,28 @@ export const agentChatBody = style({
   lineHeight: '1.7',
 });
 
-/* ── COMPOSER ────────────────────────────────────────────── */
+/* ── STICKY COMPOSER (viewport bottom) ─────────────────── */
+
+export const agentStickyComposer = style({
+  position: 'fixed',
+  bottom: 0,
+  left: '260px',
+  right: 0,
+  zIndex: 100,
+  display: 'grid',
+  gap: '10px',
+  padding: '14px 24px 16px',
+  borderTop: '1px solid rgba(99,102,241,0.2)',
+  background: 'rgba(8,10,24,0.95)',
+  backdropFilter: 'blur(12px)',
+  '@media': {
+    '(max-width: 1180px)': {
+      left: 0,
+    },
+  },
+});
+
+/* ── COMPOSER (legacy, inside dialogue stage) ──────────── */
 
 export const agentChatComposer = style({
   display: 'grid',
