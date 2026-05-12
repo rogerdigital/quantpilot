@@ -77,14 +77,14 @@ globalStyle(`${mainPanel}::before`, {
 export const sidebar = style({
   position: 'sticky',
   top: 0,
-  alignSelf: 'start',
-  minHeight: '100vh',
+  height: '100vh',
   padding: '24px 16px',
   borderRight: '1px solid var(--line)',
   background: 'linear-gradient(180deg, rgba(10, 20, 46, 0.99) 0%, rgba(8, 16, 36, 0.99) 100%)',
   display: 'flex',
   flexDirection: 'column',
-  overflow: 'visible',
+  overflowY: 'auto',
+  zIndex: 50,
   '@media': {
     [tablet]: {
       display: 'none',

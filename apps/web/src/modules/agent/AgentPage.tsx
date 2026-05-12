@@ -12,7 +12,6 @@ import {
   agentActionButtons,
   agentChatAssistant,
   agentChatBody,
-  agentChatComposer,
   agentChatComposerActions,
   agentChatMessage,
   agentChatMeta,
@@ -57,6 +56,7 @@ import {
   agentStepperLabelDone,
   agentStepStack,
   agentStepTop,
+  agentStickyComposer,
   agentSuggestionButton,
   agentSuggestionList,
   agentThesis,
@@ -555,47 +555,6 @@ export default function AgentPage() {
                   </div>
                 ))}
               </div>
-
-              {/* Composer */}
-              <div className={agentChatComposer}>
-                <textarea
-                  id="agent-prompt-input"
-                  className={agentChatTextarea}
-                  placeholder={
-                    locale === 'zh'
-                      ? '输入你的交易想法或问题，按发送让 Agent 分析…'
-                      : 'Describe your trading idea or question, then send to Agent…'
-                  }
-                  value={prompt}
-                  rows={2}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                      e.preventDefault();
-                      submitPrompt();
-                    }
-                  }}
-                />
-                <div className={agentChatComposerActions}>
-                  <span className="status-copy" style={{ fontSize: '11px' }}>
-                    {locale === 'zh' ? '⌘Enter 发送' : '⌘Enter to send'}
-                  </span>
-                  <button
-                    type="button"
-                    className={agentSendButton}
-                    onClick={submitPrompt}
-                    disabled={running || !prompt.trim()}
-                  >
-                    {running
-                      ? locale === 'zh'
-                        ? '分析中…'
-                        : 'Analyzing…'
-                      : locale === 'zh'
-                        ? '发送并分析'
-                        : 'Send & Analyze'}
-                  </button>
-                </div>
-              </div>
             </div>
 
             {/* Right: insight rail */}
@@ -886,6 +845,47 @@ export default function AgentPage() {
         </article>
       </section>
 
+      {/* Sticky Composer — always at viewport bottom */}
+      <div className={agentStickyComposer}>
+        <textarea
+          id="agent-prompt-input"
+          className={agentChatTextarea}
+          placeholder={
+            locale === 'zh'
+              ? '输入你的交易想法或问题，按发送让 Agent 分析…'
+              : 'Describe your trading idea or question, then send to Agent…'
+          }
+          value={prompt}
+          rows={2}
+          onChange={(e) => setPrompt(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              submitPrompt();
+            }
+          }}
+        />
+        <div className={agentChatComposerActions}>
+          <span className="status-copy" style={{ fontSize: '11px' }}>
+            {locale === 'zh' ? '⌘Enter 发送' : '⌘Enter to send'}
+          </span>
+          <button
+            type="button"
+            className={agentSendButton}
+            onClick={submitPrompt}
+            disabled={running || !prompt.trim()}
+          >
+            {running
+              ? locale === 'zh'
+                ? '分析中…'
+                : 'Analyzing…'
+              : locale === 'zh'
+                ? '发送并分析'
+                : 'Send & Analyze'}
+          </button>
+        </div>
+      </div>
+
       {/* Governance section */}
       <section
         className="panel-grid panel-grid-wide"
@@ -1043,6 +1043,7 @@ export default function AgentPage() {
           </div>
         </article>
       </section>
+      <div style={{ height: '100px' }} />
     </>
   );
 }
