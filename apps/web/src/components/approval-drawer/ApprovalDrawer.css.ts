@@ -10,7 +10,7 @@ export const drawerRoot = style({
   bottom: 0,
   left: '260px', // sidebar width
   right: 0,
-  zIndex: 8000,
+  zIndex: 'var(--z-modal)' as any,
   padding: '0 24px 20px',
   animation: `${slideUp} 220ms cubic-bezier(0.16, 1, 0.3, 1) both`,
   '@media': {

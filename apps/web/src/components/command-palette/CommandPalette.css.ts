@@ -13,13 +13,13 @@ const panelIn = keyframes({
 export const overlay = style({
   position: 'fixed',
   inset: 0,
-  zIndex: 9000,
+  zIndex: 'var(--z-modal)' as any,
   display: 'flex',
   alignItems: 'flex-start',
   justifyContent: 'center',
   paddingTop: 'clamp(60px, 12vh, 140px)',
-  background: 'rgba(0, 0, 0, 0.25)',
-  backdropFilter: 'blur(4px)',
+  background: 'var(--overlay-dim)',
+  backdropFilter: 'var(--overlay-blur)',
   animation: `${backdropIn} 120ms ease both`,
 });
 

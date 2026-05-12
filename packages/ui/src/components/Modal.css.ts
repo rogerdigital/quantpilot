@@ -9,11 +9,11 @@ import { fontSize, fontWeight } from '../tokens/typography.css.js';
 export const overlay = style({
   position: 'fixed',
   inset: 0,
-  background: 'rgba(0, 0, 0, 0.3)',
+  background: 'var(--overlay-dim)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  zIndex: 1000,
+  zIndex: 'var(--z-modal)' as any,
   animation: `fadeIn ${duration.normal} ${easing.out}`,
 });
 

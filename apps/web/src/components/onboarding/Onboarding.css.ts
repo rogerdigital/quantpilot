@@ -8,7 +8,7 @@ const fadeIn = keyframes({
 export const overlay = style({
   position: 'fixed',
   inset: 0,
-  zIndex: 9500,
+  zIndex: 'var(--z-toast)' as any,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -77,37 +77,6 @@ export const footer = style({
   padding: '16px 28px',
   borderTop: '1px solid var(--line)',
   background: 'var(--panel-2)',
-});
-
-export const btn = style({
-  padding: '8px 20px',
-  borderRadius: 'var(--radius)',
-  font: '600 13px/1 var(--font-ui)',
-  cursor: 'pointer',
-  transition: 'all 150ms ease',
-  border: 'none',
-});
-
-export const btnPrimary = style({
-  background: 'var(--accent)',
-  color: '#fff',
-  selectors: {
-    '&:hover': {
-      background: 'var(--accent-hover)',
-    },
-  },
-});
-
-export const btnSecondary = style({
-  background: 'transparent',
-  border: '1px solid var(--line)',
-  color: 'var(--muted)',
-  selectors: {
-    '&:hover': {
-      borderColor: 'var(--accent)',
-      color: 'var(--text)',
-    },
-  },
 });
 
 export const btnSkip = style({

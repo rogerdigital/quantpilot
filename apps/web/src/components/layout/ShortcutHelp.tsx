@@ -55,11 +55,12 @@ export function ShortcutHelp({ open, onClose }: ShortcutHelpProps) {
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0, 0, 0, 0.6)',
+        background: 'var(--overlay-heavy)',
+        backdropFilter: 'var(--overlay-blur)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1000,
+        zIndex: 'var(--z-modal)',
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();

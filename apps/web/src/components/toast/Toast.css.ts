@@ -14,7 +14,7 @@ export const toastContainer = style({
   position: 'fixed',
   bottom: '24px',
   right: '24px',
-  zIndex: 9500,
+  zIndex: 'var(--z-toast)' as any,
   display: 'flex',
   flexDirection: 'column',
   gap: '8px',

@@ -35,7 +35,7 @@ globalStyle('.meta-value.accent', {
 } as any);
 
 globalStyle('.panel', {
-  padding: '20px',
+  padding: 'var(--space-5)',
 } as any);
 
 /* ============================================================
@@ -45,14 +45,14 @@ globalStyle('.panel', {
 globalStyle('.hero-grid', {
   display: 'grid',
   gridTemplateColumns: '1.9fr 1fr 1fr',
-  gap: '16px',
+  gap: 'var(--space-4)',
   marginTop: '28px',
 } as any);
 
 globalStyle('.overview-hero-grid', {
   display: 'grid',
   gridTemplateColumns: '1.8fr 0.8fr 0.8fr',
-  gap: '16px',
+  gap: 'var(--space-4)',
   marginTop: '28px',
 } as any);
 
@@ -135,7 +135,7 @@ globalStyle(
   } as any
 );
 
-globalStyle('.overview-command-note', { display: 'grid', gap: '8px' } as any);
+globalStyle('.overview-command-note', { display: 'grid', gap: 'var(--space-2)' } as any);
 
 globalStyle('.overview-command-note p, .overview-primary-note p, .overview-kpi-note', {
   margin: 0,
@@ -178,7 +178,7 @@ globalStyle('.overview-kpi-title', {
 
 globalStyle('.overview-kpi-grid', {
   display: 'grid',
-  gap: '12px',
+  gap: 'var(--space-3)',
   marginTop: '18px',
   paddingTop: '14px',
   borderTop: '1px solid var(--line)',
@@ -330,7 +330,7 @@ globalStyle('.metric-card', {
   borderRadius: 'var(--radius)',
   background: 'var(--panel-2)',
   display: 'grid',
-  gap: '8px',
+  gap: 'var(--space-2)',
   position: 'relative',
   overflow: 'hidden',
   transition: 'border-color 180ms ease, box-shadow 180ms ease, transform 160ms ease',
@@ -414,7 +414,7 @@ globalStyle('.tile-sub', {
 globalStyle('.panel-grid', {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-  gap: '16px',
+  gap: 'var(--space-4)',
   marginTop: '28px',
   alignItems: 'start',
 } as any);
@@ -572,7 +572,7 @@ globalStyle('.overview-desk-grid', {
 
 globalStyle('.overview-primary-panel', { minHeight: '468px' } as any);
 globalStyle('.overview-side-panel', { minHeight: '468px' } as any);
-globalStyle('.overview-panel-flow', { display: 'grid', gap: '16px' } as any);
+globalStyle('.overview-panel-flow', { display: 'grid', gap: 'var(--space-4)' } as any);
 
 globalStyle('.overview-inline-metrics', {
   display: 'grid',
@@ -674,7 +674,7 @@ globalStyle('.status-copy', {
 
 globalStyle('.focus-list', {
   display: 'grid',
-  gap: '8px',
+  gap: 'var(--space-2)',
 } as any);
 
 globalStyle('.focus-list-terminal', {

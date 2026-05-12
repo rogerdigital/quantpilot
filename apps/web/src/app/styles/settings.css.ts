@@ -7,7 +7,7 @@ import { globalStyle } from '@vanilla-extract/css';
 globalStyle('.settings-form-grid', {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-  gap: '12px',
+  gap: 'var(--space-3)',
   marginTop: '14px',
 } as any);
 
@@ -87,7 +87,7 @@ globalStyle('.agent-chat-textarea', {
 globalStyle('.settings-actions', {
   display: 'flex',
   alignItems: 'center',
-  gap: '12px',
+  gap: 'var(--space-3)',
   marginTop: '14px',
 } as any);
 
@@ -438,7 +438,7 @@ globalStyle('.agent-chat-transcript', {
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-lg)',
   background: 'var(--panel)',
-  padding: '20px',
+  padding: 'var(--space-5)',
   display: 'flex',
   flexDirection: 'column',
   gap: '12px',
