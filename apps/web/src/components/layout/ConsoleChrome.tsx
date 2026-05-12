@@ -46,6 +46,7 @@ import {
   topbarMeta,
 } from './ConsoleChrome.css.ts';
 import { MobileBottomNav } from './MobileBottomNav.tsx';
+import { NavIcon } from './NavIcons.tsx';
 import { ShortcutHelp } from './ShortcutHelp.tsx';
 
 export type TopMetaItem = {
@@ -111,41 +112,63 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
 
   return (
     <aside className={`${sidebar}${collapsed ? ` ${sidebarCollapsed}` : ''}`}>
-      <button
-        type="button"
-        className={sidebarToggle}
-        onClick={onToggle}
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        {collapsed ? '›' : '‹'}
-      </button>
-
       {!collapsed && (
         <div className={brand}>
-          <div className={brandMark} />
+          <div className={brandMark}>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+              <polyline points="16 7 22 7 22 13" />
+            </svg>
+          </div>
           <div>
             <div className={brandName}>{copy[locale].product}</div>
             <div className={brandSub}>{copy[locale].tagline}</div>
           </div>
+          <button
+            type="button"
+            className={sidebarToggle}
+            onClick={onToggle}
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+          >
+            ‹
+          </button>
         </div>
       )}
 
       {collapsed && (
         <div
           style={{
-            marginBottom: '24px',
-            paddingBottom: '18px',
+            padding: '10px 0',
+            marginBottom: '12px',
             borderBottom: '1px solid var(--line)',
             display: 'flex',
             justifyContent: 'center',
           }}
         >
-          <div className={brandMark} />
+          <button
+            type="button"
+            className={sidebarToggle}
+            onClick={onToggle}
+            aria-label="Expand sidebar"
+            title="Expand sidebar"
+          >
+            ›
+          </button>
         </div>
       )}
 
-      <div className={sidebarBlock} style={collapsed ? { padding: '10px 6px' } : undefined}>
+      <div className={sidebarBlock} style={collapsed ? { padding: '4px 2px' } : undefined}>
         {!collapsed && <div className={sidebarLabel}>{copy[locale].labels.tacticalRoutes}</div>}
         <nav className={navStack}>
           {routes.map((route) => (
@@ -155,19 +178,21 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
               className={({ isActive }) =>
                 `nav-link${isActive ? ' active' : ''}${collapsed ? ' nav-link-icon-only' : ''}`
               }
-              title={collapsed ? copy[locale].nav[route.id] : undefined}
               style={
                 collapsed
                   ? {
-                      padding: '10px',
-                      textAlign: 'center',
-                      fontSize: '10px',
-                      letterSpacing: '0.05em',
+                      padding: '8px',
+                      display: 'flex',
+                      justifyContent: 'center',
                     }
                   : undefined
               }
             >
-              {collapsed ? copy[locale].nav[route.id].slice(0, 2) : copy[locale].nav[route.id]}
+              <NavIcon id={route.id} />
+              {!collapsed && (
+                <span style={{ marginLeft: '10px' }}>{copy[locale].nav[route.id]}</span>
+              )}
+              {collapsed && <span className="nav-tooltip">{copy[locale].nav[route.id]}</span>}
             </NavLink>
           ))}
         </nav>
@@ -279,13 +304,12 @@ function GlobalToolbar() {
         </div>
         <button
           type="button"
-          className="toolbar-pill toolbar-pill-button"
+          className="toolbar-pill"
           onClick={toggle}
           title={resolved === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          style={{ cursor: 'pointer' }}
         >
-          <span className="toolbar-pill-main">
-            <span className="toolbar-pill-label">{resolved === 'dark' ? '☀' : '☾'}</span>
-          </span>
+          <span className="toolbar-pill-label">{resolved === 'dark' ? '☀' : '☾'}</span>
         </button>
       </div>
     </div>
