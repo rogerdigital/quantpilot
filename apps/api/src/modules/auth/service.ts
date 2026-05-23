@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { getUserAccount } from '../../../../../packages/control-plane-runtime/src/index.js';
 import { verifyToken } from './jwt-service.js';
 
@@ -9,7 +8,7 @@ import { verifyToken } from './jwt-service.js';
 export function getSession() {
   const account = getUserAccount();
   const defaultBrokerBinding =
-    account.brokerBindings.find((binding) => binding.isDefault) ||
+    account.brokerBindings.find((binding: any) => binding.isDefault) ||
     account.brokerBindings[0] ||
     null;
   const currentWorkspace =

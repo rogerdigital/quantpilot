@@ -1,5 +1,14 @@
-// @ts-nocheck
-const PERMISSION_CATALOG = {
+import type { ServerResponse } from 'node:http';
+import type { GatewayJsonWriter } from '../../app/routes/types.js';
+
+interface PermissionDescriptor {
+  id: string;
+  label: string;
+  summary: string;
+  scope: string;
+}
+
+const PERMISSION_CATALOG: Record<string, PermissionDescriptor> = {
   'dashboard:read': {
     id: 'dashboard:read',
     label: 'Dashboard Read',
@@ -69,6 +78,6 @@ export function createForbiddenPayload(permission = '', action = '') {
   };
 }
 
-export function writeForbiddenJson(writeJson, res, permission = '', action = '') {
+export function writeForbiddenJson(writeJson: GatewayJsonWriter, res: ServerResponse, permission = '', action = '') {
   writeJson(res, 403, createForbiddenPayload(permission, action));
 }

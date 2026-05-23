@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 
 /**
@@ -12,7 +11,7 @@ function getEncKey() {
   return Buffer.from(hex, 'hex');
 }
 
-export function encryptBrokerKey(plaintext) {
+export function encryptBrokerKey(plaintext: string) {
   const iv = randomBytes(16);
   const cipher = createCipheriv('aes-256-gcm', getEncKey(), iv);
   const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
@@ -20,7 +19,7 @@ export function encryptBrokerKey(plaintext) {
   return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted.toString('hex')}`;
 }
 
-export function decryptBrokerKey(ciphertext) {
+export function decryptBrokerKey(ciphertext: string) {
   const parts = ciphertext.split(':');
   if (parts.length !== 3) return ciphertext; // not encrypted, return as-is
   const [ivHex, tagHex, dataHex] = parts;
@@ -34,7 +33,7 @@ export function decryptBrokerKey(ciphertext) {
 }
 
 /** Returns last 4 chars with the rest masked — safe for API responses. */
-export function maskBrokerKey(ciphertext) {
+export function maskBrokerKey(ciphertext: string) {
   const plaintext = decryptBrokerKey(ciphertext);
   if (plaintext.length <= 4) return '****';
   return `****${plaintext.slice(-4)}`;
