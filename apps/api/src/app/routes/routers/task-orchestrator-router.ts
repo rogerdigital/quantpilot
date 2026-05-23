@@ -31,8 +31,8 @@ export async function handleTaskOrchestratorRoutes({
 }) {
   const writeForbidden = (permission, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
-  const requirePermission = (permission, action = '') => {
-    if (!hasPermission(permission)) {
+  const requirePermission = async (permission, action = '') => {
+    if (!(await hasPermission(permission, req.headers.authorization))) {
       writeForbidden(permission, action);
       return false;
     }
@@ -106,7 +106,7 @@ export async function handleTaskOrchestratorRoutes({
     reqUrl.pathname.endsWith('/resume') &&
     reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')
   ) {
-    if (!requirePermission('execution:approve', 'record operator actions')) return true;
+    if (!(await requirePermission('execution:approve', 'record operator actions'))) return true;
     const workflowRunId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const workflow = resumeWorkflow(workflowRunId, body);
@@ -123,7 +123,7 @@ export async function handleTaskOrchestratorRoutes({
     reqUrl.pathname.endsWith('/cancel') &&
     reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')
   ) {
-    if (!requirePermission('execution:approve', 'run control-plane cycles')) return true;
+    if (!(await requirePermission('execution:approve', 'run control-plane cycles'))) return true;
     const workflowRunId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const workflow = cancelWorkflow(workflowRunId, body);
@@ -148,7 +148,7 @@ export async function handleTaskOrchestratorRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/actions') {
-    if (!requirePermission('execution:approve', 'resume or cancel workflows')) return true;
+    if (!(await requirePermission('execution:approve', 'resume or cancel workflows'))) return true;
     const body = await readJsonBody(req);
     writeJson(res, 200, { ok: true, action: recordAction(body) });
     return true;
@@ -178,13 +178,12 @@ export async function handleTaskOrchestratorRoutes({
       getMarketSnapshot: gatewayDependencies.getMarketSnapshot,
     });
     writeJson(res, 200, result);
-    // Notify SSE clients so they can pull fresh state
     broadcast('state-update', { ok: true, ts: Date.now() });
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/strategy/execute') {
-    if (!requirePermission('strategy:write', 'queue workflows')) return true;
+    if (!(await requirePermission('strategy:write', 'queue workflows'))) return true;
     const body = await readJsonBody(req);
     writeJson(res, 200, {
       ok: true,

@@ -28,7 +28,7 @@ export async function handleRiskRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/risk/parameters') {
-    if (!hasPermission('risk:review')) {
+    if (!(await hasPermission('risk:review', req.headers.authorization))) {
       writeForbidden('risk:review', 'update risk parameters');
       return true;
     }
@@ -39,7 +39,7 @@ export async function handleRiskRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/risk/parameters/reset') {
-    if (!hasPermission('risk:review')) {
+    if (!(await hasPermission('risk:review', req.headers.authorization))) {
       writeForbidden('risk:review', 'reset risk parameters');
       return true;
     }
@@ -66,7 +66,7 @@ export async function handleRiskRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/risk/actions') {
-    if (!hasPermission('risk:review')) {
+    if (!(await hasPermission('risk:review', req.headers.authorization))) {
       writeForbidden('risk:review', 'run risk policy actions');
       return true;
     }
@@ -93,7 +93,7 @@ export async function handleRiskRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/risk/policies') {
-    if (!hasPermission('risk:review')) {
+    if (!(await hasPermission('risk:review', req.headers.authorization))) {
       writeForbidden('risk:review', 'create risk policy');
       return true;
     }
@@ -158,7 +158,7 @@ export async function handleRiskRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/risk/kill-switch') {
-    if (!hasPermission('risk:review')) {
+    if (!(await hasPermission('risk:review', req.headers.authorization))) {
       writeForbidden('risk:review', 'toggle kill switch');
       return true;
     }

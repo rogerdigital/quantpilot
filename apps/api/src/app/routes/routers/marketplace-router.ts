@@ -151,7 +151,7 @@ export async function handleMarketplaceRoutes({
 
   // POST /api/marketplace/strategies/publish - publish strategy
   if (req.method === 'POST' && reqUrl.pathname === '/api/marketplace/strategies/publish') {
-    if (!hasPermission('strategy:write')) {
+    if (!(await hasPermission('strategy:write', req.headers.authorization))) {
       writeForbidden('strategy:write', 'publish strategy to marketplace');
       return true;
     }

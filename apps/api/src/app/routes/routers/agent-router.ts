@@ -199,7 +199,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
     reqUrl.pathname.endsWith('/action-requests') &&
     reqUrl.pathname.startsWith('/api/agent/sessions/')
   ) {
-    if (!hasPermission('strategy:write')) {
+    if (!(await hasPermission('strategy:write', req.headers.authorization))) {
       writeForbidden('strategy:write', 'create agent session action requests');
       return true;
     }
@@ -216,7 +216,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/action-requests') {
-    if (!hasPermission('strategy:write')) {
+    if (!(await hasPermission('strategy:write', req.headers.authorization))) {
       writeForbidden('strategy:write', 'queue agent action requests');
       return true;
     }
@@ -231,7 +231,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
     reqUrl.pathname.endsWith('/approve') &&
     reqUrl.pathname.startsWith('/api/agent/action-requests/')
   ) {
-    if (!hasPermission('risk:review')) {
+    if (!(await hasPermission('risk:review', req.headers.authorization))) {
       writeForbidden('risk:review', 'approve agent action requests');
       return true;
     }
@@ -247,7 +247,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
     reqUrl.pathname.endsWith('/reject') &&
     reqUrl.pathname.startsWith('/api/agent/action-requests/')
   ) {
-    if (!hasPermission('risk:review')) {
+    if (!(await hasPermission('risk:review', req.headers.authorization))) {
       writeForbidden('risk:review', 'reject agent action requests');
       return true;
     }
@@ -259,7 +259,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/daily-runs') {
-    if (!hasPermission('strategy:write')) {
+    if (!(await hasPermission('strategy:write', req.headers.authorization))) {
       writeForbidden('strategy:write', 'queue agent daily runs');
       return true;
     }

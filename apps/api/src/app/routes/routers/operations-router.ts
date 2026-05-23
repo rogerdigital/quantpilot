@@ -20,7 +20,7 @@ export async function handleOperationsRoutes({
 }) {
   const writeForbidden = (permission, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
-  const canMaintain = () => hasPermission('operations:maintain');
+  const canMaintain = async () => hasPermission('operations:maintain', req.headers.authorization);
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/operations/workbench') {
     const summary = await getOperationsWorkbench({
@@ -33,7 +33,7 @@ export async function handleOperationsRoutes({
   }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/operations/maintenance') {
-    if (!canMaintain()) {
+    if (!(await canMaintain())) {
       writeForbidden('operations:maintain', 'inspect control-plane maintenance posture');
       return true;
     }
@@ -46,7 +46,7 @@ export async function handleOperationsRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/operations/maintenance/backup') {
-    if (!canMaintain()) {
+    if (!(await canMaintain())) {
       writeForbidden('operations:maintain', 'export control-plane backups');
       return true;
     }
@@ -55,7 +55,7 @@ export async function handleOperationsRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/operations/maintenance/restore') {
-    if (!canMaintain()) {
+    if (!(await canMaintain())) {
       writeForbidden('operations:maintain', 'restore control-plane backups');
       return true;
     }
@@ -65,7 +65,7 @@ export async function handleOperationsRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/operations/maintenance/repair/workflows') {
-    if (!canMaintain()) {
+    if (!(await canMaintain())) {
       writeForbidden('operations:maintain', 'repair workflow retry backlog');
       return true;
     }

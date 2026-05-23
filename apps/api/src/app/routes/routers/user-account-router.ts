@@ -33,7 +33,7 @@ export async function handleUserAccountRoutes({
 }) {
   const writeForbidden = (permission, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
-  const canWrite = () => hasPermission('account:write');
+  const canWrite = async () => hasPermission('account:write', req.headers.authorization);
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/user-account') {
     writeJson(res, 200, getUserAccountSnapshot());
@@ -46,7 +46,7 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/profile') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'update the account profile');
       return true;
     }
@@ -61,7 +61,7 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/roles') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'save role templates');
       return true;
     }
@@ -72,7 +72,7 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'DELETE' && reqUrl.pathname.startsWith('/api/user-account/roles/')) {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'delete role templates');
       return true;
     }
@@ -88,7 +88,7 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/workspaces') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'save workspaces');
       return true;
     }
@@ -99,7 +99,7 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/workspaces/current') {
-    if (!hasPermission('dashboard:read')) {
+    if (!(await hasPermission('dashboard:read', req.headers.authorization))) {
       writeForbidden('dashboard:read', 'switch workspaces');
       return true;
     }
@@ -110,7 +110,7 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/preferences') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'update account preferences');
       return true;
     }
@@ -120,7 +120,7 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/access') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'update the access policy');
       return true;
     }
@@ -150,7 +150,7 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/broker-bindings') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'save broker bindings');
       return true;
     }
@@ -172,7 +172,7 @@ export async function handleUserAccountRoutes({
     reqUrl.pathname.endsWith('/default') &&
     reqUrl.pathname.startsWith('/api/user-account/broker-bindings/')
   ) {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'change the default broker binding');
       return true;
     }
@@ -183,7 +183,7 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'DELETE' && reqUrl.pathname.startsWith('/api/user-account/broker-bindings/')) {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'delete broker bindings');
       return true;
     }
@@ -198,7 +198,7 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/broker-bindings/sync') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'sync broker runtime state');
       return true;
     }

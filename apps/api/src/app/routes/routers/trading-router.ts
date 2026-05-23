@@ -24,7 +24,7 @@ export async function handleTradingRoutes({ req, reqUrl, res, readJsonBody, writ
     return false;
   }
 
-  if (!hasPermission('execution:approve')) {
+  if (!(await hasPermission('execution:approve', req.headers.authorization))) {
     writeForbiddenJson(writeJson, res, 'execution:approve', 'submit terminal orders');
     return true;
   }

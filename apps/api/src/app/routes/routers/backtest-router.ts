@@ -77,7 +77,7 @@ export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, wri
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/backtest/runs') {
-    if (!hasPermission('strategy:write')) {
+    if (!(await hasPermission('strategy:write', req.headers.authorization))) {
       writeForbidden('strategy:write', 'queue backtest runs');
       return true;
     }
@@ -92,7 +92,7 @@ export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, wri
     reqUrl.pathname.endsWith('/evaluate') &&
     reqUrl.pathname.startsWith('/api/backtest/runs/')
   ) {
-    if (!hasPermission('risk:review')) {
+    if (!(await hasPermission('risk:review', req.headers.authorization))) {
       writeForbidden('risk:review', 'evaluate research results for promotion');
       return true;
     }
@@ -108,7 +108,7 @@ export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, wri
     reqUrl.pathname.endsWith('/review') &&
     reqUrl.pathname.startsWith('/api/backtest/runs/')
   ) {
-    if (!hasPermission('risk:review')) {
+    if (!(await hasPermission('risk:review', req.headers.authorization))) {
       writeForbidden('risk:review', 'review backtest runs');
       return true;
     }

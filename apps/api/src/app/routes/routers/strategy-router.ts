@@ -37,7 +37,7 @@ export async function handleStrategyRoutes({ req, reqUrl, res, readJsonBody, wri
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/strategy/catalog') {
-    if (!hasPermission('strategy:write')) {
+    if (!(await hasPermission('strategy:write', req.headers.authorization))) {
       writeForbidden('strategy:write', 'save strategy catalog entries');
       return true;
     }
@@ -52,7 +52,7 @@ export async function handleStrategyRoutes({ req, reqUrl, res, readJsonBody, wri
     reqUrl.pathname.endsWith('/promote') &&
     reqUrl.pathname.startsWith('/api/strategy/catalog/')
   ) {
-    if (!hasPermission('strategy:write')) {
+    if (!(await hasPermission('strategy:write', req.headers.authorization))) {
       writeForbidden('strategy:write', 'promote the strategy from a research evaluation');
       return true;
     }
@@ -78,7 +78,7 @@ export async function handleStrategyRoutes({ req, reqUrl, res, readJsonBody, wri
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/research/execution-candidates') {
-    if (!hasPermission('strategy:write')) {
+    if (!(await hasPermission('strategy:write', req.headers.authorization))) {
       writeForbidden('strategy:write', 'create execution handoffs');
       return true;
     }
@@ -93,7 +93,7 @@ export async function handleStrategyRoutes({ req, reqUrl, res, readJsonBody, wri
     reqUrl.pathname.startsWith('/api/research/execution-candidates/') &&
     reqUrl.pathname.endsWith('/queue')
   ) {
-    if (!hasPermission('execution:approve')) {
+    if (!(await hasPermission('execution:approve', req.headers.authorization))) {
       writeForbidden('execution:approve', 'queue execution handoffs');
       return true;
     }

@@ -28,8 +28,8 @@ import { hasPermission } from '../../../modules/auth/service.js';
 export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
   const writeForbidden = (permission, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
-  const requireApproval = (action) => {
-    if (!hasPermission('execution:approve')) {
+  const requireApproval = async (action) => {
+    if (!(await hasPermission('execution:approve', req.headers.authorization))) {
       writeForbidden('execution:approve', action);
       return false;
     }
@@ -47,7 +47,7 @@ export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, wr
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/execution/plans/bulk') {
-    if (!requireApproval('run bulk execution actions')) return true;
+    if (!(await requireApproval('run bulk execution actions'))) return true;
     const body = await readJsonBody(req);
     const result = bulkOperateExecutionPlans(body);
     writeJson(res, result.ok ? 200 : 400, result);
@@ -103,7 +103,7 @@ export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, wr
     reqUrl.pathname.endsWith('/approve') &&
     reqUrl.pathname.startsWith('/api/execution/plans/')
   ) {
-    if (!requireApproval('approve execution plans')) return true;
+    if (!(await requireApproval('approve execution plans'))) return true;
     const planId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = approveExecutionPlan(planId, body);
@@ -116,7 +116,7 @@ export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, wr
     reqUrl.pathname.endsWith('/settle') &&
     reqUrl.pathname.startsWith('/api/execution/plans/')
   ) {
-    if (!requireApproval('settle execution plans')) return true;
+    if (!(await requireApproval('settle execution plans'))) return true;
     const planId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = settleExecutionPlan(planId, body);
@@ -129,7 +129,7 @@ export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, wr
     reqUrl.pathname.endsWith('/sync') &&
     reqUrl.pathname.startsWith('/api/execution/plans/')
   ) {
-    if (!requireApproval('sync execution plans')) return true;
+    if (!(await requireApproval('sync execution plans'))) return true;
     const planId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = syncExecutionPlan(planId, body);
@@ -142,7 +142,7 @@ export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, wr
     reqUrl.pathname.endsWith('/broker-events') &&
     reqUrl.pathname.startsWith('/api/execution/plans/')
   ) {
-    if (!requireApproval('ingest broker execution events')) return true;
+    if (!(await requireApproval('ingest broker execution events'))) return true;
     const planId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = ingestBrokerExecutionEvent(planId, body);
@@ -155,7 +155,7 @@ export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, wr
     reqUrl.pathname.endsWith('/cancel') &&
     reqUrl.pathname.startsWith('/api/execution/plans/')
   ) {
-    if (!requireApproval('cancel execution plans')) return true;
+    if (!(await requireApproval('cancel execution plans'))) return true;
     const planId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = cancelExecutionPlan(planId, body);
@@ -168,7 +168,7 @@ export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, wr
     reqUrl.pathname.endsWith('/reconcile') &&
     reqUrl.pathname.startsWith('/api/execution/plans/')
   ) {
-    if (!requireApproval('reconcile execution plans')) return true;
+    if (!(await requireApproval('reconcile execution plans'))) return true;
     const planId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = reconcileExecutionPlan(planId, body);
@@ -181,7 +181,7 @@ export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, wr
     reqUrl.pathname.endsWith('/compensate') &&
     reqUrl.pathname.startsWith('/api/execution/plans/')
   ) {
-    if (!requireApproval('run execution compensation automation')) return true;
+    if (!(await requireApproval('run execution compensation automation'))) return true;
     const planId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = compensateExecutionPlan(planId, body);
@@ -194,7 +194,7 @@ export async function handleExecutionRoutes({ req, reqUrl, res, readJsonBody, wr
     reqUrl.pathname.endsWith('/recover') &&
     reqUrl.pathname.startsWith('/api/execution/plans/')
   ) {
-    if (!requireApproval('recover execution plans')) return true;
+    if (!(await requireApproval('recover execution plans'))) return true;
     const planId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
     const result = recoverExecutionPlan(planId, body);

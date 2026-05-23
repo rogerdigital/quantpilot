@@ -68,12 +68,12 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   if (req.method === 'POST' && reqUrl.pathname === '/api/research/governance/actions') {
     const body = await readJsonBody(req);
     if (body.action === 'promote_strategies' || body.action === 'queue_backtests') {
-      if (!hasPermission('strategy:write')) {
+      if (!(await hasPermission('strategy:write', req.headers.authorization))) {
         writeForbidden('strategy:write', 'run research governance strategy actions');
         return true;
       }
     }
-    if (body.action === 'evaluate_runs' && !hasPermission('risk:review')) {
+    if (body.action === 'evaluate_runs' && !(await hasPermission('risk:review', req.headers.authorization))) {
       writeForbidden('risk:review', 'run research governance evaluation actions');
       return true;
     }

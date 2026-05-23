@@ -38,7 +38,7 @@ export async function handleSchedulerRoutes({ req, reqUrl, res, readJsonBody, wr
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/scheduler/actions') {
-    if (!hasPermission('execution:approve')) {
+    if (!(await hasPermission('execution:approve', req.headers.authorization))) {
       writeForbidden('execution:approve', 'run scheduler orchestration actions');
       return true;
     }
