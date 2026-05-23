@@ -197,7 +197,6 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
       writeJson(res, 200, {
         ok: true,
         message: 'If the email exists, a reset link has been sent',
-        debug_token: resetToken.token,
       });
       return true;
     }
@@ -341,10 +340,8 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
       enableMfa(userId, secret);
     }
 
-    const recoveryCodes = Array.from({ length: 8 }, () => {
-      const { randomBytes: rb2 } = require('node:crypto');
-      return rb2(4).toString('hex');
-    });
+    const { randomBytes: rb2 } = await import('node:crypto');
+    const recoveryCodes = Array.from({ length: 8 }, () => rb2(4).toString('hex'));
 
     writeJson(res, 200, {
       ok: true,
