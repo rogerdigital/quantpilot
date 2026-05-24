@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 
-export function queueRiskScan(payload) {
+export function queueRiskScan(payload: any) {
   return controlPlaneRuntime.enqueueRiskScan(payload);
 }
 

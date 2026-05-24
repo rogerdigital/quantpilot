@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.js';
 import { listBacktestRuns } from '../../backtest/services/runs-service.js';
@@ -24,11 +22,11 @@ export function listAgentActionRequests(limit = 50) {
   };
 }
 
-export function recordAgentActionRequest(payload) {
+export function recordAgentActionRequest(payload: Record<string, any>) {
   return controlPlaneRuntime.recordAgentActionRequest(payload);
 }
 
-export function queueAgentActionRequest(payload = {}) {
+export function queueAgentActionRequest(payload: Record<string, any> = {}) {
   if (!ALLOWED_AGENT_REQUEST_TYPES.has(payload.requestType)) {
     return {
       ok: false,
@@ -58,14 +56,14 @@ export function queueAgentActionRequest(payload = {}) {
   };
 }
 
-function inferActionRequestType(intent = {}) {
+function inferActionRequestType(intent: Record<string, any> = {}) {
   if (intent.kind === 'request_execution_prep') return 'prepare_execution_plan';
   if (intent.kind === 'request_backtest_review') return 'review_backtest';
   if (intent.kind === 'request_risk_explanation') return 'explain_risk';
   return '';
 }
 
-function resolveHandoffTarget(intent = {}, session = {}) {
+function resolveHandoffTarget(intent: Record<string, any> = {}, session: Record<string, any> = {}) {
   if (intent.targetId) {
     return {
       ok: true,
@@ -87,7 +85,7 @@ function resolveHandoffTarget(intent = {}, session = {}) {
 
   if (intent.kind === 'request_backtest_review') {
     const run =
-      listBacktestRuns().runs.find((item) => item.status === 'needs_review') ||
+      listBacktestRuns().runs.find((item: any) => item.status === 'needs_review') ||
       listBacktestRuns().runs[0] ||
       null;
     if (run) {
@@ -102,7 +100,7 @@ function resolveHandoffTarget(intent = {}, session = {}) {
   if (intent.kind === 'request_risk_explanation') {
     const riskEvent =
       listRiskEvents(20).find(
-        (item) => item.status === 'risk-off' || item.status === 'attention'
+        (item: any) => item.status === 'risk-off' || item.status === 'attention'
       ) ||
       listRiskEvents(20)[0] ||
       null;
@@ -129,7 +127,7 @@ function resolveHandoffTarget(intent = {}, session = {}) {
   };
 }
 
-export function createSessionActionRequest(sessionId, payload = {}) {
+export function createSessionActionRequest(sessionId: string | undefined, payload: Record<string, any> = {}) {
   const session = controlPlaneRuntime.getAgentSession(sessionId);
   if (!session) {
     return {
@@ -229,7 +227,7 @@ export function createSessionActionRequest(sessionId, payload = {}) {
   const updatedSession = controlPlaneRuntime.updateAgentSession(session.id, {
     status: 'waiting_approval',
     metadata: {
-      pendingActionWorkflowId: workflowResult.workflow.id,
+      pendingActionWorkflowId: workflowResult.workflow!.id,
       pendingActionRequestType: requestType,
       pendingActionRequestedAt: new Date().toISOString(),
     },
@@ -245,7 +243,7 @@ export function createSessionActionRequest(sessionId, payload = {}) {
       requestType,
       targetId: target.targetId,
       targetType: target.targetType,
-      workflowRunId: workflowResult.workflow.id,
+      workflowRunId: workflowResult.workflow!.id,
     },
   });
 
@@ -263,7 +261,7 @@ export function createSessionActionRequest(sessionId, payload = {}) {
   };
 }
 
-export function approveAgentActionRequest(requestId, payload = {}) {
+export function approveAgentActionRequest(requestId: string | undefined, payload: Record<string, any> = {}) {
   const request = controlPlaneRuntime.getAgentActionRequest(requestId);
   if (!request) {
     return { ok: false, message: 'agent action request not found' };
@@ -363,7 +361,7 @@ export function approveAgentActionRequest(requestId, payload = {}) {
   };
 }
 
-export function rejectAgentActionRequest(requestId, payload = {}) {
+export function rejectAgentActionRequest(requestId: string | undefined, payload: Record<string, any> = {}) {
   const request = controlPlaneRuntime.getAgentActionRequest(requestId);
   if (!request) {
     return { ok: false, message: 'agent action request not found' };

@@ -1,11 +1,10 @@
-// @ts-nocheck
 import { listBacktestRuns } from '../../backtest/services/runs-service.js';
 import { listExecutionPlans } from '../../execution/services/query-service.js';
 import { getStrategyCatalogItem } from '../../strategy/services/catalog-service.js';
 import { listRiskEvents } from './feed-service.js';
 import { getRiskParameters } from './parameters-service.js';
 
-export function assessExecutionCandidate(candidate) {
+export function assessExecutionCandidate(candidate: Record<string, any>) {
   const params = getRiskParameters();
   const needsReview =
     candidate.mode === 'live' && candidate.status !== 'paper' && candidate.status !== 'live';
@@ -47,7 +46,7 @@ export function assessExecutionCandidate(candidate) {
   };
 }
 
-export function assessAgentActionRequestRisk(payload = {}) {
+export function assessAgentActionRequestRisk(payload: Record<string, any> = {}) {
   if (payload.requestType === 'prepare_execution_plan') {
     const params = getRiskParameters();
     const strategy = getStrategyCatalogItem(payload.targetId);
@@ -90,7 +89,7 @@ export function assessAgentActionRequestRisk(payload = {}) {
   }
 
   if (payload.requestType === 'review_backtest') {
-    const run = listBacktestRuns().runs.find((item) => item.id === payload.targetId);
+    const run = listBacktestRuns().runs.find((item: any) => item.id === payload.targetId);
     if (!run) {
       return {
         riskStatus: 'blocked',
@@ -111,8 +110,8 @@ export function assessAgentActionRequestRisk(payload = {}) {
 
   if (payload.requestType === 'explain_risk') {
     const hasTarget =
-      listExecutionPlans(20).some((item) => item.id === payload.targetId) ||
-      listRiskEvents(20).some((item) => item.id === payload.targetId);
+      listExecutionPlans(20).some((item: any) => item.id === payload.targetId) ||
+      listRiskEvents(20).some((item: any) => item.id === payload.targetId);
     if (!hasTarget) {
       return {
         riskStatus: 'blocked',

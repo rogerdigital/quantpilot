@@ -1,16 +1,15 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 
 const AUTHORITY_ORDER = ['full_auto', 'bounded_auto', 'ask_first', 'manual_only', 'stopped'];
 
-function rankAuthority(mode) {
+function rankAuthority(mode: string) {
   const idx = AUTHORITY_ORDER.indexOf(mode);
   return idx >= 0 ? idx : AUTHORITY_ORDER.indexOf('manual_only');
 }
 
-function mostRestrictiveMode(modes) {
+function mostRestrictiveMode(modes: string[]) {
   return modes.reduce(
-    (worst, mode) => (rankAuthority(mode) > rankAuthority(worst) ? mode : worst),
+    (worst: string, mode: string) => (rankAuthority(mode) > rankAuthority(worst) ? mode : worst),
     'full_auto'
   );
 }
@@ -31,7 +30,7 @@ export function resolveAgentAuthority({
   const policies = controlPlaneRuntime
     .listAgentPolicies(200)
     .filter(
-      (item) =>
+      (item: any) =>
         (item.accountId === accountId || item.accountId === 'all') &&
         (item.strategyId === strategyId || item.strategyId === 'all') &&
         (item.actionType === actionType || item.actionType === 'all') &&
@@ -39,7 +38,7 @@ export function resolveAgentAuthority({
     );
 
   const baseMode =
-    policies.length > 0 ? mostRestrictiveMode(policies.map((p) => p.authority)) : 'manual_only';
+    policies.length > 0 ? mostRestrictiveMode(policies.map((p: any) => p.authority)) : 'manual_only';
 
   let effectiveMode = baseMode;
   let reason =
