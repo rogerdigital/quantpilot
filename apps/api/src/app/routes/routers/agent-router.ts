@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import {
   evaluateToolPolicy,
   filterAllowedFromRequest,
@@ -10,6 +8,7 @@ import {
   executeAgentReviewWorkflow,
   isValidReviewType,
 } from '../../../../../../packages/task-workflow-engine/src/agent-review-workflows.js';
+import type { AgentReviewType } from '../../../../../../packages/task-workflow-engine/src/agent-review-workflows.js';
 import {
   approveAgentActionRequest,
   createSessionActionRequest,
@@ -40,9 +39,10 @@ import {
 } from '../../../domains/agent/services/workbench-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
-export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
-  const writeForbidden = (permission, action = '') =>
+export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+  const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/agent/authority') {
@@ -80,7 +80,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/tools/execute') {
     const body = await readJsonBody(req);
-    const result = await executeAgentTool(body);
+    const result = await executeAgentTool(body as Record<string, unknown> | undefined);
     writeJson(res, result.ok ? 200 : 403, result);
     return true;
   }
@@ -95,19 +95,19 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/tools/policy/evaluate') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, unknown> | null;
     if (!body?.tools || !Array.isArray(body.tools)) {
       writeJson(res, 400, { ok: false, error: 'Missing required field: tools (array)' });
       return true;
     }
-    const result = filterAllowedFromRequest(body.tools);
+    const result = filterAllowedFromRequest(body.tools as string[]);
     writeJson(res, 200, { ok: true, ...result });
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/reviews') {
-    const body = await readJsonBody(req);
-    if (!body?.reviewType || !isValidReviewType(body.reviewType)) {
+    const body = (await readJsonBody(req)) as Record<string, unknown> | null;
+    if (!body?.reviewType || !isValidReviewType(body.reviewType as string)) {
       writeJson(res, 400, {
         ok: false,
         error:
@@ -121,10 +121,10 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
     }
     const result = await executeAgentReviewWorkflow(
       {
-        reviewType: body.reviewType,
-        targetId: body.targetId,
-        requestedBy: body.requestedBy || 'api',
-        context: body.context,
+        reviewType: body.reviewType as AgentReviewType,
+        targetId: body.targetId as string,
+        requestedBy: (body.requestedBy as string) || 'api',
+        context: body.context as Record<string, unknown> | undefined,
       },
       {}
     );
@@ -135,7 +135,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
   // LLM-powered intent parsing (now async)
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/intent') {
     const body = await readJsonBody(req);
-    const result = await parseAgentIntent(body);
+    const result = await parseAgentIntent(body as Parameters<typeof parseAgentIntent>[0]);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
@@ -143,7 +143,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
   // LLM-powered plan creation (now async)
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/plans') {
     const body = await readJsonBody(req);
-    const result = await createAgentPlan(body);
+    const result = await createAgentPlan(body as Parameters<typeof createAgentPlan>[0]);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
@@ -151,7 +151,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
   // LLM-powered analysis with tool-use loop (now async)
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/analysis-runs') {
     const body = await readJsonBody(req);
-    const result = await runAgentAnalysis(body);
+    const result = await runAgentAnalysis(body as Parameters<typeof runAgentAnalysis>[0]);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
@@ -205,7 +205,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
     }
     const sessionId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
-    const result = createSessionActionRequest(sessionId, body);
+    const result = createSessionActionRequest(sessionId, body as Record<string, unknown> | undefined);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
@@ -221,7 +221,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
       return true;
     }
     const body = await readJsonBody(req);
-    const result = queueAgentActionRequest(body);
+    const result = queueAgentActionRequest(body as Record<string, unknown> | undefined);
     writeJson(res, result.ok ? 200 : 403, result);
     return true;
   }
@@ -237,7 +237,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
     }
     const requestId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
-    const result = approveAgentActionRequest(requestId, body);
+    const result = approveAgentActionRequest(requestId, body as Record<string, unknown> | undefined);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
@@ -253,7 +253,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
     }
     const requestId = reqUrl.pathname.split('/').at(-2);
     const body = await readJsonBody(req);
-    const result = rejectAgentActionRequest(requestId, body);
+    const result = rejectAgentActionRequest(requestId, body as Record<string, unknown> | undefined);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
