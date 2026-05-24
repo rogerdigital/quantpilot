@@ -1,7 +1,7 @@
-// @ts-nocheck
+import type { GatewayRouteContext } from '../types.js';
 import { listNotifications } from '../../../modules/notification/service.js';
 
-export function handleNotificationRoutes({ req, reqUrl, res, writeJson }) {
+export function handleNotificationRoutes({ req, reqUrl, res, writeJson }: GatewayRouteContext) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/notification/events') {
     writeJson(res, 200, {
       ok: true,

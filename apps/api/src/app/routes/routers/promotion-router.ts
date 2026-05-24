@@ -1,9 +1,9 @@
-// @ts-nocheck
-import { PromotionStore } from '../../../../../../packages/control-plane-store/src/promotion-store.ts';
+import type { GatewayRouteContext } from '../types.js';
+import { PromotionStore } from '../../../../../../packages/control-plane-store/src/promotion-store.js';
 
 const store = new PromotionStore();
 
-export function handlePromotionRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
+export function handlePromotionRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
   const pathname = reqUrl.pathname;
 
   if (req.method === 'GET' && pathname === '/api/promotions') {
@@ -15,7 +15,7 @@ export function handlePromotionRoutes({ req, reqUrl, res, readJsonBody, writeJso
 
   if (req.method === 'POST' && pathname === '/api/promotions') {
     return (async () => {
-      const body = await readJsonBody(req);
+      const body = (await readJsonBody(req)) as Record<string, any> | undefined;
       if (!body?.strategyCandidateId || !body?.strategyVersionId || !body?.requestedBy) {
         writeJson(res, 400, {
           ok: false,
@@ -35,7 +35,7 @@ export function handlePromotionRoutes({ req, reqUrl, res, readJsonBody, writeJso
         updatedAt: new Date().toISOString(),
         metadata: body.metadata || {},
       };
-      const created = store.create(request);
+      const created = store.create(request as any);
       writeJson(res, 201, { ok: true, promotion: created });
       return true;
     })();
@@ -66,7 +66,7 @@ export function handlePromotionRoutes({ req, reqUrl, res, readJsonBody, writeJso
   const approvePaperMatch = pathname.match(/^\/api\/promotions\/([^/]+)\/approve-paper$/);
   if (approvePaperMatch && req.method === 'POST') {
     return (async () => {
-      const body = await readJsonBody(req);
+      const body = (await readJsonBody(req)) as Record<string, any> | undefined;
       if (!body?.actor || !body?.reason) {
         writeJson(res, 400, { ok: false, error: 'Missing actor or reason' });
         return true;
@@ -83,7 +83,7 @@ export function handlePromotionRoutes({ req, reqUrl, res, readJsonBody, writeJso
         timestamp: new Date().toISOString(),
         metadata: {},
       };
-      const result = store.approvePaper(approvePaperMatch[1], decision);
+      const result = store.approvePaper(approvePaperMatch[1], decision as any);
       if (!result) {
         writeJson(res, 409, { ok: false, error: 'Cannot approve paper from current state' });
         return true;
@@ -96,7 +96,7 @@ export function handlePromotionRoutes({ req, reqUrl, res, readJsonBody, writeJso
   const approveLiveMatch = pathname.match(/^\/api\/promotions\/([^/]+)\/approve-live$/);
   if (approveLiveMatch && req.method === 'POST') {
     return (async () => {
-      const body = await readJsonBody(req);
+      const body = (await readJsonBody(req)) as Record<string, any> | undefined;
       if (!body?.actor || !body?.reason) {
         writeJson(res, 400, { ok: false, error: 'Missing actor or reason' });
         return true;
@@ -113,7 +113,7 @@ export function handlePromotionRoutes({ req, reqUrl, res, readJsonBody, writeJso
         timestamp: new Date().toISOString(),
         metadata: {},
       };
-      const result = store.approveLive(approveLiveMatch[1], decision);
+      const result = store.approveLive(approveLiveMatch[1], decision as any);
       if (!result) {
         writeJson(res, 409, { ok: false, error: 'Cannot approve live from current state' });
         return true;
@@ -126,7 +126,7 @@ export function handlePromotionRoutes({ req, reqUrl, res, readJsonBody, writeJso
   const rejectMatch = pathname.match(/^\/api\/promotions\/([^/]+)\/reject$/);
   if (rejectMatch && req.method === 'POST') {
     return (async () => {
-      const body = await readJsonBody(req);
+      const body = (await readJsonBody(req)) as Record<string, any> | undefined;
       if (!body?.actor || !body?.reason) {
         writeJson(res, 400, { ok: false, error: 'Missing actor or reason' });
         return true;
@@ -143,7 +143,7 @@ export function handlePromotionRoutes({ req, reqUrl, res, readJsonBody, writeJso
         timestamp: new Date().toISOString(),
         metadata: {},
       };
-      const result = store.reject(rejectMatch[1], decision);
+      const result = store.reject(rejectMatch[1], decision as any);
       if (!result) {
         writeJson(res, 409, { ok: false, error: 'Cannot reject: missing reason or invalid state' });
         return true;
@@ -156,7 +156,7 @@ export function handlePromotionRoutes({ req, reqUrl, res, readJsonBody, writeJso
   const suspendMatch = pathname.match(/^\/api\/promotions\/([^/]+)\/suspend$/);
   if (suspendMatch && req.method === 'POST') {
     return (async () => {
-      const body = await readJsonBody(req);
+      const body = (await readJsonBody(req)) as Record<string, any> | undefined;
       if (!body?.actor || !body?.reason) {
         writeJson(res, 400, { ok: false, error: 'Missing actor or reason' });
         return true;
@@ -173,7 +173,7 @@ export function handlePromotionRoutes({ req, reqUrl, res, readJsonBody, writeJso
         timestamp: new Date().toISOString(),
         metadata: {},
       };
-      const result = store.suspend(suspendMatch[1], decision);
+      const result = store.suspend(suspendMatch[1], decision as any);
       if (!result) {
         writeJson(res, 409, { ok: false, error: 'Cannot suspend: missing reason' });
         return true;

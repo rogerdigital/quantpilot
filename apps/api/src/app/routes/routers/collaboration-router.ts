@@ -1,4 +1,4 @@
-// @ts-nocheck
+import type { GatewayRouteContext } from '../types.js';
 
 import { controlPlaneContext } from '../../../../../../packages/control-plane-store/src/context.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
@@ -11,8 +11,8 @@ export async function handleCollaborationRoutes({
   readJsonBody,
   writeJson,
   userAccount,
-}) {
-  const writeForbidden = (permission, action = '') =>
+}: GatewayRouteContext) {
+  const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 
   const collaborationRepo = controlPlaneContext.collaboration;
@@ -25,11 +25,11 @@ export async function handleCollaborationRoutes({
   ) {
     const parts = reqUrl.pathname.split('/');
     const strategyId = parts[parts.length - 2];
-    const body = await readJsonBody(req);
-    const userId = userAccount?.id || 'anonymous';
-    const userName = userAccount?.name || 'Anonymous';
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+    const userId = (userAccount as any)?.id || 'anonymous';
+    const userName = (userAccount as any)?.name || 'Anonymous';
 
-    if (!body.userId || !body.permission) {
+    if (!body?.userId || !body?.permission) {
       writeJson(res, 400, { ok: false, message: 'userId and permission are required' });
       return true;
     }
@@ -37,14 +37,14 @@ export async function handleCollaborationRoutes({
     try {
       const share = collaborationRepo.shareStrategy(
         strategyId,
-        body.userId,
-        body.userName || 'User',
-        body.permission,
+        body?.userId,
+        body?.userName || 'User',
+        body?.permission,
         userId
       );
 
       writeJson(res, 200, { ok: true, share });
-    } catch (err) {
+    } catch (err: any) {
       writeJson(res, 400, { ok: false, message: err.message });
     }
     return true;
@@ -87,11 +87,11 @@ export async function handleCollaborationRoutes({
   ) {
     const parts = reqUrl.pathname.split('/');
     const strategyId = parts[parts.length - 2];
-    const body = await readJsonBody(req);
-    const userId = userAccount?.id || 'anonymous';
-    const userName = userAccount?.name || 'Anonymous';
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+    const userId = (userAccount as any)?.id || 'anonymous';
+    const userName = (userAccount as any)?.name || 'Anonymous';
 
-    if (!body.content || body.content.trim().length === 0) {
+    if (!body?.content || body?.content.trim().length === 0) {
       writeJson(res, 400, { ok: false, message: 'Comment content is required' });
       return true;
     }
@@ -101,12 +101,12 @@ export async function handleCollaborationRoutes({
         strategyId,
         userId,
         userName,
-        body.content,
-        body.parentId
+        body?.content,
+        body?.parentId
       );
 
       writeJson(res, 200, { ok: true, comment });
-    } catch (err) {
+    } catch (err: any) {
       writeJson(res, 400, { ok: false, message: err.message });
     }
     return true;
@@ -135,12 +135,12 @@ export async function handleCollaborationRoutes({
   ) {
     const parts = reqUrl.pathname.split('/');
     const commentId = parts[parts.length - 2];
-    const userId = userAccount?.id || 'anonymous';
+    const userId = (userAccount as any)?.id || 'anonymous';
 
     try {
       const comment = collaborationRepo.resolveComment(commentId, userId);
       writeJson(res, 200, { ok: true, comment });
-    } catch (err) {
+    } catch (err: any) {
       writeJson(res, 400, { ok: false, message: err.message });
     }
     return true;

@@ -1,4 +1,4 @@
-// @ts-nocheck
+import type { GatewayRouteContext } from '../types.js';
 
 import {
   getBacktestResultDetail,
@@ -16,8 +16,8 @@ import { evaluateBacktestRun } from '../../../domains/research/services/evaluati
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
 
-export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
-  const writeForbidden = (permission, action = '') =>
+export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+  const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/backtest/summary') {
@@ -81,7 +81,7 @@ export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, wri
       writeForbidden('strategy:write', 'queue backtest runs');
       return true;
     }
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const result = createBacktestRun(body);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
@@ -97,8 +97,8 @@ export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, wri
       return true;
     }
     const runId = reqUrl.pathname.split('/').at(-2);
-    const body = await readJsonBody(req);
-    const result = evaluateBacktestRun(runId, body);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+    const result = evaluateBacktestRun(runId as string, body);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
@@ -113,7 +113,7 @@ export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, wri
       return true;
     }
     const runId = reqUrl.pathname.split('/').at(-2);
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const result = reviewBacktestRun(runId, body);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;

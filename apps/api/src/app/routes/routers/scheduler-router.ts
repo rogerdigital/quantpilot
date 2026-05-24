@@ -1,5 +1,4 @@
-// @ts-nocheck
-
+import type { GatewayRouteContext } from '../types.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
 import {
@@ -8,8 +7,8 @@ import {
   runSchedulerOrchestrationAction,
 } from '../../../modules/scheduler/service.js';
 
-export async function handleSchedulerRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
-  const writeForbidden = (permission, action = '') =>
+export async function handleSchedulerRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+  const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/scheduler/ticks') {
@@ -42,7 +41,7 @@ export async function handleSchedulerRoutes({ req, reqUrl, res, readJsonBody, wr
       writeForbidden('execution:approve', 'run scheduler orchestration actions');
       return true;
     }
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const result = runSchedulerOrchestrationAction(body);
     writeJson(res, result?.ok === false ? 400 : 200, result);
     return true;

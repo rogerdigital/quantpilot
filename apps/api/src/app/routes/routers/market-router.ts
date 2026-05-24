@@ -1,4 +1,4 @@
-// @ts-nocheck
+import type { GatewayRouteContext } from '../types.js';
 
 /**
  * GET /api/market/ohlcv?symbol=AAPL&timeframe=1D&limit=100
@@ -34,23 +34,23 @@ const STOCK_PARAMS = {
   SPY: { drift: 0.07, volatility: 0.8 },
 };
 
-function seededNoise(seed, step) {
+function seededNoise(seed: number, step: number): number {
   const raw = Math.sin(seed * 12.9898 + step * 78.233) * 43758.5453;
   return raw - Math.floor(raw); // 0..1
 }
 
-function isWeekday(date) {
+function isWeekday(date: Date): boolean {
   const d = date.getDay();
   return d !== 0 && d !== 6;
 }
 
-function generateOhlcv(symbol, limit) {
-  const basePrice = STOCK_BASE_PRICES[symbol] ?? 100;
-  const params = STOCK_PARAMS[symbol] ?? { drift: 0.08, volatility: 1.5 };
-  const symbolSeed = symbol.split('').reduce((s, c) => s + c.charCodeAt(0), 0);
+function generateOhlcv(symbol: string, limit: number) {
+  const basePrice = STOCK_BASE_PRICES[symbol as keyof typeof STOCK_BASE_PRICES] ?? 100;
+  const params = STOCK_PARAMS[symbol as keyof typeof STOCK_PARAMS] ?? { drift: 0.08, volatility: 1.5 };
+  const symbolSeed = symbol.split('').reduce((s: number, c: string) => s + c.charCodeAt(0), 0);
 
   // Collect 'limit' trading days going backward from today
-  const dates = [];
+  const dates: string[] = [];
   const cursor = new Date();
   while (dates.length < limit) {
     if (isWeekday(cursor)) {
@@ -91,7 +91,7 @@ function generateOhlcv(symbol, limit) {
   return bars;
 }
 
-export async function handleMarketRoutes({ req, reqUrl, res, writeJson }) {
+export async function handleMarketRoutes({ req, reqUrl, res, writeJson }: GatewayRouteContext) {
   if (req.method !== 'GET' || reqUrl.pathname !== '/api/market/ohlcv') {
     return false;
   }
@@ -103,7 +103,7 @@ export async function handleMarketRoutes({ req, reqUrl, res, writeJson }) {
   try {
     const bars = generateOhlcv(symbol, limit);
     writeJson(res, 200, { symbol, timeframe, bars });
-  } catch (err) {
+  } catch (err: any) {
     writeJson(res, 500, { ok: false, message: err.message || 'Failed to generate OHLCV data' });
   }
 

@@ -1,5 +1,4 @@
-// @ts-nocheck
-
+import type { GatewayRouteContext } from '../types.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
 import {
@@ -17,8 +16,8 @@ export async function handleOperationsRoutes({
   readJsonBody,
   writeJson,
   gatewayDependencies,
-}) {
-  const writeForbidden = (permission, action = '') =>
+}: GatewayRouteContext) {
+  const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
   const canMaintain = async () => hasPermission('operations:maintain', req.headers.authorization);
 
@@ -59,7 +58,7 @@ export async function handleOperationsRoutes({
       writeForbidden('operations:maintain', 'restore control-plane backups');
       return true;
     }
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, restoreOperationsMaintenanceBackup(body || {}));
     return true;
   }
@@ -69,7 +68,7 @@ export async function handleOperationsRoutes({
       writeForbidden('operations:maintain', 'repair workflow retry backlog');
       return true;
     }
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, releaseWorkflowMaintenanceBacklog(body || {}));
     return true;
   }
