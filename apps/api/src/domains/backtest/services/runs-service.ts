@@ -1,10 +1,9 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.js';
 import { getStrategyCatalogItem } from '../../strategy/services/catalog-service.js';
 import { refreshBacktestSummary } from './summary-service.js';
 
-function buildBacktestResultFromRun(run, patch = {}) {
+function buildBacktestResultFromRun(run: any, patch: Record<string, any> = {}) {
   if (!run?.completedAt) return null;
   return controlPlaneRuntime.appendBacktestResult({
     runId: run.id,
@@ -39,7 +38,7 @@ function defaultWindowLabel() {
   return '2024-01-01 -> 2026-03-01';
 }
 
-function syncResearchTaskFromRun(run, patch = {}) {
+function syncResearchTaskFromRun(run: any, patch: Record<string, any> = {}) {
   if (!run) return null;
   return controlPlaneRuntime.upsertResearchTask({
     taskType: 'backtest-run',
@@ -80,11 +79,11 @@ export function listBacktestRuns() {
   };
 }
 
-export function getBacktestRunItem(runId) {
+export function getBacktestRunItem(runId: any) {
   return controlPlaneRuntime.getBacktestRun(runId);
 }
 
-export function getBacktestRunDetail(runId) {
+export function getBacktestRunDetail(runId: any) {
   const run = controlPlaneRuntime.getBacktestRun(runId);
   if (!run) {
     return {
@@ -115,7 +114,7 @@ export function getBacktestRunDetail(runId) {
   };
 }
 
-export function createBacktestRun(payload = {}) {
+export function createBacktestRun(payload: Record<string, any> = {}) {
   const strategy = getStrategyCatalogItem(payload.strategyId);
   if (!strategy) {
     return {
@@ -190,7 +189,7 @@ export function createBacktestRun(payload = {}) {
   };
 }
 
-export function updateBacktestRun(runId, patch = {}) {
+export function updateBacktestRun(runId: any, patch: Record<string, any> = {}) {
   const updated = controlPlaneRuntime.updateBacktestRun(runId, patch);
   if (!updated) {
     return {
@@ -222,7 +221,7 @@ export function updateBacktestRun(runId, patch = {}) {
   };
 }
 
-export function reviewBacktestRun(runId, payload = {}) {
+export function reviewBacktestRun(runId: any, payload: Record<string, any> = {}) {
   const current = controlPlaneRuntime.getBacktestRun(runId);
   if (!current) {
     return {

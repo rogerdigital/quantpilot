@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import {
   getBacktestResultSummary,
@@ -16,18 +15,18 @@ import {
   listResearchGovernanceActions,
 } from './workbench-service.js';
 
-function parseLimit(value, fallback) {
+function parseLimit(value: unknown, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function resolveSince(hours) {
+function resolveSince(hours: unknown): string {
   const parsed = Number(hours);
   if (!Number.isFinite(parsed) || parsed <= 0) return '';
   return new Date(Date.now() - parsed * 60 * 60 * 1000).toISOString();
 }
 
-export function listResearchTasks(options = {}) {
+export function listResearchTasks(options: Record<string, unknown> = {}) {
   const limit = parseLimit(options.limit, 100);
   const since = resolveSince(options.hours);
   const tasks = controlPlaneRuntime.listResearchTasks(limit, {
@@ -45,7 +44,7 @@ export function listResearchTasks(options = {}) {
   };
 }
 
-export function getResearchTaskDetail(taskId) {
+export function getResearchTaskDetail(taskId: string) {
   const task = controlPlaneRuntime.getResearchTask(taskId);
   if (!task) {
     return {
@@ -72,7 +71,7 @@ export function getResearchTaskDetail(taskId) {
   };
 }
 
-export function getResearchTaskSummary(options = {}) {
+export function getResearchTaskSummary(options: Record<string, unknown> = {}) {
   const limit = parseLimit(options.limit, 200);
   const since = resolveSince(options.hours);
   const tasks = controlPlaneRuntime.listResearchTasks(limit, {
@@ -88,15 +87,15 @@ export function getResearchTaskSummary(options = {}) {
     needsReview: 0,
     completed: 0,
     failed: 0,
-    byType: [],
-    byStrategy: [],
+    byType: [] as { taskType: string; count: number }[],
+    byStrategy: [] as { strategyId: string; strategyName: string; count: number; activeCount: number }[],
     active: 0,
   };
 
-  const typeCounts = new Map();
-  const strategyCounts = new Map();
+  const typeCounts = new Map<string, number>();
+  const strategyCounts = new Map<string, { strategyId: string; strategyName: string; count: number; activeCount: number }>();
 
-  tasks.forEach((task) => {
+  tasks.forEach((task: any) => {
     if (task.status === 'queued') summary.queued += 1;
     if (task.status === 'running') summary.running += 1;
     if (task.status === 'needs_review') summary.needsReview += 1;
@@ -128,7 +127,7 @@ export function getResearchTaskSummary(options = {}) {
   };
 }
 
-export function getResearchHubSnapshot(options = {}) {
+export function getResearchHubSnapshot(options: Record<string, unknown> = {}) {
   const tasks = listResearchTasks(options);
   const taskSummary = getResearchTaskSummary(options);
   const results = listBacktestResults(options);
