@@ -5,10 +5,7 @@ const DATA_DIR = join(process.cwd(), '.quantpilot', 'auth');
 
 export function persistMap<K, V>(filename: string, map: Map<K, V>) {
   mkdirSync(DATA_DIR, { recursive: true });
-  writeFileSync(
-    join(DATA_DIR, filename),
-    JSON.stringify([...map.entries()], null, 2)
-  );
+  writeFileSync(join(DATA_DIR, filename), JSON.stringify([...map.entries()], null, 2));
 }
 
 export function loadMap<K, V>(filename: string, map: Map<K, V>) {
