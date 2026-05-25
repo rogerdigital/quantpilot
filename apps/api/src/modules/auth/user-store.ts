@@ -272,11 +272,8 @@ export function enableMfa(userId: string, secret: string): User | null {
   return user;
 }
 
-export function verifyMfa(userId: string, _code: string): boolean {
-  const user = users.get(userId);
-  if (!user?.mfaEnabled) return false;
-  // In production, verify TOTP code against mfaSecret
-  return true;
+export function verifyMfa(_userId: string, _code: string): boolean {
+  return false;
 }
 
 export function useRecoveryCode(userId: string, code: string): boolean {
