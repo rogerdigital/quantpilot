@@ -1,18 +1,12 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import { ClaudeProvider } from '../src/claude-provider.js';
+import { createLLMProvider, getConfiguredProvider, isLLMAvailable } from '../src/factory.js';
 import { OpenAIProvider } from '../src/openai-provider.js';
-import {
-  createLLMProvider,
-  getConfiguredProvider,
-  isLLMAvailable,
-} from '../src/factory.js';
-import { PROVIDERS, DEFAULT_MODELS } from '../src/types.js';
 import type { LLMMessage, LLMTool } from '../src/types.js';
+import { DEFAULT_MODELS, PROVIDERS } from '../src/types.js';
 
-const MOCK_MESSAGES: LLMMessage[] = [
-  { role: 'user', content: 'Hello' },
-];
+const MOCK_MESSAGES: LLMMessage[] = [{ role: 'user', content: 'Hello' }];
 
 const MOCK_TOOLS: LLMTool[] = [
   {

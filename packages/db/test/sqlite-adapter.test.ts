@@ -1,8 +1,8 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createSQLiteAdapter } from '../src/sqlite-adapter.js';
 
 describe('sqlite-adapter', () => {

@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { createChildLogger } from '../lib/logger.js';
 
 const log = createChildLogger('gateway');
+
 import { createServer } from 'node:http';
 import { join } from 'node:path';
 import { handleControlPlaneRoutes } from '../app/routes/control-plane-routes.js';

@@ -155,10 +155,7 @@ export async function getHistoricalBars(
 
     return { ok: true, symbol: upperSymbol, bars, source: 'alpaca', timeframe };
   } catch (err: unknown) {
-    log.error(
-      { err: err instanceof Error ? err.message : 'unknown_error' },
-      'Error fetching bars'
-    );
+    log.error({ err: err instanceof Error ? err.message : 'unknown_error' }, 'Error fetching bars');
     const endD = new Date();
     const startD = new Date();
     startD.setDate(startD.getDate() - days);

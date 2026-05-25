@@ -1,5 +1,5 @@
-import { createChildLogger } from './lib/logger.js';
 import { startGatewayServer } from './app/index.js';
+import { createChildLogger } from './lib/logger.js';
 
 const log = createChildLogger('main');
 

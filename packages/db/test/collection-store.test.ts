@@ -1,15 +1,11 @@
-import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { beforeEach, describe, it } from 'node:test';
 import { createCollectionStore } from '../src/collection-store.js';
+import { ensureDirectory, readJsonFile, writeJsonFile } from '../src/filesystem.js';
 import { createKeyValueStore } from '../src/kv-store.js';
-import {
-  ensureDirectory,
-  readJsonFile,
-  writeJsonFile,
-} from '../src/filesystem.js';
 
 describe('collection-store', () => {
   let rootDir: string;
@@ -36,7 +32,10 @@ describe('collection-store', () => {
 
   it('writes and reads back a collection', () => {
     const store = createStore();
-    const items = [{ id: 1, name: 'test' }, { id: 2, name: 'other' }];
+    const items = [
+      { id: 1, name: 'test' },
+      { id: 2, name: 'other' },
+    ];
     store.writeCollection('items.json', items);
     const result = store.readCollection('items.json');
     assert.deepEqual(result, items);
