@@ -1,24 +1,22 @@
-// @ts-nocheck
-
 /**
  * Data export service for strategies, backtests, trades, and analytics.
  * Supports JSON, CSV, and PDF (text-based) output.
  */
 
-export function createExportService(store) {
-  function getStrategy(id) {
+export function createExportService(store: any) {
+  function getStrategy(id: any) {
     const catalog = store.readCollection('strategy-catalog.json');
-    return catalog.find((s) => s.id === id) || null;
+    return catalog.find((s: any) => s.id === id) || null;
   }
 
-  function getBacktest(id) {
+  function getBacktest(id: any) {
     const results = store.readCollection('backtest-results.json');
-    return results.find((r) => r.id === id) || null;
+    return results.find((r: any) => r.id === id) || null;
   }
 
-  function getTradeHistory(from, to) {
+  function getTradeHistory(from: any, to: any) {
     const trades = store.readCollection('trade-history.json');
-    return trades.filter((t) => {
+    return trades.filter((t: any) => {
       const ts = new Date(t.executedAt || t.createdAt).getTime();
       if (from && ts < new Date(from).getTime()) return false;
       if (to && ts > new Date(to).getTime()) return false;
@@ -26,7 +24,7 @@ export function createExportService(store) {
     });
   }
 
-  function exportStrategy(id, format) {
+  function exportStrategy(id: any, format: any) {
     const strategy = getStrategy(id);
     if (!strategy) return null;
 
@@ -63,7 +61,7 @@ export function createExportService(store) {
     };
   }
 
-  function exportBacktest(id, format) {
+  function exportBacktest(id: any, format: any) {
     const backtest = getBacktest(id);
     if (!backtest) return null;
 
@@ -96,7 +94,7 @@ export function createExportService(store) {
     };
   }
 
-  function exportTrades(from, to, format) {
+  function exportTrades(from: any, to: any, format: any) {
     const trades = getTradeHistory(from, to);
 
     if (format === 'json') {
@@ -109,7 +107,7 @@ export function createExportService(store) {
 
     // CSV
     const headers = ['ID', 'Symbol', 'Side', 'Quantity', 'Price', 'Status', 'Executed At'];
-    const rows = trades.map((t) => [
+    const rows = trades.map((t: any) => [
       t.id,
       t.symbol,
       t.side,
@@ -125,9 +123,9 @@ export function createExportService(store) {
     };
   }
 
-  function exportAnalytics(format) {
+  function exportAnalytics(format: any) {
     const strategies = store.readCollection('strategy-catalog.json');
-    const summary = strategies.map((s) => ({
+    const summary = strategies.map((s: any) => ({
       id: s.id,
       name: s.name,
       status: s.status,
@@ -151,7 +149,7 @@ export function createExportService(store) {
 
     // CSV
     const headers = ['ID', 'Name', 'Status', 'CAGR', 'Sharpe', 'Max Drawdown', 'Win Rate'];
-    const rows = summary.map((s) => [
+    const rows = summary.map((s: any) => [
       s.id,
       s.name,
       s.status || '',
@@ -170,7 +168,7 @@ export function createExportService(store) {
   return { exportStrategy, exportBacktest, exportTrades, exportAnalytics };
 }
 
-function escapeCsv(val) {
+function escapeCsv(val: any) {
   if (val == null) return '';
   const s = String(val);
   if (s.includes(',') || s.includes('"') || s.includes('\n')) {

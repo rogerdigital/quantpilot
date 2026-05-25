@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
 import { getRiskSchedulerLinkage } from '../../domains/risk/services/risk-scheduler-linkage-service.js';
 
@@ -11,29 +10,30 @@ const SCHEDULER_RUNBOOK_KEYS = new Set([
   'review-off-hours-watch',
 ]);
 
-function parseLimit(value, fallback) {
+function parseLimit(value: any, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function resolveSince(hours) {
+function resolveSince(hours: any): string {
   const parsed = Number(hours);
   if (!Number.isFinite(parsed) || parsed <= 0) return '';
   return new Date(Date.now() - parsed * 60 * 60 * 1000).toISOString();
 }
 
-function parseTimestamp(value) {
+function parseTimestamp(value: any): number {
   const parsed = Date.parse(value || '');
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function sortByRecency(items, timestampKey = 'createdAt') {
+function sortByRecency(items: any[], timestampKey = 'createdAt'): any[] {
   return [...items].sort(
-    (left, right) => parseTimestamp(right[timestampKey]) - parseTimestamp(left[timestampKey])
+    (left: any, right: any) =>
+      parseTimestamp(right[timestampKey]) - parseTimestamp(left[timestampKey])
   );
 }
 
-function takeLatest(items, limit, timestampKey = 'createdAt') {
+function takeLatest(items: any[], limit: number, timestampKey = 'createdAt'): any[] {
   return sortByRecency(items, timestampKey).slice(0, limit);
 }
 
@@ -47,15 +47,15 @@ const NEUTRAL_SCHEDULER_STATUSES = new Set([
   'info',
 ]);
 
-export function isSchedulerAttentionStatus(status = '') {
+export function isSchedulerAttentionStatus(status: string = '') {
   return Boolean(status) && !NEUTRAL_SCHEDULER_STATUSES.has(status);
 }
 
-function isSchedulerCriticalStatus(status = '') {
+function isSchedulerCriticalStatus(status: string = '') {
   return ['critical', 'failed', 'missed-window', 'drift-critical'].includes(status);
 }
 
-function isSchedulerLinkedRiskEvent(item) {
+function isSchedulerLinkedRiskEvent(item: any): boolean {
   const message = `${item?.title || ''} ${item?.message || ''}`.toLowerCase();
   return (
     item?.source === 'scheduler' ||
@@ -67,8 +67,8 @@ function isSchedulerLinkedRiskEvent(item) {
   );
 }
 
-function buildRunbook(input) {
-  const items = [];
+function buildRunbook(input: any): any[] {
+  const items: any[] = [];
 
   if (input.currentWindowAttention > 0) {
     items.push({
@@ -139,7 +139,7 @@ function buildRunbook(input) {
   return items;
 }
 
-function resolvePosture(input) {
+function resolvePosture(input: any) {
   if (input.criticalTicks > 0 || input.criticalIncidents > 0) {
     return {
       status: 'critical',
@@ -171,18 +171,18 @@ function resolvePosture(input) {
   };
 }
 
-export function listSchedulerTicks(options = {}) {
+export function listSchedulerTicks(options: Record<string, any> = {}) {
   return controlPlaneRuntime.listSchedulerTicks(parseLimit(options.limit, 50), {
     phase: options.phase || '',
     since: resolveSince(options.hours),
   });
 }
 
-export function runSchedulerTick(options = {}) {
+export function runSchedulerTick(options: Record<string, any> = {}) {
   return controlPlaneRuntime.recordSchedulerTick(options);
 }
 
-export function getSchedulerWorkbench(options = {}) {
+export function getSchedulerWorkbench(options: Record<string, any> = {}) {
   const limit = parseLimit(options.limit, 80);
   const since = resolveSince(options.hours);
   const ticks = controlPlaneRuntime.listSchedulerTicks(Math.max(limit * 4, 120), { since });
@@ -195,33 +195,37 @@ export function getSchedulerWorkbench(options = {}) {
       since,
       source: 'scheduler',
     })
-    .filter((item) => item.status !== 'resolved');
+    .filter((item: any) => item.status !== 'resolved');
   const cycleRecords = controlPlaneRuntime
     .listCycleRecords(Math.max(limit * 3, 120))
-    .filter((item) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since));
+    .filter((item: any) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since));
   const riskEvents = controlPlaneRuntime
     .listRiskEvents(Math.max(limit * 3, 120))
-    .filter((item) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since))
+    .filter((item: any) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since))
     .filter(isSchedulerLinkedRiskEvent);
   const linkage = getRiskSchedulerLinkage({ limit, since });
 
-  const attentionTicks = ticks.filter((item) => isSchedulerAttentionStatus(item.status));
-  const criticalTicks = attentionTicks.filter((item) => isSchedulerCriticalStatus(item.status));
-  const phaseChanges = ticks.filter((item) => item.status === 'phase-change');
+  const attentionTicks = ticks.filter((item: any) => isSchedulerAttentionStatus(item.status));
+  const criticalTicks = attentionTicks.filter((item: any) =>
+    isSchedulerCriticalStatus(item.status)
+  );
+  const phaseChanges = ticks.filter((item: any) => item.status === 'phase-change');
   const currentPhase = ticks[0]?.phase || 'UNKNOWN';
   const currentWindowAttention = attentionTicks.filter(
-    (item) => item.phase === currentPhase
+    (item: any) => item.phase === currentPhase
   ).length;
   const cycleAttention = cycleRecords.filter(
-    (item) =>
+    (item: any) =>
       item.pendingApprovals > 0 ||
       !item.brokerConnected ||
       !item.marketConnected ||
       ['REVIEW', 'RISK OFF'].includes(item.riskLevel)
   );
-  const criticalIncidents = incidents.filter((item) => item.severity === 'critical');
-  const notificationCritical = notifications.filter((item) => item.level === 'critical').length;
-  const offHoursAttention = attentionTicks.filter((item) => item.phase === 'OFF_HOURS').length;
+  const criticalIncidents = incidents.filter((item: any) => item.severity === 'critical');
+  const notificationCritical = notifications.filter(
+    (item: any) => item.level === 'critical'
+  ).length;
+  const offHoursAttention = attentionTicks.filter((item: any) => item.phase === 'OFF_HOURS').length;
   const posture = resolvePosture({
     attentionTicks: attentionTicks.length,
     criticalIncidents: criticalIncidents.length,
@@ -232,13 +236,15 @@ export function getSchedulerWorkbench(options = {}) {
   });
   const generatedAt = new Date().toISOString();
 
-  function summarizePhase(phase, title) {
-    const phaseTicks = ticks.filter((item) => item.phase === phase);
-    const phaseAttention = phaseTicks.filter((item) => isSchedulerAttentionStatus(item.status));
+  function summarizePhase(phase: string, title: string) {
+    const phaseTicks = ticks.filter((item: any) => item.phase === phase);
+    const phaseAttention = phaseTicks.filter((item: any) =>
+      isSchedulerAttentionStatus(item.status)
+    );
     return {
       key: title.toLowerCase(),
       title,
-      status: phaseAttention.some((item) => isSchedulerCriticalStatus(item.status))
+      status: phaseAttention.some((item: any) => isSchedulerCriticalStatus(item.status))
         ? 'critical'
         : phaseAttention.length
           ? 'warn'
@@ -265,10 +271,10 @@ export function getSchedulerWorkbench(options = {}) {
       attentionTicks: attentionTicks.length,
       criticalTicks: criticalTicks.length,
       phaseChanges: phaseChanges.length,
-      preOpenTicks: ticks.filter((item) => item.phase === 'PRE_OPEN').length,
-      intradayTicks: ticks.filter((item) => item.phase === 'INTRADAY').length,
-      postCloseTicks: ticks.filter((item) => item.phase === 'POST_CLOSE').length,
-      offHoursTicks: ticks.filter((item) => item.phase === 'OFF_HOURS').length,
+      preOpenTicks: ticks.filter((item: any) => item.phase === 'PRE_OPEN').length,
+      intradayTicks: ticks.filter((item: any) => item.phase === 'INTRADAY').length,
+      postCloseTicks: ticks.filter((item: any) => item.phase === 'POST_CLOSE').length,
+      offHoursTicks: ticks.filter((item: any) => item.phase === 'OFF_HOURS').length,
       openIncidents: incidents.length,
       cycleAttention: cycleAttention.length,
       schedulerNotifications: notifications.length,
@@ -303,14 +309,14 @@ export function getSchedulerWorkbench(options = {}) {
       {
         key: 'cycles',
         title: 'Cycles',
-        status: cycleAttention.some((item) => !item.brokerConnected || !item.marketConnected)
+        status: cycleAttention.some((item: any) => !item.brokerConnected || !item.marketConnected)
           ? 'critical'
           : cycleAttention.length
             ? 'warn'
             : 'healthy',
         detail: `${cycleAttention.length} cycle records show approvals, degraded connectivity, or elevated risk posture around scheduler windows.`,
         primaryCount: cycleAttention.length,
-        secondaryCount: cycleAttention.filter((item) => item.pendingApprovals > 0).length,
+        secondaryCount: cycleAttention.filter((item: any) => item.pendingApprovals > 0).length,
         updatedAt: cycleRecords[0]?.createdAt || generatedAt,
       },
       {
@@ -325,14 +331,16 @@ export function getSchedulerWorkbench(options = {}) {
       {
         key: 'risk',
         title: 'Risk Linkage',
-        status: riskEvents.some((item) => item.level === 'critical' || item.status === 'risk-off')
+        status: riskEvents.some(
+          (item: any) => item.level === 'critical' || item.status === 'risk-off'
+        )
           ? 'critical'
           : riskEvents.length
             ? 'warn'
             : 'healthy',
         detail: `${riskEvents.length} risk events are linked back to scheduler windows or drift signals.`,
         primaryCount: riskEvents.length,
-        secondaryCount: riskEvents.filter((item) => item.status === 'risk-off').length,
+        secondaryCount: riskEvents.filter((item: any) => item.status === 'risk-off').length,
         updatedAt: riskEvents[0]?.createdAt || generatedAt,
       },
     ],
@@ -365,20 +373,20 @@ export function getSchedulerWorkbench(options = {}) {
   };
 }
 
-function resolveCurrentPhase(workbench) {
+function resolveCurrentPhase(workbench: any) {
   if (workbench.posture.currentPhase && workbench.posture.currentPhase !== 'UNKNOWN') {
     return workbench.posture.currentPhase;
   }
   return workbench.linkage.summary.activePhase || 'INTRADAY';
 }
 
-function resolveActionTargets(actionKey, workbench) {
+function resolveActionTargets(actionKey: string, workbench: any) {
   const currentPhase = resolveCurrentPhase(workbench);
   const currentWindowAttention = workbench.queue.attentionTicks.filter(
-    (item) => item.phase === currentPhase
+    (item: any) => item.phase === currentPhase
   );
   const offHoursAttention = workbench.queue.attentionTicks.filter(
-    (item) => item.phase === 'OFF_HOURS'
+    (item: any) => item.phase === 'OFF_HOURS'
   );
 
   if (actionKey === 'review-current-window') {
@@ -443,21 +451,23 @@ function resolveActionTargets(actionKey, workbench) {
     notifications: workbench.queue.notifications,
     cycleRecords: workbench.queue.cycleRecords,
     riskEvents: workbench.queue.riskEvents.filter(
-      (item) => String(item.metadata?.schedulerPhase || '') === 'OFF_HOURS'
+      (item: any) => String(item.metadata?.schedulerPhase || '') === 'OFF_HOURS'
     ),
   };
 }
 
-function buildOrchestrationDescriptor(actionKey, workbench, targets) {
+function buildOrchestrationDescriptor(actionKey: string, workbench: any, targets: any) {
   const currentPhase = targets.phase || resolveCurrentPhase(workbench);
-  const hasCriticalNotification = targets.notifications.some((item) => item.level === 'critical');
-  const hasCriticalRisk = targets.riskEvents.some(
-    (item) => item.level === 'critical' || item.status === 'risk-off'
+  const hasCriticalNotification = targets.notifications.some(
+    (item: any) => item.level === 'critical'
   );
-  const hasCriticalTick = targets.attentionTicks.some((item) =>
+  const hasCriticalRisk = targets.riskEvents.some(
+    (item: any) => item.level === 'critical' || item.status === 'risk-off'
+  );
+  const hasCriticalTick = targets.attentionTicks.some((item: any) =>
     isSchedulerCriticalStatus(item.status)
   );
-  const hasCriticalIncident = targets.incidents.some((item) => item.severity === 'critical');
+  const hasCriticalIncident = targets.incidents.some((item: any) => item.severity === 'critical');
   const level =
     hasCriticalNotification || hasCriticalRisk || hasCriticalTick || hasCriticalIncident
       ? 'critical'
@@ -530,21 +540,24 @@ function buildOrchestrationDescriptor(actionKey, workbench, targets) {
   };
 }
 
-function buildIncidentLinks(targets) {
+function buildIncidentLinks(targets: any) {
   return [
-    ...targets.attentionTicks.map((item) => ({ kind: 'scheduler-tick', tickId: item.id })),
-    ...targets.notifications.map((item) => ({ kind: 'notification', notificationId: item.id })),
-    ...targets.cycleRecords.map((item) => ({ kind: 'cycle', cycleId: item.id })),
-    ...targets.riskEvents.map((item) => ({ kind: 'risk-event', riskEventId: item.id })),
+    ...targets.attentionTicks.map((item: any) => ({ kind: 'scheduler-tick', tickId: item.id })),
+    ...targets.notifications.map((item: any) => ({
+      kind: 'notification',
+      notificationId: item.id,
+    })),
+    ...targets.cycleRecords.map((item: any) => ({ kind: 'cycle', cycleId: item.id })),
+    ...targets.riskEvents.map((item: any) => ({ kind: 'risk-event', riskEventId: item.id })),
   ].slice(0, 12);
 }
 
-function upsertSchedulerIncidents(actor, descriptor, targets) {
+function upsertSchedulerIncidents(actor: string, descriptor: any, targets: any) {
   const incidentNote = `${descriptor.title} runbook action executed by ${actor}. ${descriptor.detail}`;
-  const touched = [];
-  const existing = targets.incidents.filter((item) => item.status !== 'resolved');
+  const touched: any[] = [];
+  const existing = targets.incidents.filter((item: any) => item.status !== 'resolved');
 
-  existing.forEach((incident) => {
+  existing.forEach((incident: any) => {
     const nextStatus = incident.status === 'open' ? 'investigating' : incident.status;
     const transitioned = controlPlaneRuntime.transitionIncident(incident.id, {
       actor,
@@ -598,7 +611,7 @@ function upsertSchedulerIncidents(actor, descriptor, targets) {
   return touched;
 }
 
-export function runSchedulerOrchestrationAction(payload = {}) {
+export function runSchedulerOrchestrationAction(payload: Record<string, any> = {}) {
   const actionKey = String(payload.actionKey || '').trim();
   if (!SCHEDULER_RUNBOOK_KEYS.has(actionKey)) {
     return {
@@ -616,10 +629,10 @@ export function runSchedulerOrchestrationAction(payload = {}) {
   const descriptor = buildOrchestrationDescriptor(actionKey, workbench, targets);
 
   const incidents = upsertSchedulerIncidents(actor, descriptor, targets);
-  const touchedIncidentIds = incidents.map((item) => item.id);
-  const touchedNotificationIds = targets.notifications.map((item) => item.id);
-  const touchedRiskEventIds = targets.riskEvents.map((item) => item.id);
-  const touchedCycleIds = targets.cycleRecords.map((item) => item.id);
+  const touchedIncidentIds = incidents.map((item: any) => item.id);
+  const touchedNotificationIds = targets.notifications.map((item: any) => item.id);
+  const touchedRiskEventIds = targets.riskEvents.map((item: any) => item.id);
+  const touchedCycleIds = targets.cycleRecords.map((item: any) => item.id);
 
   const operatorAction = controlPlaneRuntime.recordOperatorAction({
     type: `scheduler.orchestration.${actionKey}`,
@@ -677,7 +690,7 @@ export function runSchedulerOrchestrationAction(payload = {}) {
       detail: descriptor.detail,
       level: descriptor.level,
       phase: descriptor.phase,
-      executedAt: schedulerTick.createdAt,
+      executedAt: (schedulerTick as any).createdAt,
       touchedIncidentIds,
       touchedNotificationIds,
       touchedRiskEventIds,

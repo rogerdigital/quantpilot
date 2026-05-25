@@ -1,21 +1,20 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
 
 const ACK_OVERDUE_HOURS = 1;
 const STALE_HOURS = 24;
 
-function parseLimit(value, fallback) {
+function parseLimit(value: any, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function resolveSince(hours) {
+function resolveSince(hours: any): string {
   const parsed = Number(hours);
   if (!Number.isFinite(parsed) || parsed <= 0) return '';
   return new Date(Date.now() - parsed * 60 * 60 * 1000).toISOString();
 }
 
-export function listIncidents(options = {}) {
+export function listIncidents(options: Record<string, any> = {}) {
   return controlPlaneRuntime.listIncidents(parseLimit(options.limit, 50), {
     owner: options.owner || '',
     severity: options.severity || '',
@@ -25,7 +24,7 @@ export function listIncidents(options = {}) {
   });
 }
 
-export function getIncidentSummary(options = {}) {
+export function getIncidentSummary(options: Record<string, any> = {}) {
   const incidents = controlPlaneRuntime.listIncidents(parseLimit(options.limit, 500), {
     owner: options.owner || '',
     severity: options.severity || '',
@@ -34,7 +33,7 @@ export function getIncidentSummary(options = {}) {
     since: resolveSince(options.hours),
   });
 
-  const summary = {
+  const summary: any = {
     total: incidents.length,
     open: 0,
     investigating: 0,
@@ -47,8 +46,8 @@ export function getIncidentSummary(options = {}) {
     stale: 0,
     unacknowledged: 0,
     missingNotes: 0,
-    bySource: [],
-    byOwner: [],
+    bySource: [] as any[],
+    byOwner: [] as any[],
     ageBuckets: [
       { bucket: 'lt_1h', count: 0 },
       { bucket: 'lt_6h', count: 0 },
@@ -72,10 +71,10 @@ export function getIncidentSummary(options = {}) {
     ],
   };
 
-  const sourceCounts = new Map();
-  const ownerCounts = new Map();
+  const sourceCounts = new Map<string, number>();
+  const ownerCounts = new Map<string, any>();
 
-  incidents.forEach((incident) => {
+  incidents.forEach((incident: any) => {
     const tasks = controlPlaneRuntime.listIncidentTasks(incident.id, 100);
     const operations = buildIncidentOperations(incident, {
       tasks,
@@ -103,7 +102,7 @@ export function getIncidentSummary(options = {}) {
     if (incident.status !== 'resolved' && incident.severity === 'critical')
       summary.response.unresolvedCritical += 1;
     const nextActionEntry = summary.nextActions.find(
-      (item) => item.key === operations.nextAction.key
+      (item: any) => item.key === operations.nextAction.key
     );
     if (nextActionEntry) nextActionEntry.count += 1;
 
@@ -120,7 +119,7 @@ export function getIncidentSummary(options = {}) {
       Number(sourceCounts.get(incident.source || 'unknown') || 0) + 1
     );
     const ownerKey = incident.owner || 'unassigned';
-    const ownerEntry = ownerCounts.get(ownerKey) || {
+    const ownerEntry: any = ownerCounts.get(ownerKey) || {
       owner: ownerKey,
       count: 0,
       openCount: 0,
@@ -144,7 +143,7 @@ export function getIncidentSummary(options = {}) {
     .sort((left, right) => right.count - left.count);
   summary.byOwner = [...ownerCounts.values()]
     .sort(
-      (left, right) =>
+      (left: any, right: any) =>
         right.openCount - left.openCount ||
         right.criticalCount - left.criticalCount ||
         right.blockedTaskCount - left.blockedTaskCount ||
@@ -153,7 +152,7 @@ export function getIncidentSummary(options = {}) {
     )
     .slice(0, 8);
   summary.response.ownerHotspots = summary.byOwner.filter(
-    (item) =>
+    (item: any) =>
       item.openCount >= 3 ||
       item.criticalCount > 0 ||
       item.blockedTaskCount > 0 ||
@@ -163,7 +162,7 @@ export function getIncidentSummary(options = {}) {
   return summary;
 }
 
-export function getIncidentDetail(incidentId, options = {}) {
+export function getIncidentDetail(incidentId: any, options: Record<string, any> = {}) {
   const incident = controlPlaneRuntime.getIncident(incidentId);
   if (!incident) return null;
   const evidence = collectIncidentEvidence(incident, options);
@@ -189,35 +188,39 @@ export function getIncidentDetail(incidentId, options = {}) {
   };
 }
 
-export function createIncident(payload = {}) {
+export function createIncident(payload: Record<string, any> = {}) {
   return controlPlaneRuntime.recordIncident(payload);
 }
 
-export function updateIncident(incidentId, payload = {}) {
+export function updateIncident(incidentId: any, payload: Record<string, any> = {}) {
   return controlPlaneRuntime.transitionIncident(incidentId, payload);
 }
 
-export function appendIncidentNote(incidentId, payload = {}) {
+export function appendIncidentNote(incidentId: any, payload: Record<string, any> = {}) {
   return controlPlaneRuntime.recordIncidentNote(incidentId, payload);
 }
 
-export function appendIncidentTask(incidentId, payload = {}) {
+export function appendIncidentTask(incidentId: any, payload: Record<string, any> = {}) {
   return controlPlaneRuntime.recordIncidentTask(incidentId, payload);
 }
 
-export function updateIncidentTask(incidentId, taskId, payload = {}) {
+export function updateIncidentTask(
+  incidentId: any,
+  taskId: any,
+  payload: Record<string, any> = {}
+) {
   return controlPlaneRuntime.transitionIncidentTask(incidentId, taskId, payload);
 }
 
-export function bulkUpdateIncidents(payload = {}) {
+export function bulkUpdateIncidents(payload: Record<string, any> = {}) {
   const incidentIds = [
     ...new Set(
       (Array.isArray(payload.incidentIds) ? payload.incidentIds : [])
-        .map((item) => String(item || '').trim())
+        .map((item: any) => String(item || '').trim())
         .filter(Boolean)
     ),
   ];
-  const patch = {};
+  const patch: Record<string, any> = {};
 
   if (typeof payload.status === 'string' && payload.status) patch.status = payload.status;
   if (typeof payload.owner === 'string') patch.owner = payload.owner;
@@ -225,7 +228,7 @@ export function bulkUpdateIncidents(payload = {}) {
     patch.summary = payload.summary.trim();
   if (typeof payload.actor === 'string' && payload.actor) patch.actor = payload.actor;
 
-  const incidents = [];
+  const incidents: any[] = [];
   let notesAdded = 0;
 
   incidentIds.forEach((incidentId) => {
@@ -235,7 +238,7 @@ export function bulkUpdateIncidents(payload = {}) {
     if (!incident) return;
     incidents.push(incident);
     if (typeof payload.note === 'string' && payload.note.trim()) {
-      const noteResult = controlPlaneRuntime.recordIncidentNote(incidentId, {
+      const noteResult: any = controlPlaneRuntime.recordIncidentNote(incidentId, {
         author: payload.actor || payload.owner || incident.owner || 'operator',
         body: payload.note.trim(),
         metadata: {
@@ -249,34 +252,34 @@ export function bulkUpdateIncidents(payload = {}) {
   });
 
   return {
-    updatedIds: incidents.map((item) => item.id),
+    updatedIds: incidents.map((item: any) => item.id),
     incidents,
     notesAdded,
   };
 }
 
-function parseTimestamp(value) {
+function parseTimestamp(value: any) {
   const parsed = Date.parse(value || '');
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function buildIncidentOperations(incident, inputs = {}) {
+function buildIncidentOperations(incident: any, inputs: Record<string, any> = {}) {
   const tasks = Array.isArray(inputs.tasks) ? inputs.tasks : [];
   const notes = Array.isArray(inputs.notes) ? inputs.notes : [];
   const activity = Array.isArray(inputs.activity) ? inputs.activity : [];
   const evidenceSummary = inputs.evidenceSummary || {};
   const updatedMs = parseTimestamp(incident.updatedAt || incident.createdAt) || Date.now();
   const ageHours = Math.max(0, (Date.now() - updatedMs) / (60 * 60 * 1000));
-  const blockedTasks = tasks.filter((item) => item.status === 'blocked').length;
-  const pendingTasks = tasks.filter((item) => item.status === 'pending').length;
+  const blockedTasks = tasks.filter((item: any) => item.status === 'blocked').length;
+  const pendingTasks = tasks.filter((item: any) => item.status === 'pending').length;
   const activeTasks = tasks.filter(
-    (item) =>
+    (item: any) =>
       item.status === 'pending' || item.status === 'in_progress' || item.status === 'blocked'
   ).length;
   const linkedEvidence = Number(evidenceSummary.linked || 0);
   const latestActivity =
     [...activity].sort(
-      (left, right) =>
+      (left: any, right: any) =>
         (parseTimestamp(right.createdAt) || 0) - (parseTimestamp(left.createdAt) || 0)
     )[0] || null;
   const stale = incident.status !== 'resolved' && ageHours >= STALE_HOURS;
@@ -331,6 +334,14 @@ function resolveIncidentNextAction({
   pendingTasks,
   notes,
   tasks,
+}: {
+  incident: any;
+  ackState: any;
+  blockedTasks: any;
+  linkedEvidence: any;
+  pendingTasks: any;
+  notes: any[];
+  tasks: any[];
 }) {
   if (!incident.owner) {
     return {
@@ -362,7 +373,7 @@ function resolveIncidentNextAction({
   }
   if (
     incident.status !== 'resolved' &&
-    (!pendingTasks || tasks.some((item) => item.status === 'done'))
+    (!pendingTasks || tasks.some((item: any) => item.status === 'done'))
   ) {
     return {
       key: 'closeout',
@@ -380,13 +391,13 @@ function resolveIncidentNextAction({
   };
 }
 
-function intersects(left = [], right = []) {
+function intersects(left: any[] = [], right: any[] = []) {
   if (!left.length || !right.length) return false;
   const set = new Set(right);
   return left.some((item) => set.has(item));
 }
 
-function normalizeTokens(...values) {
+function normalizeTokens(...values: any[]) {
   return [
     ...new Set(
       values
@@ -402,15 +413,15 @@ function normalizeTokens(...values) {
   ];
 }
 
-function buildLinkSet(incident) {
+function buildLinkSet(incident: any) {
   return new Set(
-    (incident.links || []).flatMap((item) =>
+    (incident.links || []).flatMap((item: any) =>
       Object.values(item || {}).map((value) => String(value || ''))
     )
   );
 }
 
-function buildIncidentContext(incident) {
+function buildIncidentContext(incident: any) {
   const createdAtMs = parseTimestamp(incident.createdAt) || Date.now();
   return {
     createdAtMs,
@@ -430,13 +441,13 @@ function buildIncidentContext(incident) {
   };
 }
 
-function withinIncidentWindow(context, timestamp) {
+function withinIncidentWindow(context: any, timestamp: any) {
   const valueMs = parseTimestamp(timestamp);
   if (valueMs === null) return false;
   return valueMs >= context.fromMs && valueMs <= context.toMs;
 }
 
-function scoreEvidenceMatch(context, candidate) {
+function scoreEvidenceMatch(context: any, candidate: any) {
   const refIds = normalizeTokens(candidate.id, ...(candidate.refIds || []));
   const contentTokens = normalizeTokens(
     candidate.title,
@@ -458,13 +469,13 @@ function scoreEvidenceMatch(context, candidate) {
   };
 }
 
-function collectIncidentEvidence(incident, options = {}) {
+function collectIncidentEvidence(incident: any, options: Record<string, any> = {}) {
   const limit = parseLimit(options.evidenceLimit, 120);
   const context = buildIncidentContext(incident);
-  const evidence = [];
+  const evidence: any[] = [];
 
   const monitoringAlerts = controlPlaneRuntime.listMonitoringAlerts(limit, {});
-  monitoringAlerts.forEach((item) => {
+  monitoringAlerts.forEach((item: any) => {
     const match = scoreEvidenceMatch(context, {
       id: item.id,
       refIds: [item.snapshotId, item.metadata?.monitoringAlertId],
@@ -495,7 +506,7 @@ function collectIncidentEvidence(incident, options = {}) {
   });
 
   const notifications = controlPlaneRuntime.listNotifications(limit, {});
-  notifications.forEach((item) => {
+  notifications.forEach((item: any) => {
     const match = scoreEvidenceMatch(context, {
       id: item.id,
       refIds: [item.metadata?.notificationId, item.metadata?.incidentId],
@@ -523,7 +534,7 @@ function collectIncidentEvidence(incident, options = {}) {
   });
 
   const auditRecords = controlPlaneRuntime.listAuditRecords(limit, {});
-  auditRecords.forEach((item) => {
+  auditRecords.forEach((item: any) => {
     const match = scoreEvidenceMatch(context, {
       id: item.id,
       refIds: [item.metadata?.auditId, item.metadata?.incidentId],
@@ -554,7 +565,7 @@ function collectIncidentEvidence(incident, options = {}) {
   });
 
   const actions = controlPlaneRuntime.listOperatorActions(limit, {});
-  actions.forEach((item) => {
+  actions.forEach((item: any) => {
     const match = scoreEvidenceMatch(context, {
       id: item.id,
       refIds: [item.metadata?.incidentId],
@@ -585,7 +596,7 @@ function collectIncidentEvidence(incident, options = {}) {
   });
 
   const schedulerTicks = controlPlaneRuntime.listSchedulerTicks(limit, {});
-  schedulerTicks.forEach((item) => {
+  schedulerTicks.forEach((item: any) => {
     const match = scoreEvidenceMatch(context, {
       id: item.id,
       refIds: [item.metadata?.schedulerTickId],
@@ -616,7 +627,7 @@ function collectIncidentEvidence(incident, options = {}) {
   });
 
   const riskEvents = controlPlaneRuntime.listRiskEvents(limit);
-  riskEvents.forEach((item) => {
+  riskEvents.forEach((item: any) => {
     const match = scoreEvidenceMatch(context, {
       id: item.id,
       refIds: [item.metadata?.riskEventId, item.metadata?.incidentId],
@@ -648,7 +659,7 @@ function collectIncidentEvidence(incident, options = {}) {
   });
 
   const workflowRuns = controlPlaneRuntime.listWorkflowRuns(limit);
-  workflowRuns.forEach((item) => {
+  workflowRuns.forEach((item: any) => {
     const match = scoreEvidenceMatch(context, {
       id: item.id,
       refIds: [item.workflowId, item.metadata?.workflowRunId, item.metadata?.incidentId],
@@ -682,7 +693,7 @@ function collectIncidentEvidence(incident, options = {}) {
   });
 
   const executionPlans = controlPlaneRuntime.listExecutionPlans(limit);
-  executionPlans.forEach((item) => {
+  executionPlans.forEach((item: any) => {
     const match = scoreEvidenceMatch(context, {
       id: item.id,
       refIds: [
@@ -726,16 +737,18 @@ function collectIncidentEvidence(incident, options = {}) {
     });
   });
 
-  const deduped = [...new Map(evidence.map((item) => [`${item.kind}:${item.id}`, item])).values()]
+  const deduped = [
+    ...new Map(evidence.map((item: any) => [`${item.kind}:${item.id}`, item])).values(),
+  ]
     .sort(
-      (left, right) =>
+      (left: any, right: any) =>
         Number(right.linked) - Number(left.linked) ||
         (parseTimestamp(right.timestamp) || 0) - (parseTimestamp(left.timestamp) || 0)
     )
     .slice(0, limit);
 
   const summary = deduped.reduce(
-    (acc, item) => {
+    (acc: any, item: any) => {
       acc.total += 1;
       if (item.linked) acc.linked += 1;
       if (item.kind === 'monitoring-alert') acc.monitoringAlerts += 1;
@@ -768,13 +781,13 @@ function collectIncidentEvidence(incident, options = {}) {
   };
 }
 
-function collectIncidentActivity(incidentId, options = {}) {
+function collectIncidentActivity(incidentId: any, options: Record<string, any> = {}) {
   const timeline = controlPlaneRuntime.listIncidentActivities(
     incidentId,
     parseLimit(options.activityLimit, 120)
   );
   const summary = timeline.reduce(
-    (acc, item) => {
+    (acc: any, item: any) => {
       acc.total += 1;
       if (item.kind === 'note-added') acc.notes += 1;
       if (item.kind === 'status-changed') acc.statusChanges += 1;
@@ -801,13 +814,13 @@ function collectIncidentActivity(incidentId, options = {}) {
   };
 }
 
-function collectIncidentTasks(incidentId, options = {}) {
+function collectIncidentTasks(incidentId: any, options: Record<string, any> = {}) {
   const items = controlPlaneRuntime.listIncidentTasks(
     incidentId,
     parseLimit(options.taskLimit, 100)
   );
   const summary = items.reduce(
-    (acc, item) => {
+    (acc: any, item: any) => {
       acc.total += 1;
       if (item.status === 'pending') acc.pending += 1;
       if (item.status === 'in_progress') acc.inProgress += 1;

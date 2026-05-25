@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   deleteBrokerBinding,
   deleteUserRoleTemplate,
@@ -22,8 +21,13 @@ import {
 import { appendAuditRecord } from '../audit/service.js';
 import { getSession } from '../auth/service.js';
 
-function recordAccountAuditEvent(type, title, detail, metadata = {}) {
-  const account = getUserAccount();
+function recordAccountAuditEvent(
+  type: string,
+  title: string,
+  detail: string,
+  metadata: Record<string, any> = {}
+) {
+  const account: any = getUserAccount();
   appendAuditRecord({
     type,
     actor: account.profile.id || 'operator-demo',
@@ -34,7 +38,7 @@ function recordAccountAuditEvent(type, title, detail, metadata = {}) {
 }
 
 export function getUserAccountSnapshot() {
-  const account = getUserAccount();
+  const account: any = getUserAccount();
   const session = getSession();
   return {
     ok: true,
@@ -55,7 +59,7 @@ export function getUserAccountSnapshot() {
 }
 
 export function getUserProfileSnapshot() {
-  const account = getUserAccount();
+  const account: any = getUserAccount();
   const session = getSession();
   return {
     ok: true,
@@ -71,7 +75,7 @@ export function getUserProfileSnapshot() {
 }
 
 export function getUserRoleTemplatesSnapshot() {
-  const account = getUserAccount();
+  const account: any = getUserAccount();
   return {
     ok: true,
     roleTemplates: account.roleTemplates,
@@ -87,8 +91,8 @@ export function getUserWorkspaceSnapshot() {
   };
 }
 
-export function patchUserProfile(payload = {}) {
-  const updated = updateUserProfile(payload);
+export function patchUserProfile(payload: Record<string, any> = {}) {
+  const updated: any = updateUserProfile(payload);
   recordAccountAuditEvent(
     'user-account.profile.updated',
     'User profile updated',
@@ -106,8 +110,8 @@ export function patchUserProfile(payload = {}) {
   };
 }
 
-export function patchUserPreferences(payload = {}) {
-  const updated = updateUserPreferences(payload);
+export function patchUserPreferences(payload: Record<string, any> = {}) {
+  const updated: any = updateUserPreferences(payload);
   recordAccountAuditEvent(
     'user-account.preferences.updated',
     'User preferences updated',
@@ -126,8 +130,8 @@ export function patchUserPreferences(payload = {}) {
   };
 }
 
-export function patchUserAccess(payload = {}) {
-  const updated = updateUserAccess(payload);
+export function patchUserAccess(payload: Record<string, any> = {}) {
+  const updated: any = updateUserAccess(payload);
   recordAccountAuditEvent(
     'user-account.access.updated',
     'User access policy updated',
@@ -148,7 +152,7 @@ export function patchUserAccess(payload = {}) {
   };
 }
 
-export function saveUserRoleTemplate(payload = {}) {
+export function saveUserRoleTemplate(payload: Record<string, any> = {}) {
   if (!payload.id || !payload.label) {
     return {
       ok: false,
@@ -156,7 +160,7 @@ export function saveUserRoleTemplate(payload = {}) {
     };
   }
 
-  const roleTemplate = upsertUserRoleTemplate(payload);
+  const roleTemplate: any = upsertUserRoleTemplate(payload);
   recordAccountAuditEvent(
     'user-account.role-template.saved',
     'User role template saved',
@@ -176,7 +180,7 @@ export function saveUserRoleTemplate(payload = {}) {
   };
 }
 
-export function saveWorkspace(payload = {}) {
+export function saveWorkspace(payload: Record<string, any> = {}) {
   if (!payload.id || !payload.label) {
     return {
       ok: false,
@@ -184,7 +188,7 @@ export function saveWorkspace(payload = {}) {
     };
   }
 
-  const workspace = upsertWorkspace(payload);
+  const workspace: any = upsertWorkspace(payload);
   recordAccountAuditEvent(
     'user-account.workspace.saved',
     'Workspace saved',
@@ -208,8 +212,8 @@ export function saveWorkspace(payload = {}) {
   };
 }
 
-export function selectCurrentWorkspace(workspaceId) {
-  const workspace = setCurrentWorkspace(workspaceId);
+export function selectCurrentWorkspace(workspaceId: any) {
+  const workspace: any = setCurrentWorkspace(workspaceId);
   if (!workspace) {
     return {
       ok: false,
@@ -238,9 +242,9 @@ export function selectCurrentWorkspace(workspaceId) {
   };
 }
 
-export function removeUserRoleTemplate(roleId) {
-  const existing = getUserRoleTemplate(roleId);
-  const result = deleteUserRoleTemplate(roleId);
+export function removeUserRoleTemplate(roleId: any) {
+  const existing: any = getUserRoleTemplate(roleId);
+  const result: any = deleteUserRoleTemplate(roleId);
   if (!result?.ok) {
     return result;
   }
@@ -272,16 +276,16 @@ export function getBrokerBindingsSnapshot() {
   };
 }
 
-function buildBrokerRuntimeSnapshot(binding, health) {
+function buildBrokerRuntimeSnapshot(binding: any, health: any) {
   if (!binding) {
     return {
-      ok: false,
+      ok: false as const,
       error: 'default broker binding is not configured',
     };
   }
 
   return {
-    ok: true,
+    ok: true as const,
     binding,
     runtime: {
       adapter: health.adapter,
@@ -295,23 +299,37 @@ function buildBrokerRuntimeSnapshot(binding, health) {
   };
 }
 
-export async function getBrokerBindingRuntimeSnapshot(getBrokerHealth) {
-  const binding =
-    listBrokerBindings().find((item) => item.isDefault) || listBrokerBindings()[0] || null;
-  const health = await getBrokerHealth();
+export async function getBrokerBindingRuntimeSnapshot(
+  getBrokerHealth?: (...args: never[]) => unknown
+) {
+  const binding: any =
+    listBrokerBindings().find((item: any) => item.isDefault) || listBrokerBindings()[0] || null;
+  const health = await (getBrokerHealth?.() ||
+    Promise.resolve({
+      adapter: 'unknown',
+      connected: false,
+      customBrokerConfigured: false,
+      alpacaConfigured: false,
+    }));
   return buildBrokerRuntimeSnapshot(binding, health);
 }
 
-export async function syncBrokerBindingRuntime(getBrokerHealth) {
-  const binding =
-    listBrokerBindings().find((item) => item.isDefault) || listBrokerBindings()[0] || null;
-  const health = await getBrokerHealth();
+export async function syncBrokerBindingRuntime(getBrokerHealth?: (...args: never[]) => unknown) {
+  const binding: any =
+    listBrokerBindings().find((item: any) => item.isDefault) || listBrokerBindings()[0] || null;
+  const health = await (getBrokerHealth?.() ||
+    Promise.resolve({
+      adapter: 'unknown',
+      connected: false,
+      customBrokerConfigured: false,
+      alpacaConfigured: false,
+    }));
   const runtimeSnapshot = buildBrokerRuntimeSnapshot(binding, health);
   if (!runtimeSnapshot.ok) {
     return runtimeSnapshot;
   }
 
-  const updatedBinding = upsertBrokerBinding({
+  const updatedBinding: any = upsertBrokerBinding({
     ...runtimeSnapshot.binding,
     status: runtimeSnapshot.runtime.status,
     lastSyncAt: runtimeSnapshot.runtime.lastCheckedAt,
@@ -358,7 +376,7 @@ export async function syncBrokerBindingRuntime(getBrokerHealth) {
   };
 }
 
-export function saveBrokerBinding(payload = {}) {
+export function saveBrokerBinding(payload: Record<string, any> = {}) {
   if (!payload.provider || !payload.label) {
     return {
       ok: false,
@@ -366,7 +384,7 @@ export function saveBrokerBinding(payload = {}) {
     };
   }
 
-  const binding = upsertBrokerBinding(payload);
+  const binding: any = upsertBrokerBinding(payload);
   recordAccountAuditEvent(
     'user-account.broker-binding.saved',
     'Broker binding saved',
@@ -386,8 +404,8 @@ export function saveBrokerBinding(payload = {}) {
   };
 }
 
-export function setPrimaryBrokerBinding(bindingId) {
-  const binding = setDefaultBrokerBinding(bindingId);
+export function setPrimaryBrokerBinding(bindingId: any) {
+  const binding: any = setDefaultBrokerBinding(bindingId);
   if (!binding) {
     return {
       ok: false,
@@ -414,8 +432,8 @@ export function setPrimaryBrokerBinding(bindingId) {
   };
 }
 
-export function removeBrokerBinding(bindingId) {
-  const result = deleteBrokerBinding(bindingId);
+export function removeBrokerBinding(bindingId: any) {
+  const result: any = deleteBrokerBinding(bindingId);
   if (!result.ok) {
     return result;
   }
