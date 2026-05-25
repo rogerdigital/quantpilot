@@ -2,6 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
+  inline?: boolean;
 }
 
 interface State {
@@ -21,6 +22,43 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.error) {
+      if (this.props.inline) {
+        return (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <div
+              style={{
+                fontSize: 13,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: '#e35142',
+                marginBottom: 12,
+              }}
+            >
+              Page Error
+            </div>
+            <div style={{ fontSize: 14, color: '#8a7e72', marginBottom: 20 }}>
+              {this.state.error.message}
+            </div>
+            <button
+              style={{
+                fontSize: 12,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                padding: '8px 20px',
+                background: 'transparent',
+                border: '1px solid #d4ccc2',
+                color: '#6f6257',
+                cursor: 'pointer',
+                borderRadius: 6,
+              }}
+              onClick={() => this.setState({ error: null })}
+            >
+              Retry
+            </button>
+          </div>
+        );
+      }
+
       return (
         <div
           style={{

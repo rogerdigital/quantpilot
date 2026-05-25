@@ -1,5 +1,6 @@
 import type { AppLocale } from '@shared-types/trading.ts';
 import { lazy, type ReactElement, Suspense } from 'react';
+import { ErrorBoundary } from '../../app/components/ErrorBoundary.tsx';
 import { type ConsolePageKey, copy } from './console.i18n.tsx';
 
 const AgentPage = lazy(() => import('../agent/AgentPage.tsx'));
@@ -66,11 +67,13 @@ export type ConsoleRouteDefinition = {
 
 function renderLazyRoute(element: ReactElement) {
   return (
-    <Suspense
-      fallback={<div style={{ padding: '2rem', color: '#6f6257' }}>Loading workspace...</div>}
-    >
-      {element}
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense
+        fallback={<div style={{ padding: '2rem', color: '#6f6257' }}>Loading workspace...</div>}
+      >
+        {element}
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
