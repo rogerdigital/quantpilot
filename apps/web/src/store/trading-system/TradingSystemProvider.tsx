@@ -100,17 +100,24 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
     // Initial fetch regardless of SSE state
     pollCycle();
 
-    // Fallback polling: 15s when SSE is connected, APP_CONFIG.refreshMs otherwise
-    const getInterval = () => (sseConnectedRef.current ? 15_000 : APP_CONFIG.refreshMs);
-    let intervalMs = getInterval();
-    timerRef.current = window.setInterval(() => {
-      intervalMs = getInterval();
-      pollCycle();
-    }, intervalMs);
+    // When SSE is connected, skip polling — SSE pushes trigger runCycle directly.
+    // When SSE is disconnected, poll at APP_CONFIG.refreshMs as fallback.
+    const scheduleNext = () => {
+      if (cancelled) return;
+      if (sseConnectedRef.current) {
+        timerRef.current = window.setTimeout(scheduleNext, 30_000);
+        return;
+      }
+      timerRef.current = window.setTimeout(async () => {
+        await pollCycle();
+        scheduleNext();
+      }, APP_CONFIG.refreshMs);
+    };
+    scheduleNext();
 
     return () => {
       cancelled = true;
-      if (timerRef.current) window.clearInterval(timerRef.current);
+      if (timerRef.current) window.clearTimeout(timerRef.current);
     };
     // runCycle is stable (useCallback with no deps)
     // eslint-disable-next-line react-hooks/exhaustive-deps
