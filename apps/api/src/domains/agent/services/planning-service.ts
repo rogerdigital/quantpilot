@@ -1,7 +1,10 @@
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { createLLMProvider } from '../../../../../../packages/llm-provider/src/index.js';
+import { createChildLogger } from '../../../lib/logger.js';
 import { type AgentIntent, parseAgentIntent } from './intent-service.js';
 import { PLANNING_SYSTEM_PROMPT } from './prompts.js';
+
+const log = createChildLogger('planning-service');
 
 type PlanStep = {
   kind: string;
@@ -245,7 +248,7 @@ ${intent.extractedTrade ? `Trade: ${intent.extractedTrade.side} ${intent.extract
   );
 
   if (!response.ok) {
-    console.error('[planning-service] LLM error, using fallback steps:', response.error);
+    log.error({ error: response.error }, 'LLM error, using fallback steps');
     return buildFallbackSteps(intent);
   }
 
@@ -264,9 +267,9 @@ ${intent.extractedTrade ? `Trade: ${intent.extractedTrade.side} ${intent.extract
       metadata: step.metadata || {},
     }));
   } catch (parseErr: unknown) {
-    console.error(
-      '[planning-service] JSON parse error, using fallback steps:',
-      parseErr instanceof Error ? parseErr.message : 'unknown_error'
+    log.error(
+      { err: parseErr instanceof Error ? parseErr.message : 'unknown_error' },
+      'JSON parse error, using fallback steps'
     );
     return buildFallbackSteps(intent);
   }

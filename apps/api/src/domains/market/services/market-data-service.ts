@@ -3,6 +3,9 @@
  * trading-engine synthetic data when QUANTPILOT_USE_MOCK_DATA=true or no credentials.
  */
 import { generateHistoricalOhlcv } from '../../../../../../packages/trading-engine/src/backtest/data.js';
+import { createChildLogger } from '../../../lib/logger.js';
+
+const log = createChildLogger('market-data');
 
 type OhlcvBar = {
   time: string;
@@ -113,8 +116,9 @@ export async function getHistoricalBars(
 
     if (!response.ok) {
       // Fallback to synthetic data on API error
-      console.warn(
-        `[market-data] Alpaca bars error HTTP ${response.status} for ${upperSymbol}, using synthetic fallback`
+      log.warn(
+        { status: response.status, symbol: upperSymbol },
+        'Alpaca bars error, using synthetic fallback'
       );
       const endD = new Date();
       const startD = new Date();
@@ -151,10 +155,7 @@ export async function getHistoricalBars(
 
     return { ok: true, symbol: upperSymbol, bars, source: 'alpaca', timeframe };
   } catch (err: unknown) {
-    console.error(
-      '[market-data] Error fetching bars:',
-      err instanceof Error ? err.message : 'unknown_error'
-    );
+    log.error({ err: err instanceof Error ? err.message : 'unknown_error' }, 'Error fetching bars');
     const endD = new Date();
     const startD = new Date();
     startD.setDate(startD.getDate() - days);

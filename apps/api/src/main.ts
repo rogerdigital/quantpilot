@@ -1,4 +1,7 @@
 import { startGatewayServer } from './app/index.js';
+import { createChildLogger } from './lib/logger.js';
+
+const log = createChildLogger('main');
 
 async function main() {
   if (process.env.USE_HONO === 'true') {
@@ -11,7 +14,7 @@ async function main() {
     const port = Number(process.env.GATEWAY_PORT || 8787);
     app.route('/api/execution', createExecutionHonoRouter());
     serve({ fetch: app.fetch, port }, () => {
-      console.log(`[hono-gateway] listening on :${port}`);
+      log.info({ port }, 'hono-gateway listening');
     });
   } else {
     startGatewayServer();
