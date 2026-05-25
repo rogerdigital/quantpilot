@@ -69,7 +69,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/agent/instructions') {
     const body = await readJsonBody(req);
-    writeJson(res, 200, createAgentInstruction(body || {}));
+    writeJson(res, 200, createAgentInstruction((body || {}) as Record<string, unknown>));
     return true;
   }
 
@@ -188,7 +188,7 @@ export async function handleAgentRoutes({ req, reqUrl, res, readJsonBody, writeJ
   }
 
   if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/agent/sessions/')) {
-    const sessionId = reqUrl.pathname.split('/').at(-1);
+    const sessionId = reqUrl.pathname.split("/").at(-1)!;
     const result = getAgentSessionDetail(sessionId);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;

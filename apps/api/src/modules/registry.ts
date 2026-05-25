@@ -1,4 +1,3 @@
-// @ts-nocheck
 export const ARCHITECTURE_LAYERS = [
   {
     id: 'frontend',
@@ -179,7 +178,7 @@ export function listArchitectureLayers() {
 }
 
 export function describeArchitecture() {
-  const moduleCountByLayer = MODULE_REGISTRY.reduce((acc, module) => {
+  const moduleCountByLayer = MODULE_REGISTRY.reduce((acc: Record<string, number>, module: any) => {
     acc[module.layer] = (acc[module.layer] || 0) + 1;
     return acc;
   }, {});

@@ -84,7 +84,7 @@ export async function handleTaskOrchestratorRoutes({
   }
 
   if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')) {
-    const workflowRunId = reqUrl.pathname.split('/').at(-1);
+    const workflowRunId = reqUrl.pathname.split('/').at(-1)!;
     const workflow = getWorkflow(workflowRunId);
     writeJson(
       res,
@@ -106,7 +106,7 @@ export async function handleTaskOrchestratorRoutes({
     reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')
   ) {
     if (!(await requirePermission('execution:approve', 'record operator actions'))) return true;
-    const workflowRunId = reqUrl.pathname.split('/').at(-2);
+    const workflowRunId = reqUrl.pathname.split('/').at(-2)!;
     const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const workflow = resumeWorkflow(workflowRunId, body);
     writeJson(
@@ -123,7 +123,7 @@ export async function handleTaskOrchestratorRoutes({
     reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')
   ) {
     if (!(await requirePermission('execution:approve', 'run control-plane cycles'))) return true;
-    const workflowRunId = reqUrl.pathname.split('/').at(-2);
+    const workflowRunId = reqUrl.pathname.split('/').at(-2)!;
     const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const workflow = cancelWorkflow(workflowRunId, body);
     writeJson(

@@ -87,7 +87,7 @@ export async function handleRiskRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/risk/events/')) {
-    const eventId = reqUrl.pathname.split('/').at(-1);
+    const eventId = reqUrl.pathname.split('/').at(-1)!;
     const event = getRiskEvent(eventId);
     writeJson(
       res,

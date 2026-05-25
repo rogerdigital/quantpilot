@@ -1,10 +1,11 @@
-// @ts-nocheck
+import type { ServerResponse } from 'node:http';
+
 // SSE connection pool — maintains a set of active response streams
 // and provides a broadcast function.
 
-const connections = new Set();
+const connections = new Set<ServerResponse>();
 
-export function addSseConnection(res) {
+export function addSseConnection(res: ServerResponse) {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream; charset=utf-8',
     'Cache-Control': 'no-cache, no-transform',
@@ -22,7 +23,7 @@ export function addSseConnection(res) {
   res.write('event: connected\ndata: {}\n\n');
 }
 
-export function broadcast(event, data) {
+export function broadcast(event: string, data: unknown) {
   const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
   for (const res of connections) {
     try {

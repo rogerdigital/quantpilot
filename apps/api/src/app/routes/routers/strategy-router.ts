@@ -30,7 +30,7 @@ export async function handleStrategyRoutes({ req, reqUrl, res, readJsonBody, wri
   }
 
   if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/strategy/catalog/')) {
-    const strategyId = reqUrl.pathname.split('/').at(-1);
+    const strategyId = reqUrl.pathname.split('/').at(-1)!;
     const result = getStrategyCatalogDetail(strategyId);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;
@@ -56,7 +56,7 @@ export async function handleStrategyRoutes({ req, reqUrl, res, readJsonBody, wri
       writeForbidden('strategy:write', 'promote the strategy from a research evaluation');
       return true;
     }
-    const strategyId = reqUrl.pathname.split('/').at(-2);
+    const strategyId = reqUrl.pathname.split('/').at(-2)!;
     const body = await readJsonBody(req) as Record<string, unknown> | undefined;
     const result = promoteStrategyFromEvaluation(strategyId, body);
     writeJson(res, result.ok ? 200 : 409, result);
@@ -97,7 +97,7 @@ export async function handleStrategyRoutes({ req, reqUrl, res, readJsonBody, wri
       writeForbidden('execution:approve', 'queue execution handoffs');
       return true;
     }
-    const handoffId = reqUrl.pathname.split('/').at(-2);
+    const handoffId = reqUrl.pathname.split('/').at(-2)!;
     const body = await readJsonBody(req) as Record<string, unknown> | undefined;
     const result = queueExecutionCandidateHandoff(handoffId, body);
     writeJson(res, result.ok ? 200 : 404, result);
