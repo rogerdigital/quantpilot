@@ -1,14 +1,13 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
 
-function toIsoString(value) {
+function toIsoString(value: any) {
   if (!value) return '';
   if (value instanceof Date) return value.toISOString();
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString();
 }
 
-function getAgeSeconds(timestamp, nowIso) {
+function getAgeSeconds(timestamp: any, nowIso: any) {
   const targetIso = toIsoString(timestamp);
   if (!targetIso) return null;
   const deltaMs = Date.parse(nowIso) - Date.parse(targetIso);
@@ -16,15 +15,15 @@ function getAgeSeconds(timestamp, nowIso) {
   return Math.max(0, Math.round(deltaMs / 1000));
 }
 
-function countBy(items, predicate) {
-  return items.reduce((count, item) => (predicate(item) ? count + 1 : count), 0);
+function countBy(items: any[], predicate: (item: any) => boolean): number {
+  return items.reduce((count: number, item: any) => (predicate(item) ? count + 1 : count), 0);
 }
 
-function listUniqueWorkers(heartbeats) {
-  return [...new Set(heartbeats.map((item) => item.worker).filter(Boolean))];
+function listUniqueWorkers(heartbeats: any[]) {
+  return [...new Set(heartbeats.map((item: any) => item.worker).filter(Boolean))];
 }
 
-function findLatestTimestamp(items, field) {
+function findLatestTimestamp(items: any[], field: string) {
   let latestIso = '';
   let latestValue = -Infinity;
   for (const item of items) {
@@ -38,13 +37,13 @@ function findLatestTimestamp(items, field) {
   return latestIso || null;
 }
 
-function findOldestAgeSeconds(items, nowIso, fields = []) {
+function findOldestAgeSeconds(items: any[], nowIso: any, fields: string[] = []) {
   let oldestAge = null;
   for (const item of items) {
     const timestamps = fields
       .map((field) => item?.[field])
-      .map((value) => getAgeSeconds(value, nowIso))
-      .filter((value) => value !== null);
+      .map((value: any) => getAgeSeconds(value, nowIso))
+      .filter((value: any): value is number => value !== null);
     if (!timestamps.length) continue;
     const candidate = Math.max(...timestamps);
     if (oldestAge === null || candidate > oldestAge) oldestAge = candidate;
@@ -52,33 +51,33 @@ function findOldestAgeSeconds(items, nowIso, fields = []) {
   return oldestAge;
 }
 
-function buildQueueBacklogStatus(totalPending, retryScheduledWorkflows) {
+function buildQueueBacklogStatus(totalPending: any, retryScheduledWorkflows: any) {
   if (retryScheduledWorkflows > 0 || totalPending >= 10) return 'critical';
   if (totalPending > 0) return 'warn';
   return 'healthy';
 }
 
-function buildWorkflowCounts(workflows) {
+function buildWorkflowCounts(workflows: any[]) {
   return {
-    queued: countBy(workflows, (item) => item.status === 'queued'),
-    running: countBy(workflows, (item) => item.status === 'running'),
-    retryScheduled: countBy(workflows, (item) => item.status === 'retry_scheduled'),
-    failed: countBy(workflows, (item) => item.status === 'failed'),
-    completed: countBy(workflows, (item) => item.status === 'completed'),
-    canceled: countBy(workflows, (item) => item.status === 'canceled'),
+    queued: countBy(workflows, (item: any) => item.status === 'queued'),
+    running: countBy(workflows, (item: any) => item.status === 'running'),
+    retryScheduled: countBy(workflows, (item: any) => item.status === 'retry_scheduled'),
+    failed: countBy(workflows, (item: any) => item.status === 'failed'),
+    completed: countBy(workflows, (item: any) => item.status === 'completed'),
+    canceled: countBy(workflows, (item: any) => item.status === 'canceled'),
   };
 }
 
-function buildRiskCounts(events) {
+function buildRiskCounts(events: any[]) {
   return {
-    riskOff: countBy(events, (item) => item.status === 'risk-off'),
-    approvalRequired: countBy(events, (item) => item.status === 'approval-required'),
-    connectivityDegraded: countBy(events, (item) => item.status === 'connectivity-degraded'),
-    healthy: countBy(events, (item) => item.status === 'healthy'),
+    riskOff: countBy(events, (item: any) => item.status === 'risk-off'),
+    approvalRequired: countBy(events, (item: any) => item.status === 'approval-required'),
+    connectivityDegraded: countBy(events, (item: any) => item.status === 'connectivity-degraded'),
+    healthy: countBy(events, (item: any) => item.status === 'healthy'),
   };
 }
 
-function resolveWorkerStatus(latestHeartbeat, nowIso) {
+function resolveWorkerStatus(latestHeartbeat: any, nowIso: any) {
   if (!latestHeartbeat) {
     return {
       status: 'warn',
@@ -124,24 +123,24 @@ function resolveWorkerStatus(latestHeartbeat, nowIso) {
   };
 }
 
-function deriveOverallStatus(signals) {
+function deriveOverallStatus(signals: any[]) {
   if (signals.includes('critical')) return 'critical';
   if (signals.includes('warn')) return 'warn';
   return 'healthy';
 }
 
-function parseLimit(value, fallback) {
+function parseLimit(value: any, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function resolveSince(hours) {
+function resolveSince(hours: any): string {
   const parsed = Number(hours);
   if (!Number.isFinite(parsed) || parsed <= 0) return '';
   return new Date(Date.now() - parsed * 60 * 60 * 1000).toISOString();
 }
 
-export async function getMonitoringStatus(options = {}) {
+export async function getMonitoringStatus(options: Record<string, any> = {}) {
   const nowIso = toIsoString(options.now || new Date()) || new Date().toISOString();
   const workflows = controlPlaneRuntime.listWorkflowRuns(120);
   const workflowCounts = buildWorkflowCounts(workflows);
@@ -149,42 +148,45 @@ export async function getMonitoringStatus(options = {}) {
   const activeWorkflows =
     workflowCounts.queued + workflowCounts.running + workflowCounts.retryScheduled;
   const oldestQueuedAgeSeconds = findOldestAgeSeconds(
-    workflows.filter((item) => item.status === 'queued'),
+    workflows.filter((item: any) => item.status === 'queued'),
     nowIso,
     ['createdAt', 'updatedAt', 'startedAt']
   );
   const oldestRetryAgeSeconds = findOldestAgeSeconds(
-    workflows.filter((item) => item.status === 'retry_scheduled'),
+    workflows.filter((item: any) => item.status === 'retry_scheduled'),
     nowIso,
     ['nextRunAt', 'updatedAt', 'failedAt', 'createdAt']
   );
   const lastCompletedAt = findLatestTimestamp(
-    workflows.filter((item) => item.status === 'completed'),
+    workflows.filter((item: any) => item.status === 'completed'),
     'updatedAt'
   );
   const lastFailedAt = findLatestTimestamp(
-    workflows.filter((item) => item.status === 'failed'),
+    workflows.filter((item: any) => item.status === 'failed'),
     'updatedAt'
   );
   const failureRate =
     totalWorkflows > 0 ? Number((workflowCounts.failed / totalWorkflows).toFixed(4)) : 0;
   const notifications = controlPlaneRuntime.listNotifications(20);
   const notificationJobs = controlPlaneRuntime.listNotificationJobs(120);
-  const pendingNotificationJobs = countBy(notificationJobs, (item) => item.status === 'pending');
+  const pendingNotificationJobs = countBy(
+    notificationJobs,
+    (item: any) => item.status === 'pending'
+  );
   const riskEvents = controlPlaneRuntime.listRiskEvents(120);
   const riskCounts = buildRiskCounts(riskEvents);
   const riskScanJobs = controlPlaneRuntime.listRiskScanJobs(120);
-  const pendingRiskScanJobs = countBy(riskScanJobs, (item) => item.status === 'pending');
+  const pendingRiskScanJobs = countBy(riskScanJobs, (item: any) => item.status === 'pending');
   const agentActionRequests = controlPlaneRuntime.listAgentActionRequests(120);
   const pendingAgentReviews = countBy(
     agentActionRequests,
-    (item) => item.status === 'pending_review'
+    (item: any) => item.status === 'pending_review'
   );
   const latestWorkerHeartbeat = controlPlaneRuntime.getLatestWorkerHeartbeat();
   const recentWorkerHeartbeats = controlPlaneRuntime.listWorkerHeartbeats(120);
   const activeWorkers = listUniqueWorkers(recentWorkerHeartbeats).length;
   const staleWorkers = listUniqueWorkers(
-    recentWorkerHeartbeats.filter((item) => {
+    recentWorkerHeartbeats.filter((item: any) => {
       const ageSeconds = getAgeSeconds(item.createdAt, nowIso);
       return ageSeconds !== null && ageSeconds > 45 * 60;
     })
@@ -236,7 +238,7 @@ export async function getMonitoringStatus(options = {}) {
     queueStatus,
   ]);
 
-  const alerts = [];
+  const alerts: any[] = [];
   if (!broker.connected) {
     alerts.push({
       level: 'warn',
@@ -356,7 +358,7 @@ export async function getMonitoringStatus(options = {}) {
   };
 }
 
-export function listMonitoringSnapshots(options = {}) {
+export function listMonitoringSnapshots(options: Record<string, any> = {}) {
   const limit = parseLimit(options.limit, 50);
   const since = resolveSince(options.hours);
   return {
@@ -368,7 +370,7 @@ export function listMonitoringSnapshots(options = {}) {
   };
 }
 
-export function listMonitoringAlerts(options = {}) {
+export function listMonitoringAlerts(options: Record<string, any> = {}) {
   const limit = parseLimit(options.limit, 100);
   const since = resolveSince(options.hours);
   return {
@@ -382,7 +384,7 @@ export function listMonitoringAlerts(options = {}) {
   };
 }
 
-export async function recordMonitoringStatusSnapshot(options = {}) {
+export async function recordMonitoringStatusSnapshot(options: Record<string, any> = {}) {
   const summary = await getMonitoringStatus(options);
   const recorded = controlPlaneRuntime.recordMonitoringSnapshot({
     status: summary.status,

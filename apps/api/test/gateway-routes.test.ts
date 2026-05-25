@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
@@ -3860,7 +3858,7 @@ test('GET /api/monitoring/status returns runtime health and queue summary', asyn
     summary: 'worker heartbeat',
     createdAt: nowIso,
   });
-  context.store.writeCollection('scheduler-ticks.json', [
+  (context.store as any).writeCollection('scheduler-ticks.json', [
     {
       id: 'scheduler-monitoring-tick',
       phase: 'INTRADAY',

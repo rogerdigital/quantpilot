@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
 import { getMonitoringStatus } from '../monitoring/service.js';
 import { isSchedulerAttentionStatus } from '../scheduler/service.js';
@@ -7,34 +6,34 @@ import { getOperationsMaintenanceSnapshot } from './maintenance-service.js';
 const ACK_OVERDUE_HOURS = 1;
 const STALE_HOURS = 24;
 
-function parseLimit(value, fallback) {
+function parseLimit(value: any, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function resolveSince(hours) {
+function resolveSince(hours: any): string {
   const parsed = Number(hours);
   if (!Number.isFinite(parsed) || parsed <= 0) return '';
   return new Date(Date.now() - parsed * 60 * 60 * 1000).toISOString();
 }
 
-function parseTimestamp(value) {
+function parseTimestamp(value: any) {
   const parsed = Date.parse(value || '');
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function countBy(items, predicate) {
-  return items.reduce((count, item) => (predicate(item) ? count + 1 : count), 0);
+function countBy(items: any[], predicate: (item: any) => boolean): number {
+  return items.reduce((count: number, item: any) => (predicate(item) ? count + 1 : count), 0);
 }
 
-function getAgeHours(timestamp) {
+function getAgeHours(timestamp: any) {
   const valueMs = parseTimestamp(timestamp);
   if (valueMs === null) return 0;
   return Math.max(0, (Date.now() - valueMs) / (60 * 60 * 1000));
 }
 
-function buildRunbookEntries(input) {
-  const entries = [];
+function buildRunbookEntries(input: any) {
+  const entries: any[] = [];
 
   if (input.connectivityIssues > 0) {
     entries.push({
@@ -131,7 +130,7 @@ function buildRunbookEntries(input) {
   return entries;
 }
 
-function buildObservabilitySummary(monitoring) {
+function buildObservabilitySummary(monitoring: any) {
   const queueStatus = monitoring.services.queues.backlogStatus;
   const staleWorkers = monitoring.services.worker.staleWorkers;
   const failureRate = monitoring.services.workflows.failureRate;
@@ -168,7 +167,7 @@ function buildObservabilitySummary(monitoring) {
   };
 }
 
-function buildPersistenceSummary(maintenance) {
+function buildPersistenceSummary(maintenance: any) {
   const persistence = maintenance?.integrity?.persistence || {
     adapter: maintenance?.storageAdapter || {
       kind: 'custom',
@@ -240,7 +239,7 @@ function buildPersistenceSummary(maintenance) {
   };
 }
 
-export async function getOperationsWorkbench(options = {}) {
+export async function getOperationsWorkbench(options: Record<string, any> = {}) {
   const limit = parseLimit(options.limit, 120);
   const since = resolveSince(options.hours);
   const [monitoring, maintenance] = await Promise.all([
@@ -250,14 +249,14 @@ export async function getOperationsWorkbench(options = {}) {
   const incidents = controlPlaneRuntime.listIncidents(limit, {
     since,
   });
-  const unresolvedIncidents = incidents.filter((item) => item.status !== 'resolved');
+  const unresolvedIncidents = incidents.filter((item: any) => item.status !== 'resolved');
   const staleIncidents = unresolvedIncidents.filter(
-    (item) => getAgeHours(item.updatedAt || item.createdAt) >= STALE_HOURS
+    (item: any) => getAgeHours(item.updatedAt || item.createdAt) >= STALE_HOURS
   );
-  const unassignedIncidents = unresolvedIncidents.filter((item) => !item.owner);
-  const criticalIncidents = unresolvedIncidents.filter((item) => item.severity === 'critical');
+  const unassignedIncidents = unresolvedIncidents.filter((item: any) => !item.owner);
+  const criticalIncidents = unresolvedIncidents.filter((item: any) => item.severity === 'critical');
   const ackOverdueIncidents = unresolvedIncidents.filter(
-    (item) =>
+    (item: any) =>
       !item.acknowledgedAt && getAgeHours(item.updatedAt || item.createdAt) >= ACK_OVERDUE_HOURS
   );
   const monitoringAlerts = controlPlaneRuntime.listMonitoringAlerts(limit, {
@@ -273,7 +272,7 @@ export async function getOperationsWorkbench(options = {}) {
     since,
   });
 
-  const schedulerAttention = schedulerTicks.filter((item) =>
+  const schedulerAttention = schedulerTicks.filter((item: any) =>
     isSchedulerAttentionStatus(item.status)
   );
   const connectivityIssues = countBy(
@@ -282,26 +281,26 @@ export async function getOperationsWorkbench(options = {}) {
       monitoring.services.market.status,
       monitoring.services.worker.status,
     ],
-    (item) => item !== 'healthy'
+    (item: any) => item !== 'healthy'
   );
   const criticalSignals =
-    monitoringAlerts.filter((item) => item.level === 'critical').length +
+    monitoringAlerts.filter((item: any) => item.level === 'critical').length +
     criticalIncidents.length +
-    schedulerAttention.filter((item) => item.status === 'critical').length +
-    countBy(notifications, (item) => item.level === 'critical');
+    schedulerAttention.filter((item: any) => item.status === 'critical').length +
+    countBy(notifications, (item: any) => item.level === 'critical');
   const warnSignals =
-    monitoringAlerts.filter((item) => item.level === 'warn').length +
+    monitoringAlerts.filter((item: any) => item.level === 'warn').length +
     ackOverdueIncidents.length +
-    countBy(notifications, (item) => item.level === 'warn');
+    countBy(notifications, (item: any) => item.level === 'warn');
   const queuePressure = monitoring.services.queues.totalPending;
   const controlPlaneTrail =
     countBy(
       notifications,
-      (item) => item.source === 'control-plane' || item.source === 'workflow-control'
+      (item: any) => item.source === 'control-plane' || item.source === 'workflow-control'
     ) +
     countBy(
       auditRecords,
-      (item) =>
+      (item: any) =>
         item.type === 'workflow' ||
         item.type === 'execution-plan' ||
         item.type === 'agent-action-request'
@@ -343,8 +342,8 @@ export async function getOperationsWorkbench(options = {}) {
         title: 'Monitoring',
         status: monitoring.status,
         detail: `${monitoring.alerts.length} monitoring alerts across worker, workflow, risk, and queue signals.`,
-        primaryCount: monitoringAlerts.filter((item) => item.level === 'critical').length,
-        secondaryCount: monitoringAlerts.filter((item) => item.level === 'warn').length,
+        primaryCount: monitoringAlerts.filter((item: any) => item.level === 'critical').length,
+        secondaryCount: monitoringAlerts.filter((item: any) => item.level === 'warn').length,
         updatedAt: monitoring.generatedAt,
       },
       {
@@ -363,14 +362,14 @@ export async function getOperationsWorkbench(options = {}) {
       {
         key: 'scheduler',
         title: 'Scheduler',
-        status: schedulerAttention.some((item) => item.status === 'critical')
+        status: schedulerAttention.some((item: any) => item.status === 'critical')
           ? 'critical'
           : schedulerAttention.length
             ? 'warn'
             : 'healthy',
         detail: `${schedulerTicks.length} scheduler ticks observed with ${schedulerAttention.length} attention items.`,
         primaryCount: schedulerAttention.length,
-        secondaryCount: countBy(schedulerTicks, (item) => item.phase === 'INTRADAY'),
+        secondaryCount: countBy(schedulerTicks, (item: any) => item.phase === 'INTRADAY'),
         updatedAt: schedulerTicks[0]?.createdAt || monitoring.generatedAt,
       },
       {
@@ -389,11 +388,11 @@ export async function getOperationsWorkbench(options = {}) {
         detail: `${controlPlaneTrail} control-plane notifications and audit records need coordinated review.`,
         primaryCount: countBy(
           notifications,
-          (item) => item.level === 'critical' || item.level === 'warn'
+          (item: any) => item.level === 'critical' || item.level === 'warn'
         ),
         secondaryCount: countBy(
           auditRecords,
-          (item) =>
+          (item: any) =>
             item.type === 'workflow' ||
             item.type === 'execution-plan' ||
             item.type === 'agent-action-request'

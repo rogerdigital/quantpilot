@@ -1,9 +1,21 @@
-// @ts-nocheck
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { Readable } from 'node:stream';
 
 export async function invokeGatewayRoute(
-  handler,
-  { method = 'GET', path = '/', body, rawBody: rawRequestBody, headers = {} } = {}
+  handler: (...args: any[]) => Promise<void>,
+  {
+    method = 'GET',
+    path = '/',
+    body,
+    rawBody: rawRequestBody,
+    headers = {},
+  }: {
+    method?: string;
+    path?: string;
+    body?: any;
+    rawBody?: string | null;
+    headers?: Record<string, string>;
+  } = {}
 ) {
   const payload =
     rawRequestBody !== undefined
@@ -11,7 +23,7 @@ export async function invokeGatewayRoute(
       : body === undefined
         ? null
         : JSON.stringify(body);
-  const req = Readable.from(payload ? [payload] : []);
+  const req = Readable.from(payload ? [payload] : []) as unknown as IncomingMessage;
   req.method = method;
   req.url = path;
   req.headers = {
@@ -23,30 +35,30 @@ export async function invokeGatewayRoute(
   };
 
   let statusCode = 200;
-  let responseHeaders = {};
+  let responseHeaders: Record<string, any> = {};
   let rawBody = '';
   let ended = false;
-  let resolveEnd;
+  let resolveEnd: () => void;
 
-  const endPromise = new Promise((resolve) => {
+  const endPromise = new Promise<void>((resolve) => {
     resolveEnd = resolve;
   });
 
   const res = {
-    writeHead(code, nextHeaders = {}) {
+    writeHead(code: number, nextHeaders: Record<string, any> = {}) {
       statusCode = code;
       responseHeaders = nextHeaders;
     },
-    setHeader(name, value) {
+    setHeader(name: string, value: any) {
       responseHeaders[name] = value;
     },
-    end(chunk = '') {
+    end(chunk: any = '') {
       if (ended) return;
       ended = true;
-      rawBody += typeof chunk === 'string' ? chunk : chunk.toString();
+      rawBody += typeof chunk === 'string' ? chunk : String(chunk);
       resolveEnd();
     },
-  };
+  } as unknown as ServerResponse;
 
   await handler(req, res);
   await endPromise;
