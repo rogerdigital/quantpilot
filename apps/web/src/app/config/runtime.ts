@@ -11,7 +11,7 @@ function tradingModeFromEnv(value: string | undefined): RuntimeConfig['tradingMo
 }
 
 export const runtimeConfig: RuntimeConfig = {
-  refreshMs: numberFromEnv(import.meta.env.VITE_REFRESH_MS, 1800),
+  refreshMs: numberFromEnv(import.meta.env.VITE_REFRESH_MS, 5000),
   tradingMode: tradingModeFromEnv(import.meta.env.VITE_TRADING_MODE),
   marketDataProvider: (import.meta.env.VITE_MARKET_DATA_PROVIDER ||
     'simulated') as RuntimeConfig['marketDataProvider'],
