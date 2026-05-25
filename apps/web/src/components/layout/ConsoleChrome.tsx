@@ -381,7 +381,9 @@ export function Layout() {
   const { locale } = useLocale();
   const { state, approveLiveIntent, rejectLiveIntent } = useTradingSystem();
   const [collapsed, setCollapsed] = useState(() => {
-    return window.localStorage.getItem('quantpilot-sidebar-collapsed') === 'true';
+    const stored = window.localStorage.getItem('quantpilot-sidebar-collapsed');
+    if (stored !== null) return stored === 'true';
+    return window.innerWidth < 720;
   });
   const [cmdOpen, setCmdOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
