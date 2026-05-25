@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createControlPlaneRuntime } from '../packages/control-plane-runtime/src/index.js';
