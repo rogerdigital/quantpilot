@@ -46,7 +46,10 @@ function isWeekday(date: Date): boolean {
 
 function generateOhlcv(symbol: string, limit: number) {
   const basePrice = STOCK_BASE_PRICES[symbol as keyof typeof STOCK_BASE_PRICES] ?? 100;
-  const params = STOCK_PARAMS[symbol as keyof typeof STOCK_PARAMS] ?? { drift: 0.08, volatility: 1.5 };
+  const params = STOCK_PARAMS[symbol as keyof typeof STOCK_PARAMS] ?? {
+    drift: 0.08,
+    volatility: 1.5,
+  };
   const symbolSeed = symbol.split('').reduce((s: number, c: string) => s + c.charCodeAt(0), 0);
 
   // Collect 'limit' trading days going backward from today

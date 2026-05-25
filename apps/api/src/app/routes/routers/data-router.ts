@@ -1,13 +1,19 @@
-import type { GatewayRouteContext } from '../types.js';
 import { controlPlaneContext } from '../../../../../../packages/control-plane-store/src/context.js';
 import { createDatasetRegistry } from '../../../../../../packages/control-plane-store/src/dataset-registry.js';
 import { createFeatureRegistry } from '../../../../../../packages/control-plane-store/src/feature-registry.js';
+import type { GatewayRouteContext } from '../types.js';
 
 function getStore() {
   return controlPlaneContext?.store || { readCollection: () => [], writeCollection: () => {} };
 }
 
-export function handleDataRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+export function handleDataRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   const pathname = reqUrl.pathname;
 
   if (req.method === 'GET' && pathname === '/api/data/datasets') {
@@ -19,7 +25,7 @@ export function handleDataRoutes({ req, reqUrl, res, readJsonBody, writeJson }: 
   if (req.method === 'POST' && pathname === '/api/data/datasets') {
     return (async () => {
       const body = (await readJsonBody(req)) as Record<string, any> | undefined;
-      if (!body || !body.id || !body.name || !body.category) {
+      if (!body?.id || !body.name || !body.category) {
         writeJson(res, 400, { ok: false, error: 'Missing required fields: id, name, category' });
         return true;
       }
@@ -50,7 +56,7 @@ export function handleDataRoutes({ req, reqUrl, res, readJsonBody, writeJson }: 
     if (req.method === 'POST') {
       return (async () => {
         const body = (await readJsonBody(req)) as Record<string, any> | undefined;
-        if (!body || !body.id || !body.schemaHash) {
+        if (!body?.id || !body.schemaHash) {
           writeJson(res, 400, { ok: false, error: 'Missing required fields: id, schemaHash' });
           return true;
         }
@@ -89,7 +95,7 @@ export function handleDataRoutes({ req, reqUrl, res, readJsonBody, writeJson }: 
   if (req.method === 'POST' && pathname === '/api/data/features') {
     return (async () => {
       const body = (await readJsonBody(req)) as Record<string, any> | undefined;
-      if (!body || !body.id || !body.name) {
+      if (!body?.id || !body.name) {
         writeJson(res, 400, { ok: false, error: 'Missing required fields: id, name' });
         return true;
       }

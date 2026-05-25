@@ -1,4 +1,3 @@
-import type { GatewayRouteContext } from '../types.js';
 import { encryptBrokerKey, maskBrokerKey } from '../../../modules/auth/broker-key-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
@@ -21,6 +20,7 @@ import {
   setPrimaryBrokerBinding,
   syncBrokerBindingRuntime,
 } from '../../../modules/user-account/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
 export async function handleUserAccountRoutes({
   req,
@@ -190,7 +190,11 @@ export async function handleUserAccountRoutes({
     const result = removeBrokerBinding(bindingId);
     writeJson(
       res,
-      result.ok ? 200 : (result as any).error === 'default broker binding cannot be deleted' ? 409 : 404,
+      result.ok
+        ? 200
+        : (result as any).error === 'default broker binding cannot be deleted'
+          ? 409
+          : 404,
       result
     );
     return true;

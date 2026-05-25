@@ -1,4 +1,3 @@
-
 export function generateOpenApiSpec(baseUrl = '') {
   return {
     openapi: '3.0.3',

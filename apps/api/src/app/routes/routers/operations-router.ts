@@ -1,4 +1,3 @@
-import type { GatewayRouteContext } from '../types.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
 import {
@@ -8,6 +7,7 @@ import {
   restoreOperationsMaintenanceBackup,
 } from '../../../modules/operations/maintenance-service.js';
 import { getOperationsWorkbench } from '../../../modules/operations/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
 export async function handleOperationsRoutes({
   req,

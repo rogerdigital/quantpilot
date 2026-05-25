@@ -1,4 +1,3 @@
-import type { GatewayRouteContext } from '../types.js';
 import { controlPlaneContext } from '../../../../../../packages/control-plane-store/src/context.js';
 import { createExperimentRegistry } from '../../../../../../packages/control-plane-store/src/experiment-registry.js';
 import { createResearchWorkspaceStore } from '../../../../../../packages/control-plane-store/src/research-workspace-store.js';
@@ -23,8 +22,15 @@ import {
 } from '../../../domains/research/services/workbench-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
-export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+export async function handleResearchRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 
@@ -72,7 +78,10 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
         return true;
       }
     }
-    if (body?.action === 'evaluate_runs' && !(await hasPermission('risk:review', req.headers.authorization))) {
+    if (
+      body?.action === 'evaluate_runs' &&
+      !(await hasPermission('risk:review', req.headers.authorization))
+    ) {
       writeForbidden('risk:review', 'run research governance evaluation actions');
       return true;
     }
@@ -196,7 +205,7 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   if (req.method === 'POST' && reqUrl.pathname === '/api/research/workspaces') {
     return (async () => {
       const body = (await readJsonBody(req)) as Record<string, any> | undefined;
-      if (!body || !body.id || !body.title || !body.owner) {
+      if (!body?.id || !body.title || !body.owner) {
         writeJson(res, 400, { ok: false, error: 'Missing required fields: id, title, owner' });
         return true;
       }
@@ -231,7 +240,7 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   if (wsIdeasMatch && req.method === 'POST') {
     return (async () => {
       const body = (await readJsonBody(req)) as Record<string, any> | undefined;
-      if (!body || !body.id || !body.title || !body.hypothesis) {
+      if (!body?.id || !body.title || !body.hypothesis) {
         writeJson(res, 400, {
           ok: false,
           error: 'Missing required fields: id, title, hypothesis',
@@ -266,7 +275,7 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   if (ideaTransitionsMatch && req.method === 'POST') {
     return (async () => {
       const body = (await readJsonBody(req)) as Record<string, any> | undefined;
-      if (!body || !body.workspaceId || !body.nextStatus || !body.reason || !body.actor) {
+      if (!body?.workspaceId || !body.nextStatus || !body.reason || !body.actor) {
         writeJson(res, 400, {
           ok: false,
           error: 'Missing required fields: workspaceId, nextStatus, reason, actor',
@@ -291,7 +300,7 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   if (ideaDecisionsMatch && req.method === 'POST') {
     return (async () => {
       const body = (await readJsonBody(req)) as Record<string, any> | undefined;
-      if (!body || !body.workspaceId || !body.id || !body.actor || !body.reason) {
+      if (!body?.workspaceId || !body.id || !body.actor || !body.reason) {
         writeJson(res, 400, {
           ok: false,
           error: 'Missing required fields: workspaceId, id, actor, reason',
@@ -325,7 +334,7 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   if (req.method === 'POST' && reqUrl.pathname === '/api/research/experiments') {
     return (async () => {
       const body = (await readJsonBody(req)) as Record<string, any> | undefined;
-      if (!body || !body.id || !body.name) {
+      if (!body?.id || !body.name) {
         writeJson(res, 400, { ok: false, error: 'Missing required fields: id, name' });
         return true;
       }
@@ -349,7 +358,7 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   if (expRunsMatch && req.method === 'POST') {
     return (async () => {
       const body = (await readJsonBody(req)) as Record<string, any> | undefined;
-      if (!body || !body.id || !body.snapshot) {
+      if (!body?.id || !body.snapshot) {
         writeJson(res, 400, { ok: false, error: 'Missing required fields: id, snapshot' });
         return true;
       }

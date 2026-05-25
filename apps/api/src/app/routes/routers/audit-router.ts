@@ -1,7 +1,13 @@
-import type { GatewayRouteContext } from '../types.js';
 import { appendAuditRecord, listAuditRecords } from '../../../modules/audit/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
-export async function handleAuditRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+export async function handleAuditRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/audit/records') {
     writeJson(res, 200, {
       ok: true,

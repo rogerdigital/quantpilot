@@ -100,10 +100,14 @@ export function getBacktestResultSummary(options: Record<string, any> = {}) {
     (results.reduce((sum: number, item: any) => sum + item.sharpe, 0) / results.length).toFixed(2)
   );
   summary.averageReturnPct = Number(
-    (results.reduce((sum: number, item: any) => sum + item.annualizedReturnPct, 0) / results.length).toFixed(2)
+    (
+      results.reduce((sum: number, item: any) => sum + item.annualizedReturnPct, 0) / results.length
+    ).toFixed(2)
   );
   summary.averageExcessReturnPct = Number(
-    (results.reduce((sum: number, item: any) => sum + item.excessReturnPct, 0) / results.length).toFixed(2)
+    (
+      results.reduce((sum: number, item: any) => sum + item.excessReturnPct, 0) / results.length
+    ).toFixed(2)
   );
 
   return {

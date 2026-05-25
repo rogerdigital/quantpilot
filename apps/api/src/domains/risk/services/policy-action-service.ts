@@ -14,7 +14,9 @@ const RISK_POLICY_ACTION_KEYS = new Set([
 function resolveTargets(actionKey: string, workbench: any) {
   if (actionKey === 'review-risk-off') {
     return {
-      riskEvents: workbench.reviewQueue.riskEvents.filter((item: any) => item.status === 'risk-off'),
+      riskEvents: workbench.reviewQueue.riskEvents.filter(
+        (item: any) => item.status === 'risk-off'
+      ),
       executionPlans: workbench.reviewQueue.executionPlans.filter(
         (item: any) => item.riskStatus === 'blocked'
       ),

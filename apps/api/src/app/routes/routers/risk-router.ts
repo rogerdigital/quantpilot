@@ -1,4 +1,3 @@
-import type { GatewayRouteContext } from '../types.js';
 import {
   assessExecution as riskAssessExecution,
   assessPromotion as riskAssessPromotion,
@@ -13,6 +12,7 @@ import { runRiskPolicyAction } from '../../../domains/risk/services/policy-actio
 import { getRiskWorkbench } from '../../../domains/risk/services/workbench-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
 interface RiskPolicy {
   id: string;
@@ -26,9 +26,20 @@ interface RiskPolicy {
 }
 
 const riskPolicies: RiskPolicy[] = [];
-const killSwitch: { active: boolean; activatedAt: string | null; activatedBy: string | null; reason: string | null } = { active: false, activatedAt: null, activatedBy: null, reason: null };
+const killSwitch: {
+  active: boolean;
+  activatedAt: string | null;
+  activatedBy: string | null;
+  reason: string | null;
+} = { active: false, activatedAt: null, activatedBy: null, reason: null };
 
-export async function handleRiskRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+export async function handleRiskRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 
@@ -107,7 +118,12 @@ export async function handleRiskRoutes({ req, reqUrl, res, readJsonBody, writeJs
       writeForbidden('risk:review', 'create risk policy');
       return true;
     }
-    const body = (await readJsonBody(req)) as { name?: string; rules?: unknown[]; description?: string; metadata?: Record<string, unknown> } | null;
+    const body = (await readJsonBody(req)) as {
+      name?: string;
+      rules?: unknown[];
+      description?: string;
+      metadata?: Record<string, unknown>;
+    } | null;
     if (!body?.name || !body?.rules) {
       writeJson(res, 400, { ok: false, error: 'Missing name or rules' });
       return true;
@@ -128,7 +144,11 @@ export async function handleRiskRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/risk/assess/promotion') {
-    const body = (await readJsonBody(req)) as { entityId?: string; portfolio?: unknown; mode?: 'paper' | 'live' } | null;
+    const body = (await readJsonBody(req)) as {
+      entityId?: string;
+      portfolio?: unknown;
+      mode?: 'paper' | 'live';
+    } | null;
     if (!body?.entityId || !body?.portfolio) {
       writeJson(res, 400, { ok: false, error: 'Missing entityId or portfolio' });
       return true;
@@ -146,7 +166,11 @@ export async function handleRiskRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/risk/assess/execution') {
-    const body = (await readJsonBody(req)) as { entityId?: string; orderPlan?: unknown; portfolio?: unknown } | null;
+    const body = (await readJsonBody(req)) as {
+      entityId?: string;
+      orderPlan?: unknown;
+      portfolio?: unknown;
+    } | null;
     if (!body?.entityId || !body?.orderPlan) {
       writeJson(res, 400, { ok: false, error: 'Missing entityId or orderPlan' });
       return true;
@@ -177,7 +201,11 @@ export async function handleRiskRoutes({ req, reqUrl, res, readJsonBody, writeJs
       writeForbidden('risk:review', 'toggle kill switch');
       return true;
     }
-    const body = (await readJsonBody(req)) as { active?: boolean; activatedBy?: string; reason?: string } | null;
+    const body = (await readJsonBody(req)) as {
+      active?: boolean;
+      activatedBy?: string;
+      reason?: string;
+    } | null;
     killSwitch.active = Boolean(body?.active);
     killSwitch.activatedAt = killSwitch.active ? new Date().toISOString() : null;
     killSwitch.activatedBy = body?.activatedBy || null;

@@ -1,8 +1,6 @@
-import type { GatewayRouteContext } from '../types.js';
-
 import { controlPlaneContext } from '../../../../../../packages/control-plane-store/src/context.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
-import { hasPermission } from '../../../modules/auth/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
 export async function handleCollaborationRoutes({
   req,
@@ -12,7 +10,7 @@ export async function handleCollaborationRoutes({
   writeJson,
   userAccount,
 }: GatewayRouteContext) {
-  const writeForbidden = (permission: string, action = '') =>
+  const _writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 
   const collaborationRepo = controlPlaneContext.collaboration;
@@ -27,7 +25,7 @@ export async function handleCollaborationRoutes({
     const strategyId = parts[parts.length - 2];
     const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const userId = (userAccount as any)?.id || 'anonymous';
-    const userName = (userAccount as any)?.name || 'Anonymous';
+    const _userName = (userAccount as any)?.name || 'Anonymous';
 
     if (!body?.userId || !body?.permission) {
       writeJson(res, 400, { ok: false, message: 'userId and permission are required' });

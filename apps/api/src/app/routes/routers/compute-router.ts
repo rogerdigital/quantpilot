@@ -1,5 +1,5 @@
-import type { GatewayRouteContext } from '../types.js';
 import { ComputeJobStore } from '../../../../../../packages/control-plane-store/src/compute-job-store.js';
+import type { GatewayRouteContext } from '../types.js';
 
 let store: ComputeJobStore | null = null;
 
@@ -10,7 +10,13 @@ function getStore() {
   return store;
 }
 
-export async function handleComputeRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+export async function handleComputeRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   const jobStore = getStore();
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/compute/jobs') {
@@ -34,7 +40,7 @@ export async function handleComputeRoutes({ req, reqUrl, res, readJsonBody, writ
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/compute/jobs') {
     const body = (await readJsonBody(req)) as Record<string, any> | undefined;
-    if (!body || !body.type || !body.owner || !body.resource) {
+    if (!body?.type || !body.owner || !body.resource) {
       writeJson(res, 400, { ok: false, error: 'Missing required fields: type, owner, resource' });
       return true;
     }

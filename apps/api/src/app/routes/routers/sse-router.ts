@@ -1,5 +1,5 @@
-import type { GatewayRouteContext } from '../types.js';
 import { addSseConnection } from '../../../modules/sse/sse-manager.js';
+import type { GatewayRouteContext } from '../types.js';
 
 const KEEPALIVE_INTERVAL_MS = 30_000;
 

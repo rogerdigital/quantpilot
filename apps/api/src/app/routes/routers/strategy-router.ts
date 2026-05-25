@@ -1,5 +1,3 @@
-
-import type { GatewayRouteContext } from '../types.js';
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { promoteStrategyFromEvaluation } from '../../../domains/research/services/evaluation-service.js';
 import {
@@ -14,8 +12,15 @@ import {
 } from '../../../domains/strategy/services/execution-handoff-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
-export async function handleStrategyRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+export async function handleStrategyRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 
@@ -41,7 +46,7 @@ export async function handleStrategyRoutes({ req, reqUrl, res, readJsonBody, wri
       writeForbidden('strategy:write', 'save strategy catalog entries');
       return true;
     }
-    const body = await readJsonBody(req) as Record<string, unknown> | undefined;
+    const body = (await readJsonBody(req)) as Record<string, unknown> | undefined;
     const result = saveStrategyCatalogItem(body);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
@@ -57,7 +62,7 @@ export async function handleStrategyRoutes({ req, reqUrl, res, readJsonBody, wri
       return true;
     }
     const strategyId = reqUrl.pathname.split('/').at(-2)!;
-    const body = await readJsonBody(req) as Record<string, unknown> | undefined;
+    const body = (await readJsonBody(req)) as Record<string, unknown> | undefined;
     const result = promoteStrategyFromEvaluation(strategyId, body);
     writeJson(res, result.ok ? 200 : 409, result);
     return true;
@@ -82,7 +87,7 @@ export async function handleStrategyRoutes({ req, reqUrl, res, readJsonBody, wri
       writeForbidden('strategy:write', 'create execution handoffs');
       return true;
     }
-    const body = await readJsonBody(req) as Record<string, unknown>;
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
     const result = createExecutionCandidateHandoff(body.strategyId as string, body);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
@@ -98,7 +103,7 @@ export async function handleStrategyRoutes({ req, reqUrl, res, readJsonBody, wri
       return true;
     }
     const handoffId = reqUrl.pathname.split('/').at(-2)!;
-    const body = await readJsonBody(req) as Record<string, unknown> | undefined;
+    const body = (await readJsonBody(req)) as Record<string, unknown> | undefined;
     const result = queueExecutionCandidateHandoff(handoffId, body);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;

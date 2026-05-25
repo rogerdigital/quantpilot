@@ -25,10 +25,7 @@ export function rateLimit() {
 
     if (entry && entry.resetAt > now) {
       if (entry.count >= MAX_REQUESTS) {
-        return c.json(
-          { ok: false, message: 'Too many requests. Please try again later.' },
-          429
-        );
+        return c.json({ ok: false, message: 'Too many requests. Please try again later.' }, 429);
       }
       entry.count++;
     } else {

@@ -38,7 +38,9 @@ export function resolveAgentAuthority({
     );
 
   const baseMode =
-    policies.length > 0 ? mostRestrictiveMode(policies.map((p: any) => p.authority)) : 'manual_only';
+    policies.length > 0
+      ? mostRestrictiveMode(policies.map((p: any) => p.authority))
+      : 'manual_only';
 
   let effectiveMode = baseMode;
   let reason =

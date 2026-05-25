@@ -2,7 +2,6 @@
 import type {
   DataQualityReport,
   Dataset,
-  DatasetCategory,
   DatasetVersion,
 } from '../../shared-types/src/data-science.ts';
 

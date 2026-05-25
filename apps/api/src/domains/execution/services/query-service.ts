@@ -5,11 +5,14 @@ import {
 } from './exception-policy-service.js';
 
 function groupBySymbol(items: any[] = [], qtySelector: (item: any) => number = () => 0) {
-  return items.reduce((acc: Record<string, number>, item: any) => {
-    const symbol = item.symbol || 'UNKNOWN';
-    acc[symbol] = Number((acc[symbol] || 0) + Number(qtySelector(item) || 0));
-    return acc;
-  }, {} as Record<string, number>);
+  return items.reduce(
+    (acc: Record<string, number>, item: any) => {
+      const symbol = item.symbol || 'UNKNOWN';
+      acc[symbol] = Number((acc[symbol] || 0) + Number(qtySelector(item) || 0));
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 }
 
 function round2(value: any) {
@@ -266,7 +269,11 @@ function buildExecutionReconciliation(
   };
 }
 
-function buildExecutionCompensation(detail: Record<string, any>, exceptionPolicy: Record<string, any> | null = null, linkedIncidents: any[] = []) {
+function buildExecutionCompensation(
+  detail: Record<string, any>,
+  exceptionPolicy: Record<string, any> | null = null,
+  linkedIncidents: any[] = []
+) {
   const policy = exceptionPolicy || detail.exceptionPolicy || null;
   const reconciliation = detail.reconciliation || null;
   const openIncident =
@@ -389,7 +396,11 @@ function buildExecutionCompensation(detail: Record<string, any>, exceptionPolicy
   };
 }
 
-function buildExecutionLedgerEntry(plan: Record<string, any>, runtimeEvents: any[] = [], snapshots: any[] = []) {
+function buildExecutionLedgerEntry(
+  plan: Record<string, any>,
+  runtimeEvents: any[] = [],
+  snapshots: any[] = []
+) {
   const workflow = plan.workflowRunId
     ? controlPlaneRuntime.getWorkflowRun(plan.workflowRunId)
     : null;
@@ -467,7 +478,12 @@ function buildExecutionLedgerEntry(plan: Record<string, any>, runtimeEvents: any
   };
 }
 
-function buildExecutionRecovery(plan: Record<string, any>, workflow: Record<string, any> | null, reconciliation: Record<string, any>, exceptionPolicy: Record<string, any> | null = null) {
+function buildExecutionRecovery(
+  plan: Record<string, any>,
+  workflow: Record<string, any> | null,
+  reconciliation: Record<string, any>,
+  exceptionPolicy: Record<string, any> | null = null
+) {
   const reasons: string[] = [];
 
   if (exceptionPolicy?.status === 'incident') {
@@ -602,7 +618,9 @@ export function listExecutionLedger(limit = 20) {
   const runtimeEvents = controlPlaneRuntime.listExecutionRuntimeEvents(60);
   const snapshots = controlPlaneRuntime.listBrokerAccountSnapshots(60);
 
-  return plans.map((plan: Record<string, any>) => buildExecutionLedgerEntry(plan, runtimeEvents, snapshots));
+  return plans.map((plan: Record<string, any>) =>
+    buildExecutionLedgerEntry(plan, runtimeEvents, snapshots)
+  );
 }
 
 export function getExecutionWorkbench(limit = 40) {

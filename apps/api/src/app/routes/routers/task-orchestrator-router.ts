@@ -1,4 +1,3 @@
-import type { GatewayRouteContext } from '../types.js';
 import { runCycle } from '../../../control-plane/task-orchestrator/cycle-runner.js';
 import {
   listActions,
@@ -19,6 +18,7 @@ import { runStateCycle } from '../../../control-plane/task-orchestrator/state-ru
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
 import { broadcast } from '../../../modules/sse/sse-manager.js';
+import type { GatewayRouteContext } from '../types.js';
 
 export async function handleTaskOrchestratorRoutes({
   req,

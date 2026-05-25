@@ -18,7 +18,12 @@ function currentActor() {
   return getSession()?.user?.id || 'operator-demo';
 }
 
-function recordMaintenanceAudit(type: string, title: string, detail: string, metadata: Record<string, any> = {}) {
+function recordMaintenanceAudit(
+  type: string,
+  title: string,
+  detail: string,
+  metadata: Record<string, any> = {}
+) {
   appendAuditRecord({
     type,
     actor: currentActor(),

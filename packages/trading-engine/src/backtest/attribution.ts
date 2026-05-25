@@ -33,7 +33,7 @@ export interface AttributionResult {
  * Simplified model: each stock has known factor loadings.
  */
 export function calcFactorExposures(
-  portfolioReturns: number[],
+  _portfolioReturns: number[],
   factorReturns: Record<string, number[]>,
   weights: number[]
 ): FactorExposure[] {
@@ -152,7 +152,7 @@ export type SectorHolding = {
 };
 
 export function calcSectorAttribution(holdings: SectorHolding[]): AttributionBreakdown[] {
-  const totalReturn = holdings.reduce((s, h) => s + h.weight * h.return, 0);
+  const _totalReturn = holdings.reduce((s, h) => s + h.weight * h.return, 0);
   return holdings.map((h) => ({
     source: h.sector,
     contribution: parseFloat((h.weight * h.return).toFixed(6)),

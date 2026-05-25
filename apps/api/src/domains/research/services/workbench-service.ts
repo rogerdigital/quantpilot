@@ -78,12 +78,18 @@ function roundMetric(value: number): number | null {
   return Math.round(value * 100) / 100;
 }
 
-function subtractMetric(current: number | null | undefined, reference: number | null | undefined): number | null {
+function subtractMetric(
+  current: number | null | undefined,
+  reference: number | null | undefined
+): number | null {
   if (!Number.isFinite(current) || !Number.isFinite(reference)) return null;
   return roundMetric((current as number) - (reference as number));
 }
 
-function invertGap(current: number | null | undefined, reference: number | null | undefined): number | null {
+function invertGap(
+  current: number | null | undefined,
+  reference: number | null | undefined
+): number | null {
   if (!Number.isFinite(current) || !Number.isFinite(reference)) return null;
   return roundMetric((reference as number) - (current as number));
 }
@@ -272,7 +278,12 @@ export function getResearchGovernanceActionSummary(options: Record<string, unkno
   };
 }
 
-function recordGovernanceAction(type: string, actor: string, detail: string, metadata: Record<string, unknown> = {}) {
+function recordGovernanceAction(
+  type: string,
+  actor: string,
+  detail: string,
+  metadata: Record<string, unknown> = {}
+) {
   return controlPlaneRuntime.recordOperatorAction({
     type: `research-governance.${type}`,
     actor,

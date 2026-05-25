@@ -1,4 +1,3 @@
-import type { GatewayRouteContext } from '../types.js';
 import {
   appendIncidentNote,
   appendIncidentTask,
@@ -10,8 +9,15 @@ import {
   updateIncident,
   updateIncidentTask,
 } from '../../../modules/incidents/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
-export async function handleIncidentsRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+export async function handleIncidentsRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/incidents') {
     writeJson(res, 200, {
       ok: true,

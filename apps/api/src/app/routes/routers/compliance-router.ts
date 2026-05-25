@@ -1,11 +1,17 @@
-import type { GatewayRouteContext } from '../types.js';
 import { AuditReportStore } from '../../../../../../packages/control-plane-store/src/audit-report-store.js';
+import type { GatewayRouteContext } from '../types.js';
 
 const auditReportStore = new AuditReportStore();
 
 export { auditReportStore };
 
-export async function handleComplianceRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+export async function handleComplianceRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   if (req.method === 'POST' && reqUrl.pathname === '/api/compliance/reports') {
     const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { organizationId, reportType, title, summary, generatedBy, metadata } = body || {};

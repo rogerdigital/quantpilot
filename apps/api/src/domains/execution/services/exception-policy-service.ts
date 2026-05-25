@@ -18,7 +18,11 @@ function hasExecutionLink(incident: Record<string, any>, detail: Record<string, 
   );
 }
 
-function mergeIncidentLinks(detail: Record<string, any>, policy: Record<string, any>, brokerEvent: Record<string, any> | null = null) {
+function mergeIncidentLinks(
+  detail: Record<string, any>,
+  policy: Record<string, any>,
+  brokerEvent: Record<string, any> | null = null
+) {
   const links: Record<string, any>[] = [
     {
       kind: 'execution-plan',
@@ -48,7 +52,10 @@ function mergeIncidentLinks(detail: Record<string, any>, policy: Record<string, 
   return links;
 }
 
-export function listLinkedExecutionIncidents(detail: Record<string, any>, options: Record<string, any> = {}) {
+export function listLinkedExecutionIncidents(
+  detail: Record<string, any>,
+  options: Record<string, any> = {}
+) {
   const incidents = controlPlaneRuntime.listIncidents(Number(options.limit || 120), {
     source: options.source || '',
   });
@@ -62,9 +69,14 @@ export function buildExecutionExceptionPolicy(detail: Record<string, any>) {
   const linkedIncidents = Array.isArray(detail.linkedIncidents)
     ? detail.linkedIncidents
     : listLinkedExecutionIncidents(detail, { limit: 120 });
-  const openIncident = linkedIncidents.find((incident: Record<string, any>) => incident.status !== 'resolved') || null;
-  const rejectedEvents = brokerEvents.filter((item: Record<string, any>) => item.eventType === 'rejected');
-  const cancelledEvents = brokerEvents.filter((item: Record<string, any>) => item.eventType === 'cancelled');
+  const openIncident =
+    linkedIncidents.find((incident: Record<string, any>) => incident.status !== 'resolved') || null;
+  const rejectedEvents = brokerEvents.filter(
+    (item: Record<string, any>) => item.eventType === 'rejected'
+  );
+  const cancelledEvents = brokerEvents.filter(
+    (item: Record<string, any>) => item.eventType === 'cancelled'
+  );
   const fillEvents = brokerEvents.filter(
     (item: Record<string, any>) => item.eventType === 'partial_fill' || item.eventType === 'filled'
   );
@@ -78,7 +90,9 @@ export function buildExecutionExceptionPolicy(detail: Record<string, any>) {
   const openOrders = orderStates.filter((item: Record<string, any>) =>
     ['submitted', 'acknowledged'].includes(item.lifecycleStatus)
   ).length;
-  const filledOrders = orderStates.filter((item: Record<string, any>) => item.lifecycleStatus === 'filled').length;
+  const filledOrders = orderStates.filter(
+    (item: Record<string, any>) => item.lifecycleStatus === 'filled'
+  ).length;
   const retryCount = rejectedEvents.length + cancelledEvents.length;
   const remainingRetries = Math.max(0, RETRY_LIMIT - retryCount);
   const latestBrokerEvent = brokerEvents[0] || null;
@@ -196,7 +210,10 @@ export function buildExecutionExceptionPolicy(detail: Record<string, any>) {
   };
 }
 
-export function syncExecutionExceptionState(detail: Record<string, any>, options: Record<string, any> = {}) {
+export function syncExecutionExceptionState(
+  detail: Record<string, any>,
+  options: Record<string, any> = {}
+) {
   const actor = options.actor || 'execution-desk';
   const now = options.now || new Date().toISOString();
   const policy = buildExecutionExceptionPolicy(detail);

@@ -48,7 +48,9 @@ function isLinkedIncident(item: any): boolean {
     Boolean(item?.metadata?.schedulerTickId) ||
     Boolean(item?.metadata?.riskEventId) ||
     (Array.isArray(item?.links) &&
-      item.links.some((link: any) => link?.kind === 'scheduler-tick' || link?.kind === 'risk-event'))
+      item.links.some(
+        (link: any) => link?.kind === 'scheduler-tick' || link?.kind === 'risk-event'
+      ))
   );
 }
 
@@ -232,7 +234,8 @@ export function getRiskSchedulerLinkage(options: Record<string, any> = {}) {
             : 'healthy',
         detail: `${currentPhaseAttention} linked items are attached to the active ${activePhase} scheduler window.`,
         primaryCount: currentPhaseAttention,
-        secondaryCount: linkedSchedulerTicks.filter((item: any) => item.phase === activePhase).length,
+        secondaryCount: linkedSchedulerTicks.filter((item: any) => item.phase === activePhase)
+          .length,
         updatedAt: schedulerTicks[0]?.createdAt || generatedAt,
       },
       {

@@ -1,5 +1,5 @@
-import type { GatewayRouteContext } from '../types.js';
 import { listNotifications } from '../../../modules/notification/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
 export function handleNotificationRoutes({ req, reqUrl, res, writeJson }: GatewayRouteContext) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/notification/events') {

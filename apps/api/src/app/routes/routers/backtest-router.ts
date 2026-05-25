@@ -1,5 +1,3 @@
-import type { GatewayRouteContext } from '../types.js';
-
 import {
   getBacktestResultDetail,
   getBacktestResultSummary,
@@ -15,8 +13,15 @@ import { getBacktestSummary } from '../../../domains/backtest/services/summary-s
 import { evaluateBacktestRun } from '../../../domains/research/services/evaluation-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
-export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+export async function handleBacktestRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 

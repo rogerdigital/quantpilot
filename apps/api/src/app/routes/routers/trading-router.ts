@@ -1,9 +1,9 @@
-import type { GatewayRouteContext } from '../types.js';
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { assessExecutionCandidate } from '../../../domains/risk/services/assessment-service.js';
 import { getStrategyCatalogItem } from '../../../domains/strategy/services/catalog-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
 interface TradingOrderBody {
   symbol: string;
@@ -27,7 +27,13 @@ function buildAdhocStrategy(symbol: string, side: string) {
   };
 }
 
-export async function handleTradingRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+export async function handleTradingRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   if (req.method !== 'POST' || reqUrl.pathname !== '/api/trading/orders') {
     return false;
   }
@@ -38,7 +44,7 @@ export async function handleTradingRoutes({ req, reqUrl, res, readJsonBody, writ
   }
 
   const body = (await readJsonBody(req)) as TradingOrderBody | null;
-  const { symbol, side, orderType, qty, price, source } = body || {} as TradingOrderBody;
+  const { symbol, side, orderType, qty, price, source } = body || ({} as TradingOrderBody);
 
   if (!symbol || !side || !orderType || !qty || qty <= 0) {
     writeJson(res, 400, {
@@ -123,7 +129,10 @@ export async function handleTradingRoutes({ req, reqUrl, res, readJsonBody, writ
       message: riskAssessment.summary,
     });
   } catch (err) {
-    writeJson(res, 500, { ok: false, message: (err as Error).message || 'Failed to submit terminal order' });
+    writeJson(res, 500, {
+      ok: false,
+      message: (err as Error).message || 'Failed to submit terminal order',
+    });
   }
 
   return true;

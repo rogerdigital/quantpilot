@@ -1,9 +1,9 @@
-import type { GatewayRouteContext } from '../types.js';
 import {
   describeArchitecture,
   listArchitectureLayers,
   listModules,
 } from '../../../modules/registry.js';
+import type { GatewayRouteContext } from '../types.js';
 
 export function handleHealthRoutes({ req, reqUrl, res, config, writeJson }: GatewayRouteContext) {
   const cfg = config as Record<string, any>;

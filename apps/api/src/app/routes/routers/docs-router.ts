@@ -1,5 +1,5 @@
-import type { GatewayRouteContext } from '../types.js';
 import { generateOpenApiSpec } from '../../../docs/openapi.js';
+import type { GatewayRouteContext } from '../types.js';
 
 const SWAGGER_UI_HTML = `<!DOCTYPE html>
 <html lang="en">

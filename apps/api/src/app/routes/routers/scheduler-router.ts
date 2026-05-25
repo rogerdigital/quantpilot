@@ -1,4 +1,3 @@
-import type { GatewayRouteContext } from '../types.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
 import {
@@ -6,8 +5,15 @@ import {
   listSchedulerTicks,
   runSchedulerOrchestrationAction,
 } from '../../../modules/scheduler/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
-export async function handleSchedulerRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+export async function handleSchedulerRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 

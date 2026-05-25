@@ -127,7 +127,10 @@ function resolveHandoffTarget(intent: Record<string, any> = {}, session: Record<
   };
 }
 
-export function createSessionActionRequest(sessionId: string | undefined, payload: Record<string, any> = {}) {
+export function createSessionActionRequest(
+  sessionId: string | undefined,
+  payload: Record<string, any> = {}
+) {
   const session = controlPlaneRuntime.getAgentSession(sessionId);
   if (!session) {
     return {
@@ -261,7 +264,10 @@ export function createSessionActionRequest(sessionId: string | undefined, payloa
   };
 }
 
-export function approveAgentActionRequest(requestId: string | undefined, payload: Record<string, any> = {}) {
+export function approveAgentActionRequest(
+  requestId: string | undefined,
+  payload: Record<string, any> = {}
+) {
   const request = controlPlaneRuntime.getAgentActionRequest(requestId);
   if (!request) {
     return { ok: false, message: 'agent action request not found' };
@@ -361,7 +367,10 @@ export function approveAgentActionRequest(requestId: string | undefined, payload
   };
 }
 
-export function rejectAgentActionRequest(requestId: string | undefined, payload: Record<string, any> = {}) {
+export function rejectAgentActionRequest(
+  requestId: string | undefined,
+  payload: Record<string, any> = {}
+) {
   const request = controlPlaneRuntime.getAgentActionRequest(requestId);
   if (!request) {
     return { ok: false, message: 'agent action request not found' };

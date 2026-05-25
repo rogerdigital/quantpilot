@@ -1,8 +1,7 @@
-import type { GatewayRouteContext } from '../types.js';
-
 import { controlPlaneContext } from '../../../../../../packages/control-plane-store/src/context.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
 export async function handleMarketplaceRoutes({
   req,

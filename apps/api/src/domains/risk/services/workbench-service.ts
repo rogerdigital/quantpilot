@@ -44,7 +44,10 @@ function getLiveExposure(snapshot: any) {
     ? snapshot.positions.reduce((sum: number, item: any) => sum + Number(item.marketValue || 0), 0)
     : 0;
   const largestPosition = Array.isArray(snapshot?.positions)
-    ? snapshot.positions.reduce((max: number, item: any) => Math.max(max, Number(item.marketValue || 0)), 0)
+    ? snapshot.positions.reduce(
+        (max: number, item: any) => Math.max(max, Number(item.marketValue || 0)),
+        0
+      )
     : 0;
   return {
     equity,
@@ -305,8 +308,9 @@ export function getRiskWorkbench(options: Record<string, any> = {}) {
         status: complianceAlerts.length ? 'warn' : 'healthy',
         detail: `${complianceAlerts.length} compliance or policy-linked alerts are still on the risk path.`,
         primaryCount: complianceAlerts.length,
-        secondaryCount: riskIncidents.filter((item: any) => (item.tags || []).includes('compliance'))
-          .length,
+        secondaryCount: riskIncidents.filter((item: any) =>
+          (item.tags || []).includes('compliance')
+        ).length,
         updatedAt: complianceAlerts[0]?.createdAt || riskIncidents[0]?.updatedAt || generatedAt,
       },
       {
@@ -397,7 +401,9 @@ function computeRiskAnalytics(snapshot: any) {
       const hist = Array.isArray(p.priceHistory) ? p.priceHistory : [];
       if (hist.length < 2) return null;
       const weight = Number(p.marketValue || 0) / equity;
-      return hist.slice(1).map((v: number, i: number) => (hist[i] > 0 ? Math.log(v / hist[i]) * weight : 0));
+      return hist
+        .slice(1)
+        .map((v: number, i: number) => (hist[i] > 0 ? Math.log(v / hist[i]) * weight : 0));
     })
     .filter(Boolean);
 

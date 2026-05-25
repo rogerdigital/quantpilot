@@ -1,8 +1,4 @@
-import type {
-  DataQualityCheckInput,
-  DataQualityCheckOutput,
-  DataQualityCheckSeverity,
-} from './types.ts';
+import type { DataQualityCheckInput, DataQualityCheckOutput } from './types.ts';
 
 export function checkMissingValues(
   input: DataQualityCheckInput,

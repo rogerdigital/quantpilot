@@ -1,7 +1,13 @@
-const MAX_REVIEWS_PER_USER_PER_STRATEGY = 1;
-const MAX_FORKS_PER_DAY = 10;
+const _MAX_REVIEWS_PER_USER_PER_STRATEGY = 1;
+const _MAX_FORKS_PER_DAY = 10;
 
-export function createMarketplaceService({ marketplaceRepo, strategyRepo }: { marketplaceRepo: Record<string, any>; strategyRepo: Record<string, any> }) {
+export function createMarketplaceService({
+  marketplaceRepo,
+  strategyRepo,
+}: {
+  marketplaceRepo: Record<string, any>;
+  strategyRepo: Record<string, any>;
+}) {
   return {
     async publishStrategy(strategyId: string, userId: string, options: Record<string, any> = {}) {
       // Validate strategy exists and has backtest results
@@ -62,8 +68,8 @@ export function createMarketplaceService({ marketplaceRepo, strategyRepo }: { ma
 
     async forkStrategy(marketplaceId: string, userId: string, userName: string) {
       // Rate limiting check
-      const today = new Date().toDateString();
-      const recentForks = marketplaceRepo.getForkCount(marketplaceId);
+      const _today = new Date().toDateString();
+      const _recentForks = marketplaceRepo.getForkCount(marketplaceId);
 
       const result = marketplaceRepo.forkStrategy(marketplaceId, userId, userName);
       if (!result) {
@@ -86,7 +92,13 @@ export function createMarketplaceService({ marketplaceRepo, strategyRepo }: { ma
       return result;
     },
 
-    async reviewStrategy(marketplaceId: string, userId: string, userName: string, comment: string, rating?: number) {
+    async reviewStrategy(
+      marketplaceId: string,
+      userId: string,
+      userName: string,
+      comment: string,
+      rating?: number
+    ) {
       if (!comment || comment.trim().length === 0) {
         throw new Error('Comment cannot be empty');
       }

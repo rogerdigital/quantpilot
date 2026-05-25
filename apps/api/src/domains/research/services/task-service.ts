@@ -88,12 +88,20 @@ export function getResearchTaskSummary(options: Record<string, unknown> = {}) {
     completed: 0,
     failed: 0,
     byType: [] as { taskType: string; count: number }[],
-    byStrategy: [] as { strategyId: string; strategyName: string; count: number; activeCount: number }[],
+    byStrategy: [] as {
+      strategyId: string;
+      strategyName: string;
+      count: number;
+      activeCount: number;
+    }[],
     active: 0,
   };
 
   const typeCounts = new Map<string, number>();
-  const strategyCounts = new Map<string, { strategyId: string; strategyName: string; count: number; activeCount: number }>();
+  const strategyCounts = new Map<
+    string,
+    { strategyId: string; strategyName: string; count: number; activeCount: number }
+  >();
 
   tasks.forEach((task: any) => {
     if (task.status === 'queued') summary.queued += 1;

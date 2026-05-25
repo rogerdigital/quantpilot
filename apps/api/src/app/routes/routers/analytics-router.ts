@@ -25,13 +25,16 @@ function generateDemoPerformanceData(range: string) {
   }
 
   const mean = dailyReturns.reduce((s: number, r: number) => s + r, 0) / dailyReturns.length;
-  const variance = dailyReturns.reduce((s: number, r: number) => s + (r - mean) ** 2, 0) / dailyReturns.length;
+  const variance =
+    dailyReturns.reduce((s: number, r: number) => s + (r - mean) ** 2, 0) / dailyReturns.length;
   const std = Math.sqrt(variance);
   const sharpe = std > 0 ? (mean / std) * Math.sqrt(252) : 0;
 
   const negReturns = dailyReturns.filter((r) => r < 0);
   const downVar =
-    negReturns.length > 0 ? negReturns.reduce((s: number, r: number) => s + r * r, 0) / negReturns.length : 0;
+    negReturns.length > 0
+      ? negReturns.reduce((s: number, r: number) => s + r * r, 0) / negReturns.length
+      : 0;
   const sortino =
     downVar > 0 ? (mean / Math.sqrt(downVar)) * Math.sqrt(252) : sharpe > 0 ? Infinity : 0;
 

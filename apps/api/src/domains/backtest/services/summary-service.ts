@@ -1,6 +1,10 @@
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 
-function buildSummary(strategies: any[], runs: any[], dataSource = 'control-plane-runtime.research-summary') {
+function buildSummary(
+  strategies: any[],
+  runs: any[],
+  dataSource = 'control-plane-runtime.research-summary'
+) {
   const completedRuns = runs.filter((run: any) => run.status === 'completed');
   const queuedRuns = runs.filter((run: any) => run.status === 'queued').length;
   const runningRuns = runs.filter((run: any) => run.status === 'running').length;
@@ -10,7 +14,8 @@ function buildSummary(strategies: any[], runs: any[], dataSource = 'control-plan
     ? completedRuns.reduce((sum: number, run: any) => sum + run.sharpe, 0) / completedRuns.length
     : 0;
   const averageReturnPct = completedRuns.length
-    ? completedRuns.reduce((sum: number, run: any) => sum + run.annualizedReturnPct, 0) / completedRuns.length
+    ? completedRuns.reduce((sum: number, run: any) => sum + run.annualizedReturnPct, 0) /
+      completedRuns.length
     : 0;
   const candidateStrategies = strategies.filter((item: any) =>
     ['candidate', 'paper', 'live'].includes(item.status)

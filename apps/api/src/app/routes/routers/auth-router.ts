@@ -1,4 +1,3 @@
-import type { GatewayRouteContext } from '../types.js';
 import { createHash } from 'node:crypto';
 import {
   evaluatePermissions,
@@ -19,12 +18,19 @@ import {
   revokeSession,
   usePasswordResetToken,
 } from '../../../modules/auth/user-store.js';
+import type { GatewayRouteContext } from '../types.js';
 
 function sha256hex(value: string) {
   return createHash('sha256').update(value).digest('hex');
 }
 
-export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+export async function handleAuthRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/auth/session') {
     writeJson(res, 200, getSession());
     return true;
@@ -192,7 +198,7 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
         });
         return true;
       }
-      const resetToken = createPasswordResetToken(user.id);
+      const _resetToken = createPasswordResetToken(user.id);
       // In production, send email with resetToken.token
       writeJson(res, 200, {
         ok: true,

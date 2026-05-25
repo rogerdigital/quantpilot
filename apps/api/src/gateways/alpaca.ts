@@ -81,7 +81,8 @@ function writeJson(res, statusCode, payload) {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
-    'Access-Control-Allow-Origin': process.env.CORS_ORIGINS?.split(',')[0]?.trim() || 'http://localhost:8080',
+    'Access-Control-Allow-Origin':
+      process.env.CORS_ORIGINS?.split(',')[0]?.trim() || 'http://localhost:8080',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
   });
@@ -612,7 +613,7 @@ export function createGatewayHandler(options = {}) {
       if (!isVersioned && reqUrl.pathname.startsWith('/api/')) {
         res.setHeader('Deprecation', 'true');
         res.setHeader('Sunset', 'Sat, 01 Nov 2025 00:00:00 GMT');
-        res.setHeader('Link', '</api/v1' + reqUrl.pathname.slice(4) + '>; rel="successor-version"');
+        res.setHeader('Link', `</api/v1${reqUrl.pathname.slice(4)}>; rel="successor-version"`);
       }
 
       // Cache stats endpoint

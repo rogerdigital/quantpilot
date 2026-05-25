@@ -87,7 +87,14 @@ function deriveLifecycleFromOrders(orderStates: any[] = [], fallback = 'submitte
   return fallback;
 }
 
-function buildRuntimeSnapshot(plan: Record<string, any>, executionRun: Record<string, any> | null, orderStates: any[], actor: string, message: string, now: string) {
+function buildRuntimeSnapshot(
+  plan: Record<string, any>,
+  executionRun: Record<string, any> | null,
+  orderStates: any[],
+  actor: string,
+  message: string,
+  now: string
+) {
   const counts = summarizeOrderBook(orderStates);
   const positions = buildBrokerPositions(orderStates);
   const deployedCapital = orderStates.reduce((sum: number, item: any) => {
@@ -126,7 +133,12 @@ function buildRuntimeSnapshot(plan: Record<string, any>, executionRun: Record<st
   });
 }
 
-function refreshExecutionAggregate(plan: Record<string, any>, executionRun: Record<string, any> | null, orderStates: any[], payload: Record<string, any> = {}) {
+function refreshExecutionAggregate(
+  plan: Record<string, any>,
+  executionRun: Record<string, any> | null,
+  orderStates: any[],
+  payload: Record<string, any> = {}
+) {
   const now = payload.now || new Date().toISOString();
   const actor = payload.actor || 'execution-desk';
   const nextLifecycle = deriveLifecycleFromOrders(orderStates, plan.lifecycleStatus);
@@ -968,7 +980,9 @@ export function bulkOperateExecutionPlans(payload: Record<string, any> = {}) {
       compensationStatus: detail?.compensation?.status || '',
       incidentId:
         detail?.linkedIncidents?.find((incident: any) => incident.status !== 'resolved')?.id || '',
-      error: result?.ok ? '' : (result as any)?.message || (result as any)?.error || 'unknown error',
+      error: result?.ok
+        ? ''
+        : (result as any)?.message || (result as any)?.error || 'unknown error',
     };
   });
 

@@ -27,7 +27,12 @@ function getNextStrategyStage(status: string): string {
   return '';
 }
 
-function buildEvaluationForRun(_run: any, result: any, strategy: any, payload: Record<string, unknown> = {}) {
+function buildEvaluationForRun(
+  _run: any,
+  result: any,
+  strategy: any,
+  payload: Record<string, unknown> = {}
+) {
   const benchmarkGapPct = Number(
     (result.annualizedReturnPct - result.benchmarkReturnPct).toFixed(1)
   );
@@ -222,10 +227,18 @@ export function getResearchEvaluationSummary(options: Record<string, unknown> = 
     rework: 0,
     blocked: 0,
     latestCreatedAt: evaluations[0]?.createdAt || '',
-    byStrategy: [] as { strategyId: string; strategyName: string; count: number; latestVerdict: string }[],
+    byStrategy: [] as {
+      strategyId: string;
+      strategyName: string;
+      count: number;
+      latestVerdict: string;
+    }[],
   };
 
-  const strategyCounts = new Map<string, { strategyId: string; strategyName: string; count: number; latestVerdict: string }>();
+  const strategyCounts = new Map<
+    string,
+    { strategyId: string; strategyName: string; count: number; latestVerdict: string }
+  >();
   evaluations.forEach((evaluation: any) => {
     if (evaluation.verdict === 'promote') summary.promote += 1;
     if (evaluation.verdict === 'prepare_execution') summary.prepareExecution += 1;
@@ -377,7 +390,10 @@ export function evaluateBacktestRun(runId: string, payload: Record<string, unkno
   };
 }
 
-export function promoteStrategyFromEvaluation(strategyId: string, payload: Record<string, unknown> = {}) {
+export function promoteStrategyFromEvaluation(
+  strategyId: string,
+  payload: Record<string, unknown> = {}
+) {
   const strategy = getStrategyCatalogItem(strategyId);
   if (!strategy) {
     return {

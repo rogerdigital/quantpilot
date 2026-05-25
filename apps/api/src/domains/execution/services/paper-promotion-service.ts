@@ -6,7 +6,11 @@ const DEFAULT_CRITERIA = {
   minWinRate: 0.4, // 40%
 };
 
-export function createPaperPromotionService({ paperJournalRepo }: { paperJournalRepo: Record<string, any> }) {
+export function createPaperPromotionService({
+  paperJournalRepo,
+}: {
+  paperJournalRepo: Record<string, any>;
+}) {
   return {
     evaluatePromotionReadiness(strategyId: string, customCriteria: Record<string, any> = {}) {
       const criteria = { ...DEFAULT_CRITERIA, ...customCriteria };

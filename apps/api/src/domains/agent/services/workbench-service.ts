@@ -301,7 +301,10 @@ export function getAgentWorkbench(options: Record<string, any> = {}) {
   };
 }
 
-export function getAgentOperatorTimeline(sessionId: string | undefined, options: Record<string, any> = {}) {
+export function getAgentOperatorTimeline(
+  sessionId: string | undefined,
+  options: Record<string, any> = {}
+) {
   const session = controlPlaneRuntime.getAgentSession(sessionId);
   if (!session) {
     return {
@@ -319,7 +322,10 @@ export function getAgentOperatorTimeline(sessionId: string | undefined, options:
   };
 }
 
-export function getAgentSessionLinkedArtifacts(sessionId: string, options: Record<string, any> = {}) {
+export function getAgentSessionLinkedArtifacts(
+  sessionId: string,
+  options: Record<string, any> = {}
+) {
   const session = controlPlaneRuntime.getAgentSession(sessionId);
   if (!session) {
     return {

@@ -1,5 +1,3 @@
-import type { ConsolePageKey } from '../../modules/console/console.i18n.tsx';
-
 const iconColors: Record<string, string> = {
   dashboard: '#6366f1',
   market: '#10b981',

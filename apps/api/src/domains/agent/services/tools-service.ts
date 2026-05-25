@@ -141,9 +141,7 @@ function executeMarketQuotesTool(args: Record<string, unknown> = {}) {
   }
   // Return from control plane state (real-time data from Worker sync)
   const runtime = controlPlaneRuntime as Record<string, any>;
-  const state = runtime.getLatestSystemState
-    ? runtime.getLatestSystemState()
-    : null;
+  const state = runtime.getLatestSystemState ? runtime.getLatestSystemState() : null;
   const stockStates: any[] = state?.stockStates || [];
   const quotes = symbols.map((sym: string) => {
     const found = stockStates.find((s: any) => s.symbol?.toUpperCase() === sym.toUpperCase());

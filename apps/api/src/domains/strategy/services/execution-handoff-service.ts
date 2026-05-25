@@ -64,7 +64,13 @@ function buildHandoffRecord(detail: Record<string, any>, payload: Record<string,
   };
 }
 
-function recordHandoffAction(type: string, handoff: Record<string, any>, actor: string, detail: string, metadata: Record<string, any> = {}) {
+function recordHandoffAction(
+  type: string,
+  handoff: Record<string, any>,
+  actor: string,
+  detail: string,
+  metadata: Record<string, any> = {}
+) {
   return controlPlaneRuntime.recordOperatorAction({
     type: `execution-handoff.${type}`,
     actor,
@@ -82,7 +88,10 @@ function recordHandoffAction(type: string, handoff: Record<string, any>, actor: 
   });
 }
 
-export function createExecutionCandidateHandoff(strategyId: string, payload: Record<string, any> = {}) {
+export function createExecutionCandidateHandoff(
+  strategyId: string,
+  payload: Record<string, any> = {}
+) {
   const detail = getStrategyCatalogDetail(strategyId);
   if (!detail.ok) return detail;
 
@@ -103,7 +112,10 @@ export function createExecutionCandidateHandoff(strategyId: string, payload: Rec
   };
 }
 
-export function queueExecutionCandidateHandoff(handoffId: string, payload: Record<string, any> = {}) {
+export function queueExecutionCandidateHandoff(
+  handoffId: string,
+  payload: Record<string, any> = {}
+) {
   const handoff = controlPlaneRuntime.getExecutionCandidateHandoff(handoffId);
   if (!handoff) {
     return {

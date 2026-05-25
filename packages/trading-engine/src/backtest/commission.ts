@@ -149,7 +149,6 @@ export function calcCommission(input: CommissionInput, config: CommissionConfig)
       return calcTieredCommission(input, config);
     case 'bps':
       return calcBpsCommission(input, config);
-    case 'fixed':
     default:
       return calcFixedCommission(input, config);
   }

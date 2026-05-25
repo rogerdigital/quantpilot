@@ -1,9 +1,15 @@
-import type { GatewayRouteContext } from '../types.js';
 import { PromotionStore } from '../../../../../../packages/control-plane-store/src/promotion-store.js';
+import type { GatewayRouteContext } from '../types.js';
 
 const store = new PromotionStore();
 
-export function handlePromotionRoutes({ req, reqUrl, res, readJsonBody, writeJson }: GatewayRouteContext) {
+export function handlePromotionRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   const pathname = reqUrl.pathname;
 
   if (req.method === 'GET' && pathname === '/api/promotions') {

@@ -78,6 +78,11 @@ export function createForbiddenPayload(permission = '', action = '') {
   };
 }
 
-export function writeForbiddenJson(writeJson: GatewayJsonWriter, res: ServerResponse, permission = '', action = '') {
+export function writeForbiddenJson(
+  writeJson: GatewayJsonWriter,
+  res: ServerResponse,
+  permission = '',
+  action = ''
+) {
   writeJson(res, 403, createForbiddenPayload(permission, action));
 }

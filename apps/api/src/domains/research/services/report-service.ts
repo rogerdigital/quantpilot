@@ -47,10 +47,18 @@ export function getResearchReportSummary(options: Record<string, unknown> = {}) 
     rework: 0,
     blocked: 0,
     latestCreatedAt: reports[0]?.createdAt || '',
-    byStrategy: [] as { strategyId: string; strategyName: string; count: number; latestVerdict: string }[],
+    byStrategy: [] as {
+      strategyId: string;
+      strategyName: string;
+      count: number;
+      latestVerdict: string;
+    }[],
   };
 
-  const strategyCounts = new Map<string, { strategyId: string; strategyName: string; count: number; latestVerdict: string }>();
+  const strategyCounts = new Map<
+    string,
+    { strategyId: string; strategyName: string; count: number; latestVerdict: string }
+  >();
   reports.forEach((report: any) => {
     if (report.verdict === 'promote') summary.promote += 1;
     if (report.verdict === 'prepare_execution') summary.prepareExecution += 1;
