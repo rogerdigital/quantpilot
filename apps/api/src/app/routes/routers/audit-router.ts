@@ -1,7 +1,13 @@
-// @ts-nocheck
 import { appendAuditRecord, listAuditRecords } from '../../../modules/audit/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
-export async function handleAuditRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
+export async function handleAuditRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/audit/records') {
     writeJson(res, 200, {
       ok: true,
@@ -15,7 +21,7 @@ export async function handleAuditRoutes({ req, reqUrl, res, readJsonBody, writeJ
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/audit/records') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, { ok: true, record: appendAuditRecord(body) });
     return true;
   }

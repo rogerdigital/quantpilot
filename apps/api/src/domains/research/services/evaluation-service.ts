@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.js';
 import { refreshBacktestSummary } from '../../backtest/services/summary-service.js';
@@ -9,18 +8,18 @@ import {
 } from '../../strategy/services/catalog-service.js';
 import { buildStrategyExecutionCandidate } from '../../strategy/services/execution-candidate-service.js';
 
-function parseLimit(value, fallback) {
+function parseLimit(value: unknown, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function resolveSince(hours) {
+function resolveSince(hours: unknown): string {
   const parsed = Number(hours);
   if (!Number.isFinite(parsed) || parsed <= 0) return '';
   return new Date(Date.now() - parsed * 60 * 60 * 1000).toISOString();
 }
 
-function getNextStrategyStage(status) {
+function getNextStrategyStage(status: string): string {
   if (status === 'draft') return 'researching';
   if (status === 'researching') return 'candidate';
   if (status === 'candidate') return 'paper';
@@ -28,7 +27,12 @@ function getNextStrategyStage(status) {
   return '';
 }
 
-function buildEvaluationForRun(_run, result, strategy, payload = {}) {
+function buildEvaluationForRun(
+  _run: any,
+  result: any,
+  strategy: any,
+  payload: Record<string, unknown> = {}
+) {
   const benchmarkGapPct = Number(
     (result.annualizedReturnPct - result.benchmarkReturnPct).toFixed(1)
   );
@@ -164,7 +168,7 @@ function buildEvaluationForRun(_run, result, strategy, payload = {}) {
   };
 }
 
-function syncEvaluationTask(run, evaluation, actor) {
+function syncEvaluationTask(run: any, evaluation: any, actor: string) {
   return controlPlaneRuntime.upsertResearchTask({
     taskType: 'strategy-evaluation',
     status: evaluation.verdict === 'blocked' ? 'needs_review' : 'completed',
@@ -189,7 +193,7 @@ function syncEvaluationTask(run, evaluation, actor) {
   });
 }
 
-export function listResearchEvaluations(options = {}) {
+export function listResearchEvaluations(options: Record<string, unknown> = {}) {
   const limit = parseLimit(options.limit, 100);
   const since = resolveSince(options.hours);
   const evaluations = controlPlaneRuntime.listResearchEvaluations(limit, {
@@ -207,7 +211,7 @@ export function listResearchEvaluations(options = {}) {
   };
 }
 
-export function getResearchEvaluationSummary(options = {}) {
+export function getResearchEvaluationSummary(options: Record<string, unknown> = {}) {
   const limit = parseLimit(options.limit, 200);
   const since = resolveSince(options.hours);
   const evaluations = controlPlaneRuntime.listResearchEvaluations(limit, {
@@ -223,11 +227,19 @@ export function getResearchEvaluationSummary(options = {}) {
     rework: 0,
     blocked: 0,
     latestCreatedAt: evaluations[0]?.createdAt || '',
-    byStrategy: [],
+    byStrategy: [] as {
+      strategyId: string;
+      strategyName: string;
+      count: number;
+      latestVerdict: string;
+    }[],
   };
 
-  const strategyCounts = new Map();
-  evaluations.forEach((evaluation) => {
+  const strategyCounts = new Map<
+    string,
+    { strategyId: string; strategyName: string; count: number; latestVerdict: string }
+  >();
+  evaluations.forEach((evaluation: any) => {
     if (evaluation.verdict === 'promote') summary.promote += 1;
     if (evaluation.verdict === 'prepare_execution') summary.prepareExecution += 1;
     if (evaluation.verdict === 'rework') summary.rework += 1;
@@ -251,7 +263,7 @@ export function getResearchEvaluationSummary(options = {}) {
   };
 }
 
-export function evaluateBacktestRun(runId, payload = {}) {
+export function evaluateBacktestRun(runId: string, payload: Record<string, unknown> = {}) {
   const run = controlPlaneRuntime.getBacktestRun(runId);
   if (!run) {
     return {
@@ -277,7 +289,7 @@ export function evaluateBacktestRun(runId, payload = {}) {
     };
   }
 
-  const actor = payload.actor || 'research-operator';
+  const actor = String(payload.actor || 'research-operator');
   const draft = buildEvaluationForRun(run, result, strategy, { actor });
   const evaluation = controlPlaneRuntime.appendResearchEvaluation({
     runId: run.id,
@@ -378,7 +390,10 @@ export function evaluateBacktestRun(runId, payload = {}) {
   };
 }
 
-export function promoteStrategyFromEvaluation(strategyId, payload = {}) {
+export function promoteStrategyFromEvaluation(
+  strategyId: string,
+  payload: Record<string, unknown> = {}
+) {
   const strategy = getStrategyCatalogItem(strategyId);
   if (!strategy) {
     return {

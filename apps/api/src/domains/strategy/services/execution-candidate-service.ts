@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { getStrategyCatalogItem } from './catalog-service.js';
 
-function buildTemplateOrders(strategy) {
+function buildTemplateOrders(strategy: Record<string, any>) {
   if (strategy.family === 'trend') {
     return [
       {
@@ -96,7 +95,7 @@ function buildTemplateOrders(strategy) {
   ];
 }
 
-export function buildStrategyExecutionCandidate(payload) {
+export function buildStrategyExecutionCandidate(payload: Record<string, any>) {
   const strategy = getStrategyCatalogItem(payload.strategyId);
   if (!strategy) {
     throw new Error(`Unknown strategy: ${payload.strategyId}`);

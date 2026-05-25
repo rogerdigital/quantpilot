@@ -1,6 +1,5 @@
-// @ts-nocheck
-
 import { generateOpenApiSpec } from '../../../docs/openapi.js';
+import type { GatewayRouteContext } from '../types.js';
 
 const SWAGGER_UI_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -28,7 +27,7 @@ const SWAGGER_UI_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-export async function handleDocsRoutes({ req, reqUrl, res, writeJson }) {
+export async function handleDocsRoutes({ req, reqUrl, res, writeJson }: GatewayRouteContext) {
   // GET /api/docs/openapi.json
   if (req.method === 'GET' && reqUrl.pathname === '/api/docs/openapi.json') {
     const spec = generateOpenApiSpec();

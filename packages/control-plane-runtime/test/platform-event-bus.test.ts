@@ -119,8 +119,8 @@ test('countByType aggregates correctly', () => {
   bus.emit({ type: 'risk_breach_detected', severity: 'critical', source: 's', payload: {} });
 
   const counts = bus.countByType();
-  assert.equal(counts['dataset_ingested'], 2);
-  assert.equal(counts['risk_breach_detected'], 1);
+  assert.equal(counts.dataset_ingested, 2);
+  assert.equal(counts.risk_breach_detected, 1);
 });
 
 test('countBySeverity aggregates correctly', () => {
@@ -130,8 +130,8 @@ test('countBySeverity aggregates correctly', () => {
   bus.emit({ type: 'kill_switch_triggered', severity: 'critical', source: 's', payload: {} });
 
   const counts = bus.countBySeverity();
-  assert.equal(counts['info'], 1);
-  assert.equal(counts['critical'], 2);
+  assert.equal(counts.info, 1);
+  assert.equal(counts.critical, 2);
 });
 
 test('clear removes all events', () => {

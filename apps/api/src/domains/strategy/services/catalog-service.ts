@@ -1,10 +1,9 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { refreshBacktestSummary } from '../../backtest/services/summary-service.js';
 import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';
 import { buildStrategyExecutionCandidate } from './execution-candidate-service.js';
 
-function buildPromotionReadiness(strategy, latestResult) {
+function buildPromotionReadiness(strategy: any, latestResult: any) {
   if (!strategy) return null;
   if (strategy.status === 'archived') {
     return {
@@ -54,7 +53,7 @@ function buildPromotionReadiness(strategy, latestResult) {
   };
 }
 
-function buildReplayTimeline(strategy, inputs = {}) {
+function buildReplayTimeline(strategy: any, inputs: Record<string, any> = {}) {
   const {
     auditItems = [],
     runs = [],
@@ -68,7 +67,7 @@ function buildReplayTimeline(strategy, inputs = {}) {
   } = inputs;
 
   const items = [
-    ...auditItems.map((item) => ({
+    ...auditItems.map((item: any) => ({
       id: `audit-${item.id}`,
       eventType: 'audit',
       lane: 'Registry',
@@ -84,7 +83,7 @@ function buildReplayTimeline(strategy, inputs = {}) {
         { label: 'Actor', value: item.actor || '--' },
       ],
     })),
-    ...tasks.map((task) => ({
+    ...tasks.map((task: any) => ({
       id: `task-${task.id}`,
       eventType: 'task',
       lane: 'Research Task',
@@ -99,7 +98,7 @@ function buildReplayTimeline(strategy, inputs = {}) {
         { label: 'Status', value: task.status },
       ],
     })),
-    ...workflows.map((workflow) => ({
+    ...workflows.map((workflow: any) => ({
       id: `workflow-${workflow.id}`,
       eventType: 'workflow',
       lane: 'Workflow',
@@ -116,7 +115,7 @@ function buildReplayTimeline(strategy, inputs = {}) {
         { label: 'Workflow', value: workflow.workflowId || '--' },
       ],
     })),
-    ...runs.map((run) => ({
+    ...runs.map((run: any) => ({
       id: `run-${run.id}`,
       eventType: 'run',
       lane: 'Backtest',
@@ -143,7 +142,7 @@ function buildReplayTimeline(strategy, inputs = {}) {
         },
       ],
     })),
-    ...results.map((result) => ({
+    ...results.map((result: any) => ({
       id: `result-${result.id}`,
       eventType: 'result',
       lane: 'Result',
@@ -159,7 +158,7 @@ function buildReplayTimeline(strategy, inputs = {}) {
         { label: 'Excess', value: `${result.excessReturnPct.toFixed(1)}%` },
       ],
     })),
-    ...evaluations.map((evaluation) => ({
+    ...evaluations.map((evaluation: any) => ({
       id: `evaluation-${evaluation.id}`,
       eventType: 'evaluation',
       lane: 'Evaluation',
@@ -174,7 +173,7 @@ function buildReplayTimeline(strategy, inputs = {}) {
         { label: 'Action', value: evaluation.recommendedAction || '--' },
       ],
     })),
-    ...reports.map((report) => ({
+    ...reports.map((report: any) => ({
       id: `report-${report.id}`,
       eventType: 'report',
       lane: 'Report',
@@ -190,7 +189,7 @@ function buildReplayTimeline(strategy, inputs = {}) {
         { label: 'Readiness', value: report.readiness },
       ],
     })),
-    ...governanceActions.map((action) => ({
+    ...governanceActions.map((action: any) => ({
       id: `governance-${action.id}`,
       eventType: 'governance',
       lane: 'Governance',
@@ -204,7 +203,7 @@ function buildReplayTimeline(strategy, inputs = {}) {
         { label: 'Actor', value: action.actor || '--' },
       ],
     })),
-    ...handoffs.map((handoff) => ({
+    ...handoffs.map((handoff: any) => ({
       id: `handoff-${handoff.id}`,
       eventType: 'execution',
       lane: 'Execution',
@@ -226,9 +225,9 @@ function buildReplayTimeline(strategy, inputs = {}) {
     .slice(0, 24);
 }
 
-function buildReplaySummary(timeline = []) {
+function buildReplaySummary(timeline: any[] = []) {
   return timeline.reduce(
-    (acc, item) => {
+    (acc: any, item: any) => {
       acc.totalEvents += 1;
       if (item.eventType === 'audit') acc.registryEvents += 1;
       if (
@@ -277,11 +276,11 @@ export function listStrategyCatalog() {
   };
 }
 
-export function getStrategyCatalogItem(strategyId) {
+export function getStrategyCatalogItem(strategyId: any) {
   return controlPlaneRuntime.getStrategyCatalogItem(strategyId);
 }
 
-export function getStrategyCatalogDetail(strategyId) {
+export function getStrategyCatalogDetail(strategyId: any) {
   const strategy = controlPlaneRuntime.getStrategyCatalogItem(strategyId);
   if (!strategy) {
     return {
@@ -303,31 +302,31 @@ export function getStrategyCatalogDetail(strategyId) {
   const researchTasks = controlPlaneRuntime.listResearchTasks(20, { strategyId: strategy.id });
   const workflowRunIds = Array.from(
     new Set([
-      ...recentRuns.map((item) => item.workflowRunId).filter(Boolean),
-      ...recentResults.map((item) => item.workflowRunId).filter(Boolean),
-      ...recentReports.map((item) => item.workflowRunId).filter(Boolean),
-      ...researchTasks.map((item) => item.workflowRunId).filter(Boolean),
+      ...recentRuns.map((item: any) => item.workflowRunId).filter(Boolean),
+      ...recentResults.map((item: any) => item.workflowRunId).filter(Boolean),
+      ...recentReports.map((item: any) => item.workflowRunId).filter(Boolean),
+      ...researchTasks.map((item: any) => item.workflowRunId).filter(Boolean),
     ])
   );
   const workflows = controlPlaneRuntime
     .listWorkflowRuns(60, {})
-    .filter((item) => workflowRunIds.includes(item.id))
+    .filter((item: any) => workflowRunIds.includes(item.id))
     .slice(0, 20);
   const governanceActions = controlPlaneRuntime
     .listOperatorActions(80, {})
-    .filter((item) => item.type?.startsWith('research-governance.'))
-    .filter((item) => {
+    .filter((item: any) => item.type?.startsWith('research-governance.'))
+    .filter((item: any) => {
       if (item.symbol === strategy.id) return true;
       const successes = Array.isArray(item.metadata?.successes) ? item.metadata.successes : [];
       return successes.some(
-        (entry) => entry && typeof entry === 'object' && entry.strategyId === strategy.id
+        (entry: any) => entry && typeof entry === 'object' && entry.strategyId === strategy.id
       );
     })
     .slice(0, 20);
   const strategyAuditItems = controlPlaneRuntime
     .listAuditRecords(80, {})
-    .filter((item) => item.type === 'strategy-catalog.saved')
-    .filter((item) => item.metadata?.strategyId === strategy.id)
+    .filter((item: any) => item.type === 'strategy-catalog.saved')
+    .filter((item: any) => item.metadata?.strategyId === strategy.id)
     .slice(0, 20);
   const recentHandoffs = controlPlaneRuntime.listExecutionCandidateHandoffs(20, {
     strategyId: strategy.id,
@@ -392,7 +391,7 @@ export function getStrategyCatalogDetail(strategyId) {
   };
 }
 
-export function saveStrategyCatalogItem(payload = {}) {
+export function saveStrategyCatalogItem(payload: Record<string, any> = {}) {
   if (!payload.id || !payload.name) {
     return {
       ok: false,

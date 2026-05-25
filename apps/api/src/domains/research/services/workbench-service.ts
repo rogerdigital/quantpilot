@@ -1,21 +1,20 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { createBacktestRun } from '../../backtest/services/runs-service.js';
 import { listStrategyCatalog } from '../../strategy/services/catalog-service.js';
 import { evaluateBacktestRun, promoteStrategyFromEvaluation } from './evaluation-service.js';
 
-function parseLimit(value, fallback) {
+function parseLimit(value: unknown, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function resolveSince(hours) {
+function resolveSince(hours: unknown): string {
   const parsed = Number(hours);
   if (!Number.isFinite(parsed) || parsed <= 0) return '';
   return new Date(Date.now() - parsed * 60 * 60 * 1000).toISOString();
 }
 
-function classifyCoverage(latestResult, latestEvaluation, latestReport) {
+function classifyCoverage(latestResult: any, latestEvaluation: any, latestReport: any) {
   if (!latestResult) {
     return {
       coverage: 'result_pending',
@@ -48,7 +47,7 @@ function classifyCoverage(latestResult, latestEvaluation, latestReport) {
   };
 }
 
-function computeLane(latestResult, latestEvaluation, latestReport) {
+function computeLane(latestResult: any, latestEvaluation: any, latestReport: any) {
   const coverage = classifyCoverage(latestResult, latestEvaluation, latestReport);
 
   if (coverage.coverage === 'result_pending' || coverage.coverage === 'evaluation_pending') {
@@ -66,7 +65,7 @@ function computeLane(latestResult, latestEvaluation, latestReport) {
   return 'blocked';
 }
 
-function buildLaneHeadline(key, count) {
+function buildLaneHeadline(key: string, count: number): string {
   if (key === 'ready-promote') return `${count} strategies are ready for lifecycle promotion.`;
   if (key === 'ready-execution') return `${count} strategies can move into execution preparation.`;
   if (key === 'await-report') return `${count} strategies are waiting for report asset generation.`;
@@ -74,22 +73,28 @@ function buildLaneHeadline(key, count) {
   return `${count} strategies remain blocked or in research rework.`;
 }
 
-function roundMetric(value) {
+function roundMetric(value: number): number | null {
   if (!Number.isFinite(value)) return null;
   return Math.round(value * 100) / 100;
 }
 
-function subtractMetric(current, reference) {
+function subtractMetric(
+  current: number | null | undefined,
+  reference: number | null | undefined
+): number | null {
   if (!Number.isFinite(current) || !Number.isFinite(reference)) return null;
-  return roundMetric(current - reference);
+  return roundMetric((current as number) - (reference as number));
 }
 
-function invertGap(current, reference) {
+function invertGap(
+  current: number | null | undefined,
+  reference: number | null | undefined
+): number | null {
   if (!Number.isFinite(current) || !Number.isFinite(reference)) return null;
-  return roundMetric(reference - current);
+  return roundMetric((reference as number) - (current as number));
 }
 
-function resolveComparisonBand(item) {
+function resolveComparisonBand(item: any): string {
   if (item.champion) return 'champion';
   if (item.baseline) return 'baseline';
 
@@ -130,7 +135,7 @@ function resolveComparisonBand(item) {
   return 'forming';
 }
 
-function buildComparisonInsight(item) {
+function buildComparisonInsight(item: any) {
   if (item.comparisonBand === 'champion') {
     return {
       strategyId: item.strategyId,
@@ -231,7 +236,7 @@ function buildComparisonInsight(item) {
   };
 }
 
-export function listResearchGovernanceActions(options = {}) {
+export function listResearchGovernanceActions(options: Record<string, unknown> = {}) {
   const limit = parseLimit(options.limit, 30);
   const since = resolveSince(options.hours);
   const actions = controlPlaneRuntime
@@ -246,7 +251,7 @@ export function listResearchGovernanceActions(options = {}) {
   };
 }
 
-export function getResearchGovernanceActionSummary(options = {}) {
+export function getResearchGovernanceActionSummary(options: Record<string, unknown> = {}) {
   const actions = listResearchGovernanceActions({
     hours: options.hours,
     limit: parseLimit(options.limit, 60),
@@ -273,21 +278,26 @@ export function getResearchGovernanceActionSummary(options = {}) {
   };
 }
 
-function recordGovernanceAction(type, actor, detail, metadata = {}) {
+function recordGovernanceAction(
+  type: string,
+  actor: string,
+  detail: string,
+  metadata: Record<string, unknown> = {}
+) {
   return controlPlaneRuntime.recordOperatorAction({
     type: `research-governance.${type}`,
     actor,
     title: `Research governance: ${type}`,
     detail,
     symbol: metadata.primaryId || '',
-    level: metadata.failures > 0 ? 'warn' : 'info',
+    level: (metadata.failures as number) > 0 ? 'warn' : 'info',
     metadata,
   });
 }
 
-export function runResearchGovernanceAction(payload = {}) {
-  const action = payload.action || '';
-  const actor = payload.actor || 'research-operator';
+export function runResearchGovernanceAction(payload: Record<string, unknown> = {}) {
+  const action = String(payload.action || '');
+  const actor = String(payload.actor || 'research-operator');
   const strategyIds = Array.isArray(payload.strategyIds) ? payload.strategyIds.filter(Boolean) : [];
   const runIds = Array.isArray(payload.runIds) ? payload.runIds.filter(Boolean) : [];
 
@@ -299,11 +309,11 @@ export function runResearchGovernanceAction(payload = {}) {
     };
   }
 
-  const successes = [];
-  const failures = [];
+  const successes: any[] = [];
+  const failures: any[] = [];
 
   if (action === 'promote_strategies') {
-    strategyIds.forEach((strategyId) => {
+    strategyIds.forEach((strategyId: string) => {
       const result = promoteStrategyFromEvaluation(strategyId, {
         actor,
         summary: payload.summary || `Governance workbench promoted ${strategyId}.`,
@@ -328,7 +338,7 @@ export function runResearchGovernanceAction(payload = {}) {
   }
 
   if (action === 'queue_backtests') {
-    strategyIds.forEach((strategyId) => {
+    strategyIds.forEach((strategyId: string) => {
       const result = createBacktestRun({
         strategyId,
         windowLabel: payload.windowLabel || '',
@@ -360,7 +370,7 @@ export function runResearchGovernanceAction(payload = {}) {
   }
 
   if (action === 'evaluate_runs') {
-    runIds.forEach((runId) => {
+    runIds.forEach((runId: string) => {
       const result = evaluateBacktestRun(runId, {
         actor,
         summary: payload.summary || `Governance workbench evaluated ${runId}.`,
@@ -390,7 +400,7 @@ export function runResearchGovernanceAction(payload = {}) {
   }
 
   if (action === 'set_baseline' || action === 'set_champion') {
-    strategyIds.forEach((strategyId) => {
+    strategyIds.forEach((strategyId: string) => {
       const strategy = controlPlaneRuntime.getStrategyCatalogItem(strategyId);
       if (!strategy) {
         failures.push({ strategyId, error: 'strategy not found' });
@@ -398,7 +408,7 @@ export function runResearchGovernanceAction(payload = {}) {
       }
 
       if (action === 'set_baseline') {
-        controlPlaneRuntime.listStrategyCatalog(200).forEach((item) => {
+        controlPlaneRuntime.listStrategyCatalog(200).forEach((item: any) => {
           if (item.baseline && item.id !== strategyId) {
             controlPlaneRuntime.upsertStrategyCatalogItem({
               ...item,
@@ -410,7 +420,7 @@ export function runResearchGovernanceAction(payload = {}) {
       }
 
       if (action === 'set_champion') {
-        controlPlaneRuntime.listStrategyCatalog(200).forEach((item) => {
+        controlPlaneRuntime.listStrategyCatalog(200).forEach((item: any) => {
           if (item.champion && item.id !== strategyId) {
             controlPlaneRuntime.upsertStrategyCatalogItem({
               ...item,
@@ -461,12 +471,12 @@ export function runResearchGovernanceAction(payload = {}) {
   };
 }
 
-export function getResearchWorkbenchSnapshot(options = {}) {
+export function getResearchWorkbenchSnapshot(options: Record<string, unknown> = {}) {
   const limit = parseLimit(options.limit, 20);
   const since = resolveSince(options.hours);
   const strategyPayload = listStrategyCatalog();
   const strategies = (strategyPayload.strategies || []).filter(
-    (strategy) => strategy.status !== 'archived'
+    (strategy: any) => strategy.status !== 'archived'
   );
   const results = controlPlaneRuntime.listBacktestResults(300, { since });
   const evaluations = controlPlaneRuntime.listResearchEvaluations(300, { since });
@@ -476,26 +486,26 @@ export function getResearchWorkbenchSnapshot(options = {}) {
     since,
   });
 
-  const latestResultByStrategy = new Map();
-  results.forEach((result) => {
+  const latestResultByStrategy = new Map<string, any>();
+  results.forEach((result: any) => {
     if (!latestResultByStrategy.has(result.strategyId))
       latestResultByStrategy.set(result.strategyId, result);
   });
 
-  const latestEvaluationByStrategy = new Map();
-  evaluations.forEach((evaluation) => {
+  const latestEvaluationByStrategy = new Map<string, any>();
+  evaluations.forEach((evaluation: any) => {
     if (!latestEvaluationByStrategy.has(evaluation.strategyId))
       latestEvaluationByStrategy.set(evaluation.strategyId, evaluation);
   });
 
-  const latestReportByStrategy = new Map();
-  reports.forEach((report) => {
+  const latestReportByStrategy = new Map<string, any>();
+  reports.forEach((report: any) => {
     if (!latestReportByStrategy.has(report.strategyId))
       latestReportByStrategy.set(report.strategyId, report);
   });
 
-  const reportTaskByStrategy = new Map();
-  reportTasks.forEach((task) => {
+  const reportTaskByStrategy = new Map<string, any>();
+  reportTasks.forEach((task: any) => {
     if (!reportTaskByStrategy.has(task.strategyId)) reportTaskByStrategy.set(task.strategyId, task);
   });
 
@@ -503,7 +513,7 @@ export function getResearchWorkbenchSnapshot(options = {}) {
     totalStrategies: strategyPayload.strategies?.length || 0,
     activeStrategies: strategies.length,
     candidateStrategies: strategies.filter(
-      (item) => item.status === 'candidate' || item.status === 'paper'
+      (item: any) => item.status === 'candidate' || item.status === 'paper'
     ).length,
     readyToPromote: 0,
     readyForExecution: 0,
@@ -515,19 +525,19 @@ export function getResearchWorkbenchSnapshot(options = {}) {
     champions: 0,
   };
 
-  const laneBuckets = new Map([
+  const laneBuckets = new Map<string, string[]>([
     ['ready-promote', []],
     ['ready-execution', []],
     ['await-report', []],
     ['await-evaluation', []],
     ['blocked', []],
   ]);
-  const queue = [];
-  const comparisons = [];
-  const coverage = [];
+  const queue: any[] = [];
+  const comparisons: any[] = [];
+  const coverage: any[] = [];
   const staleThreshold = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
-  strategies.forEach((strategy) => {
+  strategies.forEach((strategy: any) => {
     const latestResult = latestResultByStrategy.get(strategy.id) || null;
     const latestEvaluation = latestEvaluationByStrategy.get(strategy.id) || null;
     const latestReport = latestReportByStrategy.get(strategy.id) || null;
@@ -543,7 +553,7 @@ export function getResearchWorkbenchSnapshot(options = {}) {
       strategy.updatedAt ||
       strategy.createdAt;
 
-    laneBuckets.get(laneKey).push(strategy.id);
+    laneBuckets.get(laneKey)?.push(strategy.id);
     if (laneKey === 'ready-promote') summary.readyToPromote += 1;
     if (laneKey === 'ready-execution') summary.readyForExecution += 1;
     if (laneKey === 'await-report') summary.waitingForReport += 1;
@@ -630,9 +640,9 @@ export function getResearchWorkbenchSnapshot(options = {}) {
     { key: 'blocked', label: 'Blocked Or Rework' },
   ].map((lane) => ({
     ...lane,
-    count: laneBuckets.get(lane.key).length,
-    headline: buildLaneHeadline(lane.key, laneBuckets.get(lane.key).length),
-    strategyIds: laneBuckets.get(lane.key),
+    count: laneBuckets.get(lane.key)?.length ?? 0,
+    headline: buildLaneHeadline(lane.key, laneBuckets.get(lane.key)?.length ?? 0),
+    strategyIds: laneBuckets.get(lane.key) ?? [],
   }));
   const recentActions = listResearchGovernanceActions(options).actions;
   const actionSummary = getResearchGovernanceActionSummary(options).summary;

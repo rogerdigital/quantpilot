@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { getRiskWorkbench } from './workbench-service.js';
 
@@ -12,12 +11,14 @@ const RISK_POLICY_ACTION_KEYS = new Set([
   'release-emergency-brake',
 ]);
 
-function resolveTargets(actionKey, workbench) {
+function resolveTargets(actionKey: string, workbench: any) {
   if (actionKey === 'review-risk-off') {
     return {
-      riskEvents: workbench.reviewQueue.riskEvents.filter((item) => item.status === 'risk-off'),
+      riskEvents: workbench.reviewQueue.riskEvents.filter(
+        (item: any) => item.status === 'risk-off'
+      ),
       executionPlans: workbench.reviewQueue.executionPlans.filter(
-        (item) => item.riskStatus === 'blocked'
+        (item: any) => item.riskStatus === 'blocked'
       ),
       backtestRuns: [],
       incidents: workbench.reviewQueue.incidents,
@@ -37,7 +38,7 @@ function resolveTargets(actionKey, workbench) {
 
   if (actionKey === 'inspect-live-exposure') {
     return {
-      riskEvents: workbench.recent.riskEvents.filter((item) => item.source === 'risk-monitor'),
+      riskEvents: workbench.recent.riskEvents.filter((item: any) => item.source === 'risk-monitor'),
       executionPlans: workbench.reviewQueue.executionPlans.slice(0, 2),
       backtestRuns: [],
       incidents: workbench.reviewQueue.incidents,
@@ -59,7 +60,7 @@ function resolveTargets(actionKey, workbench) {
     return {
       riskEvents: workbench.linkage.queue.riskEvents,
       executionPlans: workbench.reviewQueue.executionPlans.filter(
-        (item) => item.riskStatus === 'review' || item.approvalState === 'required'
+        (item: any) => item.riskStatus === 'review' || item.approvalState === 'required'
       ),
       backtestRuns: [],
       incidents: workbench.linkage.queue.incidents,
@@ -69,7 +70,7 @@ function resolveTargets(actionKey, workbench) {
 
   if (actionKey === 'check-compliance-alerts') {
     return {
-      riskEvents: workbench.reviewQueue.riskEvents.filter((item) => {
+      riskEvents: workbench.reviewQueue.riskEvents.filter((item: any) => {
         const message = `${item.title} ${item.message}`.toLowerCase();
         return message.includes('compliance') || message.includes('policy');
       }),
@@ -81,9 +82,9 @@ function resolveTargets(actionKey, workbench) {
   }
 
   return {
-    riskEvents: workbench.reviewQueue.riskEvents.filter((item) => item.status === 'risk-off'),
+    riskEvents: workbench.reviewQueue.riskEvents.filter((item: any) => item.status === 'risk-off'),
     executionPlans: workbench.reviewQueue.executionPlans.filter(
-      (item) => item.riskStatus === 'blocked' || item.status === 'blocked'
+      (item: any) => item.riskStatus === 'blocked' || item.status === 'blocked'
     ),
     backtestRuns: [],
     incidents: workbench.reviewQueue.incidents,
@@ -91,11 +92,11 @@ function resolveTargets(actionKey, workbench) {
   };
 }
 
-function buildDescriptor(actionKey, workbench, targets) {
-  const hasCriticalIncident = targets.incidents.some((item) => item.severity === 'critical');
-  const hasRiskOff = targets.riskEvents.some((item) => item.status === 'risk-off');
+function buildDescriptor(actionKey: string, workbench: any, targets: any) {
+  const hasCriticalIncident = targets.incidents.some((item: any) => item.severity === 'critical');
+  const hasRiskOff = targets.riskEvents.some((item: any) => item.status === 'risk-off');
   const hasCompliance = targets.riskEvents.some(
-    (item) =>
+    (item: any) =>
       `${item.title} ${item.message}`.toLowerCase().includes('compliance') ||
       `${item.title} ${item.message}`.toLowerCase().includes('policy')
   );
@@ -174,24 +175,24 @@ function buildDescriptor(actionKey, workbench, targets) {
   };
 }
 
-function buildIncidentLinks(targets) {
+function buildIncidentLinks(targets: any) {
   return [
-    ...targets.riskEvents.map((item) => ({
+    ...targets.riskEvents.map((item: any) => ({
       kind: 'risk-event',
       riskEventId: item.id,
       source: item.source,
     })),
-    ...targets.executionPlans.map((item) => ({
+    ...targets.executionPlans.map((item: any) => ({
       kind: 'execution-plan',
       planId: item.id,
       strategyId: item.strategyId,
     })),
-    ...targets.backtestRuns.map((item) => ({
+    ...targets.backtestRuns.map((item: any) => ({
       kind: 'backtest-run',
       runId: item.id,
       strategyId: item.strategyId,
     })),
-    ...targets.schedulerTicks.map((item) => ({
+    ...targets.schedulerTicks.map((item: any) => ({
       kind: 'scheduler-tick',
       tickId: item.id,
       phase: item.phase,
@@ -199,12 +200,12 @@ function buildIncidentLinks(targets) {
   ].slice(0, 12);
 }
 
-function upsertRiskIncidents(actor, descriptor, targets) {
+function upsertRiskIncidents(actor: string, descriptor: any, targets: any) {
   const touched = [];
   const noteBody = `${descriptor.title} policy action executed by ${actor}. ${descriptor.detail}`;
-  const existing = targets.incidents.filter((item) => item.status !== 'resolved');
+  const existing = targets.incidents.filter((item: any) => item.status !== 'resolved');
 
-  existing.forEach((incident) => {
+  existing.forEach((incident: any) => {
     const transitioned = controlPlaneRuntime.transitionIncident(incident.id, {
       actor,
       owner: incident.owner || actor,
@@ -254,7 +255,7 @@ function upsertRiskIncidents(actor, descriptor, targets) {
   return touched;
 }
 
-export function runRiskPolicyAction(payload = {}) {
+export function runRiskPolicyAction(payload: Record<string, any> = {}) {
   const actionKey = String(payload.actionKey || '').trim();
   if (!RISK_POLICY_ACTION_KEYS.has(actionKey)) {
     return {
@@ -271,11 +272,11 @@ export function runRiskPolicyAction(payload = {}) {
   const targets = resolveTargets(actionKey, workbench);
   const descriptor = buildDescriptor(actionKey, workbench, targets);
   const incidents = upsertRiskIncidents(actor, descriptor, targets);
-  const linkedIncidentIds = incidents.map((item) => item.id);
-  const linkedRiskEventIds = targets.riskEvents.map((item) => item.id);
-  const linkedExecutionPlanIds = targets.executionPlans.map((item) => item.id);
-  const linkedBacktestRunIds = targets.backtestRuns.map((item) => item.id);
-  const linkedSchedulerTickIds = targets.schedulerTicks.map((item) => item.id);
+  const linkedIncidentIds = incidents.map((item: any) => item.id);
+  const linkedRiskEventIds = targets.riskEvents.map((item: any) => item.id);
+  const linkedExecutionPlanIds = targets.executionPlans.map((item: any) => item.id);
+  const linkedBacktestRunIds = targets.backtestRuns.map((item: any) => item.id);
+  const linkedSchedulerTickIds = targets.schedulerTicks.map((item: any) => item.id);
 
   const operatorAction = controlPlaneRuntime.recordOperatorAction({
     type: `risk.policy.${actionKey}`,

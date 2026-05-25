@@ -1,11 +1,17 @@
-// @ts-nocheck
 import {
   getMonitoringStatus,
   listMonitoringAlerts,
   listMonitoringSnapshots,
 } from '../../../modules/monitoring/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
-export async function handleMonitoringRoutes({ req, reqUrl, res, writeJson, gatewayDependencies }) {
+export async function handleMonitoringRoutes({
+  req,
+  reqUrl,
+  res,
+  writeJson,
+  gatewayDependencies,
+}: GatewayRouteContext) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/monitoring/status') {
     const summary = await getMonitoringStatus({
       getBrokerHealth: gatewayDependencies.getBrokerHealth,

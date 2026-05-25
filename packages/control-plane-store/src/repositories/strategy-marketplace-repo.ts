@@ -131,7 +131,6 @@ export function createStrategyMarketplaceRepository(store) {
         case 'bestPerforming':
           results.sort((a, b) => (b.metrics.sharpe || 0) - (a.metrics.sharpe || 0));
           break;
-        case 'popular':
         default:
           results.sort((a, b) => b.forkCount - a.forkCount);
           break;

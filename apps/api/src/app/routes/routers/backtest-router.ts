@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import {
   getBacktestResultDetail,
   getBacktestResultSummary,
@@ -15,9 +13,16 @@ import { getBacktestSummary } from '../../../domains/backtest/services/summary-s
 import { evaluateBacktestRun } from '../../../domains/research/services/evaluation-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
-export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
-  const writeForbidden = (permission, action = '') =>
+export async function handleBacktestRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
+  const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/backtest/summary') {
@@ -77,11 +82,11 @@ export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, wri
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/backtest/runs') {
-    if (!hasPermission('strategy:write')) {
+    if (!(await hasPermission('strategy:write', req.headers.authorization))) {
       writeForbidden('strategy:write', 'queue backtest runs');
       return true;
     }
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const result = createBacktestRun(body);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
@@ -92,13 +97,13 @@ export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, wri
     reqUrl.pathname.endsWith('/evaluate') &&
     reqUrl.pathname.startsWith('/api/backtest/runs/')
   ) {
-    if (!hasPermission('risk:review')) {
+    if (!(await hasPermission('risk:review', req.headers.authorization))) {
       writeForbidden('risk:review', 'evaluate research results for promotion');
       return true;
     }
     const runId = reqUrl.pathname.split('/').at(-2);
-    const body = await readJsonBody(req);
-    const result = evaluateBacktestRun(runId, body);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+    const result = evaluateBacktestRun(runId as string, body);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
@@ -108,12 +113,12 @@ export async function handleBacktestRoutes({ req, reqUrl, res, readJsonBody, wri
     reqUrl.pathname.endsWith('/review') &&
     reqUrl.pathname.startsWith('/api/backtest/runs/')
   ) {
-    if (!hasPermission('risk:review')) {
+    if (!(await hasPermission('risk:review', req.headers.authorization))) {
       writeForbidden('risk:review', 'review backtest runs');
       return true;
     }
     const runId = reqUrl.pathname.split('/').at(-2);
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const result = reviewBacktestRun(runId, body);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;

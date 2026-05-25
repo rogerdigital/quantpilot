@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   appendIncidentNote,
   appendIncidentTask,
@@ -10,8 +9,15 @@ import {
   updateIncident,
   updateIncidentTask,
 } from '../../../modules/incidents/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
-export async function handleIncidentsRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
+export async function handleIncidentsRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/incidents') {
     writeJson(res, 200, {
       ok: true,
@@ -43,13 +49,13 @@ export async function handleIncidentsRoutes({ req, reqUrl, res, readJsonBody, wr
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/incidents') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, { ok: true, incident: createIncident(body) });
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/incidents/bulk') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, { ok: true, ...bulkUpdateIncidents(body) });
     return true;
   }
@@ -77,7 +83,7 @@ export async function handleIncidentsRoutes({ req, reqUrl, res, readJsonBody, wr
     reqUrl.pathname.startsWith('/api/incidents/')
   ) {
     const incidentId = reqUrl.pathname.split('/').at(-2);
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const result = appendIncidentNote(incidentId, body);
     writeJson(
       res,
@@ -93,7 +99,7 @@ export async function handleIncidentsRoutes({ req, reqUrl, res, readJsonBody, wr
     reqUrl.pathname.startsWith('/api/incidents/')
   ) {
     const incidentId = reqUrl.pathname.split('/').at(-2);
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const task = appendIncidentTask(incidentId, body);
     writeJson(
       res,
@@ -112,7 +118,7 @@ export async function handleIncidentsRoutes({ req, reqUrl, res, readJsonBody, wr
     if (parts.length === 5) {
       const incidentId = parts[2];
       const taskId = parts[4];
-      const body = await readJsonBody(req);
+      const body = (await readJsonBody(req)) as Record<string, any> | undefined;
       const task = updateIncidentTask(incidentId, taskId, body);
       writeJson(
         res,
@@ -127,7 +133,7 @@ export async function handleIncidentsRoutes({ req, reqUrl, res, readJsonBody, wr
     const parts = reqUrl.pathname.split('/').filter(Boolean);
     if (parts.length === 3) {
       const incidentId = parts.at(-1);
-      const body = await readJsonBody(req);
+      const body = (await readJsonBody(req)) as Record<string, any> | undefined;
       const incident = updateIncident(incidentId, body);
       writeJson(
         res,

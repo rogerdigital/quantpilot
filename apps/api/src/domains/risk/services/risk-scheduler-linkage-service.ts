@@ -1,25 +1,24 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { isSchedulerAttentionStatus } from '../../../modules/scheduler/service.js';
 
-function parseTimestamp(value) {
+function parseTimestamp(value: any): number {
   const parsed = Date.parse(value || '');
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function sortByRecency(items, timestampKey = 'createdAt') {
+function sortByRecency(items: any[], timestampKey = 'createdAt'): any[] {
   return [...items].sort(
-    (left, right) =>
+    (left: any, right: any) =>
       parseTimestamp(right[timestampKey] || right.updatedAt) -
       parseTimestamp(left[timestampKey] || left.updatedAt)
   );
 }
 
-function takeLatest(items, limit, timestampKey = 'createdAt') {
+function takeLatest(items: any[], limit: number, timestampKey = 'createdAt'): any[] {
   return sortByRecency(items, timestampKey).slice(0, limit);
 }
 
-function isLinkedRiskEvent(item) {
+function isLinkedRiskEvent(item: any): boolean {
   const message = `${item?.title || ''} ${item?.message || ''}`.toLowerCase();
   return (
     item?.source === 'scheduler' ||
@@ -31,7 +30,7 @@ function isLinkedRiskEvent(item) {
   );
 }
 
-function isLinkedSchedulerNotification(item) {
+function isLinkedSchedulerNotification(item: any): boolean {
   const text = `${item?.title || ''} ${item?.message || ''}`.toLowerCase();
   return (
     item?.source === 'scheduler' ||
@@ -42,18 +41,20 @@ function isLinkedSchedulerNotification(item) {
   );
 }
 
-function isLinkedIncident(item) {
+function isLinkedIncident(item: any): boolean {
   return (
     item?.source === 'scheduler' ||
     item?.source === 'risk' ||
     Boolean(item?.metadata?.schedulerTickId) ||
     Boolean(item?.metadata?.riskEventId) ||
     (Array.isArray(item?.links) &&
-      item.links.some((link) => link?.kind === 'scheduler-tick' || link?.kind === 'risk-event'))
+      item.links.some(
+        (link: any) => link?.kind === 'scheduler-tick' || link?.kind === 'risk-event'
+      ))
   );
 }
 
-function isCycleAttention(item) {
+function isCycleAttention(item: any): boolean {
   return (
     item.pendingApprovals > 0 ||
     !item.brokerConnected ||
@@ -62,7 +63,7 @@ function isCycleAttention(item) {
   );
 }
 
-function buildRunbook(input) {
+function buildRunbook(input: any) {
   const items = [];
 
   if (input.currentPhaseAttention > 0) {
@@ -119,7 +120,7 @@ function buildRunbook(input) {
   return items;
 }
 
-function resolvePosture(input) {
+function resolvePosture(input: any) {
   if (input.riskOffLinked > 0 || input.criticalTicks > 0 || input.linkedIncidents > 0) {
     return {
       status: 'critical',
@@ -148,53 +149,53 @@ function resolvePosture(input) {
   };
 }
 
-export function getRiskSchedulerLinkage(options = {}) {
+export function getRiskSchedulerLinkage(options: Record<string, any> = {}) {
   const limit = Number(options.limit) > 0 ? Number(options.limit) : 12;
   const since = options.since || '';
   const schedulerTicks = controlPlaneRuntime.listSchedulerTicks(Math.max(limit * 4, 80), { since });
   const riskEvents = controlPlaneRuntime
     .listRiskEvents(Math.max(limit * 4, 80))
-    .filter((item) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since))
+    .filter((item: any) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since))
     .filter(isLinkedRiskEvent);
   const incidents = controlPlaneRuntime
     .listIncidents(Math.max(limit * 4, 80), { since })
-    .filter((item) => item.status !== 'resolved')
+    .filter((item: any) => item.status !== 'resolved')
     .filter(isLinkedIncident);
   const notifications = controlPlaneRuntime
     .listNotifications(Math.max(limit * 4, 80), { since })
     .filter(isLinkedSchedulerNotification);
   const cycleRecords = controlPlaneRuntime
     .listCycleRecords(Math.max(limit * 4, 80))
-    .filter((item) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since))
+    .filter((item: any) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since))
     .filter(isCycleAttention);
 
   const activePhase = schedulerTicks[0]?.phase || 'UNKNOWN';
-  const linkedSchedulerTicks = schedulerTicks.filter((item) => {
+  const linkedSchedulerTicks = schedulerTicks.filter((item: any) => {
     const metadataId = item.metadata?.previousPhase || item.metadata?.bucket || '';
     return (
       isSchedulerAttentionStatus(item.status) ||
       riskEvents.some(
-        (event) =>
+        (event: any) =>
           event.metadata?.schedulerTickId === item.id ||
           String(event.metadata?.schedulerPhase || '') === item.phase
       ) ||
       incidents.some(
-        (incident) =>
+        (incident: any) =>
           Array.isArray(incident.links) &&
-          incident.links.some((link) => link?.tickId === item.id || link?.phase === item.phase)
+          incident.links.some((link: any) => link?.tickId === item.id || link?.phase === item.phase)
       ) ||
       Boolean(metadataId && activePhase === item.phase)
     );
   });
   const criticalTicks = linkedSchedulerTicks.filter(
-    (item) =>
+    (item: any) =>
       item.status === 'critical' || item.status === 'failed' || item.status === 'missed-window'
   );
   const currentPhaseAttention = linkedSchedulerTicks.filter(
-    (item) => item.phase === activePhase
+    (item: any) => item.phase === activePhase
   ).length;
-  const riskOffLinked = riskEvents.filter((item) => item.status === 'risk-off').length;
-  const complianceLinked = riskEvents.filter((item) => {
+  const riskOffLinked = riskEvents.filter((item: any) => item.status === 'risk-off').length;
+  const complianceLinked = riskEvents.filter((item: any) => {
     const message = `${item.title} ${item.message}`.toLowerCase();
     return message.includes('compliance') || message.includes('policy');
   }).length;
@@ -226,14 +227,15 @@ export function getRiskSchedulerLinkage(options = {}) {
       {
         key: 'current-window',
         title: 'Current Window',
-        status: criticalTicks.some((item) => item.phase === activePhase)
+        status: criticalTicks.some((item: any) => item.phase === activePhase)
           ? 'critical'
           : currentPhaseAttention
             ? 'warn'
             : 'healthy',
         detail: `${currentPhaseAttention} linked items are attached to the active ${activePhase} scheduler window.`,
         primaryCount: currentPhaseAttention,
-        secondaryCount: linkedSchedulerTicks.filter((item) => item.phase === activePhase).length,
+        secondaryCount: linkedSchedulerTicks.filter((item: any) => item.phase === activePhase)
+          .length,
         updatedAt: schedulerTicks[0]?.createdAt || generatedAt,
       },
       {
@@ -261,40 +263,40 @@ export function getRiskSchedulerLinkage(options = {}) {
       {
         key: 'incidents',
         title: 'Incidents',
-        status: incidents.some((item) => item.severity === 'critical')
+        status: incidents.some((item: any) => item.severity === 'critical')
           ? 'critical'
           : incidents.length
             ? 'warn'
             : 'healthy',
         detail: `${incidents.length} unresolved incidents sit across the shared risk and scheduler path.`,
         primaryCount: incidents.length,
-        secondaryCount: incidents.filter((item) => item.severity === 'critical').length,
+        secondaryCount: incidents.filter((item: any) => item.severity === 'critical').length,
         updatedAt: incidents[0]?.updatedAt || generatedAt,
       },
       {
         key: 'cycles',
         title: 'Cycle Drift',
-        status: cycleRecords.some((item) => !item.brokerConnected || !item.marketConnected)
+        status: cycleRecords.some((item: any) => !item.brokerConnected || !item.marketConnected)
           ? 'critical'
           : cycleRecords.length
             ? 'warn'
             : 'healthy',
         detail: `${cycleRecords.length} cycle records show approvals, degraded connectivity, or elevated risk posture around scheduler windows.`,
         primaryCount: cycleRecords.length,
-        secondaryCount: cycleRecords.filter((item) => item.pendingApprovals > 0).length,
+        secondaryCount: cycleRecords.filter((item: any) => item.pendingApprovals > 0).length,
         updatedAt: cycleRecords[0]?.createdAt || generatedAt,
       },
       {
         key: 'notifications',
         title: 'Notifications',
-        status: notifications.some((item) => item.level === 'critical')
+        status: notifications.some((item: any) => item.level === 'critical')
           ? 'critical'
           : notifications.length
             ? 'warn'
             : 'healthy',
         detail: `${notifications.length} notifications are linked to the current risk and scheduler path.`,
         primaryCount: notifications.length,
-        secondaryCount: notifications.filter((item) => item.level === 'critical').length,
+        secondaryCount: notifications.filter((item: any) => item.level === 'critical').length,
         updatedAt: notifications[0]?.createdAt || generatedAt,
       },
     ],

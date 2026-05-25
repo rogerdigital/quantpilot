@@ -1,18 +1,17 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 
-function parseLimit(value, fallback) {
+function parseLimit(value: unknown, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function resolveSince(hours) {
+function resolveSince(hours: unknown): string {
   const parsed = Number(hours);
   if (!Number.isFinite(parsed) || parsed <= 0) return '';
   return new Date(Date.now() - parsed * 60 * 60 * 1000).toISOString();
 }
 
-export function listResearchReports(options = {}) {
+export function listResearchReports(options: Record<string, unknown> = {}) {
   const limit = parseLimit(options.limit, 100);
   const since = resolveSince(options.hours);
   const reports = controlPlaneRuntime.listResearchReports(limit, {
@@ -32,7 +31,7 @@ export function listResearchReports(options = {}) {
   };
 }
 
-export function getResearchReportSummary(options = {}) {
+export function getResearchReportSummary(options: Record<string, unknown> = {}) {
   const limit = parseLimit(options.limit, 200);
   const since = resolveSince(options.hours);
   const reports = controlPlaneRuntime.listResearchReports(limit, {
@@ -48,11 +47,19 @@ export function getResearchReportSummary(options = {}) {
     rework: 0,
     blocked: 0,
     latestCreatedAt: reports[0]?.createdAt || '',
-    byStrategy: [],
+    byStrategy: [] as {
+      strategyId: string;
+      strategyName: string;
+      count: number;
+      latestVerdict: string;
+    }[],
   };
 
-  const strategyCounts = new Map();
-  reports.forEach((report) => {
+  const strategyCounts = new Map<
+    string,
+    { strategyId: string; strategyName: string; count: number; latestVerdict: string }
+  >();
+  reports.forEach((report: any) => {
     if (report.verdict === 'promote') summary.promote += 1;
     if (report.verdict === 'prepare_execution') summary.prepareExecution += 1;
     if (report.verdict === 'rework') summary.rework += 1;

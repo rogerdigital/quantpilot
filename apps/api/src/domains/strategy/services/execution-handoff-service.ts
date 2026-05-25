@@ -1,29 +1,28 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { queueWorkflow } from '../../../control-plane/task-orchestrator/services/workflow-service.js';
 import { assessExecutionCandidate } from '../../risk/services/assessment-service.js';
 import { getStrategyCatalogDetail } from './catalog-service.js';
 import { buildStrategyExecutionCandidate } from './execution-candidate-service.js';
 
-function parseLimit(value, fallback) {
+function parseLimit(value: any, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function resolveSince(hours) {
+function resolveSince(hours: any): string {
   const parsed = Number(hours);
   if (!Number.isFinite(parsed) || parsed <= 0) return '';
   return new Date(Date.now() - parsed * 60 * 60 * 1000).toISOString();
 }
 
-function resolveHandoffStatus(detail, riskDecision) {
+function resolveHandoffStatus(detail: Record<string, any>, riskDecision: Record<string, any>) {
   if (!detail.latestEvaluation || !detail.latestResult) return 'blocked';
   if (!['promote', 'prepare_execution'].includes(detail.latestEvaluation.verdict)) return 'blocked';
   if (riskDecision.riskStatus === 'blocked') return 'blocked';
   return 'ready';
 }
 
-function buildHandoffRecord(detail, payload = {}) {
+function buildHandoffRecord(detail: Record<string, any>, payload: Record<string, any> = {}) {
   const candidate = buildStrategyExecutionCandidate({
     strategyId: detail.strategy.id,
     mode: payload.mode || 'paper',
@@ -65,7 +64,13 @@ function buildHandoffRecord(detail, payload = {}) {
   };
 }
 
-function recordHandoffAction(type, handoff, actor, detail, metadata = {}) {
+function recordHandoffAction(
+  type: string,
+  handoff: Record<string, any>,
+  actor: string,
+  detail: string,
+  metadata: Record<string, any> = {}
+) {
   return controlPlaneRuntime.recordOperatorAction({
     type: `execution-handoff.${type}`,
     actor,
@@ -83,7 +88,10 @@ function recordHandoffAction(type, handoff, actor, detail, metadata = {}) {
   });
 }
 
-export function createExecutionCandidateHandoff(strategyId, payload = {}) {
+export function createExecutionCandidateHandoff(
+  strategyId: string,
+  payload: Record<string, any> = {}
+) {
   const detail = getStrategyCatalogDetail(strategyId);
   if (!detail.ok) return detail;
 
@@ -104,7 +112,10 @@ export function createExecutionCandidateHandoff(strategyId, payload = {}) {
   };
 }
 
-export function queueExecutionCandidateHandoff(handoffId, payload = {}) {
+export function queueExecutionCandidateHandoff(
+  handoffId: string,
+  payload: Record<string, any> = {}
+) {
   const handoff = controlPlaneRuntime.getExecutionCandidateHandoff(handoffId);
   if (!handoff) {
     return {
@@ -155,7 +166,7 @@ export function queueExecutionCandidateHandoff(handoffId, payload = {}) {
   };
 }
 
-export function listExecutionCandidateHandoffs(options = {}) {
+export function listExecutionCandidateHandoffs(options: Record<string, any> = {}) {
   const limit = parseLimit(options.limit, 30);
   const since = resolveSince(options.hours);
   const handoffs = controlPlaneRuntime.listExecutionCandidateHandoffs(limit, {
@@ -164,7 +175,7 @@ export function listExecutionCandidateHandoffs(options = {}) {
     mode: options.mode || '',
   });
   const summary = handoffs.reduce(
-    (acc, item) => {
+    (acc: Record<string, number>, item: Record<string, any>) => {
       acc.total += 1;
       if (item.handoffStatus === 'ready') acc.ready += 1;
       if (item.handoffStatus === 'queued' || item.handoffStatus === 'converted') acc.queued += 1;

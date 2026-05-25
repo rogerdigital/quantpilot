@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { listBacktestRuns } from '../../backtest/services/runs-service.js';
 import { getBacktestSummary } from '../../backtest/services/summary-service.js';
@@ -102,10 +100,10 @@ function executeBacktestSummaryTool() {
   };
 }
 
-function executeBacktestRunsTool(args = {}) {
+function executeBacktestRunsTool(args: Record<string, unknown> = {}) {
   const snapshot = listBacktestRuns();
-  const status = args.status || '';
-  const runs = status ? snapshot.runs.filter((item) => item.status === status) : snapshot.runs;
+  const status = (args.status as string) || '';
+  const runs = status ? snapshot.runs.filter((item: any) => item.status === status) : snapshot.runs;
   return {
     ok: true,
     tool: 'backtest.runs.list',
@@ -114,8 +112,8 @@ function executeBacktestRunsTool(args = {}) {
   };
 }
 
-function executeRiskEventsTool(args = {}) {
-  const limit = Number.isFinite(args.limit) ? args.limit : 10;
+function executeRiskEventsTool(args: Record<string, unknown> = {}) {
+  const limit = Number.isFinite(args.limit) ? (args.limit as number) : 10;
   const events = listRiskEvents(limit);
   return {
     ok: true,
@@ -125,8 +123,8 @@ function executeRiskEventsTool(args = {}) {
   };
 }
 
-function executeExecutionPlansTool(args = {}) {
-  const limit = Number.isFinite(args.limit) ? args.limit : 10;
+function executeExecutionPlansTool(args: Record<string, unknown> = {}) {
+  const limit = Number.isFinite(args.limit) ? (args.limit as number) : 10;
   const plans = listExecutionPlans(limit);
   return {
     ok: true,
@@ -136,18 +134,17 @@ function executeExecutionPlansTool(args = {}) {
   };
 }
 
-function executeMarketQuotesTool(args = {}) {
-  const symbols = Array.isArray(args.symbols) ? args.symbols : [];
+function executeMarketQuotesTool(args: Record<string, unknown> = {}) {
+  const symbols: string[] = Array.isArray(args.symbols) ? (args.symbols as string[]) : [];
   if (symbols.length === 0) {
     return { ok: false, tool: 'market.quotes.get', summary: 'No symbols provided.', data: {} };
   }
   // Return from control plane state (real-time data from Worker sync)
-  const state = controlPlaneRuntime.getLatestSystemState
-    ? controlPlaneRuntime.getLatestSystemState()
-    : null;
-  const stockStates = state?.stockStates || [];
-  const quotes = symbols.map((sym) => {
-    const found = stockStates.find((s) => s.symbol?.toUpperCase() === sym.toUpperCase());
+  const runtime = controlPlaneRuntime as Record<string, any>;
+  const state = runtime.getLatestSystemState ? runtime.getLatestSystemState() : null;
+  const stockStates: any[] = state?.stockStates || [];
+  const quotes = symbols.map((sym: string) => {
+    const found = stockStates.find((s: any) => s.symbol?.toUpperCase() === sym.toUpperCase());
     if (found) {
       return {
         symbol: sym.toUpperCase(),
@@ -174,8 +171,8 @@ function executeMarketQuotesTool(args = {}) {
   };
 }
 
-async function executeMarketHistoryTool(args = {}) {
-  const symbol = args.symbol || '';
+async function executeMarketHistoryTool(args: Record<string, unknown> = {}) {
+  const symbol = (args.symbol as string) || '';
   const days = Math.min(Number(args.days) || 90, 365);
   if (!symbol) {
     return { ok: false, tool: 'market.history.get', summary: 'Symbol is required.', data: {} };
@@ -196,8 +193,13 @@ async function executeMarketHistoryTool(args = {}) {
 
 // ─── Write Tools ──────────────────────────────────────────────────────────────
 
-function executePaperOrderTool(args = {}) {
-  const { symbol, side, qty, orderType = 'market', price = null, rationale = '' } = args;
+function executePaperOrderTool(args: Record<string, unknown> = {}) {
+  const symbol = args.symbol as string | undefined;
+  const side = args.side as string | undefined;
+  const qty = args.qty as number | undefined;
+  const orderType = (args.orderType as string) || 'market';
+  const price = (args.price as number) || null;
+  const rationale = (args.rationale as string) || '';
 
   if (!symbol || !side || !qty || qty <= 0) {
     return {
@@ -283,8 +285,13 @@ function executePaperOrderTool(args = {}) {
   };
 }
 
-function executeLiveOrderRequestTool(args = {}) {
-  const { symbol, side, qty, orderType = 'market', price = null, rationale = '' } = args;
+function executeLiveOrderRequestTool(args: Record<string, unknown> = {}) {
+  const symbol = args.symbol as string | undefined;
+  const side = args.side as string | undefined;
+  const qty = args.qty as number | undefined;
+  const orderType = (args.orderType as string) || 'market';
+  const price = (args.price as number) || null;
+  const rationale = (args.rationale as string) || '';
 
   if (!symbol || !side || !qty || qty <= 0) {
     return {
@@ -355,8 +362,10 @@ function executeLiveOrderRequestTool(args = {}) {
   };
 }
 
-function executeBacktestQueueTool(args = {}) {
-  const { strategyDescription = '', symbols = [], days = 90 } = args;
+function executeBacktestQueueTool(args: Record<string, unknown> = {}) {
+  const strategyDescription = (args.strategyDescription as string) || '';
+  const symbols: string[] = Array.isArray(args.symbols) ? (args.symbols as string[]) : [];
+  const days = (args.days as number) || 90;
   if (!strategyDescription) {
     return {
       ok: false,
@@ -368,7 +377,7 @@ function executeBacktestQueueTool(args = {}) {
 
   const strategyId = `agent-backtest-${Date.now()}`;
   // Queue a backtest workflow
-  controlPlaneRuntime.recordWorkflowRun?.({
+  (controlPlaneRuntime as Record<string, any>).recordWorkflowRun?.({
     kind: 'task-orchestrator.backtest-run',
     status: 'pending',
     payload: {
@@ -396,9 +405,9 @@ function executeBacktestQueueTool(args = {}) {
 
 // ─── Main dispatcher ──────────────────────────────────────────────────────────
 
-export async function executeAgentTool(payload = {}) {
-  const tool = payload.tool || '';
-  const args = payload.args || {};
+export async function executeAgentTool(payload: Record<string, unknown> = {}) {
+  const tool = (payload.tool as string) || '';
+  const args = (payload.args as Record<string, unknown>) || {};
 
   switch (tool) {
     case 'strategy.catalog.list':

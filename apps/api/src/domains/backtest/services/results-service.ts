@@ -1,18 +1,17 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 
-function parseLimit(value, fallback) {
+function parseLimit(value: any, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function resolveSince(hours) {
+function resolveSince(hours: any): string {
   const parsed = Number(hours);
   if (!Number.isFinite(parsed) || parsed <= 0) return '';
   return new Date(Date.now() - parsed * 60 * 60 * 1000).toISOString();
 }
 
-export function listBacktestResults(options = {}) {
+export function listBacktestResults(options: Record<string, any> = {}) {
   const limit = parseLimit(options.limit, 100);
   const since = resolveSince(options.hours);
   const results = controlPlaneRuntime.listBacktestResults(limit, {
@@ -31,7 +30,7 @@ export function listBacktestResults(options = {}) {
   };
 }
 
-export function getBacktestResultDetail(resultId) {
+export function getBacktestResultDetail(resultId: any) {
   const result = controlPlaneRuntime.getBacktestResult(resultId);
   if (!result) {
     return {
@@ -62,7 +61,7 @@ export function getBacktestResultDetail(resultId) {
   };
 }
 
-export function getBacktestResultSummary(options = {}) {
+export function getBacktestResultSummary(options: Record<string, any> = {}) {
   const limit = parseLimit(options.limit, 200);
   const since = resolveSince(options.hours);
   const results = controlPlaneRuntime.listBacktestResults(limit, {
@@ -91,20 +90,24 @@ export function getBacktestResultSummary(options = {}) {
     };
   }
 
-  results.forEach((item) => {
+  results.forEach((item: any) => {
     if (item.status === 'completed') summary.completed += 1;
     if (item.status === 'needs_review') summary.needsReview += 1;
     if (item.status === 'failed') summary.failed += 1;
   });
 
   summary.averageSharpe = Number(
-    (results.reduce((sum, item) => sum + item.sharpe, 0) / results.length).toFixed(2)
+    (results.reduce((sum: number, item: any) => sum + item.sharpe, 0) / results.length).toFixed(2)
   );
   summary.averageReturnPct = Number(
-    (results.reduce((sum, item) => sum + item.annualizedReturnPct, 0) / results.length).toFixed(2)
+    (
+      results.reduce((sum: number, item: any) => sum + item.annualizedReturnPct, 0) / results.length
+    ).toFixed(2)
   );
   summary.averageExcessReturnPct = Number(
-    (results.reduce((sum, item) => sum + item.excessReturnPct, 0) / results.length).toFixed(2)
+    (
+      results.reduce((sum: number, item: any) => sum + item.excessReturnPct, 0) / results.length
+    ).toFixed(2)
   );
 
   return {

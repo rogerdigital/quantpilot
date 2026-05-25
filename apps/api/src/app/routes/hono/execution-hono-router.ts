@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Hono } from 'hono';
 import {
   approveExecutionPlan,
@@ -23,8 +22,8 @@ import {
 } from '../../../domains/execution/services/query-service.js';
 import { hasPermission } from '../../../modules/auth/service.js';
 
-function requireApproval(c, action = '') {
-  if (!hasPermission('execution:approve')) {
+async function requireApproval(c: any, action = '') {
+  if (!(await hasPermission('execution:approve', c.req.header('authorization')))) {
     return c.json(
       { ok: false, message: `Permission 'execution:approve' required to ${action}` },
       403

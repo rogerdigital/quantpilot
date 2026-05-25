@@ -16,10 +16,7 @@ import {
   formatPermissionDisabled,
   formatPermissionError,
 } from '../../modules/permissions/permissionCopy.ts';
-import { BacktestAttributionPanel } from '../../modules/research/BacktestAttributionPanel.tsx';
 import { BacktestCandidateStrategyRow } from '../../modules/research/BacktestCandidateStrategyRow.tsx';
-import { BacktestEvidencePanel } from '../../modules/research/BacktestEvidencePanel.tsx';
-import { BacktestRobustnessPanel } from '../../modules/research/BacktestRobustnessPanel.tsx';
 import { BacktestRunQueueRow } from '../../modules/research/BacktestRunQueueRow.tsx';
 import {
   ResearchActionBar,

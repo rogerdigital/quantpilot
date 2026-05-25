@@ -1,7 +1,7 @@
-// @ts-nocheck
+import type { GatewayRouteContext } from '../types.js';
 
-function generateDemoPerformanceData(range) {
-  const daysMap = { '1M': 22, '3M': 66, '6M': 126, '1Y': 252, ALL: 504 };
+function generateDemoPerformanceData(range: string) {
+  const daysMap: Record<string, number> = { '1M': 22, '3M': 66, '6M': 126, '1Y': 252, ALL: 504 };
   const days = daysMap[range] || 252;
 
   // Generate equity curve with realistic random walk
@@ -19,19 +19,22 @@ function generateDemoPerformanceData(range) {
   const cagr = (1 + totalReturn) ** (1 / years) - 1;
 
   // Generate daily returns
-  const dailyReturns = [];
+  const dailyReturns: number[] = [];
   for (let i = 1; i < equityCurve.length; i++) {
     dailyReturns.push((equityCurve[i] - equityCurve[i - 1]) / equityCurve[i - 1]);
   }
 
-  const mean = dailyReturns.reduce((s, r) => s + r, 0) / dailyReturns.length;
-  const variance = dailyReturns.reduce((s, r) => s + (r - mean) ** 2, 0) / dailyReturns.length;
+  const mean = dailyReturns.reduce((s: number, r: number) => s + r, 0) / dailyReturns.length;
+  const variance =
+    dailyReturns.reduce((s: number, r: number) => s + (r - mean) ** 2, 0) / dailyReturns.length;
   const std = Math.sqrt(variance);
   const sharpe = std > 0 ? (mean / std) * Math.sqrt(252) : 0;
 
   const negReturns = dailyReturns.filter((r) => r < 0);
   const downVar =
-    negReturns.length > 0 ? negReturns.reduce((s, r) => s + r * r, 0) / negReturns.length : 0;
+    negReturns.length > 0
+      ? negReturns.reduce((s: number, r: number) => s + r * r, 0) / negReturns.length
+      : 0;
   const sortino =
     downVar > 0 ? (mean / Math.sqrt(downVar)) * Math.sqrt(252) : sharpe > 0 ? Infinity : 0;
 
@@ -51,12 +54,12 @@ function generateDemoPerformanceData(range) {
   const wins = tradePnLs.filter((p) => p > 0);
   const losses = tradePnLs.filter((p) => p < 0);
   const winRate = wins.length / totalTrades;
-  const grossProfit = wins.reduce((s, p) => s + p, 0);
-  const grossLoss = Math.abs(losses.reduce((s, p) => s + p, 0));
+  const grossProfit = wins.reduce((s: number, p: number) => s + p, 0);
+  const grossLoss = Math.abs(losses.reduce((s: number, p: number) => s + p, 0));
   const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
 
   // Monthly returns
-  const monthlyReturns = {};
+  const monthlyReturns: Record<number, Record<string, number>> = {};
   let monthStart = equityCurve[0];
   let currentMonth = 0;
   for (let i = 0; i < equityCurve.length; i++) {
@@ -115,7 +118,7 @@ function generateDemoPerformanceData(range) {
   };
 }
 
-export async function handleAnalyticsRoutes({ req, reqUrl, res, writeJson }) {
+export async function handleAnalyticsRoutes({ req, reqUrl, res, writeJson }: GatewayRouteContext) {
   // GET /api/analytics/performance
   if (req.method === 'GET' && reqUrl.pathname === '/api/analytics/performance') {
     const range = reqUrl.searchParams.get('range') || '1Y';

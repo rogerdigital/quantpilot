@@ -121,7 +121,6 @@ export function calcSlippage(input: SlippageInput, config: SlippageConfig): Slip
       return calcSpreadSlippage(input, config);
     case 'volatility_adjusted':
       return calcVolatilitySlippage(input, config);
-    case 'fixed':
     default:
       return calcFixedSlippage(input, config);
   }

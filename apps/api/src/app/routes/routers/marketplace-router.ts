@@ -1,8 +1,7 @@
-// @ts-nocheck
-
 import { controlPlaneContext } from '../../../../../../packages/control-plane-store/src/context.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
 export async function handleMarketplaceRoutes({
   req,
@@ -11,8 +10,8 @@ export async function handleMarketplaceRoutes({
   readJsonBody,
   writeJson,
   userAccount,
-}) {
-  const writeForbidden = (permission, action = '') =>
+}: GatewayRouteContext) {
+  const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 
   const marketplaceRepo = controlPlaneContext.strategyMarketplace;
@@ -68,8 +67,8 @@ export async function handleMarketplaceRoutes({
   ) {
     const parts = reqUrl.pathname.split('/');
     const marketplaceId = parts[parts.length - 2];
-    const userId = userAccount?.id || 'anonymous';
-    const userName = userAccount?.name || 'Anonymous';
+    const userId = (userAccount as any)?.id || 'anonymous';
+    const userName = (userAccount as any)?.name || 'Anonymous';
 
     try {
       const result = marketplaceRepo.forkStrategy(marketplaceId, userId, userName);
@@ -79,7 +78,7 @@ export async function handleMarketplaceRoutes({
       }
 
       writeJson(res, 200, { ok: true, fork: result.fork, strategy: result.strategy });
-    } catch (err) {
+    } catch (err: any) {
       writeJson(res, 400, { ok: false, message: err.message });
     }
     return true;
@@ -93,9 +92,9 @@ export async function handleMarketplaceRoutes({
   ) {
     const parts = reqUrl.pathname.split('/');
     const marketplaceId = parts[parts.length - 2];
-    const body = await readJsonBody(req);
-    const userId = userAccount?.id || 'anonymous';
-    const rating = parseInt(body.rating, 10);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+    const userId = (userAccount as any)?.id || 'anonymous';
+    const rating = parseInt(body?.rating, 10);
 
     if (rating < 1 || rating > 5) {
       writeJson(res, 400, { ok: false, message: 'Rating must be between 1 and 5' });
@@ -110,7 +109,7 @@ export async function handleMarketplaceRoutes({
       }
 
       writeJson(res, 200, { ok: true, strategy: result });
-    } catch (err) {
+    } catch (err: any) {
       writeJson(res, 400, { ok: false, message: err.message });
     }
     return true;
@@ -124,11 +123,11 @@ export async function handleMarketplaceRoutes({
   ) {
     const parts = reqUrl.pathname.split('/');
     const marketplaceId = parts[parts.length - 2];
-    const body = await readJsonBody(req);
-    const userId = userAccount?.id || 'anonymous';
-    const userName = userAccount?.name || 'Anonymous';
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+    const userId = (userAccount as any)?.id || 'anonymous';
+    const userName = (userAccount as any)?.name || 'Anonymous';
 
-    if (!body.comment || body.comment.trim().length === 0) {
+    if (!body?.comment || body?.comment.trim().length === 0) {
       writeJson(res, 400, { ok: false, message: 'Comment cannot be empty' });
       return true;
     }
@@ -138,12 +137,12 @@ export async function handleMarketplaceRoutes({
         marketplaceId,
         userId,
         userName,
-        body.comment.trim(),
-        body.rating ? parseInt(body.rating, 10) : undefined
+        body?.comment.trim(),
+        body?.rating ? parseInt(body?.rating, 10) : undefined
       );
 
       writeJson(res, 200, { ok: true, review });
-    } catch (err) {
+    } catch (err: any) {
       writeJson(res, 400, { ok: false, message: err.message });
     }
     return true;
@@ -151,24 +150,24 @@ export async function handleMarketplaceRoutes({
 
   // POST /api/marketplace/strategies/publish - publish strategy
   if (req.method === 'POST' && reqUrl.pathname === '/api/marketplace/strategies/publish') {
-    if (!hasPermission('strategy:write')) {
+    if (!(await hasPermission('strategy:write', req.headers.authorization))) {
       writeForbidden('strategy:write', 'publish strategy to marketplace');
       return true;
     }
 
-    const body = await readJsonBody(req);
-    const userId = userAccount?.id || 'anonymous';
-    const userName = userAccount?.name || 'Anonymous';
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+    const userId = (userAccount as any)?.id || 'anonymous';
+    const userName = (userAccount as any)?.name || 'Anonymous';
 
-    if (!body.strategyId) {
+    if (!body?.strategyId) {
       writeJson(res, 400, { ok: false, message: 'strategyId is required' });
       return true;
     }
 
     try {
       // Get strategy from catalog
-      const catalog = store.store.readCollection('strategy-catalog.json');
-      const strategy = catalog.find((s) => s.id === body.strategyId);
+      const catalog = (store.store as any).readCollection('strategy-catalog.json');
+      const strategy = catalog.find((s: any) => s.id === body?.strategyId);
 
       if (!strategy) {
         writeJson(res, 404, { ok: false, message: 'Strategy not found in catalog' });
@@ -176,14 +175,14 @@ export async function handleMarketplaceRoutes({
       }
 
       const entry = marketplaceRepo.publishStrategy({
-        strategyId: body.strategyId,
+        strategyId: body?.strategyId,
         authorId: userId,
         authorName: userName,
         name: strategy.name,
-        description: body.description || strategy.description || '',
-        visibility: body.visibility || 'public',
-        category: body.category || 'other',
-        tags: body.tags || [],
+        description: body?.description || strategy.description || '',
+        visibility: body?.visibility || 'public',
+        category: body?.category || 'other',
+        tags: body?.tags || [],
         metrics: {
           cagr: strategy.lastBacktest?.metrics?.cagr || 0,
           sharpe: strategy.lastBacktest?.metrics?.sharpe || 0,
@@ -194,7 +193,7 @@ export async function handleMarketplaceRoutes({
       });
 
       writeJson(res, 200, { ok: true, strategy: entry });
-    } catch (err) {
+    } catch (err: any) {
       writeJson(res, 400, { ok: false, message: err.message });
     }
     return true;

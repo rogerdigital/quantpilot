@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import {
   calcBeta,
@@ -9,43 +8,46 @@ import {
 import { isSchedulerAttentionStatus } from '../../../modules/scheduler/service.js';
 import { getRiskSchedulerLinkage } from './risk-scheduler-linkage-service.js';
 
-function parseLimit(value, fallback) {
+function parseLimit(value: any, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function resolveSince(hours) {
+function resolveSince(hours: any): string {
   const parsed = Number(hours);
   if (!Number.isFinite(parsed) || parsed <= 0) return '';
   return new Date(Date.now() - parsed * 60 * 60 * 1000).toISOString();
 }
 
-function parseTimestamp(value) {
+function parseTimestamp(value: any): number {
   const parsed = Date.parse(value || '');
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function sortByRecency(items) {
+function sortByRecency(items: any[]): any[] {
   return items
     .slice()
     .sort(
-      (left, right) =>
+      (left: any, right: any) =>
         parseTimestamp(right.updatedAt || right.createdAt) -
         parseTimestamp(left.updatedAt || left.createdAt)
     );
 }
 
-function takeLatest(items, limit) {
+function takeLatest(items: any[], limit: number): any[] {
   return sortByRecency(items).slice(0, limit);
 }
 
-function getLiveExposure(snapshot) {
+function getLiveExposure(snapshot: any) {
   const equity = Number(snapshot?.account?.equity || 0);
   const marketValue = Array.isArray(snapshot?.positions)
-    ? snapshot.positions.reduce((sum, item) => sum + Number(item.marketValue || 0), 0)
+    ? snapshot.positions.reduce((sum: number, item: any) => sum + Number(item.marketValue || 0), 0)
     : 0;
   const largestPosition = Array.isArray(snapshot?.positions)
-    ? snapshot.positions.reduce((max, item) => Math.max(max, Number(item.marketValue || 0)), 0)
+    ? snapshot.positions.reduce(
+        (max: number, item: any) => Math.max(max, Number(item.marketValue || 0)),
+        0
+      )
     : 0;
   return {
     equity,
@@ -55,7 +57,7 @@ function getLiveExposure(snapshot) {
   };
 }
 
-function createRunbook(input) {
+function createRunbook(input: any) {
   const items = [];
 
   if (input.riskOffEvents > 0) {
@@ -135,7 +137,7 @@ function createRunbook(input) {
   return items;
 }
 
-function resolvePosture(input) {
+function resolvePosture(input: any) {
   if (input.blockedExecutions > 0 || input.riskOffEvents > 0 || input.criticalIncidents > 0) {
     return {
       status: 'critical',
@@ -167,12 +169,12 @@ function resolvePosture(input) {
   };
 }
 
-export function getRiskWorkbench(options = {}) {
+export function getRiskWorkbench(options: Record<string, any> = {}) {
   const limit = parseLimit(options.limit, 80);
   const since = resolveSince(options.hours);
   const riskEvents = controlPlaneRuntime
     .listRiskEvents(200)
-    .filter((item) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since));
+    .filter((item: any) => !since || parseTimestamp(item.createdAt) >= parseTimestamp(since));
   const executionPlans = controlPlaneRuntime.listExecutionPlans(120);
   const backtestRuns = controlPlaneRuntime.listBacktestRuns(120);
   const incidents = controlPlaneRuntime.listIncidents(120, { since });
@@ -180,28 +182,28 @@ export function getRiskWorkbench(options = {}) {
   const schedulerTicks = controlPlaneRuntime.listSchedulerTicks(80, { since });
   const linkage = getRiskSchedulerLinkage({ limit, since });
 
-  const unresolvedRiskEvents = riskEvents.filter((item) => item.status !== 'healthy');
-  const riskOffEvents = riskEvents.filter((item) => item.status === 'risk-off');
-  const drawdownAlerts = riskEvents.filter((item) => {
+  const unresolvedRiskEvents = riskEvents.filter((item: any) => item.status !== 'healthy');
+  const riskOffEvents = riskEvents.filter((item: any) => item.status === 'risk-off');
+  const drawdownAlerts = riskEvents.filter((item: any) => {
     const message = `${item.title} ${item.message}`.toLowerCase();
     return message.includes('drawdown');
   });
-  const complianceAlerts = riskEvents.filter((item) => {
+  const complianceAlerts = riskEvents.filter((item: any) => {
     const message = `${item.title} ${item.message}`.toLowerCase();
     return message.includes('compliance') || message.includes('policy');
   });
   const approvalRequiredPlans = executionPlans.filter(
-    (item) => item.approvalState === 'required' || item.riskStatus === 'review'
+    (item: any) => item.approvalState === 'required' || item.riskStatus === 'review'
   );
   const blockedExecutionPlans = executionPlans.filter(
-    (item) => item.riskStatus === 'blocked' || item.status === 'blocked'
+    (item: any) => item.riskStatus === 'blocked' || item.status === 'blocked'
   );
-  const reviewBacktests = backtestRuns.filter((item) => item.status === 'needs_review');
+  const reviewBacktests = backtestRuns.filter((item: any) => item.status === 'needs_review');
   const riskIncidents = incidents
-    .filter((item) => item.status !== 'resolved')
-    .filter((item) => item.source === 'risk' || item.metadata?.riskEventId);
-  const criticalIncidents = riskIncidents.filter((item) => item.severity === 'critical');
-  const schedulerAttention = schedulerTicks.filter((item) =>
+    .filter((item: any) => item.status !== 'resolved')
+    .filter((item: any) => item.source === 'risk' || item.metadata?.riskEventId);
+  const criticalIncidents = riskIncidents.filter((item: any) => item.severity === 'critical');
+  const schedulerAttention = schedulerTicks.filter((item: any) =>
     isSchedulerAttentionStatus(item.status)
   );
   const exposure = getLiveExposure(brokerSnapshot);
@@ -270,7 +272,7 @@ export function getRiskWorkbench(options = {}) {
         status: reviewBacktests.length ? 'warn' : 'healthy',
         detail: `${reviewBacktests.length} backtest runs still need operator explanation or approval.`,
         primaryCount: reviewBacktests.length,
-        secondaryCount: backtestRuns.filter((item) => item.status === 'running').length,
+        secondaryCount: backtestRuns.filter((item: any) => item.status === 'running').length,
         updatedAt: backtestRuns[0]?.updatedAt || generatedAt,
       },
       {
@@ -306,8 +308,9 @@ export function getRiskWorkbench(options = {}) {
         status: complianceAlerts.length ? 'warn' : 'healthy',
         detail: `${complianceAlerts.length} compliance or policy-linked alerts are still on the risk path.`,
         primaryCount: complianceAlerts.length,
-        secondaryCount: riskIncidents.filter((item) => (item.tags || []).includes('compliance'))
-          .length,
+        secondaryCount: riskIncidents.filter((item: any) =>
+          (item.tags || []).includes('compliance')
+        ).length,
         updatedAt: complianceAlerts[0]?.createdAt || riskIncidents[0]?.updatedAt || generatedAt,
       },
       {
@@ -377,7 +380,7 @@ export function getRiskWorkbench(options = {}) {
   };
 }
 
-function computeRiskAnalytics(snapshot) {
+function computeRiskAnalytics(snapshot: any) {
   if (!snapshot) return { var95: null, cvar95: null, beta: null, hhi: null, holdingCount: 0 };
 
   const positions = Array.isArray(snapshot?.positions) ? snapshot.positions : [];
@@ -389,16 +392,18 @@ function computeRiskAnalytics(snapshot) {
   }
 
   // Compute position weights
-  const weights = positions.map((p) => Number(p.marketValue || 0) / equity);
+  const weights = positions.map((p: any) => Number(p.marketValue || 0) / equity);
   const hhi = parseFloat(calcHHI(weights).toFixed(4));
 
   // Build portfolio daily returns from position price histories (via priceHistory if available)
   const positionReturns = positions
-    .map((p) => {
+    .map((p: any) => {
       const hist = Array.isArray(p.priceHistory) ? p.priceHistory : [];
       if (hist.length < 2) return null;
       const weight = Number(p.marketValue || 0) / equity;
-      return hist.slice(1).map((v, i) => (hist[i] > 0 ? Math.log(v / hist[i]) * weight : 0));
+      return hist
+        .slice(1)
+        .map((v: number, i: number) => (hist[i] > 0 ? Math.log(v / hist[i]) * weight : 0));
     })
     .filter(Boolean);
 
@@ -407,9 +412,9 @@ function computeRiskAnalytics(snapshot) {
   }
 
   // Sum weighted returns across positions to get portfolio daily returns
-  const len = Math.min(...positionReturns.map((r) => r.length));
-  const portfolioReturns = Array.from({ length: len }, (_, i) =>
-    positionReturns.reduce((s, r) => s + r[i], 0)
+  const len = Math.min(...positionReturns.map((r: any) => r.length));
+  const portfolioReturns = Array.from({ length: len }, (_: number, i: number) =>
+    positionReturns.reduce((s: number, r: any) => s + r[i], 0)
   );
 
   const var95 = parseFloat((calcHistoricalVaR(portfolioReturns, 0.95) * 100).toFixed(3));
@@ -418,8 +423,8 @@ function computeRiskAnalytics(snapshot) {
   // Beta: compare largest position to portfolio as proxy (if SPY history not available)
   // We use the first position with longest history as benchmark proxy
   const benchmarkReturns = positionReturns.reduce(
-    (best, r) => (r.length > best.length ? r : best),
-    []
+    (best: any, r: any) => (r.length > best.length ? r : best),
+    [] as any[]
   );
   const beta =
     portfolioReturns.length >= 10

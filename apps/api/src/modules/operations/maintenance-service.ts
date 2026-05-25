@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
 import { controlPlaneContext } from '../../../../../packages/control-plane-store/src/context.js';
 import {
@@ -11,7 +9,7 @@ import { appendAuditRecord } from '../audit/service.js';
 import { getSession } from '../auth/service.js';
 import { getMonitoringStatus } from '../monitoring/service.js';
 
-function toPositiveLimit(value, fallback) {
+function toPositiveLimit(value: any, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
@@ -20,7 +18,12 @@ function currentActor() {
   return getSession()?.user?.id || 'operator-demo';
 }
 
-function recordMaintenanceAudit(type, title, detail, metadata = {}) {
+function recordMaintenanceAudit(
+  type: string,
+  title: string,
+  detail: string,
+  metadata: Record<string, any> = {}
+) {
   appendAuditRecord({
     type,
     actor: currentActor(),
@@ -30,9 +33,9 @@ function recordMaintenanceAudit(type, title, detail, metadata = {}) {
   });
 }
 
-export async function getOperationsMaintenanceSnapshot(options = {}) {
+export async function getOperationsMaintenanceSnapshot(options: Record<string, any> = {}) {
   const generatedAt = new Date().toISOString();
-  const monitoring = await getMonitoringStatus(options);
+  const monitoring = await getMonitoringStatus(options as any);
   const integrity = getControlPlaneIntegrityReport(controlPlaneContext.store, {
     generatedAt,
   });
@@ -49,16 +52,16 @@ export async function getOperationsMaintenanceSnapshot(options = {}) {
   return {
     ok: true,
     generatedAt,
-    storageAdapter: controlPlaneContext.storageAdapter,
+    storageAdapter: (controlPlaneContext as any).storageAdapter,
     integrity,
     backlog: {
-      pendingNotificationJobs: monitoring.services.queues.pendingNotificationJobs,
-      pendingRiskScanJobs: monitoring.services.queues.pendingRiskScanJobs,
-      pendingAgentReviews: monitoring.services.queues.pendingAgentReviews,
-      retryScheduledWorkflows: monitoring.services.queues.retryScheduledWorkflows,
+      pendingNotificationJobs: (monitoring as any).services.queues.pendingNotificationJobs,
+      pendingRiskScanJobs: (monitoring as any).services.queues.pendingRiskScanJobs,
+      pendingAgentReviews: (monitoring as any).services.queues.pendingAgentReviews,
+      retryScheduledWorkflows: (monitoring as any).services.queues.retryScheduledWorkflows,
       failedWorkflows: failedWorkflows.length,
-      totalPending: monitoring.services.queues.totalPending,
-      backlogStatus: monitoring.services.queues.backlogStatus,
+      totalPending: (monitoring as any).services.queues.totalPending,
+      backlogStatus: (monitoring as any).services.queues.backlogStatus,
     },
     recentFailedWorkflows: failedWorkflows,
     recentRetryScheduledWorkflows: retryScheduledWorkflows,
@@ -78,10 +81,10 @@ export function createOperationsMaintenanceBackup() {
   recordMaintenanceAudit(
     'operations.maintenance.backup.created',
     'Control-plane backup exported',
-    `Exported control-plane backup with ${backup.files.length} files.`,
+    `Exported control-plane backup with ${(backup as any).files.length} files.`,
     {
-      adapterKind: backup.adapter.kind,
-      fileCount: backup.files.length,
+      adapterKind: (backup as any).adapter.kind,
+      fileCount: (backup as any).files.length,
     }
   );
   return {
@@ -90,10 +93,10 @@ export function createOperationsMaintenanceBackup() {
   };
 }
 
-export function restoreOperationsMaintenanceBackup(payload = {}) {
+export function restoreOperationsMaintenanceBackup(payload: Record<string, any> = {}) {
   const result = restoreControlPlaneBackup(controlPlaneContext.store, payload.backup || payload, {
     dryRun: payload.dryRun,
-  });
+  }) as any;
 
   recordMaintenanceAudit(
     result.dryRun
@@ -117,12 +120,12 @@ export function restoreOperationsMaintenanceBackup(payload = {}) {
   };
 }
 
-export function releaseWorkflowMaintenanceBacklog(payload = {}) {
+export function releaseWorkflowMaintenanceBacklog(payload: Record<string, any> = {}) {
   const result = controlPlaneRuntime.releaseScheduledWorkflowRuns({
     worker: payload.worker || 'operations-maintenance',
     limit: toPositiveLimit(payload.limit, 20),
     now: payload.now || new Date().toISOString(),
-  });
+  }) as any;
 
   recordMaintenanceAudit(
     'operations.maintenance.workflow-repair',
@@ -131,7 +134,7 @@ export function releaseWorkflowMaintenanceBacklog(payload = {}) {
     {
       worker: result.worker,
       releasedCount: result.releasedCount,
-      workflowIds: result.workflows.map((item) => item.id),
+      workflowIds: result.workflows.map((item: any) => item.id),
     }
   );
 

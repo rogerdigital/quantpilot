@@ -1,9 +1,9 @@
-// @ts-nocheck
 import { addSseConnection } from '../../../modules/sse/sse-manager.js';
+import type { GatewayRouteContext } from '../types.js';
 
 const KEEPALIVE_INTERVAL_MS = 30_000;
 
-export async function handleSseRoutes({ req, reqUrl, res }) {
+export async function handleSseRoutes({ req, reqUrl, res }: GatewayRouteContext) {
   if (req.method !== 'GET' || reqUrl.pathname !== '/api/sse/state') {
     return false;
   }

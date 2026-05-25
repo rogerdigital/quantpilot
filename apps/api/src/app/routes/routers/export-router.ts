@@ -1,9 +1,8 @@
-// @ts-nocheck
-
 import { controlPlaneContext } from '../../../../../../packages/control-plane-store/src/context.js';
 import { createExportService } from '../../../domains/export/services/export-service.js';
+import type { GatewayRouteContext } from '../types.js';
 
-function sendExport(res, result) {
+function sendExport(res: any, result: any) {
   if (!result) {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: false, message: 'Resource not found' }));
@@ -16,8 +15,8 @@ function sendExport(res, result) {
   res.end(result.body);
 }
 
-export async function handleExportRoutes({ req, reqUrl, res, writeJson }) {
-  const store = controlPlaneContext.store;
+export async function handleExportRoutes({ req, reqUrl, res, writeJson }: GatewayRouteContext) {
+  const store = controlPlaneContext.store as any;
   const exportService = createExportService(store);
 
   // GET /api/export/strategies/:id

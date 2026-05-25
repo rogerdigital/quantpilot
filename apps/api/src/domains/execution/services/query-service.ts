@@ -1,27 +1,29 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import {
   buildExecutionExceptionPolicy,
   listLinkedExecutionIncidents,
 } from './exception-policy-service.js';
 
-function groupBySymbol(items = [], qtySelector = () => 0) {
-  return items.reduce((acc, item) => {
-    const symbol = item.symbol || 'UNKNOWN';
-    acc[symbol] = Number((acc[symbol] || 0) + Number(qtySelector(item) || 0));
-    return acc;
-  }, {});
+function groupBySymbol(items: any[] = [], qtySelector: (item: any) => number = () => 0) {
+  return items.reduce(
+    (acc: Record<string, number>, item: any) => {
+      const symbol = item.symbol || 'UNKNOWN';
+      acc[symbol] = Number((acc[symbol] || 0) + Number(qtySelector(item) || 0));
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 }
 
-function round2(value) {
+function round2(value: any) {
   return Number(Number(value || 0).toFixed(2));
 }
 
 function buildExecutionReconciliation(
-  orderStates = [],
-  snapshot = null,
-  latestRuntime = null,
-  plan = null
+  orderStates: any[] = [],
+  snapshot: Record<string, any> | null = null,
+  latestRuntime: Record<string, any> | null = null,
+  plan: Record<string, any> | null = null
 ) {
   if (!snapshot) {
     return {
@@ -267,7 +269,11 @@ function buildExecutionReconciliation(
   };
 }
 
-function buildExecutionCompensation(detail, exceptionPolicy = null, linkedIncidents = []) {
+function buildExecutionCompensation(
+  detail: Record<string, any>,
+  exceptionPolicy: Record<string, any> | null = null,
+  linkedIncidents: any[] = []
+) {
   const policy = exceptionPolicy || detail.exceptionPolicy || null;
   const reconciliation = detail.reconciliation || null;
   const openIncident =
@@ -275,8 +281,8 @@ function buildExecutionCompensation(detail, exceptionPolicy = null, linkedIncide
       (incident) => incident.status !== 'resolved'
     ) || null;
   const lastAutomatedAt = detail.plan?.metadata?.compensation?.lastAutomatedAt || '';
-  const reasons = [];
-  const steps = [];
+  const reasons: string[] = [];
+  const steps: Record<string, any>[] = [];
   let status = 'not_needed';
   let mode = 'none';
   let autoExecutable = false;
@@ -390,7 +396,11 @@ function buildExecutionCompensation(detail, exceptionPolicy = null, linkedIncide
   };
 }
 
-function buildExecutionLedgerEntry(plan, runtimeEvents = [], snapshots = []) {
+function buildExecutionLedgerEntry(
+  plan: Record<string, any>,
+  runtimeEvents: any[] = [],
+  snapshots: any[] = []
+) {
   const workflow = plan.workflowRunId
     ? controlPlaneRuntime.getWorkflowRun(plan.workflowRunId)
     : null;
@@ -468,8 +478,13 @@ function buildExecutionLedgerEntry(plan, runtimeEvents = [], snapshots = []) {
   };
 }
 
-function buildExecutionRecovery(plan, workflow, reconciliation, exceptionPolicy = null) {
-  const reasons = [];
+function buildExecutionRecovery(
+  plan: Record<string, any>,
+  workflow: Record<string, any> | null,
+  reconciliation: Record<string, any>,
+  exceptionPolicy: Record<string, any> | null = null
+) {
+  const reasons: string[] = [];
 
   if (exceptionPolicy?.status === 'incident') {
     reasons.push(...(exceptionPolicy.reasons || []));
@@ -556,19 +571,19 @@ function buildExecutionRecovery(plan, workflow, reconciliation, exceptionPolicy 
   };
 }
 
-export function listExecutionPlans(limit = 50, filter = {}) {
+export function listExecutionPlans(limit = 50, filter: Record<string, any> = {}) {
   return controlPlaneRuntime.listExecutionPlans(limit, filter);
 }
 
-export function listExecutionRuns(limit = 50, filter = {}) {
+export function listExecutionRuns(limit = 50, filter: Record<string, any> = {}) {
   return controlPlaneRuntime.listExecutionRuns(limit, filter);
 }
 
-export function getExecutionPlan(planId) {
+export function getExecutionPlan(planId: string) {
   return controlPlaneRuntime.getExecutionPlan(planId);
 }
 
-export function getExecutionPlanDetail(planId) {
+export function getExecutionPlanDetail(planId: string) {
   const plan = controlPlaneRuntime.getExecutionPlan(planId);
   if (!plan) return null;
   return buildExecutionLedgerEntry(
@@ -578,7 +593,7 @@ export function getExecutionPlanDetail(planId) {
   );
 }
 
-export function findExecutionPlanByWorkflowRunId(workflowRunId) {
+export function findExecutionPlanByWorkflowRunId(workflowRunId: string) {
   return controlPlaneRuntime.findExecutionPlanByWorkflowRunId(workflowRunId);
 }
 
@@ -590,7 +605,7 @@ export function listBrokerAccountSnapshots(limit = 50) {
   return controlPlaneRuntime.listBrokerAccountSnapshots(limit);
 }
 
-export function listBrokerExecutionEvents(limit = 50, filter = {}) {
+export function listBrokerExecutionEvents(limit = 50, filter: Record<string, any> = {}) {
   return controlPlaneRuntime.listBrokerExecutionEvents(limit, filter);
 }
 
@@ -603,7 +618,9 @@ export function listExecutionLedger(limit = 20) {
   const runtimeEvents = controlPlaneRuntime.listExecutionRuntimeEvents(60);
   const snapshots = controlPlaneRuntime.listBrokerAccountSnapshots(60);
 
-  return plans.map((plan) => buildExecutionLedgerEntry(plan, runtimeEvents, snapshots));
+  return plans.map((plan: Record<string, any>) =>
+    buildExecutionLedgerEntry(plan, runtimeEvents, snapshots)
+  );
 }
 
 export function getExecutionWorkbench(limit = 40) {
@@ -638,7 +655,7 @@ export function getExecutionWorkbench(limit = 40) {
     fillEvents: 0,
   };
 
-  ledger.forEach((entry) => {
+  ledger.forEach((entry: any) => {
     const lifecycle =
       entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus || 'planned';
     if (lifecycle === 'awaiting_approval') summary.awaitingApproval += 1;
@@ -654,7 +671,7 @@ export function getExecutionWorkbench(limit = 40) {
     if (reconciliation === 'attention') summary.attention += 1;
     if (reconciliation === 'drift') summary.drift += 1;
     if (reconciliation === 'missing_snapshot') summary.missingSnapshot += 1;
-    summary.totalOpenOrders += entry.orderStates.filter((item) =>
+    summary.totalOpenOrders += entry.orderStates.filter((item: any) =>
       ['submitted', 'acknowledged'].includes(item.lifecycleStatus)
     ).length;
     summary.syncedPositions += Array.isArray(entry.latestSnapshot?.positions)
@@ -675,11 +692,11 @@ export function getExecutionWorkbench(limit = 40) {
       summary.brokerRejectPlans += 1;
     summary.brokerEvents += Array.isArray(entry.brokerEvents) ? entry.brokerEvents.length : 0;
     summary.rejectedBrokerEvents += Array.isArray(entry.brokerEvents)
-      ? entry.brokerEvents.filter((item) => item.eventType === 'rejected').length
+      ? entry.brokerEvents.filter((item: any) => item.eventType === 'rejected').length
       : 0;
     summary.fillEvents += Array.isArray(entry.brokerEvents)
       ? entry.brokerEvents.filter(
-          (item) => item.eventType === 'partial_fill' || item.eventType === 'filled'
+          (item: any) => item.eventType === 'partial_fill' || item.eventType === 'filled'
         ).length
       : 0;
   });
@@ -687,27 +704,27 @@ export function getExecutionWorkbench(limit = 40) {
   const queues = {
     approvals: ledger
       .filter(
-        (entry) =>
+        (entry: any) =>
           (entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus) ===
           'awaiting_approval'
       )
       .slice(0, 8),
-    retryEligible: ledger.filter((entry) => entry.exceptionPolicy?.retryEligible).slice(0, 8),
+    retryEligible: ledger.filter((entry: any) => entry.exceptionPolicy?.retryEligible).slice(0, 8),
     compensation: ledger
-      .filter((entry) => entry.exceptionPolicy?.status === 'compensation')
+      .filter((entry: any) => entry.exceptionPolicy?.status === 'compensation')
       .slice(0, 8),
     compensationAutomation: ledger
-      .filter((entry) => entry.compensation?.autoExecutable)
+      .filter((entry: any) => entry.compensation?.autoExecutable)
       .slice(0, 8),
     incidents: ledger
       .filter(
-        (entry) =>
+        (entry: any) =>
           Boolean(entry.exceptionPolicy?.linkedIncidentId) ||
           entry.exceptionPolicy?.status === 'incident'
       )
       .slice(0, 8),
     activeRouting: ledger
-      .filter((entry) =>
+      .filter((entry: any) =>
         ['submitted', 'acknowledged', 'partial_fill'].includes(
           entry.executionRun?.lifecycleStatus || entry.plan.lifecycleStatus
         )
@@ -715,8 +732,8 @@ export function getExecutionWorkbench(limit = 40) {
       .slice(0, 8),
   };
 
-  const ownerBuckets = new Map();
-  ledger.forEach((entry) => {
+  const ownerBuckets = new Map<string, Record<string, any>>();
+  ledger.forEach((entry: any) => {
     const owner = entry.executionRun?.owner || 'unassigned';
     const bucket = ownerBuckets.get(owner) || {
       owner,

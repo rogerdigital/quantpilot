@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createHash } from 'node:crypto';
 import {
   evaluatePermissions,
@@ -19,12 +18,19 @@ import {
   revokeSession,
   usePasswordResetToken,
 } from '../../../modules/auth/user-store.js';
+import type { GatewayRouteContext } from '../types.js';
 
-function sha256hex(value) {
+function sha256hex(value: string) {
   return createHash('sha256').update(value).digest('hex');
 }
 
-export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
+export async function handleAuthRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   if (req.method === 'GET' && reqUrl.pathname === '/api/auth/session') {
     writeJson(res, 200, getSession());
     return true;
@@ -36,7 +42,7 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/auth/register') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { email, password, name } = body || {};
 
     if (typeof email !== 'string' || typeof password !== 'string' || typeof name !== 'string') {
@@ -65,7 +71,7 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/auth/login') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { username, password, email } = body || {};
 
     // Support both legacy username and new email login
@@ -123,7 +129,7 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/auth/refresh') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { refreshToken } = body || {};
 
     if (typeof refreshToken !== 'string') {
@@ -177,7 +183,7 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/auth/password-reset') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { email, token, newPassword } = body || {};
 
     // Request reset
@@ -192,12 +198,11 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
         });
         return true;
       }
-      const resetToken = createPasswordResetToken(user.id);
+      const _resetToken = createPasswordResetToken(user.id);
       // In production, send email with resetToken.token
       writeJson(res, 200, {
         ok: true,
         message: 'If the email exists, a reset link has been sent',
-        debug_token: resetToken.token,
       });
       return true;
     }
@@ -219,7 +224,7 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
 
   // Team management routes
   if (req.method === 'POST' && reqUrl.pathname === '/api/auth/teams') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { name, description } = body || {};
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
@@ -241,7 +246,7 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/auth/teams/invite') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { teamId, email, role } = body || {};
     if (!teamId || !email) {
       writeJson(res, 400, { ok: false, message: 'Missing teamId or email' });
@@ -255,7 +260,7 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/auth/teams/accept') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { token } = body || {};
     if (!token) {
       writeJson(res, 400, { ok: false, message: 'Missing invite token' });
@@ -275,7 +280,7 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/auth/api-keys') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { teamId, name, permissions, expiresInDays } = body || {};
     if (!teamId || !name) {
       writeJson(res, 400, { ok: false, message: 'Missing teamId or name' });
@@ -307,7 +312,7 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
 
     // Generate TOTP secret (in production, use speakeasy or otplib)
     const { randomBytes: rb } = await import('node:crypto');
-    const secret = rb(20).toString('base32');
+    const secret = rb(20).toString('base32' as BufferEncoding);
     const otpauthUrl = `otpauth://totp/QuantPilot:demo?secret=${secret}&issuer=QuantPilot`;
 
     writeJson(res, 200, {
@@ -321,7 +326,7 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/auth/mfa/verify') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { userId, code, secret } = body || {};
 
     if (!code) {
@@ -341,10 +346,8 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
       enableMfa(userId, secret);
     }
 
-    const recoveryCodes = Array.from({ length: 8 }, () => {
-      const { randomBytes: rb2 } = require('node:crypto');
-      return rb2(4).toString('hex');
-    });
+    const { randomBytes: rb2 } = await import('node:crypto');
+    const recoveryCodes = Array.from({ length: 8 }, () => rb2(4).toString('hex'));
 
     writeJson(res, 200, {
       ok: true,
@@ -355,7 +358,7 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/auth/mfa/challenge') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { userId, code, recoveryCode } = body || {};
 
     if (recoveryCode) {
@@ -381,13 +384,13 @@ export async function handleAuthRoutes({ req, reqUrl, res, readJsonBody, writeJs
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/auth/permission-policy') {
     const role = reqUrl.searchParams.get('role') || 'viewer';
-    const policy = getPermissionPolicy(role);
+    const policy = getPermissionPolicy(role as any);
     writeJson(res, 200, { ok: true, policy });
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/auth/permission-policy/evaluate') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { role, actions } = body || {};
     if (!role || !Array.isArray(actions)) {
       writeJson(res, 400, { ok: false, message: 'Missing role or actions array' });

@@ -63,7 +63,7 @@ export function PaperPerformancePanel({
     );
   }
 
-  if (!readiness || !readiness.metrics) {
+  if (!readiness?.metrics) {
     return (
       <div
         className={className}

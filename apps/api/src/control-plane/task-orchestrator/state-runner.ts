@@ -1,12 +1,10 @@
-// @ts-nocheck
-
 import { controlPlaneRuntime } from '../../../../../packages/control-plane-runtime/src/index.js';
 import { executeStateWorkflow } from '../../../../../packages/task-workflow-engine/src/index.js';
 import { queueRiskScan } from '../../domains/risk/services/scan-service.js';
 import { getSession } from '../../modules/auth/service.js';
 import { recordCycleRun } from './services/cycle-service.js';
 
-export async function runStateCycle(previousState, context) {
+export async function runStateCycle(previousState: any, context: Record<string, any>) {
   return executeStateWorkflow(
     previousState,
     {

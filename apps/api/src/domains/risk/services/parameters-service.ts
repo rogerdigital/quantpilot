@@ -38,7 +38,7 @@ export function updateRiskParameters(patch: Partial<RiskParameters> = {}): RiskP
     if (!allowed.has(key)) continue;
     const typedKey = key as keyof RiskParameters;
     const defaultVal = DEFAULT_RISK_PARAMS[typedKey];
-    if (typeof defaultVal === 'number' && typeof value === 'number' && isFinite(value)) {
+    if (typeof defaultVal === 'number' && typeof value === 'number' && Number.isFinite(value)) {
       updates[typedKey] = value as never;
     } else if (typeof defaultVal === 'boolean' && typeof value === 'boolean') {
       updates[typedKey] = value as never;

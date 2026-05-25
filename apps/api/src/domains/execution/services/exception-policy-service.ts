@@ -1,13 +1,12 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 
 const RETRY_LIMIT = 2;
 
-function hasExecutionLink(incident, detail) {
+function hasExecutionLink(incident: Record<string, any>, detail: Record<string, any>) {
   return (
     Array.isArray(incident?.links) &&
     incident.links.some(
-      (link) =>
+      (link: Record<string, any>) =>
         (link?.executionPlanId && String(link.executionPlanId) === String(detail.plan.id)) ||
         (link?.executionRunId &&
           String(link.executionRunId) === String(detail.executionRun?.id || '')) ||
@@ -19,8 +18,12 @@ function hasExecutionLink(incident, detail) {
   );
 }
 
-function mergeIncidentLinks(detail, policy, brokerEvent = null) {
-  const links = [
+function mergeIncidentLinks(
+  detail: Record<string, any>,
+  policy: Record<string, any>,
+  brokerEvent: Record<string, any> | null = null
+) {
+  const links: Record<string, any>[] = [
     {
       kind: 'execution-plan',
       executionPlanId: detail.plan.id,
@@ -49,7 +52,10 @@ function mergeIncidentLinks(detail, policy, brokerEvent = null) {
   return links;
 }
 
-export function listLinkedExecutionIncidents(detail, options = {}) {
+export function listLinkedExecutionIncidents(
+  detail: Record<string, any>,
+  options: Record<string, any> = {}
+) {
   const incidents = controlPlaneRuntime.listIncidents(Number(options.limit || 120), {
     source: options.source || '',
   });
@@ -57,17 +63,22 @@ export function listLinkedExecutionIncidents(detail, options = {}) {
   return incidents.filter((incident) => hasExecutionLink(incident, detail));
 }
 
-export function buildExecutionExceptionPolicy(detail) {
+export function buildExecutionExceptionPolicy(detail: Record<string, any>) {
   const brokerEvents = Array.isArray(detail.brokerEvents) ? detail.brokerEvents : [];
   const orderStates = Array.isArray(detail.orderStates) ? detail.orderStates : [];
   const linkedIncidents = Array.isArray(detail.linkedIncidents)
     ? detail.linkedIncidents
     : listLinkedExecutionIncidents(detail, { limit: 120 });
-  const openIncident = linkedIncidents.find((incident) => incident.status !== 'resolved') || null;
-  const rejectedEvents = brokerEvents.filter((item) => item.eventType === 'rejected');
-  const cancelledEvents = brokerEvents.filter((item) => item.eventType === 'cancelled');
+  const openIncident =
+    linkedIncidents.find((incident: Record<string, any>) => incident.status !== 'resolved') || null;
+  const rejectedEvents = brokerEvents.filter(
+    (item: Record<string, any>) => item.eventType === 'rejected'
+  );
+  const cancelledEvents = brokerEvents.filter(
+    (item: Record<string, any>) => item.eventType === 'cancelled'
+  );
   const fillEvents = brokerEvents.filter(
-    (item) => item.eventType === 'partial_fill' || item.eventType === 'filled'
+    (item: Record<string, any>) => item.eventType === 'partial_fill' || item.eventType === 'filled'
   );
   const workflowRetryScheduled = detail.workflow?.status === 'retry_scheduled';
   const workflowFailed =
@@ -76,10 +87,12 @@ export function buildExecutionExceptionPolicy(detail) {
   const hardReconciliationDrift = reconciliationStatus === 'drift';
   const attentionReconciliation =
     reconciliationStatus === 'attention' || reconciliationStatus === 'missing_snapshot';
-  const openOrders = orderStates.filter((item) =>
+  const openOrders = orderStates.filter((item: Record<string, any>) =>
     ['submitted', 'acknowledged'].includes(item.lifecycleStatus)
   ).length;
-  const filledOrders = orderStates.filter((item) => item.lifecycleStatus === 'filled').length;
+  const filledOrders = orderStates.filter(
+    (item: Record<string, any>) => item.lifecycleStatus === 'filled'
+  ).length;
   const retryCount = rejectedEvents.length + cancelledEvents.length;
   const remainingRetries = Math.max(0, RETRY_LIMIT - retryCount);
   const latestBrokerEvent = brokerEvents[0] || null;
@@ -197,7 +210,10 @@ export function buildExecutionExceptionPolicy(detail) {
   };
 }
 
-export function syncExecutionExceptionState(detail, options = {}) {
+export function syncExecutionExceptionState(
+  detail: Record<string, any>,
+  options: Record<string, any> = {}
+) {
   const actor = options.actor || 'execution-desk';
   const now = options.now || new Date().toISOString();
   const policy = buildExecutionExceptionPolicy(detail);

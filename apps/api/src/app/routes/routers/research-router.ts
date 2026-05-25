@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { controlPlaneContext } from '../../../../../../packages/control-plane-store/src/context.js';
 import { createExperimentRegistry } from '../../../../../../packages/control-plane-store/src/experiment-registry.js';
 import { createResearchWorkspaceStore } from '../../../../../../packages/control-plane-store/src/research-workspace-store.js';
@@ -24,9 +22,16 @@ import {
 } from '../../../domains/research/services/workbench-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
-export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
-  const writeForbidden = (permission, action = '') =>
+export async function handleResearchRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
+  const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/research/hub') {
@@ -66,18 +71,21 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/research/governance/actions') {
-    const body = await readJsonBody(req);
-    if (body.action === 'promote_strategies' || body.action === 'queue_backtests') {
-      if (!hasPermission('strategy:write')) {
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+    if (body?.action === 'promote_strategies' || body?.action === 'queue_backtests') {
+      if (!(await hasPermission('strategy:write', req.headers.authorization))) {
         writeForbidden('strategy:write', 'run research governance strategy actions');
         return true;
       }
     }
-    if (body.action === 'evaluate_runs' && !hasPermission('risk:review')) {
+    if (
+      body?.action === 'evaluate_runs' &&
+      !(await hasPermission('risk:review', req.headers.authorization))
+    ) {
       writeForbidden('risk:review', 'run research governance evaluation actions');
       return true;
     }
-    const result = runResearchGovernanceAction(body);
+    const result = runResearchGovernanceAction(body as any);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
@@ -115,7 +123,7 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
 
   if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/research/tasks/')) {
     const taskId = reqUrl.pathname.split('/').at(-1);
-    const result = getResearchTaskDetail(taskId);
+    const result = getResearchTaskDetail(taskId as string);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
@@ -189,19 +197,19 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/research/workspaces') {
-    const wsStore = createResearchWorkspaceStore(getStore());
+    const wsStore = createResearchWorkspaceStore(getStore() as any);
     writeJson(res, 200, { ok: true, workspaces: wsStore.listWorkspaces() });
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/research/workspaces') {
     return (async () => {
-      const body = await readJsonBody(req);
-      if (!body || !body.id || !body.title || !body.owner) {
+      const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+      if (!body?.id || !body.title || !body.owner) {
         writeJson(res, 400, { ok: false, error: 'Missing required fields: id, title, owner' });
         return true;
       }
-      const wsStore = createResearchWorkspaceStore(getStore());
+      const wsStore = createResearchWorkspaceStore(getStore() as any);
       const workspace = wsStore.createWorkspace({
         ...body,
         ownerRole: body.ownerRole || 'researcher',
@@ -210,7 +218,7 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
         createdAt: body.createdAt || new Date().toISOString(),
         updatedAt: body.updatedAt || new Date().toISOString(),
         metadata: body.metadata || {},
-      });
+      } as any);
       writeJson(res, 201, { ok: true, workspace });
       return true;
     })();
@@ -218,7 +226,7 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
 
   const wsDetailMatch = reqUrl.pathname.match(/^\/api\/research\/workspaces\/([^/]+)$/);
   if (wsDetailMatch && req.method === 'GET') {
-    const wsStore = createResearchWorkspaceStore(getStore());
+    const wsStore = createResearchWorkspaceStore(getStore() as any);
     const workspace = wsStore.getWorkspace(wsDetailMatch[1]);
     if (!workspace) {
       writeJson(res, 404, { ok: false, error: 'Workspace not found' });
@@ -231,15 +239,15 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   const wsIdeasMatch = reqUrl.pathname.match(/^\/api\/research\/workspaces\/([^/]+)\/ideas$/);
   if (wsIdeasMatch && req.method === 'POST') {
     return (async () => {
-      const body = await readJsonBody(req);
-      if (!body || !body.id || !body.title || !body.hypothesis) {
+      const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+      if (!body?.id || !body.title || !body.hypothesis) {
         writeJson(res, 400, {
           ok: false,
           error: 'Missing required fields: id, title, hypothesis',
         });
         return true;
       }
-      const wsStore = createResearchWorkspaceStore(getStore());
+      const wsStore = createResearchWorkspaceStore(getStore() as any);
       const idea = wsStore.attachIdea(wsIdeasMatch[1], {
         ...body,
         workspaceId: wsIdeasMatch[1],
@@ -255,7 +263,7 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
         createdAt: body.createdAt || new Date().toISOString(),
         updatedAt: body.updatedAt || new Date().toISOString(),
         metadata: body.metadata || {},
-      });
+      } as any);
       writeJson(res, 201, { ok: true, idea });
       return true;
     })();
@@ -266,15 +274,15 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   );
   if (ideaTransitionsMatch && req.method === 'POST') {
     return (async () => {
-      const body = await readJsonBody(req);
-      if (!body || !body.workspaceId || !body.nextStatus || !body.reason || !body.actor) {
+      const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+      if (!body?.workspaceId || !body.nextStatus || !body.reason || !body.actor) {
         writeJson(res, 400, {
           ok: false,
           error: 'Missing required fields: workspaceId, nextStatus, reason, actor',
         });
         return true;
       }
-      const wsStore = createResearchWorkspaceStore(getStore());
+      const wsStore = createResearchWorkspaceStore(getStore() as any);
       const idea = wsStore.transitionIdea(
         body.workspaceId,
         ideaTransitionsMatch[1],
@@ -291,15 +299,15 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   const ideaDecisionsMatch = reqUrl.pathname.match(/^\/api\/research\/ideas\/([^/]+)\/decisions$/);
   if (ideaDecisionsMatch && req.method === 'POST') {
     return (async () => {
-      const body = await readJsonBody(req);
-      if (!body || !body.workspaceId || !body.id || !body.actor || !body.reason) {
+      const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+      if (!body?.workspaceId || !body.id || !body.actor || !body.reason) {
         writeJson(res, 400, {
           ok: false,
           error: 'Missing required fields: workspaceId, id, actor, reason',
         });
         return true;
       }
-      const wsStore = createResearchWorkspaceStore(getStore());
+      const wsStore = createResearchWorkspaceStore(getStore() as any);
       const decision = wsStore.recordDecision(body.workspaceId, ideaDecisionsMatch[1], {
         id: body.id,
         actor: body.actor,
@@ -309,7 +317,7 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
         evidenceLinks: body.evidenceLinks || [],
         timestamp: body.timestamp || new Date().toISOString(),
         metadata: body.metadata || {},
-      });
+      } as any);
       writeJson(res, 200, { ok: true, decision });
       return true;
     })();
@@ -318,19 +326,19 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   // ── Experiment Routes ────────────────────────────────────
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/research/experiments') {
-    const expRegistry = createExperimentRegistry(getStore());
+    const expRegistry = createExperimentRegistry(getStore() as any);
     writeJson(res, 200, { ok: true, experiments: expRegistry.listExperiments() });
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/research/experiments') {
     return (async () => {
-      const body = await readJsonBody(req);
-      if (!body || !body.id || !body.name) {
+      const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+      if (!body?.id || !body.name) {
         writeJson(res, 400, { ok: false, error: 'Missing required fields: id, name' });
         return true;
       }
-      const expRegistry = createExperimentRegistry(getStore());
+      const expRegistry = createExperimentRegistry(getStore() as any);
       const experiment = expRegistry.registerExperiment({
         ...body,
         workspaceId: body.workspaceId || '',
@@ -340,7 +348,7 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
         createdAt: body.createdAt || new Date().toISOString(),
         updatedAt: body.updatedAt || new Date().toISOString(),
         metadata: body.metadata || {},
-      });
+      } as any);
       writeJson(res, 201, { ok: true, experiment });
       return true;
     })();
@@ -349,12 +357,12 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
   const expRunsMatch = reqUrl.pathname.match(/^\/api\/research\/experiments\/([^/]+)\/runs$/);
   if (expRunsMatch && req.method === 'POST') {
     return (async () => {
-      const body = await readJsonBody(req);
-      if (!body || !body.id || !body.snapshot) {
+      const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+      if (!body?.id || !body.snapshot) {
         writeJson(res, 400, { ok: false, error: 'Missing required fields: id, snapshot' });
         return true;
       }
-      const expRegistry = createExperimentRegistry(getStore());
+      const expRegistry = createExperimentRegistry(getStore() as any);
       const run = expRegistry.createRun(expRunsMatch[1], {
         ...body,
         experimentId: expRunsMatch[1],
@@ -366,7 +374,7 @@ export async function handleResearchRoutes({ req, reqUrl, res, readJsonBody, wri
         completedAt: body.completedAt || '',
         createdAt: body.createdAt || new Date().toISOString(),
         metadata: body.metadata || {},
-      });
+      } as any);
       writeJson(res, 201, { ok: true, run });
       return true;
     })();

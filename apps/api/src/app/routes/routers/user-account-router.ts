@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { encryptBrokerKey, maskBrokerKey } from '../../../modules/auth/broker-key-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
@@ -22,6 +20,7 @@ import {
   setPrimaryBrokerBinding,
   syncBrokerBindingRuntime,
 } from '../../../modules/user-account/service.js';
+import type { GatewayRouteContext } from '../types.js';
 
 export async function handleUserAccountRoutes({
   req,
@@ -30,10 +29,10 @@ export async function handleUserAccountRoutes({
   readJsonBody,
   writeJson,
   gatewayDependencies,
-}) {
-  const writeForbidden = (permission, action = '') =>
+}: GatewayRouteContext) {
+  const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
-  const canWrite = () => hasPermission('account:write');
+  const canWrite = async () => hasPermission('account:write', req.headers.authorization);
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/user-account') {
     writeJson(res, 200, getUserAccountSnapshot());
@@ -46,11 +45,11 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/profile') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'update the account profile');
       return true;
     }
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, patchUserProfile(body));
     return true;
   }
@@ -61,18 +60,18 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/roles') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'save role templates');
       return true;
     }
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const result = saveUserRoleTemplate(body);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
 
   if (req.method === 'DELETE' && reqUrl.pathname.startsWith('/api/user-account/roles/')) {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'delete role templates');
       return true;
     }
@@ -88,52 +87,52 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/workspaces') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'save workspaces');
       return true;
     }
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const result = saveWorkspace(body);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/workspaces/current') {
-    if (!hasPermission('dashboard:read')) {
+    if (!(await hasPermission('dashboard:read', req.headers.authorization))) {
       writeForbidden('dashboard:read', 'switch workspaces');
       return true;
     }
-    const body = await readJsonBody(req);
-    const result = selectCurrentWorkspace(body.workspaceId);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
+    const result = selectCurrentWorkspace(body?.workspaceId as string);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/preferences') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'update account preferences');
       return true;
     }
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, patchUserPreferences(body));
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/access') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'update the access policy');
       return true;
     }
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, patchUserAccess(body));
     return true;
   }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/user-account/broker-bindings') {
-    const snapshot = getBrokerBindingsSnapshot();
+    const snapshot = getBrokerBindingsSnapshot() as any;
     // Mask any stored API keys before sending to client
     if (snapshot.ok && Array.isArray(snapshot.bindings)) {
-      snapshot.bindings = snapshot.bindings.map((b) => ({
+      snapshot.bindings = snapshot.bindings.map((b: any) => ({
         ...b,
         apiKey: b.apiKey ? maskBrokerKey(b.apiKey) : undefined,
         secretKey: b.secretKey ? '****' : undefined,
@@ -150,11 +149,11 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/broker-bindings') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'save broker bindings');
       return true;
     }
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     // Encrypt API key before persisting
     if (body && typeof body.apiKey === 'string' && body.apiKey) {
       body.apiKey = encryptBrokerKey(body.apiKey);
@@ -172,7 +171,7 @@ export async function handleUserAccountRoutes({
     reqUrl.pathname.endsWith('/default') &&
     reqUrl.pathname.startsWith('/api/user-account/broker-bindings/')
   ) {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'change the default broker binding');
       return true;
     }
@@ -183,7 +182,7 @@ export async function handleUserAccountRoutes({
   }
 
   if (req.method === 'DELETE' && reqUrl.pathname.startsWith('/api/user-account/broker-bindings/')) {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'delete broker bindings');
       return true;
     }
@@ -191,14 +190,18 @@ export async function handleUserAccountRoutes({
     const result = removeBrokerBinding(bindingId);
     writeJson(
       res,
-      result.ok ? 200 : result.error === 'default broker binding cannot be deleted' ? 409 : 404,
+      result.ok
+        ? 200
+        : (result as any).error === 'default broker binding cannot be deleted'
+          ? 409
+          : 404,
       result
     );
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/user-account/broker-bindings/sync') {
-    if (!canWrite()) {
+    if (!(await canWrite())) {
       writeForbidden('account:write', 'sync broker runtime state');
       return true;
     }

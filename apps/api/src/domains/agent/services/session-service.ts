@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { getAgentOperatorTimeline, getAgentSessionLinkedArtifacts } from './workbench-service.js';
 
@@ -11,7 +10,7 @@ export function listAgentSessionsSnapshot(limit = 20) {
   };
 }
 
-export function getAgentSessionDetail(sessionId) {
+export function getAgentSessionDetail(sessionId: string) {
   const session = controlPlaneRuntime.getAgentSession(sessionId);
   if (!session) {
     return {

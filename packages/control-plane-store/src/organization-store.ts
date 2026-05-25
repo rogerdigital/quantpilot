@@ -7,7 +7,6 @@ import type {
   StrategyAllocation,
   Team,
   TeamMember,
-  UserRole,
   Workspace,
 } from '../../shared-types/src/organization.ts';
 

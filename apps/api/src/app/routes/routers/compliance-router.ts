@@ -1,13 +1,19 @@
-// @ts-nocheck
 import { AuditReportStore } from '../../../../../../packages/control-plane-store/src/audit-report-store.js';
+import type { GatewayRouteContext } from '../types.js';
 
 const auditReportStore = new AuditReportStore();
 
 export { auditReportStore };
 
-export async function handleComplianceRoutes({ req, reqUrl, res, readJsonBody, writeJson }) {
+export async function handleComplianceRoutes({
+  req,
+  reqUrl,
+  res,
+  readJsonBody,
+  writeJson,
+}: GatewayRouteContext) {
   if (req.method === 'POST' && reqUrl.pathname === '/api/compliance/reports') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { organizationId, reportType, title, summary, generatedBy, metadata } = body || {};
 
     if (!reportType || !title) {
@@ -53,7 +59,7 @@ export async function handleComplianceRoutes({ req, reqUrl, res, readJsonBody, w
   if (req.method === 'GET' && reqUrl.pathname === '/api/compliance/reports') {
     const organizationId = reqUrl.searchParams.get('organizationId') || undefined;
     const reportType = reqUrl.searchParams.get('reportType') || undefined;
-    const reports = auditReportStore.listReports(organizationId, reportType);
+    const reports = auditReportStore.listReports(organizationId, reportType as any);
     writeJson(res, 200, { ok: true, reports });
     return true;
   }
@@ -71,7 +77,7 @@ export async function handleComplianceRoutes({ req, reqUrl, res, readJsonBody, w
 
   const entryMatch = reqUrl.pathname.match(/^\/api\/compliance\/reports\/([^/]+)\/entries$/);
   if (req.method === 'POST' && entryMatch) {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const { actor, action, detail, evidenceRef } = body || {};
 
     if (!actor || !action) {

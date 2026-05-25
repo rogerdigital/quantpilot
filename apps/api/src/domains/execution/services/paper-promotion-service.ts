@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 const DEFAULT_CRITERIA = {
   minTradingDays: 30,
   maxDrawdown: 0.15, // 15%
@@ -8,9 +6,13 @@ const DEFAULT_CRITERIA = {
   minWinRate: 0.4, // 40%
 };
 
-export function createPaperPromotionService({ paperJournalRepo }) {
+export function createPaperPromotionService({
+  paperJournalRepo,
+}: {
+  paperJournalRepo: Record<string, any>;
+}) {
   return {
-    evaluatePromotionReadiness(strategyId, customCriteria = {}) {
+    evaluatePromotionReadiness(strategyId: string, customCriteria: Record<string, any> = {}) {
       const criteria = { ...DEFAULT_CRITERIA, ...customCriteria };
       const metrics = paperJournalRepo.getCumulativeMetrics(strategyId);
 
@@ -41,7 +43,7 @@ export function createPaperPromotionService({ paperJournalRepo }) {
           required: criteria.maxDrawdown,
           met: metrics.maxDrawdown <= criteria.maxDrawdown,
           unit: '%',
-          format: (v) => `${(v * 100).toFixed(1)}%`,
+          format: (v: number) => `${(v * 100).toFixed(1)}%`,
         },
         {
           name: 'sharpe',
@@ -51,7 +53,7 @@ export function createPaperPromotionService({ paperJournalRepo }) {
           required: criteria.minSharpe,
           met: metrics.sharpe >= criteria.minSharpe,
           unit: '',
-          format: (v) => v.toFixed(2),
+          format: (v: number) => v.toFixed(2),
         },
         {
           name: 'tradeCount',
@@ -70,7 +72,7 @@ export function createPaperPromotionService({ paperJournalRepo }) {
           required: criteria.minWinRate,
           met: metrics.winRate >= criteria.minWinRate,
           unit: '%',
-          format: (v) => `${(v * 100).toFixed(1)}%`,
+          format: (v: number) => `${(v * 100).toFixed(1)}%`,
         },
       ];
 
@@ -89,7 +91,7 @@ export function createPaperPromotionService({ paperJournalRepo }) {
       };
     },
 
-    getPromotionReport(strategyId) {
+    getPromotionReport(strategyId: string) {
       const readiness = this.evaluatePromotionReadiness(strategyId);
       const metrics = readiness.metrics;
 

@@ -36,7 +36,7 @@ function calcSharpeFromEquity(equityPoints: Array<{ equity: number }>): number {
   return (mean / dailyVol) * Math.sqrt(252);
 }
 
-function calcMaxDrawdown(equityPoints: Array<{ equity: number }>): number {
+function _calcMaxDrawdown(equityPoints: Array<{ equity: number }>): number {
   let peak = equityPoints[0]?.equity ?? 0;
   let maxDd = 0;
   for (const p of equityPoints) {
@@ -113,7 +113,7 @@ export function assessRobustness(input: RobustnessInput): RobustnessReport {
   const { equityCurve, parameters, trainEndIndex } = input;
   const windows = input.walkForwardWindows ?? 4;
   const minTradeCount = input.minTradeCount ?? 30;
-  const maxTurnover = input.maxTurnover ?? 5.0;
+  const _maxTurnover = input.maxTurnover ?? 5.0;
 
   const paramSensitivity = runParameterSensitivity(equityCurve, parameters);
   const walkForwardSharpe = runWalkForwardAnalysis(equityCurve, windows);

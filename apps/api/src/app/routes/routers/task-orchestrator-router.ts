@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { runCycle } from '../../../control-plane/task-orchestrator/cycle-runner.js';
 import {
   listActions,
@@ -20,6 +18,7 @@ import { runStateCycle } from '../../../control-plane/task-orchestrator/state-ru
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
 import { broadcast } from '../../../modules/sse/sse-manager.js';
+import type { GatewayRouteContext } from '../types.js';
 
 export async function handleTaskOrchestratorRoutes({
   req,
@@ -28,11 +27,11 @@ export async function handleTaskOrchestratorRoutes({
   readJsonBody,
   writeJson,
   gatewayDependencies,
-}) {
-  const writeForbidden = (permission, action = '') =>
+}: GatewayRouteContext) {
+  const writeForbidden = (permission: string, action = '') =>
     writeForbiddenJson(writeJson, res, permission, action);
-  const requirePermission = (permission, action = '') => {
-    if (!hasPermission(permission)) {
+  const requirePermission = async (permission: string, action = '') => {
+    if (!(await hasPermission(permission, req.headers.authorization))) {
       writeForbidden(permission, action);
       return false;
     }
@@ -45,13 +44,13 @@ export async function handleTaskOrchestratorRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/cycles') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, { ok: true, cycle: recordCycleRun(body) });
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/cycles/queue') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, {
       ok: true,
       workflow: queueWorkflow({
@@ -60,14 +59,14 @@ export async function handleTaskOrchestratorRoutes({
         actor: 'api-queue',
         trigger: 'api',
         payload: body,
-        maxAttempts: Number(body.maxAttempts || 3),
+        maxAttempts: Number(body?.maxAttempts || 3),
       }),
     });
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/cycles/run') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(
       res,
       200,
@@ -85,7 +84,7 @@ export async function handleTaskOrchestratorRoutes({
   }
 
   if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')) {
-    const workflowRunId = reqUrl.pathname.split('/').at(-1);
+    const workflowRunId = reqUrl.pathname.split('/').at(-1)!;
     const workflow = getWorkflow(workflowRunId);
     writeJson(
       res,
@@ -96,7 +95,7 @@ export async function handleTaskOrchestratorRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/workflows/queue') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, { ok: true, workflow: queueWorkflow(body) });
     return true;
   }
@@ -106,9 +105,9 @@ export async function handleTaskOrchestratorRoutes({
     reqUrl.pathname.endsWith('/resume') &&
     reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')
   ) {
-    if (!requirePermission('execution:approve', 'record operator actions')) return true;
-    const workflowRunId = reqUrl.pathname.split('/').at(-2);
-    const body = await readJsonBody(req);
+    if (!(await requirePermission('execution:approve', 'record operator actions'))) return true;
+    const workflowRunId = reqUrl.pathname.split('/').at(-2)!;
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const workflow = resumeWorkflow(workflowRunId, body);
     writeJson(
       res,
@@ -123,9 +122,9 @@ export async function handleTaskOrchestratorRoutes({
     reqUrl.pathname.endsWith('/cancel') &&
     reqUrl.pathname.startsWith('/api/task-orchestrator/workflows/')
   ) {
-    if (!requirePermission('execution:approve', 'run control-plane cycles')) return true;
-    const workflowRunId = reqUrl.pathname.split('/').at(-2);
-    const body = await readJsonBody(req);
+    if (!(await requirePermission('execution:approve', 'run control-plane cycles'))) return true;
+    const workflowRunId = reqUrl.pathname.split('/').at(-2)!;
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const workflow = cancelWorkflow(workflowRunId, body);
     writeJson(
       res,
@@ -148,14 +147,14 @@ export async function handleTaskOrchestratorRoutes({
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/actions') {
-    if (!requirePermission('execution:approve', 'resume or cancel workflows')) return true;
-    const body = await readJsonBody(req);
+    if (!(await requirePermission('execution:approve', 'resume or cancel workflows'))) return true;
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, { ok: true, action: recordAction(body) });
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/state/queue') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, {
       ok: true,
       workflow: queueWorkflow({
@@ -163,43 +162,42 @@ export async function handleTaskOrchestratorRoutes({
         workflowType: 'task-orchestrator',
         actor: 'api-queue',
         trigger: 'api',
-        payload: { state: body.state },
-        maxAttempts: Number(body.maxAttempts || 3),
+        payload: { state: body?.state },
+        maxAttempts: Number(body?.maxAttempts || 3),
       }),
     });
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/task-orchestrator/state/run') {
-    const body = await readJsonBody(req);
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     const result = await runStateCycle(body?.state, {
       getBrokerHealth: gatewayDependencies.getBrokerHealth,
       executeBrokerCycle: gatewayDependencies.executeBrokerCycle,
       getMarketSnapshot: gatewayDependencies.getMarketSnapshot,
     });
     writeJson(res, 200, result);
-    // Notify SSE clients so they can pull fresh state
     broadcast('state-update', { ok: true, ts: Date.now() });
     return true;
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/strategy/execute') {
-    if (!requirePermission('strategy:write', 'queue workflows')) return true;
-    const body = await readJsonBody(req);
+    if (!(await requirePermission('strategy:write', 'queue workflows'))) return true;
+    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
     writeJson(res, 200, {
       ok: true,
       workflow: queueWorkflow({
         workflowId: 'task-orchestrator.strategy-execution',
         workflowType: 'task-orchestrator',
-        actor: body.requestedBy || 'api-queue',
+        actor: body?.requestedBy || 'api-queue',
         trigger: 'api',
         payload: {
-          strategyId: body.strategyId,
-          mode: body.mode || 'paper',
-          capital: Number(body.capital || 0),
-          requestedBy: body.requestedBy || 'operator',
+          strategyId: body?.strategyId,
+          mode: body?.mode || 'paper',
+          capital: Number(body?.capital || 0),
+          requestedBy: body?.requestedBy || 'operator',
         },
-        maxAttempts: Number(body.maxAttempts || 3),
+        maxAttempts: Number(body?.maxAttempts || 3),
       }),
     });
     return true;
