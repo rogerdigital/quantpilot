@@ -1,30 +1,35 @@
-// @ts-nocheck
 import assert from 'node:assert/strict';
 import { Readable } from 'node:stream';
 import test from 'node:test';
 
-import { handlePromotionRoutes } from '../src/app/routes/routers/promotion-router.ts';
+import { handlePromotionRoutes } from '../src/app/routes/routers/promotion-router.js';
+import type { GatewayRouteContext } from '../src/app/routes/types.js';
 
-function createContext(method, pathname, body = null) {
+function createContext(method: string, pathname: string, body: any = null) {
   const req = Object.assign(new Readable({ read() {} }), { method });
   const reqUrl = new URL(`http://localhost${pathname}`);
-  let responseStatus = null;
-  let responseData = null;
+  let responseStatus: number | null = null;
+  let responseData: any = null;
   const res = {};
 
   return {
     req,
+    method,
+    url: reqUrl,
     reqUrl,
     res,
+    config: {},
     readJsonBody: async () => body,
-    writeJson: (_res, status, data) => {
+    writeJson: (_res: any, status: number, data: any) => {
       responseStatus = status;
       responseData = data;
     },
+    gatewayDependencies: {},
+    userAccount: null,
     getResponse() {
       return { status: responseStatus, data: responseData };
     },
-  };
+  } as any;
 }
 
 test('POST /api/promotions creates promotion', async () => {

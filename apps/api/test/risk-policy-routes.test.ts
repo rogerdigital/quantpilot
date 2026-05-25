@@ -1,4 +1,3 @@
-// @ts-nocheck
 import assert from 'node:assert/strict';
 import { Readable } from 'node:stream';
 import test from 'node:test';
@@ -9,16 +8,16 @@ import {
   assessExecution,
   assessOrderBatch,
   assessPromotion,
-} from '../../../packages/trading-engine/src/risk/assessment.ts';
+} from '../../../packages/trading-engine/src/risk/assessment.js';
 import {
   checkOrderPlanAgainstPolicy,
   checkPortfolioAgainstPolicy,
-} from '../../../packages/trading-engine/src/risk/policy.ts';
+} from '../../../packages/trading-engine/src/risk/policy.js';
 
 test('risk policy API: assess promotion via engine', () => {
   const rules = [
     { dimension: 'max_single_name_weight', limit: 0.1, mode: 'both', severity: 'blocker' },
-  ];
+  ] as any[];
   const result = assessPromotion({
     entityId: 'promo-api-1',
     portfolio: {
@@ -40,7 +39,7 @@ test('risk policy API: assess promotion via engine', () => {
 test('risk policy API: assess execution via engine', () => {
   const rules = [
     { dimension: 'max_order_notional', limit: 100000, mode: 'live', severity: 'blocker' },
-  ];
+  ] as any[];
   const result = assessExecution({
     entityId: 'exec-api-1',
     orderPlan: {
@@ -72,7 +71,7 @@ test('risk policy API: kill switch blocks execution conceptually', () => {
 test('risk policy API: assess order batch via engine', () => {
   const rules = [
     { dimension: 'allowed_universe', limit: ['AAPL', 'MSFT'], mode: 'both', severity: 'blocker' },
-  ];
+  ] as any[];
   const result = assessOrderBatch(
     'batch-api-1',
     { orders: [{ symbol: 'TSLA', notional: 5000, side: 'buy' }], tradingMode: 'paper' },
@@ -86,7 +85,7 @@ test('risk policy API: portfolio check passes compliant state', () => {
   const rules = [
     { dimension: 'max_gross_exposure', limit: 1.0, mode: 'both', severity: 'blocker' },
     { dimension: 'max_leverage', limit: 2.0, mode: 'both', severity: 'blocker' },
-  ];
+  ] as any[];
   const result = checkPortfolioAgainstPolicy(
     {
       positions: [{ symbol: 'AAPL', weight: 0.05 }],
@@ -106,7 +105,7 @@ test('risk policy API: portfolio check passes compliant state', () => {
 test('risk policy API: order plan check with universe restriction', () => {
   const rules = [
     { dimension: 'allowed_universe', limit: ['AAPL', 'GOOGL'], mode: 'both', severity: 'blocker' },
-  ];
+  ] as any[];
   const result = checkOrderPlanAgainstPolicy(
     { orders: [{ symbol: 'AAPL', notional: 1000, side: 'buy' }], tradingMode: 'paper' },
     rules
