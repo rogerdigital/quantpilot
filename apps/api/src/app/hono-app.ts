@@ -1,8 +1,11 @@
+import { createChildLogger } from '../lib/logger.js';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { logger } from 'hono/logger';
+import { logger as honoLogger } from 'hono/logger';
 import { timing } from 'hono/timing';
 import { rateLimit } from '../middleware/rate-limit.js';
+
+const log = createChildLogger('hono-gateway');
 
 export function createHonoApp() {
   const app = new Hono();
@@ -21,11 +24,11 @@ export function createHonoApp() {
   );
 
   app.use('*', rateLimit());
-  app.use('*', logger());
+  app.use('*', honoLogger());
   app.use('*', timing());
 
   app.onError((err, c) => {
-    console.error('[hono-gateway]', err.message);
+    log.error({ err, path: c.req.path, method: c.req.method }, 'request error');
     return c.json({ ok: false, message: 'Internal server error' }, 500);
   });
 

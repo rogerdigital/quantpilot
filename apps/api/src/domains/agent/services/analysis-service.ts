@@ -1,11 +1,14 @@
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import type { LLMMessage, LLMTool } from '../../../../../../packages/llm-provider/src/index.js';
 import { createLLMProvider } from '../../../../../../packages/llm-provider/src/index.js';
+import { createChildLogger } from '../../../lib/logger.js';
 import { listActiveAgentInstructions } from './instruction-service.js';
 import type { AgentIntent } from './intent-service.js';
 import { createAgentPlan } from './planning-service.js';
 import { ANALYSIS_SYSTEM_PROMPT } from './prompts.js';
 import { executeAgentTool } from './tools-service.js';
+
+const log = createChildLogger('analysis-service');
 
 type ToolExecutionResult = {
   ok: boolean;
@@ -232,7 +235,7 @@ async function runLLMAnalysisLoop(
     });
 
     if (!response.ok) {
-      console.error('[analysis-service] LLM error in round', round, response.error);
+      log.error({ round, error: response.error }, 'LLM error in round');
       return null;
     }
 
@@ -282,16 +285,16 @@ async function runLLMAnalysisLoop(
         toolCallLog,
       };
     } catch (parseErr: unknown) {
-      console.error(
-        '[analysis-service] Failed to parse LLM JSON response:',
-        parseErr instanceof Error ? parseErr.message : 'unknown_error'
+      log.error(
+        { err: parseErr instanceof Error ? parseErr.message : 'unknown_error' },
+        'Failed to parse LLM JSON response'
       );
-      console.error('[analysis-service] Raw content:', finalContent.slice(0, 500));
+      log.error({ content: finalContent.slice(0, 500) }, 'Raw content');
       return null;
     }
   }
 
-  console.error('[analysis-service] Exceeded max tool call rounds');
+  log.error('Exceeded max tool call rounds');
   return null;
 }
 

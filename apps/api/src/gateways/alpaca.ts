@@ -1,6 +1,9 @@
 // @ts-nocheck
 
 import { existsSync, readFileSync } from 'node:fs';
+import { createChildLogger } from '../lib/logger.js';
+
+const log = createChildLogger('gateway');
 import { createServer } from 'node:http';
 import { join } from 'node:path';
 import { handleControlPlaneRoutes } from '../app/routes/control-plane-routes.js';
@@ -734,7 +737,7 @@ export function startGatewayServer(options = {}) {
   const config = createGatewayConfig(options);
   const server = createGatewayServer(config);
   server.listen(config.gatewayPort, '127.0.0.1', () => {
-    console.log(`QuantPilot gateway listening on http://127.0.0.1:${config.gatewayPort}`);
+    log.info({ port: config.gatewayPort }, 'gateway listening');
   });
   return server;
 }

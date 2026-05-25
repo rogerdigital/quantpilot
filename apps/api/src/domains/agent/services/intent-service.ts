@@ -1,6 +1,9 @@
 import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
 import { createLLMProvider } from '../../../../../../packages/llm-provider/src/index.js';
+import { createChildLogger } from '../../../lib/logger.js';
 import { INTENT_SYSTEM_PROMPT } from './prompts.js';
+
+const log = createChildLogger('intent-service');
 
 type ExtractedStrategy = {
   description: string;
@@ -185,7 +188,7 @@ async function inferIntentWithLLM(prompt: string, explicitTargetId = ''): Promis
   );
 
   if (!response.ok) {
-    console.error('[intent-service] LLM error, falling back to rules:', response.error);
+    log.error({ error: response.error }, 'LLM error, falling back to rules');
     return inferIntentFromRules(prompt, explicitTargetId);
   }
 
@@ -209,9 +212,9 @@ async function inferIntentWithLLM(prompt: string, explicitTargetId = ''): Promis
       },
     };
   } catch (parseErr: unknown) {
-    console.error(
-      '[intent-service] JSON parse error, falling back to rules:',
-      parseErr instanceof Error ? parseErr.message : 'unknown_error'
+    log.error(
+      { err: parseErr instanceof Error ? parseErr.message : 'unknown_error' },
+      'JSON parse error, falling back to rules'
     );
     return inferIntentFromRules(prompt, explicitTargetId);
   }
