@@ -176,7 +176,7 @@ test('ComputeJobStore: expired lease can be recovered', () => {
   const before = store.recoverExpiredLeases();
   assert.equal(before.length, 0);
 
-  const wait = Date.now() + 5;
+  const wait = Date.now() + 50;
   while (Date.now() < wait) {
     /* spin */
   }
