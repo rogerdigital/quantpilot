@@ -1,7 +1,10 @@
 import { startGatewayServer } from './app/index.js';
 import { createChildLogger } from './lib/logger.js';
+import { seedDefaultAdmin } from './modules/auth/user-store.js';
 
 const log = createChildLogger('main');
+
+seedDefaultAdmin();
 
 async function main() {
   if (process.env.USE_HONO === 'true') {

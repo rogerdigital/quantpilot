@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { loadMap, persistMap } from '../../lib/persist.js';
 
 export type TeamRole = 'owner' | 'admin' | 'member' | 'viewer';
 
@@ -47,6 +48,18 @@ const members = new Map<string, TeamMember[]>();
 const invites = new Map<string, TeamInvite>();
 const apiKeys = new Map<string, ApiKey>();
 
+loadMap<string, Team>('teams.json', teams);
+loadMap<string, TeamMember[]>('team-members.json', members);
+loadMap<string, TeamInvite>('team-invites.json', invites);
+loadMap<string, ApiKey>('api-keys.json', apiKeys);
+
+function save() {
+  persistMap('teams.json', teams);
+  persistMap('team-members.json', members);
+  persistMap('team-invites.json', invites);
+  persistMap('api-keys.json', apiKeys);
+}
+
 export function createTeam(name: string, description: string, ownerId: string): Team {
   const team: Team = {
     id: `team-${Date.now()}`,
@@ -66,6 +79,7 @@ export function createTeam(name: string, description: string, ownerId: string): 
     invitedBy: ownerId,
   };
   members.set(team.id, [member]);
+  save();
 
   return team;
 }
@@ -94,6 +108,7 @@ export function updateTeam(
   if (patch.name) team.name = patch.name;
   if (patch.description) team.description = patch.description;
   team.updatedAt = new Date().toISOString();
+  save();
   return team;
 }
 
@@ -102,6 +117,7 @@ export function deleteTeam(teamId: string): boolean {
   if (!team) return false;
   teams.delete(teamId);
   members.delete(teamId);
+  save();
   return true;
 }
 
@@ -135,6 +151,7 @@ export function addTeamMember(
   };
   teamMembers.push(member);
   members.set(teamId, teamMembers);
+  save();
   return member;
 }
 
@@ -147,6 +164,7 @@ export function updateMemberRole(
   const member = teamMembers.find((m) => m.userId === userId);
   if (!member) return null;
   member.role = role;
+  save();
   return member;
 }
 
@@ -155,6 +173,7 @@ export function removeMember(teamId: string, userId: string): boolean {
   const index = teamMembers.findIndex((m) => m.userId === userId);
   if (index === -1) return false;
   teamMembers.splice(index, 1);
+  save();
   return true;
 }
 
@@ -174,6 +193,7 @@ export function createInvite(
     invitedBy,
   };
   invites.set(invite.id, invite);
+  save();
   return invite;
 }
 
@@ -190,6 +210,7 @@ export function acceptInvite(token: string): TeamInvite | null {
   const invite = getInviteByToken(token);
   if (!invite) return null;
   invite.acceptedAt = new Date().toISOString();
+  save();
   return invite;
 }
 
@@ -214,6 +235,7 @@ export function createApiKey(
     createdBy,
   };
   apiKeys.set(apiKey.id, apiKey);
+  save();
   return apiKey;
 }
 
@@ -229,6 +251,7 @@ export function revokeApiKey(keyId: string): boolean {
   const apiKey = apiKeys.get(keyId);
   if (!apiKey) return false;
   apiKey.revokedAt = new Date().toISOString();
+  save();
   return true;
 }
 

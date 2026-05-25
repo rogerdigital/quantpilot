@@ -1,4 +1,5 @@
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { loadMap, persistMap } from '../../lib/persist.js';
 
 export interface User {
   id: string;
@@ -39,6 +40,40 @@ const users = new Map<string, User>();
 const sessions = new Map<string, Session>();
 const resetTokens = new Map<string, PasswordResetToken>();
 const emailIndex = new Map<string, string>();
+
+loadMap<string, User>('users.json', users);
+loadMap<string, Session>('sessions.json', sessions);
+loadMap<string, PasswordResetToken>('reset-tokens.json', resetTokens);
+for (const [id, user] of users) {
+  emailIndex.set(user.email, id);
+}
+
+function save() {
+  persistMap('users.json', users);
+  persistMap('sessions.json', sessions);
+  persistMap('reset-tokens.json', resetTokens);
+}
+
+export function seedDefaultAdmin() {
+  if (users.size > 0) return;
+  const salt = generateSalt();
+  const user: User = {
+    id: 'user-default-admin',
+    email: 'admin@quantpilot.local',
+    passwordHash: hashPassword('changeme', salt),
+    salt,
+    name: 'Admin',
+    role: 'owner',
+    status: 'active',
+    mfaEnabled: false,
+    recoveryCodes: Array.from({ length: 8 }, () => randomBytes(4).toString('hex')),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  users.set(user.id, user);
+  emailIndex.set(user.email, user.id);
+  save();
+}
 
 function hashPassword(password: string, salt: string): string {
   return scryptSync(password, salt, 64).toString('hex');
@@ -91,6 +126,7 @@ export function createUser(
 
   users.set(user.id, user);
   emailIndex.set(user.email, user.id);
+  save();
   return user;
 }
 
@@ -109,6 +145,7 @@ export function authenticateUser(email: string, password: string): User | null {
 
   user.lastLoginAt = new Date().toISOString();
   user.updatedAt = new Date().toISOString();
+  save();
   return user;
 }
 
@@ -138,6 +175,7 @@ export function createSession(
     createdAt: now.toISOString(),
   };
   sessions.set(session.id, session);
+  save();
   return session;
 }
 
@@ -163,6 +201,7 @@ export function revokeSession(sessionId: string): boolean {
   const session = sessions.get(sessionId);
   if (!session) return false;
   session.revokedAt = new Date().toISOString();
+  save();
   return true;
 }
 
@@ -172,6 +211,7 @@ export function revokeAllUserSessions(userId: string): number {
     if (session.userId === userId && !session.revokedAt) {
       session.revokedAt = new Date().toISOString();
       count++;
+      save();
     }
   }
   return count;
@@ -186,6 +226,7 @@ export function createPasswordResetToken(userId: string): PasswordResetToken {
     expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
   };
   resetTokens.set(resetToken.id, resetToken);
+  save();
   return resetToken;
 }
 
@@ -216,6 +257,7 @@ export function usePasswordResetToken(
   user.salt = salt;
   user.updatedAt = new Date().toISOString();
   resetToken.usedAt = new Date().toISOString();
+  save();
 
   return user;
 }
@@ -226,6 +268,7 @@ export function enableMfa(userId: string, secret: string): User | null {
   user.mfaEnabled = true;
   user.mfaSecret = secret;
   user.updatedAt = new Date().toISOString();
+  save();
   return user;
 }
 
@@ -243,6 +286,7 @@ export function useRecoveryCode(userId: string, code: string): boolean {
   if (index === -1) return false;
   user.recoveryCodes.splice(index, 1);
   user.updatedAt = new Date().toISOString();
+  save();
   return true;
 }
 
