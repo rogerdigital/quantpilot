@@ -171,12 +171,12 @@ test('ComputeJobStore: cancel queued job', () => {
 test('ComputeJobStore: expired lease can be recovered', async () => {
   const store = new ComputeJobStore();
   store.enqueue(makeJob());
-  store.lease('job-1', 'worker-1', 1);
+  store.lease('job-1', 'worker-1', 50);
 
   const before = store.recoverExpiredLeases();
   assert.equal(before.length, 0);
 
-  await new Promise((r) => setTimeout(r, 50));
+  await new Promise((r) => setTimeout(r, 100));
 
   const recovered = store.recoverExpiredLeases();
   assert.equal(recovered.length, 1);
