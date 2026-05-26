@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCollectionStore } from './collection-store.js';
@@ -11,7 +10,7 @@ const repoRoot = join(packageDir, '..', '..', '..');
 export const CONTROL_PLANE_ADAPTER_MANIFEST_FILENAME = '_control-plane-adapter.json';
 export const CONTROL_PLANE_SCHEMA_VERSION = 1;
 
-function createAdapterMetadata(input = {}) {
+function createAdapterMetadata(input: any = {}) {
   return {
     kind: input.kind || 'file',
     label: input.label || 'JSON File Adapter',
@@ -30,7 +29,7 @@ function createAdapterMetadata(input = {}) {
   };
 }
 
-function createAdapterManifest(metadata, input = {}) {
+function createAdapterManifest(metadata: any, input: any = {}) {
   return {
     version: 1,
     schemaVersion: Number.isInteger(input.schemaVersion)
@@ -47,7 +46,7 @@ function createAdapterManifest(metadata, input = {}) {
   };
 }
 
-function normalizeAdapterManifest(metadata, value) {
+function normalizeAdapterManifest(metadata: any, value: any) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return createAdapterManifest(metadata);
   }
@@ -60,8 +59,12 @@ function normalizeAdapterManifest(metadata, value) {
   });
 }
 
-function buildMigrationSteps(metadata, manifest, targetVersion = CONTROL_PLANE_SCHEMA_VERSION) {
-  const pending = [];
+function buildMigrationSteps(
+  metadata: any,
+  manifest: any,
+  targetVersion = CONTROL_PLANE_SCHEMA_VERSION
+) {
+  const pending: any[] = [];
   if (metadata.kind !== 'db') {
     return pending;
   }
@@ -92,12 +95,12 @@ function buildMigrationSteps(metadata, manifest, targetVersion = CONTROL_PLANE_S
   );
 }
 
-function createAdapterStore({ rootDir, metadata, resolveCollectionPath, resolveObjectPath }) {
+function createAdapterStore({ rootDir, metadata, resolveCollectionPath, resolveObjectPath }: any) {
   function ensureRoot() {
     ensureDirectory(rootDir);
   }
 
-  const store = {
+  const store: any = {
     adapter: metadata,
     rootDir,
     ...createCollectionStore({
@@ -122,7 +125,7 @@ function createAdapterStore({ rootDir, metadata, resolveCollectionPath, resolveO
     );
   }
 
-  function writeAdapterManifest(value) {
+  function writeAdapterManifest(value: any) {
     ensureRoot();
     store.writeObject(
       CONTROL_PLANE_ADAPTER_MANIFEST_FILENAME,
@@ -138,7 +141,7 @@ function createAdapterStore({ rootDir, metadata, resolveCollectionPath, resolveO
     return readAdapterManifest();
   }
 
-  function getMigrationPlan(options = {}) {
+  function getMigrationPlan(options: any = {}) {
     const manifest = ensureAdapterManifest();
     const targetVersion = Number(options.targetVersion || CONTROL_PLANE_SCHEMA_VERSION);
     const pending = buildMigrationSteps(metadata, manifest, targetVersion);
@@ -151,7 +154,7 @@ function createAdapterStore({ rootDir, metadata, resolveCollectionPath, resolveO
     };
   }
 
-  function applyMigrations(options = {}) {
+  function applyMigrations(options: any = {}) {
     const startedAt = options.startedAt || new Date().toISOString();
     const manifest = ensureAdapterManifest();
     const plan = getMigrationPlan(options);
@@ -171,7 +174,7 @@ function createAdapterStore({ rootDir, metadata, resolveCollectionPath, resolveO
       updatedAt: startedAt,
       migrations: [
         ...(Array.isArray(manifest.migrations) ? manifest.migrations : []),
-        ...plan.pending.map((step) => ({
+        ...plan.pending.map((step: any) => ({
           id: step.id,
           kind: step.kind,
           fromVersion: step.fromVersion,
@@ -204,7 +207,7 @@ function createAdapterStore({ rootDir, metadata, resolveCollectionPath, resolveO
   return store;
 }
 
-export function createJsonFileStore({ namespace }) {
+export function createJsonFileStore({ namespace }: { namespace: string }) {
   const rootDir = join(repoRoot, '.quantpilot-runtime', namespace);
 
   return createAdapterStore({
@@ -216,12 +219,12 @@ export function createJsonFileStore({ namespace }) {
       rootDir,
       persistence: 'filesystem-json',
     }),
-    resolveCollectionPath: (filename) => join(rootDir, filename),
-    resolveObjectPath: (filename) => join(rootDir, filename),
+    resolveCollectionPath: (filename: string) => join(rootDir, filename),
+    resolveObjectPath: (filename: string) => join(rootDir, filename),
   });
 }
 
-export function createEmbeddedDbStore({ namespace }) {
+export function createEmbeddedDbStore({ namespace }: { namespace: string }) {
   const dbPath = join(repoRoot, '.quantpilot', 'control-plane.db');
   const store = createSQLiteAdapter({ namespace, dbPath });
   store.ensureAdapterManifest();

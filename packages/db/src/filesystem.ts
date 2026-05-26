@@ -1,11 +1,10 @@
-// @ts-nocheck
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
-export function ensureDirectory(pathname) {
+export function ensureDirectory(pathname: string) {
   mkdirSync(pathname, { recursive: true });
 }
 
-export function readJsonFile(pathname, fallback) {
+export function readJsonFile(pathname: string, fallback: any): any {
   if (!existsSync(pathname)) {
     return fallback;
   }
@@ -16,6 +15,6 @@ export function readJsonFile(pathname, fallback) {
   }
 }
 
-export function writeJsonFile(pathname, value) {
+export function writeJsonFile(pathname: string, value: any) {
   writeFileSync(pathname, JSON.stringify(value, null, 2));
 }
