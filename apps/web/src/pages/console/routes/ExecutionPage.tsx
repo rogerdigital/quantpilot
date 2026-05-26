@@ -16,25 +16,11 @@ import {
   syncExecutionPlan,
   updateIncident,
 } from '../../../app/api/controlPlane.ts';
-import {
-  ActivityLog,
-  ApprovalQueueTable,
-  OrdersTable,
-} from '../../../components/business/ConsoleTables.tsx';
+import { ApprovalQueueTable, OrdersTable } from '../../../components/business/ConsoleTables.tsx';
 import { TopMeta } from '../../../components/layout/ConsoleChrome.tsx';
 import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
-import {
-  onShortcutKeyDown,
-  useSettingsNavigation,
-} from '../../../modules/console/console.hooks.ts';
 import { copy, useLocale } from '../../../modules/console/console.i18n.tsx';
-import {
-  modeTone,
-  translateEngineStatus,
-  translateMode,
-  translateRiskLevel,
-  translateRuntimeText,
-} from '../../../modules/console/console.utils.ts';
+import { translateEngineStatus } from '../../../modules/console/console.utils.ts';
 import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';
 import { getExecutionCollectionConfigs } from '../../../modules/console/executionCollectionConfigs.ts';
 import {
@@ -57,6 +43,7 @@ import { useSyncedQuerySelection } from '../../../modules/console/useSyncedQuery
 import { formatActionGuardNotice } from '../../../modules/permissions/permissionCopy.ts';
 import { useResearchNavigationContext } from '../../../modules/research/useResearchNavigationContext.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
+import { ExecutionSummaryPanel } from '../components/ExecutionSummaryPanel.tsx';
 import {
   InspectionListPanel,
   InspectionMetricsRow,
@@ -84,7 +71,6 @@ export function ExecutionPage() {
   const [queueFocus, setQueueFocus] = useState<ExecutionQueueFocusKey>('all');
   const [selectedIncidentDetail, setSelectedIncidentDetail] = useState<any>(null);
   const researchNavigation = useResearchNavigationContext(searchParams, navigate);
-  const goToSettings = useSettingsNavigation();
   const canApproveExecution = hasPermission('execution:approve');
   const {
     runtimeEvents,
@@ -352,72 +338,7 @@ export function ExecutionPage() {
         />
       </header>
 
-      <section className="panel-grid panel-grid-wide">
-        <article className="panel">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{copy[locale].terms.executionLog}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '按时间逆序查看最新系统执行记录。'
-                  : 'Review the latest execution records in reverse chronological order.'}
-              </div>
-            </div>
-            <div className="panel-badge badge-info">EXECUTION</div>
-          </div>
-          <ActivityLog />
-        </article>
-        <article
-          className="panel shortcut-surface"
-          role="button"
-          tabIndex={0}
-          onClick={() => goToSettings('integrations')}
-          onKeyDown={(event) => onShortcutKeyDown(event, () => goToSettings('integrations'))}
-        >
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{copy[locale].terms.executionSummary}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '汇总最近一个刷新周期的动作和通道路由。'
-                  : 'Summarize the latest cycle actions and routing posture.'}
-              </div>
-            </div>
-            <div className={`panel-badge badge-${modeTone(state.mode)}`}>
-              {translateMode(locale, state.mode)}
-            </div>
-          </div>
-          <div className="status-stack">
-            <div className="status-row">
-              <span>{copy[locale].labels.latestSignal}</span>
-              <strong>
-                {state.stockStates.filter((stock) => stock.signal === 'BUY').length} /{' '}
-                {state.stockStates.filter((stock) => stock.signal === 'SELL').length}
-              </strong>
-            </div>
-            <div className="status-row">
-              <span>{copy[locale].terms.riskLevel}</span>
-              <strong>{translateRiskLevel(locale, state.riskLevel)}</strong>
-            </div>
-            <div className="status-row">
-              <span>{copy[locale].terms.tradeDecision}</span>
-              <strong>{translateRuntimeText(locale, state.decisionSummary)}</strong>
-            </div>
-            <div className="status-row">
-              <span>{copy[locale].labels.brokerState}</span>
-              <strong>
-                {state.integrationStatus.broker.connected
-                  ? copy[locale].labels.connected
-                  : copy[locale].labels.fallback}
-              </strong>
-            </div>
-            <div className="status-copy">{translateRuntimeText(locale, state.decisionCopy)}</div>
-            <div className="status-copy">
-              {translateRuntimeText(locale, state.integrationStatus.broker.message)}
-            </div>
-          </div>
-        </article>
-      </section>
+      <ExecutionSummaryPanel locale={locale} state={state} />
 
       <section className="panel-grid panel-grid-wide">
         <article className="panel">
