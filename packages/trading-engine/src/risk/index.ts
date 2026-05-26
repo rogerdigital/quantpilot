@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { buildRemoteSellIntent, sellPosition } from '../execution/index.js';
 
 export { calcBeta, calcHHI } from './beta-calculator.js';
@@ -36,21 +35,23 @@ export {
   type VaRResult,
 } from './var-calculator.js';
 
-export function riskOffIfNeeded(state, brokerSupportsRemoteExecution) {
+export function riskOffIfNeeded(state: any, brokerSupportsRemoteExecution: boolean) {
   const liveRiskIntents = [];
   const avgVol =
-    state.stockStates.reduce((sum, stock) => sum + Math.abs(stock.features.intraday || 0), 0) /
-    state.stockStates.length;
+    state.stockStates.reduce(
+      (sum: number, stock: any) => sum + Math.abs(stock.features.intraday || 0),
+      0
+    ) / state.stockStates.length;
   if (state.toggles.riskGuard && avgVol > 1.8) {
     state.riskLevel = 'RISK OFF';
     const paperHoldingSymbol = Object.keys(state.accounts.paper.holdings)[0];
-    const paperStock = state.stockStates.find((item) => item.symbol === paperHoldingSymbol);
+    const paperStock = state.stockStates.find((item: any) => item.symbol === paperHoldingSymbol);
     if (paperStock) {
       sellPosition(state.accounts.paper, paperStock, 0.3, 'Risk Guard', state);
     }
     if (state.toggles.liveTrade) {
       const liveHoldingSymbol = Object.keys(state.accounts.live.holdings)[0];
-      const liveStock = state.stockStates.find((item) => item.symbol === liveHoldingSymbol);
+      const liveStock = state.stockStates.find((item: any) => item.symbol === liveHoldingSymbol);
       if (liveStock) {
         if (brokerSupportsRemoteExecution) {
           const liveIntent = buildRemoteSellIntent(

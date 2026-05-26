@@ -1,12 +1,10 @@
-// @ts-nocheck
-
 import { chinaNow, cloneState, computeAccount, logEvent } from '../core/shared.js';
 import { applyBrokerSnapshot, applyRemoteOrderSubmissions } from '../execution/index.js';
 import { applyQuotePatch, updateTicker } from '../market/index.js';
 import { riskOffIfNeeded } from '../risk/index.js';
 import { executeStrategy } from '../strategy/index.js';
 
-export function applyControlPlaneResolution(state, resolution) {
+export function applyControlPlaneResolution(state: any, resolution: any) {
   const previousCycleId = state.controlPlane.lastCycleId;
   state.controlPlane = {
     ...resolution.controlPlane,
@@ -18,7 +16,7 @@ export function applyControlPlaneResolution(state, resolution) {
     state.routeCopy = resolution.controlPlane.routeHint;
   }
   applyRemoteOrderSubmissions(state, resolution.brokerExecution.submittedOrders || []);
-  (resolution.brokerExecution.rejectedOrders || []).forEach((order) => {
+  (resolution.brokerExecution.rejectedOrders || []).forEach((order: any) => {
     logEvent(
       state,
       'info',
@@ -40,7 +38,7 @@ export function applyControlPlaneResolution(state, resolution) {
   }
 }
 
-export function buildCyclePayload(state) {
+export function buildCyclePayload(state: any) {
   return {
     cycle: state.cycle,
     mode: state.mode,
@@ -56,35 +54,35 @@ export function buildCyclePayload(state) {
   };
 }
 
-function reconcileLiveIntents(state, riskIntents, strategyIntents) {
+function reconcileLiveIntents(state: any, riskIntents: any, strategyIntents: any) {
   const nextPendingMap = new Map();
   const nextApprovalMap = new Map();
 
-  state.pendingLiveIntents.forEach((order) => {
+  state.pendingLiveIntents.forEach((order: any) => {
     if (order.clientOrderId) {
       nextPendingMap.set(order.clientOrderId, order);
     }
   });
-  state.approvalQueue.forEach((order) => {
+  state.approvalQueue.forEach((order: any) => {
     if (order.clientOrderId) {
       nextApprovalMap.set(order.clientOrderId, order);
     }
   });
 
-  const newlyCreatedIntents = [...riskIntents, ...strategyIntents];
+  const newlyCreatedIntents: any[] = [...riskIntents, ...strategyIntents];
   if (state.toggles.manualApproval) {
-    newlyCreatedIntents.forEach((order) => {
+    newlyCreatedIntents.forEach((order: any) => {
       if (order.clientOrderId) {
         nextApprovalMap.set(order.clientOrderId, order);
       }
     });
   } else {
-    newlyCreatedIntents.forEach((order) => {
+    newlyCreatedIntents.forEach((order: any) => {
       if (order.clientOrderId) {
         nextPendingMap.set(order.clientOrderId, order);
       }
     });
-    state.approvalQueue.forEach((order) => {
+    state.approvalQueue.forEach((order: any) => {
       if (order.clientOrderId) {
         nextPendingMap.set(order.clientOrderId, order);
       }
@@ -97,8 +95,11 @@ function reconcileLiveIntents(state, riskIntents, strategyIntents) {
 }
 
 export function advanceLocalState(
-  previousState,
-  { marketSnapshot, brokerSupportsRemoteExecution }
+  previousState: any,
+  {
+    marketSnapshot,
+    brokerSupportsRemoteExecution,
+  }: { marketSnapshot: any; brokerSupportsRemoteExecution: boolean }
 ) {
   const state = cloneState(previousState);
   state.cycle += 1;

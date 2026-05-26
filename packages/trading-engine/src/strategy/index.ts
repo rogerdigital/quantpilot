@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 export {
   canPromoteToLive,
   canPromoteToPaper,
@@ -25,20 +23,20 @@ import {
   sellPosition,
 } from '../execution/index.js';
 
-export function executeStrategy(state, brokerSupportsRemoteExecution) {
-  const ranked = state.stockStates.slice().sort((a, b) => b.score - a.score);
-  const topBuy = ranked.filter((stock) => stock.signal === 'BUY').slice(0, 3);
-  const topSell = ranked.filter((stock) => stock.signal === 'SELL').slice(0, 3);
-  const liveIntents = [];
+export function executeStrategy(state: any, brokerSupportsRemoteExecution: boolean) {
+  const ranked = state.stockStates.slice().sort((a: any, b: any) => b.score - a.score);
+  const topBuy = ranked.filter((stock: any) => stock.signal === 'BUY').slice(0, 3);
+  const topSell = ranked.filter((stock: any) => stock.signal === 'SELL').slice(0, 3);
+  const liveIntents: any[] = [];
   const liveShadow = structuredClone(state.accounts.live);
 
   for (const intent of state.pendingLiveIntents) reserveIntentOnShadowAccount(liveShadow, intent);
 
   state.decisionSummary = topBuy.length
-    ? `Priority buys: ${topBuy.map((item) => item.symbol).join(' / ')}`
+    ? `Priority buys: ${topBuy.map((item: any) => item.symbol).join(' / ')}`
     : 'No new strong buy signals in this cycle';
   state.decisionCopy = topSell.length
-    ? `Trim alert: ${topSell.map((item) => item.symbol).join(' / ')}`
+    ? `Trim alert: ${topSell.map((item: any) => item.symbol).join(' / ')}`
     : 'No high-risk positions under the sell threshold.';
   state.routeCopy = state.toggles.liveTrade
     ? brokerSupportsRemoteExecution
@@ -50,7 +48,7 @@ export function executeStrategy(state, brokerSupportsRemoteExecution) {
     return { liveIntents };
   }
 
-  topBuy.forEach((stock, index) => {
+  topBuy.forEach((stock: any, index: number) => {
     const weight = Math.max(state.config.maxPositionWeight - index * 0.05, 0.08);
     buyPosition(state.accounts.paper, stock, weight, 'Paper', state);
     if (!state.toggles.liveTrade) {
@@ -79,7 +77,7 @@ export function executeStrategy(state, brokerSupportsRemoteExecution) {
     }
   });
 
-  topSell.forEach((stock) => {
+  topSell.forEach((stock: any) => {
     sellPosition(state.accounts.paper, stock, 0.5, 'Paper', state);
     if (!state.toggles.liveTrade) {
       return;

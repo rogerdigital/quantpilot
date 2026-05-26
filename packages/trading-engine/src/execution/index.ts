@@ -1,8 +1,14 @@
-// @ts-nocheck
 import { OPEN_ORDER_STATUSES } from '../core/constants.js';
 import { createOrderRecord, logEvent, prependOrder } from '../core/shared.js';
 
-function createRemoteIntent(state, side, symbol, qty, price, tag) {
+function createRemoteIntent(
+  state: any,
+  side: string,
+  symbol: string,
+  qty: number,
+  price: number,
+  tag: string
+) {
   const seq = state.orderSeq;
   const clientOrderId = `sandbox-live-${String(side).toLowerCase()}-${symbol}-${seq}`;
   return createOrderRecord(state, 'live', side, symbol, qty, price, 'pending_submit', tag, {
@@ -15,12 +21,12 @@ function createRemoteIntent(state, side, symbol, qty, price, tag) {
   });
 }
 
-function hasBlockingLiveOrder(state, symbol, side) {
+function hasBlockingLiveOrder(state: any, symbol: string, side: string) {
   return (
-    state.approvalQueue.some((order) => order.symbol === symbol && order.side === side) ||
-    state.pendingLiveIntents.some((order) => order.symbol === symbol && order.side === side) ||
+    state.approvalQueue.some((order: any) => order.symbol === symbol && order.side === side) ||
+    state.pendingLiveIntents.some((order: any) => order.symbol === symbol && order.side === side) ||
     state.accounts.live.orders.some(
-      (order) =>
+      (order: any) =>
         order.symbol === symbol &&
         order.side === side &&
         OPEN_ORDER_STATUSES.has(String(order.status || '').toLowerCase())
@@ -28,17 +34,17 @@ function hasBlockingLiveOrder(state, symbol, side) {
   );
 }
 
-function syncRemoteOrders(state, orders) {
+function syncRemoteOrders(state: any, orders: any) {
   if (!orders) {
     return;
   }
-  const nextOrders = orders.map((order) => ({
+  const nextOrders: any[] = orders.map((order: any) => ({
     ...order,
     account: 'live',
     tag: 'Remote',
   }));
-  const nextMap = {};
-  nextOrders.forEach((order) => {
+  const nextMap: Record<string, any> = {};
+  nextOrders.forEach((order: any) => {
     if (!order.id) {
       return;
     }
@@ -68,9 +74,9 @@ function syncRemoteOrders(state, orders) {
   state.brokerOrderStatusMap = nextMap;
   state.accounts.live.orders = nextOrders.slice(0, 50);
   state.approvalQueue = state.approvalQueue.filter(
-    (intent) =>
+    (intent: any) =>
       !nextOrders.some(
-        (order) =>
+        (order: any) =>
           (order.clientOrderId && intent.clientOrderId === order.clientOrderId) ||
           (order.symbol === intent.symbol &&
             order.side === intent.side &&
@@ -78,9 +84,9 @@ function syncRemoteOrders(state, orders) {
       )
   );
   state.pendingLiveIntents = state.pendingLiveIntents.filter(
-    (intent) =>
+    (intent: any) =>
       !nextOrders.some(
-        (order) =>
+        (order: any) =>
           (order.clientOrderId && intent.clientOrderId === order.clientOrderId) ||
           (order.symbol === intent.symbol &&
             order.side === intent.side &&
@@ -89,7 +95,7 @@ function syncRemoteOrders(state, orders) {
   );
 }
 
-export function buyPosition(account, stock, ratio, tag, state) {
+export function buyPosition(account: any, stock: any, ratio: number, tag: string, state: any) {
   const lot = stock.lotSize || 1;
   const budget = Math.max(account.nav * ratio, 0);
   const shares = Math.floor(Math.min(account.cash, budget) / stock.price / lot) * lot;
@@ -129,7 +135,7 @@ export function buyPosition(account, stock, ratio, tag, state) {
   return order;
 }
 
-export function sellPosition(account, stock, ratio, tag, state) {
+export function sellPosition(account: any, stock: any, ratio: number, tag: string, state: any) {
   const holding = account.holdings[stock.symbol];
   if (!holding || holding.shares <= 0) {
     return null;
@@ -173,7 +179,13 @@ export function sellPosition(account, stock, ratio, tag, state) {
   return order;
 }
 
-export function buildRemoteBuyIntent(state, account, stock, ratio, tag) {
+export function buildRemoteBuyIntent(
+  state: any,
+  account: any,
+  stock: any,
+  ratio: number,
+  tag: string
+) {
   if (hasBlockingLiveOrder(state, stock.symbol, 'BUY')) {
     return null;
   }
@@ -185,7 +197,13 @@ export function buildRemoteBuyIntent(state, account, stock, ratio, tag) {
   return createRemoteIntent(state, 'BUY', stock.symbol, qty, stock.price, tag);
 }
 
-export function buildRemoteSellIntent(state, account, stock, ratio, tag) {
+export function buildRemoteSellIntent(
+  state: any,
+  account: any,
+  stock: any,
+  ratio: number,
+  tag: string
+) {
   if (hasBlockingLiveOrder(state, stock.symbol, 'SELL')) {
     return null;
   }
@@ -204,20 +222,20 @@ export function buildRemoteSellIntent(state, account, stock, ratio, tag) {
   );
 }
 
-export function applyRemoteOrderSubmissions(state, orders) {
+export function applyRemoteOrderSubmissions(state: any, orders: any) {
   if (!orders?.length) {
     return;
   }
   const acceptedClientOrderIds = new Set(
-    orders.map((order) => order.clientOrderId).filter(Boolean)
+    orders.map((order: any) => order.clientOrderId).filter(Boolean)
   );
   state.pendingLiveIntents = state.pendingLiveIntents.filter(
-    (order) => !acceptedClientOrderIds.has(order.clientOrderId)
+    (order: any) => !acceptedClientOrderIds.has(order.clientOrderId)
   );
   state.approvalQueue = state.approvalQueue.filter(
-    (order) => !acceptedClientOrderIds.has(order.clientOrderId)
+    (order: any) => !acceptedClientOrderIds.has(order.clientOrderId)
   );
-  orders.forEach((order) => {
+  orders.forEach((order: any) => {
     const normalized = createOrderRecord(
       state,
       'live',
@@ -242,7 +260,7 @@ export function applyRemoteOrderSubmissions(state, orders) {
   });
 }
 
-export function applyBrokerSnapshot(state, snapshot) {
+export function applyBrokerSnapshot(state: any, snapshot: any) {
   if (!snapshot) {
     return;
   }
@@ -254,8 +272,8 @@ export function applyBrokerSnapshot(state, snapshot) {
       : live.cash;
   }
   if (Array.isArray(snapshot.positions)) {
-    const nextHoldings = {};
-    snapshot.positions.forEach((position) => {
+    const nextHoldings: Record<string, any> = {};
+    snapshot.positions.forEach((position: any) => {
       if (position.qty > 0) {
         nextHoldings[position.symbol] = {
           shares: position.qty,

@@ -1,12 +1,10 @@
-// @ts-nocheck
-
 /**
  * Black-Scholes Option Pricing Model
  * European-style options pricing and Greeks calculation
  */
 
 // Standard normal cumulative distribution function
-function normCDF(x) {
+function normCDF(x: number) {
   const a1 = 0.254829592;
   const a2 = -0.284496736;
   const a3 = 1.421413741;
@@ -24,7 +22,7 @@ function normCDF(x) {
 }
 
 // Standard normal probability density function
-function normPDF(x) {
+function normPDF(x: number) {
   return Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
 }
 
@@ -39,7 +37,21 @@ function normPDF(x) {
  * @param {'CALL'|'PUT'} params.optionType - Option type
  * @returns {Object} Option price and Greeks
  */
-export function blackScholes({ S, K, T, r, sigma, optionType = 'CALL' }) {
+export function blackScholes({
+  S,
+  K,
+  T,
+  r,
+  sigma,
+  optionType = 'CALL',
+}: {
+  S: number;
+  K: number;
+  T: number;
+  r: number;
+  sigma: number;
+  optionType?: string;
+}) {
   if (T <= 0) {
     // Option has expired
     const intrinsic = optionType === 'CALL' ? Math.max(0, S - K) : Math.max(0, K - S);
@@ -117,6 +129,15 @@ export function impliedVolatility({
   optionType = 'CALL',
   maxIterations = 100,
   tolerance = 0.0001,
+}: {
+  marketPrice: number;
+  S: number;
+  K: number;
+  T: number;
+  r: number;
+  optionType?: string;
+  maxIterations?: number;
+  tolerance?: number;
 }) {
   let sigma = 0.3; // Initial guess
 
@@ -144,7 +165,7 @@ export function impliedVolatility({
  * @param {Array} positions - Array of option positions
  * @returns {Object} Aggregated Greeks
  */
-export function calculatePortfolioGreeks(positions) {
+export function calculatePortfolioGreeks(positions: any[]) {
   return positions.reduce(
     (acc, pos) => {
       const multiplier = pos.multiplier || 100;
@@ -176,6 +197,11 @@ export function calculateOptionsRisk({
   underlyingPrice,
   underlyingMove = 0.05,
   daysForward = 1,
+}: {
+  positions: any[];
+  underlyingPrice: number;
+  underlyingMove?: number;
+  daysForward?: number;
 }) {
   const portfolioGreeks = calculatePortfolioGreeks(positions);
 
@@ -252,6 +278,14 @@ export function generateOptionChain({
   daysToExpiry = 30,
   strikeRange = 0.2,
   strikeCount = 10,
+}: {
+  underlying: string;
+  currentPrice: number;
+  volatility: number;
+  riskFreeRate?: number;
+  daysToExpiry?: number;
+  strikeRange?: number;
+  strikeCount?: number;
 }) {
   const T = daysToExpiry / 365;
   const minStrike = currentPrice * (1 - strikeRange);
