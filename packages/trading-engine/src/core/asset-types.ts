@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 export const AssetType = {
   STOCK: 'STOCK',
   OPTION: 'OPTION',
@@ -13,7 +11,7 @@ export const OptionType = {
   PUT: 'PUT',
 };
 
-export function createInstrument(data) {
+export function createInstrument(data: any) {
   const base = {
     symbol: data.symbol || '',
     assetType: data.assetType || AssetType.STOCK,
@@ -87,7 +85,7 @@ export function createInstrument(data) {
   }
 }
 
-export function createPosition(data) {
+export function createPosition(data: any) {
   const base = {
     symbol: data.symbol || '',
     assetType: data.assetType || AssetType.STOCK,
@@ -149,7 +147,7 @@ export function createPosition(data) {
   }
 }
 
-export function calculatePortfolioGreeks(positions) {
+export function calculatePortfolioGreeks(positions: any[]) {
   const optionPositions = positions.filter((p) => p.assetType === AssetType.OPTION);
 
   if (optionPositions.length === 0) {
@@ -168,8 +166,8 @@ export function calculatePortfolioGreeks(positions) {
   );
 }
 
-export function getAssetTypeLabel(assetType, locale = 'en') {
-  const labels = {
+export function getAssetTypeLabel(assetType: string, locale: string = 'en') {
+  const labels: Record<string, Record<string, string>> = {
     en: {
       [AssetType.STOCK]: 'Stock',
       [AssetType.OPTION]: 'Option',

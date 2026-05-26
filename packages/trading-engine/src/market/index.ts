@@ -1,17 +1,16 @@
-// @ts-nocheck
 import { DEFAULT_ENGINE_CONFIG, STOCK_UNIVERSE } from '../core/constants.js';
 import { createTickerState } from '../core/shared.js';
 
-function sanitizeQuoteNumber(value, fallback) {
+function sanitizeQuoteNumber(value: any, fallback: any) {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
-export function scoreStock(stock, config = DEFAULT_ENGINE_CONFIG) {
+export function scoreStock(stock: any, config: any = DEFAULT_ENGINE_CONFIG) {
   const history = stock.history;
   const last = history.at(-1) || stock.price;
   const prev = history.at(-2) || stock.prevClose || stock.price;
-  const short = history.slice(-5).reduce((sum, value) => sum + value, 0) / 5;
-  const long = history.slice(-18).reduce((sum, value) => sum + value, 0) / 18;
+  const short = history.slice(-5).reduce((sum: number, value: number) => sum + value, 0) / 5;
+  const long = history.slice(-18).reduce((sum: number, value: number) => sum + value, 0) / 18;
   const momentum = (last / history[Math.max(history.length - 8, 0)] - 1) * 100;
   const intraday = (last / prev - 1) * 100;
   const volatility = Math.abs(intraday) * 8 + stock.volatility * 6;
@@ -31,24 +30,26 @@ export function scoreStock(stock, config = DEFAULT_ENGINE_CONFIG) {
   }
 }
 
-export function createInitialStockStates(config = DEFAULT_ENGINE_CONFIG) {
-  const stockStates = STOCK_UNIVERSE.map((ticker, index) => createTickerState(ticker, index));
+export function createInitialStockStates(config: any = DEFAULT_ENGINE_CONFIG) {
+  const stockStates: any[] = STOCK_UNIVERSE.map((ticker: any, index: number) =>
+    createTickerState(ticker, index)
+  );
   for (const stock of stockStates) scoreStock(stock, config);
   return stockStates;
 }
 
-function seededNoise(index, step) {
+function seededNoise(index: number, step: number) {
   const base = Math.sin(index * 12.9898 + step * 78.233) * 43758.5453;
   return base - Math.floor(base);
 }
 
 export function updateTicker(
-  stock,
-  index,
-  cycle,
-  riskGuard,
-  stockCount,
-  config = DEFAULT_ENGINE_CONFIG
+  stock: any,
+  index: number,
+  cycle: number,
+  riskGuard: boolean,
+  stockCount: number,
+  config: any = DEFAULT_ENGINE_CONFIG
 ) {
   const noise = (seededNoise(index + 1, cycle + 1) - 0.5) * (stock.volatility / 100);
   const directional = Math.sin((cycle + index * 3) / 6) * (stock.drift / 100);
@@ -67,12 +68,16 @@ export function updateTicker(
   scoreStock(stock, config);
 }
 
-export function applyQuotePatch(stockStates, quotes, config = DEFAULT_ENGINE_CONFIG) {
+export function applyQuotePatch(
+  stockStates: any[],
+  quotes: any[],
+  config: any = DEFAULT_ENGINE_CONFIG
+) {
   if (!quotes.length) {
     return;
   }
-  const quoteMap = new Map(quotes.map((quote) => [quote.symbol, quote]));
-  stockStates.forEach((stock) => {
+  const quoteMap = new Map(quotes.map((quote: any) => [quote.symbol, quote]));
+  stockStates.forEach((stock: any) => {
     const nextQuote = quoteMap.get(stock.symbol);
     if (!nextQuote) {
       return;

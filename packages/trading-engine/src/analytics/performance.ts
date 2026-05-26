@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 /**
  * Performance analytics module for quantitative trading
  */
@@ -9,7 +7,7 @@
  * @param {number[]} equityCurve - Array of equity values
  * @returns {number[]} Daily returns
  */
-export function calculateDailyReturns(equityCurve) {
+export function calculateDailyReturns(equityCurve: number[]) {
   if (equityCurve.length < 2) return [];
 
   const returns = [];
@@ -29,7 +27,7 @@ export function calculateDailyReturns(equityCurve) {
  * @param {number[]} returns - Daily returns
  * @returns {number[]} Cumulative returns
  */
-export function calculateCumulativeReturns(returns) {
+export function calculateCumulativeReturns(returns: number[]) {
   let cumulative = 1;
   return returns.map((r) => {
     cumulative *= 1 + r;
@@ -43,7 +41,7 @@ export function calculateCumulativeReturns(returns) {
  * @param {number} tradingDays - Number of trading days
  * @returns {number} Annualized return
  */
-export function calculateCAGR(totalReturn, tradingDays) {
+export function calculateCAGR(totalReturn: number, tradingDays: number) {
   if (tradingDays <= 0) return 0;
   const years = tradingDays / 252;
   return (1 + totalReturn) ** (1 / years) - 1;
@@ -55,7 +53,7 @@ export function calculateCAGR(totalReturn, tradingDays) {
  * @param {number} riskFreeRate - Annual risk-free rate (default: 0.02)
  * @returns {number} Sharpe ratio
  */
-export function calculateSharpeRatio(returns, riskFreeRate = 0.02) {
+export function calculateSharpeRatio(returns: number[], riskFreeRate: number = 0.02) {
   if (returns.length === 0) return 0;
 
   const dailyRf = riskFreeRate / 252;
@@ -74,7 +72,7 @@ export function calculateSharpeRatio(returns, riskFreeRate = 0.02) {
  * @param {number} riskFreeRate - Annual risk-free rate
  * @returns {number} Sortino ratio
  */
-export function calculateSortinoRatio(returns, riskFreeRate = 0.02) {
+export function calculateSortinoRatio(returns: number[], riskFreeRate: number = 0.02) {
   if (returns.length === 0) return 0;
 
   const dailyRf = riskFreeRate / 252;
@@ -96,7 +94,7 @@ export function calculateSortinoRatio(returns, riskFreeRate = 0.02) {
  * @param {number[]} equityCurve - Equity values
  * @returns {Object} Max drawdown info
  */
-export function calculateMaxDrawdown(equityCurve) {
+export function calculateMaxDrawdown(equityCurve: number[]) {
   if (equityCurve.length < 2) {
     return { maxDrawdown: 0, peakIndex: 0, troughIndex: 0, peak: 0, trough: 0 };
   }
@@ -136,7 +134,7 @@ export function calculateMaxDrawdown(equityCurve) {
  * @param {number[]} equityCurve - Equity values
  * @returns {number[]} Drawdown percentages
  */
-export function calculateDrawdownSeries(equityCurve) {
+export function calculateDrawdownSeries(equityCurve: number[]) {
   if (equityCurve.length === 0) return [];
 
   let peak = equityCurve[0];
@@ -152,7 +150,7 @@ export function calculateDrawdownSeries(equityCurve) {
  * @param {number} maxDrawdown - Maximum drawdown
  * @returns {number} Calmar ratio
  */
-export function calculateCalmarRatio(cagr, maxDrawdown) {
+export function calculateCalmarRatio(cagr: number, maxDrawdown: number) {
   if (maxDrawdown === 0) return cagr > 0 ? Infinity : 0;
   return cagr / maxDrawdown;
 }
@@ -163,7 +161,7 @@ export function calculateCalmarRatio(cagr, maxDrawdown) {
  * @param {number} threshold - Return threshold (default: 0)
  * @returns {number} Omega ratio
  */
-export function calculateOmegaRatio(returns, threshold = 0) {
+export function calculateOmegaRatio(returns: number[], threshold: number = 0) {
   if (returns.length === 0) return 0;
 
   const gains = returns.filter((r) => r > threshold).reduce((s, r) => s + (r - threshold), 0);
@@ -178,7 +176,7 @@ export function calculateOmegaRatio(returns, threshold = 0) {
  * @param {number[]} tradePnLs - Array of trade P&L values
  * @returns {Object} Win rate and profit factor
  */
-export function calculateTradeMetrics(tradePnLs) {
+export function calculateTradeMetrics(tradePnLs: number[]) {
   if (tradePnLs.length === 0) {
     return { winRate: 0, profitFactor: 0, avgWin: 0, avgLoss: 0, expectancy: 0 };
   }
@@ -204,10 +202,10 @@ export function calculateTradeMetrics(tradePnLs) {
  * @param {Date[]} dates - Corresponding dates
  * @returns {Object} Monthly returns by year and month
  */
-export function calculateMonthlyReturns(equityCurve, dates) {
+export function calculateMonthlyReturns(equityCurve: number[], dates: Date[]) {
   if (equityCurve.length < 2 || dates.length < 2) return {};
 
-  const monthlyData = {};
+  const monthlyData: Record<string, { start: number; end: number }> = {};
 
   for (let i = 1; i < equityCurve.length; i++) {
     const year = dates[i].getFullYear();
@@ -222,11 +220,11 @@ export function calculateMonthlyReturns(equityCurve, dates) {
   }
 
   // Calculate returns
-  const monthlyReturns = {};
+  const monthlyReturns: Record<string, Record<string, number>> = {};
   for (const [key, data] of Object.entries(monthlyData)) {
     const [year, month] = key.split('-');
     if (!monthlyReturns[year]) monthlyReturns[year] = {};
-    monthlyReturns[year][month] = data.start > 0 ? (data.end - data.start) / data.start : 0;
+    monthlyReturns[year][month] = data.end > 0 ? (data.end - data.start) / data.start : 0;
   }
 
   return monthlyReturns;
@@ -238,7 +236,7 @@ export function calculateMonthlyReturns(equityCurve, dates) {
  * @param {number[]} benchmarkReturns - Benchmark returns
  * @returns {Object} Up and down capture ratios
  */
-export function calculateCaptureRatio(strategyReturns, benchmarkReturns) {
+export function calculateCaptureRatio(strategyReturns: number[], benchmarkReturns: number[]) {
   if (strategyReturns.length !== benchmarkReturns.length || strategyReturns.length === 0) {
     return { upCapture: 0, downCapture: 0 };
   }
@@ -286,6 +284,11 @@ export function generatePerformanceReport({
   dates,
   tradePnLs = [],
   benchmarkReturns = [],
+}: {
+  equityCurve: number[];
+  dates: Date[];
+  tradePnLs?: number[];
+  benchmarkReturns?: number[];
 }) {
   const dailyReturns = calculateDailyReturns(equityCurve);
   const totalReturn =

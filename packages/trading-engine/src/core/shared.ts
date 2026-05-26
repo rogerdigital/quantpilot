@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { INITIAL_SERIES_LENGTH } from './constants.js';
 
 export function chinaNow() {
@@ -12,7 +11,7 @@ export function chinaNow() {
     second: '2-digit',
     hour12: false,
   }).formatToParts(new Date());
-  const map = {};
+  const map: Record<string, string> = {};
   parts.forEach((part) => {
     if (part.type !== 'literal') {
       map[part.type] = part.value;
@@ -24,12 +23,12 @@ export function chinaNow() {
   };
 }
 
-function seededNoise(index, step) {
+function seededNoise(index: number, step: number) {
   const base = Math.sin(index * 12.9898 + step * 78.233) * 43758.5453;
   return base - Math.floor(base);
 }
 
-function buildPriceSeries(basePrice, index) {
+function buildPriceSeries(basePrice: number, index: number) {
   const series = [];
   let price = basePrice;
   for (let i = 0; i < INITIAL_SERIES_LENGTH; i += 1) {
@@ -41,7 +40,12 @@ function buildPriceSeries(basePrice, index) {
   return series;
 }
 
-export function createAccount(id, label, cash, holdings) {
+export function createAccount(
+  id: string,
+  label: string,
+  cash: number,
+  holdings: Record<string, any> = {}
+) {
   return {
     id,
     label,
@@ -57,7 +61,7 @@ export function createAccount(id, label, cash, holdings) {
   };
 }
 
-export function createTickerState(ticker, index) {
+export function createTickerState(ticker: any, index: number) {
   const history = buildPriceSeries(ticker.price, index);
   const lastPrice = history[history.length - 1];
   return {
@@ -76,10 +80,10 @@ export function createTickerState(ticker, index) {
   };
 }
 
-export function computeAccount(account, stockStates) {
+export function computeAccount(account: any, stockStates: any) {
   let marketValue = 0;
-  Object.entries(account.holdings).forEach(([symbol, holding]) => {
-    const stock = stockStates.find((item) => item.symbol === symbol);
+  Object.entries(account.holdings).forEach(([symbol, holding]: [string, any]) => {
+    const stock = stockStates.find((item: any) => item.symbol === symbol);
     if (stock) {
       marketValue += stock.price * holding.shares;
     }
@@ -94,7 +98,7 @@ export function computeAccount(account, stockStates) {
   account.pnlPct = base ? (account.nav / base - 1) * 100 : 0;
 }
 
-export function cloneState(state) {
+export function cloneState(state: any) {
   return {
     ...state,
     integrationStatus: {
@@ -102,7 +106,7 @@ export function cloneState(state) {
       broker: { ...state.integrationStatus.broker },
     },
     brokerOrderStatusMap: { ...state.brokerOrderStatusMap },
-    stockStates: state.stockStates.map((stock) => ({
+    stockStates: state.stockStates.map((stock: any) => ({
       ...stock,
       history: [...stock.history],
       features: { ...stock.features },
@@ -111,49 +115,49 @@ export function cloneState(state) {
       paper: {
         ...state.accounts.paper,
         holdings: Object.fromEntries(
-          Object.entries(state.accounts.paper.holdings).map(([symbol, holding]) => [
+          Object.entries(state.accounts.paper.holdings).map(([symbol, holding]: [string, any]) => [
             symbol,
             { ...holding },
           ])
         ),
-        orders: state.accounts.paper.orders.map((order) => ({ ...order })),
-        equitySeries: state.accounts.paper.equitySeries.map((point) => ({ ...point })),
+        orders: state.accounts.paper.orders.map((order: any) => ({ ...order })),
+        equitySeries: state.accounts.paper.equitySeries.map((point: any) => ({ ...point })),
       },
       live: {
         ...state.accounts.live,
         holdings: Object.fromEntries(
-          Object.entries(state.accounts.live.holdings).map(([symbol, holding]) => [
+          Object.entries(state.accounts.live.holdings).map(([symbol, holding]: [string, any]) => [
             symbol,
             { ...holding },
           ])
         ),
-        orders: state.accounts.live.orders.map((order) => ({ ...order })),
-        equitySeries: state.accounts.live.equitySeries.map((point) => ({ ...point })),
+        orders: state.accounts.live.orders.map((order: any) => ({ ...order })),
+        equitySeries: state.accounts.live.equitySeries.map((point: any) => ({ ...point })),
       },
     },
-    approvalQueue: state.approvalQueue.map((order) => ({ ...order })),
-    pendingLiveIntents: state.pendingLiveIntents.map((order) => ({ ...order })),
-    activityLog: state.activityLog.map((entry) => ({ ...entry })),
+    approvalQueue: state.approvalQueue.map((order: any) => ({ ...order })),
+    pendingLiveIntents: state.pendingLiveIntents.map((order: any) => ({ ...order })),
+    activityLog: state.activityLog.map((entry: any) => ({ ...entry })),
     controlPlane: { ...state.controlPlane },
   };
 }
 
-export function logEvent(state, kind, title, copy) {
+export function logEvent(state: any, kind: string, title: string, copy: string) {
   const now = chinaNow();
   state.activityLog.unshift({ kind, title, copy, time: now.time });
   state.activityLog = state.activityLog.slice(0, 40);
 }
 
 export function createOrderRecord(
-  state,
-  accountId,
-  side,
-  symbol,
-  qty,
-  price,
-  status,
-  tag,
-  extra = {}
+  state: any,
+  accountId: string,
+  side: string,
+  symbol: string,
+  qty: number,
+  price: number,
+  status: string,
+  tag: string,
+  extra: Record<string, any> = {}
 ) {
   const now = new Date().toISOString();
   const id = extra.id || `local-${accountId}-${state.orderSeq}`;
@@ -177,7 +181,7 @@ export function createOrderRecord(
   };
 }
 
-export function reserveIntentOnShadowAccount(account, intent) {
+export function reserveIntentOnShadowAccount(account: any, intent: any) {
   if (intent.side === 'BUY') {
     const cost = (intent.price || 0) * intent.qty;
     account.buyingPower = Math.max(0, account.buyingPower - cost);
@@ -193,7 +197,7 @@ export function reserveIntentOnShadowAccount(account, intent) {
   }
 }
 
-export function prependOrder(account, order) {
+export function prependOrder(account: any, order: any) {
   account.orders.unshift(order);
   account.orders = account.orders.slice(0, 50);
 }
