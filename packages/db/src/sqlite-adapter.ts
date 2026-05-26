@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -28,7 +26,13 @@ const CREATE_OBJECTS = `
   )
 `;
 
-export function createSQLiteAdapter({ namespace, dbPath }) {
+export function createSQLiteAdapter({
+  namespace,
+  dbPath,
+}: {
+  namespace: string;
+  dbPath?: string;
+}): any {
   const resolvedPath = dbPath || join(repoRoot, '.quantpilot', 'control-plane.db');
   mkdirSync(dirname(resolvedPath), { recursive: true });
 
@@ -48,8 +52,8 @@ export function createSQLiteAdapter({ namespace, dbPath }) {
     ),
   };
 
-  function readCollection(filename) {
-    const row = stmts.getCollection.get(filename, namespace);
+  function readCollection(filename: string): any[] {
+    const row: any = stmts.getCollection.get(filename, namespace);
     if (!row) return [];
     try {
       const parsed = JSON.parse(row.entries);
@@ -59,7 +63,7 @@ export function createSQLiteAdapter({ namespace, dbPath }) {
     }
   }
 
-  function writeCollection(filename, entries) {
+  function writeCollection(filename: string, entries: any) {
     stmts.upsertCollection.run(
       filename,
       namespace,
@@ -68,8 +72,8 @@ export function createSQLiteAdapter({ namespace, dbPath }) {
     );
   }
 
-  function readObject(filename, fallback = null) {
-    const row = stmts.getObject.get(filename, namespace);
+  function readObject(filename: string, fallback: any = null): any {
+    const row: any = stmts.getObject.get(filename, namespace);
     if (!row) return fallback;
     try {
       return JSON.parse(row.data);
@@ -78,7 +82,7 @@ export function createSQLiteAdapter({ namespace, dbPath }) {
     }
   }
 
-  function writeObject(filename, value) {
+  function writeObject(filename: string, value: any) {
     stmts.upsertObject.run(filename, namespace, JSON.stringify(value), new Date().toISOString());
   }
 
@@ -113,7 +117,7 @@ export function createSQLiteAdapter({ namespace, dbPath }) {
       };
     },
     readAdapterManifest() {
-      return this.readObject('_control-plane-adapter.json', {});
+      return this.readObject('_control-plane-adapter.json', {} as any);
     },
     ensureAdapterManifest() {
       const existing = this.readObject('_control-plane-adapter.json', null);
