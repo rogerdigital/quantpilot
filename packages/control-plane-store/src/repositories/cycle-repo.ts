@@ -1,14 +1,13 @@
-// @ts-nocheck
 import { createCycleRecordEntry, trimAndSave } from '../shared.js';
 
 const FILENAME = 'cycle-records.json';
 
-export function createCycleRepository(store) {
+export function createCycleRepository(store: any) {
   return {
     listCycleRecords(limit = 30) {
       return store.readCollection(FILENAME).slice(0, limit);
     },
-    appendCycleRecord(payload) {
+    appendCycleRecord(payload: any) {
       const cycles = store.readCollection(FILENAME);
       const entry = createCycleRecordEntry(payload);
       cycles.unshift(entry);

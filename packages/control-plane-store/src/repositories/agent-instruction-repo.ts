@@ -1,9 +1,8 @@
-// @ts-nocheck
 import { createAgentInstructionEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-instructions.json';
 
-function isInstructionActive(item, activeAt = new Date().toISOString()) {
+function isInstructionActive(item: any, activeAt: any = new Date().toISOString()) {
   if (!item.activeUntil) return true;
   const activeUntilMs = Date.parse(item.activeUntil);
   const activeAtMs = Date.parse(activeAt);
@@ -11,7 +10,7 @@ function isInstructionActive(item, activeAt = new Date().toISOString()) {
   return activeUntilMs >= activeAtMs;
 }
 
-function matchesInstructionFilter(item, filter = {}) {
+function matchesInstructionFilter(item: any, filter: any = {}) {
   if (!matchesScopeFilter(item, filter)) return false;
   if (filter.sessionId && item.sessionId !== filter.sessionId) return false;
   if (filter.kind && item.kind !== filter.kind) return false;
@@ -28,9 +27,9 @@ function matchesInstructionFilter(item, filter = {}) {
   return true;
 }
 
-function persistInstruction(store, payload = {}) {
+function persistInstruction(store: any, payload: any = {}) {
   const records = store.readCollection(FILENAME);
-  const currentIndex = payload.id ? records.findIndex((item) => item.id === payload.id) : -1;
+  const currentIndex = payload.id ? records.findIndex((item: any) => item.id === payload.id) : -1;
   const current = currentIndex >= 0 ? records[currentIndex] : null;
   const entry = current
     ? createAgentInstructionEntry({
@@ -51,7 +50,7 @@ function persistInstruction(store, payload = {}) {
   return entry;
 }
 
-function appendInstruction(store, payload = {}) {
+function appendInstruction(store: any, payload: any = {}) {
   const records = store.readCollection(FILENAME);
   const entry = createAgentInstructionEntry(payload);
   records.unshift(entry);
@@ -59,16 +58,16 @@ function appendInstruction(store, payload = {}) {
   return entry;
 }
 
-export function createAgentInstructionRepository(store) {
+export function createAgentInstructionRepository(store: any) {
   return {
     list(limit = 50, filter = {}) {
       return store
         .readCollection(FILENAME)
-        .filter((item) => matchesInstructionFilter(item, filter))
+        .filter((item: any) => matchesInstructionFilter(item, filter))
         .slice(0, limit);
     },
-    get(instructionId) {
-      return store.readCollection(FILENAME).find((item) => item.id === instructionId) || null;
+    get(instructionId: any) {
+      return store.readCollection(FILENAME).find((item: any) => item.id === instructionId) || null;
     },
     upsert(payload = {}) {
       return persistInstruction(store, payload);
@@ -76,8 +75,8 @@ export function createAgentInstructionRepository(store) {
     append(payload = {}) {
       return appendInstruction(store, payload);
     },
-    update(instructionId, patch = {}) {
-      const current = store.readCollection(FILENAME).find((item) => item.id === instructionId);
+    update(instructionId: any, patch = {}) {
+      const current = store.readCollection(FILENAME).find((item: any) => item.id === instructionId);
       if (!current) return null;
       return persistInstruction(store, {
         ...current,
@@ -89,7 +88,7 @@ export function createAgentInstructionRepository(store) {
     listAgentInstructions(limit = 50, filter = {}) {
       return this.list(limit, filter);
     },
-    getAgentInstruction(instructionId) {
+    getAgentInstruction(instructionId: any) {
       return this.get(instructionId);
     },
     upsertAgentInstruction(payload = {}) {
@@ -98,7 +97,7 @@ export function createAgentInstructionRepository(store) {
     appendAgentInstruction(payload = {}) {
       return this.append(payload);
     },
-    updateAgentInstruction(instructionId, patch = {}) {
+    updateAgentInstruction(instructionId: any, patch = {}) {
       return this.update(instructionId, patch);
     },
   };

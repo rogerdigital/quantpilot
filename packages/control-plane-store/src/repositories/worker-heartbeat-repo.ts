@@ -1,14 +1,13 @@
-// @ts-nocheck
 import { createWorkerHeartbeatEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'worker-heartbeats.json';
 
-export function createWorkerHeartbeatRepository(store) {
+export function createWorkerHeartbeatRepository(store: any) {
   return {
-    listWorkerHeartbeats(limit = 50, filter = {}) {
+    listWorkerHeartbeats(limit = 50, filter: any = {}) {
       return store
         .readCollection(FILENAME)
-        .filter((item) => matchesScopeFilter(item, filter))
+        .filter((item: any) => matchesScopeFilter(item, filter))
         .slice(0, limit);
     },
     recordWorkerHeartbeat(payload = {}) {
@@ -18,9 +17,10 @@ export function createWorkerHeartbeatRepository(store) {
       trimAndSave(store, FILENAME, heartbeats, 120);
       return entry;
     },
-    getLatestWorkerHeartbeat(worker = '') {
+    getLatestWorkerHeartbeat(worker: any = '') {
       return (
-        store.readCollection(FILENAME).find((item) => !worker || item.worker === worker) || null
+        store.readCollection(FILENAME).find((item: any) => !worker || item.worker === worker) ||
+        null
       );
     },
   };

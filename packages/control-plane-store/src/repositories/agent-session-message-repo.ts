@@ -1,14 +1,13 @@
-// @ts-nocheck
 import { createAgentSessionMessageEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-session-messages.json';
 
-export function createAgentSessionMessageRepository(store) {
+export function createAgentSessionMessageRepository(store: any) {
   return {
-    listAgentSessionMessages(sessionId, limit = 100, filter = {}) {
+    listAgentSessionMessages(sessionId: any, limit = 100, filter: any = {}) {
       return store
         .readCollection(FILENAME)
-        .filter((item) => {
+        .filter((item: any) => {
           if (sessionId && item.sessionId !== sessionId) return false;
           if (!matchesScopeFilter(item, filter)) return false;
           if (filter.role && item.role !== filter.role) return false;

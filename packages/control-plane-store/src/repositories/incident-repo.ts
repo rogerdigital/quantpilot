@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   createIncidentActivityEntry,
   createIncidentEntry,
@@ -13,18 +12,18 @@ const NOTES_FILE = 'incident-notes.json';
 const ACTIVITIES_FILE = 'incident-activities.json';
 const TASKS_FILE = 'incident-tasks.json';
 
-export function createIncidentRepository(store) {
-  function filterByDate(items, since) {
+export function createIncidentRepository(store: any) {
+  function filterByDate(items: any, since: any) {
     if (!since) return items;
     const sinceMs = Date.parse(since);
     if (!Number.isFinite(sinceMs)) return items;
-    return items.filter((item) => {
+    return items.filter((item: any) => {
       const valueMs = Date.parse(item.updatedAt || item.createdAt || '');
       return Number.isFinite(valueMs) && valueMs >= sinceMs;
     });
   }
 
-  function sortByUpdatedAtDesc(items) {
+  function sortByUpdatedAtDesc(items: any) {
     return [...items].sort((left, right) => {
       const leftMs = Date.parse(left.updatedAt || left.createdAt || '');
       const rightMs = Date.parse(right.updatedAt || right.createdAt || '');
@@ -51,14 +50,17 @@ export function createIncidentRepository(store) {
     return store.readCollection(TASKS_FILE);
   }
 
-  function listIncidentActivities(incidentId, limit = 100) {
+  function listIncidentActivities(incidentId: any, limit = 100) {
     return readActivities()
-      .filter((item) => item.incidentId === incidentId)
-      .sort((left, right) => Date.parse(right.createdAt || '') - Date.parse(left.createdAt || ''))
+      .filter((item: any) => item.incidentId === incidentId)
+      .sort(
+        (left: any, right: any) =>
+          Date.parse(right.createdAt || '') - Date.parse(left.createdAt || '')
+      )
       .slice(0, limit);
   }
 
-  function appendActivity(incidentId, payload = {}) {
+  function appendActivity(incidentId: any, payload: any = {}) {
     const activities = readActivities();
     const entry = createIncidentActivityEntry({
       ...payload,
@@ -69,25 +71,25 @@ export function createIncidentRepository(store) {
     return entry;
   }
 
-  function listIncidentTasks(incidentId, limit = 100) {
+  function listIncidentTasks(incidentId: any, limit = 100) {
     return readTasks()
-      .filter((item) => item.incidentId === incidentId)
+      .filter((item: any) => item.incidentId === incidentId)
       .sort(
-        (left, right) =>
+        (left: any, right: any) =>
           Date.parse(right.updatedAt || right.createdAt || '') -
           Date.parse(left.updatedAt || left.createdAt || '')
       )
       .slice(0, limit);
   }
 
-  function saveTasks(items) {
+  function saveTasks(items: any) {
     trimAndSave(store, TASKS_FILE, items, 2000);
   }
 
-  function syncTemplateTask(incidentId, templateKey, patch = {}) {
+  function syncTemplateTask(incidentId: any, templateKey: any, patch: any = {}) {
     const tasks = readTasks();
     const index = tasks.findIndex(
-      (item) => item.incidentId === incidentId && item.metadata?.templateKey === templateKey
+      (item: any) => item.incidentId === incidentId && item.metadata?.templateKey === templateKey
     );
     if (index === -1) return null;
     const current = tasks[index];
@@ -108,7 +110,7 @@ export function createIncidentRepository(store) {
     return next;
   }
 
-  function buildDefaultTasks(entry) {
+  function buildDefaultTasks(entry: any) {
     const now = entry.createdAt;
     return [
       {
@@ -159,9 +161,9 @@ export function createIncidentRepository(store) {
     ];
   }
 
-  function appendIncidentTask(incidentId, payload = {}) {
+  function appendIncidentTask(incidentId: any, payload: any = {}) {
     const incidents = readIncidents();
-    const incident = incidents.find((item) => item.id === incidentId);
+    const incident = incidents.find((item: any) => item.id === incidentId);
     if (!incident) return null;
     const tasks = readTasks();
     const task = createIncidentTaskEntry({
@@ -185,9 +187,11 @@ export function createIncidentRepository(store) {
     return task;
   }
 
-  function updateIncidentTask(incidentId, taskId, patch = {}) {
+  function updateIncidentTask(incidentId: any, taskId: any, patch: any = {}) {
     const tasks = readTasks();
-    const index = tasks.findIndex((item) => item.incidentId === incidentId && item.id === taskId);
+    const index = tasks.findIndex(
+      (item: any) => item.incidentId === incidentId && item.id === taskId
+    );
     if (index === -1) return null;
     const current = tasks[index];
     const next = {
@@ -219,11 +223,11 @@ export function createIncidentRepository(store) {
     return next;
   }
 
-  function hydrateIncident(incident) {
-    const notes = readNotes().filter((item) => item.incidentId === incident.id);
+  function hydrateIncident(incident: any) {
+    const notes = readNotes().filter((item: any) => item.incidentId === incident.id);
     const latestNote =
       sortByUpdatedAtDesc(
-        notes.map((item) => ({
+        notes.map((item: any) => ({
           ...item,
           updatedAt: item.createdAt,
         }))
@@ -236,14 +240,14 @@ export function createIncidentRepository(store) {
   }
 
   return {
-    listIncidents(limit = 50, filter = {}) {
+    listIncidents(limit = 50, filter: any = {}) {
       const items = sortByUpdatedAtDesc(
         filterByDate(readIncidents(), filter.since)
-          .filter((item) => matchesScopeFilter(item, filter))
-          .filter((item) => !filter.status || item.status === filter.status)
-          .filter((item) => !filter.severity || item.severity === filter.severity)
-          .filter((item) => !filter.source || item.source === filter.source)
-          .filter((item) => {
+          .filter((item: any) => matchesScopeFilter(item, filter))
+          .filter((item: any) => !filter.status || item.status === filter.status)
+          .filter((item: any) => !filter.severity || item.severity === filter.severity)
+          .filter((item: any) => !filter.source || item.source === filter.source)
+          .filter((item: any) => {
             if (!filter.owner) return true;
             if (filter.owner === 'unassigned') return !item.owner;
             return item.owner === filter.owner;
@@ -251,19 +255,22 @@ export function createIncidentRepository(store) {
       ).map(hydrateIncident);
       return items.slice(0, limit);
     },
-    getIncident(incidentId) {
-      const incident = readIncidents().find((item) => item.id === incidentId);
+    getIncident(incidentId: any) {
+      const incident = readIncidents().find((item: any) => item.id === incidentId);
       return incident ? hydrateIncident(incident) : null;
     },
     listIncidentActivities,
     listIncidentTasks,
-    listIncidentNotes(incidentId, limit = 100) {
+    listIncidentNotes(incidentId: any, limit = 100) {
       return readNotes()
-        .filter((item) => item.incidentId === incidentId)
-        .sort((left, right) => Date.parse(right.createdAt || '') - Date.parse(left.createdAt || ''))
+        .filter((item: any) => item.incidentId === incidentId)
+        .sort(
+          (left: any, right: any) =>
+            Date.parse(right.createdAt || '') - Date.parse(left.createdAt || '')
+        )
         .slice(0, limit);
     },
-    appendIncident(payload = {}) {
+    appendIncident(payload: any = {}) {
       const incidents = readIncidents();
       const entry = createIncidentEntry(payload);
       incidents.unshift(entry);
@@ -326,9 +333,9 @@ export function createIncidentRepository(store) {
 
       return hydrateIncident(entry);
     },
-    updateIncident(incidentId, patch = {}) {
+    updateIncident(incidentId: any, patch: any = {}) {
       const incidents = readIncidents();
-      const index = incidents.findIndex((item) => item.id === incidentId);
+      const index = incidents.findIndex((item: any) => item.id === incidentId);
       if (index === -1) return null;
       const current = incidents[index];
       const nextStatus = patch.status || current.status;
@@ -469,9 +476,9 @@ export function createIncidentRepository(store) {
 
       return hydrateIncident(next);
     },
-    appendIncidentNote(incidentId, payload = {}) {
+    appendIncidentNote(incidentId: any, payload: any = {}) {
       const incidents = readIncidents();
-      const index = incidents.findIndex((item) => item.id === incidentId);
+      const index = incidents.findIndex((item: any) => item.id === incidentId);
       if (index === -1) return null;
       const notes = readNotes();
       const note = createIncidentNoteEntry({

@@ -1,22 +1,21 @@
-// @ts-nocheck
 import { createNotificationEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const EVENTS_FILE = 'notifications.json';
 const OUTBOX_FILE = 'notification-outbox.json';
 
-export function createNotificationRepository(store) {
-  function filterByDate(items, since) {
+export function createNotificationRepository(store: any) {
+  function filterByDate(items: any, since: any) {
     if (!since) return items;
     const sinceMs = Date.parse(since);
     if (!Number.isFinite(sinceMs)) return items;
-    return items.filter((item) => {
+    return items.filter((item: any) => {
       const valueMs = Date.parse(item.createdAt || '');
       return Number.isFinite(valueMs) && valueMs >= sinceMs;
     });
   }
 
-  function sortByCreatedAtDesc(items) {
-    return [...items].sort((left, right) => {
+  function sortByCreatedAtDesc(items: any) {
+    return [...items].sort((left: any, right: any) => {
       const leftMs = Date.parse(left.createdAt || '');
       const rightMs = Date.parse(right.createdAt || '');
       if (!Number.isFinite(leftMs) && !Number.isFinite(rightMs)) return 0;
@@ -27,23 +26,23 @@ export function createNotificationRepository(store) {
   }
 
   return {
-    listNotifications(limit = 50, filter = {}) {
+    listNotifications(limit = 50, filter: any = {}) {
       const items = sortByCreatedAtDesc(
         filterByDate(store.readCollection(EVENTS_FILE), filter.since)
-          .filter((item) => matchesScopeFilter(item, filter))
-          .filter((item) => !filter.level || item.level === filter.level)
-          .filter((item) => !filter.source || item.source === filter.source)
+          .filter((item: any) => matchesScopeFilter(item, filter))
+          .filter((item: any) => !filter.level || item.level === filter.level)
+          .filter((item: any) => !filter.source || item.source === filter.source)
       );
       return items.slice(0, limit);
     },
-    appendNotification(event) {
+    appendNotification(event: any) {
       const notifications = store.readCollection(EVENTS_FILE);
       const entry = createNotificationEntry(event);
       notifications.unshift(entry);
       trimAndSave(store, EVENTS_FILE, notifications, 100);
       return entry;
     },
-    enqueueNotification(event) {
+    enqueueNotification(event: any) {
       const jobs = store.readCollection(OUTBOX_FILE);
       const job = {
         id: `notification-job-${event.id || Date.now()}`,
@@ -58,15 +57,15 @@ export function createNotificationRepository(store) {
     listNotificationJobs(limit = 50) {
       return store.readCollection(OUTBOX_FILE).slice(0, limit);
     },
-    dispatchPendingNotifications(options = {}) {
+    dispatchPendingNotifications(options: any = {}) {
       const worker = options.worker || 'quantpilot-worker';
       const limit = Number.isFinite(options.limit) ? options.limit : 20;
       const jobs = store.readCollection(OUTBOX_FILE);
       const notifications = store.readCollection(EVENTS_FILE);
-      const dispatchedJobs = [];
-      const pendingJobs = [];
+      const dispatchedJobs: any[] = [];
+      const pendingJobs: any[] = [];
 
-      jobs.forEach((job) => {
+      jobs.forEach((job: any) => {
         if (job.status !== 'pending' || dispatchedJobs.length >= limit) {
           pendingJobs.push(job);
           return;

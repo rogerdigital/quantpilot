@@ -1,11 +1,10 @@
-// @ts-nocheck
 import { randomUUID } from 'node:crypto';
 import { trimAndSave } from '../shared.js';
 
 const JOURNAL_FILE = 'paper-journal.json';
 const SNAPSHOTS_FILE = 'paper-snapshots.json';
 
-function createJournalEntry(entry) {
+function createJournalEntry(entry: any) {
   return {
     id: entry.id || `journal-${randomUUID()}`,
     strategyId: entry.strategyId || 'default',
@@ -23,7 +22,7 @@ function createJournalEntry(entry) {
   };
 }
 
-function createSnapshotEntry(snapshot) {
+function createSnapshotEntry(snapshot: any) {
   return {
     id: snapshot.id || `snapshot-${randomUUID()}`,
     strategyId: snapshot.strategyId || 'default',
@@ -40,7 +39,7 @@ function createSnapshotEntry(snapshot) {
   };
 }
 
-export function createPaperJournalRepository(store) {
+export function createPaperJournalRepository(store: any) {
   function getAllEntries() {
     return store.readCollection(JOURNAL_FILE);
   }
@@ -50,13 +49,13 @@ export function createPaperJournalRepository(store) {
   }
 
   return {
-    recordDailyEntry(entryData) {
+    recordDailyEntry(entryData: any) {
       const entries = getAllEntries();
       const entry = createJournalEntry(entryData);
 
       // Check if entry for this date already exists
       const existingIdx = entries.findIndex(
-        (e) => e.strategyId === entry.strategyId && e.date === entry.date
+        (e: any) => e.strategyId === entry.strategyId && e.date === entry.date
       );
 
       if (existingIdx >= 0) {
@@ -69,7 +68,7 @@ export function createPaperJournalRepository(store) {
       return entry;
     },
 
-    recordSnapshot(snapshotData) {
+    recordSnapshot(snapshotData: any) {
       const snapshots = getAllSnapshots();
       const snapshot = createSnapshotEntry(snapshotData);
       snapshots.unshift(snapshot);
@@ -77,40 +76,40 @@ export function createPaperJournalRepository(store) {
       return snapshot;
     },
 
-    getJournalEntries(strategyId, limit = 90) {
+    getJournalEntries(strategyId: any, limit = 90) {
       return getAllEntries()
-        .filter((e) => e.strategyId === strategyId)
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .filter((e: any) => e.strategyId === strategyId)
+        .sort((a: any, b: any) => +new Date(b.date) - +new Date(a.date))
         .slice(0, limit);
     },
 
-    getSnapshots(strategyId, limit = 30) {
+    getSnapshots(strategyId: any, limit = 30) {
       return getAllSnapshots()
-        .filter((s) => s.strategyId === strategyId)
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .filter((s: any) => s.strategyId === strategyId)
+        .sort((a: any, b: any) => +new Date(b.date) - +new Date(a.date))
         .slice(0, limit);
     },
 
-    getCumulativeMetrics(strategyId) {
+    getCumulativeMetrics(strategyId: any) {
       const entries = getAllEntries()
-        .filter((e) => e.strategyId === strategyId)
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+        .filter((e: any) => e.strategyId === strategyId)
+        .sort((a: any, b: any) => +new Date(a.date) - +new Date(b.date));
 
       if (entries.length === 0) {
         return null;
       }
 
-      const totalTrades = entries.reduce((sum, e) => sum + e.tradeCount, 0);
-      const totalWins = entries.reduce((sum, e) => sum + e.winCount, 0);
-      const totalLosses = entries.reduce((sum, e) => sum + e.lossCount, 0);
-      const maxDrawdown = Math.max(...entries.map((e) => e.drawdown));
-      const totalPnl = entries.reduce((sum, e) => sum + e.pnl, 0);
+      const totalTrades = entries.reduce((sum: any, e: any) => sum + e.tradeCount, 0);
+      const totalWins = entries.reduce((sum: any, e: any) => sum + e.winCount, 0);
+      const totalLosses = entries.reduce((sum: any, e: any) => sum + e.lossCount, 0);
+      const maxDrawdown = Math.max(...entries.map((e: any) => e.drawdown));
+      const totalPnl = entries.reduce((sum: any, e: any) => sum + e.pnl, 0);
 
       // Calculate daily returns for Sharpe ratio
-      const dailyReturns = entries.map((e) => e.pnlPercent / 100);
-      const avgReturn = dailyReturns.reduce((s, r) => s + r, 0) / dailyReturns.length;
+      const dailyReturns = entries.map((e: any) => e.pnlPercent / 100);
+      const avgReturn = dailyReturns.reduce((s: any, r: any) => s + r, 0) / dailyReturns.length;
       const stdReturn = Math.sqrt(
-        dailyReturns.reduce((s, r) => s + (r - avgReturn) ** 2, 0) / dailyReturns.length
+        dailyReturns.reduce((s: any, r: any) => s + (r - avgReturn) ** 2, 0) / dailyReturns.length
       );
       const sharpe = stdReturn > 0 ? (avgReturn / stdReturn) * Math.sqrt(252) : 0;
 
@@ -118,9 +117,11 @@ export function createPaperJournalRepository(store) {
       const winRate = totalTrades > 0 ? totalWins / totalTrades : 0;
 
       // Calculate profit factor
-      const grossProfit = entries.filter((e) => e.pnl > 0).reduce((sum, e) => sum + e.pnl, 0);
+      const grossProfit = entries
+        .filter((e: any) => e.pnl > 0)
+        .reduce((sum: any, e: any) => sum + e.pnl, 0);
       const grossLoss = Math.abs(
-        entries.filter((e) => e.pnl < 0).reduce((sum, e) => sum + e.pnl, 0)
+        entries.filter((e: any) => e.pnl < 0).reduce((sum: any, e: any) => sum + e.pnl, 0)
       );
       const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
 

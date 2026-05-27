@@ -1,9 +1,8 @@
-// @ts-nocheck
 import { createAgentAuthorityEventEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-authority-events.json';
 
-function matchesAuthorityEventFilter(item, filter = {}) {
+function matchesAuthorityEventFilter(item: any, filter: any = {}) {
   if (!matchesScopeFilter(item, filter)) return false;
   if (filter.severity && item.severity !== filter.severity) return false;
   if (filter.eventType && item.eventType !== filter.eventType) return false;
@@ -22,9 +21,9 @@ function matchesAuthorityEventFilter(item, filter = {}) {
   return true;
 }
 
-function persistAuthorityEvent(store, payload = {}) {
+function persistAuthorityEvent(store: any, payload: any = {}) {
   const records = store.readCollection(FILENAME);
-  const currentIndex = payload.id ? records.findIndex((item) => item.id === payload.id) : -1;
+  const currentIndex = payload.id ? records.findIndex((item: any) => item.id === payload.id) : -1;
   const current = currentIndex >= 0 ? records[currentIndex] : null;
   const entry = current
     ? createAgentAuthorityEventEntry({
@@ -45,7 +44,7 @@ function persistAuthorityEvent(store, payload = {}) {
   return entry;
 }
 
-function appendAuthorityEvent(store, payload = {}) {
+function appendAuthorityEvent(store: any, payload: any = {}) {
   const records = store.readCollection(FILENAME);
   const entry = createAgentAuthorityEventEntry(payload);
   records.unshift(entry);
@@ -53,16 +52,16 @@ function appendAuthorityEvent(store, payload = {}) {
   return entry;
 }
 
-export function createAgentAuthorityEventRepository(store) {
+export function createAgentAuthorityEventRepository(store: any) {
   return {
     list(limit = 50, filter = {}) {
       return store
         .readCollection(FILENAME)
-        .filter((item) => matchesAuthorityEventFilter(item, filter))
+        .filter((item: any) => matchesAuthorityEventFilter(item, filter))
         .slice(0, limit);
     },
-    get(eventId) {
-      return store.readCollection(FILENAME).find((item) => item.id === eventId) || null;
+    get(eventId: any) {
+      return store.readCollection(FILENAME).find((item: any) => item.id === eventId) || null;
     },
     upsert(payload = {}) {
       return persistAuthorityEvent(store, payload);
@@ -70,8 +69,8 @@ export function createAgentAuthorityEventRepository(store) {
     append(payload = {}) {
       return appendAuthorityEvent(store, payload);
     },
-    update(eventId, patch = {}) {
-      const current = store.readCollection(FILENAME).find((item) => item.id === eventId);
+    update(eventId: any, patch = {}) {
+      const current = store.readCollection(FILENAME).find((item: any) => item.id === eventId);
       if (!current) return null;
       return persistAuthorityEvent(store, {
         ...current,
@@ -83,7 +82,7 @@ export function createAgentAuthorityEventRepository(store) {
     listAgentAuthorityEvents(limit = 50, filter = {}) {
       return this.list(limit, filter);
     },
-    getAgentAuthorityEvent(eventId) {
+    getAgentAuthorityEvent(eventId: any) {
       return this.get(eventId);
     },
     upsertAgentAuthorityEvent(payload = {}) {
@@ -92,7 +91,7 @@ export function createAgentAuthorityEventRepository(store) {
     appendAgentAuthorityEvent(payload = {}) {
       return this.append(payload);
     },
-    updateAgentAuthorityEvent(eventId, patch = {}) {
+    updateAgentAuthorityEvent(eventId: any, patch = {}) {
       return this.update(eventId, patch);
     },
   };

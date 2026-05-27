@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   buildSchedulerBucket,
   createNotificationEntry,
@@ -13,19 +12,19 @@ const TICKS_FILE = 'scheduler-ticks.json';
 const STATE_FILE = 'scheduler-state.json';
 const NOTIFICATIONS_FILE = 'notifications.json';
 
-export function createSchedulerRepository(store) {
-  function filterByDate(items, since) {
+export function createSchedulerRepository(store: any) {
+  function filterByDate(items: any, since: any) {
     if (!since) return items;
     const sinceMs = Date.parse(since);
     if (!Number.isFinite(sinceMs)) return items;
-    return items.filter((item) => {
+    return items.filter((item: any) => {
       const valueMs = Date.parse(item.createdAt || '');
       return Number.isFinite(valueMs) && valueMs >= sinceMs;
     });
   }
 
-  function sortByCreatedAtDesc(items) {
-    return [...items].sort((left, right) => {
+  function sortByCreatedAtDesc(items: any) {
+    return [...items].sort((left: any, right: any) => {
       const leftMs = Date.parse(left.createdAt || '');
       const rightMs = Date.parse(right.createdAt || '');
       if (!Number.isFinite(leftMs) && !Number.isFinite(rightMs)) return 0;
@@ -36,15 +35,15 @@ export function createSchedulerRepository(store) {
   }
 
   return {
-    listSchedulerTicks(limit = 50, filter = {}) {
+    listSchedulerTicks(limit = 50, filter: any = {}) {
       const items = sortByCreatedAtDesc(
         filterByDate(store.readCollection(TICKS_FILE), filter.since)
-          .filter((item) => matchesScopeFilter(item, filter))
-          .filter((item) => !filter.phase || item.phase === filter.phase)
+          .filter((item: any) => matchesScopeFilter(item, filter))
+          .filter((item: any) => !filter.phase || item.phase === filter.phase)
       );
       return items.slice(0, limit);
     },
-    recordSchedulerTick(options = {}) {
+    recordSchedulerTick(options: any = {}) {
       const worker = options.worker || 'quantpilot-worker';
       const now = options.createdAt ? new Date(options.createdAt) : new Date();
       const parts = getShanghaiTimeParts(now);

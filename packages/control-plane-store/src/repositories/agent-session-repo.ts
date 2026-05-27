@@ -1,14 +1,13 @@
-// @ts-nocheck
 import { createAgentSessionEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-sessions.json';
 
-export function createAgentSessionRepository(store) {
+export function createAgentSessionRepository(store: any) {
   return {
-    listAgentSessions(limit = 50, filter = {}) {
+    listAgentSessions(limit = 50, filter: any = {}) {
       return store
         .readCollection(FILENAME)
-        .filter((item) => {
+        .filter((item: any) => {
           if (!matchesScopeFilter(item, filter)) return false;
           if (filter.status && item.status !== filter.status) return false;
           if (filter.requestedBy && item.requestedBy !== filter.requestedBy) return false;
@@ -16,19 +15,19 @@ export function createAgentSessionRepository(store) {
         })
         .slice(0, limit);
     },
-    getAgentSession(sessionId) {
-      return store.readCollection(FILENAME).find((item) => item.id === sessionId) || null;
+    getAgentSession(sessionId: any) {
+      return store.readCollection(FILENAME).find((item: any) => item.id === sessionId) || null;
     },
-    appendAgentSession(payload = {}) {
+    appendAgentSession(payload: any = {}) {
       const sessions = store.readCollection(FILENAME);
       const entry = createAgentSessionEntry(payload);
       sessions.unshift(entry);
       trimAndSave(store, FILENAME, sessions, 120);
       return entry;
     },
-    updateAgentSession(sessionId, patch = {}) {
+    updateAgentSession(sessionId: any, patch: any = {}) {
       const sessions = store.readCollection(FILENAME);
-      const index = sessions.findIndex((item) => item.id === sessionId);
+      const index = sessions.findIndex((item: any) => item.id === sessionId);
       if (index === -1) return null;
       const current = sessions[index];
       const next = {

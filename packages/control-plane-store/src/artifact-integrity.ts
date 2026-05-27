@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { createHash } from 'node:crypto';
 
 export type ArtifactIntegrityIssue = {

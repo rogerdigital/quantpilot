@@ -1,4 +1,3 @@
-// @ts-nocheck
 const FILENAME = 'market-provider-status.json';
 
 const DEFAULT_MARKET_STATUS = {
@@ -10,7 +9,7 @@ const DEFAULT_MARKET_STATUS = {
   symbolCount: 0,
 };
 
-function normalizeSnapshot(snapshot = {}) {
+function normalizeSnapshot(snapshot: any = {}) {
   return {
     asOf: snapshot.asOf || new Date().toISOString(),
     provider: snapshot.provider || 'simulated',
@@ -21,12 +20,12 @@ function normalizeSnapshot(snapshot = {}) {
   };
 }
 
-export function createMarketProviderRepository(store) {
+export function createMarketProviderRepository(store: any) {
   return {
     getMarketProviderStatus() {
       return normalizeSnapshot(store.readObject(FILENAME, DEFAULT_MARKET_STATUS));
     },
-    updateMarketProviderStatus(snapshot = {}) {
+    updateMarketProviderStatus(snapshot: any = {}) {
       const next = normalizeSnapshot(snapshot);
       store.writeObject(FILENAME, next);
       return next;

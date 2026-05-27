@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 export type AuditReportType =
   | 'strategy_promotion'
   | 'live_trading_approval'

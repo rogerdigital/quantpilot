@@ -1,58 +1,61 @@
-// @ts-nocheck
 import { createExecutionCandidateHandoffEntry, trimAndSave } from '../shared.js';
 
 const FILENAME = 'execution-candidate-handoffs.json';
 
-function parseTimestamp(value) {
+function parseTimestamp(value: any) {
   const parsed = Date.parse(value || '');
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function normalizeSince(value) {
+function normalizeSince(value: any) {
   if (!value) return 0;
   return parseTimestamp(value);
 }
 
-export function createExecutionCandidateHandoffRepository(store) {
+export function createExecutionCandidateHandoffRepository(store: any) {
   function readHandoffs() {
-    return store.readCollection(FILENAME).map((item) => createExecutionCandidateHandoffEntry(item));
+    return store
+      .readCollection(FILENAME)
+      .map((item: any) => createExecutionCandidateHandoffEntry(item));
   }
 
-  function writeHandoffs(items) {
+  function writeHandoffs(items: any) {
     trimAndSave(
       store,
       FILENAME,
-      items.map((item) => createExecutionCandidateHandoffEntry(item)),
+      items.map((item: any) => createExecutionCandidateHandoffEntry(item)),
       300
     );
   }
 
   return {
-    listExecutionCandidateHandoffs(limit = 100, filter = {}) {
+    listExecutionCandidateHandoffs(limit = 100, filter: any = {}) {
       const sinceMs = normalizeSince(filter.since);
       return readHandoffs()
-        .filter((item) => !filter.strategyId || item.strategyId === filter.strategyId)
-        .filter((item) => !filter.mode || item.mode === filter.mode)
-        .filter((item) => !filter.handoffStatus || item.handoffStatus === filter.handoffStatus)
-        .filter((item) => !sinceMs || parseTimestamp(item.updatedAt || item.createdAt) >= sinceMs)
+        .filter((item: any) => !filter.strategyId || item.strategyId === filter.strategyId)
+        .filter((item: any) => !filter.mode || item.mode === filter.mode)
+        .filter((item: any) => !filter.handoffStatus || item.handoffStatus === filter.handoffStatus)
+        .filter(
+          (item: any) => !sinceMs || parseTimestamp(item.updatedAt || item.createdAt) >= sinceMs
+        )
         .slice(0, limit);
     },
-    getExecutionCandidateHandoff(handoffId) {
-      return readHandoffs().find((item) => item.id === handoffId) || null;
+    getExecutionCandidateHandoff(handoffId: any) {
+      return readHandoffs().find((item: any) => item.id === handoffId) || null;
     },
-    getLatestExecutionCandidateHandoffForStrategy(strategyId) {
-      return readHandoffs().find((item) => item.strategyId === strategyId) || null;
+    getLatestExecutionCandidateHandoffForStrategy(strategyId: any) {
+      return readHandoffs().find((item: any) => item.strategyId === strategyId) || null;
     },
-    appendExecutionCandidateHandoff(payload = {}) {
+    appendExecutionCandidateHandoff(payload: any = {}) {
       const items = readHandoffs();
       const entry = createExecutionCandidateHandoffEntry(payload);
       items.unshift(entry);
       writeHandoffs(items);
       return entry;
     },
-    updateExecutionCandidateHandoff(handoffId, patch = {}) {
+    updateExecutionCandidateHandoff(handoffId: any, patch: any = {}) {
       const items = readHandoffs();
-      const index = items.findIndex((item) => item.id === handoffId);
+      const index = items.findIndex((item: any) => item.id === handoffId);
       if (index === -1) return null;
       const current = items[index];
       items[index] = createExecutionCandidateHandoffEntry({

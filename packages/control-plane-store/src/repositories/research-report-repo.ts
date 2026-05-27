@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createResearchReportEntry, trimAndSave } from '../shared.js';
 
 const FILENAME = 'research-reports.json';
@@ -31,58 +30,58 @@ const DEFAULT_RESEARCH_REPORTS = [
   },
 ];
 
-function parseTimestamp(value) {
+function parseTimestamp(value: any) {
   const parsed = Date.parse(value || '');
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function normalizeSince(value) {
+function normalizeSince(value: any) {
   if (!value) return 0;
   return parseTimestamp(value);
 }
 
-export function createResearchReportRepository(store) {
+export function createResearchReportRepository(store: any) {
   function readReports() {
     const reports = store.readCollection(FILENAME);
     if (!reports.length) {
       store.writeCollection(FILENAME, DEFAULT_RESEARCH_REPORTS);
       return DEFAULT_RESEARCH_REPORTS.map((entry) => createResearchReportEntry(entry));
     }
-    return reports.map((entry) => createResearchReportEntry(entry));
+    return reports.map((entry: any) => createResearchReportEntry(entry));
   }
 
-  function writeReports(reports) {
+  function writeReports(reports: any) {
     trimAndSave(
       store,
       FILENAME,
-      reports.map((entry) => createResearchReportEntry(entry)),
+      reports.map((entry: any) => createResearchReportEntry(entry)),
       600
     );
   }
 
   return {
-    listResearchReports(limit = 100, filter = {}) {
+    listResearchReports(limit = 100, filter: any = {}) {
       const sinceMs = normalizeSince(filter.since);
       return readReports()
-        .filter((item) => !filter.evaluationId || item.evaluationId === filter.evaluationId)
-        .filter((item) => !filter.workflowRunId || item.workflowRunId === filter.workflowRunId)
-        .filter((item) => !filter.runId || item.runId === filter.runId)
-        .filter((item) => !filter.resultId || item.resultId === filter.resultId)
-        .filter((item) => !filter.strategyId || item.strategyId === filter.strategyId)
-        .filter((item) => !filter.verdict || item.verdict === filter.verdict)
-        .filter((item) => !sinceMs || parseTimestamp(item.createdAt) >= sinceMs)
+        .filter((item: any) => !filter.evaluationId || item.evaluationId === filter.evaluationId)
+        .filter((item: any) => !filter.workflowRunId || item.workflowRunId === filter.workflowRunId)
+        .filter((item: any) => !filter.runId || item.runId === filter.runId)
+        .filter((item: any) => !filter.resultId || item.resultId === filter.resultId)
+        .filter((item: any) => !filter.strategyId || item.strategyId === filter.strategyId)
+        .filter((item: any) => !filter.verdict || item.verdict === filter.verdict)
+        .filter((item: any) => !sinceMs || parseTimestamp(item.createdAt) >= sinceMs)
         .slice(0, limit);
     },
-    getResearchReport(reportId) {
-      return readReports().find((item) => item.id === reportId) || null;
+    getResearchReport(reportId: any) {
+      return readReports().find((item: any) => item.id === reportId) || null;
     },
-    getLatestResearchReportForRun(runId) {
-      return readReports().find((item) => item.runId === runId) || null;
+    getLatestResearchReportForRun(runId: any) {
+      return readReports().find((item: any) => item.runId === runId) || null;
     },
-    getLatestResearchReportForStrategy(strategyId) {
-      return readReports().find((item) => item.strategyId === strategyId) || null;
+    getLatestResearchReportForStrategy(strategyId: any) {
+      return readReports().find((item: any) => item.strategyId === strategyId) || null;
     },
-    appendResearchReport(payload = {}) {
+    appendResearchReport(payload: any = {}) {
       const reports = readReports();
       const entry = createResearchReportEntry(payload);
       reports.unshift(entry);
