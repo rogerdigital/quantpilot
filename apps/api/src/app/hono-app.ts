@@ -4,6 +4,7 @@ import { cors } from 'hono/cors';
 import { logger as honoLogger } from 'hono/logger';
 import { timing } from 'hono/timing';
 import { createChildLogger } from '../lib/logger.js';
+import { authMiddleware } from '../middleware/auth.js';
 import { rateLimit } from '../middleware/rate-limit.js';
 import { requestId } from '../middleware/request-id.js';
 
@@ -27,6 +28,7 @@ export function createHonoApp() {
 
   app.use('*', requestId());
   app.use('*', rateLimit());
+  app.use('*', authMiddleware);
   app.use('*', honoLogger());
   app.use('*', timing());
 
