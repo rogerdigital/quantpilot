@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   assessAgentActionRequestRisk,
   assessExecutionCandidate,
@@ -46,11 +45,11 @@ function createWorkerExecutionContext() {
     assessExecutionCandidate,
     recordExecutionPlan,
     refreshBacktestSummary,
-    queueRiskScan: (payload) => controlPlaneRuntime.enqueueRiskScan(payload),
+    queueRiskScan: (payload: any) => controlPlaneRuntime.enqueueRiskScan(payload),
   };
 }
 
-export async function runWorkflowExecutionTask(config, dependencies = {}) {
+export async function runWorkflowExecutionTask(config: any, dependencies: any = {}) {
   const claimQueuedWorkflows =
     dependencies.claimQueuedWorkflows || controlPlaneRuntime.claimQueuedWorkflowRuns;
   const executeWorkflow = dependencies.executeWorkflow || executeQueuedWorkflow;

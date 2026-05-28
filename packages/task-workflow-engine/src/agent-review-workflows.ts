@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 export type AgentReviewType =
   | 'research_idea_critique'
   | 'backtest_overfit_review'
@@ -43,28 +41,28 @@ export function getReviewWorkflowId(type: AgentReviewType): string {
   return REVIEW_WORKFLOW_MAP[type];
 }
 
-function startWorkflow(context, payload) {
+function startWorkflow(context: any, payload: any) {
   if (typeof context.startWorkflow === 'function') {
     return context.startWorkflow(payload);
   }
   return context.startWorkflowRun(payload);
 }
 
-function completeWorkflow(context, workflowRunId, patch) {
+function completeWorkflow(context: any, workflowRunId: any, patch: any) {
   if (typeof context.completeWorkflow === 'function') {
     return context.completeWorkflow(workflowRunId, patch);
   }
   return context.completeWorkflowRun(workflowRunId, patch);
 }
 
-function failWorkflow(context, workflowRunId, error, patch) {
+function failWorkflow(context: any, workflowRunId: any, error: any, patch: any) {
   if (typeof context.failWorkflow === 'function') {
     return context.failWorkflow(workflowRunId, error, patch);
   }
   return context.failWorkflowRun(workflowRunId, error, patch);
 }
 
-function buildIdeaCritique(context, request: AgentReviewRequest): AgentReviewResult {
+function buildIdeaCritique(context: any, request: AgentReviewRequest): AgentReviewResult {
   const idea = context.getResearchIdea?.(request.targetId);
   const title = idea?.title || request.targetId;
   const status = idea?.status || 'unknown';
@@ -94,7 +92,7 @@ function buildIdeaCritique(context, request: AgentReviewRequest): AgentReviewRes
   };
 }
 
-function buildOverfitReview(context, request: AgentReviewRequest): AgentReviewResult {
+function buildOverfitReview(context: any, request: AgentReviewRequest): AgentReviewResult {
   const run = context.getBacktestRun?.(request.targetId);
   const strategyName = run?.strategyName || 'Unknown';
   const sharpe = run?.sharpe ?? 0;
@@ -143,7 +141,10 @@ function buildOverfitReview(context, request: AgentReviewRequest): AgentReviewRe
   };
 }
 
-function buildRiskViolationExplanation(context, request: AgentReviewRequest): AgentReviewResult {
+function buildRiskViolationExplanation(
+  context: any,
+  request: AgentReviewRequest
+): AgentReviewResult {
   const event = context.getRiskEvent?.(request.targetId);
   const level = event?.level || 'unknown';
   const title = event?.title || request.targetId;
@@ -178,7 +179,7 @@ function buildRiskViolationExplanation(context, request: AgentReviewRequest): Ag
   };
 }
 
-function buildPromotionMemo(context, request: AgentReviewRequest): AgentReviewResult {
+function buildPromotionMemo(context: any, request: AgentReviewRequest): AgentReviewResult {
   const strategy = context.getStrategyCatalogItem?.(request.targetId);
   const name = strategy?.name || request.targetId;
   const status = strategy?.status || 'unknown';
@@ -194,7 +195,7 @@ function buildPromotionMemo(context, request: AgentReviewRequest): AgentReviewRe
 
   const runs = context.listBacktestRuns?.() || [];
   const strategyRuns = runs.filter(
-    (r) => r.strategyId === request.targetId && r.status === 'completed'
+    (r: any) => r.strategyId === request.targetId && r.status === 'completed'
   );
   const latestRun = strategyRuns[0];
 
@@ -226,7 +227,7 @@ function buildPromotionMemo(context, request: AgentReviewRequest): AgentReviewRe
   };
 }
 
-function buildIncidentSummary(context, request: AgentReviewRequest): AgentReviewResult {
+function buildIncidentSummary(context: any, request: AgentReviewRequest): AgentReviewResult {
   const incident = context.getIncident?.(request.targetId);
   const title = incident?.title || request.targetId;
   const severity = incident?.severity || 'unknown';
@@ -268,7 +269,7 @@ function buildIncidentSummary(context, request: AgentReviewRequest): AgentReview
 
 const REVIEW_BUILDERS: Record<
   AgentReviewType,
-  (ctx, req: AgentReviewRequest) => AgentReviewResult
+  (ctx: any, req: AgentReviewRequest) => AgentReviewResult
 > = {
   research_idea_critique: buildIdeaCritique,
   backtest_overfit_review: buildOverfitReview,
@@ -279,7 +280,7 @@ const REVIEW_BUILDERS: Record<
 
 export async function executeAgentReviewWorkflow(
   request: AgentReviewRequest,
-  context,
+  context: any,
   options: { workflow?: any; trigger?: string } = {}
 ) {
   const workflowId = getReviewWorkflowId(request.reviewType);

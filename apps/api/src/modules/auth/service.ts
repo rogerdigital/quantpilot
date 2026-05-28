@@ -13,7 +13,7 @@ export function getSession() {
     null;
   const currentWorkspace =
     account.currentWorkspace ||
-    account.workspaces?.find((workspace) => workspace.isCurrent) ||
+    account.workspaces?.find((workspace: any) => workspace.isCurrent) ||
     null;
   const accountPermissions =
     account.access?.status === 'active'
@@ -23,7 +23,7 @@ export function getSession() {
     ? currentWorkspace.effectivePermissions
     : [];
   const permissions = workspacePermissions.length
-    ? accountPermissions.filter((item) => workspacePermissions.includes(item))
+    ? accountPermissions.filter((item: any) => workspacePermissions.includes(item))
     : accountPermissions;
 
   return {

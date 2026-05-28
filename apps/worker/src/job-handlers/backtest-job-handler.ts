@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { JobHandler, JobHandlerContext, JobHandlerResult } from './types.js';
 
 export const backtestJobHandler: JobHandler = {

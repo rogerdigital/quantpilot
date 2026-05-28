@@ -1,11 +1,9 @@
-// @ts-nocheck
-
 import { randomUUID } from 'node:crypto';
 import type {
   PlatformEvent,
   PlatformEventSeverity,
   PlatformEventType,
-} from '../../../shared-types/src/platform-events.ts';
+} from '../../shared-types/src/platform-events.ts';
 
 export type PlatformEventListener = (event: PlatformEvent) => void;
 

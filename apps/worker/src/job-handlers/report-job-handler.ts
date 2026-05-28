@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import {
   executeAgentReviewWorkflow,
   isValidReviewType,
@@ -13,7 +11,7 @@ export const reportJobHandler: JobHandler = {
   async run(job, context: JobHandlerContext): Promise<JobHandlerResult> {
     const reportType = job.params.reportType || 'summary';
 
-    if (reportType === 'agent-review' && isValidReviewType(job.params.reviewType)) {
+    if (reportType === 'agent-review' && isValidReviewType(job.params.reviewType as string)) {
       context.appendLog('info', 'Agent review workflow started', {
         reviewType: job.params.reviewType,
         targetId: job.params.targetId,
@@ -22,10 +20,10 @@ export const reportJobHandler: JobHandler = {
 
       const result = await executeAgentReviewWorkflow(
         {
-          reviewType: job.params.reviewType,
-          targetId: job.params.targetId || '',
-          requestedBy: job.params.requestedBy || 'worker',
-          context: job.params.context,
+          reviewType: job.params.reviewType as any,
+          targetId: (job.params.targetId as string) || '',
+          requestedBy: (job.params.requestedBy as string) || 'worker',
+          context: job.params.context as Record<string, unknown> | undefined,
         },
         job.params._runtimeContext || {}
       );

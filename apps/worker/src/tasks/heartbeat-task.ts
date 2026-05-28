@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../packages/control-plane-runtime/src/index.js';
 
-export async function runHeartbeatTask(config, dependencies = {}) {
+export async function runHeartbeatTask(config: any, dependencies: any = {}) {
   const recordWorkerHeartbeat =
     dependencies.recordWorkerHeartbeat || controlPlaneRuntime.recordWorkerHeartbeat;
   const heartbeat = recordWorkerHeartbeat({

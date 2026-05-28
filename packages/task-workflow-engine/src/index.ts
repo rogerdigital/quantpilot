@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { runBacktestEngine } from '../../trading-engine/src/backtest/index.js';
 import { DEFAULT_ENGINE_CONFIG, STOCK_UNIVERSE } from '../../trading-engine/src/core/constants.js';
 import {
@@ -16,7 +14,7 @@ const USE_MOCK = () => process.env.QUANTPILOT_USE_MOCK_DATA === 'true';
  * Returns a map of symbol -> OhlcvBar[].
  * Falls back gracefully to undefined (engine uses synthetic data).
  */
-async function fetchAlpacaBarsForBacktest(symbols, startDate, endDate) {
+async function fetchAlpacaBarsForBacktest(symbols: any, startDate: any, endDate: any) {
   if (USE_MOCK() || !process.env.ALPACA_KEY_ID || !process.env.ALPACA_SECRET_KEY) {
     return undefined;
   }
@@ -28,10 +26,10 @@ async function fetchAlpacaBarsForBacktest(symbols, startDate, endDate) {
       'APCA-API-SECRET-KEY': process.env.ALPACA_SECRET_KEY,
     };
     const feed = process.env.ALPACA_DATA_FEED || 'iex';
-    const externalBars = {};
+    const externalBars: any = {};
 
     await Promise.all(
-      symbols.map(async (symbol) => {
+      symbols.map(async (symbol: any) => {
         try {
           const url = new URL(`/v2/stocks/${encodeURIComponent(symbol)}/bars`, ALPACA_DATA_BASE);
           url.searchParams.set('timeframe', '1Day');
@@ -46,7 +44,7 @@ async function fetchAlpacaBarsForBacktest(symbols, startDate, endDate) {
 
           const payload = await response.json();
           const bars = Array.isArray(payload?.bars)
-            ? payload.bars.map((b) => ({
+            ? payload.bars.map((b: any) => ({
                 time: b.t ? b.t.split('T')[0] : '',
                 open: Number(b.o || 0),
                 high: Number(b.h || 0),
@@ -73,12 +71,15 @@ async function fetchAlpacaBarsForBacktest(symbols, startDate, endDate) {
     }
     return fetchedCount > 0 ? externalBars : undefined;
   } catch (err) {
-    console.warn('[backtest-workflow] Alpaca data fetch failed, using synthetic:', err.message);
+    console.warn(
+      '[backtest-workflow] Alpaca data fetch failed, using synthetic:',
+      (err as Error).message
+    );
     return undefined;
   }
 }
 
-function parseWindowLabel(label) {
+function parseWindowLabel(label: any) {
   const parts = (label || '').split(' -> ');
   if (parts.length === 2 && parts[0] && parts[1]) {
     return { startDate: parts[0].trim(), endDate: parts[1].trim() };
@@ -92,42 +93,42 @@ function parseWindowLabel(label) {
   };
 }
 
-function startWorkflow(context, payload) {
+function startWorkflow(context: any, payload: any) {
   if (typeof context.startWorkflow === 'function') {
     return context.startWorkflow(payload);
   }
   return context.startWorkflowRun(payload);
 }
 
-function completeWorkflow(context, workflowRunId, patch) {
+function completeWorkflow(context: any, workflowRunId: any, patch: any) {
   if (typeof context.completeWorkflow === 'function') {
     return context.completeWorkflow(workflowRunId, patch);
   }
   return context.completeWorkflowRun(workflowRunId, patch);
 }
 
-function failWorkflow(context, workflowRunId, error, patch) {
+function failWorkflow(context: any, workflowRunId: any, error: any, patch: any) {
   if (typeof context.failWorkflow === 'function') {
     return context.failWorkflow(workflowRunId, error, patch);
   }
   return context.failWorkflowRun(workflowRunId, error, patch);
 }
 
-function getBrokerProvider(state) {
+function getBrokerProvider(state: any) {
   return state?.integrationStatus?.broker?.provider || 'simulated';
 }
 
-function getMarketProvider(state) {
+function getMarketProvider(state: any) {
   return state?.integrationStatus?.marketData?.provider || 'simulated';
 }
 
-function getTrackedSymbols(state) {
+function getTrackedSymbols(state: any) {
   return Array.isArray(state?.stockStates)
-    ? state.stockStates.map((stock) => stock.symbol).filter(Boolean)
+    ? state.stockStates.map((stock: any) => stock.symbol).filter(Boolean)
     : [];
 }
 
-function _buildMockBacktestMetrics(strategy, runId) {
+function _buildMockBacktestMetrics(strategy: any, runId: any) {
   const seed = String(runId || strategy.id)
     .split('')
     .reduce((sum, char) => sum + char.charCodeAt(0), 0);
@@ -159,7 +160,7 @@ function _buildMockBacktestMetrics(strategy, runId) {
 // Agent Daily Run helpers
 // =========================================================
 
-function buildPreMarketBrief(context, _payload) {
+function buildPreMarketBrief(context: any, _payload: any) {
   const snapshot =
     typeof context.getAgentGovernanceSnapshot === 'function'
       ? context.getAgentGovernanceSnapshot()
@@ -172,7 +173,7 @@ function buildPreMarketBrief(context, _payload) {
   const recentRiskEvents =
     typeof context.listRiskEvents === 'function' ? context.listRiskEvents(10) : [];
   const criticalRiskCount = recentRiskEvents.filter(
-    (e) => e.level === 'critical' || e.status === 'risk-off'
+    (e: any) => e.level === 'critical' || e.status === 'risk-off'
   ).length;
   const recentRuns =
     typeof context.listAgentDailyRuns === 'function'
@@ -201,7 +202,7 @@ function buildPreMarketBrief(context, _payload) {
   };
 }
 
-function runIntradayMonitorCheck(context, payload, existingRun) {
+function runIntradayMonitorCheck(context: any, payload: any, existingRun: any) {
   const alreadyProcessed = Array.isArray(existingRun?.metadata?.processedRiskEventIds)
     ? existingRun.metadata.processedRiskEventIds
     : [];
@@ -210,7 +211,8 @@ function runIntradayMonitorCheck(context, payload, existingRun) {
     typeof context.listRiskEvents === 'function' ? context.listRiskEvents(20) : [];
 
   const newCritical = recentRiskEvents.filter(
-    (e) => !alreadyProcessed.includes(e.id) && (e.level === 'critical' || e.status === 'risk-off')
+    (e: any) =>
+      !alreadyProcessed.includes(e.id) && (e.level === 'critical' || e.status === 'risk-off')
   );
 
   const blockedPlans =
@@ -272,7 +274,7 @@ function runIntradayMonitorCheck(context, payload, existingRun) {
   };
 }
 
-function buildPostMarketRecap(context, payload) {
+function buildPostMarketRecap(context: any, payload: any) {
   const today = new Date().toISOString().slice(0, 10);
   const since = `${today}T00:00:00.000Z`;
 
@@ -289,13 +291,13 @@ function buildPostMarketRecap(context, payload) {
       ? context.listAgentActionRequests(20)
       : [];
 
-  const completedRuns = todayRuns.filter((r) => r.status === 'completed').length;
-  const failedRuns = todayRuns.filter((r) => r.status === 'failed').length;
+  const completedRuns = todayRuns.filter((r: any) => r.status === 'completed').length;
+  const failedRuns = todayRuns.filter((r: any) => r.status === 'failed').length;
   const downgrades = authorityEvents.filter(
-    (e) =>
+    (e: any) =>
       e.eventType === 'downgraded' || e.eventType === 'stopped' || e.eventType === 'risk_triggered'
   ).length;
-  const pendingRequests = allRequests.filter((r) => r.status === 'pending_review').length;
+  const pendingRequests = allRequests.filter((r: any) => r.status === 'pending_review').length;
 
   const recap = [
     `Daily runs completed: ${completedRuns}, failed: ${failedRuns}.`,
@@ -332,7 +334,7 @@ function buildPostMarketRecap(context, payload) {
   };
 }
 
-function syncBacktestResearchTask(context, run, patch = {}) {
+function syncBacktestResearchTask(context: any, run: any, patch: any = {}) {
   if (!run || typeof context.upsertResearchTask !== 'function') return null;
   return context.upsertResearchTask({
     taskType: 'backtest-run',
@@ -361,7 +363,7 @@ function syncBacktestResearchTask(context, run, patch = {}) {
   });
 }
 
-function appendBacktestResultVersion(context, run, patch = {}) {
+function appendBacktestResultVersion(context: any, run: any, patch: any = {}) {
   if (!run?.completedAt || typeof context.appendBacktestResult !== 'function') return null;
   const benchmarkReturnPct = Number(Math.max(run.annualizedReturnPct - 4.5, 0).toFixed(1));
   return context.appendBacktestResult({
@@ -389,7 +391,7 @@ function appendBacktestResultVersion(context, run, patch = {}) {
   });
 }
 
-function syncResearchReportTask(context, payload = {}) {
+function syncResearchReportTask(context: any, payload: any = {}) {
   if (typeof context.upsertResearchTask !== 'function') return null;
   return context.upsertResearchTask({
     taskType: 'research-report',
@@ -412,7 +414,7 @@ function syncResearchReportTask(context, payload = {}) {
   });
 }
 
-async function executeResearchReportWorkflow(payload, context, options = {}) {
+async function executeResearchReportWorkflow(payload: any, context: any, options: any = {}) {
   const workflow =
     options.workflow ||
     startWorkflow(context, {
@@ -601,7 +603,7 @@ async function executeResearchReportWorkflow(payload, context, options = {}) {
   }
 }
 
-async function executeStrategyExecutionWorkflow(payload, context, options = {}) {
+async function executeStrategyExecutionWorkflow(payload: any, context: any, options: any = {}) {
   const workflow =
     options.workflow ||
     startWorkflow(context, {
@@ -674,7 +676,7 @@ async function executeStrategyExecutionWorkflow(payload, context, options = {}) 
       })) || null;
     const orderStates =
       context.appendExecutionOrderStates?.(
-        candidate.orders.map((order, index) => ({
+        candidate.orders.map((order: any, index: any) => ({
           executionPlanId: plan.id,
           executionRunId: executionRun?.id || '',
           symbol: order.symbol,
@@ -725,7 +727,7 @@ async function executeStrategyExecutionWorkflow(payload, context, options = {}) 
           buyingPower: Number(candidate.capital || 0),
           equity: Number(candidate.capital || 0),
           message: `Submitted ${plan.orderCount} orders for ${plan.strategyName}.`,
-          orders: orderStates.map((item) => ({
+          orders: orderStates.map((item: any) => ({
             id: item.brokerOrderId || item.id,
             symbol: item.symbol,
             side: item.side,
@@ -825,7 +827,7 @@ async function executeStrategyExecutionWorkflow(payload, context, options = {}) 
   }
 }
 
-async function executeAgentActionRequestWorkflow(payload, context, options = {}) {
+async function executeAgentActionRequestWorkflow(payload: any, context: any, options: any = {}) {
   const workflow =
     options.workflow ||
     startWorkflow(context, {
@@ -923,7 +925,7 @@ async function executeAgentActionRequestWorkflow(payload, context, options = {})
   }
 }
 
-async function executeBacktestRunWorkflow(payload, context, options = {}) {
+async function executeBacktestRunWorkflow(payload: any, context: any, options: any = {}) {
   const workflow =
     options.workflow ||
     startWorkflow(context, {
@@ -1128,7 +1130,7 @@ async function executeBacktestRunWorkflow(payload, context, options = {}) {
   }
 }
 
-export async function executeCycleWorkflow(payload, context, options = {}) {
+export async function executeCycleWorkflow(payload: any, context: any, options: any = {}) {
   const workflow =
     options.workflow ||
     startWorkflow(context, {
@@ -1259,7 +1261,7 @@ export async function executeCycleWorkflow(payload, context, options = {}) {
   }
 }
 
-export async function executeStateWorkflow(previousState, context, options = {}) {
+export async function executeStateWorkflow(previousState: any, context: any, options: any = {}) {
   const workflow =
     options.workflow ||
     startWorkflow(context, {
@@ -1358,7 +1360,7 @@ export async function executeStateWorkflow(previousState, context, options = {})
   }
 }
 
-export async function executeQueuedWorkflow(workflowRun, context) {
+export async function executeQueuedWorkflow(workflowRun: any, context: any) {
   if (workflowRun.workflowId === 'task-orchestrator.backtest-run') {
     return executeBacktestRunWorkflow(workflowRun.payload, context, {
       workflow: workflowRun,
@@ -1411,7 +1413,7 @@ export async function executeQueuedWorkflow(workflowRun, context) {
         context.updateAgentDailyRun(runId, { status: 'running', updatedAt: now });
       }
 
-      let resultMetadata = {};
+      let resultMetadata: any = {};
 
       if (kind === 'pre_market') {
         resultMetadata = buildPreMarketBrief(context, { accountId, strategyId });
@@ -1434,7 +1436,7 @@ export async function executeQueuedWorkflow(workflowRun, context) {
           typeof context.listAgentDailyRuns === 'function'
             ? context.listAgentDailyRuns(5, { kind: 'intraday_monitor', status: 'completed' })
             : [];
-        const lastCompletedRun = previousRuns.find((r) => r.id !== runId) || null;
+        const lastCompletedRun = previousRuns.find((r: any) => r.id !== runId) || null;
         resultMetadata = runIntradayMonitorCheck(
           context,
           { accountId, strategyId },
@@ -1503,7 +1505,7 @@ export async function executeQueuedWorkflow(workflowRun, context) {
       }
       return {
         ok: false,
-        workflow: failWorkflow(context, workflowRun.id, errMsg),
+        workflow: failWorkflow(context, workflowRun.id, errMsg, {}),
       };
     }
   }

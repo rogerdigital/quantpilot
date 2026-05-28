@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { controlPlaneContext } from '../../control-plane-store/src/context.js';
 
 export function createControlPlaneRuntime(context = controlPlaneContext) {
@@ -11,7 +10,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     };
   }
 
-  function withScopeMetadata(payload = {}, extraMetadata = {}) {
+  function withScopeMetadata(payload: any = {}, extraMetadata: any = {}) {
     const scope = getCurrentScope();
     return {
       ...payload,
@@ -24,7 +23,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     };
   }
 
-  function withScopeMetaRecord(metadata = {}) {
+  function withScopeMetaRecord(metadata: any = {}) {
     const scope = getCurrentScope();
     return {
       tenantId: scope.tenantId,
@@ -33,7 +32,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     };
   }
 
-  function withScopedFilter(filter = {}, options = {}) {
+  function withScopedFilter(filter: any = {}, options: any = {}) {
     if (filter.allScopes || filter.scope === 'all') {
       return filter;
     }
@@ -47,7 +46,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     };
   }
 
-  function isVisibleInCurrentScope(item, options = {}) {
+  function isVisibleInCurrentScope(item: any, options: any = {}) {
     if (!item) return null;
 
     const filter = withScopedFilter({}, options);
@@ -74,7 +73,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     return item;
   }
 
-  function fanoutWorkflowEvent(level, title, message, metadata = {}) {
+  function fanoutWorkflowEvent(level: any, title: any, message: any, metadata: any = {}) {
     context.audit.appendAuditRecord({
       type: 'workflow',
       actor: metadata.actor || 'task-orchestrator',
@@ -92,14 +91,14 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     });
   }
 
-  function syncExecutionPlanForWorkflow(workflowRunId, patch = {}) {
+  function syncExecutionPlanForWorkflow(workflowRunId: any, patch: any = {}) {
     if (!workflowRunId || !context.executionPlans?.findExecutionPlanByWorkflowRunId) return null;
     const existing = context.executionPlans.findExecutionPlanByWorkflowRunId(workflowRunId);
     if (!existing) return null;
     return context.executionPlans.updateExecutionPlan(existing.id, patch);
   }
 
-  function buildAgentAuthorityState(options = {}) {
+  function buildAgentAuthorityState(options: any = {}) {
     const policyFilter = withScopedFilter({
       accountId: options.accountId,
       strategyId: options.strategyId,
@@ -147,7 +146,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     };
   }
 
-  function buildAgentDailyBiasState(options = {}) {
+  function buildAgentDailyBiasState(options: any = {}) {
     const activeAt = options.activeAt || new Date().toISOString();
     const instructionFilter = withScopedFilter({
       sessionId: options.sessionId,
@@ -174,16 +173,16 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
   }
 
   return {
-    listAgentSessions(limit = 50, filter = {}) {
+    listAgentSessions(limit = 50, filter: any = {}) {
       return context.agentSessions.listAgentSessions(limit, withScopedFilter(filter));
     },
-    getAgentSession(sessionId) {
+    getAgentSession(sessionId: any) {
       return isVisibleInCurrentScope(context.agentSessions.getAgentSession(sessionId));
     },
-    appendAgentSession(payload = {}) {
+    appendAgentSession(payload: any = {}) {
       return context.agentSessions.appendAgentSession(withScopeMetadata(payload));
     },
-    recordAgentSession(payload = {}) {
+    recordAgentSession(payload: any = {}) {
       const session = context.agentSessions.appendAgentSession(withScopeMetadata(payload));
 
       context.audit.appendAuditRecord({
@@ -200,20 +199,20 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return session;
     },
-    updateAgentSession(sessionId, patch = {}) {
+    updateAgentSession(sessionId: any, patch: any = {}) {
       return context.agentSessions.updateAgentSession(sessionId, patch);
     },
-    listAgentSessionMessages(sessionId, limit = 100, filter = {}) {
+    listAgentSessionMessages(sessionId: any, limit = 100, filter: any = {}) {
       return context.agentSessionMessages.listAgentSessionMessages(
         sessionId,
         limit,
         withScopedFilter(filter)
       );
     },
-    appendAgentSessionMessage(payload = {}) {
+    appendAgentSessionMessage(payload: any = {}) {
       return context.agentSessionMessages.appendAgentSessionMessage(withScopeMetadata(payload));
     },
-    recordAgentSessionMessage(payload = {}) {
+    recordAgentSessionMessage(payload: any = {}) {
       const message = context.agentSessionMessages.appendAgentSessionMessage(
         withScopeMetadata(payload)
       );
@@ -233,19 +232,19 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return message;
     },
-    listAgentPlans(limit = 50, filter = {}) {
+    listAgentPlans(limit = 50, filter: any = {}) {
       return context.agentPlans.listAgentPlans(limit, withScopedFilter(filter));
     },
-    getAgentPlan(planId) {
+    getAgentPlan(planId: any) {
       return isVisibleInCurrentScope(context.agentPlans.getAgentPlan(planId));
     },
-    getLatestAgentPlanForSession(sessionId) {
+    getLatestAgentPlanForSession(sessionId: any) {
       return context.agentPlans.getLatestAgentPlanForSession(sessionId);
     },
-    appendAgentPlan(payload = {}) {
+    appendAgentPlan(payload: any = {}) {
       return context.agentPlans.appendAgentPlan(withScopeMetadata(payload));
     },
-    recordAgentPlan(payload = {}) {
+    recordAgentPlan(payload: any = {}) {
       const plan = context.agentPlans.appendAgentPlan(withScopeMetadata(payload));
       if (plan.sessionId) {
         context.agentSessions.updateAgentSession(plan.sessionId, {
@@ -269,22 +268,22 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return plan;
     },
-    updateAgentPlan(planId, patch = {}) {
+    updateAgentPlan(planId: any, patch: any = {}) {
       return context.agentPlans.updateAgentPlan(planId, patch);
     },
-    listAgentAnalysisRuns(limit = 50, filter = {}) {
+    listAgentAnalysisRuns(limit = 50, filter: any = {}) {
       return context.agentAnalysisRuns.listAgentAnalysisRuns(limit, withScopedFilter(filter));
     },
-    getAgentAnalysisRun(runId) {
+    getAgentAnalysisRun(runId: any) {
       return isVisibleInCurrentScope(context.agentAnalysisRuns.getAgentAnalysisRun(runId));
     },
-    getLatestAgentAnalysisRunForSession(sessionId) {
+    getLatestAgentAnalysisRunForSession(sessionId: any) {
       return context.agentAnalysisRuns.getLatestAgentAnalysisRunForSession(sessionId);
     },
-    appendAgentAnalysisRun(payload = {}) {
+    appendAgentAnalysisRun(payload: any = {}) {
       return context.agentAnalysisRuns.appendAgentAnalysisRun(withScopeMetadata(payload));
     },
-    recordAgentAnalysisRun(payload = {}) {
+    recordAgentAnalysisRun(payload: any = {}) {
       const run = context.agentAnalysisRuns.appendAgentAnalysisRun(withScopeMetadata(payload));
       if (run.sessionId) {
         context.agentSessions.updateAgentSession(run.sessionId, {
@@ -309,19 +308,19 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return run;
     },
-    updateAgentAnalysisRun(runId, patch = {}) {
+    updateAgentAnalysisRun(runId: any, patch: any = {}) {
       return context.agentAnalysisRuns.updateAgentAnalysisRun(runId, patch);
     },
-    listAgentActionRequests(limit = 50, filter = {}) {
+    listAgentActionRequests(limit = 50, filter: any = {}) {
       return context.agentActionRequests.listAgentActionRequests(limit, withScopedFilter(filter));
     },
-    getAgentActionRequest(requestId) {
+    getAgentActionRequest(requestId: any) {
       return isVisibleInCurrentScope(context.agentActionRequests.getAgentActionRequest(requestId));
     },
-    appendAgentActionRequest(payload) {
+    appendAgentActionRequest(payload: any) {
       return context.agentActionRequests.appendAgentActionRequest(withScopeMetadata(payload));
     },
-    recordAgentActionRequest(payload) {
+    recordAgentActionRequest(payload: any) {
       const request = context.agentActionRequests.appendAgentActionRequest(
         withScopeMetadata(payload)
       );
@@ -354,58 +353,58 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return request;
     },
-    updateAgentActionRequest(requestId, patch = {}) {
+    updateAgentActionRequest(requestId: any, patch: any = {}) {
       return context.agentActionRequests.updateAgentActionRequest(requestId, patch);
     },
-    listAgentPolicies(limit = 50, filter = {}) {
+    listAgentPolicies(limit = 50, filter: any = {}) {
       return context.agentPolicy.listAgentPolicies(limit, withScopedFilter(filter));
     },
-    getAgentPolicy(policyId) {
+    getAgentPolicy(policyId: any) {
       return isVisibleInCurrentScope(context.agentPolicy.getAgentPolicy(policyId));
     },
-    appendAgentPolicy(payload = {}) {
+    appendAgentPolicy(payload: any = {}) {
       return context.agentPolicy.appendAgentPolicy(withScopeMetadata(payload));
     },
-    saveAgentPolicy(payload = {}) {
+    saveAgentPolicy(payload: any = {}) {
       return context.agentPolicy.upsertAgentPolicy(withScopeMetadata(payload));
     },
-    recordAgentPolicy(payload = {}) {
+    recordAgentPolicy(payload: any = {}) {
       return this.saveAgentPolicy(payload);
     },
-    updateAgentPolicy(policyId, patch = {}) {
+    updateAgentPolicy(policyId: any, patch: any = {}) {
       return context.agentPolicy.updateAgentPolicy(policyId, patch);
     },
-    listAgentInstructions(limit = 50, filter = {}) {
+    listAgentInstructions(limit = 50, filter: any = {}) {
       return context.agentInstruction.listAgentInstructions(limit, withScopedFilter(filter));
     },
-    getAgentInstruction(instructionId) {
+    getAgentInstruction(instructionId: any) {
       return isVisibleInCurrentScope(context.agentInstruction.getAgentInstruction(instructionId));
     },
-    appendAgentInstruction(payload = {}) {
+    appendAgentInstruction(payload: any = {}) {
       return context.agentInstruction.appendAgentInstruction(withScopeMetadata(payload));
     },
-    recordAgentInstruction(payload = {}) {
+    recordAgentInstruction(payload: any = {}) {
       return context.agentInstruction.appendAgentInstruction(withScopeMetadata(payload));
     },
-    updateAgentInstruction(instructionId, patch = {}) {
+    updateAgentInstruction(instructionId: any, patch: any = {}) {
       return context.agentInstruction.updateAgentInstruction(instructionId, patch);
     },
-    listAgentDailyRuns(limit = 50, filter = {}) {
+    listAgentDailyRuns(limit = 50, filter: any = {}) {
       return context.agentDailyRun.listAgentDailyRuns(limit, withScopedFilter(filter));
     },
-    getAgentDailyRun(runId) {
+    getAgentDailyRun(runId: any) {
       return isVisibleInCurrentScope(context.agentDailyRun.getAgentDailyRun(runId));
     },
-    appendAgentDailyRun(payload = {}) {
+    appendAgentDailyRun(payload: any = {}) {
       return context.agentDailyRun.appendAgentDailyRun(withScopeMetadata(payload));
     },
-    recordAgentDailyRun(payload = {}) {
+    recordAgentDailyRun(payload: any = {}) {
       return context.agentDailyRun.appendAgentDailyRun(withScopeMetadata(payload));
     },
-    updateAgentDailyRun(runId, patch = {}) {
+    updateAgentDailyRun(runId: any, patch: any = {}) {
       return context.agentDailyRun.updateAgentDailyRun(runId, patch);
     },
-    queueAgentDailyRun(payload = {}) {
+    queueAgentDailyRun(payload: any = {}) {
       const run = this.appendAgentDailyRun({
         ...payload,
         status: 'queued',
@@ -426,22 +425,22 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       });
       return { ok: true, run, workflow };
     },
-    listAgentAuthorityEvents(limit = 50, filter = {}) {
+    listAgentAuthorityEvents(limit = 50, filter: any = {}) {
       return context.agentAuthorityEvent.listAgentAuthorityEvents(limit, withScopedFilter(filter));
     },
-    getAgentAuthorityEvent(eventId) {
+    getAgentAuthorityEvent(eventId: any) {
       return isVisibleInCurrentScope(context.agentAuthorityEvent.getAgentAuthorityEvent(eventId));
     },
-    appendAgentAuthorityEvent(payload = {}) {
+    appendAgentAuthorityEvent(payload: any = {}) {
       return context.agentAuthorityEvent.appendAgentAuthorityEvent(withScopeMetadata(payload));
     },
-    recordAgentAuthorityEvent(payload = {}) {
+    recordAgentAuthorityEvent(payload: any = {}) {
       return context.agentAuthorityEvent.appendAgentAuthorityEvent(withScopeMetadata(payload));
     },
-    updateAgentAuthorityEvent(eventId, patch = {}) {
+    updateAgentAuthorityEvent(eventId: any, patch: any = {}) {
       return context.agentAuthorityEvent.updateAgentAuthorityEvent(eventId, patch);
     },
-    getAgentGovernanceSnapshot(options = {}) {
+    getAgentGovernanceSnapshot(options: any = {}) {
       const eventLimit = Number.isFinite(options.eventLimit) ? options.eventLimit : 20;
       const runLimit = Number.isFinite(options.runLimit) ? options.runLimit : 20;
       const authorityEvents = this.listAgentAuthorityEvents(eventLimit, {
@@ -464,70 +463,70 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         dailyRuns,
       };
     },
-    listBacktestRuns(limit = 100, filter = {}) {
+    listBacktestRuns(limit = 100, filter: any = {}) {
       return context.backtestRuns.listBacktestRuns(limit, filter);
     },
-    listBacktestResults(limit = 100, filter = {}) {
+    listBacktestResults(limit = 100, filter: any = {}) {
       return context.backtestResults.listBacktestResults(limit, filter);
     },
-    listBacktestResultsForRun(runId, limit = 20) {
+    listBacktestResultsForRun(runId: any, limit = 20) {
       return context.backtestResults.listBacktestResultsForRun(runId, limit);
     },
-    getBacktestResult(resultId) {
+    getBacktestResult(resultId: any) {
       return context.backtestResults.getBacktestResult(resultId);
     },
-    getLatestBacktestResultForRun(runId) {
+    getLatestBacktestResultForRun(runId: any) {
       return context.backtestResults.getLatestBacktestResultForRun(runId);
     },
-    appendBacktestResult(payload = {}) {
+    appendBacktestResult(payload: any = {}) {
       return context.backtestResults.appendBacktestResult(withScopeMetadata(payload));
     },
-    listResearchEvaluations(limit = 100, filter = {}) {
+    listResearchEvaluations(limit = 100, filter: any = {}) {
       return context.researchEvaluations.listResearchEvaluations(limit, filter);
     },
-    getResearchEvaluation(evaluationId) {
+    getResearchEvaluation(evaluationId: any) {
       return context.researchEvaluations.getResearchEvaluation(evaluationId);
     },
-    getLatestEvaluationForRun(runId) {
+    getLatestEvaluationForRun(runId: any) {
       return context.researchEvaluations.getLatestEvaluationForRun(runId);
     },
-    getLatestEvaluationForStrategy(strategyId) {
+    getLatestEvaluationForStrategy(strategyId: any) {
       return context.researchEvaluations.getLatestEvaluationForStrategy(strategyId);
     },
-    appendResearchEvaluation(payload = {}) {
+    appendResearchEvaluation(payload: any = {}) {
       return context.researchEvaluations.appendResearchEvaluation(withScopeMetadata(payload));
     },
-    listResearchReports(limit = 100, filter = {}) {
+    listResearchReports(limit = 100, filter: any = {}) {
       return context.researchReports.listResearchReports(limit, filter);
     },
-    getResearchReport(reportId) {
+    getResearchReport(reportId: any) {
       return context.researchReports.getResearchReport(reportId);
     },
-    getLatestResearchReportForRun(runId) {
+    getLatestResearchReportForRun(runId: any) {
       return context.researchReports.getLatestResearchReportForRun(runId);
     },
-    getLatestResearchReportForStrategy(strategyId) {
+    getLatestResearchReportForStrategy(strategyId: any) {
       return context.researchReports.getLatestResearchReportForStrategy(strategyId);
     },
-    appendResearchReport(payload = {}) {
+    appendResearchReport(payload: any = {}) {
       return context.researchReports.appendResearchReport(withScopeMetadata(payload));
     },
-    getBacktestRun(runId) {
+    getBacktestRun(runId: any) {
       return context.backtestRuns.getBacktestRun(runId);
     },
-    findBacktestRunByWorkflowRunId(workflowRunId) {
+    findBacktestRunByWorkflowRunId(workflowRunId: any) {
       return context.backtestRuns.findBacktestRunByWorkflowRunId(workflowRunId);
     },
-    appendBacktestRun(payload) {
+    appendBacktestRun(payload: any) {
       return context.backtestRuns.appendBacktestRun(withScopeMetadata(payload));
     },
-    updateBacktestRun(runId, patch = {}) {
+    updateBacktestRun(runId: any, patch: any = {}) {
       return context.backtestRuns.updateBacktestRun(runId, patch);
     },
-    listAuditRecords(limit = 50, filter = {}) {
+    listAuditRecords(limit = 50, filter: any = {}) {
       return context.audit.listAuditRecords(limit, withScopedFilter(filter));
     },
-    appendAuditRecord(record) {
+    appendAuditRecord(record: any) {
       return context.audit.appendAuditRecord({
         ...record,
         metadata: withScopeMetaRecord(record.metadata || {}),
@@ -536,10 +535,10 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     listCycleRecords(limit = 30) {
       return context.cycles.listCycleRecords(limit);
     },
-    appendCycleRecord(payload) {
+    appendCycleRecord(payload: any) {
       return context.cycles.appendCycleRecord(withScopeMetadata(payload));
     },
-    recordCycleRun(payload) {
+    recordCycleRun(payload: any) {
       const entry = context.cycles.appendCycleRecord(withScopeMetadata(payload));
 
       context.audit.appendAuditRecord({
@@ -582,13 +581,13 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return entry;
     },
-    listOperatorActions(limit = 50, filter = {}) {
+    listOperatorActions(limit = 50, filter: any = {}) {
       return context.operatorActions.listOperatorActions(limit, withScopedFilter(filter));
     },
-    appendOperatorAction(payload) {
+    appendOperatorAction(payload: any) {
       return context.operatorActions.appendOperatorAction(withScopeMetadata(payload));
     },
-    recordOperatorAction(payload) {
+    recordOperatorAction(payload: any) {
       const action = context.operatorActions.appendOperatorAction(withScopeMetadata(payload));
 
       context.audit.appendAuditRecord({
@@ -609,67 +608,67 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return action;
     },
-    listExecutionPlans(limit = 50, filter = {}) {
+    listExecutionPlans(limit = 50, filter: any = {}) {
       return context.executionPlans.listExecutionPlans(limit, filter);
     },
-    listExecutionCandidateHandoffs(limit = 50, filter = {}) {
+    listExecutionCandidateHandoffs(limit = 50, filter: any = {}) {
       return context.executionCandidateHandoffs.listExecutionCandidateHandoffs(limit, filter);
     },
-    getExecutionCandidateHandoff(handoffId) {
+    getExecutionCandidateHandoff(handoffId: any) {
       return context.executionCandidateHandoffs.getExecutionCandidateHandoff(handoffId);
     },
-    getLatestExecutionCandidateHandoffForStrategy(strategyId) {
+    getLatestExecutionCandidateHandoffForStrategy(strategyId: any) {
       return context.executionCandidateHandoffs.getLatestExecutionCandidateHandoffForStrategy(
         strategyId
       );
     },
-    appendExecutionCandidateHandoff(payload) {
+    appendExecutionCandidateHandoff(payload: any) {
       return context.executionCandidateHandoffs.appendExecutionCandidateHandoff(
         withScopeMetadata(payload)
       );
     },
-    updateExecutionCandidateHandoff(handoffId, patch = {}) {
+    updateExecutionCandidateHandoff(handoffId: any, patch: any = {}) {
       return context.executionCandidateHandoffs.updateExecutionCandidateHandoff(handoffId, patch);
     },
-    getExecutionPlan(planId) {
+    getExecutionPlan(planId: any) {
       return context.executionPlans.getExecutionPlan(planId);
     },
-    findExecutionPlanByWorkflowRunId(workflowRunId) {
+    findExecutionPlanByWorkflowRunId(workflowRunId: any) {
       return context.executionPlans.findExecutionPlanByWorkflowRunId(workflowRunId);
     },
-    listExecutionRuns(limit = 50, filter = {}) {
+    listExecutionRuns(limit = 50, filter: any = {}) {
       return context.executionRuns.listExecutionRuns(limit, filter);
     },
-    getExecutionRun(runId) {
+    getExecutionRun(runId: any) {
       return context.executionRuns.getExecutionRun(runId);
     },
-    getExecutionRunByPlanId(executionPlanId) {
+    getExecutionRunByPlanId(executionPlanId: any) {
       return context.executionRuns.getExecutionRunByPlanId(executionPlanId);
     },
-    listExecutionOrderStates(limit = 200, filter = {}) {
+    listExecutionOrderStates(limit = 200, filter: any = {}) {
       return context.executionRuns.listExecutionOrderStates(limit, filter);
     },
-    appendExecutionRun(payload) {
+    appendExecutionRun(payload: any) {
       return context.executionRuns.appendExecutionRun(withScopeMetadata(payload));
     },
-    appendExecutionOrderStates(entries = []) {
+    appendExecutionOrderStates(entries: any[] = []) {
       return context.executionRuns.appendExecutionOrderStates(
-        entries.map((entry) => withScopeMetadata(entry))
+        entries.map((entry: any) => withScopeMetadata(entry)) as any
       );
     },
-    updateExecutionRun(runId, patch = {}) {
+    updateExecutionRun(runId: any, patch: any = {}) {
       return context.executionRuns.updateExecutionRun(runId, patch);
     },
-    updateExecutionOrderState(orderStateId, patch = {}) {
+    updateExecutionOrderState(orderStateId: any, patch: any = {}) {
       return context.executionRuns.updateExecutionOrderState(orderStateId, patch);
     },
-    appendExecutionPlan(payload) {
+    appendExecutionPlan(payload: any) {
       return context.executionPlans.appendExecutionPlan(withScopeMetadata(payload));
     },
-    updateExecutionPlan(planId, patch = {}) {
+    updateExecutionPlan(planId: any, patch: any = {}) {
       return context.executionPlans.updateExecutionPlan(planId, patch);
     },
-    recordExecutionPlan(payload) {
+    recordExecutionPlan(payload: any) {
       const plan = context.executionPlans.appendExecutionPlan(withScopeMetadata(payload));
 
       context.audit.appendAuditRecord({
@@ -711,7 +710,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return plan;
     },
-    recordExecutionRun(payload) {
+    recordExecutionRun(payload: any) {
       const run = context.executionRuns.appendExecutionRun(withScopeMetadata(payload));
       context.audit.appendAuditRecord({
         type: 'execution-run',
@@ -731,22 +730,22 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     listExecutionRuntimeEvents(limit = 50) {
       return context.executionRuntime.listExecutionRuntimeEvents(limit);
     },
-    appendExecutionRuntimeEvent(payload) {
+    appendExecutionRuntimeEvent(payload: any) {
       return context.executionRuntime.appendExecutionRuntimeEvent(withScopeMetadata(payload));
     },
     listBrokerAccountSnapshots(limit = 50) {
       return context.executionRuntime.listBrokerAccountSnapshots(limit);
     },
-    appendBrokerAccountSnapshot(payload) {
+    appendBrokerAccountSnapshot(payload: any) {
       return context.executionRuntime.appendBrokerAccountSnapshot(withScopeMetadata(payload));
     },
-    listBrokerExecutionEvents(limit = 50, filter = {}) {
+    listBrokerExecutionEvents(limit = 50, filter: any = {}) {
       return context.executionRuntime.listBrokerExecutionEvents(limit, filter);
     },
-    appendBrokerExecutionEvent(payload) {
+    appendBrokerExecutionEvent(payload: any) {
       return context.executionRuntime.appendBrokerExecutionEvent(withScopeMetadata(payload));
     },
-    recordExecutionRuntime(payload) {
+    recordExecutionRuntime(payload: any) {
       const runtimeEvent = context.executionRuntime.appendExecutionRuntimeEvent(
         withScopeMetadata(payload)
       );
@@ -787,37 +786,37 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     getMarketProviderStatus() {
       return context.marketProviders.getMarketProviderStatus();
     },
-    updateMarketProviderStatus(snapshot = {}) {
+    updateMarketProviderStatus(snapshot: any = {}) {
       return context.marketProviders.updateMarketProviderStatus(snapshot);
     },
-    listMonitoringSnapshots(limit = 50, filter = {}) {
+    listMonitoringSnapshots(limit = 50, filter: any = {}) {
       return context.monitoring.listMonitoringSnapshots(limit, withScopedFilter(filter));
     },
-    listMonitoringAlerts(limit = 100, filter = {}) {
+    listMonitoringAlerts(limit = 100, filter: any = {}) {
       return context.monitoring.listMonitoringAlerts(limit, withScopedFilter(filter));
     },
-    recordMonitoringSnapshot(payload = {}) {
+    recordMonitoringSnapshot(payload: any = {}) {
       return context.monitoring.recordMonitoringSnapshot(withScopeMetadata(payload));
     },
-    listIncidents(limit = 50, filter = {}) {
+    listIncidents(limit = 50, filter: any = {}) {
       return context.incidents.listIncidents(limit, withScopedFilter(filter));
     },
-    getIncident(incidentId) {
+    getIncident(incidentId: any) {
       return isVisibleInCurrentScope(context.incidents.getIncident(incidentId));
     },
-    listIncidentActivities(incidentId, limit = 100) {
+    listIncidentActivities(incidentId: any, limit = 100) {
       return context.incidents.listIncidentActivities(incidentId, limit);
     },
-    listIncidentTasks(incidentId, limit = 100) {
+    listIncidentTasks(incidentId: any, limit = 100) {
       return context.incidents.listIncidentTasks(incidentId, limit);
     },
-    listIncidentNotes(incidentId, limit = 100) {
+    listIncidentNotes(incidentId: any, limit = 100) {
       return context.incidents.listIncidentNotes(incidentId, limit);
     },
-    appendIncident(payload = {}) {
+    appendIncident(payload: any = {}) {
       return context.incidents.appendIncident(withScopeMetadata(payload));
     },
-    recordIncident(payload = {}) {
+    recordIncident(payload: any = {}) {
       const incident = context.incidents.appendIncident(withScopeMetadata(payload));
 
       context.audit.appendAuditRecord({
@@ -850,10 +849,10 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return incident;
     },
-    updateIncident(incidentId, patch = {}) {
+    updateIncident(incidentId: any, patch: any = {}) {
       return context.incidents.updateIncident(incidentId, patch);
     },
-    transitionIncident(incidentId, patch = {}) {
+    transitionIncident(incidentId: any, patch: any = {}) {
       const incident = context.incidents.updateIncident(incidentId, patch);
       if (!incident) return null;
 
@@ -886,16 +885,16 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
 
       return incident;
     },
-    appendIncidentNote(incidentId, payload = {}) {
+    appendIncidentNote(incidentId: any, payload: any = {}) {
       return context.incidents.appendIncidentNote(incidentId, withScopeMetadata(payload));
     },
-    appendIncidentTask(incidentId, payload = {}) {
+    appendIncidentTask(incidentId: any, payload: any = {}) {
       return context.incidents.appendIncidentTask(incidentId, withScopeMetadata(payload));
     },
-    updateIncidentTask(incidentId, taskId, payload = {}) {
+    updateIncidentTask(incidentId: any, taskId: any, payload: any = {}) {
       return context.incidents.updateIncidentTask(incidentId, taskId, payload);
     },
-    recordIncidentNote(incidentId, payload = {}) {
+    recordIncidentNote(incidentId: any, payload: any = {}) {
       const note = context.incidents.appendIncidentNote(incidentId, withScopeMetadata(payload));
       if (!note) return null;
       const incident = context.incidents.getIncident(incidentId);
@@ -916,82 +915,82 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         incident,
       };
     },
-    recordIncidentTask(incidentId, payload = {}) {
+    recordIncidentTask(incidentId: any, payload: any = {}) {
       return context.incidents.appendIncidentTask(incidentId, withScopeMetadata(payload));
     },
-    transitionIncidentTask(incidentId, taskId, payload = {}) {
+    transitionIncidentTask(incidentId: any, taskId: any, payload: any = {}) {
       return context.incidents.updateIncidentTask(incidentId, taskId, payload);
     },
-    listNotifications(limit = 50, filter = {}) {
+    listNotifications(limit = 50, filter: any = {}) {
       return context.notifications.listNotifications(limit, withScopedFilter(filter));
     },
-    appendNotification(event) {
+    appendNotification(event: any) {
       return context.notifications.appendNotification(withScopeMetadata(event));
     },
-    enqueueNotification(event) {
+    enqueueNotification(event: any) {
       return context.notifications.enqueueNotification(withScopeMetadata(event));
     },
     listNotificationJobs(limit = 50) {
       return context.notifications.listNotificationJobs(limit);
     },
-    dispatchPendingNotifications(options = {}) {
+    dispatchPendingNotifications(options: any = {}) {
       return context.notifications.dispatchPendingNotifications(options);
     },
     getResearchSummary() {
       return context.researchSummary.getResearchSummary();
     },
-    updateResearchSummary(summary = {}) {
+    updateResearchSummary(summary: any = {}) {
       return context.researchSummary.updateResearchSummary(summary);
     },
-    listResearchTasks(limit = 100, filter = {}) {
+    listResearchTasks(limit = 100, filter: any = {}) {
       return context.researchTasks.listResearchTasks(limit, filter);
     },
-    getResearchTask(taskId) {
+    getResearchTask(taskId: any) {
       return context.researchTasks.getResearchTask(taskId);
     },
-    findResearchTaskByWorkflowRunId(workflowRunId) {
+    findResearchTaskByWorkflowRunId(workflowRunId: any) {
       return context.researchTasks.findResearchTaskByWorkflowRunId(workflowRunId);
     },
-    findResearchTaskByRunId(runId) {
+    findResearchTaskByRunId(runId: any) {
       return context.researchTasks.findResearchTaskByRunId(runId);
     },
-    appendResearchTask(payload = {}) {
+    appendResearchTask(payload: any = {}) {
       return context.researchTasks.appendResearchTask(withScopeMetadata(payload));
     },
-    updateResearchTask(taskId, patch = {}) {
+    updateResearchTask(taskId: any, patch: any = {}) {
       return context.researchTasks.updateResearchTask(taskId, patch);
     },
-    upsertResearchTask(payload = {}) {
+    upsertResearchTask(payload: any = {}) {
       return context.researchTasks.upsertResearchTask(withScopeMetadata(payload));
     },
-    listRiskEvents(limit = 50, filter = {}) {
+    listRiskEvents(limit = 50, filter: any = {}) {
       return context.risk.listRiskEvents(limit, withScopedFilter(filter));
     },
-    appendRiskEvent(event) {
+    appendRiskEvent(event: any) {
       return context.risk.appendRiskEvent(withScopeMetadata(event));
     },
-    enqueueRiskScan(payload) {
+    enqueueRiskScan(payload: any) {
       return context.risk.enqueueRiskScan(withScopeMetadata(payload));
     },
     listRiskScanJobs(limit = 50) {
       return context.risk.listRiskScanJobs(limit);
     },
-    dispatchPendingRiskScans(options = {}) {
+    dispatchPendingRiskScans(options: any = {}) {
       return context.risk.dispatchPendingRiskScans(options);
     },
-    listSchedulerTicks(limit = 50, filter = {}) {
+    listSchedulerTicks(limit = 50, filter: any = {}) {
       return context.scheduler.listSchedulerTicks(limit, withScopedFilter(filter));
     },
-    recordSchedulerTick(options = {}) {
+    recordSchedulerTick(options: any = {}) {
       return context.scheduler.recordSchedulerTick(options);
     },
     listStrategyCatalog(limit = 100) {
       return context.strategyCatalog.listStrategies(limit);
     },
-    getStrategyCatalogItem(strategyId) {
+    getStrategyCatalogItem(strategyId: any) {
       return context.strategyCatalog.getStrategy(strategyId);
     },
-    upsertStrategyCatalogItem(payload = {}) {
+    upsertStrategyCatalogItem(payload: any = {}) {
       return context.strategyCatalog.upsertStrategy(payload);
     },
     getUserAccount() {
@@ -1009,7 +1008,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     getCurrentWorkspace() {
       return context.userAccount.getCurrentWorkspace();
     },
-    updateUserProfile(patch = {}) {
+    updateUserProfile(patch: any = {}) {
       return context.userAccount.updateUserProfile(patch);
     },
     getUserPreferences() {
@@ -1024,60 +1023,61 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
     listUserRoleTemplates() {
       return context.userAccount.listRoleTemplates();
     },
-    getUserRoleTemplate(roleId) {
+    getUserRoleTemplate(roleId: any) {
       return context.userAccount.getRoleTemplate(roleId);
     },
     getBrokerBindingSummary() {
       return context.userAccount.getBrokerSummary();
     },
-    updateUserPreferences(patch = {}) {
+    updateUserPreferences(patch: any = {}) {
       return context.userAccount.updateUserPreferences(patch);
     },
-    updateUserAccess(patch = {}) {
+    updateUserAccess(patch: any = {}) {
       return context.userAccount.updateUserAccess(patch);
     },
-    upsertUserRoleTemplate(payload = {}) {
+    upsertUserRoleTemplate(payload: any = {}) {
       return context.userAccount.upsertRoleTemplate(payload);
     },
-    upsertWorkspace(payload = {}) {
+    upsertWorkspace(payload: any = {}) {
       return context.userAccount.upsertWorkspace(payload);
     },
-    setCurrentWorkspace(workspaceId) {
+    setCurrentWorkspace(workspaceId: any) {
       return context.userAccount.setCurrentWorkspace(workspaceId);
     },
-    deleteUserRoleTemplate(roleId) {
+    deleteUserRoleTemplate(roleId: any) {
       return context.userAccount.deleteRoleTemplate(roleId);
     },
     listBrokerBindings() {
       return context.userAccount.listBrokerBindings();
     },
-    upsertBrokerBinding(payload = {}) {
+    upsertBrokerBinding(payload: any = {}) {
       return context.userAccount.upsertBrokerBinding(payload);
     },
-    setDefaultBrokerBinding(bindingId) {
+    setDefaultBrokerBinding(bindingId: any) {
       return context.userAccount.setDefaultBrokerBinding(bindingId);
     },
-    deleteBrokerBinding(bindingId) {
+    deleteBrokerBinding(bindingId: any) {
       return context.userAccount.deleteBrokerBinding(bindingId);
     },
-    listWorkerHeartbeats(limit = 50, filter = {}) {
+    listWorkerHeartbeats(limit = 50, filter: any = {}) {
       return context.workerHeartbeats.listWorkerHeartbeats(limit, withScopedFilter(filter));
     },
     getLatestWorkerHeartbeat(worker = '') {
       return (
-        this.listWorkerHeartbeats(120).find((item) => !worker || item.worker === worker) || null
+        this.listWorkerHeartbeats(120).find((item: any) => !worker || item.worker === worker) ||
+        null
       );
     },
-    recordWorkerHeartbeat(payload = {}) {
+    recordWorkerHeartbeat(payload: any = {}) {
       return context.workerHeartbeats.recordWorkerHeartbeat(payload);
     },
-    listWorkflowRuns(limit = 50, filter = {}) {
+    listWorkflowRuns(limit = 50, filter: any = {}) {
       return context.workflows.listWorkflowRuns(limit, withScopedFilter(filter));
     },
-    getWorkflowRun(workflowRunId) {
+    getWorkflowRun(workflowRunId: any) {
       return isVisibleInCurrentScope(context.workflows.getWorkflowRun(workflowRunId));
     },
-    startWorkflowRun(payload) {
+    startWorkflowRun(payload: any) {
       return context.workflows.appendWorkflowRun({
         ...withScopeMetadata(payload),
         status: payload.status || 'running',
@@ -1086,7 +1086,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         nextRunAt: payload.nextRunAt || new Date().toISOString(),
       });
     },
-    enqueueWorkflowRun(payload) {
+    enqueueWorkflowRun(payload: any) {
       return context.workflows.appendWorkflowRun({
         ...withScopeMetadata(payload),
         status: payload.status || 'queued',
@@ -1094,7 +1094,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         nextRunAt: payload.nextRunAt || new Date().toISOString(),
       });
     },
-    completeWorkflowRun(workflowRunId, patch = {}) {
+    completeWorkflowRun(workflowRunId: any, patch: any = {}) {
       return context.workflows.updateWorkflowRun(workflowRunId, {
         ...patch,
         status: 'completed',
@@ -1103,7 +1103,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
         lockedAt: '',
       });
     },
-    failWorkflowRun(workflowRunId, error, patch = {}) {
+    failWorkflowRun(workflowRunId: any, error: any, patch: any = {}) {
       const current = context.workflows.getWorkflowRun(workflowRunId);
       const nextAttempt = Number(current?.attempt || 1);
       const maxAttempts = Number(current?.maxAttempts || patch.maxAttempts || 3);
@@ -1152,7 +1152,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       }
       return workflow;
     },
-    resumeWorkflowRun(workflowRunId, patch = {}) {
+    resumeWorkflowRun(workflowRunId: any, patch: any = {}) {
       const current = context.workflows.getWorkflowRun(workflowRunId);
       if (!current) return null;
       const workflow = context.workflows.updateWorkflowRun(workflowRunId, {
@@ -1189,7 +1189,7 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       }
       return workflow;
     },
-    cancelWorkflowRun(workflowRunId, patch = {}) {
+    cancelWorkflowRun(workflowRunId: any, patch: any = {}) {
       const workflow = context.workflows.updateWorkflowRun(workflowRunId, {
         ...patch,
         status: 'canceled',
@@ -1221,9 +1221,9 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       }
       return workflow;
     },
-    releaseScheduledWorkflowRuns(options = {}) {
+    releaseScheduledWorkflowRuns(options: any = {}) {
       const result = context.workflows.releaseScheduledWorkflowRuns(options);
-      result.workflows.forEach((workflow) => {
+      result.workflows.forEach((workflow: any) => {
         fanoutWorkflowEvent(
           'info',
           `Workflow re-queued ${workflow.workflowId}`,
@@ -1239,171 +1239,233 @@ export function createControlPlaneRuntime(context = controlPlaneContext) {
       });
       return result;
     },
-    claimQueuedWorkflowRuns(options = {}) {
+    claimQueuedWorkflowRuns(options: any = {}) {
       return context.workflows.claimQueuedWorkflowRuns(options);
     },
   };
 }
 
 export const controlPlaneRuntime = createControlPlaneRuntime();
-export const getUserAccount = (...args) => controlPlaneRuntime.getUserAccount(...args);
-export const getUserProfile = (...args) => controlPlaneRuntime.getUserProfile(...args);
-export const getTenant = (...args) => controlPlaneRuntime.getTenant(...args);
-export const listWorkspaces = (...args) => controlPlaneRuntime.listWorkspaces(...args);
-export const getCurrentWorkspace = (...args) => controlPlaneRuntime.getCurrentWorkspace(...args);
-export const updateUserProfile = (...args) => controlPlaneRuntime.updateUserProfile(...args);
-export const getUserPreferences = (...args) => controlPlaneRuntime.getUserPreferences(...args);
-export const getUserAccess = (...args) => controlPlaneRuntime.getUserAccess(...args);
-export const getUserAccessSummary = (...args) => controlPlaneRuntime.getUserAccessSummary(...args);
-export const listUserRoleTemplates = (...args) =>
-  controlPlaneRuntime.listUserRoleTemplates(...args);
-export const getUserRoleTemplate = (...args) => controlPlaneRuntime.getUserRoleTemplate(...args);
-export const getBrokerBindingSummary = (...args) =>
-  controlPlaneRuntime.getBrokerBindingSummary(...args);
-export const updateUserPreferences = (...args) =>
-  controlPlaneRuntime.updateUserPreferences(...args);
-export const updateUserAccess = (...args) => controlPlaneRuntime.updateUserAccess(...args);
-export const upsertUserRoleTemplate = (...args) =>
-  controlPlaneRuntime.upsertUserRoleTemplate(...args);
-export const deleteUserRoleTemplate = (...args) =>
-  controlPlaneRuntime.deleteUserRoleTemplate(...args);
-export const upsertWorkspace = (...args) => controlPlaneRuntime.upsertWorkspace(...args);
-export const setCurrentWorkspace = (...args) => controlPlaneRuntime.setCurrentWorkspace(...args);
-export const listBrokerBindings = (...args) => controlPlaneRuntime.listBrokerBindings(...args);
-export const upsertBrokerBinding = (...args) => controlPlaneRuntime.upsertBrokerBinding(...args);
-export const setDefaultBrokerBinding = (...args) =>
-  controlPlaneRuntime.setDefaultBrokerBinding(...args);
-export const deleteBrokerBinding = (...args) => controlPlaneRuntime.deleteBrokerBinding(...args);
-export const listExecutionRuntimeEvents = (...args) =>
-  controlPlaneRuntime.listExecutionRuntimeEvents(...args);
-export const listBrokerAccountSnapshots = (...args) =>
-  controlPlaneRuntime.listBrokerAccountSnapshots(...args);
-export const listBrokerExecutionEvents = (...args) =>
-  controlPlaneRuntime.listBrokerExecutionEvents(...args);
-export const listAgentPolicies = (...args) => controlPlaneRuntime.listAgentPolicies(...args);
-export const getAgentPolicy = (...args) => controlPlaneRuntime.getAgentPolicy(...args);
-export const appendAgentPolicy = (...args) => controlPlaneRuntime.appendAgentPolicy(...args);
-export const saveAgentPolicy = (...args) => controlPlaneRuntime.saveAgentPolicy(...args);
-export const recordAgentPolicy = (...args) => controlPlaneRuntime.recordAgentPolicy(...args);
-export const updateAgentPolicy = (...args) => controlPlaneRuntime.updateAgentPolicy(...args);
-export const listAgentInstructions = (...args) =>
-  controlPlaneRuntime.listAgentInstructions(...args);
-export const getAgentInstruction = (...args) => controlPlaneRuntime.getAgentInstruction(...args);
-export const appendAgentInstruction = (...args) =>
-  controlPlaneRuntime.appendAgentInstruction(...args);
-export const recordAgentInstruction = (...args) =>
-  controlPlaneRuntime.recordAgentInstruction(...args);
-export const updateAgentInstruction = (...args) =>
-  controlPlaneRuntime.updateAgentInstruction(...args);
-export const listAgentDailyRuns = (...args) => controlPlaneRuntime.listAgentDailyRuns(...args);
-export const getAgentDailyRun = (...args) => controlPlaneRuntime.getAgentDailyRun(...args);
-export const appendAgentDailyRun = (...args) => controlPlaneRuntime.appendAgentDailyRun(...args);
-export const recordAgentDailyRun = (...args) => controlPlaneRuntime.recordAgentDailyRun(...args);
-export const updateAgentDailyRun = (...args) => controlPlaneRuntime.updateAgentDailyRun(...args);
-export const queueAgentDailyRun = (...args) => controlPlaneRuntime.queueAgentDailyRun(...args);
-export const listAgentAuthorityEvents = (...args) =>
-  controlPlaneRuntime.listAgentAuthorityEvents(...args);
-export const getAgentAuthorityEvent = (...args) =>
-  controlPlaneRuntime.getAgentAuthorityEvent(...args);
-export const appendAgentAuthorityEvent = (...args) =>
-  controlPlaneRuntime.appendAgentAuthorityEvent(...args);
-export const recordAgentAuthorityEvent = (...args) =>
-  controlPlaneRuntime.recordAgentAuthorityEvent(...args);
-export const updateAgentAuthorityEvent = (...args) =>
-  controlPlaneRuntime.updateAgentAuthorityEvent(...args);
-export const getAgentGovernanceSnapshot = (...args) =>
-  controlPlaneRuntime.getAgentGovernanceSnapshot(...args);
-export const listExecutionRuns = (...args) => controlPlaneRuntime.listExecutionRuns(...args);
-export const getExecutionRun = (...args) => controlPlaneRuntime.getExecutionRun(...args);
-export const getExecutionRunByPlanId = (...args) =>
-  controlPlaneRuntime.getExecutionRunByPlanId(...args);
-export const listExecutionOrderStates = (...args) =>
-  controlPlaneRuntime.listExecutionOrderStates(...args);
-export const listExecutionCandidateHandoffs = (...args) =>
-  controlPlaneRuntime.listExecutionCandidateHandoffs(...args);
-export const getExecutionCandidateHandoff = (...args) =>
-  controlPlaneRuntime.getExecutionCandidateHandoff(...args);
-export const getLatestExecutionCandidateHandoffForStrategy = (...args) =>
-  controlPlaneRuntime.getLatestExecutionCandidateHandoffForStrategy(...args);
-export const appendExecutionCandidateHandoff = (...args) =>
-  controlPlaneRuntime.appendExecutionCandidateHandoff(...args);
-export const updateExecutionCandidateHandoff = (...args) =>
-  controlPlaneRuntime.updateExecutionCandidateHandoff(...args);
-export const recordExecutionRun = (...args) => controlPlaneRuntime.recordExecutionRun(...args);
-export const updateExecutionRun = (...args) => controlPlaneRuntime.updateExecutionRun(...args);
-export const updateExecutionOrderState = (...args) =>
-  controlPlaneRuntime.updateExecutionOrderState(...args);
-export const updateExecutionPlan = (...args) => controlPlaneRuntime.updateExecutionPlan(...args);
-export const appendBrokerExecutionEvent = (...args) =>
-  controlPlaneRuntime.appendBrokerExecutionEvent(...args);
-export const listBacktestRuns = (...args) => controlPlaneRuntime.listBacktestRuns(...args);
-export const listBacktestResults = (...args) => controlPlaneRuntime.listBacktestResults(...args);
-export const listBacktestResultsForRun = (...args) =>
-  controlPlaneRuntime.listBacktestResultsForRun(...args);
-export const getBacktestResult = (...args) => controlPlaneRuntime.getBacktestResult(...args);
-export const getLatestBacktestResultForRun = (...args) =>
-  controlPlaneRuntime.getLatestBacktestResultForRun(...args);
-export const appendBacktestResult = (...args) => controlPlaneRuntime.appendBacktestResult(...args);
-export const listResearchEvaluations = (...args) =>
-  controlPlaneRuntime.listResearchEvaluations(...args);
-export const getResearchEvaluation = (...args) =>
-  controlPlaneRuntime.getResearchEvaluation(...args);
-export const getLatestEvaluationForRun = (...args) =>
-  controlPlaneRuntime.getLatestEvaluationForRun(...args);
-export const getLatestEvaluationForStrategy = (...args) =>
-  controlPlaneRuntime.getLatestEvaluationForStrategy(...args);
-export const appendResearchEvaluation = (...args) =>
-  controlPlaneRuntime.appendResearchEvaluation(...args);
-export const listResearchReports = (...args) => controlPlaneRuntime.listResearchReports(...args);
-export const getResearchReport = (...args) => controlPlaneRuntime.getResearchReport(...args);
-export const getLatestResearchReportForRun = (...args) =>
-  controlPlaneRuntime.getLatestResearchReportForRun(...args);
-export const getLatestResearchReportForStrategy = (...args) =>
-  controlPlaneRuntime.getLatestResearchReportForStrategy(...args);
-export const appendResearchReport = (...args) => controlPlaneRuntime.appendResearchReport(...args);
-export const getBacktestRun = (...args) => controlPlaneRuntime.getBacktestRun(...args);
-export const findBacktestRunByWorkflowRunId = (...args) =>
-  controlPlaneRuntime.findBacktestRunByWorkflowRunId(...args);
-export const appendBacktestRun = (...args) => controlPlaneRuntime.appendBacktestRun(...args);
-export const updateBacktestRun = (...args) => controlPlaneRuntime.updateBacktestRun(...args);
-export const getResearchSummary = (...args) => controlPlaneRuntime.getResearchSummary(...args);
-export const updateResearchSummary = (...args) =>
-  controlPlaneRuntime.updateResearchSummary(...args);
-export const listResearchTasks = (...args) => controlPlaneRuntime.listResearchTasks(...args);
-export const getResearchTask = (...args) => controlPlaneRuntime.getResearchTask(...args);
-export const findResearchTaskByWorkflowRunId = (...args) =>
-  controlPlaneRuntime.findResearchTaskByWorkflowRunId(...args);
-export const findResearchTaskByRunId = (...args) =>
-  controlPlaneRuntime.findResearchTaskByRunId(...args);
-export const appendResearchTask = (...args) => controlPlaneRuntime.appendResearchTask(...args);
-export const updateResearchTask = (...args) => controlPlaneRuntime.updateResearchTask(...args);
-export const upsertResearchTask = (...args) => controlPlaneRuntime.upsertResearchTask(...args);
-export const listStrategyCatalog = (...args) => controlPlaneRuntime.listStrategyCatalog(...args);
-export const getStrategyCatalogItem = (...args) =>
-  controlPlaneRuntime.getStrategyCatalogItem(...args);
-export const upsertStrategyCatalogItem = (...args) =>
-  controlPlaneRuntime.upsertStrategyCatalogItem(...args);
-export const getMarketProviderStatus = (...args) =>
-  controlPlaneRuntime.getMarketProviderStatus(...args);
-export const updateMarketProviderStatus = (...args) =>
-  controlPlaneRuntime.updateMarketProviderStatus(...args);
-export const listMonitoringSnapshots = (...args) =>
-  controlPlaneRuntime.listMonitoringSnapshots(...args);
-export const listMonitoringAlerts = (...args) => controlPlaneRuntime.listMonitoringAlerts(...args);
-export const listIncidents = (...args) => controlPlaneRuntime.listIncidents(...args);
-export const getIncident = (...args) => controlPlaneRuntime.getIncident(...args);
-export const listIncidentNotes = (...args) => controlPlaneRuntime.listIncidentNotes(...args);
-export const appendIncident = (...args) => controlPlaneRuntime.appendIncident(...args);
-export const recordIncident = (...args) => controlPlaneRuntime.recordIncident(...args);
-export const updateIncident = (...args) => controlPlaneRuntime.updateIncident(...args);
-export const transitionIncident = (...args) => controlPlaneRuntime.transitionIncident(...args);
-export const appendIncidentNote = (...args) => controlPlaneRuntime.appendIncidentNote(...args);
-export const recordIncidentNote = (...args) => controlPlaneRuntime.recordIncidentNote(...args);
-export const listWorkerHeartbeats = (...args) => controlPlaneRuntime.listWorkerHeartbeats(...args);
-export const getLatestWorkerHeartbeat = (...args) =>
-  controlPlaneRuntime.getLatestWorkerHeartbeat(...args);
-export const listWorkflowRuns = (...args) => controlPlaneRuntime.listWorkflowRuns(...args);
-export const getWorkflowRun = (...args) => controlPlaneRuntime.getWorkflowRun(...args);
+export const getUserAccount = (...args: any[]) =>
+  (controlPlaneRuntime as any).getUserAccount(...args);
+export const getUserProfile = (...args: any[]) =>
+  (controlPlaneRuntime as any).getUserProfile(...args);
+export const getTenant = (...args: any[]) => (controlPlaneRuntime as any).getTenant(...args);
+export const listWorkspaces = (...args: any[]) =>
+  (controlPlaneRuntime as any).listWorkspaces(...args);
+export const getCurrentWorkspace = (...args: any[]) =>
+  (controlPlaneRuntime as any).getCurrentWorkspace(...args);
+export const updateUserProfile = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateUserProfile(...args);
+export const getUserPreferences = (...args: any[]) =>
+  (controlPlaneRuntime as any).getUserPreferences(...args);
+export const getUserAccess = (...args: any[]) =>
+  (controlPlaneRuntime as any).getUserAccess(...args);
+export const getUserAccessSummary = (...args: any[]) =>
+  (controlPlaneRuntime as any).getUserAccessSummary(...args);
+export const listUserRoleTemplates = (...args: any[]) =>
+  (controlPlaneRuntime as any).listUserRoleTemplates(...args);
+export const getUserRoleTemplate = (...args: any[]) =>
+  (controlPlaneRuntime as any).getUserRoleTemplate(...args);
+export const getBrokerBindingSummary = (...args: any[]) =>
+  (controlPlaneRuntime as any).getBrokerBindingSummary(...args);
+export const updateUserPreferences = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateUserPreferences(...args);
+export const updateUserAccess = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateUserAccess(...args);
+export const upsertUserRoleTemplate = (...args: any[]) =>
+  (controlPlaneRuntime as any).upsertUserRoleTemplate(...args);
+export const deleteUserRoleTemplate = (...args: any[]) =>
+  (controlPlaneRuntime as any).deleteUserRoleTemplate(...args);
+export const upsertWorkspace = (...args: any[]) =>
+  (controlPlaneRuntime as any).upsertWorkspace(...args);
+export const setCurrentWorkspace = (...args: any[]) =>
+  (controlPlaneRuntime as any).setCurrentWorkspace(...args);
+export const listBrokerBindings = (...args: any[]) =>
+  (controlPlaneRuntime as any).listBrokerBindings(...args);
+export const upsertBrokerBinding = (...args: any[]) =>
+  (controlPlaneRuntime as any).upsertBrokerBinding(...args);
+export const setDefaultBrokerBinding = (...args: any[]) =>
+  (controlPlaneRuntime as any).setDefaultBrokerBinding(...args);
+export const deleteBrokerBinding = (...args: any[]) =>
+  (controlPlaneRuntime as any).deleteBrokerBinding(...args);
+export const listExecutionRuntimeEvents = (...args: any[]) =>
+  (controlPlaneRuntime as any).listExecutionRuntimeEvents(...args);
+export const listBrokerAccountSnapshots = (...args: any[]) =>
+  (controlPlaneRuntime as any).listBrokerAccountSnapshots(...args);
+export const listBrokerExecutionEvents = (...args: any[]) =>
+  (controlPlaneRuntime as any).listBrokerExecutionEvents(...args);
+export const listAgentPolicies = (...args: any[]) =>
+  (controlPlaneRuntime as any).listAgentPolicies(...args);
+export const getAgentPolicy = (...args: any[]) =>
+  (controlPlaneRuntime as any).getAgentPolicy(...args);
+export const appendAgentPolicy = (...args: any[]) =>
+  (controlPlaneRuntime as any).appendAgentPolicy(...args);
+export const saveAgentPolicy = (...args: any[]) =>
+  (controlPlaneRuntime as any).saveAgentPolicy(...args);
+export const recordAgentPolicy = (...args: any[]) =>
+  (controlPlaneRuntime as any).recordAgentPolicy(...args);
+export const updateAgentPolicy = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateAgentPolicy(...args);
+export const listAgentInstructions = (...args: any[]) =>
+  (controlPlaneRuntime as any).listAgentInstructions(...args);
+export const getAgentInstruction = (...args: any[]) =>
+  (controlPlaneRuntime as any).getAgentInstruction(...args);
+export const appendAgentInstruction = (...args: any[]) =>
+  (controlPlaneRuntime as any).appendAgentInstruction(...args);
+export const recordAgentInstruction = (...args: any[]) =>
+  (controlPlaneRuntime as any).recordAgentInstruction(...args);
+export const updateAgentInstruction = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateAgentInstruction(...args);
+export const listAgentDailyRuns = (...args: any[]) =>
+  (controlPlaneRuntime as any).listAgentDailyRuns(...args);
+export const getAgentDailyRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).getAgentDailyRun(...args);
+export const appendAgentDailyRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).appendAgentDailyRun(...args);
+export const recordAgentDailyRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).recordAgentDailyRun(...args);
+export const updateAgentDailyRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateAgentDailyRun(...args);
+export const queueAgentDailyRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).queueAgentDailyRun(...args);
+export const listAgentAuthorityEvents = (...args: any[]) =>
+  (controlPlaneRuntime as any).listAgentAuthorityEvents(...args);
+export const getAgentAuthorityEvent = (...args: any[]) =>
+  (controlPlaneRuntime as any).getAgentAuthorityEvent(...args);
+export const appendAgentAuthorityEvent = (...args: any[]) =>
+  (controlPlaneRuntime as any).appendAgentAuthorityEvent(...args);
+export const recordAgentAuthorityEvent = (...args: any[]) =>
+  (controlPlaneRuntime as any).recordAgentAuthorityEvent(...args);
+export const updateAgentAuthorityEvent = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateAgentAuthorityEvent(...args);
+export const getAgentGovernanceSnapshot = (...args: any[]) =>
+  (controlPlaneRuntime as any).getAgentGovernanceSnapshot(...args);
+export const listExecutionRuns = (...args: any[]) =>
+  (controlPlaneRuntime as any).listExecutionRuns(...args);
+export const getExecutionRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).getExecutionRun(...args);
+export const getExecutionRunByPlanId = (...args: any[]) =>
+  (controlPlaneRuntime as any).getExecutionRunByPlanId(...args);
+export const listExecutionOrderStates = (...args: any[]) =>
+  (controlPlaneRuntime as any).listExecutionOrderStates(...args);
+export const listExecutionCandidateHandoffs = (...args: any[]) =>
+  (controlPlaneRuntime as any).listExecutionCandidateHandoffs(...args);
+export const getExecutionCandidateHandoff = (...args: any[]) =>
+  (controlPlaneRuntime as any).getExecutionCandidateHandoff(...args);
+export const getLatestExecutionCandidateHandoffForStrategy = (...args: any[]) =>
+  (controlPlaneRuntime as any).getLatestExecutionCandidateHandoffForStrategy(...args);
+export const appendExecutionCandidateHandoff = (...args: any[]) =>
+  (controlPlaneRuntime as any).appendExecutionCandidateHandoff(...args);
+export const updateExecutionCandidateHandoff = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateExecutionCandidateHandoff(...args);
+export const recordExecutionRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).recordExecutionRun(...args);
+export const updateExecutionRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateExecutionRun(...args);
+export const updateExecutionOrderState = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateExecutionOrderState(...args);
+export const updateExecutionPlan = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateExecutionPlan(...args);
+export const appendBrokerExecutionEvent = (...args: any[]) =>
+  (controlPlaneRuntime as any).appendBrokerExecutionEvent(...args);
+export const listBacktestRuns = (...args: any[]) =>
+  (controlPlaneRuntime as any).listBacktestRuns(...args);
+export const listBacktestResults = (...args: any[]) =>
+  (controlPlaneRuntime as any).listBacktestResults(...args);
+export const listBacktestResultsForRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).listBacktestResultsForRun(...args);
+export const getBacktestResult = (...args: any[]) =>
+  (controlPlaneRuntime as any).getBacktestResult(...args);
+export const getLatestBacktestResultForRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).getLatestBacktestResultForRun(...args);
+export const appendBacktestResult = (...args: any[]) =>
+  (controlPlaneRuntime as any).appendBacktestResult(...args);
+export const listResearchEvaluations = (...args: any[]) =>
+  (controlPlaneRuntime as any).listResearchEvaluations(...args);
+export const getResearchEvaluation = (...args: any[]) =>
+  (controlPlaneRuntime as any).getResearchEvaluation(...args);
+export const getLatestEvaluationForRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).getLatestEvaluationForRun(...args);
+export const getLatestEvaluationForStrategy = (...args: any[]) =>
+  (controlPlaneRuntime as any).getLatestEvaluationForStrategy(...args);
+export const appendResearchEvaluation = (...args: any[]) =>
+  (controlPlaneRuntime as any).appendResearchEvaluation(...args);
+export const listResearchReports = (...args: any[]) =>
+  (controlPlaneRuntime as any).listResearchReports(...args);
+export const getResearchReport = (...args: any[]) =>
+  (controlPlaneRuntime as any).getResearchReport(...args);
+export const getLatestResearchReportForRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).getLatestResearchReportForRun(...args);
+export const getLatestResearchReportForStrategy = (...args: any[]) =>
+  (controlPlaneRuntime as any).getLatestResearchReportForStrategy(...args);
+export const appendResearchReport = (...args: any[]) =>
+  (controlPlaneRuntime as any).appendResearchReport(...args);
+export const getBacktestRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).getBacktestRun(...args);
+export const findBacktestRunByWorkflowRunId = (...args: any[]) =>
+  (controlPlaneRuntime as any).findBacktestRunByWorkflowRunId(...args);
+export const appendBacktestRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).appendBacktestRun(...args);
+export const updateBacktestRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateBacktestRun(...args);
+export const getResearchSummary = (...args: any[]) =>
+  (controlPlaneRuntime as any).getResearchSummary(...args);
+export const updateResearchSummary = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateResearchSummary(...args);
+export const listResearchTasks = (...args: any[]) =>
+  (controlPlaneRuntime as any).listResearchTasks(...args);
+export const getResearchTask = (...args: any[]) =>
+  (controlPlaneRuntime as any).getResearchTask(...args);
+export const findResearchTaskByWorkflowRunId = (...args: any[]) =>
+  (controlPlaneRuntime as any).findResearchTaskByWorkflowRunId(...args);
+export const findResearchTaskByRunId = (...args: any[]) =>
+  (controlPlaneRuntime as any).findResearchTaskByRunId(...args);
+export const appendResearchTask = (...args: any[]) =>
+  (controlPlaneRuntime as any).appendResearchTask(...args);
+export const updateResearchTask = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateResearchTask(...args);
+export const upsertResearchTask = (...args: any[]) =>
+  (controlPlaneRuntime as any).upsertResearchTask(...args);
+export const listStrategyCatalog = (...args: any[]) =>
+  (controlPlaneRuntime as any).listStrategyCatalog(...args);
+export const getStrategyCatalogItem = (...args: any[]) =>
+  (controlPlaneRuntime as any).getStrategyCatalogItem(...args);
+export const upsertStrategyCatalogItem = (...args: any[]) =>
+  (controlPlaneRuntime as any).upsertStrategyCatalogItem(...args);
+export const getMarketProviderStatus = (...args: any[]) =>
+  (controlPlaneRuntime as any).getMarketProviderStatus(...args);
+export const updateMarketProviderStatus = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateMarketProviderStatus(...args);
+export const listMonitoringSnapshots = (...args: any[]) =>
+  (controlPlaneRuntime as any).listMonitoringSnapshots(...args);
+export const listMonitoringAlerts = (...args: any[]) =>
+  (controlPlaneRuntime as any).listMonitoringAlerts(...args);
+export const listIncidents = (...args: any[]) =>
+  (controlPlaneRuntime as any).listIncidents(...args);
+export const getIncident = (...args: any[]) => (controlPlaneRuntime as any).getIncident(...args);
+export const listIncidentNotes = (...args: any[]) =>
+  (controlPlaneRuntime as any).listIncidentNotes(...args);
+export const appendIncident = (...args: any[]) =>
+  (controlPlaneRuntime as any).appendIncident(...args);
+export const recordIncident = (...args: any[]) =>
+  (controlPlaneRuntime as any).recordIncident(...args);
+export const updateIncident = (...args: any[]) =>
+  (controlPlaneRuntime as any).updateIncident(...args);
+export const transitionIncident = (...args: any[]) =>
+  (controlPlaneRuntime as any).transitionIncident(...args);
+export const appendIncidentNote = (...args: any[]) =>
+  (controlPlaneRuntime as any).appendIncidentNote(...args);
+export const recordIncidentNote = (...args: any[]) =>
+  (controlPlaneRuntime as any).recordIncidentNote(...args);
+export const listWorkerHeartbeats = (...args: any[]) =>
+  (controlPlaneRuntime as any).listWorkerHeartbeats(...args);
+export const getLatestWorkerHeartbeat = (...args: any[]) =>
+  (controlPlaneRuntime as any).getLatestWorkerHeartbeat(...args);
+export const listWorkflowRuns = (...args: any[]) =>
+  (controlPlaneRuntime as any).listWorkflowRuns(...args);
+export const getWorkflowRun = (...args: any[]) =>
+  (controlPlaneRuntime as any).getWorkflowRun(...args);
 
 export { recordAgentActionRequest } from '../../../apps/api/src/domains/agent/services/action-request-service.js';
 export { refreshBacktestSummary } from '../../../apps/api/src/domains/backtest/services/summary-service.js';
