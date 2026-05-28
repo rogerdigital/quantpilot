@@ -1,5 +1,5 @@
 import type { AgentDailyRunRecord } from '@shared-types/trading.ts';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocale } from '../console/console.i18n.tsx';
 import { fmtDateTime } from '../console/console.utils.ts';
@@ -9,6 +9,12 @@ import {
   summaryCardHeader,
   summaryCardTime,
   summaryCardTitle,
+  summaryCollapsible,
+  summaryCollapsibleInner,
+  summaryCollapsibleOpen,
+  summaryExpandCaret,
+  summaryExpandCaretOpen,
+  summaryExpandToggle,
   summaryKindChip,
   summarySkeletonLine,
   summaryStatusChip,

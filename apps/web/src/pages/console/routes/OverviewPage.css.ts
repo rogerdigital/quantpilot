@@ -4,7 +4,7 @@ import { globalStyle, style } from '@vanilla-extract/css';
 
 export const overviewResultsBanner = style({
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+  gridTemplateColumns: 'repeat(3, 1fr)',
   gap: '12px',
   marginTop: '20px',
   marginBottom: '20px',
@@ -15,12 +15,20 @@ export const overviewResultsBanner = style({
   boxShadow: 'var(--shadow-panel)',
   position: 'relative',
   overflow: 'hidden',
+  '@media': {
+    '(max-width: 720px)': { gridTemplateColumns: '1fr' },
+  },
 });
 
 export const overviewResultsKpi = style({
   display: 'grid',
   gap: '6px',
-  padding: '4px 0',
+  padding: '12px 16px',
+  border: '1px solid var(--line)',
+  borderRadius: 'var(--radius)',
+  background: 'var(--panel-2)',
+  minHeight: '88px',
+  alignContent: 'start',
 });
 
 export const overviewResultsKpiDivider = style({
@@ -41,13 +49,13 @@ globalStyle(`${overviewResultsKpi} .kpi-label`, {
 });
 
 globalStyle(`${overviewResultsKpi} .kpi-value`, {
-  font: '700 clamp(24px, 3vw, 36px)/1 var(--font-data)',
+  font: '700 clamp(22px, 2.5vw, 32px)/1 var(--font-data)',
   letterSpacing: '-0.04em',
   color: 'var(--text)',
 });
 
 globalStyle(`${overviewResultsKpi} .kpi-sub`, {
-  font: '600 12px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   color: 'var(--muted-strong)',
   marginTop: '2px',
 });
@@ -171,7 +179,11 @@ globalStyle(`${overviewStat} strong`, {
 
 /* -- OVERVIEW KPI CARD ---------------------------------- */
 
-export const overviewKpiCard = style({ minHeight: '230px' });
+export const overviewKpiCard = style({
+  minHeight: '230px',
+  display: 'grid',
+  alignContent: 'start',
+});
 
 export const overviewKpiTitle = style({
   marginTop: '8px',
@@ -196,6 +208,12 @@ globalStyle(`${overviewKpiGrid} div`, {
 
 globalStyle(`${overviewKpiGrid} span`, { color: 'var(--muted)', fontSize: '12px' });
 globalStyle(`${overviewKpiGrid} strong`, { font: '700 15px/1 var(--font-data)' });
+
+/* -- KPI mini-metric uses monospace data font -- */
+globalStyle(`${overviewKpiCard} .mini-metric`, {
+  font: '700 22px/1.02 var(--font-data)',
+  letterSpacing: '-0.03em',
+});
 
 export const overviewKpiNote = style({
   marginTop: '18px',
