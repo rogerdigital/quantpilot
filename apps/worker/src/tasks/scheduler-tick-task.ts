@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../packages/control-plane-runtime/src/index.js';
 
-export async function runSchedulerTickTask(config, dependencies = {}) {
+export async function runSchedulerTickTask(config: any, dependencies: any = {}) {
   const recordSchedulerTick =
     dependencies.runSchedulerTick || controlPlaneRuntime.recordSchedulerTick;
   const result = recordSchedulerTick({

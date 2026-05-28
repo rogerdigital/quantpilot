@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 export type ToolPolicyVerdict = {
   tool: string;
   allowed: boolean;

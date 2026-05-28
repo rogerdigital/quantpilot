@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../packages/control-plane-runtime/src/index.js';
 
-export async function runWorkflowMaintenanceTask(config, dependencies = {}) {
+export async function runWorkflowMaintenanceTask(config: any, dependencies: any = {}) {
   const releaseWorkflows =
     dependencies.releaseScheduledWorkflows || controlPlaneRuntime.releaseScheduledWorkflowRuns;
   const result = releaseWorkflows({

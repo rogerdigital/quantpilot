@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../packages/control-plane-runtime/src/index.js';
 
-export async function runRiskScanTask(config, dependencies = {}) {
+export async function runRiskScanTask(config: any, dependencies: any = {}) {
   const flushRiskScans =
     dependencies.flushQueuedRiskScans || controlPlaneRuntime.dispatchPendingRiskScans;
   const result = flushRiskScans({

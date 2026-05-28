@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { randomUUID } from 'node:crypto';
 import { ComputeJobStore } from '../../../packages/control-plane-store/src/compute-job-store.js';
 import type { WorkerConfig } from './config.js';
@@ -82,7 +81,7 @@ export async function runJobRunnerTask(
         store.appendLog(job.id, {
           id: `log-${randomUUID()}`,
           jobId: job.id,
-          level,
+          level: level as 'debug' | 'info' | 'warn' | 'error',
           message,
           timestamp: new Date().toISOString(),
           metadata,

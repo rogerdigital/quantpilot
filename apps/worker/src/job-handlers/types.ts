@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { ComputeJob } from '../../../../packages/shared-types/src/compute.ts';
 
 export type JobHandlerResult = {

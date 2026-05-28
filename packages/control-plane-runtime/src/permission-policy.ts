@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import type { UserRole } from '../../shared-types/src/organization.ts';
 
 export type PermissionAction =

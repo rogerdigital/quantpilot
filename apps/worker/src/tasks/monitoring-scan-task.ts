@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { recordMonitoringStatusSnapshot } from '../../../api/src/modules/monitoring/service.js';
 
-export async function runMonitoringScanTask(config, dependencies = {}) {
+export async function runMonitoringScanTask(config: any, dependencies: any = {}) {
   const scanMonitoring = dependencies.recordMonitoringSnapshot || recordMonitoringStatusSnapshot;
   const result = await scanMonitoring({
     getBrokerHealth: dependencies.getBrokerHealth,

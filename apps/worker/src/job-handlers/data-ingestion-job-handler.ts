@@ -1,11 +1,9 @@
-// @ts-nocheck
-
 import {
   createDataIngestionResult,
   shouldActivateVersion,
 } from '../../../../packages/trading-engine/src/connectors/data-connector.js';
 
-export async function handleDataIngestionJob(job) {
+export async function handleDataIngestionJob(job: any) {
   const { connectorId, datasetId, versionId, records, qualityChecks } = job.payload || {};
 
   if (!connectorId || !datasetId || !versionId) {

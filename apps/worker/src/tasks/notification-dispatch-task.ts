@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { controlPlaneRuntime } from '../../../../packages/control-plane-runtime/src/index.js';
 
-export async function runNotificationDispatchTask(config, dependencies = {}) {
+export async function runNotificationDispatchTask(config: any, dependencies: any = {}) {
   const flushNotifications =
     dependencies.flushQueuedNotifications || controlPlaneRuntime.dispatchPendingNotifications;
   const result = flushNotifications({
