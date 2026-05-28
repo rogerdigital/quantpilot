@@ -16,6 +16,53 @@ export const summaryCard = style({
   },
 });
 
+export const summaryCollapsible = style({
+  display: 'grid',
+  gridTemplateRows: '0fr',
+  opacity: 0,
+  transition: 'grid-template-rows 200ms ease, opacity 200ms ease, gap 200ms ease',
+});
+
+export const summaryCollapsibleOpen = style({
+  gridTemplateRows: '1fr',
+  opacity: 1,
+  marginTop: '10px',
+});
+
+export const summaryCollapsibleInner = style({
+  overflow: 'hidden',
+});
+
+export const summaryExpandToggle = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '4px',
+  border: 'none',
+  background: 'transparent',
+  color: 'var(--muted)',
+  fontFamily: 'var(--font-data)',
+  fontSize: '10px',
+  fontWeight: 600,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  cursor: 'pointer',
+  padding: '4px 0',
+  transition: 'color 150ms ease',
+  ':hover': {
+    color: 'var(--accent)',
+  },
+});
+
+export const summaryExpandCaret = style({
+  display: 'inline-block',
+  fontSize: '10px',
+  transition: 'transform 200ms ease',
+});
+
+export const summaryExpandCaretOpen = style({
+  transform: 'rotate(180deg)',
+});
+
 export const summaryCardHeader = style({
   display: 'flex',
   alignItems: 'center',
