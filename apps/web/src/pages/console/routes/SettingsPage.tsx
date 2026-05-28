@@ -29,10 +29,6 @@ import {
 } from '../../../modules/agent/agentTools.service.ts';
 import { copy, useLocale } from '../../../modules/console/console.i18n.tsx';
 import {
-  connectionLabel,
-  fmtDateTime,
-  modeTone,
-  translateMode,
   translateProviderLabel,
   translateRuntimeText,
 } from '../../../modules/console/console.utils.ts';
@@ -46,31 +42,19 @@ import {
   formatActionGuardNotice,
   formatPermissionDisabled,
   formatPermissionError,
-  formatPermissionReadOnly,
 } from '../../../modules/permissions/permissionCopy.ts';
 import { useTradingSystem } from '../../../store/trading-system/TradingSystemProvider.tsx';
+import { AccessPolicyPanel } from '../components/AccessPolicyPanel.tsx';
+import { AccountProfilePanel } from '../components/AccountProfilePanel.tsx';
+import { BrokerBindingsPanel } from '../components/BrokerBindingsPanel.tsx';
+import { IntegrationSettingsPanel } from '../components/IntegrationSettingsPanel.tsx';
+import { SystemModePanel } from '../components/SystemModePanel.tsx';
 
 function toPermissionList(value: string) {
   return value
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
-}
-
-function translateBindingHealth(locale: 'zh' | 'en', status = 'idle') {
-  const zhMap: Record<string, string> = {
-    healthy: '健康',
-    degraded: '降级',
-    attention: '待处理',
-    idle: '空闲',
-  };
-  const enMap: Record<string, string> = {
-    healthy: 'healthy',
-    degraded: 'degraded',
-    attention: 'attention',
-    idle: 'idle',
-  };
-  return locale === 'zh' ? zhMap[status] || status : enMap[status] || status;
 }
 
 export function WorkspaceAccessScopePanel({
@@ -607,7 +591,6 @@ export function RiskParametersPanel({ locale }: { locale: 'zh' | 'en' }) {
     </article>
   );
 }
-
 export function SettingsPage() {
   const { locale } = useLocale();
   const {
@@ -1096,362 +1079,91 @@ export function SettingsPage() {
         </div>
       </section>
 
-      <section className="panel-grid panel-grid-wide">
-        <article className="panel" id="system-mode">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{copy[locale].labels.systemMode}</div>
-              <div className="panel-copy">{copy[locale].terms.systemModeCopy}</div>
-            </div>
-            <div className={`panel-badge badge-${modeTone(state.mode)}`}>
-              {translateMode(locale, state.mode)}
-            </div>
-          </div>
-          <div className="mode-stack">
-            {modes.map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                title={!canWriteStrategy ? modeDisabledReason : undefined}
-                disabled={!canWriteStrategy}
-                className={`mode-pill${state.mode === key ? ' active' : ''}`}
-                onClick={() => setMode(key)}
-              >
-                {translateMode(locale, label)}
-              </button>
-            ))}
-          </div>
-          {!canWriteStrategy ? (
-            <div className="status-copy">
-              {formatPermissionDisabled(
-                locale,
-                'strategy:write',
-                '切换系统模式',
-                'change the system mode'
-              )}
-            </div>
-          ) : null}
-          {actionGuardNotice?.action === 'set-mode' ? (
-            <div className="status-copy">{formatActionGuardNotice(locale, actionGuardNotice)}</div>
-          ) : null}
-        </article>
-        <article className="panel" id="switches">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{copy[locale].labels.switches}</div>
-              <div className="panel-copy">{copy[locale].terms.switchesCopy}</div>
-            </div>
-            <div className="panel-badge badge-muted">CONTROL</div>
-          </div>
-          <label className="switch-row">
-            <span>{copy[locale].labels.autoTrade}</span>
-            <input
-              title={!canWriteStrategy ? autoTradeDisabledReason : undefined}
-              type="checkbox"
-              disabled={!canWriteStrategy}
-              checked={state.toggles.autoTrade}
-              onChange={(event) => updateToggle('autoTrade', event.target.checked)}
-            />
-          </label>
-          <label className="switch-row">
-            <span>{copy[locale].labels.allowLive}</span>
-            <input
-              title={!canApproveExecution ? executionDisabledReason : undefined}
-              type="checkbox"
-              disabled={!canApproveExecution}
-              checked={state.toggles.liveTrade}
-              onChange={(event) => updateToggle('liveTrade', event.target.checked)}
-            />
-          </label>
-          <label className="switch-row">
-            <span>{copy[locale].labels.riskGuard}</span>
-            <input
-              title={!canReviewRisk ? riskGuardDisabledReason : undefined}
-              type="checkbox"
-              disabled={!canReviewRisk}
-              checked={state.toggles.riskGuard}
-              onChange={(event) => updateToggle('riskGuard', event.target.checked)}
-            />
-          </label>
-          <label className="switch-row">
-            <span>{copy[locale].labels.manualApproval}</span>
-            <input
-              title={!canApproveExecution ? executionDisabledReason : undefined}
-              type="checkbox"
-              disabled={!canApproveExecution}
-              checked={state.toggles.manualApproval}
-              onChange={(event) => updateToggle('manualApproval', event.target.checked)}
-            />
-          </label>
-          <div className="status-copy">
-            {locale === 'zh'
-              ? 'autoTrade 需要 strategy:write，riskGuard 需要 risk:review，allowLive / manualApproval 需要 execution:approve。'
-              : 'autoTrade requires strategy:write, riskGuard requires risk:review, and allowLive/manualApproval require execution:approve.'}
-          </div>
-          {actionGuardNotice?.action?.startsWith('toggle:') ? (
-            <div className="status-copy">{formatActionGuardNotice(locale, actionGuardNotice)}</div>
-          ) : null}
-        </article>
-      </section>
+      <SystemModePanel
+        locale={locale}
+        mode={state.mode}
+        toggles={state.toggles}
+        canWriteStrategy={canWriteStrategy}
+        canReviewRisk={canReviewRisk}
+        canApproveExecution={canApproveExecution}
+        actionGuardNotice={actionGuardNotice}
+        setMode={setMode}
+        updateToggle={updateToggle}
+      />
 
       <section className="panel-grid panel-grid-wide">
-        <article className="panel" id="account-profile">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{locale === 'zh' ? '账户档案' : 'Account Profile'}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '现在由统一账户快照驱动，并会在保存后刷新当前会话。'
-                  : 'The profile is now driven by a unified account snapshot and refreshes the active session after saves.'}
-              </div>
-            </div>
-            <div className="panel-badge badge-info">ACCOUNT</div>
-          </div>
-          <div className="policy-card policy-card-inline">
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '姓名' : 'Name'}</span>
-              <strong>{account?.profile.name || 'QuantPilot Operator'}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '邮箱' : 'Email'}</span>
-              <strong>{account?.profile.email || 'operator@quantpilot.local'}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '角色' : 'Role'}</span>
-              <strong>{account?.profile.role || 'admin'}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '访问状态' : 'Access Status'}</span>
-              <strong>{account?.access.status || 'active'}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '当前会话权限' : 'Session Permissions'}</span>
-              <strong>{session?.user.permissions.join(', ') || 'dashboard:read'}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '权限对齐' : 'Session Alignment'}</span>
-              <strong>
-                {accessSummary?.isSessionAligned
-                  ? locale === 'zh'
-                    ? '已对齐'
-                    : 'aligned'
-                  : locale === 'zh'
-                    ? '待刷新'
-                    : 'refresh required'}
-              </strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '时区' : 'Timezone'}</span>
-              <strong>{account?.preferences.timezone || 'Asia/Shanghai'}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '默认模式' : 'Default Mode'}</span>
-              <strong>{account?.preferences.defaultMode || 'hybrid'}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '通知通道' : 'Notifications'}</span>
-              <strong>{account?.preferences.notificationChannels.join(', ') || 'inbox'}</strong>
-            </div>
-          </div>
-          {!canWriteAccount ? (
-            <div className="status-copy">
-              {formatPermissionReadOnly(locale, 'account:write', '账户设置', 'account settings')}
-            </div>
-          ) : null}
-          <div className="settings-form-grid">
-            <label className="settings-field">
-              <span>{locale === 'zh' ? '姓名' : 'Name'}</span>
-              <input
-                disabled={!canWriteAccount}
-                value={profileForm.name}
-                onChange={(event) =>
-                  setProfileForm((current) => ({ ...current, name: event.target.value }))
-                }
-              />
-            </label>
-            <label className="settings-field">
-              <span>{locale === 'zh' ? '邮箱' : 'Email'}</span>
-              <input
-                disabled={!canWriteAccount}
-                value={profileForm.email}
-                onChange={(event) =>
-                  setProfileForm((current) => ({ ...current, email: event.target.value }))
-                }
-              />
-            </label>
-            <label className="settings-field">
-              <span>{locale === 'zh' ? '组织' : 'Organization'}</span>
-              <input
-                disabled={!canWriteAccount}
-                value={profileForm.organization}
-                onChange={(event) =>
-                  setProfileForm((current) => ({ ...current, organization: event.target.value }))
-                }
-              />
-            </label>
-            <label className="settings-field">
-              <span>{locale === 'zh' ? '时区' : 'Timezone'}</span>
-              <select
-                disabled={!canWriteAccount}
-                value={profileForm.timezone}
-                onChange={(event) =>
-                  setProfileForm((current) => ({ ...current, timezone: event.target.value }))
-                }
-              >
-                <option value="Asia/Shanghai">Asia/Shanghai</option>
-                <option value="America/New_York">America/New_York</option>
-              </select>
-            </label>
-          </div>
-          <div className="settings-actions">
-            <button
-              type="button"
-              className="settings-button"
-              disabled={!canWriteAccount}
-              onClick={handleProfileSave}
-            >
-              {locale === 'zh' ? '保存账户档案' : 'Save Profile'}
-            </button>
-            <div className="status-copy">{saveState.profile}</div>
-          </div>
-        </article>
+        <AccountProfilePanel
+          locale={locale}
+          account={account}
+          sessionPermissions={session?.user.permissions || []}
+          accessSummary={accessSummary}
+          canWriteAccount={canWriteAccount}
+          onSave={async (form) => {
+            setSaveState((current) => ({
+              ...current,
+              profile: locale === 'zh' ? '保存中...' : 'Saving...',
+            }));
+            try {
+              await updateUserAccountProfile(form);
+              await refreshAccountWorkspace();
+              setSaveState((current) => ({
+                ...current,
+                profile:
+                  locale === 'zh'
+                    ? '账户档案已保存，并已刷新当前会话。'
+                    : 'Profile saved and session refreshed.',
+              }));
+            } catch (error) {
+              setSaveState((current) => ({
+                ...current,
+                profile: formatPermissionError(
+                  locale,
+                  error,
+                  '账户档案保存失败',
+                  'Profile save failed',
+                  '账户档案保存',
+                  'Profile save'
+                ),
+              }));
+            }
+          }}
+        />
 
-        <article className="panel" id="access-policy">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{locale === 'zh' ? '访问策略' : 'Access Policy'}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '角色模板、有效权限和当前会话权限现在会一起对比展示。'
-                  : 'Role templates, effective permissions, and session permissions are now compared together.'}
-              </div>
-            </div>
-            <div className="panel-badge badge-warn">{account?.access.role || 'admin'}</div>
-          </div>
-          <div className="policy-card policy-card-inline">
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '当前角色' : 'Current Role'}</span>
-              <strong>{account?.access.role || 'admin'}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '当前状态' : 'Current Status'}</span>
-              <strong>{account?.access.status || 'active'}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '模板权限' : 'Template Permissions'}</span>
-              <strong>{accessSummary?.defaultPermissions.join(', ') || 'dashboard:read'}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '有效权限' : 'Effective Permissions'}</span>
-              <strong>{accessSummary?.effectivePermissions.join(', ') || 'dashboard:read'}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '扩展权限' : 'Added Permissions'}</span>
-              <strong>
-                {accessSummary?.addedPermissions.join(', ') || (locale === 'zh' ? '无' : 'none')}
-              </strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '被移除模板权限' : 'Removed Template Permissions'}</span>
-              <strong>
-                {accessSummary?.removedPermissions.join(', ') || (locale === 'zh' ? '无' : 'none')}
-              </strong>
-            </div>
-          </div>
-          <div className="settings-chip-row">
-            {(account?.roleTemplates || []).map((template) => (
-              <button
-                key={template.id}
-                type="button"
-                disabled={!canWriteAccount}
-                className={`settings-chip${accessForm.role === template.id ? ' active' : ''}`}
-                onClick={() => applyRoleTemplate(template.id)}
-                title={template.summary}
-              >
-                {template.id}
-              </button>
-            ))}
-          </div>
-          {selectedRoleTemplate ? (
-            <div className="status-copy">
-              {locale === 'zh'
-                ? `${selectedRoleTemplate.label}: ${selectedRoleTemplate.summary}`
-                : `${selectedRoleTemplate.label}: ${selectedRoleTemplate.summary}`}
-            </div>
-          ) : null}
-          {!accessSummary?.isSessionAligned ? (
-            <div className="status-copy">
-              {locale === 'zh'
-                ? `当前会话仍保留 ${accessSummary?.sessionPermissions.join(', ') || 'dashboard:read'}，保存后会自动刷新。`
-                : `The active session still carries ${accessSummary?.sessionPermissions.join(', ') || 'dashboard:read'} and will be refreshed after saving.`}
-            </div>
-          ) : null}
-          <div className="settings-form-grid">
-            <label className="settings-field">
-              <span>{locale === 'zh' ? '角色' : 'Role'}</span>
-              <select
-                disabled={!canWriteAccount}
-                value={accessForm.role}
-                onChange={(event) => applyRoleTemplate(event.target.value)}
-              >
-                <option value="admin">admin</option>
-                <option value="operator">operator</option>
-                <option value="viewer">viewer</option>
-              </select>
-            </label>
-            <label className="settings-field">
-              <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-              <select
-                disabled={!canWriteAccount}
-                value={accessForm.status}
-                onChange={(event) =>
-                  setAccessForm((current) => ({ ...current, status: event.target.value }))
-                }
-              >
-                <option value="active">active</option>
-                <option value="disabled">disabled</option>
-              </select>
-            </label>
-            <label className="settings-field settings-field-wide">
-              <span>{locale === 'zh' ? '权限清单' : 'Permissions'}</span>
-              <input
-                disabled={!canWriteAccount}
-                value={accessForm.permissions}
-                onChange={(event) =>
-                  setAccessForm((current) => ({ ...current, permissions: event.target.value }))
-                }
-                placeholder="dashboard:read, risk:review"
-              />
-            </label>
-          </div>
-          <div className="settings-chip-row">
-            {permissionOptions.map((permission) => {
-              const selected = selectedPermissions.includes(permission);
-              return (
-                <button
-                  key={permission}
-                  type="button"
-                  disabled={!canWriteAccount}
-                  className={`settings-chip${selected ? ' active' : ''}`}
-                  onClick={() => togglePermission(permission)}
-                >
-                  {permission}
-                </button>
-              );
-            })}
-          </div>
-          <div className="settings-actions">
-            <button
-              type="button"
-              className="settings-button"
-              disabled={!canWriteAccount}
-              onClick={handleAccessSave}
-            >
-              {locale === 'zh' ? '保存访问策略' : 'Save Access Policy'}
-            </button>
-            <div className="status-copy">{saveState.access}</div>
-          </div>
-        </article>
+        <AccessPolicyPanel
+          locale={locale}
+          account={account}
+          accessSummary={accessSummary}
+          canWriteAccount={canWriteAccount}
+          onSave={async (data) => {
+            setSaveState((current) => ({
+              ...current,
+              access: locale === 'zh' ? '保存中...' : 'Saving...',
+            }));
+            try {
+              await updateUserAccountAccess(data);
+              await refreshAccountWorkspace();
+              setSaveState((current) => ({
+                ...current,
+                access:
+                  locale === 'zh'
+                    ? '访问策略已保存，权限上下文已重新对齐。'
+                    : 'Access policy saved and permission context realigned.',
+              }));
+            } catch (error) {
+              setSaveState((current) => ({
+                ...current,
+                access: formatPermissionError(
+                  locale,
+                  error,
+                  '访问策略保存失败',
+                  'Access policy save failed',
+                  '访问策略保存',
+                  'Access policy save'
+                ),
+              }));
+            }
+          }}
+        />
 
         <WorkspaceAccessScopePanel
           locale={locale}
@@ -1560,266 +1272,124 @@ export function SettingsPage() {
           </div>
         </article>
 
-        <article className="panel" id="integrations">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{copy[locale].labels.integrations}</div>
-              <div className="panel-copy">{copy[locale].terms.marketConnectivity}</div>
-            </div>
-            <div className="panel-badge badge-info">INTEGRATION</div>
-          </div>
-          <div className="policy-card policy-card-inline">
-            <div className="policy-row">
-              <span>{copy[locale].labels.marketData}</span>
-              <strong>{marketProviderLabel}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{copy[locale].labels.marketState}</span>
-              <strong>{connectionLabel(locale, marketConnected, marketFallback)}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? 'Fallback' : 'Fallback'}</span>
-              <strong>{marketFallback ? 'ON' : 'OFF'}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '最近同步' : 'Last Sync'}</span>
-              <strong>{fmtDateTime(marketStatus?.asOf, locale)}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{copy[locale].labels.broker}</span>
-              <strong>
-                {translateProviderLabel(
-                  locale,
-                  state.integrationStatus.broker.label || state.integrationStatus.broker.provider
-                )}
-              </strong>
-            </div>
-            <div className="policy-row">
-              <span>{copy[locale].labels.brokerState}</span>
-              <strong>
-                {state.integrationStatus.broker.connected
-                  ? copy[locale].labels.connected
-                  : copy[locale].labels.localOnly}
-              </strong>
-            </div>
-            <div className="status-copy">{translateRuntimeText(locale, marketMessage)}</div>
-            <div className="status-copy">
-              {translateRuntimeText(locale, state.integrationStatus.broker.message)}
-            </div>
-          </div>
-        </article>
+        <IntegrationSettingsPanel locale={locale} state={state} marketStatus={marketStatus} />
 
-        <article className="panel" id="broker-bindings">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">{locale === 'zh' ? '券商绑定' : 'Broker Bindings'}</div>
-              <div className="panel-copy">
-                {locale === 'zh'
-                  ? '绑定列表、默认连接、健康状态和运行时检查现在统一回到账户域里。'
-                  : 'Bindings, default connections, health states, and runtime checks now roll up into the account domain.'}
-              </div>
-            </div>
-            <div className="panel-badge badge-muted">
-              {account?.brokerSummary.total || bindings.length || 1}
-            </div>
-          </div>
-          <div className="policy-card policy-card-inline">
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '默认绑定' : 'Default Binding'}</span>
-              <strong>{account?.brokerSummary.defaultBindingId || 'broker-binding-primary'}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '连接数' : 'Connected Bindings'}</span>
-              <strong>{account?.brokerSummary.connected || 0}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '待处理绑定' : 'Bindings Requiring Attention'}</span>
-              <strong>{account?.brokerSummary.requiresAttention || 0}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '实盘绑定' : 'Live Bindings'}</span>
-              <strong>{account?.brokerSummary.liveBindings || 0}</strong>
-            </div>
-            <div className="policy-row">
-              <span>{locale === 'zh' ? '最近同步' : 'Last Sync'}</span>
-              <strong>{fmtDateTime(account?.brokerSummary.lastSyncAt, locale)}</strong>
-            </div>
-            {bindings.map((binding) => (
-              <div key={binding.id} className="policy-row policy-row-split">
-                <span>
-                  {binding.label}
-                  {binding.isDefault ? ` (${locale === 'zh' ? '默认' : 'default'})` : ''}
-                </span>
-                <div className="policy-row-actions">
-                  <strong>{`${binding.provider} / ${binding.environment} / ${binding.status} / ${translateBindingHealth(locale, binding.health.status)}`}</strong>
-                  <button
-                    type="button"
-                    className="settings-inline-button"
-                    disabled={!canWriteAccount}
-                    onClick={() => handleBindingEdit(binding)}
-                  >
-                    {locale === 'zh' ? '编辑' : 'Edit'}
-                  </button>
-                  {!binding.isDefault ? (
-                    <button
-                      type="button"
-                      className="settings-inline-button"
-                      disabled={!canWriteAccount}
-                      onClick={() => handleBindingSetDefault(binding.id)}
-                    >
-                      {locale === 'zh' ? '设为默认' : 'Make Default'}
-                    </button>
-                  ) : null}
-                  {!binding.isDefault ? (
-                    <button
-                      type="button"
-                      className="settings-inline-button settings-inline-button-danger"
-                      disabled={!canWriteAccount}
-                      onClick={() => handleBindingDelete(binding.id)}
-                    >
-                      {locale === 'zh' ? '删除' : 'Delete'}
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-            ))}
-            {!bindings.length ? (
-              <div className="status-copy">
-                {locale === 'zh'
-                  ? '尚未加载到远程绑定，当前显示默认券商档案。'
-                  : 'No remote bindings loaded yet. Showing the default broker record.'}
-              </div>
-            ) : null}
-            {bindings
-              .filter((binding) => binding.health.requiresAttention)
-              .map((binding) => (
-                <div key={`${binding.id}-attention`} className="status-copy">
-                  {locale === 'zh'
-                    ? `${binding.label} 需要处理：${binding.health.lastError || (binding.health.mismatch ? '绑定提供商与当前网关适配器不一致。' : '连接状态与目标环境不匹配。')}`
-                    : `${binding.label} requires attention: ${binding.health.lastError || (binding.health.mismatch ? 'binding provider does not match the active gateway adapter.' : 'connection state does not match the target environment.')}`}
-                </div>
-              ))}
-            {bindingRuntime?.ok ? (
-              <>
-                <div className="policy-row">
-                  <span>{locale === 'zh' ? '运行时适配器' : 'Runtime Adapter'}</span>
-                  <strong>{bindingRuntime.runtime.adapter}</strong>
-                </div>
-                <div className="policy-row">
-                  <span>{locale === 'zh' ? '运行时连接' : 'Runtime Connectivity'}</span>
-                  <strong>{bindingRuntime.runtime.connected ? 'connected' : 'disconnected'}</strong>
-                </div>
-                <div className="policy-row">
-                  <span>{locale === 'zh' ? '最近检查' : 'Last Checked'}</span>
-                  <strong>{fmtDateTime(bindingRuntime.runtime.lastCheckedAt, locale)}</strong>
-                </div>
-                {bindingRuntime.runtime.mismatch ? (
-                  <div className="status-copy">
-                    {locale === 'zh'
-                      ? '默认绑定提供商与当前网关适配器不一致，请校准配置。'
-                      : 'The default binding provider does not match the active gateway adapter.'}
-                  </div>
-                ) : null}
-              </>
-            ) : null}
-          </div>
-          <div className="settings-form-grid">
-            <label className="settings-field">
-              <span>{locale === 'zh' ? '提供商' : 'Provider'}</span>
-              <select
-                disabled={!canWriteAccount}
-                value={bindingForm.provider}
-                onChange={(event) =>
-                  setBindingForm((current) => ({ ...current, provider: event.target.value }))
-                }
-              >
-                <option value="alpaca">alpaca</option>
-                <option value="custom-http">custom-http</option>
-              </select>
-            </label>
-            <label className="settings-field">
-              <span>{locale === 'zh' ? '标签' : 'Label'}</span>
-              <input
-                disabled={!canWriteAccount}
-                value={bindingForm.label}
-                onChange={(event) =>
-                  setBindingForm((current) => ({ ...current, label: event.target.value }))
-                }
-              />
-            </label>
-            <label className="settings-field">
-              <span>{locale === 'zh' ? '环境' : 'Environment'}</span>
-              <select
-                disabled={!canWriteAccount}
-                value={bindingForm.environment}
-                onChange={(event) =>
-                  setBindingForm((current) => ({ ...current, environment: event.target.value }))
-                }
-              >
-                <option value="paper">paper</option>
-                <option value="live">live</option>
-              </select>
-            </label>
-            <label className="settings-field">
-              <span>{locale === 'zh' ? '状态' : 'Status'}</span>
-              <select
-                disabled={!canWriteAccount}
-                value={bindingForm.status}
-                onChange={(event) =>
-                  setBindingForm((current) => ({ ...current, status: event.target.value }))
-                }
-              >
-                <option value="connected">connected</option>
-                <option value="disconnected">disconnected</option>
-                <option value="degraded">degraded</option>
-                <option value="error">error</option>
-              </select>
-            </label>
-            <label className="settings-field settings-field-wide">
-              <span>{locale === 'zh' ? '账户 ID' : 'Account ID'}</span>
-              <input
-                disabled={!canWriteAccount}
-                value={bindingForm.accountId}
-                onChange={(event) =>
-                  setBindingForm((current) => ({ ...current, accountId: event.target.value }))
-                }
-              />
-            </label>
-          </div>
-          <div className="settings-actions">
-            <button
-              type="button"
-              className="settings-button"
-              disabled={!canWriteAccount}
-              onClick={handleBindingSave}
-            >
-              {bindingForm.id
-                ? locale === 'zh'
-                  ? '更新券商绑定'
-                  : 'Update Broker Binding'
-                : locale === 'zh'
-                  ? '保存券商绑定'
-                  : 'Save Broker Binding'}
-            </button>
-            <button
-              type="button"
-              className="settings-button settings-button-secondary"
-              disabled={!canWriteAccount}
-              onClick={handleBindingCreate}
-            >
-              {locale === 'zh' ? '新建绑定' : 'New Binding'}
-            </button>
-            <button
-              type="button"
-              className="settings-button settings-button-secondary"
-              disabled={!canWriteAccount}
-              onClick={handleBindingRuntimeSync}
-            >
-              {locale === 'zh' ? '同步运行状态' : 'Sync Runtime'}
-            </button>
-            <div className="status-copy">{saveState.binding}</div>
-          </div>
-        </article>
+        <BrokerBindingsPanel
+          locale={locale}
+          account={account}
+          bindings={bindings}
+          bindingRuntime={bindingRuntime}
+          canWriteAccount={canWriteAccount}
+          onSave={async (form) => {
+            setSaveState((current) => ({
+              ...current,
+              binding: locale === 'zh' ? '保存中...' : 'Saving...',
+            }));
+            try {
+              await saveBrokerBinding(form);
+              await refreshAccountWorkspace();
+              setSaveState((current) => ({
+                ...current,
+                binding:
+                  locale === 'zh'
+                    ? '券商绑定已保存，并已刷新默认会话上下文。'
+                    : 'Broker binding saved and session context refreshed.',
+              }));
+            } catch (error) {
+              setSaveState((current) => ({
+                ...current,
+                binding: formatPermissionError(
+                  locale,
+                  error,
+                  '券商绑定保存失败',
+                  'Broker binding save failed',
+                  '券商绑定保存',
+                  'Broker binding save'
+                ),
+              }));
+            }
+          }}
+          onSetDefault={async (id) => {
+            setSaveState((current) => ({
+              ...current,
+              binding: locale === 'zh' ? '切换默认中...' : 'Switching default...',
+            }));
+            try {
+              await setDefaultBrokerBinding(id);
+              await refreshAccountWorkspace();
+              setSaveState((current) => ({
+                ...current,
+                binding:
+                  locale === 'zh' ? '默认券商绑定已更新。' : 'Default broker binding updated.',
+              }));
+            } catch (error) {
+              setSaveState((current) => ({
+                ...current,
+                binding: formatPermissionError(
+                  locale,
+                  error,
+                  '默认券商绑定更新失败',
+                  'Default binding update failed',
+                  '默认券商绑定更新',
+                  'Default binding update'
+                ),
+              }));
+            }
+          }}
+          onDelete={async (id) => {
+            setSaveState((current) => ({
+              ...current,
+              binding: locale === 'zh' ? '删除中...' : 'Deleting...',
+            }));
+            try {
+              await deleteBrokerBinding(id);
+              await refreshAccountWorkspace();
+              setSaveState((current) => ({
+                ...current,
+                binding: locale === 'zh' ? '券商绑定已删除。' : 'Broker binding deleted.',
+              }));
+            } catch (error) {
+              setSaveState((current) => ({
+                ...current,
+                binding: formatPermissionError(
+                  locale,
+                  error,
+                  '券商绑定删除失败',
+                  'Broker binding delete failed',
+                  '券商绑定删除',
+                  'Broker binding delete'
+                ),
+              }));
+            }
+          }}
+          onRuntimeSync={async () => {
+            setSaveState((current) => ({
+              ...current,
+              binding: locale === 'zh' ? '同步中...' : 'Syncing...',
+            }));
+            try {
+              const runtimeSnapshot = await syncBrokerBindingRuntime();
+              const refreshed = await refreshAccountWorkspace();
+              setBindingRuntime(runtimeSnapshot || refreshed.runtimeSnapshot || null);
+              setSaveState((current) => ({
+                ...current,
+                binding: locale === 'zh' ? '运行状态已同步。' : 'Runtime synced.',
+              }));
+            } catch (error) {
+              setSaveState((current) => ({
+                ...current,
+                binding: formatPermissionError(
+                  locale,
+                  error,
+                  '运行状态同步失败',
+                  'Runtime sync failed',
+                  '运行状态同步',
+                  'Runtime sync'
+                ),
+              }));
+            }
+          }}
+        />
       </section>
     </>
   );
