@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { createAgentActionRequestRepository } from './repositories/agent-action-request-repo.js';
 import { createAgentAnalysisRunRepository } from './repositories/agent-analysis-run-repo.js';
 import { createAgentAuthorityEventRepository } from './repositories/agent-authority-event-repo.js';

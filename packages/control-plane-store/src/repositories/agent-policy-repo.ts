@@ -1,9 +1,8 @@
-// @ts-nocheck
 import { createAgentPolicyEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-policies.json';
 
-function matchesPolicyFilter(item, filter = {}) {
+function matchesPolicyFilter(item: any, filter: any = {}) {
   if (!matchesScopeFilter(item, filter)) return false;
   if (filter.accountId && item.accountId !== filter.accountId) return false;
   if (filter.strategyId && item.strategyId !== filter.strategyId) return false;
@@ -20,9 +19,9 @@ function matchesPolicyFilter(item, filter = {}) {
   return true;
 }
 
-function persistPolicy(store, payload = {}) {
+function persistPolicy(store: any, payload: any = {}) {
   const records = store.readCollection(FILENAME);
-  const currentIndex = payload.id ? records.findIndex((item) => item.id === payload.id) : -1;
+  const currentIndex = payload.id ? records.findIndex((item: any) => item.id === payload.id) : -1;
   const current = currentIndex >= 0 ? records[currentIndex] : null;
   const entry = current
     ? createAgentPolicyEntry({
@@ -44,7 +43,7 @@ function persistPolicy(store, payload = {}) {
   return entry;
 }
 
-function appendPolicy(store, payload = {}) {
+function appendPolicy(store: any, payload: any = {}) {
   const records = store.readCollection(FILENAME);
   const entry = createAgentPolicyEntry(payload);
   records.unshift(entry);
@@ -52,16 +51,16 @@ function appendPolicy(store, payload = {}) {
   return entry;
 }
 
-export function createAgentPolicyRepository(store) {
+export function createAgentPolicyRepository(store: any) {
   return {
-    list(limit = 50, filter = {}) {
+    list(limit = 50, filter: any = {}) {
       return store
         .readCollection(FILENAME)
-        .filter((item) => matchesPolicyFilter(item, filter))
+        .filter((item: any) => matchesPolicyFilter(item, filter))
         .slice(0, limit);
     },
-    get(policyId) {
-      return store.readCollection(FILENAME).find((item) => item.id === policyId) || null;
+    get(policyId: any) {
+      return store.readCollection(FILENAME).find((item: any) => item.id === policyId) || null;
     },
     upsert(payload = {}) {
       return persistPolicy(store, payload);
@@ -69,8 +68,8 @@ export function createAgentPolicyRepository(store) {
     append(payload = {}) {
       return appendPolicy(store, payload);
     },
-    update(policyId, patch = {}) {
-      const current = store.readCollection(FILENAME).find((item) => item.id === policyId);
+    update(policyId: any, patch: any = {}) {
+      const current = store.readCollection(FILENAME).find((item: any) => item.id === policyId);
       if (!current) return null;
       return persistPolicy(store, {
         ...current,
@@ -82,7 +81,7 @@ export function createAgentPolicyRepository(store) {
     listAgentPolicies(limit = 50, filter = {}) {
       return this.list(limit, filter);
     },
-    getAgentPolicy(policyId) {
+    getAgentPolicy(policyId: any) {
       return this.get(policyId);
     },
     upsertAgentPolicy(payload = {}) {
@@ -91,7 +90,7 @@ export function createAgentPolicyRepository(store) {
     appendAgentPolicy(payload = {}) {
       return this.append(payload);
     },
-    updateAgentPolicy(policyId, patch = {}) {
+    updateAgentPolicy(policyId: any, patch: any = {}) {
       return this.update(policyId, patch);
     },
   };

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { randomUUID } from 'node:crypto';
 import { trimAndSave } from '../shared.js';
 
@@ -88,7 +87,7 @@ const DEFAULT_BACKTEST_RUNS = [
   },
 ];
 
-function createBacktestRunEntry(payload = {}) {
+function createBacktestRunEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `backtest-run-${randomUUID()}`,
@@ -114,51 +113,51 @@ function createBacktestRunEntry(payload = {}) {
   };
 }
 
-export function createBacktestRunRepository(store) {
+export function createBacktestRunRepository(store: any) {
   function readRuns() {
     const runs = store.readCollection(FILENAME);
     if (!runs.length) {
       store.writeCollection(FILENAME, DEFAULT_BACKTEST_RUNS);
       return DEFAULT_BACKTEST_RUNS.map((entry) => ({ ...entry }));
     }
-    return runs.map((entry) => createBacktestRunEntry(entry));
+    return runs.map((entry: any) => createBacktestRunEntry(entry));
   }
 
-  function writeRuns(runs) {
+  function writeRuns(runs: any) {
     trimAndSave(
       store,
       FILENAME,
-      runs.map((entry) => createBacktestRunEntry(entry)),
+      runs.map((entry: any) => createBacktestRunEntry(entry)),
       300
     );
   }
 
   return {
-    listBacktestRuns(limit = 100, filter = {}) {
+    listBacktestRuns(limit = 100, filter: any = {}) {
       return readRuns()
-        .filter((run) => {
+        .filter((run: any) => {
           if (filter.status && run.status !== filter.status) return false;
           if (filter.strategyId && run.strategyId !== filter.strategyId) return false;
           return true;
         })
         .slice(0, limit);
     },
-    getBacktestRun(runId) {
-      return readRuns().find((run) => run.id === runId) || null;
+    getBacktestRun(runId: any) {
+      return readRuns().find((run: any) => run.id === runId) || null;
     },
-    findBacktestRunByWorkflowRunId(workflowRunId) {
-      return readRuns().find((run) => run.workflowRunId === workflowRunId) || null;
+    findBacktestRunByWorkflowRunId(workflowRunId: any) {
+      return readRuns().find((run: any) => run.workflowRunId === workflowRunId) || null;
     },
-    appendBacktestRun(payload = {}) {
+    appendBacktestRun(payload: any = {}) {
       const runs = readRuns();
       const entry = createBacktestRunEntry(payload);
       runs.unshift(entry);
       writeRuns(runs);
       return entry;
     },
-    updateBacktestRun(runId, patch = {}) {
+    updateBacktestRun(runId: any, patch: any = {}) {
       const runs = readRuns();
-      const index = runs.findIndex((run) => run.id === runId);
+      const index = runs.findIndex((run: any) => run.id === runId);
       if (index === -1) {
         return null;
       }

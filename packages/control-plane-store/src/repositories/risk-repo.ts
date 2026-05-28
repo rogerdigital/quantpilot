@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   buildRiskScanResult,
   createNotificationEntry,
@@ -11,22 +10,22 @@ const EVENTS_FILE = 'risk-events.json';
 const OUTBOX_FILE = 'risk-scan-outbox.json';
 const NOTIFICATIONS_FILE = 'notifications.json';
 
-export function createRiskRepository(store) {
+export function createRiskRepository(store: any) {
   return {
-    listRiskEvents(limit = 50, filter = {}) {
+    listRiskEvents(limit = 50, filter: any = {}) {
       return store
         .readCollection(EVENTS_FILE)
-        .filter((item) => matchesScopeFilter(item, filter))
+        .filter((item: any) => matchesScopeFilter(item, filter))
         .slice(0, limit);
     },
-    appendRiskEvent(event) {
+    appendRiskEvent(event: any) {
       const events = store.readCollection(EVENTS_FILE);
       const entry = createRiskEventEntry(event);
       events.unshift(entry);
       trimAndSave(store, EVENTS_FILE, events, 100);
       return entry;
     },
-    enqueueRiskScan(payload) {
+    enqueueRiskScan(payload: any) {
       const jobs = store.readCollection(OUTBOX_FILE);
       const job = {
         id: `risk-scan-job-${payload.id || Date.now()}`,
@@ -53,16 +52,16 @@ export function createRiskRepository(store) {
     listRiskScanJobs(limit = 50) {
       return store.readCollection(OUTBOX_FILE).slice(0, limit);
     },
-    dispatchPendingRiskScans(options = {}) {
+    dispatchPendingRiskScans(options: any = {}) {
       const worker = options.worker || 'quantpilot-worker';
       const limit = Number.isFinite(options.limit) ? options.limit : 20;
       const jobs = store.readCollection(OUTBOX_FILE);
       const events = store.readCollection(EVENTS_FILE);
       const notifications = store.readCollection(NOTIFICATIONS_FILE);
-      const dispatchedJobs = [];
-      const pendingJobs = [];
+      const dispatchedJobs: any[] = [];
+      const pendingJobs: any[] = [];
 
-      jobs.forEach((job) => {
+      jobs.forEach((job: any) => {
         if (job.status !== 'pending' || dispatchedJobs.length >= limit) {
           pendingJobs.push(job);
           return;
@@ -84,8 +83,8 @@ export function createRiskRepository(store) {
             routeHint: job.payload.routeHint,
           },
         });
-        event.dispatchedAt = new Date().toISOString();
-        event.dispatchedBy = worker;
+        (event as any).dispatchedAt = new Date().toISOString();
+        (event as any).dispatchedBy = worker;
         events.unshift(event);
 
         if (scan.notify) {
@@ -107,7 +106,7 @@ export function createRiskRepository(store) {
         dispatchedJobs.push({
           ...job,
           status: 'dispatched',
-          dispatchedAt: event.dispatchedAt,
+          dispatchedAt: (event as any).dispatchedAt,
           dispatchedBy: worker,
           riskEventId: event.id,
         });

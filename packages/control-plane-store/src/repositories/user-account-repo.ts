@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   createBrokerBindingEntry,
   createTenantEntry,
@@ -13,25 +12,25 @@ import {
 
 const FILENAME = 'user-account.json';
 
-function listUnique(items = []) {
+function listUnique(items: any[] = []) {
   return [...new Set(items.filter(Boolean))];
 }
 
-function diffPermissions(base = [], compare = []) {
+function diffPermissions(base: any[] = [], compare: any[] = []) {
   return {
     added: compare.filter((item) => !base.includes(item)),
     removed: base.filter((item) => !compare.includes(item)),
   };
 }
 
-function intersectPermissions(base = [], scope = []) {
+function intersectPermissions(base: any[] = [], scope: any[] = []) {
   const baseList = listUnique(base);
   const scopeList = listUnique(scope);
   if (!scopeList.length) return baseList;
   return baseList.filter((item) => scopeList.includes(item));
 }
 
-function mergeWorkspaces(rawWorkspaces = [], tenant = createTenantEntry()) {
+function mergeWorkspaces(rawWorkspaces: any[] = [], tenant: any = createTenantEntry()) {
   const defaultWorkspaces = [
     createWorkspaceEntry(
       {
@@ -61,11 +60,11 @@ function mergeWorkspaces(rawWorkspaces = [], tenant = createTenantEntry()) {
   const map = new Map(defaultWorkspaces.map((workspace) => [workspace.id, workspace]));
 
   if (Array.isArray(rawWorkspaces)) {
-    rawWorkspaces.forEach((workspace) => {
+    rawWorkspaces.forEach((workspace: any) => {
       const existing = map.get(workspace.id) || null;
       const entry = createWorkspaceEntry(
         {
-          ...existing,
+          ...(existing as any),
           ...workspace,
         },
         tenant
@@ -89,8 +88,8 @@ function mergeWorkspaces(rawWorkspaces = [], tenant = createTenantEntry()) {
   }));
 }
 
-function toAccessPolicyInput(access = {}, patch = {}) {
-  const next = {
+function toAccessPolicyInput(access: any = {}, patch: any = {}) {
+  const next: any = {
     role: patch.role || access.role || 'admin',
     status: patch.status || access.status || 'active',
     grants: Object.hasOwn(patch, 'grants') ? patch.grants : access.grants || [],
@@ -106,7 +105,7 @@ function toAccessPolicyInput(access = {}, patch = {}) {
   return next;
 }
 
-function mergeRoleTemplates(rawTemplates = []) {
+function mergeRoleTemplates(rawTemplates: any[] = []) {
   const defaults = listUserRoleTemplates();
   const map = new Map(defaults.map((template) => [template.id, template]));
 
@@ -167,7 +166,7 @@ function createDefaultAccountSnapshot() {
   };
 }
 
-function normalizeSnapshot(snapshot = {}) {
+function normalizeSnapshot(snapshot: any = {}) {
   const defaults = createDefaultAccountSnapshot();
   const tenant = createTenantEntry({
     ...defaults.tenant,
@@ -199,15 +198,15 @@ function normalizeSnapshot(snapshot = {}) {
   });
   const brokerBindings =
     Array.isArray(snapshot.brokerBindings) && snapshot.brokerBindings.length
-      ? snapshot.brokerBindings.map((binding, index) =>
+      ? snapshot.brokerBindings.map((binding: any, index: any) =>
           createBrokerBindingEntry({
             ...binding,
             isDefault: index === 0 ? binding.isDefault !== false : Boolean(binding.isDefault),
           })
         )
       : defaults.brokerBindings;
-  const hasDefault = brokerBindings.some((binding) => binding.isDefault);
-  const normalizedBindings = brokerBindings.map((binding, index) => ({
+  const hasDefault = brokerBindings.some((binding: any) => binding.isDefault);
+  const normalizedBindings = brokerBindings.map((binding: any, index: any) => ({
     ...binding,
     isDefault: hasDefault ? binding.isDefault : index === 0,
   }));
@@ -231,12 +230,12 @@ function normalizeSnapshot(snapshot = {}) {
   };
 }
 
-export function createUserAccountRepository(store) {
+export function createUserAccountRepository(store: any) {
   function readSnapshot() {
     return normalizeSnapshot(store.readObject(FILENAME, createDefaultAccountSnapshot()));
   }
 
-  function writeSnapshot(snapshot) {
+  function writeSnapshot(snapshot: any) {
     const next = {
       ...snapshot,
       updatedAt: new Date().toISOString(),
@@ -297,24 +296,26 @@ export function createUserAccountRepository(store) {
 
   function getBrokerSummary(snapshot = readSnapshot()) {
     const bindings = snapshot.brokerBindings;
-    const defaultBinding = bindings.find((binding) => binding.isDefault) || bindings[0] || null;
+    const defaultBinding =
+      bindings.find((binding: any) => binding.isDefault) || bindings[0] || null;
     return {
       total: bindings.length,
-      connected: bindings.filter((binding) => binding.health?.connected).length,
-      requiresAttention: bindings.filter((binding) => binding.health?.requiresAttention).length,
-      liveBindings: bindings.filter((binding) => binding.environment === 'live').length,
-      paperBindings: bindings.filter((binding) => binding.environment !== 'live').length,
+      connected: bindings.filter((binding: any) => binding.health?.connected).length,
+      requiresAttention: bindings.filter((binding: any) => binding.health?.requiresAttention)
+        .length,
+      liveBindings: bindings.filter((binding: any) => binding.environment === 'live').length,
+      paperBindings: bindings.filter((binding: any) => binding.environment !== 'live').length,
       defaultBindingId: defaultBinding?.id || '',
       defaultProvider: defaultBinding?.provider || '',
       defaultStatus: defaultBinding?.status || 'disconnected',
       defaultHealthStatus: defaultBinding?.health?.status || 'idle',
       lastSyncAt: bindings
-        .map((binding) => binding.lastSyncAt)
+        .map((binding: any) => binding.lastSyncAt)
         .filter(Boolean)
         .sort()
         .at(0)
         ? bindings
-            .map((binding) => binding.lastSyncAt)
+            .map((binding: any) => binding.lastSyncAt)
             .filter(Boolean)
             .sort()
             .at(-1)
@@ -340,7 +341,7 @@ export function createUserAccountRepository(store) {
     getCurrentWorkspace() {
       return readSnapshot().currentWorkspace;
     },
-    updateUserProfile(patch = {}) {
+    updateUserProfile(patch: any = {}) {
       const snapshot = readSnapshot();
       const profile = createUserAccountProfile({
         ...snapshot.profile,
@@ -382,16 +383,16 @@ export function createUserAccountRepository(store) {
     listRoleTemplates() {
       return readSnapshot().roleTemplates;
     },
-    getRoleTemplate(roleId) {
+    getRoleTemplate(roleId: any) {
       return readSnapshot().roleTemplates.find((item) => item.id === roleId) || null;
     },
     getBrokerSummary() {
       return getBrokerSummary(readSnapshot());
     },
-    upsertWorkspace(payload = {}) {
+    upsertWorkspace(payload: any = {}) {
       const snapshot = readSnapshot();
       const workspaces = mergeWorkspaces(
-        [...snapshot.workspaces.filter((item) => item.id !== payload.id), payload],
+        [...snapshot.workspaces.filter((item: any) => item.id !== payload.id), payload],
         snapshot.tenant
       );
       const currentWorkspaceId = payload.isCurrent
@@ -415,7 +416,7 @@ export function createUserAccountRepository(store) {
 
       return nextWorkspaces.find((workspace) => workspace.id === payload.id) || null;
     },
-    setCurrentWorkspace(workspaceId) {
+    setCurrentWorkspace(workspaceId: any) {
       if (!workspaceId) return null;
       const snapshot = readSnapshot();
       if (!snapshot.workspaces.some((workspace) => workspace.id === workspaceId)) {
@@ -435,7 +436,7 @@ export function createUserAccountRepository(store) {
 
       return next.currentWorkspace;
     },
-    updateUserPreferences(patch = {}) {
+    updateUserPreferences(patch: any = {}) {
       const snapshot = readSnapshot();
       const preferences = createUserPreferences({
         ...snapshot.preferences,
@@ -446,7 +447,7 @@ export function createUserAccountRepository(store) {
         preferences,
       }).preferences;
     },
-    updateUserAccess(patch = {}) {
+    updateUserAccess(patch: any = {}) {
       const snapshot = readSnapshot();
       const access = createUserAccessPolicy(
         toAccessPolicyInput(snapshot.access, {
@@ -466,10 +467,10 @@ export function createUserAccountRepository(store) {
         currentWorkspace: snapshot.currentWorkspace,
       }).access;
     },
-    upsertRoleTemplate(payload = {}) {
+    upsertRoleTemplate(payload: any = {}) {
       const snapshot = readSnapshot();
       const roleTemplates = mergeRoleTemplates([
-        ...snapshot.roleTemplates.filter((item) => item.id !== payload.id),
+        ...snapshot.roleTemplates.filter((item: any) => item.id !== payload.id),
         payload,
       ]);
       const access = createUserAccessPolicy(toAccessPolicyInput(snapshot.access), roleTemplates);
@@ -487,7 +488,7 @@ export function createUserAccountRepository(store) {
 
       return roleTemplates.find((item) => item.id === payload.id) || null;
     },
-    deleteRoleTemplate(roleId) {
+    deleteRoleTemplate(roleId: any) {
       const snapshot = readSnapshot();
       const existing = snapshot.roleTemplates.find((item) => item.id === roleId);
       if (!existing) {
@@ -524,7 +525,7 @@ export function createUserAccountRepository(store) {
     listBrokerBindings() {
       return readSnapshot().brokerBindings;
     },
-    upsertBrokerBinding(payload = {}) {
+    upsertBrokerBinding(payload: any = {}) {
       const snapshot = readSnapshot();
       const bindings = [...snapshot.brokerBindings];
       const entry = createBrokerBindingEntry(payload);
@@ -565,14 +566,14 @@ export function createUserAccountRepository(store) {
 
       return normalizedBindings.find((binding) => binding.id === nextBinding.id) || nextBinding;
     },
-    setDefaultBrokerBinding(bindingId) {
+    setDefaultBrokerBinding(bindingId: any) {
       if (!bindingId) return null;
       const snapshot = readSnapshot();
-      if (!snapshot.brokerBindings.some((binding) => binding.id === bindingId)) {
+      if (!snapshot.brokerBindings.some((binding: any) => binding.id === bindingId)) {
         return null;
       }
 
-      const brokerBindings = snapshot.brokerBindings.map((binding) => ({
+      const brokerBindings = snapshot.brokerBindings.map((binding: any) => ({
         ...binding,
         isDefault: binding.id === bindingId,
       }));
@@ -582,9 +583,9 @@ export function createUserAccountRepository(store) {
         brokerBindings,
       });
 
-      return brokerBindings.find((binding) => binding.id === bindingId) || null;
+      return brokerBindings.find((binding: any) => binding.id === bindingId) || null;
     },
-    deleteBrokerBinding(bindingId) {
+    deleteBrokerBinding(bindingId: any) {
       if (!bindingId) {
         return {
           ok: false,
@@ -593,7 +594,7 @@ export function createUserAccountRepository(store) {
       }
 
       const snapshot = readSnapshot();
-      const binding = snapshot.brokerBindings.find((item) => item.id === bindingId);
+      const binding = snapshot.brokerBindings.find((item: any) => item.id === bindingId);
       if (!binding) {
         return {
           ok: false,
@@ -608,7 +609,7 @@ export function createUserAccountRepository(store) {
         };
       }
 
-      const brokerBindings = snapshot.brokerBindings.filter((item) => item.id !== bindingId);
+      const brokerBindings = snapshot.brokerBindings.filter((item: any) => item.id !== bindingId);
       writeSnapshot({
         ...snapshot,
         brokerBindings,

@@ -1,14 +1,13 @@
-// @ts-nocheck
 import { createAgentActionRequestEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-action-requests.json';
 
-export function createAgentActionRequestRepository(store) {
+export function createAgentActionRequestRepository(store: any) {
   return {
-    listAgentActionRequests(limit = 50, filter = {}) {
+    listAgentActionRequests(limit = 50, filter: any = {}) {
       return store
         .readCollection(FILENAME)
-        .filter((item) => {
+        .filter((item: any) => {
           if (!matchesScopeFilter(item, filter)) return false;
           if (filter.status && item.status !== filter.status) return false;
           if (filter.requestType && item.requestType !== filter.requestType) return false;
@@ -16,19 +15,19 @@ export function createAgentActionRequestRepository(store) {
         })
         .slice(0, limit);
     },
-    getAgentActionRequest(requestId) {
-      return store.readCollection(FILENAME).find((item) => item.id === requestId) || null;
+    getAgentActionRequest(requestId: any) {
+      return store.readCollection(FILENAME).find((item: any) => item.id === requestId) || null;
     },
-    appendAgentActionRequest(payload) {
+    appendAgentActionRequest(payload: any) {
       const requests = store.readCollection(FILENAME);
       const entry = createAgentActionRequestEntry(payload);
       requests.unshift(entry);
       trimAndSave(store, FILENAME, requests, 120);
       return entry;
     },
-    updateAgentActionRequest(requestId, patch) {
+    updateAgentActionRequest(requestId: any, patch: any) {
       const requests = store.readCollection(FILENAME);
-      const index = requests.findIndex((item) => item.id === requestId);
+      const index = requests.findIndex((item: any) => item.id === requestId);
       if (index === -1) return null;
       const current = requests[index];
       const next = {

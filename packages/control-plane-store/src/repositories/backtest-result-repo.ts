@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createBacktestResultEntry, trimAndSave } from '../shared.js';
 
 const FILENAME = 'backtest-results.json';
@@ -54,66 +53,68 @@ const DEFAULT_BACKTEST_RESULTS = [
   },
 ];
 
-function parseTimestamp(value) {
+function parseTimestamp(value: any) {
   const parsed = Date.parse(value || '');
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function normalizeSince(value) {
+function normalizeSince(value: any) {
   if (!value) return 0;
   return parseTimestamp(value);
 }
 
-export function createBacktestResultRepository(store) {
+export function createBacktestResultRepository(store: any) {
   function readResults() {
     const results = store.readCollection(FILENAME);
     if (!results.length) {
       store.writeCollection(FILENAME, DEFAULT_BACKTEST_RESULTS);
       return DEFAULT_BACKTEST_RESULTS.map((entry) => createBacktestResultEntry(entry));
     }
-    return results.map((entry) => createBacktestResultEntry(entry));
+    return results.map((entry: any) => createBacktestResultEntry(entry));
   }
 
-  function writeResults(results) {
+  function writeResults(results: any) {
     trimAndSave(
       store,
       FILENAME,
-      results.map((entry) => createBacktestResultEntry(entry)),
+      results.map((entry: any) => createBacktestResultEntry(entry)),
       600
     );
   }
 
-  function nextVersion(results, runId) {
+  function nextVersion(results: any, runId: any) {
     const versions = results
-      .filter((item) => item.runId === runId)
-      .map((item) => Number(item.version || 0));
+      .filter((item: any) => item.runId === runId)
+      .map((item: any) => Number(item.version || 0));
     return (versions.length ? Math.max(...versions) : 0) + 1;
   }
 
   return {
-    listBacktestResults(limit = 100, filter = {}) {
+    listBacktestResults(limit = 100, filter: any = {}) {
       const sinceMs = normalizeSince(filter.since);
       return readResults()
-        .filter((item) => !filter.runId || item.runId === filter.runId)
-        .filter((item) => !filter.strategyId || item.strategyId === filter.strategyId)
-        .filter((item) => !filter.workflowRunId || item.workflowRunId === filter.workflowRunId)
-        .filter((item) => !filter.status || item.status === filter.status)
-        .filter((item) => !filter.stage || item.stage === filter.stage)
-        .filter((item) => !sinceMs || parseTimestamp(item.generatedAt || item.createdAt) >= sinceMs)
+        .filter((item: any) => !filter.runId || item.runId === filter.runId)
+        .filter((item: any) => !filter.strategyId || item.strategyId === filter.strategyId)
+        .filter((item: any) => !filter.workflowRunId || item.workflowRunId === filter.workflowRunId)
+        .filter((item: any) => !filter.status || item.status === filter.status)
+        .filter((item: any) => !filter.stage || item.stage === filter.stage)
+        .filter(
+          (item: any) => !sinceMs || parseTimestamp(item.generatedAt || item.createdAt) >= sinceMs
+        )
         .slice(0, limit);
     },
-    getBacktestResult(resultId) {
-      return readResults().find((item) => item.id === resultId) || null;
+    getBacktestResult(resultId: any) {
+      return readResults().find((item: any) => item.id === resultId) || null;
     },
-    listBacktestResultsForRun(runId, limit = 20) {
+    listBacktestResultsForRun(runId: any, limit = 20) {
       return readResults()
-        .filter((item) => item.runId === runId)
+        .filter((item: any) => item.runId === runId)
         .slice(0, limit);
     },
-    getLatestBacktestResultForRun(runId) {
+    getLatestBacktestResultForRun(runId: any) {
       return this.listBacktestResultsForRun(runId, 1)[0] || null;
     },
-    appendBacktestResult(payload = {}) {
+    appendBacktestResult(payload: any = {}) {
       const results = readResults();
       const entry = createBacktestResultEntry({
         ...payload,

@@ -1,14 +1,13 @@
-// @ts-nocheck
 import { createWorkflowRunEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'workflow-runs.json';
 
-export function createWorkflowRepository(store) {
+export function createWorkflowRepository(store: any) {
   return {
-    listWorkflowRuns(limit = 50, filter = {}) {
+    listWorkflowRuns(limit = 50, filter: any = {}) {
       return store
         .readCollection(FILENAME)
-        .filter((item) => {
+        .filter((item: any) => {
           if (!matchesScopeFilter(item, filter)) return false;
           if (filter.status && item.status !== filter.status) return false;
           if (filter.workflowId && item.workflowId !== filter.workflowId) return false;
@@ -16,19 +15,19 @@ export function createWorkflowRepository(store) {
         })
         .slice(0, limit);
     },
-    getWorkflowRun(workflowRunId) {
-      return store.readCollection(FILENAME).find((item) => item.id === workflowRunId) || null;
+    getWorkflowRun(workflowRunId: any) {
+      return store.readCollection(FILENAME).find((item: any) => item.id === workflowRunId) || null;
     },
-    appendWorkflowRun(payload) {
+    appendWorkflowRun(payload: any) {
       const workflows = store.readCollection(FILENAME);
       const entry = createWorkflowRunEntry(payload);
       workflows.unshift(entry);
       trimAndSave(store, FILENAME, workflows, 120);
       return entry;
     },
-    updateWorkflowRun(workflowRunId, patch) {
+    updateWorkflowRun(workflowRunId: any, patch: any) {
       const workflows = store.readCollection(FILENAME);
-      const index = workflows.findIndex((item) => item.id === workflowRunId);
+      const index = workflows.findIndex((item: any) => item.id === workflowRunId);
       if (index === -1) {
         return null;
       }
@@ -44,14 +43,14 @@ export function createWorkflowRepository(store) {
       trimAndSave(store, FILENAME, workflows, 120);
       return next;
     },
-    releaseScheduledWorkflowRuns(options = {}) {
+    releaseScheduledWorkflowRuns(options: any = {}) {
       const worker = options.worker || 'quantpilot-worker';
       const limit = Number.isFinite(options.limit) ? options.limit : 20;
       const nowIso = options.now || new Date().toISOString();
       const workflows = store.readCollection(FILENAME);
       let releasedCount = 0;
 
-      workflows.forEach((workflow, index) => {
+      workflows.forEach((workflow: any, index: any) => {
         if (releasedCount >= limit) return;
         if (workflow.status !== 'retry_scheduled') return;
         if ((workflow.nextRunAt || nowIso) > nowIso) return;
@@ -73,19 +72,19 @@ export function createWorkflowRepository(store) {
         worker,
         releasedCount,
         workflows: workflows
-          .filter((item) => item.lockedBy === worker && item.lockedAt === nowIso)
+          .filter((item: any) => item.lockedBy === worker && item.lockedAt === nowIso)
           .slice(0, limit),
       };
     },
-    claimQueuedWorkflowRuns(options = {}) {
+    claimQueuedWorkflowRuns(options: any = {}) {
       const worker = options.worker || 'quantpilot-worker';
       const limit = Number.isFinite(options.limit) ? options.limit : 10;
       const nowIso = options.now || new Date().toISOString();
       const workflowId = options.workflowId || '';
       const workflows = store.readCollection(FILENAME);
-      const claimed = [];
+      const claimed: any[] = [];
 
-      workflows.forEach((workflow, index) => {
+      workflows.forEach((workflow: any, index: any) => {
         if (claimed.length >= limit) return;
         if (workflow.status !== 'queued') return;
         if ((workflow.nextRunAt || nowIso) > nowIso) return;

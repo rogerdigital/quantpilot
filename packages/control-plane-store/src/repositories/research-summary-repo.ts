@@ -1,4 +1,3 @@
-// @ts-nocheck
 const FILENAME = 'research-summary.json';
 
 const DEFAULT_SUMMARY = {
@@ -16,7 +15,7 @@ const DEFAULT_SUMMARY = {
   dataSource: 'control-plane-store.research-summary',
 };
 
-function normalizeSummary(summary = {}) {
+function normalizeSummary(summary: any = {}) {
   return {
     ok: true,
     asOf: summary.asOf || new Date().toISOString(),
@@ -33,12 +32,12 @@ function normalizeSummary(summary = {}) {
   };
 }
 
-export function createResearchSummaryRepository(store) {
+export function createResearchSummaryRepository(store: any) {
   return {
     getResearchSummary() {
       return normalizeSummary(store.readObject(FILENAME, DEFAULT_SUMMARY));
     },
-    updateResearchSummary(summary = {}) {
+    updateResearchSummary(summary: any = {}) {
       const next = normalizeSummary(summary);
       store.writeObject(FILENAME, next);
       return next;

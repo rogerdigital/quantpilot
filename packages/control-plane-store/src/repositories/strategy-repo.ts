@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { trimAndSave } from '../shared.js';
 
 const FILENAME = 'strategy-catalog.json';
@@ -86,7 +85,7 @@ const DEFAULT_STRATEGY_CATALOG = [
   },
 ];
 
-function normalizeEntry(entry = {}) {
+function normalizeEntry(entry: any = {}) {
   return {
     id: entry.id || '',
     name: entry.name || 'Unknown Strategy',
@@ -108,21 +107,21 @@ function normalizeEntry(entry = {}) {
   };
 }
 
-export function createStrategyRepository(store) {
+export function createStrategyRepository(store: any) {
   function readCatalog() {
     const catalog = store.readCollection(FILENAME);
     if (!catalog.length) {
       store.writeCollection(FILENAME, DEFAULT_STRATEGY_CATALOG);
-      return DEFAULT_STRATEGY_CATALOG.map((entry) => ({ ...entry }));
+      return DEFAULT_STRATEGY_CATALOG.map((entry: any) => ({ ...entry }));
     }
-    return catalog.map((entry) => normalizeEntry(entry));
+    return catalog.map((entry: any) => normalizeEntry(entry));
   }
 
-  function writeCatalog(entries) {
+  function writeCatalog(entries: any) {
     trimAndSave(
       store,
       FILENAME,
-      entries.map((entry) => normalizeEntry(entry)),
+      entries.map((entry: any) => normalizeEntry(entry)),
       200
     );
   }
@@ -131,13 +130,13 @@ export function createStrategyRepository(store) {
     listStrategies(limit = 100) {
       return readCatalog().slice(0, limit);
     },
-    getStrategy(strategyId) {
-      return readCatalog().find((entry) => entry.id === strategyId) || null;
+    getStrategy(strategyId: any) {
+      return readCatalog().find((entry: any) => entry.id === strategyId) || null;
     },
-    upsertStrategy(payload = {}) {
+    upsertStrategy(payload: any = {}) {
       const catalog = readCatalog();
       const entry = normalizeEntry(payload);
-      const index = catalog.findIndex((item) => item.id === entry.id);
+      const index = catalog.findIndex((item: any) => item.id === entry.id);
       if (index === -1) {
         catalog.unshift(entry);
       } else {
@@ -148,7 +147,7 @@ export function createStrategyRepository(store) {
         };
       }
       writeCatalog(catalog);
-      return catalog.find((item) => item.id === entry.id) || entry;
+      return catalog.find((item: any) => item.id === entry.id) || entry;
     },
   };
 }

@@ -1,12 +1,11 @@
-// @ts-nocheck
 import { randomUUID } from 'node:crypto';
 
-export function trimAndSave(store, filename, entries, maxSize) {
+export function trimAndSave(store: any, filename: any, entries: any, maxSize: any) {
   entries.splice(maxSize);
   store.writeCollection(filename, entries);
 }
 
-export function createNotificationEntry(event) {
+export function createNotificationEntry(event: any) {
   return {
     id: event.id || `notification-${randomUUID()}`,
     level: event.level || 'info',
@@ -18,7 +17,7 @@ export function createNotificationEntry(event) {
   };
 }
 
-export function createRiskEventEntry(event) {
+export function createRiskEventEntry(event: any) {
   return {
     id: event.id || `risk-event-${randomUUID()}`,
     level: event.level || 'info',
@@ -33,7 +32,7 @@ export function createRiskEventEntry(event) {
   };
 }
 
-export function createSchedulerTickEntry(event) {
+export function createSchedulerTickEntry(event: any) {
   return {
     id: event.id || `scheduler-tick-${randomUUID()}`,
     phase: event.phase || 'OFF_HOURS',
@@ -46,7 +45,7 @@ export function createSchedulerTickEntry(event) {
   };
 }
 
-export function createWorkerHeartbeatEntry(event) {
+export function createWorkerHeartbeatEntry(event: any) {
   return {
     id: event.id || `worker-heartbeat-${randomUUID()}`,
     worker: event.worker || 'quantpilot-worker',
@@ -57,7 +56,7 @@ export function createWorkerHeartbeatEntry(event) {
   };
 }
 
-export function createMonitoringSnapshotEntry(event = {}) {
+export function createMonitoringSnapshotEntry(event: any = {}) {
   return {
     id: event.id || `monitoring-snapshot-${randomUUID()}`,
     status: event.status || 'healthy',
@@ -70,7 +69,7 @@ export function createMonitoringSnapshotEntry(event = {}) {
   };
 }
 
-export function createMonitoringAlertEntry(event = {}) {
+export function createMonitoringAlertEntry(event: any = {}) {
   return {
     id: event.id || `monitoring-alert-${randomUUID()}`,
     snapshotId: event.snapshotId || '',
@@ -83,7 +82,7 @@ export function createMonitoringAlertEntry(event = {}) {
   };
 }
 
-export function createIncidentEntry(payload = {}) {
+export function createIncidentEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   const noteCount = Number.isFinite(payload.noteCount) ? Number(payload.noteCount) : 0;
   return {
@@ -106,7 +105,7 @@ export function createIncidentEntry(payload = {}) {
   };
 }
 
-export function createIncidentNoteEntry(payload = {}) {
+export function createIncidentNoteEntry(payload: any = {}) {
   return {
     id: payload.id || `incident-note-${randomUUID()}`,
     incidentId: payload.incidentId || '',
@@ -117,7 +116,7 @@ export function createIncidentNoteEntry(payload = {}) {
   };
 }
 
-export function createIncidentActivityEntry(payload = {}) {
+export function createIncidentActivityEntry(payload: any = {}) {
   return {
     id: payload.id || `incident-activity-${randomUUID()}`,
     incidentId: payload.incidentId || '',
@@ -130,7 +129,7 @@ export function createIncidentActivityEntry(payload = {}) {
   };
 }
 
-export function createIncidentTaskEntry(payload = {}) {
+export function createIncidentTaskEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `incident-task-${randomUUID()}`,
@@ -146,7 +145,7 @@ export function createIncidentTaskEntry(payload = {}) {
   };
 }
 
-export function createAuditRecordEntry(record) {
+export function createAuditRecordEntry(record: any) {
   return {
     id: record.id || `audit-${randomUUID()}`,
     type: record.type || 'system',
@@ -158,7 +157,7 @@ export function createAuditRecordEntry(record) {
   };
 }
 
-export function createCycleRecordEntry(payload) {
+export function createCycleRecordEntry(payload: any) {
   return {
     id: payload.id || `cycle-${randomUUID()}`,
     cycle: Number(payload.cycle || 0),
@@ -174,7 +173,7 @@ export function createCycleRecordEntry(payload) {
   };
 }
 
-export function createOperatorActionEntry(payload) {
+export function createOperatorActionEntry(payload: any) {
   return {
     id: payload.id || `action-${randomUUID()}`,
     type: payload.type || 'manual',
@@ -188,7 +187,7 @@ export function createOperatorActionEntry(payload) {
   };
 }
 
-export function createWorkflowRunEntry(payload) {
+export function createWorkflowRunEntry(payload: any) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `workflow-${randomUUID()}`,
@@ -215,7 +214,7 @@ export function createWorkflowRunEntry(payload) {
   };
 }
 
-export function createExecutionPlanEntry(payload) {
+export function createExecutionPlanEntry(payload: any) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `execution-plan-${randomUUID()}`,
@@ -239,7 +238,7 @@ export function createExecutionPlanEntry(payload) {
   };
 }
 
-export function createExecutionRunEntry(payload = {}) {
+export function createExecutionRunEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `execution-run-${randomUUID()}`,
@@ -262,7 +261,7 @@ export function createExecutionRunEntry(payload = {}) {
   };
 }
 
-export function createExecutionOrderStateEntry(payload = {}) {
+export function createExecutionOrderStateEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `execution-order-state-${randomUUID()}`,
@@ -286,7 +285,7 @@ export function createExecutionOrderStateEntry(payload = {}) {
   };
 }
 
-export function createExecutionCandidateHandoffEntry(payload = {}) {
+export function createExecutionCandidateHandoffEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `execution-handoff-${randomUUID()}`,
@@ -317,7 +316,7 @@ export function createExecutionCandidateHandoffEntry(payload = {}) {
   };
 }
 
-export function createAgentActionRequestEntry(payload) {
+export function createAgentActionRequestEntry(payload: any) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `agent-action-request-${randomUUID()}`,
@@ -336,7 +335,7 @@ export function createAgentActionRequestEntry(payload) {
   };
 }
 
-export function createAgentSessionEntry(payload = {}) {
+export function createAgentSessionEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `agent-session-${randomUUID()}`,
@@ -364,7 +363,7 @@ export function createAgentSessionEntry(payload = {}) {
   };
 }
 
-export function createAgentSessionMessageEntry(payload = {}) {
+export function createAgentSessionMessageEntry(payload: any = {}) {
   return {
     id: payload.id || `agent-message-${randomUUID()}`,
     sessionId: payload.sessionId || '',
@@ -378,7 +377,7 @@ export function createAgentSessionMessageEntry(payload = {}) {
   };
 }
 
-export function createAgentPlanEntry(payload = {}) {
+export function createAgentPlanEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `agent-plan-${randomUUID()}`,
@@ -388,7 +387,7 @@ export function createAgentPlanEntry(payload = {}) {
     requiresApproval: Boolean(payload.requiresApproval),
     requestedBy: payload.requestedBy || 'agent',
     steps: Array.isArray(payload.steps)
-      ? payload.steps.map((step, index) => ({
+      ? payload.steps.map((step: any, index: any) => ({
           id: step.id || `agent-plan-step-${index + 1}`,
           kind: step.kind || 'read',
           title: step.title || 'Untitled step',
@@ -405,7 +404,7 @@ export function createAgentPlanEntry(payload = {}) {
   };
 }
 
-export function createAgentAnalysisRunEntry(payload = {}) {
+export function createAgentAnalysisRunEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `agent-analysis-run-${randomUUID()}`,
@@ -416,7 +415,7 @@ export function createAgentAnalysisRunEntry(payload = {}) {
     conclusion: payload.conclusion || '',
     requestedBy: payload.requestedBy || 'agent',
     toolCalls: Array.isArray(payload.toolCalls)
-      ? payload.toolCalls.map((call) => ({
+      ? payload.toolCalls.map((call: any) => ({
           tool: call.tool || '',
           status: call.status || 'pending',
           summary: call.summary || '',
@@ -424,7 +423,7 @@ export function createAgentAnalysisRunEntry(payload = {}) {
         }))
       : [],
     evidence: Array.isArray(payload.evidence)
-      ? payload.evidence.map((entry, index) => ({
+      ? payload.evidence.map((entry: any, index: any) => ({
           id: entry.id || `agent-evidence-${index + 1}`,
           kind: entry.kind || 'tool_result',
           title: entry.title || 'Evidence',
@@ -447,18 +446,18 @@ export function createAgentAnalysisRunEntry(payload = {}) {
   };
 }
 
-function toFiniteNumber(value, fallback = 0) {
+function toFiniteNumber(value: any, fallback: any = 0) {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
 }
 
-function resolveEndOfDayIso(reference = new Date()) {
+function resolveEndOfDayIso(reference: any = new Date()) {
   const endOfDay = new Date(reference);
   endOfDay.setHours(23, 59, 59, 999);
   return endOfDay.toISOString();
 }
 
-export function createAgentPolicyEntry(payload = {}) {
+export function createAgentPolicyEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `agent-policy-${randomUUID()}`,
@@ -478,7 +477,7 @@ export function createAgentPolicyEntry(payload = {}) {
   };
 }
 
-export function createAgentInstructionEntry(payload = {}) {
+export function createAgentInstructionEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `agent-instruction-${randomUUID()}`,
@@ -493,7 +492,7 @@ export function createAgentInstructionEntry(payload = {}) {
   };
 }
 
-export function createAgentDailyRunEntry(payload = {}) {
+export function createAgentDailyRunEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `agent-daily-run-${randomUUID()}`,
@@ -509,7 +508,7 @@ export function createAgentDailyRunEntry(payload = {}) {
   };
 }
 
-export function createAgentAuthorityEventEntry(payload = {}) {
+export function createAgentAuthorityEventEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `agent-authority-event-${randomUUID()}`,
@@ -528,7 +527,7 @@ export function createAgentAuthorityEventEntry(payload = {}) {
   };
 }
 
-export function createResearchTaskEntry(payload = {}) {
+export function createResearchTaskEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `research-task-${randomUUID()}`,
@@ -554,7 +553,7 @@ export function createResearchTaskEntry(payload = {}) {
   };
 }
 
-export function createBacktestResultEntry(payload = {}) {
+export function createBacktestResultEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `backtest-result-${randomUUID()}`,
@@ -582,7 +581,7 @@ export function createBacktestResultEntry(payload = {}) {
   };
 }
 
-export function createResearchEvaluationEntry(payload = {}) {
+export function createResearchEvaluationEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `research-evaluation-${randomUUID()}`,
@@ -601,7 +600,7 @@ export function createResearchEvaluationEntry(payload = {}) {
   };
 }
 
-export function createResearchReportEntry(payload = {}) {
+export function createResearchReportEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `research-report-${randomUUID()}`,
@@ -624,7 +623,7 @@ export function createResearchReportEntry(payload = {}) {
   };
 }
 
-export function createUserAccountProfile(payload = {}) {
+export function createUserAccountProfile(payload: any = {}) {
   const timezone = payload.timezone || 'Asia/Shanghai';
   const locale = payload.locale || 'zh-CN';
   return {
@@ -638,7 +637,7 @@ export function createUserAccountProfile(payload = {}) {
   };
 }
 
-export function createTenantEntry(payload = {}) {
+export function createTenantEntry(payload: any = {}) {
   return {
     id: payload.id || 'tenant-quantpilot-labs',
     key: payload.key || 'quantpilot-labs',
@@ -647,7 +646,7 @@ export function createTenantEntry(payload = {}) {
   };
 }
 
-export function createWorkspaceEntry(payload = {}, tenant = createTenantEntry()) {
+export function createWorkspaceEntry(payload: any = {}, tenant: any = createTenantEntry()) {
   const role = payload.role || 'admin';
   const defaultPermissions = getDefaultPermissionsForRole(role);
   const grants = listUniquePermissions(payload.grants || payload.permissionGrants || []);
@@ -679,7 +678,7 @@ export function createWorkspaceEntry(payload = {}, tenant = createTenantEntry())
   };
 }
 
-export function createUserPreferences(payload = {}) {
+export function createUserPreferences(payload: any = {}) {
   return {
     locale: payload.locale || 'zh-CN',
     timezone: payload.timezone || 'Asia/Shanghai',
@@ -690,25 +689,25 @@ export function createUserPreferences(payload = {}) {
       Array.isArray(payload.notificationChannels) && payload.notificationChannels.length
         ? [
             ...new Set(
-              payload.notificationChannels.map((item) => String(item).trim()).filter(Boolean)
+              payload.notificationChannels.map((item: any) => String(item).trim()).filter(Boolean)
             ),
           ]
         : ['inbox'],
   };
 }
 
-function listUniquePermissions(items = []) {
-  return [...new Set(items.map((item) => String(item || '').trim()).filter(Boolean))];
+function listUniquePermissions(items: any = []) {
+  return [...new Set(items.map((item: any) => String(item || '').trim()).filter(Boolean))];
 }
 
-export function getItemScopeMetadata(item = {}) {
+export function getItemScopeMetadata(item: any = {}) {
   return {
     tenantId: item?.metadata?.tenantId || item?.tenantId || '',
     workspaceId: item?.metadata?.workspaceId || item?.workspaceId || '',
   };
 }
 
-export function matchesScopeFilter(item = {}, filter = {}) {
+export function matchesScopeFilter(item: any = {}, filter: any = {}) {
   if (filter.allScopes || filter.scope === 'all') return true;
 
   const tenantId = filter.tenantId || '';
@@ -794,10 +793,10 @@ export function listUserRoleTemplates() {
 }
 
 export function createUserRoleTemplateEntry(
-  payload = {},
-  existingTemplates = listUserRoleTemplates()
+  payload: any = {},
+  existingTemplates: any = listUserRoleTemplates()
 ) {
-  const existing = existingTemplates.find((item) => item.id === payload.id) || null;
+  const existing = existingTemplates.find((item: any) => item.id === payload.id) || null;
   const inferredPermissions =
     Array.isArray(payload.defaultPermissions) && payload.defaultPermissions.length
       ? payload.defaultPermissions
@@ -813,16 +812,19 @@ export function createUserRoleTemplateEntry(
 }
 
 export function getDefaultPermissionsForRole(
-  role = 'viewer',
-  roleTemplates = listUserRoleTemplates()
+  role: any = 'viewer',
+  roleTemplates: any = listUserRoleTemplates()
 ) {
   const template =
-    roleTemplates.find((item) => item.id === role) ||
-    roleTemplates.find((item) => item.id === 'viewer');
+    roleTemplates.find((item: any) => item.id === role) ||
+    roleTemplates.find((item: any) => item.id === 'viewer');
   return listUniquePermissions(template?.defaultPermissions || ['dashboard:read']);
 }
 
-export function createUserAccessPolicy(payload = {}, roleTemplates = listUserRoleTemplates()) {
+export function createUserAccessPolicy(
+  payload: any = {},
+  roleTemplates: any = listUserRoleTemplates()
+) {
   const role = payload.role || 'admin';
   const defaultPermissions = getDefaultPermissionsForRole(role, roleTemplates);
   const explicitPermissions =
@@ -854,7 +856,7 @@ export function createUserAccessPolicy(payload = {}, roleTemplates = listUserRol
   };
 }
 
-export function createBrokerBindingEntry(payload = {}) {
+export function createBrokerBindingEntry(payload: any = {}) {
   const rawStatus = payload.status || 'disconnected';
   const connected = Boolean(payload.health?.connected ?? rawStatus === 'connected');
   const mismatch = Boolean(payload.health?.mismatch ?? payload.metadata?.mismatch);
@@ -880,7 +882,7 @@ export function createBrokerBindingEntry(payload = {}) {
     status: payload.status || 'disconnected',
     permissions:
       Array.isArray(payload.permissions) && payload.permissions.length
-        ? [...new Set(payload.permissions.map((item) => String(item).trim()).filter(Boolean))]
+        ? [...new Set(payload.permissions.map((item: any) => String(item).trim()).filter(Boolean))]
         : ['read'],
     lastSyncAt: payload.lastSyncAt || '',
     isDefault: Boolean(payload.isDefault),
@@ -896,7 +898,7 @@ export function createBrokerBindingEntry(payload = {}) {
   };
 }
 
-export function createExecutionRuntimeEntry(payload = {}) {
+export function createExecutionRuntimeEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `execution-runtime-${randomUUID()}`,
@@ -921,7 +923,7 @@ export function createExecutionRuntimeEntry(payload = {}) {
   };
 }
 
-export function createBrokerExecutionEventEntry(payload = {}) {
+export function createBrokerExecutionEventEntry(payload: any = {}) {
   const now = payload.createdAt || new Date().toISOString();
   return {
     id: payload.id || `broker-execution-event-${randomUUID()}`,
@@ -942,7 +944,7 @@ export function createBrokerExecutionEventEntry(payload = {}) {
   };
 }
 
-export function getShanghaiTimeParts(date = new Date()) {
+export function getShanghaiTimeParts(date: any = new Date()) {
   const parts = new Intl.DateTimeFormat('zh-CN', {
     timeZone: 'Asia/Shanghai',
     year: 'numeric',
@@ -953,7 +955,7 @@ export function getShanghaiTimeParts(date = new Date()) {
     second: '2-digit',
     hour12: false,
   }).formatToParts(date);
-  const map = {};
+  const map: any = {};
   parts.forEach((part) => {
     if (part.type !== 'literal') {
       map[part.type] = part.value;
@@ -967,7 +969,7 @@ export function getShanghaiTimeParts(date = new Date()) {
   };
 }
 
-export function resolveSchedulerPhase(parts) {
+export function resolveSchedulerPhase(parts: any) {
   const time = parts.hour * 60 + parts.minute;
   if (time >= 8 * 60 + 30 && time < 9 * 60 + 30) {
     return 'PRE_OPEN';
@@ -981,12 +983,12 @@ export function resolveSchedulerPhase(parts) {
   return 'OFF_HOURS';
 }
 
-export function buildSchedulerBucket(parts) {
+export function buildSchedulerBucket(parts: any) {
   const minuteBucket = String(Math.floor(parts.minute / 15) * 15).padStart(2, '0');
   return `${parts.date} ${String(parts.hour).padStart(2, '0')}:${minuteBucket}`;
 }
 
-export function buildRiskScanResult(payload) {
+export function buildRiskScanResult(payload: any) {
   if (payload.riskLevel === 'RISK OFF') {
     return {
       level: 'critical',

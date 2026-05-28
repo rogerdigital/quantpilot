@@ -1,21 +1,20 @@
-// @ts-nocheck
 import { createOperatorActionEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'operator-actions.json';
 
-export function createOperatorActionRepository(store) {
-  function filterByDate(items, since) {
+export function createOperatorActionRepository(store: any) {
+  function filterByDate(items: any, since: any) {
     if (!since) return items;
     const sinceMs = Date.parse(since);
     if (!Number.isFinite(sinceMs)) return items;
-    return items.filter((item) => {
+    return items.filter((item: any) => {
       const valueMs = Date.parse(item.createdAt || '');
       return Number.isFinite(valueMs) && valueMs >= sinceMs;
     });
   }
 
-  function sortByCreatedAtDesc(items) {
-    return [...items].sort((left, right) => {
+  function sortByCreatedAtDesc(items: any) {
+    return [...items].sort((left: any, right: any) => {
       const leftMs = Date.parse(left.createdAt || '');
       const rightMs = Date.parse(right.createdAt || '');
       if (!Number.isFinite(leftMs) && !Number.isFinite(rightMs)) return 0;
@@ -26,15 +25,15 @@ export function createOperatorActionRepository(store) {
   }
 
   return {
-    listOperatorActions(limit = 50, filter = {}) {
+    listOperatorActions(limit = 50, filter: any = {}) {
       const items = sortByCreatedAtDesc(
         filterByDate(store.readCollection(FILENAME), filter.since)
-          .filter((item) => matchesScopeFilter(item, filter))
-          .filter((item) => !filter.level || item.level === filter.level)
+          .filter((item: any) => matchesScopeFilter(item, filter))
+          .filter((item: any) => !filter.level || item.level === filter.level)
       );
       return items.slice(0, limit);
     },
-    appendOperatorAction(payload) {
+    appendOperatorAction(payload: any) {
       const actions = store.readCollection(FILENAME);
       const entry = createOperatorActionEntry(payload);
       actions.unshift(entry);

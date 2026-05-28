@@ -1,9 +1,8 @@
-// @ts-nocheck
 import { createAgentDailyRunEntry, matchesScopeFilter, trimAndSave } from '../shared.js';
 
 const FILENAME = 'agent-daily-runs.json';
 
-function matchesDailyRunFilter(item, filter = {}) {
+function matchesDailyRunFilter(item: any, filter: any = {}) {
   if (!matchesScopeFilter(item, filter)) return false;
   if (filter.status && item.status !== filter.status) return false;
   if (filter.kind && item.kind !== filter.kind) return false;
@@ -21,9 +20,9 @@ function matchesDailyRunFilter(item, filter = {}) {
   return true;
 }
 
-function persistDailyRun(store, payload = {}) {
+function persistDailyRun(store: any, payload: any = {}) {
   const records = store.readCollection(FILENAME);
-  const currentIndex = payload.id ? records.findIndex((item) => item.id === payload.id) : -1;
+  const currentIndex = payload.id ? records.findIndex((item: any) => item.id === payload.id) : -1;
   const current = currentIndex >= 0 ? records[currentIndex] : null;
   const entry = current
     ? createAgentDailyRunEntry({
@@ -45,7 +44,7 @@ function persistDailyRun(store, payload = {}) {
   return entry;
 }
 
-function appendDailyRun(store, payload = {}) {
+function appendDailyRun(store: any, payload: any = {}) {
   const records = store.readCollection(FILENAME);
   const entry = createAgentDailyRunEntry(payload);
   records.unshift(entry);
@@ -53,16 +52,16 @@ function appendDailyRun(store, payload = {}) {
   return entry;
 }
 
-export function createAgentDailyRunRepository(store) {
+export function createAgentDailyRunRepository(store: any) {
   return {
     list(limit = 50, filter = {}) {
       return store
         .readCollection(FILENAME)
-        .filter((item) => matchesDailyRunFilter(item, filter))
+        .filter((item: any) => matchesDailyRunFilter(item, filter))
         .slice(0, limit);
     },
-    get(runId) {
-      return store.readCollection(FILENAME).find((item) => item.id === runId) || null;
+    get(runId: any) {
+      return store.readCollection(FILENAME).find((item: any) => item.id === runId) || null;
     },
     upsert(payload = {}) {
       return persistDailyRun(store, payload);
@@ -70,8 +69,8 @@ export function createAgentDailyRunRepository(store) {
     append(payload = {}) {
       return appendDailyRun(store, payload);
     },
-    update(runId, patch = {}) {
-      const current = store.readCollection(FILENAME).find((item) => item.id === runId);
+    update(runId: any, patch = {}) {
+      const current = store.readCollection(FILENAME).find((item: any) => item.id === runId);
       if (!current) return null;
       return persistDailyRun(store, {
         ...current,
@@ -83,7 +82,7 @@ export function createAgentDailyRunRepository(store) {
     listAgentDailyRuns(limit = 50, filter = {}) {
       return this.list(limit, filter);
     },
-    getAgentDailyRun(runId) {
+    getAgentDailyRun(runId: any) {
       return this.get(runId);
     },
     upsertAgentDailyRun(payload = {}) {
@@ -92,7 +91,7 @@ export function createAgentDailyRunRepository(store) {
     appendAgentDailyRun(payload = {}) {
       return this.append(payload);
     },
-    updateAgentDailyRun(runId, patch = {}) {
+    updateAgentDailyRun(runId: any, patch = {}) {
       return this.update(runId, patch);
     },
   };

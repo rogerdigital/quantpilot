@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { randomUUID } from 'node:crypto';
 import { trimAndSave } from '../shared.js';
 
@@ -8,7 +7,7 @@ const ACTIVITY_FILE = 'strategy-activity.json';
 
 const PERMISSION_LEVELS = ['view', 'comment', 'edit'];
 
-function createShareEntry(share) {
+function createShareEntry(share: any) {
   return {
     id: share.id || `share-${randomUUID()}`,
     strategyId: share.strategyId,
@@ -21,7 +20,7 @@ function createShareEntry(share) {
   };
 }
 
-function createCommentEntry(comment) {
+function createCommentEntry(comment: any) {
   return {
     id: comment.id || `comment-${randomUUID()}`,
     strategyId: comment.strategyId,
@@ -36,7 +35,7 @@ function createCommentEntry(comment) {
   };
 }
 
-function createActivityEntry(activity) {
+function createActivityEntry(activity: any) {
   return {
     id: activity.id || `activity-${randomUUID()}`,
     strategyId: activity.strategyId,
@@ -48,7 +47,7 @@ function createActivityEntry(activity) {
   };
 }
 
-export function createCollaborationRepository(store) {
+export function createCollaborationRepository(store: any) {
   function getAllShares() {
     return store.readCollection(SHARES_FILE);
   }
@@ -63,17 +62,17 @@ export function createCollaborationRepository(store) {
 
   return {
     // Share management
-    shareStrategy(strategyId, userId, userName, permission, sharedBy) {
+    shareStrategy(strategyId: any, userId: any, userName: any, permission: any, sharedBy: any) {
       if (!PERMISSION_LEVELS.includes(permission)) {
         throw new Error(`Invalid permission level: ${permission}`);
       }
 
       const shares = getAllShares();
-      const existing = shares.find((s) => s.strategyId === strategyId && s.userId === userId);
+      const existing = shares.find((s: any) => s.strategyId === strategyId && s.userId === userId);
 
       if (existing) {
         // Update existing share
-        const idx = shares.findIndex((s) => s.id === existing.id);
+        const idx = shares.findIndex((s: any) => s.id === existing.id);
         shares[idx] = { ...existing, permission, sharedAt: new Date().toISOString() };
         trimAndSave(store, SHARES_FILE, shares, 500);
         return shares[idx];
@@ -89,24 +88,26 @@ export function createCollaborationRepository(store) {
       return share;
     },
 
-    revokeShare(strategyId, userId) {
+    revokeShare(strategyId: any, userId: any) {
       const shares = getAllShares().filter(
-        (s) => !(s.strategyId === strategyId && s.userId === userId)
+        (s: any) => !(s.strategyId === strategyId && s.userId === userId)
       );
       store.writeCollection(SHARES_FILE, shares);
     },
 
-    getShares(strategyId) {
-      return getAllShares().filter((s) => s.strategyId === strategyId);
+    getShares(strategyId: any) {
+      return getAllShares().filter((s: any) => s.strategyId === strategyId);
     },
 
-    getUserPermission(strategyId, userId) {
-      const share = getAllShares().find((s) => s.strategyId === strategyId && s.userId === userId);
+    getUserPermission(strategyId: any, userId: any) {
+      const share = getAllShares().find(
+        (s: any) => s.strategyId === strategyId && s.userId === userId
+      );
       return share ? share.permission : null;
     },
 
     // Comments
-    addComment(strategyId, userId, userName, content, parentId = null) {
+    addComment(strategyId: any, userId: any, userName: any, content: any, parentId = null) {
       if (!content || content.trim().length === 0) {
         throw new Error('Comment content cannot be empty');
       }
@@ -129,9 +130,9 @@ export function createCollaborationRepository(store) {
       return comment;
     },
 
-    updateComment(commentId, userId, content) {
+    updateComment(commentId: any, userId: any, content: any) {
       const comments = getAllComments();
-      const idx = comments.findIndex((c) => c.id === commentId);
+      const idx = comments.findIndex((c: any) => c.id === commentId);
 
       if (idx === -1) {
         throw new Error('Comment not found');
@@ -151,9 +152,9 @@ export function createCollaborationRepository(store) {
       return comments[idx];
     },
 
-    resolveComment(commentId, userId) {
+    resolveComment(commentId: any, userId: any) {
       const comments = getAllComments();
-      const idx = comments.findIndex((c) => c.id === commentId);
+      const idx = comments.findIndex((c: any) => c.id === commentId);
 
       if (idx === -1) {
         throw new Error('Comment not found');
@@ -172,27 +173,27 @@ export function createCollaborationRepository(store) {
       return comments[idx];
     },
 
-    getComments(strategyId, limit = 50) {
+    getComments(strategyId: any, limit = 50) {
       return getAllComments()
-        .filter((c) => c.strategyId === strategyId)
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .filter((c: any) => c.strategyId === strategyId)
+        .sort((a: any, b: any) => +new Date(b.createdAt) - +new Date(a.createdAt))
         .slice(0, limit);
     },
 
-    getThread(commentId) {
+    getThread(commentId: any) {
       const comments = getAllComments();
-      const parent = comments.find((c) => c.id === commentId);
+      const parent = comments.find((c: any) => c.id === commentId);
       if (!parent) return [];
 
       const replies = comments
-        .filter((c) => c.parentId === commentId)
-        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        .filter((c: any) => c.parentId === commentId)
+        .sort((a: any, b: any) => +new Date(a.createdAt) - +new Date(b.createdAt));
 
       return [parent, ...replies];
     },
 
     // Activity log
-    recordActivity(strategyId, userId, action, details = {}) {
+    recordActivity(strategyId: any, userId: any, action: any, details: any = {}) {
       const activity = getAllActivity();
       const entry = createActivityEntry({
         strategyId,
@@ -208,22 +209,24 @@ export function createCollaborationRepository(store) {
       return entry;
     },
 
-    getActivity(strategyId, limit = 50, filters = {}) {
-      let activity = getAllActivity().filter((a) => a.strategyId === strategyId);
+    getActivity(strategyId: any, limit = 50, filters: any = {}) {
+      let activity = getAllActivity().filter((a: any) => a.strategyId === strategyId);
 
       // Apply filters
       if (filters.userId) {
-        activity = activity.filter((a) => a.userId === filters.userId);
+        activity = activity.filter((a: any) => a.userId === filters.userId);
       }
       if (filters.action) {
-        activity = activity.filter((a) => a.action === filters.action);
+        activity = activity.filter((a: any) => a.action === filters.action);
       }
       if (filters.since) {
         const sinceMs = new Date(filters.since).getTime();
-        activity = activity.filter((a) => new Date(a.createdAt).getTime() >= sinceMs);
+        activity = activity.filter((a: any) => new Date(a.createdAt).getTime() >= sinceMs);
       }
 
-      return activity.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, limit);
+      return activity
+        .sort((a: any, b: any) => +new Date(b.createdAt) - +new Date(a.createdAt))
+        .slice(0, limit);
     },
   };
 }

@@ -1,5 +1,4 @@
-// @ts-nocheck
-function getAdapterMetadata(store) {
+function getAdapterMetadata(store: any) {
   if (store?.describeAdapter) return store.describeAdapter();
   return (
     store?.adapter || {
@@ -10,7 +9,7 @@ function getAdapterMetadata(store) {
   );
 }
 
-function getPersistenceStatus(store) {
+function getPersistenceStatus(store: any) {
   if (store?.describePersistence) {
     return store.describePersistence();
   }
@@ -26,25 +25,25 @@ function getPersistenceStatus(store) {
   };
 }
 
-function cloneValue(value) {
+function cloneValue(value: any) {
   return value === undefined ? undefined : structuredClone(value);
 }
 
-function readFileValue(store, descriptor) {
+function readFileValue(store: any, descriptor: any) {
   if (descriptor.kind === 'object') {
     return cloneValue(store.readObject(descriptor.filename, {}));
   }
   return cloneValue(store.readCollection(descriptor.filename));
 }
 
-function normalizeFileValue(descriptor, value) {
+function normalizeFileValue(descriptor: any, value: any) {
   if (descriptor.kind === 'object') {
     return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
   }
   return Array.isArray(value) ? value : [];
 }
 
-function summarizeFileValue(descriptor, value) {
+function summarizeFileValue(descriptor: any, value: any) {
   if (descriptor.kind === 'object') {
     return {
       filename: descriptor.filename,
@@ -62,7 +61,7 @@ function summarizeFileValue(descriptor, value) {
   };
 }
 
-function buildIssue(level, code, filename, message, metadata = {}) {
+function buildIssue(level: any, code: any, filename: any, message: any, metadata: any = {}) {
   return {
     level,
     code,
@@ -72,7 +71,7 @@ function buildIssue(level, code, filename, message, metadata = {}) {
   };
 }
 
-function countBy(items = [], predicate) {
+function countBy(items = [], predicate: any) {
   return items.reduce((count, item) => (predicate(item) ? count + 1 : count), 0);
 }
 
@@ -132,11 +131,11 @@ export const CONTROL_PLANE_FILE_MANIFEST = [
   { filename: 'workflow-runs.json', label: 'Workflow Runs', kind: 'collection' },
 ];
 
-export function exportControlPlaneBackup(store, options = {}) {
+export function exportControlPlaneBackup(store: any, options: any = {}) {
   const generatedAt = options.generatedAt || new Date().toISOString();
   const adapter = getAdapterMetadata(store);
   const persistence = getPersistenceStatus(store);
-  const data = {};
+  const data: any = {};
   const files = CONTROL_PLANE_FILE_MANIFEST.map((descriptor) => {
     const value = readFileValue(store, descriptor);
     data[descriptor.filename] = value;
@@ -154,12 +153,12 @@ export function exportControlPlaneBackup(store, options = {}) {
   };
 }
 
-export function restoreControlPlaneBackup(store, input = {}, options = {}) {
+export function restoreControlPlaneBackup(store: any, input: any = {}, options: any = {}) {
   const backup = input?.backup && typeof input.backup === 'object' ? input.backup : input;
   const dryRun = Boolean(options.dryRun ?? input?.dryRun);
   const data = backup?.data && typeof backup.data === 'object' ? backup.data : {};
   const files = [];
-  const skippedFiles = [];
+  const skippedFiles: any[] = [];
 
   for (const descriptor of CONTROL_PLANE_FILE_MANIFEST) {
     if (!Object.hasOwn(data, descriptor.filename)) continue;
@@ -174,7 +173,7 @@ export function restoreControlPlaneBackup(store, input = {}, options = {}) {
   }
 
   if (backup?.files && Array.isArray(backup.files)) {
-    backup.files.forEach((item) => {
+    backup.files.forEach((item: any) => {
       if (
         !CONTROL_PLANE_FILE_MANIFEST.some((descriptor) => descriptor.filename === item.filename)
       ) {
@@ -192,10 +191,10 @@ export function restoreControlPlaneBackup(store, input = {}, options = {}) {
   };
 }
 
-export function getControlPlaneIntegrityReport(store, options = {}) {
+export function getControlPlaneIntegrityReport(store: any, options: any = {}) {
   const generatedAt = options.generatedAt || new Date().toISOString();
   const persistence = getPersistenceStatus(store);
-  const issues = [];
+  const issues: any[] = [];
   let totalRecords = 0;
   let collectionFiles = 0;
   let objectFiles = 0;
@@ -301,11 +300,20 @@ export function getControlPlaneIntegrityReport(store, options = {}) {
     readFileValue(store, { filename: 'agent-action-requests.json', kind: 'collection' })
   );
 
-  const retryScheduledWorkflows = countBy(workflows, (item) => item.status === 'retry_scheduled');
-  const failedWorkflows = countBy(workflows, (item) => item.status === 'failed');
-  const pendingNotificationJobs = countBy(notificationJobs, (item) => item.status === 'pending');
-  const pendingRiskScanJobs = countBy(riskScanJobs, (item) => item.status === 'pending');
-  const pendingAgentReviews = countBy(agentRequests, (item) => item.status === 'pending_review');
+  const retryScheduledWorkflows = countBy(
+    workflows,
+    (item: any) => item.status === 'retry_scheduled'
+  );
+  const failedWorkflows = countBy(workflows, (item: any) => item.status === 'failed');
+  const pendingNotificationJobs = countBy(
+    notificationJobs,
+    (item: any) => item.status === 'pending'
+  );
+  const pendingRiskScanJobs = countBy(riskScanJobs, (item: any) => item.status === 'pending');
+  const pendingAgentReviews = countBy(
+    agentRequests,
+    (item: any) => item.status === 'pending_review'
+  );
 
   return {
     ok: true,
@@ -336,7 +344,7 @@ export function getControlPlaneIntegrityReport(store, options = {}) {
   };
 }
 
-export function runControlPlaneMigrations(store, options = {}) {
+export function runControlPlaneMigrations(store: any, options: any = {}) {
   if (!store?.applyMigrations) {
     return {
       ok: true,

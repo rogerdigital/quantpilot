@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   createBrokerExecutionEventEntry,
   createExecutionRuntimeEntry,
@@ -9,12 +8,12 @@ const EVENTS_FILE = 'execution-runtime-events.json';
 const SNAPSHOTS_FILE = 'broker-account-snapshots.json';
 const BROKER_EVENTS_FILE = 'broker-execution-events.json';
 
-export function createExecutionRuntimeRepository(store) {
+export function createExecutionRuntimeRepository(store: any) {
   return {
     listExecutionRuntimeEvents(limit = 50) {
       return store.readCollection(EVENTS_FILE).slice(0, limit);
     },
-    appendExecutionRuntimeEvent(payload = {}) {
+    appendExecutionRuntimeEvent(payload: any = {}) {
       const events = store.readCollection(EVENTS_FILE);
       const entry = createExecutionRuntimeEntry(payload);
       events.unshift(entry);
@@ -24,7 +23,7 @@ export function createExecutionRuntimeRepository(store) {
     listBrokerAccountSnapshots(limit = 50) {
       return store.readCollection(SNAPSHOTS_FILE).slice(0, limit);
     },
-    appendBrokerAccountSnapshot(payload = {}) {
+    appendBrokerAccountSnapshot(payload: any = {}) {
       const snapshots = store.readCollection(SNAPSHOTS_FILE);
       const entry = {
         id: payload.id || `broker-account-snapshot-${Date.now()}`,
@@ -44,10 +43,10 @@ export function createExecutionRuntimeRepository(store) {
       trimAndSave(store, SNAPSHOTS_FILE, snapshots, 120);
       return entry;
     },
-    listBrokerExecutionEvents(limit = 50, filter = {}) {
+    listBrokerExecutionEvents(limit = 50, filter: any = {}) {
       return store
         .readCollection(BROKER_EVENTS_FILE)
-        .filter((item) => {
+        .filter((item: any) => {
           if (filter.executionPlanId && item.executionPlanId !== filter.executionPlanId)
             return false;
           if (filter.executionRunId && item.executionRunId !== filter.executionRunId) return false;
@@ -57,7 +56,7 @@ export function createExecutionRuntimeRepository(store) {
         })
         .slice(0, limit);
     },
-    appendBrokerExecutionEvent(payload = {}) {
+    appendBrokerExecutionEvent(payload: any = {}) {
       const events = store.readCollection(BROKER_EVENTS_FILE);
       const entry = createBrokerExecutionEventEntry(payload);
       events.unshift(entry);
