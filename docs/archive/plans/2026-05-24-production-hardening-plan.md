@@ -1,5 +1,7 @@
 # QuantPilot 生产级加固与优化计划
 
+> Archived after core-console simplification; not active product scope.
+
 > 日期: 2026-05-24
 > 范围: 安全加固、类型安全、可观测性、测试覆盖、持久化、配置管理、性能优化、UI 布局、代码精简
 > 原则: 每个提交独立可验证，不引入破坏性变更，先修后优化

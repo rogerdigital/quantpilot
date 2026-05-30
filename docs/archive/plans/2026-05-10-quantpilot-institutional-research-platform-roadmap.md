@@ -1,5 +1,7 @@
 # QuantPilot Institutional Research Platform Roadmap
 
+> Archived after core-console simplification; not active product scope.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` for independent implementation streams, or `superpowers:executing-plans` for inline execution with checkpoints. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 将 QuantPilot 从“量化交易平台骨架”改造成“AI-native quantitative research and execution control plane”，覆盖研究组织、数据科学、实验复现、策略生命周期、算力调度、风控执行、Agent 协作和机构级运营闭环。
