@@ -57,7 +57,6 @@ export const ARCHITECTURE_LAYERS = [
       'packages/trading-engine/src/risk',
       'apps/api/src/domains/risk',
       'apps/api/src/modules/risk',
-      'apps/worker/src/tasks/risk-scan-task.js',
     ],
   },
   {
