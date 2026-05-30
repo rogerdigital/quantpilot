@@ -53,9 +53,8 @@ function markComplete() {
 
 const FEATURES_ZH = [
   { icon: '📊', title: '策略回测', desc: '在历史数据上验证你的量化策略' },
-  { icon: '⚡', title: '实时信号', desc: 'AI 驱动的买卖信号实时推送' },
-  { icon: '🛡️', title: '风控系统', desc: '多层风控参数保护你的资金安全' },
-  { icon: '🤖', title: 'Agent 协作', desc: 'AI Agent 辅助分析和决策' },
+  { icon: '⚡', title: '纸面执行', desc: '把策略信号转成可控执行计划' },
+  { icon: '🛡️', title: '风控系统', desc: '用基础风控参数保护纸面执行流程' },
 ];
 
 const FEATURES_EN = [
@@ -64,16 +63,11 @@ const FEATURES_EN = [
     title: 'Strategy Backtesting',
     desc: 'Validate your strategies against historical data',
   },
-  { icon: '⚡', title: 'Real-time Signals', desc: 'AI-driven buy/sell signals in real-time' },
+  { icon: '⚡', title: 'Paper Execution', desc: 'Turn strategy signals into controlled plans' },
   {
     icon: '🛡️',
     title: 'Risk Management',
-    desc: 'Multi-layer risk parameters to protect your capital',
-  },
-  {
-    icon: '🤖',
-    title: 'Agent Collaboration',
-    desc: 'AI agent assisted analysis and decision-making',
+    desc: 'Use basic risk parameters to protect the paper execution flow',
   },
 ];
 

@@ -1,5 +1,4 @@
 import type {
-  OperationsMaintenanceResponse,
   UserAccountSnapshot,
   UserBrokerBinding,
   UserBrokerBindingRuntimeSnapshot,
@@ -9,7 +8,6 @@ import { useLocation } from 'react-router-dom';
 import {
   deleteBrokerBinding,
   fetchBrokerBindingRuntime,
-  fetchOperationsMaintenance,
   fetchRiskParameters,
   fetchUserAccount,
   resetRiskParametersToDefaults,
@@ -23,21 +21,11 @@ import {
 } from '../../../app/api/controlPlane.ts';
 import { SectionHeader } from '../../../components/layout/ConsoleChrome.tsx';
 import { useMarketProviderStatus } from '../../../hooks/useMarketProviderStatus.ts';
-import {
-  type AgentWorkbenchPayload,
-  fetchAgentWorkbench,
-} from '../../../modules/agent/agentTools.service.ts';
 import { copy, useLocale } from '../../../modules/console/console.i18n.tsx';
 import {
   translateProviderLabel,
   translateRuntimeText,
 } from '../../../modules/console/console.utils.ts';
-import {
-  buildPersistenceApiExamples,
-  buildPersistenceCliCommands,
-  derivePersistencePostureFromMaintenance,
-  translatePersistencePosture,
-} from '../../../modules/operations/persistencePosture.ts';
 import {
   formatActionGuardNotice,
   formatPermissionDisabled,
@@ -140,241 +128,6 @@ export function WorkspaceAccessScopePanel({
           ? '最终会话权限会同时受全局账户访问策略和当前 workspace 权限作用域约束。'
           : 'Final session permissions are constrained by both the global account access policy and the active workspace scope.'}
       </div>
-    </article>
-  );
-}
-
-export function PersistenceMigrationPanel({
-  locale,
-  canInspectMaintenance,
-  maintenance,
-}: {
-  locale: 'zh' | 'en';
-  canInspectMaintenance: boolean;
-  maintenance: OperationsMaintenanceResponse | null;
-}) {
-  const persistence = derivePersistencePostureFromMaintenance(maintenance);
-  const cliExamples = buildPersistenceCliCommands(persistence.adapter.kind || 'db');
-  const apiExamples = buildPersistenceApiExamples();
-  const latestMigrationLabel = persistence.latestMigration?.id || (locale === 'zh' ? '无' : 'none');
-
-  return (
-    <article className="panel" id="persistence-migration">
-      <div className="panel-head">
-        <div>
-          <div className="panel-title">
-            {locale === 'zh' ? '持久化与迁移' : 'Persistence & Migration'}
-          </div>
-          <div className="panel-copy">
-            {locale === 'zh'
-              ? '展示当前控制面后端、schema 版本、迁移差异和建议的维护路径。'
-              : 'Review the active control-plane backend, schema version, migration gap, and the recommended maintenance path.'}
-          </div>
-        </div>
-        <div
-          className={`panel-badge ${persistence.posture === 'healthy' ? 'badge-success' : persistence.posture === 'attention' ? 'badge-warn' : 'badge-danger'}`}
-        >
-          {translatePersistencePosture(locale, persistence.posture)}
-        </div>
-      </div>
-      {!canInspectMaintenance ? (
-        <div className="status-copy">
-          {locale === 'zh'
-            ? '当前会话没有 operations:maintain 权限，因此这里只显示只读维护说明。'
-            : 'The active session does not have operations:maintain permission, so this panel only shows read-only maintenance guidance.'}
-        </div>
-      ) : null}
-      <div className="policy-card policy-card-inline">
-        <div className="policy-row">
-          <span>{locale === 'zh' ? 'Adapter' : 'Adapter'}</span>
-          <strong>{persistence.adapter.label}</strong>
-        </div>
-        <div className="policy-row">
-          <span>{locale === 'zh' ? '存储模型' : 'Storage Model'}</span>
-          <strong>{persistence.storageModel}</strong>
-        </div>
-        <div className="policy-row">
-          <span>{locale === 'zh' ? 'Schema 版本' : 'Schema Version'}</span>
-          <strong>{String(persistence.schemaVersion ?? '--')}</strong>
-        </div>
-        <div className="policy-row">
-          <span>{locale === 'zh' ? '当前 -> 目标' : 'Current -> Target'}</span>
-          <strong>
-            {persistence.currentVersion !== null && persistence.targetVersion !== null
-              ? `${persistence.currentVersion} → ${persistence.targetVersion}`
-              : '--'}
-          </strong>
-        </div>
-        <div className="policy-row">
-          <span>{locale === 'zh' ? '待迁移数量' : 'Pending Migrations'}</span>
-          <strong>{persistence.pendingCount}</strong>
-        </div>
-        <div className="policy-row">
-          <span>{locale === 'zh' ? '已对齐' : 'Up To Date'}</span>
-          <strong>
-            {persistence.upToDate
-              ? locale === 'zh'
-                ? '是'
-                : 'yes'
-              : locale === 'zh'
-                ? '否'
-                : 'no'}
-          </strong>
-        </div>
-        <div className="policy-row">
-          <span>{locale === 'zh' ? '最近迁移' : 'Latest Migration'}</span>
-          <strong>{latestMigrationLabel}</strong>
-        </div>
-      </div>
-      <div className="status-copy">{persistence.headline}</div>
-      <div className="status-copy">{persistence.detail}</div>
-      <div className="status-copy">{persistence.recommendedAction}</div>
-      <div className="panel-subtitle">
-        {locale === 'zh' ? '建议入口' : 'Recommended Entry Points'}
-      </div>
-      <div className="settings-chip-row">
-        <a className="settings-chip active" href={persistence.links.maintenance}>
-          {locale === 'zh' ? '跳到运维工作台' : 'Open Operations Workbench'}
-        </a>
-        <a className="settings-chip" href={persistence.links.settings}>
-          {locale === 'zh' ? '定位当前面板' : 'Link To This Panel'}
-        </a>
-      </div>
-      <div className="panel-subtitle">{locale === 'zh' ? 'CLI 建议' : 'CLI Guidance'}</div>
-      <div className="focus-list focus-list-terminal">
-        {cliExamples.map((item) => (
-          <div className="focus-row focus-row-wide" key={item}>
-            <div className="symbol-cell">
-              <strong>{locale === 'zh' ? '命令' : 'Command'}</strong>
-              <span>{item}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="panel-subtitle">{locale === 'zh' ? 'API 建议' : 'API Guidance'}</div>
-      <div className="focus-list focus-list-terminal">
-        {apiExamples.map((item) => (
-          <div className="focus-row focus-row-wide" key={item}>
-            <div className="symbol-cell">
-              <strong>API</strong>
-              <span>{item}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </article>
-  );
-}
-
-type AgentAuthorityStateShape = {
-  mode: string;
-  reason: string;
-  policies: Array<Record<string, unknown>>;
-} | null;
-
-type AgentDailyBiasShape = {
-  instructions: Array<{
-    id: string;
-    kind: string;
-    title: string;
-    body: string;
-    requestedBy: string;
-    activeUntil: string;
-    createdAt: string;
-  }>;
-  latestUpdatedAt: string;
-} | null;
-
-export function AgentGovernanceSettingsPanel({
-  locale,
-  authorityState,
-  dailyBias,
-}: {
-  locale: 'zh' | 'en';
-  authorityState: AgentAuthorityStateShape;
-  dailyBias: AgentDailyBiasShape;
-}) {
-  const instructions = Array.isArray(dailyBias?.instructions) ? dailyBias!.instructions : [];
-  const policies = Array.isArray(authorityState?.policies) ? authorityState!.policies : [];
-
-  return (
-    <article className="panel" id="agent-governance-settings">
-      <div className="panel-head">
-        <div>
-          <div className="panel-title">
-            {locale === 'zh' ? 'Agent 治理设置' : 'Agent Governance Settings'}
-          </div>
-          <div className="panel-copy">
-            {locale === 'zh'
-              ? '查看并管理 Agent 授权模式（Authority Mode）和今日运营指令（Daily Bias）。授权策略通过 API 或 Agent 工作台进行配置。'
-              : 'Review and manage the Agent authority mode and active daily bias. Authority policies are configured via the API or the Agent workbench.'}
-          </div>
-        </div>
-        <span
-          className={`panel-badge ${authorityState?.mode === 'stopped' ? 'badge-warn' : 'badge-info'}`}
-        >
-          {authorityState?.mode || 'manual_only'}
-        </span>
-      </div>
-      <div className="policy-card policy-card-inline">
-        <div className="policy-row">
-          <span>{locale === 'zh' ? 'Authority Mode' : 'Authority Mode'}</span>
-          <strong>{authorityState?.mode || 'manual_only'}</strong>
-        </div>
-        <div className="policy-row">
-          <span>{locale === 'zh' ? '策略依据' : 'Policy Basis'}</span>
-          <strong>
-            {authorityState?.reason ||
-              (locale === 'zh'
-                ? '尚未配置 Agent 治理策略。'
-                : 'No agent governance policy configured.')}
-          </strong>
-        </div>
-        <div className="policy-row">
-          <span>{locale === 'zh' ? '策略数' : 'Active Policies'}</span>
-          <strong>{policies.length}</strong>
-        </div>
-        <div className="policy-row">
-          <span>{locale === 'zh' ? '今日运营指令' : 'Daily Bias Instructions'}</span>
-          <strong>{instructions.length}</strong>
-        </div>
-      </div>
-      {policies.length > 0 ? (
-        <div className="focus-list">
-          {policies.map((policy) => (
-            <div className="focus-row" key={String(policy.id || '')}>
-              <div className="symbol-cell">
-                <strong>{String(policy.accountId || 'all')}</strong>
-                <span>{`${String(policy.strategyId || 'all')} / ${String(policy.actionType || 'all')} / ${String(policy.environment || 'all')}`}</span>
-              </div>
-              <div className="focus-metric">
-                <span>{locale === 'zh' ? '授权' : 'Authority'}</span>
-                <strong>{String(policy.authority || '--')}</strong>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : null}
-      {instructions.length > 0 ? (
-        <div className="focus-list">
-          {instructions.map((item) => (
-            <div className="focus-row" key={item.id}>
-              <div className="symbol-cell">
-                <strong>{item.title}</strong>
-                <span>{item.body}</span>
-              </div>
-              <div className="focus-metric">
-                <span>{locale === 'zh' ? '有效至' : 'Active Until'}</span>
-                <strong>{item.activeUntil ? item.activeUntil.slice(0, 10) : '--'}</strong>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="status-copy">
-          {locale === 'zh' ? '当前没有活跃的今日运营指令。' : 'No active daily bias instructions.'}
-        </div>
-      )}
     </article>
   );
 }
@@ -557,8 +310,8 @@ export function RiskParametersPanel({ locale }: { locale: 'zh' | 'en' }) {
               style={{ fontSize: '11px', marginTop: '4px', paddingLeft: '26px' }}
             >
               {locale === 'zh'
-                ? '启用后，Agent 生成的所有实盘订单都需要在执行页面手动确认。'
-                : 'When enabled, all live orders generated by Agent require manual confirmation on the Execution page.'}
+                ? '启用后，纸面执行计划需要在执行页面手动确认。'
+                : 'When enabled, paper execution plans require manual confirmation on the Execution page.'}
             </div>
           </div>
 
@@ -604,16 +357,11 @@ export function SettingsPage() {
   } = useTradingSystem();
   const location = useLocation();
   const canWriteAccount = hasPermission('account:write');
-  const canInspectMaintenance = hasPermission('operations:maintain');
   const canWriteStrategy = hasPermission('strategy:write');
   const canReviewRisk = hasPermission('risk:review');
   const canApproveExecution = hasPermission('execution:approve');
   const [account, setAccount] = useState<UserAccountSnapshot | null>(null);
   const [bindingRuntime, setBindingRuntime] = useState<UserBrokerBindingRuntimeSnapshot | null>(
-    null
-  );
-  const [maintenance, setMaintenance] = useState<OperationsMaintenanceResponse | null>(null);
-  const [governanceWorkbench, setGovernanceWorkbench] = useState<AgentWorkbenchPayload | null>(
     null
   );
   const [profileForm, setProfileForm] = useState({
@@ -711,22 +459,14 @@ export function SettingsPage() {
   }
 
   async function loadAccountWorkspace() {
-    const [accountSnapshot, runtimeSnapshot, maintenanceSnapshot, agentWorkbenchSnapshot] =
-      await Promise.all([
-        fetchUserAccount(),
-        fetchBrokerBindingRuntime().catch(() => null),
-        canInspectMaintenance
-          ? fetchOperationsMaintenance({ limit: 10 }).catch(() => null)
-          : Promise.resolve(null),
-        fetchAgentWorkbench().catch(() => null),
-      ]);
+    const [accountSnapshot, runtimeSnapshot] = await Promise.all([
+      fetchUserAccount(),
+      fetchBrokerBindingRuntime().catch(() => null),
+    ]);
     syncAccountState(accountSnapshot, runtimeSnapshot);
-    setMaintenance(maintenanceSnapshot);
-    setGovernanceWorkbench(agentWorkbenchSnapshot);
     return {
       accountSnapshot,
       runtimeSnapshot,
-      maintenanceSnapshot,
     };
   }
 
@@ -1170,18 +910,6 @@ export function SettingsPage() {
           currentWorkspace={currentWorkspace}
           accessSummary={accessSummary}
           sessionPermissions={session?.user.permissions || []}
-        />
-
-        <PersistenceMigrationPanel
-          locale={locale}
-          canInspectMaintenance={canInspectMaintenance}
-          maintenance={maintenance}
-        />
-
-        <AgentGovernanceSettingsPanel
-          locale={locale}
-          authorityState={governanceWorkbench?.authorityState || null}
-          dailyBias={governanceWorkbench?.dailyBias || null}
         />
 
         <RiskParametersPanel locale={locale} />

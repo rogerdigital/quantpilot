@@ -4,7 +4,7 @@ import type {
   WorkflowRunRecord,
   WorkflowStepRecord,
 } from '@shared-types/trading.ts';
-import type { AuditFeedItem } from '../audit/useAuditFeed.ts';
+import type { AuditFeedItem } from '../console/useAuditFeed.ts';
 
 export function getExecutionDetailInspectionConfig(
   locale: 'zh' | 'en',

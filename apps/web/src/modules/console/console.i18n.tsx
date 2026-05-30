@@ -21,16 +21,11 @@ export const copy = {
       'strategy-detail': '策略详情',
       backtest: '回测中心',
       risk: '风控面板',
-      agent: 'Agent 对话台',
-      notifications: '通知中心',
       overview: '总览',
       signals: '信号',
       execution: '执行',
       portfolio: '组合',
       settings: '设置',
-      marketplace: '策略市场',
-      analytics: '绩效分析',
-      data: '数据平台',
     },
     labels: {
       language: '语言',
@@ -140,11 +135,11 @@ export const copy = {
     pages: {
       dashboard: [
         '仪表盘',
-        '集中查看资产、信号、执行状态和 Agent 摘要，作为 QuantPilot 的统一指挥面板。',
+        '集中查看资产、信号、执行状态和关键风险，作为 QuantPilot Lite 的统一指挥面板。',
       ],
       market: [
         '市场监控',
-        '跟踪股票池价格、强弱排序和行情接入状态，为策略与 Agent 提供市场上下文。',
+        '跟踪股票池价格、强弱排序和行情接入状态，为策略提供市场上下文。',
       ],
       trading: ['交易终端', '在一个界面内完成行情监控、图表分析和下单操作。'],
       strategies: [
@@ -153,19 +148,11 @@ export const copy = {
       ],
       backtest: ['回测中心', '发起研究任务、复核绩效曲线，并把候选策略送入后续风险与执行流程。'],
       risk: ['风控面板', '聚合风险等级、暴露、待审批动作和拦截上下文，作为执行前的风险闸门。'],
-      agent: ['Agent 对话台', '把策略分析、风险解释和执行建议组织成可确认的协作界面。'],
-      notifications: [
-        '通知中心',
-        '统一查看任务完成、风控拦截、执行结果和系统事件，形成可追踪的操作回执。',
-      ],
       overview: ['总览', '集中观察净值、仓位、信号和最近委托，只保留盯盘主视图。'],
       signals: ['信号中心', '查看当前周期的买卖判断、评分分布和信号方向。'],
       execution: ['执行中心', '跟踪订单状态、撤单动作和最新成交回报。'],
       portfolio: ['组合中心', '查看账户净值、现金、持仓和当前组合暴露。'],
       settings: ['系统设置', '管理运行模式、执行开关、参数和接入状态。'],
-      marketplace: ['策略市场', '浏览和复制社区分享的量化策略。'],
-      analytics: ['绩效分析', '查看策略绩效指标、风险分析和交易分布。'],
-      data: ['数据平台', '管理数据资产、数据质量报告和特征血缘，为策略研究提供可靠数据基础。'],
     },
     desk: {
       dashboard: 'Command Deck',
@@ -173,14 +160,11 @@ export const copy = {
       strategies: 'Strategy Desk',
       backtest: 'Research Desk',
       risk: 'Risk Desk',
-      agent: 'Agent Desk',
-      notifications: 'Notification Desk',
       overview: 'Overview Desk',
       signals: 'Signal Desk',
       execution: 'Execution Desk',
       portfolio: 'Portfolio Desk',
       settings: 'Control Desk',
-      data: 'Data Desk',
     },
     slogans: {
       heroEyebrow: 'Autonomous Intelligence for Quantitative Trading',
@@ -220,16 +204,11 @@ export const copy = {
       'strategy-detail': 'Strategy Detail',
       backtest: 'Backtest',
       risk: 'Risk',
-      agent: 'Agent',
-      notifications: 'Notifications',
       overview: 'Overview',
       signals: 'Signals',
       execution: 'Execution',
       portfolio: 'Portfolio',
       settings: 'Settings',
-      marketplace: 'Marketplace',
-      analytics: 'Analytics',
-      data: 'Data',
     },
     labels: {
       language: 'Language',
@@ -339,7 +318,7 @@ export const copy = {
     pages: {
       dashboard: [
         'Dashboard',
-        'Track assets, signals, execution state, and Agent summaries from one command surface.',
+        'Track assets, signals, execution state, and key risks from one command surface.',
       ],
       market: [
         'Market Monitor',
@@ -361,14 +340,6 @@ export const copy = {
         'Risk Console',
         'Monitor risk level, exposure, pending approvals, and execution blockers before orders are released.',
       ],
-      agent: [
-        'Agent Copilot',
-        'Turn strategy analysis, risk explanations, and execution suggestions into confirmable operator workflows.',
-      ],
-      notifications: [
-        'Notification Center',
-        'Review task completions, execution feedback, risk alerts, and system events in one stream.',
-      ],
       overview: [
         'Trading Overview',
         'Monitor NAV, exposure, signals, and the latest order flow in one platform view.',
@@ -386,15 +357,6 @@ export const copy = {
         'Review NAV, cash, holdings, and current portfolio exposure.',
       ],
       settings: ['Settings', 'Manage modes, switches, thresholds, and provider connectivity.'],
-      marketplace: ['Marketplace', 'Browse and fork community-shared quantitative strategies.'],
-      analytics: [
-        'Analytics',
-        'Review strategy performance metrics, risk analysis, and trade distribution.',
-      ],
-      data: [
-        'Data Science',
-        'Manage data assets, quality reports, and feature lineage for reliable research foundations.',
-      ],
     },
     desk: {
       dashboard: 'Command Deck',
@@ -403,14 +365,11 @@ export const copy = {
       strategies: 'Strategy Desk',
       backtest: 'Research Desk',
       risk: 'Risk Desk',
-      agent: 'Agent Desk',
-      notifications: 'Notification Desk',
       overview: 'Overview Desk',
       signals: 'Signal Desk',
       execution: 'Execution Desk',
       portfolio: 'Portfolio Desk',
       settings: 'Control Desk',
-      data: 'Data Desk',
     },
     slogans: {
       heroEyebrow: 'Autonomous Intelligence for Quantitative Trading',

@@ -97,10 +97,6 @@ export function AccountProfilePanel({
           <span>{locale === 'zh' ? '默认模式' : 'Default Mode'}</span>
           <strong>{account?.preferences.defaultMode || 'hybrid'}</strong>
         </div>
-        <div className="policy-row">
-          <span>{locale === 'zh' ? '通知通道' : 'Notifications'}</span>
-          <strong>{account?.preferences.notificationChannels.join(', ') || 'inbox'}</strong>
-        </div>
       </div>
       {!canWriteAccount ? (
         <div className="status-copy">

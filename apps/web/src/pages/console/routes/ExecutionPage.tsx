@@ -18,7 +18,7 @@ import {
 } from '../../../app/api/controlPlane.ts';
 import { ApprovalQueueTable, OrdersTable } from '../../../components/business/ConsoleTables.tsx';
 import { TopMeta } from '../../../components/layout/ConsoleChrome.tsx';
-import { useAuditFeed } from '../../../modules/audit/useAuditFeed.ts';
+import { useAuditFeed } from '../../../modules/console/useAuditFeed.ts';
 import { copy, useLocale } from '../../../modules/console/console.i18n.tsx';
 import { translateEngineStatus } from '../../../modules/console/console.utils.ts';
 import { readDeepLinkParams } from '../../../modules/console/deepLinks.ts';

@@ -36,8 +36,6 @@ function getIcon(id: string): string {
     backtest: '⟐',
     execution: '⬡',
     risk: '△',
-    agent: '◎',
-    notifications: '⊡',
     settings: '⚙',
   };
   return icons[id] ?? '•';

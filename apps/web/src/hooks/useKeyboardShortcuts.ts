@@ -84,12 +84,9 @@ export const DEFAULT_SHORTCUTS: Omit<Shortcut, 'action'>[] = [
   { key: '4', meta: true, category: 'navigation', label: 'Go to Backtest' },
   { key: '5', meta: true, category: 'navigation', label: 'Go to Execution' },
   { key: '6', meta: true, category: 'navigation', label: 'Go to Risk' },
-  { key: '7', meta: true, category: 'navigation', label: 'Go to Agent' },
-  { key: '8', meta: true, category: 'navigation', label: 'Go to Notifications' },
-  { key: '9', meta: true, category: 'navigation', label: 'Go to Settings' },
+  { key: '7', meta: true, category: 'navigation', label: 'Go to Settings' },
   { key: 'b', meta: true, category: 'trading', label: 'Quick buy' },
   { key: 's', meta: true, category: 'trading', label: 'Quick sell' },
   { key: 'e', meta: true, category: 'trading', label: 'Toggle watchlist' },
-  { key: '.', meta: true, category: 'general', label: 'Toggle notifications' },
   { key: 'Escape', category: 'general', label: 'Close modal/drawer' },
 ];
