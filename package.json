@@ -24,13 +24,12 @@
     "check:runtime-env": "node --import tsx/esm scripts/check-runtime-env.ts",
     "test:api": "node --import tsx/esm --test apps/api/test/*.test.ts",
     "test:engine": "node --import tsx/esm --test packages/trading-engine/test/*.ts",
-    "test:control-plane": "node --import tsx/esm --test packages/control-plane-store/test/*.test.ts",
     "test:web": "vitest run --config apps/web/vite.config.ts apps/web/src/modules/console/execution-collection-configs.test.ts apps/web/src/modules/console/execution-inspection-configs.test.ts apps/web/src/modules/console/execution-operations.test.ts apps/web/src/modules/console/execution-panels.test.tsx apps/web/src/modules/research/research-panels.test.tsx apps/web/src/modules/research/research-navigation.test.ts apps/web/src/modules/permissions/permissionCopy.test.ts apps/web/src/pages/research-pages.test.tsx apps/web/src/pages/settings-page.test.tsx apps/web/src/modules/risk/risk-workbench.test.tsx apps/web/src/app/styles/style.test.ts apps/web/src/hooks/useSSE.test.tsx apps/web/src/store/trading-system/TradingSystemProvider.test.tsx --environment node",
     "lint": "biome check --diagnostic-level=error .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "typecheck": "node --import tsx/esm scripts/typecheck-all.ts",
-    "verify": "npm run check:workspaces && npm run check:lockfile && npm run check:no-js-source && npm run check:runtime-env && npm run lint && npm run test:control-plane && npm run test:engine && npm run test:api && npm run test:web && npm run typecheck && npm run build",
+    "verify": "npm run check:workspaces && npm run check:lockfile && npm run check:no-js-source && npm run check:runtime-env && npm run lint && npm run test:engine && npm run test:api && npm run test:web && npm run typecheck && npm run build",
     "gateway": "node --import tsx/esm apps/api/src/main.ts"
   },
   "keywords": [

@@ -20,13 +20,6 @@ export const ARCHITECTURE_LAYERS = [
     responsibility: 'simulation, risk assessment, execution helpers and strategy validation',
     codeLocations: ['packages/trading-engine'],
   },
-  {
-    id: 'storage',
-    name: 'Storage',
-    status: 'active',
-    responsibility: 'lightweight local store adapters retained for settings and future persistence',
-    codeLocations: ['packages/control-plane-store', 'packages/db'],
-  },
 ];
 
 export const MODULE_REGISTRY = [

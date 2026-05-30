@@ -5,8 +5,6 @@ import { resolve } from 'node:path';
 const workspaces = [
   'apps/api',
   'apps/web',
-  'packages/control-plane-store',
-  'packages/db',
   'packages/shared-types',
   'packages/trading-engine',
   'packages/ui',
