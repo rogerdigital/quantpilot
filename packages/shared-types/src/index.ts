@@ -1,4 +1,3 @@
-export * from './ai-research.ts';
 export * from './backtest.ts';
 export * from './connectors.ts';
 export * from './data-science.ts';

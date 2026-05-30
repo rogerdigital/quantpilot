@@ -37,18 +37,6 @@ export const ARCHITECTURE_LAYERS = [
     ],
   },
   {
-    id: 'agent',
-    name: 'Agent Layer',
-    status: 'prototype',
-    responsibility:
-      'intent parsing, session-linked planning, read-only analysis execution, workbench aggregation, structured summaries, and approval-gated action requests',
-    codeLocations: [
-      'apps/api/src/domains/agent',
-      'apps/api/src/modules/agent',
-      'apps/web/src/pages/agent',
-    ],
-  },
-  {
     id: 'risk',
     name: 'Risk Layer',
     status: 'prototype',

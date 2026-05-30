@@ -17,9 +17,6 @@ const envSchema = z.object({
     .default('true')
     .transform((v) => v === 'true'),
   ALPACA_DATA_FEED: z.enum(['iex', 'sip']).default('iex'),
-  ANTHROPIC_API_KEY: z.string().default(''),
-  OPENAI_API_KEY: z.string().default(''),
-  QUANTPILOT_LLM_PROVIDER: z.enum(['claude', 'openai', '']).default(''),
   QUANTPILOT_USE_MOCK_DATA: z
     .enum(['true', 'false'])
     .default('false')

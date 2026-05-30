@@ -1467,7 +1467,6 @@ export const listWorkflowRuns = (...args: any[]) =>
 export const getWorkflowRun = (...args: any[]) =>
   (controlPlaneRuntime as any).getWorkflowRun(...args);
 
-export { recordAgentActionRequest } from '../../../apps/api/src/domains/agent/services/action-request-service.js';
 export { refreshBacktestSummary } from '../../../apps/api/src/domains/backtest/services/summary-service.js';
 // Domain service re-exports for worker decoupling (no apps/api cross-imports needed)
 export { recordExecutionPlan } from '../../../apps/api/src/domains/execution/services/command-service.js';
