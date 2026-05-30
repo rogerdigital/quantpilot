@@ -1,15 +1,16 @@
 import {
+  appendRiskEvent,
+  getRiskEvent,
+  getRiskParameters,
+  getRiskWorkbench,
+  listRiskEvents,
+  resetRiskParameters,
+  updateRiskParameters,
+} from '../core-data.js';
+import {
   assessExecution as riskAssessExecution,
   assessPromotion as riskAssessPromotion,
 } from '../../../../../../packages/trading-engine/src/risk/assessment.js';
-import { getRiskEvent, listRiskEvents } from '../../../domains/risk/services/feed-service.js';
-import {
-  getRiskParameters,
-  resetRiskParameters,
-  updateRiskParameters,
-} from '../../../domains/risk/services/parameters-service.js';
-import { runRiskPolicyAction } from '../../../domains/risk/services/policy-action-service.js';
-import { getRiskWorkbench } from '../../../domains/risk/services/workbench-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
 import type { GatewayRouteContext } from '../types.js';
@@ -54,8 +55,7 @@ export async function handleRiskRoutes({
       return true;
     }
     const body = await readJsonBody(req);
-    const updated = updateRiskParameters(body as Parameters<typeof updateRiskParameters>[0]);
-    writeJson(res, 200, { ok: true, parameters: updated });
+    writeJson(res, 200, { ok: true, parameters: updateRiskParameters(body as Record<string, unknown>) });
     return true;
   }
 
@@ -64,8 +64,7 @@ export async function handleRiskRoutes({
       writeForbidden('risk:review', 'reset risk parameters');
       return true;
     }
-    const reset = resetRiskParameters();
-    writeJson(res, 200, { ok: true, parameters: reset });
+    writeJson(res, 200, { ok: true, parameters: resetRiskParameters() });
     return true;
   }
 
@@ -75,14 +74,7 @@ export async function handleRiskRoutes({
   }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/risk/workbench') {
-    writeJson(
-      res,
-      200,
-      getRiskWorkbench({
-        hours: reqUrl.searchParams.get('hours'),
-        limit: reqUrl.searchParams.get('limit'),
-      })
-    );
+    writeJson(res, 200, getRiskWorkbench());
     return true;
   }
 
@@ -91,9 +83,8 @@ export async function handleRiskRoutes({
       writeForbidden('risk:review', 'run risk policy actions');
       return true;
     }
-    const body = await readJsonBody(req);
-    const result = runRiskPolicyAction(body as Record<string, unknown>);
-    writeJson(res, result?.ok === false ? 400 : 200, result);
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    writeJson(res, 200, { ok: true, event: appendRiskEvent(body) });
     return true;
   }
 
@@ -154,11 +145,10 @@ export async function handleRiskRoutes({
       return true;
     }
     const activePolicy = riskPolicies.find((p) => p.isActive);
-    const rules = activePolicy?.rules || [];
     const result = riskAssessPromotion({
       entityId: body.entityId,
       portfolio: body.portfolio as Parameters<typeof riskAssessPromotion>[0]['portfolio'],
-      rules: rules as Parameters<typeof riskAssessPromotion>[0]['rules'],
+      rules: (activePolicy?.rules || []) as Parameters<typeof riskAssessPromotion>[0]['rules'],
       mode: body.mode || 'paper',
     });
     writeJson(res, 200, { ok: true, assessment: result });
@@ -176,21 +166,19 @@ export async function handleRiskRoutes({
       return true;
     }
     const activePolicy = riskPolicies.find((p) => p.isActive);
-    const rules = activePolicy?.rules || [];
-    const portfolio = body.portfolio || {
-      positions: [],
-      grossExposure: 0,
-      netExposure: 0,
-      leverage: 1,
-      drawdownPct: 0,
-      dailyLossPct: 0,
-      turnoverPct: 0,
-    };
     const result = riskAssessExecution({
       entityId: body.entityId,
       orderPlan: body.orderPlan as Parameters<typeof riskAssessExecution>[0]['orderPlan'],
-      portfolio: portfolio as Parameters<typeof riskAssessExecution>[0]['portfolio'],
-      rules: rules as Parameters<typeof riskAssessExecution>[0]['rules'],
+      portfolio: (body.portfolio || {
+        positions: [],
+        grossExposure: 0,
+        netExposure: 0,
+        leverage: 1,
+        drawdownPct: 0,
+        dailyLossPct: 0,
+        turnoverPct: 0,
+      }) as Parameters<typeof riskAssessExecution>[0]['portfolio'],
+      rules: (activePolicy?.rules || []) as Parameters<typeof riskAssessExecution>[0]['rules'],
     });
     writeJson(res, 200, { ok: true, assessment: result });
     return true;
