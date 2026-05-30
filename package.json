@@ -2,7 +2,7 @@
   "name": "quantpilot",
   "version": "0.1.0",
   "private": true,
-  "description": "QuantPilot monorepo skeleton for the platform layer and agent-facing trading workspace",
+  "description": "QuantPilot Lite core console for quantitative research and paper execution",
   "type": "module",
   "engines": {
     "node": ">=20.5.0",
@@ -35,7 +35,7 @@
   "keywords": [
     "quantitative-trading",
     "trading-system",
-    "agent-platform",
+    "paper-trading",
     "react",
     "vite",
     "react-router"

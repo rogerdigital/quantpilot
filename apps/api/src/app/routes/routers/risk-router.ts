@@ -1,4 +1,10 @@
 import {
+  assessExecution as riskAssessExecution,
+  assessPromotion as riskAssessPromotion,
+} from '../../../../../../packages/trading-engine/src/risk/assessment.js';
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
+import { hasPermission } from '../../../modules/auth/service.js';
+import {
   appendRiskEvent,
   getRiskEvent,
   getRiskParameters,
@@ -7,12 +13,6 @@ import {
   resetRiskParameters,
   updateRiskParameters,
 } from '../core-data.js';
-import {
-  assessExecution as riskAssessExecution,
-  assessPromotion as riskAssessPromotion,
-} from '../../../../../../packages/trading-engine/src/risk/assessment.js';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
-import { hasPermission } from '../../../modules/auth/service.js';
 import type { GatewayRouteContext } from '../types.js';
 
 interface RiskPolicy {
@@ -55,7 +55,10 @@ export async function handleRiskRoutes({
       return true;
     }
     const body = await readJsonBody(req);
-    writeJson(res, 200, { ok: true, parameters: updateRiskParameters(body as Record<string, unknown>) });
+    writeJson(res, 200, {
+      ok: true,
+      parameters: updateRiskParameters(body as Record<string, unknown>),
+    });
     return true;
   }
 

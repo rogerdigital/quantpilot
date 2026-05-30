@@ -1,3 +1,5 @@
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
+import { hasPermission } from '../../../modules/auth/service.js';
 import {
   bulkUpdateExecutionPlans,
   getExecutionPlan,
@@ -9,8 +11,6 @@ import {
   listExecutionRuntimeEvents,
   updateExecutionPlan,
 } from '../core-data.js';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
-import { hasPermission } from '../../../modules/auth/service.js';
 import type { GatewayRouteContext } from '../types.js';
 
 export async function handleExecutionRoutes({

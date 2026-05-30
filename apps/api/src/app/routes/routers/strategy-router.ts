@@ -1,3 +1,5 @@
+import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
+import { hasPermission } from '../../../modules/auth/service.js';
 import {
   createExecutionHandoff,
   getMarketProviderStatus,
@@ -8,8 +10,6 @@ import {
   queueExecutionHandoff,
   saveStrategy,
 } from '../core-data.js';
-import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
-import { hasPermission } from '../../../modules/auth/service.js';
 import type { GatewayRouteContext } from '../types.js';
 
 export async function handleStrategyRoutes({

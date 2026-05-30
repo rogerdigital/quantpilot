@@ -39,7 +39,7 @@ npm run dev        # Web 控制台 -> http://localhost:8080
 | `VITE_BROKER_PROVIDER` | `simulated` 或 `custom-http` |
 | `GATEWAY_PORT` | API 网关端口，默认 `8787` |
 | `QUANTPILOT_TRADING_MODE` | 服务端运行模式，`simulated` 或 `paper` |
-| `QUANTPILOT_CONTROL_PLANE_NAMESPACE` | 本地存储命名空间 |
+| `QUANTPILOT_CONTROL_PLANE_NAMESPACE` | 本地运行命名空间 |
 
 ---
 
@@ -55,7 +55,7 @@ npm run dev        # Web 控制台 -> http://localhost:8080
 | Risk | 基础限制、风险状态和 kill switch |
 | Settings | 运行模式、刷新间隔、provider 和风控设置 |
 
-已移出当前范围：Agent 协作、compute job、后台 worker 平台、组织和团队管理、合规报告、连接器市场、数据/特征/模型注册、实验注册、实盘交易晋升流程。
+已移出当前范围：自主助手协作、compute job、后台任务平台、团队管理、报告服务、连接器市场、数据/特征/模型注册、实验注册、实盘交易审批流。
 
 ---
 
@@ -68,9 +68,8 @@ quantpilot/
 │   └── api/      Node.js API gateway
 ├── packages/
 │   ├── trading-engine/        回测、风控、执行和策略核心
-│   ├── control-plane-store/   轻量本地持久化
 │   ├── shared-types/          核心共享契约
-│   └── db/                    本地存储需要时使用的适配层
+│   └── ui/                    共享 UI 包占位
 ├── docs/
 │   ├── architecture/
 │   ├── archive/
@@ -91,7 +90,6 @@ npm run gateway             # API 网关
 npm run test:web            # 前端测试
 npm run test:api            # API 测试
 npm run test:engine         # 交易引擎测试
-npm run test:control-plane  # 存储测试
 
 npm run typecheck
 npm run build

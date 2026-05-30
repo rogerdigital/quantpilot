@@ -1,6 +1,6 @@
-import { appendExecutionHandoff, assessExecutionCandidate, getStrategy } from '../core-data.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import { appendExecutionHandoff, assessExecutionCandidate, getStrategy } from '../core-data.js';
 import type { GatewayRouteContext } from '../types.js';
 
 interface TradingOrderBody {
@@ -59,9 +59,11 @@ export async function handleTradingRoutes({
 
   const strategyId = `terminal-${symbol.toLowerCase()}-${side}`;
   const strategyDetail = getStrategy(strategyId);
-  const strategy = (strategyDetail.ok && strategyDetail.strategy
-    ? strategyDetail.strategy
-    : buildAdhocStrategy(symbol, side)) as ReturnType<typeof buildAdhocStrategy>;
+  const strategy = (
+    strategyDetail.ok && strategyDetail.strategy
+      ? strategyDetail.strategy
+      : buildAdhocStrategy(symbol, side)
+  ) as ReturnType<typeof buildAdhocStrategy>;
   const capital = price ? qty * price : qty * 100;
   const candidate = {
     strategyId: strategy.id,

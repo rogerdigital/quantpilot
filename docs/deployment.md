@@ -32,7 +32,7 @@ Core variables:
 - `QUANTPILOT_TRADING_MODE`
   - Server mode: `simulated` or `paper`.
 - `QUANTPILOT_CONTROL_PLANE_NAMESPACE`
-  - Local store namespace.
+  - Local runtime namespace.
 
 Do not place broker secrets in `VITE_*` variables.
 
@@ -64,8 +64,8 @@ For SPA hosting, route all frontend paths back to `index.html`.
 The Lite scope does not support:
 
 - live trading
-- background workers
+- background task processes
 - compute queues
-- multi-tenant administration
+- team administration
 - compliance reporting services
-- Agent or LLM runtime services
+- autonomous assistant or LLM runtime services

@@ -250,7 +250,9 @@ export function updateExecutionPlan(planId: string, patch: AnyRecord = {}) {
 
 export function bulkUpdateExecutionPlans(payload: AnyRecord = {}) {
   const ids = Array.isArray(payload.ids) ? payload.ids : executionPlans.map((item) => item.id);
-  const results = ids.map((id: string) => updateExecutionPlan(id, { status: payload.status || 'reviewed' }));
+  const results = ids.map((id: string) =>
+    updateExecutionPlan(id, { status: payload.status || 'reviewed' })
+  );
   return { ok: true, results };
 }
 
@@ -366,7 +368,10 @@ export function assessExecutionCandidate(candidate: AnyRecord) {
   return {
     riskStatus: 'pass',
     approvalState,
-    summary: approvalState === 'required' ? 'Approval required by notional threshold.' : 'Risk check passed.',
+    summary:
+      approvalState === 'required'
+        ? 'Approval required by notional threshold.'
+        : 'Risk check passed.',
   };
 }
 

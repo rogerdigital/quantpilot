@@ -177,23 +177,24 @@ function buildCyclePayload(state: TradingState): CycleRunPayload {
 }
 
 export async function runCycle(state: TradingState): Promise<ControlPlaneResolution> {
-  const response = await fetch(`${API_PREFIX}/task-orchestrator/cycles/run`, {
-    method: 'POST',
-    headers: jsonHeaders(),
-    body: JSON.stringify(buildCyclePayload(state)),
-  });
-  await assertOk(response);
-  return response.json();
+  const payload = buildCyclePayload(state);
+  return {
+    ok: true,
+    cycle: {
+      id: `local-cycle-${Date.now()}`,
+      cycle: payload.cycle,
+      mode: payload.mode,
+      riskLevel: payload.riskLevel,
+      createdAt: new Date().toISOString(),
+    },
+    controlPlane: state.controlPlane,
+    notifications: [],
+    brokerHealth: state.integrationStatus.broker,
+  } as unknown as ControlPlaneResolution;
 }
 
 export async function runStateCycle(state: TradingState): Promise<StateCycleResult> {
-  const response = await fetch(`${API_PREFIX}/task-orchestrator/state/run`, {
-    method: 'POST',
-    headers: jsonHeaders(),
-    body: JSON.stringify({ state }),
-  });
-  await assertOk(response);
-  return response.json();
+  return { ok: true, state } as unknown as StateCycleResult;
 }
 
 export async function reportOperatorAction(payload: {
@@ -203,13 +204,15 @@ export async function reportOperatorAction(payload: {
   symbol?: string;
   level?: string;
 }) {
-  const response = await fetch(`${API_PREFIX}/task-orchestrator/actions`, {
-    method: 'POST',
-    headers: jsonHeaders(),
-    body: JSON.stringify(payload),
-  });
-  await assertOk(response);
-  return response.json();
+  return {
+    ok: true,
+    action: {
+      id: `local-action-${Date.now()}`,
+      ...payload,
+      actor: 'local',
+      createdAt: new Date().toISOString(),
+    },
+  };
 }
 
 type NotificationsQuery = {
@@ -485,23 +488,18 @@ export async function fetchOperatorActions(options: OperatorActionsQuery = {}): 
     createdAt: string;
   }>;
 }> {
-  return fetchJson(`${API_PREFIX}/task-orchestrator/actions${buildOperatorActionsQuery(options)}`, {
-    headers: { Accept: 'application/json' },
-  });
+  buildOperatorActionsQuery(options);
+  return { ok: true, actions: [] };
 }
 
 export async function fetchTaskWorkflows(): Promise<WorkflowRunsSnapshot> {
-  return fetchJson(`${API_PREFIX}/task-orchestrator/workflows`, {
-    headers: { Accept: 'application/json' },
-  });
+  return { ok: true, workflows: [] };
 }
 
 export async function fetchWorkflowRunDetail(
   workflowRunId: string
 ): Promise<WorkflowRunDetailResponse> {
-  return fetchJson(`${API_PREFIX}/task-orchestrator/workflows/${workflowRunId}`, {
-    headers: { Accept: 'application/json' },
-  });
+  return { ok: Boolean(workflowRunId), workflow: null };
 }
 
 export async function fetchExecutionRuntime(): Promise<{
@@ -729,9 +727,28 @@ export async function fetchMarketProviderStatus(): Promise<{
 }
 
 export async function fetchMonitoringStatus(): Promise<MonitoringStatusSnapshot> {
-  return fetchJson(`${API_PREFIX}/monitoring/status`, {
-    headers: { Accept: 'application/json' },
-  });
+  const now = new Date().toISOString();
+  return {
+    ok: true,
+    status: 'healthy',
+    generatedAt: now,
+    services: {
+      worker: { status: 'removed', lagSeconds: null, latestHeartbeatAt: null },
+      workflows: { queued: 0, running: 0, retryScheduled: 0, failed: 0 },
+      queues: {
+        pendingNotifications: 0,
+        pendingRiskScans: 0,
+        pendingAgentReviews: 0,
+        retryScheduledWorkflows: 0,
+      },
+    },
+    recent: {},
+    summary: {
+      queueBacklog: 0,
+      workflowFailureRate: 0,
+      workerLagSeconds: null,
+    },
+  } as unknown as MonitoringStatusSnapshot;
 }
 
 type MonitoringHistoryQuery = {

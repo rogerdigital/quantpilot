@@ -8,4 +8,4 @@
 - `gateways/`: broker and market adapter helpers retained for paper/simulated integrations.
 - `lib/`: environment, logging and persistence helpers.
 
-Removed systems such as Agent, task orchestration, workflow runtime, worker dispatch, monitoring, notification, operations and institutional user-account services should not be reintroduced unless the Lite scope is explicitly changed first.
+Removed systems such as autonomous assistant flows, task orchestration, workflow runtime, background dispatch, monitoring, notification, operations and institutional user-account services should not be reintroduced unless the Lite scope is explicitly changed first.

@@ -39,7 +39,7 @@ Copy `.env.example` to `.env` when you need local overrides.
 | `VITE_BROKER_PROVIDER` | `simulated` or `custom-http` |
 | `GATEWAY_PORT` | API gateway port, default `8787` |
 | `QUANTPILOT_TRADING_MODE` | Server runtime mode, `simulated` or `paper` |
-| `QUANTPILOT_CONTROL_PLANE_NAMESPACE` | Local store namespace |
+| `QUANTPILOT_CONTROL_PLANE_NAMESPACE` | Local runtime namespace |
 
 ---
 
@@ -55,7 +55,7 @@ Copy `.env.example` to `.env` when you need local overrides.
 | Risk | Basic limits, risk state and kill switch |
 | Settings | Runtime mode, refresh interval, provider and risk settings |
 
-Removed from active scope: Agent collaboration, compute jobs, background worker platform, organization and team management, compliance reports, connector marketplace, data/feature/model registries, experiment registry, and live trading promotion workflows.
+Removed from active scope: autonomous assistant collaboration, compute jobs, background task platform, team administration, reporting services, connector marketplace, data/feature/model registries, experiment registry, and live trading approval flows.
 
 ---
 
@@ -68,9 +68,8 @@ quantpilot/
 │   └── api/      Node.js API gateway
 ├── packages/
 │   ├── trading-engine/        Backtest, risk, execution and strategy core
-│   ├── control-plane-store/   Lightweight local persistence
 │   ├── shared-types/          Core cross-package contracts
-│   └── db/                    Storage adapters if needed by the local store
+│   └── ui/                    Shared UI package placeholder
 ├── docs/
 │   ├── architecture/
 │   ├── archive/
@@ -91,7 +90,6 @@ npm run gateway             # API gateway
 npm run test:web            # Vitest frontend tests
 npm run test:api            # API tests
 npm run test:engine         # Trading engine tests
-npm run test:control-plane  # Store tests
 
 npm run typecheck
 npm run build

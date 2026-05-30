@@ -8,11 +8,11 @@ QuantPilot Lite operations are intentionally small:
 
 - Start the API gateway.
 - Start the web console.
-- Confirm local storage is readable.
+- Confirm the API gateway is reachable.
 - Confirm simulated or paper mode is selected.
 - Use the kill switch when execution should be blocked.
 
-This handbook does not cover background workers, compute queues, compliance reports, multi-tenant administration or live trading operations.
+This handbook does not cover background task processes, compute queues, reporting services, team administration or live trading operations.
 
 ## Startup Checklist
 
@@ -44,7 +44,6 @@ Use these during development:
 npm run test:api
 npm run test:web
 npm run test:engine
-npm run test:control-plane
 npm run typecheck
 npm run build
 ```
@@ -78,4 +77,4 @@ If the app fails locally:
 4. Check `.env` values against `.env.example`.
 5. Restart `npm run gateway` and `npm run dev`.
 
-For local persistence issues, clear only the local development store namespace after preserving any state you still need.
+For local state issues, restart the API gateway and web dev server after preserving any state you still need.

@@ -16,9 +16,9 @@ Owns core HTTP routes, local session, runtime settings, market access, strategy 
 
 Owns reusable trading logic: market simulation helpers, backtest calculations, cost and slippage models, execution state transitions and basic risk checks.
 
-**Local Store**
+**Local Runtime State**
 
-Owns lightweight persistence for settings, strategies, backtest runs, execution state and risk settings.
+Owns in-process Lite data for strategies, backtest runs, execution state and risk settings.
 
 ## Collaboration Rules
 
@@ -33,9 +33,8 @@ Owns lightweight persistence for settings, strategies, backtest runs, execution 
 - `apps/api`: Node API gateway and server-side provider boundaries.
 - `packages/shared-types`: core market, strategy, backtest, execution, risk and settings contracts.
 - `packages/trading-engine`: reusable backtest, execution and risk logic.
-- `packages/control-plane-store`: lightweight local state.
-- `packages/db`: optional storage adapters used by the local store.
+- `packages/ui`: shared UI package placeholder.
 
 ## Removed Architecture
 
-The previous seven-layer institutional architecture is archived and no longer active scope. Active code should not depend on Agent orchestration, background workers, compute queues, multi-tenant governance, compliance reports, connector marketplaces or live trading promotion workflows.
+The previous seven-layer institutional architecture is archived and no longer active scope. Active code should not depend on autonomous assistant orchestration, background task processes, compute queues, team governance, reporting services, connector marketplaces or live trading approval flows.
