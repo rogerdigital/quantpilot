@@ -1,4 +1,4 @@
-import type { PromotionGate } from '@shared-types/lifecycle.ts';
+import type { PromotionGate } from '@shared-types/trading.ts';
 import type { BacktestRunItem, StrategyCatalogItem } from '@shared-types/trading.ts';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';

@@ -1,4 +1,4 @@
-import type { DecisionRecord } from '@shared-types/lifecycle.ts';
+import type { DecisionRecord } from '@shared-types/trading.ts';
 
 export function DecisionRecordTimeline({
   records,

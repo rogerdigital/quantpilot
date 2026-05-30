@@ -1,4 +1,4 @@
-import type { ResearchIdea } from '@shared-types/research.ts';
+import type { ResearchIdea } from '@shared-types/trading.ts';
 
 const STATUS_LABELS: Record<string, string> = {
   idea: 'Idea',

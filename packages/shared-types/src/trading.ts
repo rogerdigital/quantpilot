@@ -2705,4 +2705,114 @@ export type TradingSystemContextValue = {
   rejectLiveIntent: (clientOrderId: string) => void;
 };
 
+export type ResearchHypothesis = {
+  statement: string;
+  rationale: string;
+  expectedOutcome: string;
+  falsificationCriteria: string;
+  relatedLiterature: string[];
+};
+
+export type ResearchIdea = {
+  id: string;
+  workspaceId: string;
+  title: string;
+  hypothesis: ResearchHypothesis;
+  market: string;
+  assetUniverse: string[];
+  timeHorizon: string;
+  status: string;
+  owner: string;
+  ownerRole: string;
+  tags: string[];
+  decisionRecords: DecisionRecord[];
+  linkedDatasetIds: string[];
+  linkedFeatureSetIds: string[];
+  linkedExperimentIds: string[];
+  linkedBacktestIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type ExperimentParameter = {
+  name: string;
+  value: string | number | boolean;
+  type: 'string' | 'number' | 'boolean' | 'json';
+};
+
+export type ExperimentMetricValue =
+  | { kind: 'scalar'; value: number }
+  | { kind: 'distribution'; values: number[]; mean: number; std: number }
+  | { kind: 'time_series'; points: Array<{ time: string; value: number }> }
+  | { kind: 'custom'; data: Record<string, unknown> };
+
+export type ExperimentMetric = {
+  name: string;
+  direction: 'higher_is_better' | 'lower_is_better';
+  value: ExperimentMetricValue;
+  metadata: Record<string, unknown>;
+};
+
+export type ExperimentRunSnapshot = {
+  datasetVersionId: string;
+  featureVersionId: string;
+  codeVersion: string;
+  parameters: ExperimentParameter[];
+  seed: number;
+  runtimeEnvironment: string;
+};
+
+export type ExperimentRun = {
+  id: string;
+  experimentId: string;
+  status: 'queued' | 'running' | 'completed' | 'failed' | string;
+  snapshot: ExperimentRunSnapshot;
+  metrics: ExperimentMetric[];
+  artifactIds: string[];
+  isCandidate: boolean;
+  startedAt: string;
+  completedAt: string;
+  createdAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type PromotionGate = {
+  key: string;
+  label: string;
+  status: 'pending' | 'passed' | 'failed' | 'waived' | string;
+  evidenceId?: string | null;
+  evaluatedAt?: string;
+  evaluatedBy?: string;
+  reason?: string;
+  metadata?: Record<string, unknown>;
+};
+
+export type PromotionRequest = {
+  id: string;
+  strategyCandidateId: string;
+  strategyVersionId: string;
+  status: string;
+  gates: PromotionGate[];
+  decisions: DecisionRecord[];
+  requestedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type DecisionRecord = {
+  id: string;
+  entityType?: string;
+  entityId?: string;
+  actor: string;
+  actorType?: 'human' | 'system' | 'policy' | string;
+  role?: string;
+  action: string;
+  reason: string;
+  evidenceLinks?: string[];
+  timestamp: string;
+  metadata?: Record<string, unknown>;
+};
+
 export type AppLocale = 'zh' | 'en';

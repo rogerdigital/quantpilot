@@ -1,4 +1,4 @@
-import type { ExperimentRun } from '@shared-types/experiments.ts';
+import type { ExperimentRun } from '@shared-types/trading.ts';
 
 export function ExperimentComparisonPanel({
   runs,

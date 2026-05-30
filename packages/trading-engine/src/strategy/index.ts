@@ -1,20 +1,3 @@
-export {
-  canPromoteToLive,
-  canPromoteToPaper,
-  evaluateTransition,
-  type GateEvaluation,
-  getAvailableTransitions,
-  type LifecycleStage,
-  type LifecycleTransition,
-  type PromotionTransitionResult,
-} from './lifecycle.js';
-export {
-  evaluateAllGates,
-  evaluateGates,
-  PROMOTION_GATES,
-  type PromotionGateSpec,
-} from './promotion-gates.js';
-
 import { reserveIntentOnShadowAccount } from '../core/shared.js';
 import {
   buildRemoteBuyIntent,
