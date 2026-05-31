@@ -4,8 +4,6 @@
 
 QuantPilot Lite 是本地优先的量化研究与纸面执行控制台。项目只聚焦策略查看、行情上下文、回测、模拟/纸面执行和基础风控。
 
-当前仓库正在从机构级研究平台精简为核心控制台。已归档的机构级规划位于 `docs/archive/plans/`，不再作为当前产品范围。
-
 ---
 
 ## 安全边界
@@ -36,10 +34,18 @@ npm run dev        # Web 控制台 -> http://localhost:8080
 | `VITE_REFRESH_MS` | 前端刷新间隔，默认 `5000` |
 | `VITE_TRADING_MODE` | `simulated` 或 `paper` |
 | `VITE_MARKET_DATA_PROVIDER` | `simulated` 或 `custom-http` |
+| `VITE_MARKET_DATA_HTTP_URL` | 使用 `custom-http` 时的可选 HTTP 行情网关 URL |
 | `VITE_BROKER_PROVIDER` | `simulated` 或 `custom-http` |
+| `VITE_BROKER_HTTP_URL` | 使用 `custom-http` 时的可选 HTTP broker 网关 URL |
 | `GATEWAY_PORT` | API 网关端口，默认 `8787` |
-| `QUANTPILOT_TRADING_MODE` | 服务端运行模式，`simulated` 或 `paper` |
-| `QUANTPILOT_CONTROL_PLANE_NAMESPACE` | 本地运行命名空间 |
+| `CORS_ORIGINS` | API 网关允许的前端来源 |
+| `RATE_LIMIT_WINDOW_MS` | API 网关限流窗口 |
+| `RATE_LIMIT_MAX` | 每个限流窗口允许的请求数 |
+| `QUANTPILOT_TRADING_MODE` | API 运行模式，`simulated` 或 `paper` |
+| `QUANTPILOT_CONTROL_PLANE_NAMESPACE` | 本地 API 命名空间 |
+| `DEMO_USERNAME` | 本地 demo session 用户名 |
+| `DEMO_PASSWORD` | 本地 demo session 密码 |
+| `QUANTPILOT_USE_MOCK_DATA` | 为 true 时使用合成网关数据 |
 
 ---
 
@@ -54,10 +60,6 @@ npm run dev        # Web 控制台 -> http://localhost:8080
 | Execution | 模拟/纸面计划、订单、持仓和事件日志 |
 | Risk | 基础限制、风险状态和 kill switch |
 | Settings | 运行模式、刷新间隔、provider 和风控设置 |
-
-已移出当前范围：自主助手协作、compute job、后台任务平台、团队管理、报告服务、连接器市场、数据/特征/模型注册、实验注册、实盘交易审批流。
-
----
 
 ## 架构
 

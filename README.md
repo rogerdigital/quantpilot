@@ -4,8 +4,6 @@
 
 QuantPilot Lite is a local-first quantitative research and paper execution console. It keeps the product focused on strategy review, market context, backtesting, simulated or paper execution, and basic risk controls.
 
-This repository is being simplified from an institutional research platform into a smaller core console. Archived institutional plans live under `docs/archive/plans/` and are no longer active product scope.
-
 ---
 
 ## Safety Boundaries
@@ -36,10 +34,18 @@ Copy `.env.example` to `.env` when you need local overrides.
 | `VITE_REFRESH_MS` | Frontend refresh interval, default `5000` |
 | `VITE_TRADING_MODE` | `simulated` or `paper` |
 | `VITE_MARKET_DATA_PROVIDER` | `simulated` or `custom-http` |
+| `VITE_MARKET_DATA_HTTP_URL` | Optional HTTP market data gateway URL when using `custom-http` |
 | `VITE_BROKER_PROVIDER` | `simulated` or `custom-http` |
+| `VITE_BROKER_HTTP_URL` | Optional HTTP broker gateway URL when using `custom-http` |
 | `GATEWAY_PORT` | API gateway port, default `8787` |
-| `QUANTPILOT_TRADING_MODE` | Server runtime mode, `simulated` or `paper` |
-| `QUANTPILOT_CONTROL_PLANE_NAMESPACE` | Local runtime namespace |
+| `CORS_ORIGINS` | Allowed frontend origins for the API gateway |
+| `RATE_LIMIT_WINDOW_MS` | API gateway rate-limit window |
+| `RATE_LIMIT_MAX` | API gateway request limit per window |
+| `QUANTPILOT_TRADING_MODE` | API runtime mode, `simulated` or `paper` |
+| `QUANTPILOT_CONTROL_PLANE_NAMESPACE` | Local API namespace |
+| `DEMO_USERNAME` | Local demo session username |
+| `DEMO_PASSWORD` | Local demo session password |
+| `QUANTPILOT_USE_MOCK_DATA` | Use synthetic gateway data when true |
 
 ---
 
@@ -54,10 +60,6 @@ Copy `.env.example` to `.env` when you need local overrides.
 | Execution | Simulated or paper plans, orders, positions and event log |
 | Risk | Basic limits, risk state and kill switch |
 | Settings | Runtime mode, refresh interval, provider and risk settings |
-
-Removed from active scope: autonomous assistant collaboration, compute jobs, background task platform, team administration, reporting services, connector marketplace, data/feature/model registries, experiment registry, and live trading approval flows.
-
----
 
 ## Architecture
 
