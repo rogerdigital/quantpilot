@@ -68,8 +68,6 @@ const ICONS: Record<string, string> = {
   backtest: 'BT',
   risk: 'RK',
   execution: 'EX',
-  agent: 'AI',
-  notifications: 'NT',
   settings: 'CF',
 };
 
@@ -80,9 +78,7 @@ const HINTS_ZH: Record<string, string> = {
   strategies: '策略评分与买卖信号',
   backtest: '运行历史回测',
   risk: '风控参数与事件日志',
-  execution: '实盘委托与执行日志',
-  agent: 'AI Agent 分析与对话',
-  notifications: '系统通知与事件流',
+  execution: '纸面委托与执行日志',
   settings: '平台配置与权限管理',
 };
 
@@ -93,9 +89,7 @@ const HINTS_EN: Record<string, string> = {
   strategies: 'Strategy scores and buy/sell signals',
   backtest: 'Run historical backtests',
   risk: 'Risk parameters and event log',
-  execution: 'Live orders and execution log',
-  agent: 'AI agent analysis and conversation',
-  notifications: 'System notifications and event stream',
+  execution: 'Paper orders and execution log',
   settings: 'Platform config and permissions',
 };
 

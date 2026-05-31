@@ -1,4 +1,4 @@
-import type { PromotionGate } from '@shared-types/lifecycle.ts';
+import type { PromotionGate } from '@shared-types/trading.ts';
 
 export function PromotionGateChecklist({
   gates,

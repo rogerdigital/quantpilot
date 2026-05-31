@@ -1,18 +1,15 @@
-import {
-  getBacktestResultDetail,
-  getBacktestResultSummary,
-  listBacktestResults,
-} from '../../../domains/backtest/services/results-service.js';
-import {
-  createBacktestRun,
-  getBacktestRunDetail,
-  listBacktestRuns,
-  reviewBacktestRun,
-} from '../../../domains/backtest/services/runs-service.js';
-import { getBacktestSummary } from '../../../domains/backtest/services/summary-service.js';
-import { evaluateBacktestRun } from '../../../domains/research/services/evaluation-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import {
+  createBacktestRun,
+  evaluateBacktestRun,
+  getBacktestResult,
+  getBacktestRun,
+  getBacktestSummary,
+  listBacktestResults,
+  listBacktestRuns,
+  reviewBacktestRun,
+} from '../core-data.js';
 import type { GatewayRouteContext } from '../types.js';
 
 export async function handleBacktestRoutes({
@@ -31,40 +28,18 @@ export async function handleBacktestRoutes({
   }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/backtest/results') {
-    writeJson(
-      res,
-      200,
-      listBacktestResults({
-        hours: reqUrl.searchParams.get('hours'),
-        limit: reqUrl.searchParams.get('limit'),
-        runId: reqUrl.searchParams.get('runId'),
-        strategyId: reqUrl.searchParams.get('strategyId'),
-        workflowRunId: reqUrl.searchParams.get('workflowRunId'),
-        status: reqUrl.searchParams.get('status'),
-        stage: reqUrl.searchParams.get('stage'),
-      })
-    );
+    writeJson(res, 200, listBacktestResults());
     return true;
   }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/backtest/results/summary') {
-    writeJson(
-      res,
-      200,
-      getBacktestResultSummary({
-        hours: reqUrl.searchParams.get('hours'),
-        limit: reqUrl.searchParams.get('limit'),
-        strategyId: reqUrl.searchParams.get('strategyId'),
-        status: reqUrl.searchParams.get('status'),
-        stage: reqUrl.searchParams.get('stage'),
-      })
-    );
+    writeJson(res, 200, getBacktestSummary());
     return true;
   }
 
   if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/backtest/results/')) {
     const resultId = reqUrl.pathname.split('/').at(-1);
-    const result = getBacktestResultDetail(resultId);
+    const result = getBacktestResult(resultId);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
@@ -76,7 +51,7 @@ export async function handleBacktestRoutes({
 
   if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/backtest/runs/')) {
     const runId = reqUrl.pathname.split('/').at(-1);
-    const result = getBacktestRunDetail(runId);
+    const result = getBacktestRun(runId);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
@@ -102,8 +77,7 @@ export async function handleBacktestRoutes({
       return true;
     }
     const runId = reqUrl.pathname.split('/').at(-2);
-    const body = (await readJsonBody(req)) as Record<string, any> | undefined;
-    const result = evaluateBacktestRun(runId as string, body);
+    const result = evaluateBacktestRun(runId);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }

@@ -39,11 +39,8 @@ jobs:
       fail-fast: false
       matrix:
         suite:
-          - control-plane
-          - runtime
           - engine
           - api
-          - worker
           - web
     steps:
       - uses: actions/checkout@v4

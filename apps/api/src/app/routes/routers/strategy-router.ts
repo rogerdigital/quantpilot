@@ -1,17 +1,15 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
-import { promoteStrategyFromEvaluation } from '../../../domains/research/services/evaluation-service.js';
-import {
-  getStrategyCatalogDetail,
-  listStrategyCatalog,
-  saveStrategyCatalogItem,
-} from '../../../domains/strategy/services/catalog-service.js';
-import {
-  createExecutionCandidateHandoff,
-  listExecutionCandidateHandoffs,
-  queueExecutionCandidateHandoff,
-} from '../../../domains/strategy/services/execution-handoff-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import {
+  createExecutionHandoff,
+  getMarketProviderStatus,
+  getStrategy,
+  listExecutionHandoffs,
+  listStrategies,
+  promoteStrategy,
+  queueExecutionHandoff,
+  saveStrategy,
+} from '../core-data.js';
 import type { GatewayRouteContext } from '../types.js';
 
 export async function handleStrategyRoutes({
@@ -25,18 +23,18 @@ export async function handleStrategyRoutes({
     writeForbiddenJson(writeJson, res, permission, action);
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/market/provider-status') {
-    writeJson(res, 200, { ok: true, status: controlPlaneRuntime.getMarketProviderStatus() });
+    writeJson(res, 200, { ok: true, status: getMarketProviderStatus() });
     return true;
   }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/strategy/catalog') {
-    writeJson(res, 200, listStrategyCatalog());
+    writeJson(res, 200, listStrategies());
     return true;
   }
 
   if (req.method === 'GET' && reqUrl.pathname.startsWith('/api/strategy/catalog/')) {
     const strategyId = reqUrl.pathname.split('/').at(-1)!;
-    const result = getStrategyCatalogDetail(strategyId);
+    const result = getStrategy(strategyId);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }
@@ -47,7 +45,7 @@ export async function handleStrategyRoutes({
       return true;
     }
     const body = (await readJsonBody(req)) as Record<string, unknown> | undefined;
-    const result = saveStrategyCatalogItem(body);
+    const result = saveStrategy(body);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
@@ -58,27 +56,18 @@ export async function handleStrategyRoutes({
     reqUrl.pathname.startsWith('/api/strategy/catalog/')
   ) {
     if (!(await hasPermission('strategy:write', req.headers.authorization))) {
-      writeForbidden('strategy:write', 'promote the strategy from a research evaluation');
+      writeForbidden('strategy:write', 'promote the strategy');
       return true;
     }
     const strategyId = reqUrl.pathname.split('/').at(-2)!;
     const body = (await readJsonBody(req)) as Record<string, unknown> | undefined;
-    const result = promoteStrategyFromEvaluation(strategyId, body);
+    const result = promoteStrategy(strategyId, body);
     writeJson(res, result.ok ? 200 : 409, result);
     return true;
   }
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/research/execution-candidates') {
-    writeJson(
-      res,
-      200,
-      listExecutionCandidateHandoffs({
-        limit: reqUrl.searchParams.get('limit'),
-        hours: reqUrl.searchParams.get('hours'),
-        handoffStatus: reqUrl.searchParams.get('handoffStatus'),
-        mode: reqUrl.searchParams.get('mode'),
-      })
-    );
+    writeJson(res, 200, listExecutionHandoffs());
     return true;
   }
 
@@ -87,8 +76,8 @@ export async function handleStrategyRoutes({
       writeForbidden('strategy:write', 'create execution handoffs');
       return true;
     }
-    const body = (await readJsonBody(req)) as Record<string, unknown>;
-    const result = createExecutionCandidateHandoff(body.strategyId as string, body);
+    const body = (await readJsonBody(req)) as Record<string, any>;
+    const result = createExecutionHandoff(body.strategyId, body);
     writeJson(res, result.ok ? 200 : 400, result);
     return true;
   }
@@ -103,8 +92,7 @@ export async function handleStrategyRoutes({
       return true;
     }
     const handoffId = reqUrl.pathname.split('/').at(-2)!;
-    const body = (await readJsonBody(req)) as Record<string, unknown> | undefined;
-    const result = queueExecutionCandidateHandoff(handoffId, body);
+    const result = queueExecutionHandoff(handoffId);
     writeJson(res, result.ok ? 200 : 404, result);
     return true;
   }

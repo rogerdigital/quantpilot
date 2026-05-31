@@ -1,3 +1,3 @@
 # API Gateway
 
-统一对接前端控制台、Agent Copilot 和外部系统入口，后续承接 REST、WebSocket、限流和请求编排。
+统一对接 QuantPilot Lite 前端控制台和核心 REST 入口，当前只承接健康检查、会话、行情、策略、回测、执行、交易和风控路由。

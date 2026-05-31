@@ -1,4 +1,4 @@
-import type { PromotionRequest } from '@shared-types/lifecycle.ts';
+import type { PromotionRequest } from '@shared-types/trading.ts';
 
 export function StrategyPromotionPanel({
   promotion,

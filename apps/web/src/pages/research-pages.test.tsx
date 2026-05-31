@@ -92,7 +92,7 @@ vi.mock('../modules/console/useExecutionConsoleData.ts', () => ({
   useExecutionConsoleData: (...args: unknown[]) => mockUseExecutionConsoleData(...args),
 }));
 
-vi.mock('../modules/audit/useAuditFeed.ts', () => ({
+vi.mock('../modules/console/useAuditFeed.ts', () => ({
   useAuditFeed: (...args: unknown[]) => mockUseAuditFeed(...args),
 }));
 

@@ -98,20 +98,12 @@ function main() {
   const errors = [];
   const warnings = [];
 
-  requireAllowed(errors, values, 'QUANTPILOT_CONTROL_PLANE_ADAPTER', ['file', 'db']);
-  requireAllowed(errors, values, 'QUANTPILOT_TRADING_MODE', ['simulated', 'paper', 'live']);
-  requireAllowed(errors, values, 'VITE_TRADING_MODE', ['simulated', 'paper', 'live']);
+  requireAllowed(errors, values, 'QUANTPILOT_TRADING_MODE', ['simulated', 'paper']);
+  requireAllowed(errors, values, 'VITE_TRADING_MODE', ['simulated', 'paper']);
   requirePositiveInteger(errors, values, 'GATEWAY_PORT');
   requirePositiveInteger(errors, values, 'VITE_REFRESH_MS');
-  requireAllowed(errors, values, 'BROKER_ADAPTER', ['alpaca', 'custom-http']);
-  requireAllowed(errors, values, 'VITE_MARKET_DATA_PROVIDER', [
-    'simulated',
-    'custom-http',
-    'alpaca',
-  ]);
-  requireAllowed(errors, values, 'VITE_BROKER_PROVIDER', ['simulated', 'custom-http', 'alpaca']);
-  requireBooleanString(errors, values, 'ALPACA_USE_PAPER');
-  requirePathPrefix(errors, values, 'VITE_ALPACA_PROXY_BASE');
+  requireAllowed(errors, values, 'VITE_MARKET_DATA_PROVIDER', ['simulated', 'custom-http']);
+  requireAllowed(errors, values, 'VITE_BROKER_PROVIDER', ['simulated', 'custom-http']);
 
   const tradingMode = resolveTradingMode(values);
   if (
@@ -120,10 +112,6 @@ function main() {
     values.QUANTPILOT_TRADING_MODE !== values.VITE_TRADING_MODE
   ) {
     errors.push('VITE_TRADING_MODE must match QUANTPILOT_TRADING_MODE when both are set');
-  }
-
-  if (values.BROKER_UPSTREAM_API_KEY && !values.BROKER_UPSTREAM_AUTH_SCHEME) {
-    errors.push('BROKER_UPSTREAM_AUTH_SCHEME is required when BROKER_UPSTREAM_API_KEY is set');
   }
 
   if (values.VITE_MARKET_DATA_PROVIDER === 'custom-http' && !values.VITE_MARKET_DATA_HTTP_URL) {
@@ -136,63 +124,6 @@ function main() {
   if (values.VITE_BROKER_PROVIDER === 'custom-http' && !values.VITE_BROKER_HTTP_URL) {
     const target = templateMode ? warnings : errors;
     target.push('VITE_BROKER_HTTP_URL should be set when VITE_BROKER_PROVIDER=custom-http');
-  }
-
-  if (values.VITE_BROKER_PROVIDER === 'alpaca' && values.BROKER_ADAPTER === 'custom-http') {
-    warnings.push(
-      'VITE_BROKER_PROVIDER=alpaca usually expects BROKER_ADAPTER=alpaca on the gateway'
-    );
-  }
-
-  if (tradingMode === 'paper') {
-    requireNonEmpty(errors, values, 'ALPACA_KEY_ID', 'ALPACA_KEY_ID is required in paper mode');
-    requireNonEmpty(
-      errors,
-      values,
-      'ALPACA_SECRET_KEY',
-      'ALPACA_SECRET_KEY is required in paper mode'
-    );
-    if (String(values.ALPACA_USE_PAPER).toLowerCase() !== 'true') {
-      errors.push('ALPACA_USE_PAPER must be true in paper mode');
-    }
-  }
-
-  if (tradingMode === 'live') {
-    requireNonEmpty(errors, values, 'ALPACA_KEY_ID', 'ALPACA_KEY_ID is required in live mode');
-    requireNonEmpty(
-      errors,
-      values,
-      'ALPACA_SECRET_KEY',
-      'ALPACA_SECRET_KEY is required in live mode'
-    );
-    if (String(values.ALPACA_USE_PAPER).toLowerCase() !== 'false') {
-      errors.push('ALPACA_USE_PAPER must be false in live mode');
-    }
-    if (values.QUANTPILOT_LIVE_TRADING_ACK !== 'I_UNDERSTAND_LIVE_TRADING_RISK') {
-      errors.push(
-        'QUANTPILOT_LIVE_TRADING_ACK must be I_UNDERSTAND_LIVE_TRADING_RISK in live mode'
-      );
-    }
-  }
-
-  if (values.BROKER_ADAPTER === 'alpaca' && tradingMode === 'simulated' && templateMode) {
-    if (!values.ALPACA_KEY_ID || !values.ALPACA_SECRET_KEY) {
-      warnings.push(
-        'ALPACA_KEY_ID and ALPACA_SECRET_KEY are blank in the template; fill them before paper/live gateway startup'
-      );
-    }
-  }
-
-  if (values.BROKER_ADAPTER === 'custom-http') {
-    if (templateMode) {
-      if (!values.BROKER_UPSTREAM_URL) {
-        warnings.push(
-          'BROKER_UPSTREAM_URL is blank in the template; fill it before custom-http gateway startup'
-        );
-      }
-    } else {
-      requireNonEmpty(errors, values, 'BROKER_UPSTREAM_URL');
-    }
   }
 
   if (values.QUANTPILOT_CONTROL_PLANE_NAMESPACE === '') {

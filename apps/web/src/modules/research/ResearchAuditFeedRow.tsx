@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { InspectionSelectableRow } from '../../pages/console/components/InspectionPanels.tsx';
-import type { AuditFeedItem } from '../audit/useAuditFeed.ts';
+import type { AuditFeedItem } from '../console/useAuditFeed.ts';
 
 type AuditMetric = {
   label: string;

@@ -3,41 +3,28 @@ import { lazy, type ReactElement, Suspense } from 'react';
 import { ErrorBoundary } from '../../app/components/ErrorBoundary.tsx';
 import { type ConsolePageKey, copy } from './console.i18n.tsx';
 
-const AgentPage = lazy(() => import('../agent/AgentPage.tsx'));
 const DashboardPage = lazy(() =>
   import('../../pages/console/routes/OverviewPage.tsx').then((m) => ({ default: m.OverviewPage }))
-);
-const ExecutionPage = lazy(() =>
-  import('../../pages/console/routes/ExecutionPage.tsx').then((m) => ({ default: m.ExecutionPage }))
 );
 const MarketPage = lazy(() =>
   import('../../pages/console/routes/MarketPage.tsx').then((m) => ({ default: m.MarketPage }))
 );
-const SettingsPage = lazy(() =>
-  import('../../pages/console/routes/SettingsPage.tsx').then((m) => ({ default: m.SettingsPage }))
+const TradingPage = lazy(() =>
+  import('../../pages/trading/TradingPage.tsx').then((m) => ({ default: m.TradingPage }))
 );
-const NotificationsPage = lazy(() => import('../../pages/notifications/NotificationsPage.tsx'));
-const BacktestPage = lazy(() => import('../../pages/backtest/BacktestPage.tsx'));
 const StrategiesPage = lazy(() => import('../../pages/strategies/StrategiesPage.tsx'));
 const StrategyDetailPage = lazy(() =>
   import('../../pages/strategies/StrategyDetailPage.tsx').then((m) => ({
     default: m.StrategyDetailPage,
   }))
 );
+const BacktestPage = lazy(() => import('../../pages/backtest/BacktestPage.tsx'));
 const RiskPage = lazy(() => import('../../pages/risk/RiskPage.tsx'));
-const TradingPage = lazy(() =>
-  import('../../pages/trading/TradingPage.tsx').then((m) => ({ default: m.TradingPage }))
+const ExecutionPage = lazy(() =>
+  import('../../pages/console/routes/ExecutionPage.tsx').then((m) => ({ default: m.ExecutionPage }))
 );
-const MarketplacePage = lazy(() =>
-  import('../../pages/marketplace/MarketplacePage.tsx').then((m) => ({
-    default: m.MarketplacePage,
-  }))
-);
-const AnalyticsPage = lazy(() =>
-  import('../../pages/analytics/AnalyticsPage.tsx').then((m) => ({ default: m.AnalyticsPage }))
-);
-const DataPage = lazy(() =>
-  import('../../pages/data/DataPage.tsx').then((m) => ({ default: m.DataPage }))
+const SettingsPage = lazy(() =>
+  import('../../pages/console/routes/SettingsPage.tsx').then((m) => ({ default: m.SettingsPage }))
 );
 
 type ConsoleNavKey =
@@ -49,12 +36,7 @@ type ConsoleNavKey =
   | 'backtest'
   | 'risk'
   | 'execution'
-  | 'agent'
-  | 'notifications'
-  | 'settings'
-  | 'marketplace'
-  | 'analytics'
-  | 'data';
+  | 'settings';
 
 export type ConsoleRouteDefinition = {
   id: ConsoleNavKey;
@@ -139,48 +121,11 @@ export const CONSOLE_ROUTES: ConsoleRouteDefinition[] = [
     element: renderLazyRoute(<ExecutionPage />),
   },
   {
-    id: 'agent',
-    pageKey: 'agent',
-    path: '/agent',
-    aliases: ['/analysis'],
-    includeInSidebar: true,
-    element: renderLazyRoute(<AgentPage />),
-  },
-  {
-    id: 'notifications',
-    pageKey: 'notifications',
-    path: '/notifications',
-    includeInSidebar: true,
-    element: renderLazyRoute(<NotificationsPage />),
-  },
-  {
     id: 'settings',
     pageKey: 'settings',
     path: '/settings',
     includeInSidebar: true,
     element: renderLazyRoute(<SettingsPage />),
-  },
-  {
-    id: 'marketplace',
-    pageKey: 'marketplace',
-    path: '/marketplace',
-    includeInSidebar: true,
-    element: renderLazyRoute(<MarketplacePage />),
-  },
-  {
-    id: 'analytics',
-    pageKey: 'analytics',
-    path: '/analytics',
-    includeInSidebar: true,
-    element: renderLazyRoute(<AnalyticsPage />),
-  },
-  {
-    id: 'data',
-    pageKey: 'data',
-    path: '/data',
-    aliases: ['/datasets', '/features'],
-    includeInSidebar: true,
-    element: renderLazyRoute(<DataPage />),
   },
 ];
 

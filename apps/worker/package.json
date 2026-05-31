@@ -1,8 +1,0 @@
-{
-  "name": "@quantpilot/worker",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "node --import tsx/esm src/main.ts"
-  }
-}

@@ -199,13 +199,6 @@ export function IncidentTriagePanel({
             >
               {locale === 'zh' ? '关闭 Incident' : 'Resolve Incident'}
             </button>
-            <button
-              type="button"
-              className="inline-action"
-              onClick={() => onNavigate(`/notifications?incident=${selectedExecutionIncident.id}`)}
-            >
-              {locale === 'zh' ? '打开通知中心' : 'Open Notifications'}
-            </button>
           </div>
           <textarea
             value={incidentNoteDraft}

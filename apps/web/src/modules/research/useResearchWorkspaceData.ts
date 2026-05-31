@@ -1,7 +1,7 @@
 import type { ExecutionLedgerEntry, WorkflowRunRecord } from '@shared-types/trading.ts';
 import { useEffect, useState } from 'react';
 import { fetchExecutionLedger, fetchTaskWorkflows } from '../../app/api/controlPlane.ts';
-import { useAuditFeed } from '../audit/useAuditFeed.ts';
+import { useAuditFeed } from '../console/useAuditFeed.ts';
 import { useResearchHub } from './useResearchHub.ts';
 
 type ResearchWorkspaceDataState = {

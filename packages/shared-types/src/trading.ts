@@ -1345,285 +1345,6 @@ export type ExecutionPlanRecord = {
   updatedAt: string;
 };
 
-export type AgentToolDefinition = {
-  name: string;
-  category: 'strategy' | 'backtest' | 'risk' | 'execution' | 'control-plane';
-  description: string;
-  access: 'read';
-};
-
-export type AgentToolExecutionResult = {
-  ok: boolean;
-  tool: string;
-  summary: string;
-  data: Record<string, unknown>;
-};
-
-export type AgentSessionStatus =
-  | 'draft'
-  | 'ready'
-  | 'running'
-  | 'waiting_approval'
-  | 'completed'
-  | 'failed';
-export type AgentMessageRole = 'system' | 'user' | 'assistant';
-export type AgentMessageKind =
-  | 'prompt'
-  | 'intent'
-  | 'plan'
-  | 'analysis_status'
-  | 'analysis_result'
-  | 'approval_note'
-  | 'system_note';
-
-export type AgentIntentKind =
-  | 'unknown'
-  | 'read_only_analysis'
-  | 'request_backtest_review'
-  | 'request_execution_prep'
-  | 'request_risk_explanation'
-  | 'request_scheduler_action';
-
-export type AgentIntentRecord = {
-  kind: AgentIntentKind;
-  summary: string;
-  targetType:
-    | 'strategy'
-    | 'backtest_run'
-    | 'execution_plan'
-    | 'risk_event'
-    | 'scheduler_window'
-    | 'incident'
-    | 'unknown';
-  targetId: string;
-  urgency: 'low' | 'normal' | 'high';
-  requiresApproval: boolean;
-  requestedMode: 'read_only' | 'prepare_action';
-  metadata: Record<string, unknown>;
-};
-
-export type AgentPlanStep = {
-  id: string;
-  kind: 'read' | 'analyze' | 'explain' | 'request_action';
-  title: string;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
-  toolName: string;
-  description: string;
-  outputSummary: string;
-  metadata: Record<string, unknown>;
-};
-
-export type AgentPlanRecord = {
-  id: string;
-  sessionId: string;
-  status: 'draft' | 'ready' | 'running' | 'completed' | 'failed';
-  summary: string;
-  requiresApproval: boolean;
-  requestedBy: string;
-  steps: AgentPlanStep[];
-  metadata: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type AgentEvidenceRecord = {
-  id: string;
-  kind: 'tool_result' | 'domain_snapshot' | 'risk_note' | 'incident_context' | 'operator_note';
-  title: string;
-  summary: string;
-  source: string;
-  sourceId: string;
-  metadata: Record<string, unknown>;
-};
-
-export type AgentAnalysisRunRecord = {
-  id: string;
-  sessionId: string;
-  planId: string;
-  status: 'queued' | 'running' | 'completed' | 'failed';
-  summary: string;
-  conclusion: string;
-  requestedBy: string;
-  toolCalls: Array<{
-    tool: string;
-    status: 'pending' | 'completed' | 'failed';
-    summary: string;
-    metadata: Record<string, unknown>;
-  }>;
-  evidence: AgentEvidenceRecord[];
-  explanation: {
-    thesis: string;
-    rationale: string[];
-    warnings: string[];
-    recommendedNextStep: string;
-  };
-  metadata: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-  completedAt: string;
-};
-
-export type AgentSessionMessageRecord = {
-  id: string;
-  sessionId: string;
-  role: AgentMessageRole;
-  kind: AgentMessageKind;
-  title: string;
-  body: string;
-  requestedBy: string;
-  createdAt: string;
-  metadata: Record<string, unknown>;
-};
-
-export type AgentSessionRecord = {
-  id: string;
-  status: AgentSessionStatus;
-  title: string;
-  prompt: string;
-  requestedBy: string;
-  latestIntent: AgentIntentRecord;
-  latestPlanId: string;
-  latestAnalysisRunId: string;
-  latestActionRequestId: string;
-  tags: string[];
-  metadata: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type AgentActionRequest = {
-  id: string;
-  workflowRunId: string;
-  requestType:
-    | 'prepare_execution_plan'
-    | 'explain_risk'
-    | 'review_backtest'
-    | 'agent_trim'
-    | 'agent_exit'
-    | 'agent_cancel'
-    | 'agent_risk_reduce';
-  targetId: string;
-  status: 'submitted' | 'pending_review' | 'approved' | 'rejected';
-  approvalState: 'pending' | 'required' | 'approved' | 'rejected' | 'not_required';
-  riskStatus: 'pending' | 'approved' | 'review' | 'blocked';
-  summary: string;
-  rationale: string;
-  requestedBy: string;
-  metadata: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type AgentAuthorityMode =
-  | 'full_auto'
-  | 'bounded_auto'
-  | 'ask_first'
-  | 'manual_only'
-  | 'stopped';
-
-export type AgentAuthorityState = {
-  mode: AgentAuthorityMode;
-  reason: string;
-  updatedAt?: string;
-  accountId?: string;
-  strategyId?: string;
-  actionType?: string;
-  latestEvent?: AgentAuthorityEventRecord;
-  policy?: AgentPolicyRecord;
-};
-
-export type AgentInstructionKind =
-  | 'conversation'
-  | 'daily_bias'
-  | 'market_intel'
-  | 'watch_focus'
-  | 'strategy_change_request';
-
-export type AgentDailyBiasState = {
-  summary?: string;
-  updatedAt: string;
-  instructions: AgentInstructionRecord[];
-  accountId?: string;
-  strategyId?: string;
-  actionType?: string;
-};
-
-export type AgentDailyRunKind =
-  | 'pre_market'
-  | 'intraday_monitor'
-  | 'post_market'
-  | 'operator_update'
-  | 'risk_event'
-  | 'execution_event'
-  | 'market_event';
-
-export type AgentPolicyRecord = {
-  id: string;
-  accountId: string;
-  strategyId: string;
-  actionType: string;
-  environment: 'paper' | 'live' | 'all';
-  authority: AgentAuthorityMode;
-  singleActionMaxNotional: number;
-  singleActionMaxEquityPct: number;
-  strategyExposureMaxPct: number;
-  dailyAutoActionLimit: number;
-  dailyLossLimitPct: number;
-  maxDrawdownLimitPct: number;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type AgentInstructionRecord = {
-  id: string;
-  sessionId: string;
-  kind: AgentInstructionKind;
-  title: string;
-  body: string;
-  requestedBy: string;
-  activeUntil: string;
-  createdAt: string;
-  metadata: Record<string, unknown>;
-};
-
-export type AgentDailyRunRecord = {
-  id: string;
-  kind: AgentDailyRunKind;
-  status: 'queued' | 'running' | 'completed' | 'failed';
-  trigger: 'schedule' | 'event' | 'manual';
-  accountId?: string;
-  strategyId?: string;
-  requestedBy: string;
-  createdAt: string;
-  updatedAt: string;
-  summary?: string;
-  latestCheckpoint?: string;
-  metadata: Record<string, unknown>;
-};
-
-export type AgentAuthorityEventRecord = {
-  id: string;
-  severity: 'info' | 'warn' | 'critical';
-  eventType: 'downgraded' | 'stopped' | 'restored' | 'blocked' | 'risk_triggered';
-  previousMode: AgentAuthorityMode;
-  nextMode: AgentAuthorityMode;
-  reason: string;
-  createdAt: string;
-  accountId?: string;
-  strategyId?: string;
-  actionType?: string;
-  sessionId?: string;
-  policyId?: string;
-  metadata: Record<string, unknown>;
-};
-
-export type AgentWorkbenchGovernanceSnapshot = {
-  authorityState: AgentAuthorityState;
-  dailyBias: AgentDailyBiasState;
-  dailyRuns: AgentDailyRunRecord[];
-  authorityEvents: AgentAuthorityEventRecord[];
-};
-
 export type ControlPlaneResolution = {
   ok: boolean;
   cycle: {
@@ -2703,6 +2424,116 @@ export type TradingSystemContextValue = {
   cancelLiveOrder: (orderId: string) => Promise<void>;
   approveLiveIntent: (clientOrderId: string) => void;
   rejectLiveIntent: (clientOrderId: string) => void;
+};
+
+export type ResearchHypothesis = {
+  statement: string;
+  rationale: string;
+  expectedOutcome: string;
+  falsificationCriteria: string;
+  relatedLiterature: string[];
+};
+
+export type ResearchIdea = {
+  id: string;
+  workspaceId: string;
+  title: string;
+  hypothesis: ResearchHypothesis;
+  market: string;
+  assetUniverse: string[];
+  timeHorizon: string;
+  status: string;
+  owner: string;
+  ownerRole: string;
+  tags: string[];
+  decisionRecords: DecisionRecord[];
+  linkedDatasetIds: string[];
+  linkedFeatureSetIds: string[];
+  linkedExperimentIds: string[];
+  linkedBacktestIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type ExperimentParameter = {
+  name: string;
+  value: string | number | boolean;
+  type: 'string' | 'number' | 'boolean' | 'json';
+};
+
+export type ExperimentMetricValue =
+  | { kind: 'scalar'; value: number }
+  | { kind: 'distribution'; values: number[]; mean: number; std: number }
+  | { kind: 'time_series'; points: Array<{ time: string; value: number }> }
+  | { kind: 'custom'; data: Record<string, unknown> };
+
+export type ExperimentMetric = {
+  name: string;
+  direction: 'higher_is_better' | 'lower_is_better';
+  value: ExperimentMetricValue;
+  metadata: Record<string, unknown>;
+};
+
+export type ExperimentRunSnapshot = {
+  datasetVersionId: string;
+  featureVersionId: string;
+  codeVersion: string;
+  parameters: ExperimentParameter[];
+  seed: number;
+  runtimeEnvironment: string;
+};
+
+export type ExperimentRun = {
+  id: string;
+  experimentId: string;
+  status: 'queued' | 'running' | 'completed' | 'failed' | string;
+  snapshot: ExperimentRunSnapshot;
+  metrics: ExperimentMetric[];
+  artifactIds: string[];
+  isCandidate: boolean;
+  startedAt: string;
+  completedAt: string;
+  createdAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type PromotionGate = {
+  key: string;
+  label: string;
+  status: 'pending' | 'passed' | 'failed' | 'waived' | string;
+  evidenceId?: string | null;
+  evaluatedAt?: string;
+  evaluatedBy?: string;
+  reason?: string;
+  metadata?: Record<string, unknown>;
+};
+
+export type PromotionRequest = {
+  id: string;
+  strategyCandidateId: string;
+  strategyVersionId: string;
+  status: string;
+  gates: PromotionGate[];
+  decisions: DecisionRecord[];
+  requestedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  metadata: Record<string, unknown>;
+};
+
+export type DecisionRecord = {
+  id: string;
+  entityType?: string;
+  entityId?: string;
+  actor: string;
+  actorType?: 'human' | 'system' | 'policy' | string;
+  role?: string;
+  action: string;
+  reason: string;
+  evidenceLinks?: string[];
+  timestamp: string;
+  metadata?: Record<string, unknown>;
 };
 
 export type AppLocale = 'zh' | 'en';

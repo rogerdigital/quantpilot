@@ -1,8 +1,6 @@
-import { controlPlaneRuntime } from '../../../../../../packages/control-plane-runtime/src/index.js';
-import { assessExecutionCandidate } from '../../../domains/risk/services/assessment-service.js';
-import { getStrategyCatalogItem } from '../../../domains/strategy/services/catalog-service.js';
 import { writeForbiddenJson } from '../../../modules/auth/permission-catalog.js';
 import { hasPermission } from '../../../modules/auth/service.js';
+import { appendExecutionHandoff, assessExecutionCandidate, getStrategy } from '../core-data.js';
 import type { GatewayRouteContext } from '../types.js';
 
 interface TradingOrderBody {
@@ -18,12 +16,12 @@ function buildAdhocStrategy(symbol: string, side: string) {
   return {
     id: `terminal-${symbol.toLowerCase()}-${side}`,
     name: `Terminal ${side.toUpperCase()} ${symbol}`,
-    family: 'trend',
+    family: 'manual',
     status: 'paper',
     score: 60,
-    expectedReturnPct: 8,
-    maxDrawdownPct: 8,
-    sharpe: 1.2,
+    expectedReturnPct: 0,
+    maxDrawdownPct: 0,
+    sharpe: 0,
   };
 }
 
@@ -59,81 +57,60 @@ export async function handleTradingRoutes({
     return true;
   }
 
-  try {
-    // Look up strategy by symbol, or use adhoc strategy for direct terminal orders
-    const strategyId = `terminal-${symbol.toLowerCase()}-${side}`;
-    let strategy = getStrategyCatalogItem(strategyId);
-
-    if (!strategy) {
-      // Create an adhoc in-memory candidate without persisting a strategy
-      strategy = buildAdhocStrategy(symbol, side);
-    }
-
-    const capital = price ? qty * price : qty * 100; // estimate capital for market orders
-
-    const candidate = {
-      strategyId: strategy.id,
-      strategyName: strategy.name,
-      mode: 'paper',
-      capital,
-      status: strategy.status,
-      metrics: {
-        score: strategy.score,
-        expectedReturnPct: strategy.expectedReturnPct,
-        maxDrawdownPct: strategy.maxDrawdownPct,
-        sharpe: strategy.sharpe,
+  const strategyId = `terminal-${symbol.toLowerCase()}-${side}`;
+  const strategyDetail = getStrategy(strategyId);
+  const strategy = (
+    strategyDetail.ok && strategyDetail.strategy
+      ? strategyDetail.strategy
+      : buildAdhocStrategy(symbol, side)
+  ) as ReturnType<typeof buildAdhocStrategy>;
+  const capital = price ? qty * price : qty * 100;
+  const candidate = {
+    strategyId: strategy.id,
+    strategyName: strategy.name,
+    mode: 'paper',
+    capital,
+    status: strategy.status,
+    metrics: {
+      score: strategy.score,
+      expectedReturnPct: strategy.expectedReturnPct,
+      maxDrawdownPct: strategy.maxDrawdownPct,
+      sharpe: strategy.sharpe,
+    },
+    orders: [
+      {
+        symbol,
+        side: side.toUpperCase(),
+        weight: 1.0,
+        qty,
+        price: price || null,
+        orderType,
+        rationale: `Terminal ${side} order from trading desk`,
       },
-      orders: [
-        {
-          symbol,
-          side: side.toUpperCase(),
-          weight: 1.0,
-          qty,
-          price: price || null,
-          orderType,
-          rationale: `Terminal ${side} order from trading desk`,
-        },
-      ],
-      summary: `Terminal ${side.toUpperCase()} ${qty} ${symbol}${price ? ` @ $${price}` : ''} (${orderType})`,
-      metadata: {
-        family: strategy.family,
-        requestedBy: 'terminal',
-        source: source || 'trading-terminal',
-      },
-    };
+    ],
+    summary: `Terminal ${side.toUpperCase()} ${qty} ${symbol}${price ? ` @ $${price}` : ''} (${orderType})`,
+    metadata: {
+      family: strategy.family,
+      requestedBy: 'terminal',
+      source: source || 'trading-terminal',
+    },
+  };
+  const riskAssessment = assessExecutionCandidate(candidate);
+  const handoff = appendExecutionHandoff({
+    id: `handoff-terminal-${Date.now()}`,
+    ...candidate,
+    riskStatus: riskAssessment.riskStatus,
+    approvalState: riskAssessment.approvalState,
+    createdAt: new Date().toISOString(),
+  });
 
-    const riskAssessment = assessExecutionCandidate(candidate);
-
-    const handoff = {
-      id: `handoff-terminal-${Date.now()}`,
-      strategyId: candidate.strategyId,
-      strategyName: candidate.strategyName,
-      mode: candidate.mode,
-      capital: candidate.capital,
-      orders: candidate.orders,
-      summary: candidate.summary,
-      riskStatus: riskAssessment.riskStatus,
-      approvalState: riskAssessment.approvalState,
-      riskSummary: riskAssessment.summary,
-      metadata: candidate.metadata,
-      createdAt: new Date().toISOString(),
-    };
-
-    controlPlaneRuntime.appendExecutionCandidateHandoff(handoff);
-
-    writeJson(res, 200, {
-      ok: true,
-      handoffId: handoff.id,
-      riskDecision: riskAssessment.riskStatus,
-      approvalState: riskAssessment.approvalState,
-      message: riskAssessment.summary,
-    });
-  } catch (err) {
-    writeJson(res, 500, {
-      ok: false,
-      message: (err as Error).message || 'Failed to submit terminal order',
-    });
-  }
+  writeJson(res, 200, {
+    ok: true,
+    handoffId: handoff.id,
+    riskDecision: riskAssessment.riskStatus,
+    approvalState: riskAssessment.approvalState,
+    message: riskAssessment.summary,
+  });
 
   return true;
 }

@@ -4,7 +4,7 @@ import type {
   StrategyCatalogDetailSnapshot,
   StrategyCatalogItem,
 } from '@shared-types/trading.ts';
-import type { AuditFeedItem } from '../audit/useAuditFeed.ts';
+import type { AuditFeedItem } from '../console/useAuditFeed.ts';
 
 type StrategyReplayTimelineItem = NonNullable<
   StrategyCatalogDetailSnapshot['replayTimeline']
