@@ -84,15 +84,15 @@ jobs:
         run: |
           echo "## Bundle Size Report" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
-          du -sh dist/ >> "$GITHUB_STEP_SUMMARY"
-          du -sh dist/assets/ >> "$GITHUB_STEP_SUMMARY"
+          du -sh apps/web/dist/ >> "$GITHUB_STEP_SUMMARY"
+          du -sh apps/web/dist/assets/ >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "Top 10 largest chunks:" >> "$GITHUB_STEP_SUMMARY"
-          ls -lhS dist/assets/*.js | head -10 | awk '{printf "%s\t%s\n", $5, $9}' >> "$GITHUB_STEP_SUMMARY"
+          ls -lhS apps/web/dist/assets/*.js | head -10 | awk '{printf "%s\t%s\n", $5, $9}' >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
       - name: Check bundle size limits
         run: |
-          TOTAL_KB=$(du -sk dist/assets/ | cut -f1)
+          TOTAL_KB=$(du -sk apps/web/dist/assets/ | cut -f1)
           THRESHOLD=1500
           echo "Total assets: ${TOTAL_KB}KB (threshold: ${THRESHOLD}KB)"
           if [ "$TOTAL_KB" -gt "$THRESHOLD" ]; then
