@@ -50,7 +50,7 @@ export function useStrategyDetailPanels(options: {
       typeof item.metadata?.sharpe === 'number'
   );
   const selectedStrategyExecutionEntries = executionEntries
-    .filter((entry) => entry.plan.strategyId === selectedStrategy?.id)
+    .filter((entry) => entry.plan?.strategyId === selectedStrategy?.id)
     .slice(0, 6);
   const fallbackTimelineItems: StrategyReplayTimelineItem[] = [
     ...selectedStrategyAuditItems.map((item) => ({
