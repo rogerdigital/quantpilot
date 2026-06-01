@@ -191,6 +191,8 @@ export function ExecutionPage() {
   const selectedRecovery = selectedEntry?.recovery;
   const selectedBrokerEvents = selectedEntry?.brokerEvents || [];
   const selectedLinkedIncidents = selectedEntry?.linkedIncidents || [];
+  const selectedAccountPositions = selectedAccountSnapshot?.positions || [];
+  const selectedAccountOrders = selectedAccountSnapshot?.orders || [];
   const workbenchSummary = workbench?.summary;
   const workbenchOperations = workbench?.operations;
   const selectedPlanCount = selectedPlanIds.length;
@@ -1076,11 +1078,11 @@ export function ExecutionPage() {
               </div>
               <div className="status-row">
                 <span>{locale === 'zh' ? '持仓数' : 'Positions'}</span>
-                <strong>{selectedAccountSnapshot.positions.length}</strong>
+                <strong>{selectedAccountPositions.length}</strong>
               </div>
               <div className="status-row">
                 <span>{locale === 'zh' ? '订单数' : 'Orders'}</span>
-                <strong>{selectedAccountSnapshot.orders.length}</strong>
+                <strong>{selectedAccountOrders.length}</strong>
               </div>
               <InspectionStatus>{selectedAccountSnapshot.message}</InspectionStatus>
             </div>

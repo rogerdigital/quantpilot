@@ -107,7 +107,7 @@ export function OverviewPage() {
   const monitoringQueueBacklog =
     (monitoringStatus?.services.queues.pendingNotificationJobs || 0) +
     (monitoringStatus?.services.queues.pendingRiskScanJobs || 0);
-  const monitoringAlert = monitoringStatus?.alerts[0] || null;
+  const monitoringAlert = monitoringStatus?.alerts?.[0] || null;
   const monitoringUpdatedAt =
     monitoringStatus?.generatedAt ||
     monitoringStatus?.recent.latestWorkerHeartbeat?.createdAt ||

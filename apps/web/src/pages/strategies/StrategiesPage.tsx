@@ -200,7 +200,7 @@ function StrategiesPage() {
               (result) => `result-${result.id}`
             ),
             ...executionEntries
-              .filter((entry) => entry.plan.strategyId === selectedStrategy.id)
+              .filter((entry) => entry.plan?.strategyId === selectedStrategy.id)
               .slice(0, 6)
               .map((entry) => `execution-${entry.plan.id}`),
           ]

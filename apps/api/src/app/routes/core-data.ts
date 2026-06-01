@@ -1,3 +1,10 @@
+import type {
+  BrokerAccountSnapshotRecord,
+  ExecutionLedgerEntry,
+  ExecutionPlanRecord,
+  RiskWorkbenchResponse,
+} from '../../../../../packages/shared-types/src/trading.ts';
+
 const now = () => new Date().toISOString();
 
 type AnyRecord = Record<string, any>;
@@ -55,16 +62,32 @@ const backtestResults: AnyRecord[] = [
   },
 ];
 
-const executionPlans: AnyRecord[] = [
+const executionPlans: ExecutionPlanRecord[] = [
   {
     id: 'plan-momentum-core',
+    workflowRunId: '',
+    handoffId: '',
+    executionRunId: '',
     strategyId: 'momentum-core',
     strategyName: 'Momentum Core',
-    status: 'pending_approval',
+    mode: 'paper',
+    status: 'ready',
+    lifecycleStatus: 'awaiting_approval',
     approvalState: 'required',
-    riskStatus: 'pass',
+    riskStatus: 'approved',
     summary: 'Paper rebalance candidate for Momentum Core.',
-    orders: [{ symbol: 'SPY', side: 'BUY', qty: 10, orderType: 'market' }],
+    capital: 10000,
+    orderCount: 1,
+    orders: [
+      {
+        symbol: 'SPY',
+        side: 'BUY',
+        qty: 10,
+        weight: 1,
+        rationale: 'Core momentum allocation.',
+      },
+    ],
+    metadata: {},
     createdAt: now(),
     updatedAt: now(),
   },
@@ -75,14 +98,24 @@ const runtimeEvents: AnyRecord[] = [];
 const brokerEvents: AnyRecord[] = [];
 const riskEvents: AnyRecord[] = [];
 
-const accountSnapshots: AnyRecord[] = [
+const accountSnapshots: BrokerAccountSnapshotRecord[] = [
   {
     id: 'snapshot-paper',
-    accountId: 'paper',
-    equity: 100000,
-    cash: 62000,
-    buyingPower: 124000,
-    capturedAt: now(),
+    cycleId: 'cycle-paper',
+    cycle: 1,
+    executionPlanId: 'plan-momentum-core',
+    executionRunId: '',
+    provider: 'simulated',
+    connected: true,
+    account: {
+      equity: 100000,
+      cash: 62000,
+      buyingPower: 124000,
+    },
+    positions: [],
+    orders: [],
+    message: 'Simulated paper account is online.',
+    createdAt: now(),
   },
 ];
 
@@ -268,12 +301,20 @@ export function listBrokerExecutionEvents(limit = 40) {
   return brokerEvents.slice(0, limit);
 }
 
-export function listExecutionLedger() {
+export function listExecutionLedger(): ExecutionLedgerEntry[] {
   return executionPlans.map((plan) => ({
-    id: `ledger-${plan.id}`,
-    executionPlanId: plan.id,
-    status: plan.status,
-    updatedAt: plan.updatedAt,
+    plan,
+    executionRun: null,
+    orderStates: [],
+    workflow: null,
+    latestRuntime: null,
+    latestSnapshot: null,
+    brokerEvents: [],
+    reconciliation: null,
+    compensation: null,
+    exceptionPolicy: null,
+    recovery: null,
+    linkedIncidents: [],
   }));
 }
 
@@ -351,13 +392,108 @@ export function appendRiskEvent(payload: AnyRecord = {}) {
   return event;
 }
 
-export function getRiskWorkbench() {
+export function getRiskWorkbench(): RiskWorkbenchResponse {
+  const brokerSnapshot = accountSnapshots[0] || null;
+
   return {
     ok: true,
-    events: riskEvents,
-    executionPlans,
-    accountSnapshot: accountSnapshots[0] || null,
-    parameters: getRiskParameters(),
+    generatedAt: now(),
+    posture: {
+      status: 'healthy',
+      title: 'Risk posture clear',
+      detail: 'No active risk events in the lightweight control plane.',
+    },
+    summary: {
+      openRiskEvents: riskEvents.length,
+      riskOffEvents: 0,
+      approvalRequired: executionPlans.filter((plan) => plan.approvalState === 'required').length,
+      blockedExecutions: executionPlans.filter((plan) => plan.lifecycleStatus === 'blocked').length,
+      reviewBacktests: 0,
+      openRiskIncidents: 0,
+      liveExposurePct: 0,
+      liveEquity: Number(brokerSnapshot?.account?.equity || 0),
+      brokerConnected: Boolean(brokerSnapshot?.connected),
+      concentrationPct: 0,
+      drawdownAlerts: 0,
+      complianceAlerts: 0,
+      emergencyActions: 0,
+      schedulerAttention: 0,
+    },
+    lanes: [
+      {
+        key: 'risk-events',
+        title: 'Risk events',
+        status: 'healthy',
+        detail: 'No open risk events.',
+        primaryCount: riskEvents.length,
+        secondaryCount: 0,
+        updatedAt: now(),
+      },
+      {
+        key: 'execution-review',
+        title: 'Execution review',
+        status: 'warn',
+        detail: 'One paper execution plan is awaiting approval.',
+        primaryCount: executionPlans.filter((plan) => plan.approvalState === 'required').length,
+        secondaryCount: executionPlans.length,
+        updatedAt: now(),
+      },
+      {
+        key: 'broker',
+        title: 'Broker',
+        status: brokerSnapshot?.connected ? 'healthy' : 'warn',
+        detail: brokerSnapshot?.message || 'Broker snapshot unavailable.',
+        primaryCount: brokerSnapshot?.connected ? 1 : 0,
+        secondaryCount: accountSnapshots.length,
+        updatedAt: now(),
+      },
+    ],
+    runbook: [],
+    policies: [],
+    assessments: [],
+    killSwitch: { active: false, activatedAt: null, activatedBy: null, reason: null },
+    reviewQueue: {
+      riskEvents: [],
+      executionPlans: executionPlans.filter((plan) => plan.approvalState === 'required'),
+      backtestRuns: [],
+      incidents: [],
+      schedulerTicks: [],
+    },
+    recent: {
+      riskEvents: [],
+      executionPlans,
+      backtestRuns: [],
+      incidents: [],
+      brokerSnapshot,
+      schedulerTicks: [],
+    },
+    linkage: {
+      posture: {
+        status: 'healthy',
+        title: 'Scheduler linkage clear',
+        detail: 'No linked scheduler or notification risk items.',
+      },
+      summary: {
+        linkedRiskEvents: 0,
+        linkedSchedulerTicks: 0,
+        linkedIncidents: 0,
+        linkedNotifications: 0,
+        cycleAttention: 0,
+        currentPhaseAttention: 0,
+        riskOffLinked: 0,
+        complianceLinked: 0,
+        activePhase: '',
+      },
+      lanes: [],
+      runbook: [],
+      queue: {
+        riskEvents: [],
+        schedulerTicks: [],
+        incidents: [],
+        notifications: [],
+        cycleRecords: [],
+      },
+    },
   };
 }
 

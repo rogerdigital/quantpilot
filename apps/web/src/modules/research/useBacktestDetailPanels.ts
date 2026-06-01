@@ -36,7 +36,7 @@ export function useBacktestDetailPanels(options: {
     : [];
   const selectedRunVersionItems = runDetail?.results || [];
   const selectedRunExecutionEntries = executionEntries
-    .filter((entry) => entry.plan.strategyId === selectedRunSnapshot?.strategyId)
+    .filter((entry) => entry.plan?.strategyId === selectedRunSnapshot?.strategyId)
     .slice(0, 6);
   const selectedWorkflow =
     runDetail?.workflow ||

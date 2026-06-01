@@ -68,6 +68,27 @@ test('core market ohlcv endpoint is available', async () => {
   assert.equal(response.json.bars.length, 5);
 });
 
+test('execution ledger returns complete entries', async () => {
+  const response = await invokeGatewayRoute(handler, { path: '/api/v1/execution/ledger' });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.entries.length, 1);
+  assert.equal(response.json.entries[0].plan.id, 'plan-momentum-core');
+  assert.equal(response.json.entries[0].plan.strategyId, 'momentum-core');
+  assert.deepEqual(response.json.entries[0].orderStates, []);
+});
+
+test('risk workbench returns current response shape', async () => {
+  const response = await invokeGatewayRoute(handler, { path: '/api/v1/risk/workbench' });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json.ok, true);
+  assert.equal(response.json.posture.status, 'healthy');
+  assert.equal(response.json.recent.brokerSnapshot.positions.length, 0);
+  assert.equal(response.json.reviewQueue.executionPlans[0].id, 'plan-momentum-core');
+});
+
 test('removed non-core endpoints return 404', async () => {
   for (const path of [
     '/api/v1/agent/workbench',
