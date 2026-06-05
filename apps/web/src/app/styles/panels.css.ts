@@ -36,6 +36,7 @@ globalStyle('.meta-value.accent', {
 
 globalStyle('.panel', {
   padding: 'var(--space-5)',
+  minWidth: 0,
 } as any);
 
 /* ============================================================
@@ -47,6 +48,11 @@ globalStyle('.hero-grid', {
   gridTemplateColumns: '1.9fr 1fr 1fr',
   gap: 'var(--space-4)',
   marginTop: '28px',
+  '@media': {
+    '(max-width: 1180px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
 } as any);
 
 globalStyle('.overview-hero-grid', {
@@ -54,6 +60,11 @@ globalStyle('.overview-hero-grid', {
   gridTemplateColumns: '1.8fr 0.8fr 0.8fr',
   gap: 'var(--space-4)',
   marginTop: '28px',
+  '@media': {
+    '(max-width: 1180px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
 } as any);
 
 globalStyle('.hero-grid.two-up', {
@@ -305,6 +316,14 @@ globalStyle('.metrics-grid', {
   gridTemplateColumns: 'repeat(4, 1fr)',
   gap: '14px',
   marginTop: '18px',
+  '@media': {
+    '(max-width: 1180px)': {
+      gridTemplateColumns: 'repeat(2, 1fr)',
+    },
+    '(max-width: 640px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
 } as any);
 
 globalStyle('.metrics-grid > *:nth-child(1)', {
@@ -364,6 +383,11 @@ globalStyle('.terminal-strip', {
   gridTemplateColumns: '1.3fr repeat(4, minmax(0, 1fr))',
   gap: '14px',
   marginTop: '24px',
+  '@media': {
+    '(max-width: 1180px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
 } as any);
 
 globalStyle('.terminal-tile', {
@@ -417,6 +441,11 @@ globalStyle('.panel-grid', {
   gap: 'var(--space-4)',
   marginTop: '28px',
   alignItems: 'start',
+  '@media': {
+    '(max-width: 1180px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
 } as any);
 
 globalStyle('.panel-grid > *:nth-child(1)', {
@@ -432,9 +461,23 @@ globalStyle('.panel-grid > *:nth-child(4)', {
   animation: 'stagger-enter 360ms ease 230ms both',
 } as any);
 
+globalStyle('.panel-grid-3', {
+  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+  '@media': {
+    '(max-width: 1180px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+} as any);
+
 globalStyle('.panel-grid-wide', {
   alignItems: 'start',
   gridTemplateColumns: '1.4fr 1fr',
+  '@media': {
+    '(max-width: 1180px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
 } as any);
 
 globalStyle('.panel-grid-wide > *', { minWidth: 0 } as any);
@@ -445,10 +488,20 @@ globalStyle('.panel-grid-wide > .panel:only-child', {
 
 globalStyle('.panel-grid-terminal', {
   gridTemplateColumns: '1.7fr 0.9fr',
+  '@media': {
+    '(max-width: 1180px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
 } as any);
 
 globalStyle('.panel-grid-terminal-bottom', {
   gridTemplateColumns: '1.1fr 0.9fr',
+  '@media': {
+    '(max-width: 1180px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
 } as any);
 
 /* ============================================================

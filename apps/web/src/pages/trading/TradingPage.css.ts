@@ -6,6 +6,7 @@ export const tradingShell = style({
   display: 'flex',
   flexDirection: 'column',
   gap: '16px',
+  overflow: 'hidden',
 });
 
 export const tradingHeader = style({
@@ -213,6 +214,7 @@ export const chartToolbar = style({
   display: 'flex',
   alignItems: 'center',
   gap: '6px',
+  flexWrap: 'wrap',
 });
 
 export const chartTimeframeBtn = style({
@@ -491,4 +493,12 @@ export const blotterPanel = style({
   borderRadius: 'var(--radius-lg)',
   background: 'var(--panel)',
   overflow: 'hidden',
+});
+
+export const quickOrderBarWrap = style({
+  '@media': {
+    '(max-width: 640px)': {
+      display: 'none',
+    },
+  },
 });

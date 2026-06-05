@@ -7,12 +7,9 @@ export function MobileBottomNav() {
   const { locale } = useLocale();
   const routes = listSidebarRoutes();
 
-  // Show first 5 routes in bottom nav
-  const visibleRoutes = routes.slice(0, 5);
-
   return (
     <nav className={bottomNav}>
-      {visibleRoutes.map((route) => (
+      {routes.map((route) => (
         <NavLink
           key={route.path}
           to={route.path}
@@ -32,6 +29,7 @@ function getIcon(id: string): string {
   const icons: Record<string, string> = {
     overview: '◈',
     market: '◉',
+    trading: '⟡',
     strategies: '◇',
     backtest: '⟐',
     execution: '⬡',

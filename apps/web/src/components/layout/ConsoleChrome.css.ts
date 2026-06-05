@@ -21,6 +21,9 @@ export const appShell = style({
     [tablet]: {
       gridTemplateColumns: '1fr',
     },
+    [mobile]: {
+      overflowX: 'hidden',
+    },
   },
 });
 
@@ -44,6 +47,7 @@ export const mainPanel = style({
   maxWidth: 'var(--content-max-width)',
   marginLeft: 'auto',
   marginRight: 'auto',
+  minWidth: 0,
   '@media': {
     [tablet]: {
       height: 'auto',
@@ -51,6 +55,7 @@ export const mainPanel = style({
     },
     [mobile]: {
       padding: '0 12px 80px',
+      overflowX: 'hidden',
     },
   },
 });
@@ -272,6 +277,7 @@ export const bottomNav = style({
       height: '56px',
       background: 'var(--panel)',
       borderTop: '1px solid var(--line)',
+      overflowX: 'auto',
     },
   },
 });
@@ -281,16 +287,17 @@ export const bottomNavItem = style({
   flexDirection: 'column',
   alignItems: 'center',
   gap: '2px',
-  padding: '6px 12px',
+  padding: '6px 6px',
   background: 'transparent',
   border: 'none',
   color: 'var(--muted)',
-  fontSize: '10px',
+  fontSize: '9px',
   fontFamily: 'var(--font-data)',
   letterSpacing: '0.06em',
   cursor: 'pointer',
   textDecoration: 'none',
   transition: 'color 150ms ease',
+  flexShrink: 0,
   ':hover': {
     color: 'var(--text)',
   },

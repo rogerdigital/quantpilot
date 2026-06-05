@@ -173,6 +173,8 @@ globalStyle('.table-wrap', {
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
   background: 'var(--panel)',
+  maxWidth: '100%',
+  minWidth: 0,
 } as any);
 
 globalStyle('.table-wrap table', {
