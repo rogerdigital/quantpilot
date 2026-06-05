@@ -28,6 +28,7 @@ import {
   orderTypeTab,
   orderTypeTabActive,
   orderTypeTabs,
+  quickOrderBarWrap,
   tradeBtnRow,
   tradeBuyBtn,
   tradeBuyBtnDisabled,
@@ -47,7 +48,6 @@ import {
   tradingHeaderStats,
   tradingHeaderSymbol,
   tradingShell,
-  quickOrderBarWrap,
   watchlistHead,
   watchlistItem,
   watchlistItemActive,
@@ -175,7 +175,17 @@ export function TradingPage() {
         <div className={tradingHeaderSymbol}>
           <div>
             <div className="eyebrow">{locale === 'zh' ? '交易终端' : 'Trading Terminal'}</div>
-            <h1 style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginTop: '4px', margin: 0, font: 'inherit', lineHeight: 'inherit' }}>
+            <h1
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: '10px',
+                marginTop: '4px',
+                margin: 0,
+                font: 'inherit',
+                lineHeight: 'inherit',
+              }}
+            >
               <span
                 style={{
                   fontFamily: 'var(--font-data)',
