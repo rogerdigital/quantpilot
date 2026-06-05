@@ -28,6 +28,7 @@ import {
   orderTypeTab,
   orderTypeTabActive,
   orderTypeTabs,
+  quickOrderBarWrap,
   tradeBtnRow,
   tradeBuyBtn,
   tradeBuyBtnDisabled,
@@ -174,7 +175,17 @@ export function TradingPage() {
         <div className={tradingHeaderSymbol}>
           <div>
             <div className="eyebrow">{locale === 'zh' ? '交易终端' : 'Trading Terminal'}</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginTop: '4px' }}>
+            <h1
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: '10px',
+                marginTop: '4px',
+                margin: 0,
+                font: 'inherit',
+                lineHeight: 'inherit',
+              }}
+            >
               <span
                 style={{
                   fontFamily: 'var(--font-data)',
@@ -193,7 +204,7 @@ export function TradingPage() {
                 {priceChange >= 0 ? '+' : ''}
                 {fmtPct(priceChange)}
               </span>
-            </div>
+            </h1>
           </div>
         </div>
 
@@ -579,11 +590,13 @@ export function TradingPage() {
           ]}
         />
       </div>
-      <QuickOrderBar
-        onSubmit={(order) => {
-          handleSubmitOrder(order.direction);
-        }}
-      />
+      <div className={quickOrderBarWrap}>
+        <QuickOrderBar
+          onSubmit={(order) => {
+            handleSubmitOrder(order.direction);
+          }}
+        />
+      </div>
     </div>
   );
 }

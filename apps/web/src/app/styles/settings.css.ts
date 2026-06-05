@@ -9,6 +9,11 @@ globalStyle('.settings-form-grid', {
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
   gap: 'var(--space-3)',
   marginTop: '14px',
+  '@media': {
+    '(max-width: 720px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
 } as any);
 
 globalStyle('.settings-field', {

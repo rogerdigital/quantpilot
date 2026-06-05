@@ -572,7 +572,7 @@ globalStyle(`.global-toolbar, .topbar`, {
 } as any);
 
 globalStyle(
-  `.hero-grid, .overview-hero-grid, .terminal-strip, .metrics-grid, .panel-grid, .panel-grid-wide, .panel-grid-terminal, .panel-grid-terminal-bottom`,
+  `.hero-grid, .overview-hero-grid, .terminal-strip, .metrics-grid, .panel-grid, .panel-grid-3, .panel-grid-wide, .panel-grid-terminal, .panel-grid-terminal-bottom`,
   {
     '@media': {
       '(max-width: 1180px)': {
@@ -610,6 +610,7 @@ globalStyle(`.main-panel`, {
     },
     '(max-width: 720px)': {
       padding: '0 16px 16px',
+      overflowX: 'hidden',
     },
   },
 } as any);
