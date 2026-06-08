@@ -5,23 +5,22 @@ import { globalStyle } from '@vanilla-extract/css';
    ============================================================ */
 
 globalStyle('.meta-card, .hero-card, .metric-tile, .panel', {
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius-lg)',
+  border: 'none',
+  borderRadius: 0,
   background: 'var(--panel)',
   position: 'relative',
   overflow: 'hidden',
-  boxShadow: 'var(--shadow-panel)',
-  transition: 'border-color 200ms ease, box-shadow 200ms ease',
+  boxShadow: 'none',
+  transition: 'background 200ms ease',
 } as any);
 
 globalStyle('.panel:hover', {
-  borderColor: 'var(--line-strong)',
-  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.04)',
-  transform: 'translateY(-1px)',
+  background: 'var(--panel-2)',
 } as any);
 
 globalStyle('.meta-card', {
   padding: '16px',
+  borderBottom: '1px solid var(--line)',
 } as any);
 
 globalStyle('.meta-value', {
@@ -127,8 +126,9 @@ globalStyle('.overview-brief-card, .overview-primary-note', {
   display: 'grid',
   gap: '6px',
   padding: '12px 16px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)',
+  border: 'none',
+  borderBottom: '1px solid var(--line)',
+  borderRadius: 0,
   background: 'var(--panel-2)',
 } as any);
 
@@ -236,9 +236,8 @@ globalStyle('.shortcut-surface', {
 
 globalStyle('.shortcut-surface:hover', {
   borderColor: 'var(--line-strong) !important',
-  boxShadow: 'var(--shadow-panel-hover)',
+  boxShadow: 'none',
   background: 'var(--panel-2) !important',
-  transform: 'translateY(-2px)',
 } as any);
 
 globalStyle('.toolbar-pill-button:hover, .status-row-button:hover, .inline-link:hover', {
@@ -347,8 +346,9 @@ globalStyle('.metrics-grid-compact', {
 
 globalStyle('.metric-card', {
   padding: '16px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)',
+  border: 'none',
+  borderBottom: '1px solid var(--line)',
+  borderRadius: 0,
   background: 'var(--panel-2)',
   display: 'grid',
   gap: 'var(--space-2)',
@@ -358,9 +358,7 @@ globalStyle('.metric-card', {
 } as any);
 
 globalStyle('.metric-card:hover', {
-  borderColor: 'var(--line-strong)',
-  boxShadow: 'var(--shadow-panel-hover)',
-  transform: 'translateY(-2px)',
+  background: 'var(--panel-3)',
 } as any);
 
 globalStyle('.metric-card span', {
@@ -394,15 +392,15 @@ globalStyle('.terminal-strip', {
 
 globalStyle('.terminal-tile', {
   padding: '16px 18px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)',
+  border: 'none',
+  borderBottom: '1px solid var(--line)',
+  borderRadius: 0,
   background: 'var(--panel)',
-  transition: 'border-color 180ms ease, box-shadow 180ms ease',
+  transition: 'background 180ms ease',
 } as any);
 
 globalStyle('.terminal-tile:hover', {
-  borderColor: 'var(--line-strong)',
-  boxShadow: 'var(--shadow-panel-hover)',
+  background: 'var(--panel-2)',
 } as any);
 
 globalStyle('.terminal-tile-primary', {
@@ -657,14 +655,15 @@ globalStyle('.overview-ops-cluster', {
   display: 'grid',
   gap: '2px',
   padding: '14px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)',
+  border: 'none',
+  borderBottom: '1px solid var(--line)',
+  borderRadius: 0,
   background: 'var(--panel-2)',
-  transition: 'border-color 180ms ease',
+  transition: 'background 180ms ease',
 } as any);
 
 globalStyle('.overview-ops-cluster:hover', {
-  borderColor: 'var(--line-strong)',
+  background: 'var(--panel-3)',
 } as any);
 
 globalStyle('.overview-blotter-grid', { gridTemplateColumns: '1.06fr 0.94fr' } as any);
