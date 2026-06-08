@@ -61,7 +61,7 @@ export const tradingHeaderChange = styleVariants({
 export const tradingHeaderStats = style({
   display: 'flex',
   alignItems: 'center',
-  gap: '24px',
+  gap: '16px',
   flexWrap: 'wrap',
 });
 
@@ -81,7 +81,7 @@ globalStyle(`${tradingHeaderStat} span`, {
 
 globalStyle(`${tradingHeaderStat} strong`, {
   color: 'var(--text-strong)',
-  fontSize: '13px',
+  fontSize: '12px',
   fontFamily: 'var(--font-data)',
   fontWeight: 600,
 });
@@ -139,10 +139,10 @@ export const watchlistItem = style({
   gridTemplateColumns: '1fr auto',
   alignItems: 'center',
   gap: '8px',
-  padding: '10px 14px',
+  padding: '12px 16px',
   borderBottom: '1px solid var(--line)',
   cursor: 'pointer',
-  transition: 'background 150ms ease',
+  transition: 'background 150ms ease, box-shadow 150ms ease',
   ':hover': {
     background: 'var(--panel-2)',
   },
@@ -152,8 +152,7 @@ export const watchlistItem = style({
 });
 
 export const watchlistItemActive = style({
-  background: 'var(--panel-3)',
-  borderLeft: '2px solid var(--accent)',
+  boxShadow: 'inset 3px 0 0 var(--accent)',
 });
 
 globalStyle(`${watchlistItem} .wl-symbol`, {
