@@ -5,23 +5,22 @@ import { globalStyle } from '@vanilla-extract/css';
    ============================================================ */
 
 globalStyle('.meta-card, .hero-card, .metric-tile, .panel', {
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius-lg)',
+  border: 'none',
+  borderRadius: 0,
   background: 'var(--panel)',
   position: 'relative',
   overflow: 'hidden',
-  boxShadow: 'var(--shadow-panel)',
-  transition: 'border-color 200ms ease, box-shadow 200ms ease',
+  boxShadow: 'none',
+  transition: 'background 200ms ease',
 } as any);
 
 globalStyle('.panel:hover', {
-  borderColor: 'var(--line-strong)',
-  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.04)',
-  transform: 'translateY(-1px)',
+  background: 'var(--panel-2)',
 } as any);
 
 globalStyle('.meta-card', {
   padding: '16px',
+  borderBottom: '1px solid var(--line)',
 } as any);
 
 globalStyle('.meta-value', {
@@ -47,8 +46,9 @@ globalStyle('.panel', {
 globalStyle('.hero-grid', {
   display: 'grid',
   gridTemplateColumns: '1.9fr 1fr 1fr',
-  gap: 'var(--space-4)',
-  marginTop: '32px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
+  marginTop: 0,
   '@media': {
     '(max-width: 1180px)': {
       gridTemplateColumns: '1fr',
@@ -59,8 +59,9 @@ globalStyle('.hero-grid', {
 globalStyle('.overview-hero-grid', {
   display: 'grid',
   gridTemplateColumns: '1.8fr 0.8fr 0.8fr',
-  gap: 'var(--space-4)',
-  marginTop: '32px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
+  marginTop: 0,
   '@media': {
     '(max-width: 1180px)': {
       gridTemplateColumns: '1fr',
@@ -94,7 +95,8 @@ globalStyle('.overview-command-frame', { display: 'grid', gap: '18px' } as any);
 globalStyle('.overview-command-head', {
   display: 'flex',
   justifyContent: 'space-between',
-  gap: '16px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
   alignItems: 'flex-start',
 } as any);
 
@@ -127,8 +129,9 @@ globalStyle('.overview-brief-card, .overview-primary-note', {
   display: 'grid',
   gap: '6px',
   padding: '12px 16px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)',
+  border: 'none',
+  borderBottom: '1px solid var(--line)',
+  borderRadius: 0,
   background: 'var(--panel-2)',
 } as any);
 
@@ -236,9 +239,8 @@ globalStyle('.shortcut-surface', {
 
 globalStyle('.shortcut-surface:hover', {
   borderColor: 'var(--line-strong) !important',
-  boxShadow: 'var(--shadow-panel-hover)',
+  boxShadow: 'none',
   background: 'var(--panel-2) !important',
-  transform: 'translateY(-2px)',
 } as any);
 
 globalStyle('.toolbar-pill-button:hover, .status-row-button:hover, .inline-link:hover', {
@@ -273,7 +275,8 @@ globalStyle('.hero-card-primary', {
 globalStyle('.hero-headline', {
   display: 'flex',
   alignItems: 'baseline',
-  gap: '16px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
 } as any);
 
 globalStyle('.hero-value', {
@@ -289,7 +292,8 @@ globalStyle('.hero-change', {
 globalStyle('.hero-foot', {
   display: 'flex',
   justifyContent: 'space-between',
-  gap: '16px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
   marginTop: '20px',
   color: 'var(--muted)',
 } as any);
@@ -316,7 +320,8 @@ globalStyle('.mini-copy', {
 globalStyle('.metrics-grid', {
   display: 'grid',
   gridTemplateColumns: 'repeat(4, 1fr)',
-  gap: '16px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
   marginTop: '20px',
   '@media': {
     '(max-width: 1180px)': {
@@ -347,8 +352,9 @@ globalStyle('.metrics-grid-compact', {
 
 globalStyle('.metric-card', {
   padding: '16px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)',
+  border: 'none',
+  borderBottom: '1px solid var(--line)',
+  borderRadius: 0,
   background: 'var(--panel-2)',
   display: 'grid',
   gap: 'var(--space-2)',
@@ -358,9 +364,7 @@ globalStyle('.metric-card', {
 } as any);
 
 globalStyle('.metric-card:hover', {
-  borderColor: 'var(--line-strong)',
-  boxShadow: 'var(--shadow-panel-hover)',
-  transform: 'translateY(-2px)',
+  background: 'var(--panel-3)',
 } as any);
 
 globalStyle('.metric-card span', {
@@ -383,7 +387,8 @@ globalStyle('.metric-card strong', {
 globalStyle('.terminal-strip', {
   display: 'grid',
   gridTemplateColumns: '1.3fr repeat(4, minmax(0, 1fr))',
-  gap: '16px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
   marginTop: '24px',
   '@media': {
     '(max-width: 1180px)': {
@@ -394,15 +399,15 @@ globalStyle('.terminal-strip', {
 
 globalStyle('.terminal-tile', {
   padding: '16px 18px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)',
+  border: 'none',
+  borderBottom: '1px solid var(--line)',
+  borderRadius: 0,
   background: 'var(--panel)',
-  transition: 'border-color 180ms ease, box-shadow 180ms ease',
+  transition: 'background 180ms ease',
 } as any);
 
 globalStyle('.terminal-tile:hover', {
-  borderColor: 'var(--line-strong)',
-  boxShadow: 'var(--shadow-panel-hover)',
+  background: 'var(--panel-2)',
 } as any);
 
 globalStyle('.terminal-tile-primary', {
@@ -440,8 +445,9 @@ globalStyle('.tile-sub', {
 globalStyle('.panel-grid', {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-  gap: 'var(--space-4)',
-  marginTop: '32px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
+  marginTop: 0,
   alignItems: 'start',
   '@media': {
     '(max-width: 1180px)': {
@@ -627,7 +633,7 @@ globalStyle('.overview-desk-grid', {
 
 globalStyle('.overview-primary-panel', { minHeight: '468px' } as any);
 globalStyle('.overview-side-panel', { minHeight: '468px' } as any);
-globalStyle('.overview-panel-flow', { display: 'grid', gap: 'var(--space-4)' } as any);
+globalStyle('.overview-panel-flow', { display: 'grid', gap: 'var(--gap-panel)' } as any);
 
 globalStyle('.overview-inline-metrics', {
   display: 'grid',
@@ -657,14 +663,15 @@ globalStyle('.overview-ops-cluster', {
   display: 'grid',
   gap: '2px',
   padding: '14px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)',
+  border: 'none',
+  borderBottom: '1px solid var(--line)',
+  borderRadius: 0,
   background: 'var(--panel-2)',
-  transition: 'border-color 180ms ease',
+  transition: 'background 180ms ease',
 } as any);
 
 globalStyle('.overview-ops-cluster:hover', {
-  borderColor: 'var(--line-strong)',
+  background: 'var(--panel-3)',
 } as any);
 
 globalStyle('.overview-blotter-grid', { gridTemplateColumns: '1.06fr 0.94fr' } as any);

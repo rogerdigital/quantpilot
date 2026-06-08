@@ -15,10 +15,11 @@ export const tradingHeader = style({
   justifyContent: 'space-between',
   gap: '16px',
   padding: '16px 20px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius-xl)',
+  border: 'none',
+  borderBottom: '1px solid var(--line)',
+  borderRadius: 0,
   background: 'var(--panel)',
-  boxShadow: 'var(--shadow-panel)',
+  boxShadow: 'none',
   flexWrap: 'wrap',
 });
 
@@ -91,7 +92,8 @@ globalStyle(`${tradingHeaderStat} strong`, {
 export const tradingGrid = style({
   display: 'grid',
   gridTemplateColumns: '220px 1fr 280px',
-  gap: '12px',
+  gap: '1px',
+  background: 'var(--line)',
   minHeight: '520px',
   '@media': {
     '(max-width: 1180px)': {
@@ -106,8 +108,8 @@ export const tradingGrid = style({
 /* -- WATCHLIST PANEL ------------------------------------ */
 
 export const watchlistPanel = style({
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius-lg)',
+  border: 'none',
+  borderRadius: 0,
   background: 'var(--panel)',
   display: 'flex',
   flexDirection: 'column',
@@ -191,8 +193,8 @@ globalStyle(`${watchlistItem} .wl-change`, {
 /* -- CHART PANEL ---------------------------------------- */
 
 export const chartPanel = style({
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius-lg)',
+  border: 'none',
+  borderRadius: 0,
   background: 'var(--panel)',
   display: 'flex',
   flexDirection: 'column',
@@ -219,7 +221,7 @@ export const chartToolbar = style({
 export const chartTimeframeBtn = style({
   padding: '4px 10px',
   borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--line)',
+  border: 'none',
   background: 'transparent',
   color: 'var(--muted)',
   fontSize: '11px',
@@ -262,7 +264,7 @@ export const chartSignalStrip = style({
 
 export const chartSignalCard = style({
   padding: '12px 14px',
-  border: '1px solid var(--line)',
+  border: 'none',
   borderRadius: 'var(--radius)',
   background: 'var(--panel-2)',
   textAlign: 'center',
@@ -287,8 +289,8 @@ globalStyle(`${chartSignalCard} .sig-value`, {
 /* -- TRADE PANEL ---------------------------------------- */
 
 export const tradePanel = style({
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius-lg)',
+  border: 'none',
+  borderRadius: 0,
   background: 'var(--panel)',
   display: 'flex',
   flexDirection: 'column',
@@ -314,7 +316,7 @@ export const orderTypeTabs = style({
   padding: '3px',
   background: 'var(--panel-3)',
   borderRadius: 'var(--radius)',
-  border: '1px solid var(--line)',
+  border: 'none',
   gap: '3px',
 });
 
@@ -363,7 +365,7 @@ export const tradeInput = style({
   width: '100%',
   padding: '10px 12px',
   background: 'var(--panel-2)',
-  border: '1px solid var(--line)',
+  border: 'none',
   borderRadius: 'var(--radius)',
   color: 'var(--text-strong)',
   fontFamily: 'var(--font-data)',
@@ -488,8 +490,8 @@ globalStyle(`${tradeInfoRow} strong`, {
 /* -- BOTTOM BLOTTER ------------------------------------- */
 
 export const blotterPanel = style({
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius-lg)',
+  border: 'none',
+  borderRadius: 0,
   background: 'var(--panel)',
   overflow: 'hidden',
 });

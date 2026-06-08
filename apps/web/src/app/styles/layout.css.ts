@@ -411,12 +411,13 @@ globalStyle('.topbar', {
   justifyContent: 'space-between',
   gap: '24px',
   alignItems: 'flex-start',
-  marginBottom: '20px',
+  marginBottom: 0,
   padding: '24px 24px 20px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius-xl)',
+  border: 'none',
+  borderBottom: '1px solid var(--line)',
+  borderRadius: 0,
   background: 'var(--panel)',
-  boxShadow: 'var(--shadow-panel)',
+  boxShadow: 'none',
   overflow: 'hidden',
 } as any);
 

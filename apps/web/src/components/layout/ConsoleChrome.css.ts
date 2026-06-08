@@ -227,17 +227,17 @@ export const topbarMeta = style({
 });
 
 export const metaCard = style({
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius-lg)',
+  border: 'none',
+  borderBottom: '1px solid var(--line)',
+  borderRadius: 0,
   background: 'var(--panel)',
   position: 'relative',
   overflow: 'hidden',
-  boxShadow: 'var(--shadow-panel)',
-  transition: 'border-color 200ms ease, box-shadow 200ms ease',
+  boxShadow: 'none',
+  transition: 'background 200ms ease',
   padding: '14px 16px',
   ':hover': {
-    borderColor: 'var(--line-strong)',
-    boxShadow: 'var(--shadow-panel-hover)',
+    background: 'var(--panel-2)',
   },
 });
 

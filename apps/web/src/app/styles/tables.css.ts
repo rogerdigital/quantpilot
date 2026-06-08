@@ -12,11 +12,12 @@ globalStyle('.focus-row', {
   gap: '12px',
   alignItems: 'start',
   padding: '12px 16px 12px 18px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)',
+  border: 'none',
+  borderBottom: '1px solid var(--line)',
+  borderRadius: 0,
   background: 'var(--panel)',
   overflow: 'clip',
-  transition: 'border-color 180ms ease, background 180ms ease, transform 180ms ease',
+  transition: 'background 180ms ease',
 } as any);
 
 globalStyle('.focus-row::before', {
@@ -31,7 +32,6 @@ globalStyle('.focus-row::before', {
 } as any);
 
 globalStyle('.focus-row:hover', {
-  borderColor: 'var(--line-strong)',
   background: 'var(--panel-2)',
 } as any);
 
@@ -169,8 +169,8 @@ globalStyle('.badge-muted', {
 globalStyle('.table-wrap', {
   position: 'relative',
   overflowX: 'auto',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)',
+  border: 'none',
+  borderRadius: 0,
   background: 'var(--panel)',
   maxWidth: '100%',
   minWidth: 0,
@@ -319,11 +319,12 @@ globalStyle('.log-item', {
   gridTemplateColumns: '74px 1fr auto',
   gap: '12px',
   padding: '12px 16px 12px 18px',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)',
+  border: 'none',
+  borderBottom: '1px solid var(--line)',
+  borderRadius: 0,
   background: 'var(--panel)',
   overflow: 'hidden',
-  transition: 'border-color 180ms ease, background 180ms ease, transform 180ms ease',
+  transition: 'background 180ms ease',
 } as any);
 
 globalStyle('.log-item::before', {
@@ -338,7 +339,6 @@ globalStyle('.log-item::before', {
 } as any);
 
 globalStyle('.log-item:hover', {
-  borderColor: 'var(--line-strong)',
   background: 'var(--panel-2)',
 } as any);
 
