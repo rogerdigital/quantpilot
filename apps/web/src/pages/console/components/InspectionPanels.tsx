@@ -1,4 +1,16 @@
 import type { ReactNode } from 'react';
+import { ValueBadge } from '../../../components/common/Badge.js';
+import { PanelHeader } from '../../../components/common/PanelHeader.js';
+
+/** Map legacy badgeClassName to ValueBadge tone */
+function resolveTone(cls?: string) {
+  if (!cls) return 'accent' as const;
+  if (cls.includes('ok') || cls.includes('success')) return 'success' as const;
+  if (cls.includes('warn')) return 'warning' as const;
+  if (cls.includes('danger')) return 'danger' as const;
+  if (cls.includes('muted')) return 'neutral' as const;
+  return 'accent' as const;
+}
 
 type InspectionPanelProps = {
   title: string;
@@ -21,13 +33,11 @@ export function InspectionPanel({
 }: InspectionPanelProps) {
   return (
     <article className="panel">
-      <div className="panel-head">
-        <div>
-          <div className="panel-title">{title}</div>
-          <div className="panel-copy">{copy}</div>
-        </div>
-        <div className={`panel-badge ${badgeClassName}`}>{badge}</div>
-      </div>
+      <PanelHeader
+        title={title}
+        description={copy}
+        badge={<ValueBadge tone={resolveTone(badgeClassName)}>{badge}</ValueBadge>}
+      />
       {children}
     </article>
   );
