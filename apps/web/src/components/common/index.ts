@@ -1,3 +1,4 @@
+export { StatusDot, LabelBadge, ValueBadge } from './Badge.js';
 export {
   EmptyBacktests,
   EmptyOrders,
