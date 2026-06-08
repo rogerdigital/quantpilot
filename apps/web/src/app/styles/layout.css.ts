@@ -406,7 +406,7 @@ globalStyle('.topbar', {
   gap: '24px',
   alignItems: 'flex-start',
   marginBottom: '20px',
-  padding: '22px 24px 18px',
+  padding: '24px 24px 20px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-xl)',
   background: 'var(--panel)',
@@ -442,7 +442,7 @@ globalStyle('.topbar-meta', {
 
 globalStyle('.mode-stack', {
   display: 'inline-flex',
-  marginTop: '14px',
+  marginTop: '16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
   background: 'var(--panel-2)',
@@ -455,7 +455,7 @@ globalStyle('.mode-pill', {
   background: 'transparent',
   color: 'var(--muted)',
   borderRadius: 'calc(var(--radius) - 1px)',
-  padding: '8px 22px',
+  padding: '8px 20px',
   cursor: 'pointer',
   font: '600 12px/1 var(--font-data)',
   letterSpacing: '0.08em',

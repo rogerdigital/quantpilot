@@ -25,7 +25,7 @@ export const tradingHeader = style({
 export const tradingHeaderSymbol = style({
   display: 'flex',
   alignItems: 'center',
-  gap: '14px',
+  gap: '16px',
 });
 
 export const tradingHeaderPrice = style({
@@ -120,7 +120,7 @@ export const watchlistPanel = style({
 });
 
 export const watchlistHead = style({
-  padding: '12px 14px',
+  padding: '12px 16px',
   borderBottom: '1px solid var(--line)',
   fontSize: '11px',
   fontFamily: 'var(--font-data)',
@@ -294,7 +294,7 @@ export const tradePanel = style({
   display: 'flex',
   flexDirection: 'column',
   padding: '16px',
-  gap: '14px',
+  gap: '16px',
   overflow: 'auto',
 });
 
@@ -381,7 +381,7 @@ export const tradeInput = style({
 
 export const tradeBuyBtn = style({
   width: '100%',
-  padding: '14px',
+  padding: '16px',
   background: 'var(--buy)',
   border: 'none',
   borderRadius: 'var(--radius)',
@@ -402,7 +402,7 @@ export const tradeBuyBtn = style({
 
 export const tradeSellBtn = style({
   width: '100%',
-  padding: '14px',
+  padding: '16px',
   background: 'var(--sell)',
   border: 'none',
   borderRadius: 'var(--radius)',
@@ -423,7 +423,7 @@ export const tradeSellBtn = style({
 
 export const tradeBuyBtnDisabled = style({
   width: '100%',
-  padding: '14px',
+  padding: '16px',
   background: 'var(--buy)',
   border: 'none',
   borderRadius: 'var(--radius)',
@@ -438,7 +438,7 @@ export const tradeBuyBtnDisabled = style({
 
 export const tradeSellBtnDisabled = style({
   width: '100%',
-  padding: '14px',
+  padding: '16px',
   background: 'var(--sell)',
   border: 'none',
   borderRadius: 'var(--radius)',

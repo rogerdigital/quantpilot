@@ -8,7 +8,7 @@ globalStyle('.settings-form-grid', {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
   gap: 'var(--space-3)',
-  marginTop: '14px',
+  marginTop: '16px',
   '@media': {
     '(max-width: 720px)': {
       gridTemplateColumns: '1fr',
@@ -93,7 +93,7 @@ globalStyle('.settings-actions', {
   display: 'flex',
   alignItems: 'center',
   gap: 'var(--space-3)',
-  marginTop: '14px',
+  marginTop: '16px',
 } as any);
 
 globalStyle('.settings-button', {
@@ -192,7 +192,7 @@ globalStyle('.settings-chip-row', {
   flexWrap: 'wrap',
   alignItems: 'center',
   gap: '8px',
-  marginTop: '14px',
+  marginTop: '16px',
 } as any);
 
 globalStyle('.settings-chip', {
@@ -228,7 +228,7 @@ globalStyle('.policy-card', {
 } as any);
 
 globalStyle('.policy-card-inline', {
-  marginTop: '14px',
+  marginTop: '16px',
   background: 'var(--panel-2)',
 } as any);
 
