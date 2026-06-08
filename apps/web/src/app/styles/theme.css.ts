@@ -40,7 +40,7 @@ globalStyle(':root', {
   '--info': '#6366f1',
 
   /* Fonts */
-  '--font-display': '"Sora", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
+  '--font-display': '"Sora", "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
   '--font-ui': '"Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
   '--font-data': '"JetBrains Mono", "SF Mono", "Consolas", monospace',
 

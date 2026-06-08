@@ -292,7 +292,7 @@ export const bottomNavItem = style({
   border: 'none',
   color: 'var(--muted)',
   fontSize: '9px',
-  fontFamily: 'var(--font-data)',
+  fontFamily: 'var(--font-ui)',
   letterSpacing: '0.06em',
   cursor: 'pointer',
   textDecoration: 'none',

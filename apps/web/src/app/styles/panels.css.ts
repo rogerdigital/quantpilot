@@ -363,7 +363,7 @@ globalStyle('.metric-card:hover', {
 
 globalStyle('.metric-card span', {
   color: 'var(--muted-strong)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 10px/1 var(--font-ui)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
