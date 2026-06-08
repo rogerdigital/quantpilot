@@ -1,4 +1,4 @@
-export { StatusDot, LabelBadge, ValueBadge } from './Badge.js';
+export { LabelBadge, StatusDot, ValueBadge } from './Badge.js';
 export {
   EmptyBacktests,
   EmptyOrders,

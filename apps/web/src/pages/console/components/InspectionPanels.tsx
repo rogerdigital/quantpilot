@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { PanelHeader } from '../../../components/common/PanelHeader.js';
 import { ValueBadge } from '../../../components/common/Badge.js';
+import { PanelHeader } from '../../../components/common/PanelHeader.js';
 
 /** Map legacy badgeClassName to ValueBadge tone */
 function resolveTone(cls?: string) {

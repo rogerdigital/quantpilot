@@ -69,7 +69,11 @@ globalStyle(':root', {
   '--glow-amber': 'none',
   '--glow-red': 'none',
 
-  /* Geometry */
+  /* Geometry — border radius nesting rules:
+     - Page-level containers (topbar): --radius-xl (18px)
+     - Panel-level (.panel, .hero-card): --radius-lg (14px)
+     - Inner elements (metric-card, table-wrap, input): --radius (10px)
+     - Smallest elements (badge, button, pill): --radius-sm (6px) */
   '--radius': '10px',
   '--radius-sm': '6px',
   '--radius-lg': '14px',
