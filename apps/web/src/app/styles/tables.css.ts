@@ -190,8 +190,8 @@ globalStyle('th, td', {
 } as any);
 
 globalStyle('th', {
-  font: '600 10px/1 var(--font-data)',
-  color: 'var(--muted)',
+  font: '600 11px/1 var(--font-ui)',
+  color: 'var(--muted-strong)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
   background: 'var(--panel-2)',

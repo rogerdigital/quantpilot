@@ -64,7 +64,7 @@ export const drawerCount = style({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  font: '700 10px/1 var(--font-data)',
+  font: '700 11px/1 var(--font-data)',
   color: 'var(--hold)',
 });
 
@@ -129,7 +129,7 @@ const actionBase = style({
   borderRadius: 'var(--radius-sm)',
   border: '1px solid',
   cursor: 'pointer',
-  font: '700 10px/1 var(--font-data)',
+  font: '700 11px/1 var(--font-data)',
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
   transition: 'background 140ms ease, box-shadow 140ms ease',

@@ -20,7 +20,7 @@ globalStyle('.panel:hover', {
 } as any);
 
 globalStyle('.meta-card', {
-  padding: '14px 16px',
+  padding: '16px',
 } as any);
 
 globalStyle('.meta-value', {
@@ -47,7 +47,7 @@ globalStyle('.hero-grid', {
   display: 'grid',
   gridTemplateColumns: '1.9fr 1fr 1fr',
   gap: 'var(--space-4)',
-  marginTop: '28px',
+  marginTop: '32px',
   '@media': {
     '(max-width: 1180px)': {
       gridTemplateColumns: '1fr',
@@ -59,7 +59,7 @@ globalStyle('.overview-hero-grid', {
   display: 'grid',
   gridTemplateColumns: '1.8fr 0.8fr 0.8fr',
   gap: 'var(--space-4)',
-  marginTop: '28px',
+  marginTop: '32px',
   '@media': {
     '(max-width: 1180px)': {
       gridTemplateColumns: '1fr',
@@ -83,7 +83,7 @@ globalStyle('.hero-grid > *:nth-child(3), .overview-hero-grid > *:nth-child(3)',
 } as any);
 
 globalStyle('.hero-card', {
-  padding: '22px 22px 20px',
+  padding: '24px 24px 20px',
   minHeight: '120px',
 } as any);
 
@@ -125,15 +125,15 @@ globalStyle('.overview-command-aside', { display: 'grid', gap: '10px' } as any);
 globalStyle('.overview-brief-card, .overview-primary-note', {
   display: 'grid',
   gap: '6px',
-  padding: '12px 14px',
+  padding: '12px 16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
   background: 'var(--panel-2)',
 } as any);
 
 globalStyle('.overview-brief-card span, .overview-command-note span, .overview-primary-note span', {
-  color: 'var(--muted)',
-  font: '600 10px/1 var(--font-data)',
+  color: 'var(--muted-strong)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
@@ -159,7 +159,7 @@ globalStyle('.overview-command-strip', {
   display: 'grid',
   gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
   gap: '10px',
-  marginTop: '18px',
+  marginTop: '20px',
   paddingTop: '16px',
   borderTop: '1px solid var(--line)',
 } as any);
@@ -168,7 +168,7 @@ globalStyle('.overview-stat', { display: 'grid', gap: '6px' } as any);
 
 globalStyle('.overview-stat span', {
   color: 'var(--muted-strong)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
@@ -190,8 +190,8 @@ globalStyle('.overview-kpi-title', {
 globalStyle('.overview-kpi-grid', {
   display: 'grid',
   gap: 'var(--space-3)',
-  marginTop: '18px',
-  paddingTop: '14px',
+  marginTop: '20px',
+  paddingTop: '16px',
   borderTop: '1px solid var(--line)',
 } as any);
 
@@ -212,8 +212,8 @@ globalStyle('.overview-kpi-grid strong', {
 } as any);
 
 globalStyle('.overview-kpi-note', {
-  marginTop: '18px',
-  paddingTop: '14px',
+  marginTop: '20px',
+  paddingTop: '16px',
   borderTop: '1px solid var(--line)',
 } as any);
 
@@ -289,12 +289,12 @@ globalStyle('.hero-foot', {
   display: 'flex',
   justifyContent: 'space-between',
   gap: '16px',
-  marginTop: '18px',
+  marginTop: '20px',
   color: 'var(--muted)',
 } as any);
 
 globalStyle('.mini-metric', {
-  marginTop: '14px',
+  marginTop: '16px',
   font: '700 22px/1.02 var(--font-data)',
   letterSpacing: '-0.03em',
   animation: 'tick-up 280ms ease 200ms both',
@@ -305,6 +305,7 @@ globalStyle('.mini-copy', {
   color: 'var(--muted-strong)',
   fontSize: '13px',
   lineHeight: '1.6',
+  maxWidth: '560px',
 } as any);
 
 /* ============================================================
@@ -314,8 +315,8 @@ globalStyle('.mini-copy', {
 globalStyle('.metrics-grid', {
   display: 'grid',
   gridTemplateColumns: 'repeat(4, 1fr)',
-  gap: '14px',
-  marginTop: '18px',
+  gap: '16px',
+  marginTop: '20px',
   '@media': {
     '(max-width: 1180px)': {
       gridTemplateColumns: 'repeat(2, 1fr)',
@@ -344,7 +345,7 @@ globalStyle('.metrics-grid-compact', {
 } as any);
 
 globalStyle('.metric-card', {
-  padding: '14px 16px',
+  padding: '16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
   background: 'var(--panel-2)',
@@ -363,7 +364,7 @@ globalStyle('.metric-card:hover', {
 
 globalStyle('.metric-card span', {
   color: 'var(--muted-strong)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-ui)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
@@ -381,7 +382,7 @@ globalStyle('.metric-card strong', {
 globalStyle('.terminal-strip', {
   display: 'grid',
   gridTemplateColumns: '1.3fr repeat(4, minmax(0, 1fr))',
-  gap: '14px',
+  gap: '16px',
   marginTop: '24px',
   '@media': {
     '(max-width: 1180px)': {
@@ -439,7 +440,7 @@ globalStyle('.panel-grid', {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
   gap: 'var(--space-4)',
-  marginTop: '28px',
+  marginTop: '32px',
   alignItems: 'start',
   '@media': {
     '(max-width: 1180px)': {
@@ -632,7 +633,7 @@ globalStyle('.overview-inline-metrics', {
   gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
   gap: '10px',
   marginTop: '16px',
-  paddingTop: '14px',
+  paddingTop: '16px',
   borderTop: '1px solid var(--line)',
 } as any);
 
@@ -640,7 +641,7 @@ globalStyle('.overview-inline-metric', { display: 'grid', gap: '6px' } as any);
 
 globalStyle('.overview-inline-metric span', {
   color: 'var(--muted-strong)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
@@ -719,6 +720,7 @@ globalStyle('.status-copy', {
   color: 'var(--muted-strong)',
   fontSize: '13px',
   lineHeight: '1.6',
+  maxWidth: '560px',
 } as any);
 
 /* ============================================================

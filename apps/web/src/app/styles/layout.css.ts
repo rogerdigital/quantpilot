@@ -58,17 +58,18 @@ globalStyle('.brand-name', {
   letterSpacing: '0.01em',
 } as any);
 
-globalStyle(
-  '.brand-sub, .sidebar-label, .eyebrow, .card-eyebrow, .tile-label, .meta-label, .panel-copy',
-  {
-    color: 'var(--muted)',
-  } as any
-);
+globalStyle('.brand-sub, .sidebar-label, .eyebrow, .card-eyebrow, .tile-label, .meta-label', {
+  color: 'var(--muted-strong)',
+} as any);
+
+globalStyle('.panel-copy', {
+  color: 'var(--muted)',
+} as any);
 
 globalStyle('.brand-sub, .sidebar-label, .eyebrow, .card-eyebrow, .tile-label, .meta-label', {
   textTransform: 'uppercase',
   letterSpacing: '0.12em',
-  fontSize: '10px',
+  fontSize: '11px',
   fontFamily: 'var(--font-data)',
 } as any);
 
@@ -190,7 +191,7 @@ globalStyle('.toolbar-copy', { display: 'grid', gap: '3px' } as any);
 
 globalStyle('.toolbar-kicker', {
   color: 'var(--muted)',
-  font: '500 10px/1 var(--font-data)',
+  font: '500 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
@@ -253,7 +254,7 @@ globalStyle('.toolbar-pill-button strong', {
   flex: '0 0 auto',
   paddingLeft: '10px',
   borderLeft: '1px solid var(--line)',
-  fontSize: '10px',
+  fontSize: '11px',
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
   color: 'inherit',
@@ -377,7 +378,7 @@ globalStyle('.locale-option span', {
 
 globalStyle('.locale-option small', {
   color: 'var(--muted)',
-  fontSize: '10px',
+  fontSize: '11px',
   textTransform: 'uppercase',
   letterSpacing: '0.08em',
 } as any);
@@ -406,7 +407,7 @@ globalStyle('.topbar', {
   gap: '24px',
   alignItems: 'flex-start',
   marginBottom: '20px',
-  padding: '22px 24px 18px',
+  padding: '24px 24px 20px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-xl)',
   background: 'var(--panel)',
@@ -442,7 +443,7 @@ globalStyle('.topbar-meta', {
 
 globalStyle('.mode-stack', {
   display: 'inline-flex',
-  marginTop: '14px',
+  marginTop: '16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
   background: 'var(--panel-2)',
@@ -455,7 +456,7 @@ globalStyle('.mode-pill', {
   background: 'transparent',
   color: 'var(--muted)',
   borderRadius: 'calc(var(--radius) - 1px)',
-  padding: '8px 22px',
+  padding: '8px 20px',
   cursor: 'pointer',
   font: '600 12px/1 var(--font-data)',
   letterSpacing: '0.08em',

@@ -25,7 +25,7 @@ export const tradingHeader = style({
 export const tradingHeaderSymbol = style({
   display: 'flex',
   alignItems: 'center',
-  gap: '14px',
+  gap: '16px',
 });
 
 export const tradingHeaderPrice = style({
@@ -73,7 +73,7 @@ export const tradingHeaderStat = style({
 
 globalStyle(`${tradingHeaderStat} span`, {
   color: 'var(--muted)',
-  fontSize: '10px',
+  fontSize: '11px',
   fontFamily: 'var(--font-data)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
@@ -120,9 +120,9 @@ export const watchlistPanel = style({
 });
 
 export const watchlistHead = style({
-  padding: '12px 14px',
+  padding: '12px 16px',
   borderBottom: '1px solid var(--line)',
-  fontSize: '10px',
+  fontSize: '11px',
   fontFamily: 'var(--font-data)',
   textTransform: 'uppercase',
   letterSpacing: '0.12em',
@@ -270,7 +270,7 @@ export const chartSignalCard = style({
 });
 
 globalStyle(`${chartSignalCard} .sig-label`, {
-  fontSize: '10px',
+  fontSize: '11px',
   fontFamily: 'var(--font-data)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
@@ -294,7 +294,7 @@ export const tradePanel = style({
   display: 'flex',
   flexDirection: 'column',
   padding: '16px',
-  gap: '14px',
+  gap: '16px',
   overflow: 'auto',
 });
 
@@ -353,7 +353,7 @@ export const tradeInputGroup = style({
 });
 
 export const tradeInputLabel = style({
-  fontSize: '10px',
+  fontSize: '11px',
   fontFamily: 'var(--font-data)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
@@ -381,12 +381,12 @@ export const tradeInput = style({
 
 export const tradeBuyBtn = style({
   width: '100%',
-  padding: '14px',
+  padding: '16px',
   background: 'var(--buy)',
   border: 'none',
   borderRadius: 'var(--radius)',
   color: '#fff',
-  fontFamily: 'var(--font-display)',
+  fontFamily: 'var(--font-ui)',
   fontSize: '15px',
   fontWeight: 700,
   letterSpacing: '0.5px',
@@ -402,12 +402,12 @@ export const tradeBuyBtn = style({
 
 export const tradeSellBtn = style({
   width: '100%',
-  padding: '14px',
+  padding: '16px',
   background: 'var(--sell)',
   border: 'none',
   borderRadius: 'var(--radius)',
   color: '#fff',
-  fontFamily: 'var(--font-display)',
+  fontFamily: 'var(--font-ui)',
   fontSize: '15px',
   fontWeight: 700,
   letterSpacing: '0.5px',
@@ -423,12 +423,12 @@ export const tradeSellBtn = style({
 
 export const tradeBuyBtnDisabled = style({
   width: '100%',
-  padding: '14px',
+  padding: '16px',
   background: 'var(--buy)',
   border: 'none',
   borderRadius: 'var(--radius)',
   color: '#fff',
-  fontFamily: 'var(--font-display)',
+  fontFamily: 'var(--font-ui)',
   fontSize: '15px',
   fontWeight: 700,
   letterSpacing: '0.5px',
@@ -438,12 +438,12 @@ export const tradeBuyBtnDisabled = style({
 
 export const tradeSellBtnDisabled = style({
   width: '100%',
-  padding: '14px',
+  padding: '16px',
   background: 'var(--sell)',
   border: 'none',
   borderRadius: 'var(--radius)',
   color: '#fff',
-  fontFamily: 'var(--font-display)',
+  fontFamily: 'var(--font-ui)',
   fontSize: '15px',
   fontWeight: 700,
   letterSpacing: '0.5px',

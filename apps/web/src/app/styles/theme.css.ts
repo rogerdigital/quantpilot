@@ -40,9 +40,19 @@ globalStyle(':root', {
   '--info': '#6366f1',
 
   /* Fonts */
-  '--font-display': '"Sora", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
+  '--font-display': '"Sora", "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
   '--font-ui': '"Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
   '--font-data': '"JetBrains Mono", "SF Mono", "Consolas", monospace',
+
+  /* Type scale */
+  '--text-xs': '11px',
+  '--text-sm': '13px',
+  '--text-md': '15px',
+  '--text-lg': '18px',
+  '--text-xl': '22px',
+  '--text-2xl': '28px',
+  '--text-3xl': '36px',
+  '--text-hero': '52px',
 
   /* Shadows */
   '--shadow': '0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06)',
@@ -111,8 +121,9 @@ globalStyle(darkSelector, {
 
   '--text': '#e5e7eb',
   '--text-strong': '#f9fafb',
-  '--muted': '#9ca3af',
+  '--muted': '#a1a8b4',
   '--muted-strong': '#d1d5db',
+  '--muted-data': '#8b95a5',
 
   '--accent-indigo': '#818cf8',
   '--accent-indigo-hover': '#6366f1',

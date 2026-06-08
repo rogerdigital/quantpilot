@@ -150,7 +150,7 @@ export const sidebarLabel = style({
   color: 'var(--muted)',
   textTransform: 'uppercase',
   letterSpacing: '0.12em',
-  fontSize: '10px',
+  fontSize: '11px',
   fontFamily: 'var(--font-data)',
 });
 
@@ -185,7 +185,7 @@ export const toolbarCopy = style({
 
 export const toolbarKicker = style({
   color: 'var(--muted)',
-  font: '500 10px/1 var(--font-data)',
+  font: '500 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 });
@@ -245,7 +245,7 @@ export const metaLabel = style({
   color: 'var(--muted)',
   textTransform: 'uppercase',
   letterSpacing: '0.12em',
-  fontSize: '10px',
+  fontSize: '11px',
   fontFamily: 'var(--font-data)',
 });
 
@@ -291,8 +291,8 @@ export const bottomNavItem = style({
   background: 'transparent',
   border: 'none',
   color: 'var(--muted)',
-  fontSize: '9px',
-  fontFamily: 'var(--font-data)',
+  fontSize: '11px',
+  fontFamily: 'var(--font-ui)',
   letterSpacing: '0.06em',
   cursor: 'pointer',
   textDecoration: 'none',

@@ -118,7 +118,7 @@ export const detailMetricLabel = style({
   color: 'var(--muted)',
   textTransform: 'uppercase',
   letterSpacing: '0.14em',
-  fontSize: '10px',
+  fontSize: '11px',
   fontFamily: 'var(--font-data)',
   marginBottom: '10px',
 });
