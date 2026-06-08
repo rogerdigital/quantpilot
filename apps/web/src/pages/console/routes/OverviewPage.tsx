@@ -53,7 +53,9 @@ import {
   overviewPrimaryNote,
   overviewPrimaryPanel,
   overviewResultsBanner,
+  overviewResultsHero,
   overviewResultsKpi,
+  overviewResultsSecondary,
   overviewSidePanel,
   overviewStat,
 } from './OverviewPage.css.ts';
@@ -135,55 +137,57 @@ export function OverviewPage() {
       </header>
 
       <section className={overviewResultsBanner} aria-label="Portfolio Summary">
-        <div className={overviewResultsKpi}>
+        <div className={overviewResultsHero}>
           <span className="kpi-label">{locale === 'zh' ? '总资产' : 'Total NAV'}</span>
           <span className="kpi-value">{fmtCurrency(totalNav)}</span>
           <span className="kpi-sub">{locale === 'zh' ? '实时净值' : 'Real-time net value'}</span>
         </div>
-        <div className={overviewResultsKpi}>
-          <span className="kpi-label">{locale === 'zh' ? '今日盈亏' : 'Daily P&L'}</span>
-          <span className="kpi-value">
-            <PnLAnimator target={totalPnlPct} precision={2} suffix="%" />
-          </span>
-          <span className="kpi-sub">
-            {totalPnlPct >= 0
-              ? locale === 'zh'
-                ? '今日盈利'
-                : "Today's gain"
-              : locale === 'zh'
-                ? '今日亏损'
-                : "Today's loss"}
-          </span>
-        </div>
-        <div className={overviewResultsKpi}>
-          <span className="kpi-label">{locale === 'zh' ? '活跃持仓' : 'Open Positions'}</span>
-          <span className="kpi-value">{positionCount}</span>
-          <span className="kpi-sub">
-            {locale === 'zh'
-              ? `Paper ${paper.exposure.toFixed(1)}% / Live ${live.exposure.toFixed(1)}%`
-              : `Paper ${paper.exposure.toFixed(1)}% / Live ${live.exposure.toFixed(1)}%`}
-          </span>
-        </div>
-        <div className={overviewResultsKpi}>
-          <span className="kpi-label">{locale === 'zh' ? '买入信号' : 'Buy Signals'}</span>
-          <span className="kpi-value" style={{ color: 'var(--buy)' }}>
-            {buyCount}
-          </span>
-          <span className="kpi-sub">
-            {locale === 'zh' ? `卖出 ${sellCount}` : `Sell: ${sellCount}`}
-          </span>
-        </div>
-        <div className={overviewResultsKpi}>
-          <span className="kpi-label">{locale === 'zh' ? '待审批' : 'Pending Approvals'}</span>
-          <span
-            className="kpi-value"
-            style={{ color: pendingApprovals > 0 ? 'var(--hold)' : 'var(--text)' }}
-          >
-            {pendingApprovals}
-          </span>
-          <span className="kpi-sub">
-            {locale === 'zh' ? '需要人工确认' : 'Require human review'}
-          </span>
+        <div className={overviewResultsSecondary}>
+          <div className={overviewResultsKpi}>
+            <span className="kpi-label">{locale === 'zh' ? '今日盈亏' : 'Daily P&L'}</span>
+            <span className="kpi-value">
+              <PnLAnimator target={totalPnlPct} precision={2} suffix="%" />
+            </span>
+            <span className="kpi-sub">
+              {totalPnlPct >= 0
+                ? locale === 'zh'
+                  ? '今日盈利'
+                  : "Today's gain"
+                : locale === 'zh'
+                  ? '今日亏损'
+                  : "Today's loss"}
+            </span>
+          </div>
+          <div className={overviewResultsKpi}>
+            <span className="kpi-label">{locale === 'zh' ? '活跃持仓' : 'Open Positions'}</span>
+            <span className="kpi-value">{positionCount}</span>
+            <span className="kpi-sub">
+              {locale === 'zh'
+                ? `Paper ${paper.exposure.toFixed(1)}% / Live ${live.exposure.toFixed(1)}%`
+                : `Paper ${paper.exposure.toFixed(1)}% / Live ${live.exposure.toFixed(1)}%`}
+            </span>
+          </div>
+          <div className={overviewResultsKpi}>
+            <span className="kpi-label">{locale === 'zh' ? '买入信号' : 'Buy Signals'}</span>
+            <span className="kpi-value" style={{ color: 'var(--buy)' }}>
+              {buyCount}
+            </span>
+            <span className="kpi-sub">
+              {locale === 'zh' ? `卖出 ${sellCount}` : `Sell: ${sellCount}`}
+            </span>
+          </div>
+          <div className={overviewResultsKpi}>
+            <span className="kpi-label">{locale === 'zh' ? '待审批' : 'Pending Approvals'}</span>
+            <span
+              className="kpi-value"
+              style={{ color: pendingApprovals > 0 ? 'var(--hold)' : 'var(--text)' }}
+            >
+              {pendingApprovals}
+            </span>
+            <span className="kpi-sub">
+              {locale === 'zh' ? '需要人工确认' : 'Require human review'}
+            </span>
+          </div>
         </div>
       </section>
 
