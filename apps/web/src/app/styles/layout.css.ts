@@ -117,7 +117,8 @@ globalStyle('.nav-link:hover', {
 globalStyle('.nav-link.active', {
   color: 'var(--accent)',
   borderColor: 'var(--line)',
-  background: 'var(--panel-2)',
+  background: 'var(--accent-subtle)',
+  borderRadius: 'var(--radius)',
 } as any);
 
 globalStyle('.nav-link.active::before', {
