@@ -117,7 +117,8 @@ globalStyle('.nav-link:hover', {
 globalStyle('.nav-link.active', {
   color: 'var(--accent)',
   borderColor: 'var(--line)',
-  background: 'var(--panel-2)',
+  background: 'var(--accent-subtle)',
+  borderRadius: 'var(--radius)',
 } as any);
 
 globalStyle('.nav-link.active::before', {
@@ -248,6 +249,10 @@ globalStyle('.toolbar-pill-button', {
 globalStyle('.toolbar-pill-button:hover', {
   borderColor: 'var(--line-strong)',
   background: 'var(--panel-2)',
+} as any);
+
+globalStyle('.toolbar-pill-button:active', {
+  transform: 'scale(0.97)',
 } as any);
 
 globalStyle('.toolbar-pill-button strong', {
@@ -468,6 +473,10 @@ globalStyle('.mode-pill', {
 globalStyle('.mode-pill:hover', {
   color: 'var(--text)',
   background: 'var(--panel)',
+} as any);
+
+globalStyle('.mode-pill:active', {
+  transform: 'scale(0.97)',
 } as any);
 
 globalStyle('.mode-pill.active', {

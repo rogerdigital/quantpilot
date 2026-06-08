@@ -16,7 +16,8 @@ globalStyle('.meta-card, .hero-card, .metric-tile, .panel', {
 
 globalStyle('.panel:hover', {
   borderColor: 'var(--line-strong)',
-  boxShadow: 'var(--shadow-panel-hover)',
+  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.04)',
+  transform: 'translateY(-1px)',
 } as any);
 
 globalStyle('.meta-card', {
@@ -266,7 +267,7 @@ globalStyle(
    ============================================================ */
 
 globalStyle('.hero-card-primary', {
-  background: 'var(--panel)',
+  background: 'var(--gradient-hero)',
 } as any);
 
 globalStyle('.hero-headline', {

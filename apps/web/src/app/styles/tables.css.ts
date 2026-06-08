@@ -33,7 +33,6 @@ globalStyle('.focus-row::before', {
 globalStyle('.focus-row:hover', {
   borderColor: 'var(--line-strong)',
   background: 'var(--panel-2)',
-  transform: 'translateX(2px)',
 } as any);
 
 globalStyle('.focus-row:hover::before', { opacity: 0.8 } as any);
@@ -329,7 +328,6 @@ globalStyle('.log-item::before', {
 globalStyle('.log-item:hover', {
   borderColor: 'var(--line-strong)',
   background: 'var(--panel-2)',
-  transform: 'translateX(2px)',
 } as any);
 
 globalStyle('.log-item:hover::before', { opacity: 0.8 } as any);

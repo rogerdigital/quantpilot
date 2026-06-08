@@ -39,6 +39,11 @@ globalStyle(':root', {
   '--hold': '#f59e0b',
   '--info': '#6366f1',
 
+  /* Semantic aliases */
+  '--warning': 'var(--hold)',
+  '--accent-subtle': 'rgba(79, 70, 229, 0.06)',
+  '--gradient-hero': 'linear-gradient(135deg, var(--panel) 0%, var(--panel-frame) 100%)',
+
   /* Fonts */
   '--font-display': '"Sora", "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
   '--font-ui': '"Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',

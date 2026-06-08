@@ -4,8 +4,8 @@ import { globalStyle, style } from '@vanilla-extract/css';
 
 export const overviewResultsBanner = style({
   display: 'grid',
-  gridTemplateColumns: 'repeat(3, 1fr)',
-  gap: '12px',
+  gridTemplateColumns: '1.2fr 1fr',
+  gap: '16px',
   marginTop: '20px',
   marginBottom: '20px',
   padding: '20px 24px',
@@ -60,11 +60,31 @@ globalStyle(`${overviewResultsKpi} .kpi-sub`, {
   marginTop: '2px',
 });
 
+export const overviewResultsHero = style({
+  display: 'grid',
+  gap: '8px',
+  alignContent: 'center',
+});
+
+globalStyle(`${overviewResultsHero} .kpi-value`, {
+  font: '700 clamp(40px, 5vw, 64px)/1 var(--font-data)',
+  letterSpacing: '-0.04em',
+  color: 'var(--text-strong)',
+  textShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+});
+
+export const overviewResultsSecondary = style({
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: '12px',
+  alignContent: 'start',
+});
+
 export const overviewHeroGrid = style({
   display: 'grid',
   gridTemplateColumns: '1.8fr 0.8fr 0.8fr',
   gap: '16px',
-  marginTop: '28px',
+  marginTop: '32px',
   '@media': {
     '(max-width: 900px)': { gridTemplateColumns: '1fr' },
   },

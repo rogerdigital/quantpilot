@@ -49,6 +49,16 @@ export const navReveal = keyframes({
   to: { clipPath: 'inset(0 0% 0 0)' },
 });
 
+export const skeletonPulse = keyframes({
+  '0%, 100%': { opacity: 0.4 },
+  '50%': { opacity: 0.15 },
+});
+
+export const skeletonSweep = keyframes({
+  from: { backgroundPosition: '200% 0' },
+  to: { backgroundPosition: '-200% 0' },
+});
+
 /* Register keyframe names as CSS custom properties */
 globalStyle(':root', {
   '--kf-panel-enter': panelEnter,
@@ -60,4 +70,20 @@ globalStyle(':root', {
   '--kf-ring-pulse': ringPulse,
   '--kf-float': float,
   '--kf-nav-reveal': navReveal,
+  '--kf-skeleton-pulse': skeletonPulse,
+  '--kf-skeleton-sweep': skeletonSweep,
+} as any);
+
+/* Skeleton loading bar */
+globalStyle('.skeleton', {
+  background: 'linear-gradient(90deg, var(--panel-2) 25%, var(--panel-3) 50%, var(--panel-2) 75%)',
+  backgroundSize: '200% 100%',
+  animation: `${skeletonSweep} 1.5s ease infinite`,
+  borderRadius: 'var(--radius-sm)',
+} as any);
+
+/* Empty panel state */
+globalStyle('.panel-empty', {
+  borderStyle: 'dashed',
+  opacity: 0.6,
 } as any);
