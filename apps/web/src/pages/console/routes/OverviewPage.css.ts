@@ -42,7 +42,7 @@ export const overviewResultsKpiDivider = style({
 });
 
 globalStyle(`${overviewResultsKpi} .kpi-label`, {
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
   color: 'var(--muted)',
@@ -129,7 +129,7 @@ export const overviewCommandNote = style({ display: 'grid', gap: '8px' });
 
 globalStyle(`${overviewBriefCard} span, ${overviewCommandNote} span, ${overviewPrimaryNote} span`, {
   color: 'var(--muted)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 });
@@ -167,7 +167,7 @@ export const overviewStat = style({ display: 'grid', gap: '6px' });
 
 globalStyle(`${overviewStat} span`, {
   color: 'var(--muted)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 });
@@ -255,7 +255,7 @@ export const overviewInlineMetric = style({ display: 'grid', gap: '6px' });
 
 globalStyle(`${overviewInlineMetric} span`, {
   color: 'var(--muted)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 });

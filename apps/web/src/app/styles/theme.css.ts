@@ -44,6 +44,16 @@ globalStyle(':root', {
   '--font-ui': '"Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
   '--font-data': '"JetBrains Mono", "SF Mono", "Consolas", monospace',
 
+  /* Type scale */
+  '--text-xs': '11px',
+  '--text-sm': '13px',
+  '--text-md': '15px',
+  '--text-lg': '18px',
+  '--text-xl': '22px',
+  '--text-2xl': '28px',
+  '--text-3xl': '36px',
+  '--text-hero': '52px',
+
   /* Shadows */
   '--shadow': '0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06)',
   '--shadow-soft': '0 4px 16px rgba(0, 0, 0, 0.08)',

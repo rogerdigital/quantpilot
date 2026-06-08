@@ -131,7 +131,7 @@ export function ShortcutHelp({ open, onClose }: ShortcutHelpProps) {
             <div
               style={{
                 color: 'var(--muted)',
-                fontSize: '10px',
+                fontSize: '11px',
                 fontFamily: 'var(--font-data)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.14em',

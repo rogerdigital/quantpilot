@@ -23,7 +23,7 @@ globalStyle('.settings-field', {
 
 globalStyle('.settings-field span', {
   color: 'var(--muted)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
@@ -55,7 +55,7 @@ globalStyle('.field-label', {
   marginTop: '16px',
   marginBottom: '8px',
   color: 'var(--muted)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
@@ -341,7 +341,7 @@ globalStyle('.agent-pulse-item:hover', {
 
 globalStyle('.agent-pulse-item span', {
   color: 'var(--muted)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
@@ -378,7 +378,7 @@ globalStyle('.agent-step-top', {
 
 globalStyle('.agent-step-top span', {
   color: 'var(--muted)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);

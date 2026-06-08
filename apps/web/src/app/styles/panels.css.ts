@@ -133,7 +133,7 @@ globalStyle('.overview-brief-card, .overview-primary-note', {
 
 globalStyle('.overview-brief-card span, .overview-command-note span, .overview-primary-note span', {
   color: 'var(--muted)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
@@ -168,7 +168,7 @@ globalStyle('.overview-stat', { display: 'grid', gap: '6px' } as any);
 
 globalStyle('.overview-stat span', {
   color: 'var(--muted-strong)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
@@ -305,6 +305,7 @@ globalStyle('.mini-copy', {
   color: 'var(--muted-strong)',
   fontSize: '13px',
   lineHeight: '1.6',
+  maxWidth: '560px',
 } as any);
 
 /* ============================================================
@@ -363,7 +364,7 @@ globalStyle('.metric-card:hover', {
 
 globalStyle('.metric-card span', {
   color: 'var(--muted-strong)',
-  font: '600 10px/1 var(--font-ui)',
+  font: '600 11px/1 var(--font-ui)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
@@ -640,7 +641,7 @@ globalStyle('.overview-inline-metric', { display: 'grid', gap: '6px' } as any);
 
 globalStyle('.overview-inline-metric span', {
   color: 'var(--muted-strong)',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
@@ -719,6 +720,7 @@ globalStyle('.status-copy', {
   color: 'var(--muted-strong)',
   fontSize: '13px',
   lineHeight: '1.6',
+  maxWidth: '560px',
 } as any);
 
 /* ============================================================

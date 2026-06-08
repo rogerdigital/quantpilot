@@ -73,7 +73,7 @@ export const tradingHeaderStat = style({
 
 globalStyle(`${tradingHeaderStat} span`, {
   color: 'var(--muted)',
-  fontSize: '10px',
+  fontSize: '11px',
   fontFamily: 'var(--font-data)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
@@ -122,7 +122,7 @@ export const watchlistPanel = style({
 export const watchlistHead = style({
   padding: '12px 14px',
   borderBottom: '1px solid var(--line)',
-  fontSize: '10px',
+  fontSize: '11px',
   fontFamily: 'var(--font-data)',
   textTransform: 'uppercase',
   letterSpacing: '0.12em',
@@ -270,7 +270,7 @@ export const chartSignalCard = style({
 });
 
 globalStyle(`${chartSignalCard} .sig-label`, {
-  fontSize: '10px',
+  fontSize: '11px',
   fontFamily: 'var(--font-data)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
@@ -353,7 +353,7 @@ export const tradeInputGroup = style({
 });
 
 export const tradeInputLabel = style({
-  fontSize: '10px',
+  fontSize: '11px',
   fontFamily: 'var(--font-data)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',

@@ -106,7 +106,7 @@ export function PaperPerformancePanel({
             {metrics.tradingDays}
           </div>
           <div
-            style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}
+            style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}
           >
             {locale === 'zh' ? '交易天数' : 'Trading Days'}
           </div>
@@ -116,7 +116,7 @@ export function PaperPerformancePanel({
             {metrics.sharpe.toFixed(2)}
           </div>
           <div
-            style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}
+            style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}
           >
             Sharpe
           </div>
@@ -126,7 +126,7 @@ export function PaperPerformancePanel({
             {(metrics.maxDrawdown * 100).toFixed(1)}%
           </div>
           <div
-            style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}
+            style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}
           >
             {locale === 'zh' ? '最大回撤' : 'Max DD'}
           </div>
@@ -136,7 +136,7 @@ export function PaperPerformancePanel({
             {(metrics.winRate * 100).toFixed(1)}%
           </div>
           <div
-            style={{ font: '400 10px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}
+            style={{ font: '400 11px/1 var(--font-ui)', color: 'var(--muted)', marginTop: '4px' }}
           >
             {locale === 'zh' ? '胜率' : 'Win Rate'}
           </div>

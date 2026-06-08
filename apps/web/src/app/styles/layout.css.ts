@@ -68,7 +68,7 @@ globalStyle(
 globalStyle('.brand-sub, .sidebar-label, .eyebrow, .card-eyebrow, .tile-label, .meta-label', {
   textTransform: 'uppercase',
   letterSpacing: '0.12em',
-  fontSize: '10px',
+  fontSize: '11px',
   fontFamily: 'var(--font-data)',
 } as any);
 
@@ -190,7 +190,7 @@ globalStyle('.toolbar-copy', { display: 'grid', gap: '3px' } as any);
 
 globalStyle('.toolbar-kicker', {
   color: 'var(--muted)',
-  font: '500 10px/1 var(--font-data)',
+  font: '500 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
 } as any);
@@ -253,7 +253,7 @@ globalStyle('.toolbar-pill-button strong', {
   flex: '0 0 auto',
   paddingLeft: '10px',
   borderLeft: '1px solid var(--line)',
-  fontSize: '10px',
+  fontSize: '11px',
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
   color: 'inherit',
@@ -377,7 +377,7 @@ globalStyle('.locale-option span', {
 
 globalStyle('.locale-option small', {
   color: 'var(--muted)',
-  fontSize: '10px',
+  fontSize: '11px',
   textTransform: 'uppercase',
   letterSpacing: '0.08em',
 } as any);

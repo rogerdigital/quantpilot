@@ -66,7 +66,7 @@ export const input = style({
 
 export const kbdHint = style({
   flexShrink: 0,
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.08em',
   color: 'var(--muted)',
   background: 'var(--panel-2)',
@@ -84,7 +84,7 @@ export const results = style({
 
 export const sectionLabel = style({
   padding: '8px 12px 4px',
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   color: 'var(--muted)',
@@ -144,7 +144,7 @@ export const resultHint = style({
 
 export const resultEnter = style({
   flexShrink: 0,
-  font: '600 10px/1 var(--font-data)',
+  font: '600 11px/1 var(--font-data)',
   color: 'var(--muted)',
   background: 'var(--panel-2)',
   border: '1px solid var(--line)',

@@ -247,7 +247,7 @@ export function CommentThread({ strategyId, className = '' }: CommentThreadProps
                           padding: '2px 6px',
                           background: 'var(--success)',
                           borderRadius: 'var(--radius-sm)',
-                          font: '600 10px/1 var(--font-data)',
+                          font: '600 11px/1 var(--font-data)',
                           color: '#fff',
                         }}
                       >

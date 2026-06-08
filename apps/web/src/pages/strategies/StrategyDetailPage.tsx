@@ -224,7 +224,7 @@ export function StrategyDetailPage() {
                   </div>
                   <span
                     className={`signal-chip signal-${run.status === 'completed' ? 'buy' : run.status === 'failed' ? 'sell' : 'hold'}`}
-                    style={{ fontSize: '10px' }}
+                    style={{ fontSize: '11px' }}
                   >
                     {run.status}
                   </span>
