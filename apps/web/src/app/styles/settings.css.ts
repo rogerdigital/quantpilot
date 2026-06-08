@@ -540,3 +540,84 @@ globalStyle('.agent-dialogue-stage > .field-label', {
   marginTop: '10px',
   marginBottom: '6px',
 } as any);
+
+/* ============================================================
+   SETTINGS SWITCH (toggle)
+   ============================================================ */
+
+globalStyle('.settings-switch', {
+  position: 'relative',
+  width: '40px',
+  height: '22px',
+  borderRadius: '11px',
+  background: 'var(--panel-3)',
+  border: '1px solid var(--line)',
+  cursor: 'pointer',
+  transition: 'background 150ms ease, border-color 150ms ease',
+  flexShrink: 0,
+} as any);
+
+globalStyle('.settings-switch.active', {
+  background: 'var(--buy)',
+  borderColor: 'var(--buy)',
+} as any);
+
+globalStyle('.settings-switch::after', {
+  content: '""',
+  position: 'absolute',
+  top: '2px',
+  left: '2px',
+  width: '16px',
+  height: '16px',
+  borderRadius: '50%',
+  background: '#fff',
+  transition: 'transform 150ms ease',
+} as any);
+
+globalStyle('.settings-switch.active::after', {
+  transform: 'translateX(18px)',
+} as any);
+
+/* ============================================================
+   SETTINGS PROFILE CARD
+   ============================================================ */
+
+globalStyle('.settings-profile-card', {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '16px',
+  padding: '20px',
+  border: '1px solid var(--line)',
+  borderRadius: 'var(--radius)',
+  background: 'var(--panel-2)',
+} as any);
+
+globalStyle('.settings-profile-avatar', {
+  width: '48px',
+  height: '48px',
+  borderRadius: '50%',
+  background: 'var(--accent-subtle)',
+  border: '1px solid var(--line)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '18px',
+  fontWeight: 700,
+  color: 'var(--accent)',
+  flexShrink: 0,
+} as any);
+
+globalStyle('.settings-profile-info', {
+  display: 'grid',
+  gap: '4px',
+} as any);
+
+globalStyle('.settings-profile-name', {
+  font: '600 16px/1.2 var(--font-display)',
+  color: 'var(--text-strong)',
+} as any);
+
+globalStyle('.settings-profile-role', {
+  font: '500 12px/1 var(--font-ui)',
+  color: 'var(--muted)',
+} as any);

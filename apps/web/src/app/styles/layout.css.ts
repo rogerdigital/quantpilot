@@ -707,3 +707,51 @@ globalStyle(`.log-item`, {
     },
   },
 } as any);
+
+/* ============================================================
+   MOBILE REFINEMENTS (≤640px)
+   ============================================================ */
+
+globalStyle('h1', {
+  '@media': {
+    '(max-width: 640px)': {
+      fontSize: '28px',
+    },
+  },
+} as any);
+
+globalStyle('.hero-value', {
+  '@media': {
+    '(max-width: 640px)': {
+      fontSize: '36px',
+    },
+  },
+} as any);
+
+globalStyle('.panel', {
+  '@media': {
+    '(max-width: 640px)': {
+      padding: '16px',
+    },
+  },
+} as any);
+
+globalStyle(
+  '.hero-grid, .overview-hero-grid, .panel-grid, .panel-grid-3, .panel-grid-wide, .metrics-grid, .terminal-strip',
+  {
+    '@media': {
+      '(max-width: 640px)': {
+        gap: '12px',
+        marginTop: '20px',
+      },
+    },
+  } as any
+);
+
+globalStyle('.inline-action', {
+  '@media': {
+    '(max-width: 640px)': {
+      padding: '8px 12px',
+    },
+  },
+} as any);

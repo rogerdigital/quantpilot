@@ -182,7 +182,7 @@ globalStyle('.table-wrap table', {
 } as any);
 
 globalStyle('th, td', {
-  padding: '11px 12px',
+  padding: '12px 14px',
   borderBottom: '1px solid var(--line)',
   textAlign: 'left',
   whiteSpace: 'nowrap',
@@ -195,12 +195,24 @@ globalStyle('th', {
   letterSpacing: '0.1em',
   background: 'var(--panel-2)',
   borderBottomColor: 'var(--line)',
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
 } as any);
 
 globalStyle('td', {
   fontSize: '13px',
   fontFamily: 'var(--font-data)',
   color: 'var(--text)',
+} as any);
+
+globalStyle('.td-numeric', {
+  textAlign: 'right',
+  fontVariantNumeric: 'tabular-nums',
+} as any);
+
+globalStyle('.table-wrap tr:nth-child(even) td', {
+  background: 'rgba(34, 38, 58, 0.3)',
 } as any);
 
 globalStyle('.table-row-hover', {

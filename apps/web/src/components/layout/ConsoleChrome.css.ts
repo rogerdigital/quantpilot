@@ -278,6 +278,8 @@ export const bottomNav = style({
       background: 'var(--panel)',
       borderTop: '1px solid var(--line)',
       overflowX: 'auto',
+      backdropFilter: 'blur(8px)',
+      WebkitBackdropFilter: 'blur(8px)',
     },
   },
 });
@@ -305,4 +307,15 @@ export const bottomNavItem = style({
 
 export const bottomNavItemActive = style({
   color: 'var(--accent)',
+  position: 'relative',
+  '::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '25%',
+    right: '25%',
+    height: '2px',
+    background: 'var(--accent)',
+    borderRadius: '0 0 1px 1px',
+  },
 });
