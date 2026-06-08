@@ -266,7 +266,7 @@ globalStyle(
    ============================================================ */
 
 globalStyle('.hero-card-primary', {
-  background: 'var(--panel)',
+  background: 'var(--gradient-hero)',
 } as any);
 
 globalStyle('.hero-headline', {
