@@ -46,8 +46,9 @@ globalStyle('.panel', {
 globalStyle('.hero-grid', {
   display: 'grid',
   gridTemplateColumns: '1.9fr 1fr 1fr',
-  gap: 'var(--space-4)',
-  marginTop: '32px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
+  marginTop: 0,
   '@media': {
     '(max-width: 1180px)': {
       gridTemplateColumns: '1fr',
@@ -58,8 +59,9 @@ globalStyle('.hero-grid', {
 globalStyle('.overview-hero-grid', {
   display: 'grid',
   gridTemplateColumns: '1.8fr 0.8fr 0.8fr',
-  gap: 'var(--space-4)',
-  marginTop: '32px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
+  marginTop: 0,
   '@media': {
     '(max-width: 1180px)': {
       gridTemplateColumns: '1fr',
@@ -93,7 +95,8 @@ globalStyle('.overview-command-frame', { display: 'grid', gap: '18px' } as any);
 globalStyle('.overview-command-head', {
   display: 'flex',
   justifyContent: 'space-between',
-  gap: '16px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
   alignItems: 'flex-start',
 } as any);
 
@@ -272,7 +275,8 @@ globalStyle('.hero-card-primary', {
 globalStyle('.hero-headline', {
   display: 'flex',
   alignItems: 'baseline',
-  gap: '16px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
 } as any);
 
 globalStyle('.hero-value', {
@@ -288,7 +292,8 @@ globalStyle('.hero-change', {
 globalStyle('.hero-foot', {
   display: 'flex',
   justifyContent: 'space-between',
-  gap: '16px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
   marginTop: '20px',
   color: 'var(--muted)',
 } as any);
@@ -315,7 +320,8 @@ globalStyle('.mini-copy', {
 globalStyle('.metrics-grid', {
   display: 'grid',
   gridTemplateColumns: 'repeat(4, 1fr)',
-  gap: '16px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
   marginTop: '20px',
   '@media': {
     '(max-width: 1180px)': {
@@ -381,7 +387,8 @@ globalStyle('.metric-card strong', {
 globalStyle('.terminal-strip', {
   display: 'grid',
   gridTemplateColumns: '1.3fr repeat(4, minmax(0, 1fr))',
-  gap: '16px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
   marginTop: '24px',
   '@media': {
     '(max-width: 1180px)': {
@@ -438,8 +445,9 @@ globalStyle('.tile-sub', {
 globalStyle('.panel-grid', {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-  gap: 'var(--space-4)',
-  marginTop: '32px',
+  gap: 'var(--gap-panel)',
+  background: 'var(--line)',
+  marginTop: 0,
   alignItems: 'start',
   '@media': {
     '(max-width: 1180px)': {
@@ -625,7 +633,7 @@ globalStyle('.overview-desk-grid', {
 
 globalStyle('.overview-primary-panel', { minHeight: '468px' } as any);
 globalStyle('.overview-side-panel', { minHeight: '468px' } as any);
-globalStyle('.overview-panel-flow', { display: 'grid', gap: 'var(--space-4)' } as any);
+globalStyle('.overview-panel-flow', { display: 'grid', gap: 'var(--gap-panel)' } as any);
 
 globalStyle('.overview-inline-metrics', {
   display: 'grid',
