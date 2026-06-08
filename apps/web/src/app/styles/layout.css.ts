@@ -250,6 +250,10 @@ globalStyle('.toolbar-pill-button:hover', {
   background: 'var(--panel-2)',
 } as any);
 
+globalStyle('.toolbar-pill-button:active', {
+  transform: 'scale(0.97)',
+} as any);
+
 globalStyle('.toolbar-pill-button strong', {
   flex: '0 0 auto',
   paddingLeft: '10px',
@@ -468,6 +472,10 @@ globalStyle('.mode-pill', {
 globalStyle('.mode-pill:hover', {
   color: 'var(--text)',
   background: 'var(--panel)',
+} as any);
+
+globalStyle('.mode-pill:active', {
+  transform: 'scale(0.97)',
 } as any);
 
 globalStyle('.mode-pill.active', {
