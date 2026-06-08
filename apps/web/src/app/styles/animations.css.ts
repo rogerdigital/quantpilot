@@ -76,8 +76,7 @@ globalStyle(':root', {
 
 /* Skeleton loading bar */
 globalStyle('.skeleton', {
-  background:
-    'linear-gradient(90deg, var(--panel-2) 25%, var(--panel-3) 50%, var(--panel-2) 75%)',
+  background: 'linear-gradient(90deg, var(--panel-2) 25%, var(--panel-3) 50%, var(--panel-2) 75%)',
   backgroundSize: '200% 100%',
   animation: `${skeletonSweep} 1.5s ease infinite`,
   borderRadius: 'var(--radius-sm)',

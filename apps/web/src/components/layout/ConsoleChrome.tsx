@@ -241,6 +241,18 @@ function GlobalToolbar() {
       <div className={toolbarActions}>
         <button
           type="button"
+          className="toolbar-pill toolbar-pill-button"
+          onClick={() =>
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))
+          }
+          aria-label="Search (⌘K)"
+        >
+          <span className="toolbar-pill-main">
+            <span className="toolbar-pill-label">⌘K</span>
+          </span>
+        </button>
+        <button
+          type="button"
           className={`toolbar-pill toolbar-pill-button tone-${integrationTone(marketConnected, marketDegraded)}`}
           onClick={() => goToSettings('integrations')}
         >
