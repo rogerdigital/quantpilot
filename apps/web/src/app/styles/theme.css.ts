@@ -62,8 +62,8 @@ globalStyle(':root', {
   /* Shadows */
   '--shadow': '0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06)',
   '--shadow-soft': '0 4px 16px rgba(0, 0, 0, 0.08)',
-  '--shadow-panel': '0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03)',
-  '--shadow-panel-hover': '0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04)',
+  '--shadow-panel': 'none',
+  '--shadow-panel-hover': 'none',
 
   /* Glows — disabled */
   '--glow-indigo': 'none',
@@ -74,15 +74,16 @@ globalStyle(':root', {
   '--glow-amber': 'none',
   '--glow-red': 'none',
 
-  /* Geometry — border radius nesting rules:
-     - Page-level containers (topbar): --radius-xl (18px)
-     - Panel-level (.panel, .hero-card): --radius-lg (14px)
-     - Inner elements (metric-card, table-wrap, input): --radius (10px)
-     - Smallest elements (badge, button, pill): --radius-sm (6px) */
-  '--radius': '10px',
-  '--radius-sm': '6px',
-  '--radius-lg': '14px',
-  '--radius-xl': '18px',
+  /* Geometry — TradingView-style borderless tiled layout:
+     - Layout containers: 0 radius (seamless tiling)
+     - Interactive elements (input, button, badge): micro radius */
+  '--radius': '4px',
+  '--radius-sm': '3px',
+  '--radius-lg': '0',
+  '--radius-xl': '0',
+
+  /* Panel gap (1px = divider line) */
+  '--gap-panel': '1px',
 
   /* Spacing scale (4px grid) */
   '--space-1': '4px',
@@ -148,8 +149,8 @@ globalStyle(darkSelector, {
 
   '--shadow': '0 12px 40px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3)',
   '--shadow-soft': '0 4px 16px rgba(0, 0, 0, 0.3)',
-  '--shadow-panel': '0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)',
-  '--shadow-panel-hover': '0 4px 12px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.25)',
+  '--shadow-panel': 'none',
+  '--shadow-panel-hover': 'none',
 
   '--glow-indigo': 'none',
   '--glow-indigo-strong': 'none',
