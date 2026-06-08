@@ -5,6 +5,13 @@ export function fmtCurrency(value: number) {
   return `¥${Math.round(value).toLocaleString('zh-CN')}`;
 }
 
+export function fmtCurrencyCompact(value: number) {
+  const abs = Math.abs(value);
+  if (abs >= 100_000_000) return `¥${(value / 100_000_000).toFixed(1)}亿`;
+  if (abs >= 10_000) return `¥${(value / 10_000).toFixed(1)}万`;
+  return `¥${Math.round(value).toLocaleString('zh-CN')}`;
+}
+
 export function fmtPct(value: number) {
   const sign = value > 0 ? '+' : '';
   return `${sign}${value.toFixed(2)}%`;
