@@ -58,12 +58,13 @@ globalStyle('.brand-name', {
   letterSpacing: '0.01em',
 } as any);
 
-globalStyle(
-  '.brand-sub, .sidebar-label, .eyebrow, .card-eyebrow, .tile-label, .meta-label, .panel-copy',
-  {
-    color: 'var(--muted)',
-  } as any
-);
+globalStyle('.brand-sub, .sidebar-label, .eyebrow, .card-eyebrow, .tile-label, .meta-label', {
+  color: 'var(--muted-strong)',
+} as any);
+
+globalStyle('.panel-copy', {
+  color: 'var(--muted)',
+} as any);
 
 globalStyle('.brand-sub, .sidebar-label, .eyebrow, .card-eyebrow, .tile-label, .meta-label', {
   textTransform: 'uppercase',

@@ -191,7 +191,7 @@ globalStyle('th, td', {
 
 globalStyle('th', {
   font: '600 11px/1 var(--font-ui)',
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
   background: 'var(--panel-2)',

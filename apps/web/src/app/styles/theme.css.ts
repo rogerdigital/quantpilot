@@ -121,8 +121,9 @@ globalStyle(darkSelector, {
 
   '--text': '#e5e7eb',
   '--text-strong': '#f9fafb',
-  '--muted': '#9ca3af',
+  '--muted': '#a1a8b4',
   '--muted-strong': '#d1d5db',
+  '--muted-data': '#8b95a5',
 
   '--accent-indigo': '#818cf8',
   '--accent-indigo-hover': '#6366f1',

@@ -132,7 +132,7 @@ globalStyle('.overview-brief-card, .overview-primary-note', {
 } as any);
 
 globalStyle('.overview-brief-card span, .overview-command-note span, .overview-primary-note span', {
-  color: 'var(--muted)',
+  color: 'var(--muted-strong)',
   font: '600 11px/1 var(--font-data)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
