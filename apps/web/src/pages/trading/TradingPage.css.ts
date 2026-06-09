@@ -8,8 +8,12 @@ export const tradingShell = style({
   gap: '1px',
   background: 'var(--line)',
   overflow: 'hidden',
-  width: '100%',
   height: '100vh',
+  width: '100vw',
+  maxWidth: 'none',
+  position: 'relative',
+  left: '50%',
+  transform: 'translateX(-50%)',
 });
 
 export const tradingHeader = style({
