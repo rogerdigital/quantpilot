@@ -8,9 +8,8 @@ export const tradingShell = style({
   gap: '1px',
   background: 'var(--line)',
   overflow: 'hidden',
-  maxWidth: 'none',
-  width: '100vw',
-  marginLeft: 'calc(-50vw + 50%)',
+  width: '100%',
+  height: '100vh',
 });
 
 export const tradingHeader = style({
@@ -98,7 +97,8 @@ export const tradingGrid = style({
   gridTemplateColumns: '220px 1fr 280px',
   gap: '1px',
   background: 'var(--line)',
-  minHeight: '520px',
+  flex: 1,
+  minHeight: 0,
   '@media': {
     '(max-width: 1180px)': {
       gridTemplateColumns: '1fr 280px',
