@@ -260,7 +260,7 @@ globalStyle('.inline-action', {
   background: 'rgba(239, 68, 68, 0.06)',
   color: 'var(--sell)',
   borderRadius: 'var(--radius-sm)',
-  padding: '6px 10px',
+  padding: '8px 12px',
   cursor: 'pointer',
   font: '600 11px/1 var(--font-ui)',
   letterSpacing: '0.02em',

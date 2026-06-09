@@ -43,7 +43,7 @@ export const mainPanel = style({
   isolation: 'isolate',
   height: '100vh',
   overflowY: 'auto',
-  padding: '0 24px 40px',
+  padding: '0 0 40px',
   maxWidth: 'var(--content-max-width)',
   marginLeft: 'auto',
   marginRight: 'auto',

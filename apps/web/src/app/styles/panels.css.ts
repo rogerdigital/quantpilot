@@ -37,6 +37,7 @@ globalStyle('.meta-value.accent', {
 globalStyle('.panel', {
   padding: 'var(--space-5)',
   minWidth: 0,
+  background: 'var(--panel)',
 } as any);
 
 /* ============================================================
@@ -163,7 +164,7 @@ globalStyle('.overview-command-strip', {
   display: 'grid',
   gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
   gap: '10px',
-  marginTop: '20px',
+  marginTop: 0,
   paddingTop: '16px',
   borderTop: '1px solid var(--line)',
 } as any);
@@ -194,7 +195,7 @@ globalStyle('.overview-kpi-title', {
 globalStyle('.overview-kpi-grid', {
   display: 'grid',
   gap: 'var(--space-3)',
-  marginTop: '20px',
+  marginTop: 0,
   paddingTop: '16px',
   borderTop: '1px solid var(--line)',
 } as any);
@@ -216,7 +217,7 @@ globalStyle('.overview-kpi-grid strong', {
 } as any);
 
 globalStyle('.overview-kpi-note', {
-  marginTop: '20px',
+  marginTop: 0,
   paddingTop: '16px',
   borderTop: '1px solid var(--line)',
 } as any);
@@ -294,7 +295,7 @@ globalStyle('.hero-foot', {
   justifyContent: 'space-between',
   gap: 'var(--gap-panel)',
   background: 'var(--line)',
-  marginTop: '20px',
+  marginTop: 0,
   color: 'var(--muted)',
 } as any);
 
@@ -322,7 +323,7 @@ globalStyle('.metrics-grid', {
   gridTemplateColumns: 'repeat(4, 1fr)',
   gap: 'var(--gap-panel)',
   background: 'var(--line)',
-  marginTop: '20px',
+  marginTop: 0,
   '@media': {
     '(max-width: 1180px)': {
       gridTemplateColumns: 'repeat(2, 1fr)',
@@ -353,9 +354,8 @@ globalStyle('.metrics-grid-compact', {
 globalStyle('.metric-card', {
   padding: '16px',
   border: 'none',
-  borderBottom: '1px solid var(--line)',
   borderRadius: 0,
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   display: 'grid',
   gap: 'var(--space-2)',
   position: 'relative',
@@ -364,7 +364,7 @@ globalStyle('.metric-card', {
 } as any);
 
 globalStyle('.metric-card:hover', {
-  background: 'var(--panel-3)',
+  background: 'var(--panel-2)',
 } as any);
 
 globalStyle('.metric-card span', {
@@ -746,3 +746,12 @@ globalStyle('.focus-list-terminal', {
   background: 'var(--panel-3)',
   padding: '4px 14px',
 } as any);
+
+/* ============================================================
+   GRID CHILDREN — cover divider-line background
+   ============================================================ */
+
+globalStyle(
+  '.hero-grid > *, .overview-hero-grid > *, .metrics-grid > *, .terminal-strip > *, .panel-grid > *, .panel-grid-3 > *, .panel-grid-wide > *, .panel-grid-terminal > *, .panel-grid-terminal-bottom > *',
+  { background: 'var(--panel)' } as any
+);
