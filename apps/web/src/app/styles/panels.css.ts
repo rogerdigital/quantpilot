@@ -258,7 +258,7 @@ globalStyle('.status-row-button:hover, .inline-link:hover', {
 } as any);
 
 globalStyle(
-  '.shortcut-surface:focus-visible, .toolbar-pill-button:focus-visible, .status-row-button:focus-visible, .inline-link:focus-visible, .locale-trigger:focus-visible, .locale-option:focus-visible, .mode-pill:focus-visible',
+  '.shortcut-surface:focus-visible, .toolbar-pill-button:focus-visible, .status-row-button:focus-visible, .inline-link:focus-visible, .locale-trigger:focus-visible, .locale-option:focus-visible, .theme-trigger:focus-visible, .theme-option:focus-visible, .mode-pill:focus-visible',
   {
     outline: '2px solid var(--accent)',
     outlineOffset: '2px',
