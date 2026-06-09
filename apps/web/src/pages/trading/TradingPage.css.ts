@@ -6,7 +6,7 @@ export const tradingShell = style({
   display: 'flex',
   flexDirection: 'column',
   gap: '1px',
-  background: 'var(--line)',
+
   overflow: 'hidden',
   height: '100vh',
   width: '100%',
@@ -96,7 +96,7 @@ export const tradingGrid = style({
   display: 'grid',
   gridTemplateColumns: '220px 1fr 280px',
   gap: '1px',
-  background: 'var(--line)',
+
   flex: 1,
   minHeight: 0,
   '@media': {

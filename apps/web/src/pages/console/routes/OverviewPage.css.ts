@@ -6,7 +6,7 @@ export const overviewResultsBanner = style({
   display: 'grid',
   gridTemplateColumns: '1.2fr 1fr',
   gap: '1px',
-  background: 'var(--line)',
+
   marginTop: 0,
   marginBottom: 0,
   padding: 0,
@@ -33,7 +33,7 @@ export const overviewResultsKpi = style({
 
 export const overviewResultsKpiDivider = style({
   width: '1px',
-  background: 'var(--line)',
+
   alignSelf: 'stretch',
   margin: '4px 0',
   '@media': {
@@ -79,7 +79,7 @@ export const overviewResultsSecondary = style({
   display: 'grid',
   gridTemplateColumns: '1fr 1fr',
   gap: '1px',
-  background: 'var(--line)',
+
   alignContent: 'start',
 });
 
@@ -87,7 +87,7 @@ export const overviewHeroGrid = style({
   display: 'grid',
   gridTemplateColumns: '1.8fr 0.8fr 0.8fr',
   gap: '1px',
-  background: 'var(--line)',
+
   marginTop: 0,
   '@media': {
     '(max-width: 900px)': { gridTemplateColumns: '1fr' },
