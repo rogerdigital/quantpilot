@@ -88,6 +88,7 @@ export function CandlestickChart({ data, timeframe, indicators }: Props) {
 
     const chart = createChart(el, {
       layout: {
+        attributionLogo: false,
         background: { color: 'transparent' },
         textColor: colors.textColor,
         fontFamily: '"JetBrains Mono", monospace',
