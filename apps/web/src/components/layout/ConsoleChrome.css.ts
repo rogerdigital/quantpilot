@@ -43,10 +43,8 @@ export const mainPanel = style({
   isolation: 'isolate',
   height: '100vh',
   overflowY: 'auto',
-  padding: '0 0 40px',
-  maxWidth: 'var(--content-max-width)',
-  marginLeft: 'auto',
-  marginRight: 'auto',
+  padding: 0,
+  maxWidth: 'none',
   minWidth: 0,
   '@media': {
     [tablet]: {

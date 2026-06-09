@@ -9,11 +9,7 @@ export const tradingShell = style({
   background: 'var(--line)',
   overflow: 'hidden',
   height: '100vh',
-  width: '100vw',
-  maxWidth: 'none',
-  position: 'relative',
-  left: '50%',
-  transform: 'translateX(-50%)',
+  width: '100%',
 });
 
 export const tradingHeader = style({
