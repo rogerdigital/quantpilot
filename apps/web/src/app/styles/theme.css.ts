@@ -6,12 +6,12 @@ import { darkTheme } from './themes/dark.css.ts';
    ============================================================ */
 
 globalStyle(':root', {
-  /* Canvas layers */
-  '--bg-canvas': '#f8f9fc',
+  /* Canvas layers — unified single background (TradingView style) */
+  '--bg-canvas': '#ffffff',
   '--bg': 'var(--bg-canvas)',
   '--panel': '#ffffff',
-  '--panel-2': '#f3f4f8',
-  '--panel-3': '#eceef5',
+  '--panel-2': '#f8f9fb',
+  '--panel-3': '#f3f4f6',
   '--panel-frame': 'rgba(79, 70, 229, 0.06)',
 
   /* Lines & borders */
@@ -118,15 +118,15 @@ globalStyle(':root', {
 const darkSelector = `.${darkTheme[0]}`;
 
 globalStyle(darkSelector, {
-  '--bg-canvas': '#0f1117',
-  '--bg': '#0f1117',
-  '--panel': '#1a1d2e',
-  '--panel-2': '#22263a',
-  '--panel-3': '#2a2f45',
+  '--bg-canvas': '#131722',
+  '--bg': '#131722',
+  '--panel': '#131722',
+  '--panel-2': '#1e222d',
+  '--panel-3': '#262b3d',
   '--panel-frame': 'rgba(99, 102, 241, 0.08)',
 
-  '--line': '#2e3348',
-  '--line-strong': '#3d4260',
+  '--line': '#2a2e39',
+  '--line-strong': '#363a45',
   '--line-vivid': '#5b6078',
 
   '--text': '#e5e7eb',
