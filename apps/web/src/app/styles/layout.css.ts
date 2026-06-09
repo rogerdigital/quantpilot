@@ -218,7 +218,7 @@ globalStyle('.toolbar-actions', {
   justifyContent: 'flex-end',
 } as any);
 
-globalStyle('.toolbar-pill, .locale-trigger, .locale-option', {
+globalStyle('.toolbar-pill, .locale-trigger, .locale-option, .theme-trigger, .theme-option', {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -397,6 +397,78 @@ globalStyle('.locale-check', {
 } as any);
 
 globalStyle('.locale-option.active', {
+  borderColor: 'var(--accent)',
+  background: 'var(--panel)',
+} as any);
+
+/* Theme switcher (dropdown, mirrors locale-switch) */
+
+globalStyle('.theme-switch-wrap', {
+  position: 'relative',
+  zIndex: 45,
+} as any);
+
+globalStyle('.theme-trigger', {
+  minHeight: '34px',
+  padding: '0 14px',
+  gap: '10px',
+  cursor: 'pointer',
+  transition: 'border-color 150ms ease',
+} as any);
+
+globalStyle('.theme-trigger:hover', {
+  borderColor: 'var(--line-strong)',
+} as any);
+
+globalStyle('.theme-menu', {
+  position: 'absolute',
+  top: 'calc(100% + 8px)',
+  right: 0,
+  zIndex: 60,
+  minWidth: '168px',
+  padding: '6px',
+  borderRadius: 'var(--radius)',
+  border: '1px solid var(--line)',
+  background: 'var(--panel)',
+  boxShadow: 'var(--shadow)',
+  animation: 'fade-up 160ms ease both',
+} as any);
+
+globalStyle('.theme-option', {
+  width: '100%',
+  justifyContent: 'space-between',
+  minHeight: '38px',
+  padding: '0 12px',
+  marginTop: '4px',
+  background: 'var(--panel)',
+  cursor: 'pointer',
+  transition: 'border-color 140ms ease, background 140ms ease',
+} as any);
+
+globalStyle('.theme-option:first-of-type', {
+  marginTop: 0,
+} as any);
+
+globalStyle('.theme-option:hover', {
+  borderColor: 'var(--line-strong)',
+  background: 'var(--panel)',
+} as any);
+
+globalStyle('.theme-option span', {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '8px',
+  color: 'var(--text)',
+  fontWeight: 700,
+} as any);
+
+globalStyle('.theme-check', {
+  color: 'var(--accent)',
+  fontSize: '14px',
+  fontWeight: 700,
+} as any);
+
+globalStyle('.theme-option.active', {
   borderColor: 'var(--accent)',
   background: 'var(--panel)',
 } as any);

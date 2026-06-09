@@ -201,14 +201,74 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
   );
 }
 
+const SunIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2" />
+    <path d="M12 20v2" />
+    <path d="m4.93 4.93 1.41 1.41" />
+    <path d="m17.66 17.66 1.41 1.41" />
+    <path d="M2 12h2" />
+    <path d="M20 12h2" />
+    <path d="m6.34 17.66-1.41 1.41" />
+    <path d="m19.07 4.93-1.41 1.41" />
+  </svg>
+);
+
+const MoonIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+  </svg>
+);
+
+const MonitorIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect width="20" height="14" x="2" y="3" rx="2" />
+    <line x1="8" x2="16" y1="21" y2="21" />
+    <line x1="12" x2="12" y1="17" y2="21" />
+  </svg>
+);
+
 function GlobalToolbar() {
   const { locale, setLocale } = useLocale();
   const { state } = useTradingSystem();
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
   const goToSettings = useSettingsNavigation();
-  const { resolved, toggle } = useThemeContext();
+  const { mode, setTheme, resolved } = useThemeContext();
   const [localeOpen, setLocaleOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
   const localeMenuRef = useRef<HTMLDivElement | null>(null);
+  const themeMenuRef = useRef<HTMLDivElement | null>(null);
   const localeLabel = locale === 'zh' ? '中文' : 'English';
   const marketConnected = marketStatus?.connected ?? state.integrationStatus.marketData.connected;
   const marketDegraded = marketStatus?.fallback ?? !marketConnected;
@@ -228,6 +288,22 @@ function GlobalToolbar() {
       window.removeEventListener('keydown', handleEscape);
     };
   }, [localeOpen]);
+
+  useEffect(() => {
+    if (!themeOpen) return;
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!themeMenuRef.current?.contains(event.target as Node)) setThemeOpen(false);
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setThemeOpen(false);
+    };
+    window.addEventListener('mousedown', handlePointerDown);
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('mousedown', handlePointerDown);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [themeOpen]);
 
   return (
     <div className={globalToolbar}>
@@ -314,15 +390,60 @@ function GlobalToolbar() {
             </div>
           ) : null}
         </div>
-        <button
-          type="button"
-          className="toolbar-pill"
-          onClick={toggle}
-          title={resolved === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          style={{ cursor: 'pointer' }}
-        >
-          <span className="toolbar-pill-label">{resolved === 'dark' ? '☀' : '☾'}</span>
-        </button>
+        <div className="theme-switch-wrap" ref={themeMenuRef}>
+          <button
+            type="button"
+            className="theme-trigger"
+            aria-haspopup="menu"
+            aria-expanded={themeOpen}
+            onClick={() => setThemeOpen((c) => !c)}
+          >
+            <span>{resolved === 'dark' ? <MoonIcon /> : <SunIcon />}</span>
+          </button>
+          {themeOpen ? (
+            <div className="theme-menu" role="menu" aria-label="Theme">
+              <button
+                type="button"
+                className={`theme-option${mode === 'light' ? ' active' : ''}`}
+                onClick={() => {
+                  setTheme('light');
+                  setThemeOpen(false);
+                }}
+              >
+                <span>
+                  <SunIcon /> Light
+                </span>
+                {mode === 'light' ? <small className="theme-check">✓</small> : null}
+              </button>
+              <button
+                type="button"
+                className={`theme-option${mode === 'dark' ? ' active' : ''}`}
+                onClick={() => {
+                  setTheme('dark');
+                  setThemeOpen(false);
+                }}
+              >
+                <span>
+                  <MoonIcon /> Dark
+                </span>
+                {mode === 'dark' ? <small className="theme-check">✓</small> : null}
+              </button>
+              <button
+                type="button"
+                className={`theme-option${mode === 'system' ? ' active' : ''}`}
+                onClick={() => {
+                  setTheme('system');
+                  setThemeOpen(false);
+                }}
+              >
+                <span>
+                  <MonitorIcon /> System
+                </span>
+                {mode === 'system' ? <small className="theme-check">✓</small> : null}
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
