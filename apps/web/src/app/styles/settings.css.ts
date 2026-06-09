@@ -32,7 +32,7 @@ globalStyle('.settings-field input, .settings-field select', {
   width: '100%',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   color: 'var(--text)',
   padding: '10px 12px',
   font: '14px var(--font-data)',
@@ -64,7 +64,7 @@ globalStyle('.text-input, .detail-textarea', {
   width: '100%',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   color: 'var(--text)',
   padding: '10px 12px',
   font: '14px var(--font-data)',
@@ -101,7 +101,7 @@ globalStyle('.settings-button', {
   overflow: 'hidden',
   border: '1px solid var(--line-strong)',
   borderRadius: 'var(--radius)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   color: 'var(--text)',
   padding: '10px 16px',
   cursor: 'pointer',
@@ -115,7 +115,7 @@ globalStyle('.settings-button', {
 globalStyle('.settings-button:hover', {
   borderColor: 'var(--accent)',
   boxShadow: 'var(--shadow-panel-hover)',
-  background: 'var(--panel-3)',
+  background: 'var(--panel)',
   transform: 'translateY(-1px)',
 } as any);
 
@@ -132,7 +132,7 @@ globalStyle('.settings-button-secondary', {
 globalStyle('.settings-button-secondary:hover', {
   borderColor: 'var(--hold)',
   boxShadow: 'var(--shadow-panel-hover)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.policy-row-split', {
@@ -153,7 +153,7 @@ globalStyle('.settings-inline-button', {
   overflow: 'hidden',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-sm)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   color: 'var(--muted)',
   padding: '6px 10px',
   cursor: 'pointer',
@@ -211,7 +211,7 @@ globalStyle('.settings-chip', {
 
 globalStyle('.settings-chip:hover', {
   borderColor: 'var(--line-strong)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   color: 'var(--text)',
 } as any);
 
@@ -229,7 +229,7 @@ globalStyle('.policy-card', {
 
 globalStyle('.policy-card-inline', {
   marginTop: '16px',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 /* ============================================================
@@ -272,7 +272,7 @@ globalStyle('.agent-stage-header', {
   padding: '14px 16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   transition: 'border-color 160ms ease',
   flexShrink: 0,
   marginBottom: '12px',
@@ -331,7 +331,7 @@ globalStyle('.agent-pulse-item', {
   padding: '12px 13px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   transition: 'border-color 150ms ease',
 } as any);
 
@@ -360,13 +360,13 @@ globalStyle('.agent-step-card', {
   padding: '12px 13px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   transition: 'border-color 150ms ease, background 150ms ease',
 } as any);
 
 globalStyle('.agent-step-card:hover', {
   borderColor: 'var(--line-strong)',
-  background: 'var(--panel-3)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.agent-step-top', {
@@ -398,7 +398,7 @@ globalStyle('.agent-suggestion-button', {
   padding: '12px 13px 12px 15px',
   borderRadius: 'var(--radius)',
   border: '1px solid var(--line)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   color: 'var(--text)',
   font: 'inherit',
   cursor: 'pointer',
@@ -424,7 +424,7 @@ globalStyle('.agent-suggestion-button::before', {
 globalStyle('.agent-suggestion-button:hover', {
   borderColor: 'var(--line-strong)',
   boxShadow: 'var(--shadow-panel)',
-  background: 'var(--panel-3)',
+  background: 'var(--panel)',
   transform: 'translateX(3px)',
 } as any);
 
@@ -480,7 +480,7 @@ globalStyle('.agent-chat-user', {
 
 globalStyle('.agent-chat-assistant', {
   justifySelf: 'start',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   borderColor: 'var(--line)',
   borderLeft: '2px solid var(--accent-2)',
 } as any);
@@ -489,7 +489,7 @@ globalStyle('.agent-chat-system', {
   justifySelf: 'center',
   width: '100%',
   maxWidth: 'none',
-  background: 'var(--panel-3)',
+  background: 'var(--panel)',
   borderLeft: '2px solid var(--muted)',
 } as any);
 
@@ -523,7 +523,7 @@ globalStyle('.agent-chat-composer', {
   padding: '16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-lg)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   flexShrink: 0,
   marginTop: '12px',
 } as any);
@@ -550,7 +550,7 @@ globalStyle('.settings-switch', {
   width: '40px',
   height: '22px',
   borderRadius: '11px',
-  background: 'var(--panel-3)',
+  background: 'var(--panel)',
   border: '1px solid var(--line)',
   cursor: 'pointer',
   transition: 'background 150ms ease, border-color 150ms ease',
@@ -589,7 +589,7 @@ globalStyle('.settings-profile-card', {
   padding: '20px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.settings-profile-avatar', {

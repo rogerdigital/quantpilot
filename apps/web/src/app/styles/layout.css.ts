@@ -111,7 +111,7 @@ globalStyle('.nav-link', {
 
 globalStyle('.nav-link:hover', {
   color: 'var(--text)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.nav-link.active', {
@@ -248,7 +248,7 @@ globalStyle('.toolbar-pill-button', {
 
 globalStyle('.toolbar-pill-button:hover', {
   borderColor: 'var(--line-strong)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.toolbar-pill-button:active', {
@@ -303,7 +303,7 @@ globalStyle('.tone-warn', {
 globalStyle('.tone-muted', {
   color: 'var(--muted)',
   borderColor: 'var(--line)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 /* ============================================================
@@ -373,7 +373,7 @@ globalStyle('.locale-option:first-of-type', {
 
 globalStyle('.locale-option:hover', {
   borderColor: 'var(--line-strong)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.locale-option span', {
@@ -398,7 +398,7 @@ globalStyle('.locale-check', {
 
 globalStyle('.locale-option.active', {
   borderColor: 'var(--accent)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 /* ============================================================
@@ -452,7 +452,7 @@ globalStyle('.mode-stack', {
   marginTop: '16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   padding: '3px',
   gap: '3px',
 } as any);
@@ -495,7 +495,7 @@ globalStyle('.route-card, .policy-card', {
   marginTop: '10px',
   padding: '14px',
   borderRadius: 'var(--radius)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   border: '1px solid var(--line)',
 } as any);
 
