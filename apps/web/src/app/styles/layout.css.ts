@@ -412,7 +412,7 @@ globalStyle('.topbar', {
   gap: '24px',
   alignItems: 'flex-start',
   marginBottom: 0,
-  padding: '20px 24px 16px',
+  padding: '12px 16px',
   border: 'none',
   borderBottom: '1px solid var(--line)',
   borderRadius: 0,

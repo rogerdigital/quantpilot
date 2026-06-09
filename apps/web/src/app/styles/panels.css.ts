@@ -35,7 +35,7 @@ globalStyle('.meta-value.accent', {
 } as any);
 
 globalStyle('.panel', {
-  padding: 'var(--space-5)',
+  padding: '12px 16px',
   minWidth: 0,
   background: 'var(--panel)',
 } as any);
@@ -86,7 +86,7 @@ globalStyle('.hero-grid > *:nth-child(3), .overview-hero-grid > *:nth-child(3)',
 } as any);
 
 globalStyle('.hero-card', {
-  padding: '24px 24px 20px',
+  padding: '12px 16px',
   minHeight: '120px',
 } as any);
 

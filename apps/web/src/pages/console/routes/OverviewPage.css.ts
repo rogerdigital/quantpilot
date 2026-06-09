@@ -62,9 +62,9 @@ globalStyle(`${overviewResultsKpi} .kpi-sub`, {
 
 export const overviewResultsHero = style({
   display: 'grid',
-  gap: '8px',
+  gap: '6px',
   alignContent: 'center',
-  padding: '24px 24px',
+  padding: '12px 16px',
   background: 'var(--panel)',
 });
 

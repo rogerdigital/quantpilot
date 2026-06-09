@@ -131,6 +131,10 @@ export function EquityChart({ paper, live, showDrawdown = false, benchmark }: Pr
     };
   }, [paper, live, showDrawdown, benchmark, colors]);
 
+  const hasData = paper.length > 0 || live.length > 0;
+
+  if (!hasData) return null;
+
   return (
     <div ref={containerRef} style={{ width: '100%', height: '280px', position: 'relative' }} />
   );

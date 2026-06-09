@@ -76,6 +76,10 @@ export function SignalBarChart({ buy, hold, sell }: Props) {
     };
   }, [buy, hold, sell]);
 
+  const hasData = buy > 0 || hold > 0 || sell > 0;
+
+  if (!hasData) return null;
+
   return (
     <div ref={containerRef} style={{ width: '100%', height: '280px', position: 'relative' }} />
   );
