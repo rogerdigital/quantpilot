@@ -23,6 +23,7 @@ export function SignalBarChart({ buy, hold, sell }: Props) {
 
     const chart = createChart(el, {
       layout: {
+        attributionLogo: false,
         background: { color: 'transparent' },
         textColor: 'rgba(160, 162, 210, 0.65)',
         fontFamily: '"JetBrains Mono", monospace',
