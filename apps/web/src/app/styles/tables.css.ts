@@ -32,7 +32,7 @@ globalStyle('.focus-row::before', {
 } as any);
 
 globalStyle('.focus-row:hover', {
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.focus-row:hover::before', { opacity: 0.8 } as any);
@@ -100,7 +100,7 @@ globalStyle('.inspection-json', {
   padding: '14px 16px',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius)',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   color: 'var(--muted)',
   font: '12px/1.6 var(--font-data)',
   whiteSpace: 'pre-wrap',
@@ -127,7 +127,7 @@ globalStyle('.panel-badge.accent', {
 } as any);
 
 globalStyle('.panel-badge.muted', {
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   color: 'var(--muted)',
   borderColor: 'var(--line)',
 } as any);
@@ -157,7 +157,7 @@ globalStyle('.badge-danger', {
 } as any);
 
 globalStyle('.badge-muted', {
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   color: 'var(--muted)',
   borderColor: 'var(--line)',
 } as any);
@@ -193,7 +193,7 @@ globalStyle('th', {
   color: 'var(--muted-strong)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   borderBottomColor: 'var(--line)',
   position: 'sticky',
   top: 0,
@@ -220,7 +220,7 @@ globalStyle('.table-row-hover', {
 } as any);
 
 globalStyle('.table-row-hover:hover, .table-row-hover:focus-within', {
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.table-row-hover:hover td, .table-row-hover:focus-within td', {
@@ -339,7 +339,7 @@ globalStyle('.log-item::before', {
 } as any);
 
 globalStyle('.log-item:hover', {
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.log-item:hover::before', { opacity: 0.8 } as any);

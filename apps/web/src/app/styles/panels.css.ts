@@ -15,7 +15,7 @@ globalStyle('.meta-card, .hero-card, .metric-tile, .panel', {
 } as any);
 
 globalStyle('.panel:hover', {
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.meta-card', {
@@ -133,7 +133,7 @@ globalStyle('.overview-brief-card, .overview-primary-note', {
   border: 'none',
   borderBottom: '1px solid var(--line)',
   borderRadius: 0,
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.overview-brief-card span, .overview-command-note span, .overview-primary-note span', {
@@ -254,7 +254,7 @@ globalStyle('.toolbar-pill-button:hover, .shortcut-surface:hover', {
 } as any);
 
 globalStyle('.status-row-button:hover, .inline-link:hover', {
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle(
@@ -270,7 +270,7 @@ globalStyle(
    ============================================================ */
 
 globalStyle('.hero-card-primary', {
-  background: 'var(--gradient-hero)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.hero-headline', {
@@ -364,7 +364,7 @@ globalStyle('.metric-card', {
 } as any);
 
 globalStyle('.metric-card:hover', {
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.metric-card span', {
@@ -407,11 +407,11 @@ globalStyle('.terminal-tile', {
 } as any);
 
 globalStyle('.terminal-tile:hover', {
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.terminal-tile-primary', {
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.metric-tile', {
@@ -666,12 +666,12 @@ globalStyle('.overview-ops-cluster', {
   border: 'none',
   borderBottom: '1px solid var(--line)',
   borderRadius: 0,
-  background: 'var(--panel-2)',
+  background: 'var(--panel)',
   transition: 'background 180ms ease',
 } as any);
 
 globalStyle('.overview-ops-cluster:hover', {
-  background: 'var(--panel-3)',
+  background: 'var(--panel)',
 } as any);
 
 globalStyle('.overview-blotter-grid', { gridTemplateColumns: '1.06fr 0.94fr' } as any);
@@ -741,9 +741,9 @@ globalStyle('.focus-list', {
 } as any);
 
 globalStyle('.focus-list-terminal', {
-  border: '1px solid var(--line)',
+  border: 'none',
   borderRadius: 'var(--radius)',
-  background: 'var(--panel-3)',
+  background: 'var(--panel)',
   padding: '4px 14px',
 } as any);
 
