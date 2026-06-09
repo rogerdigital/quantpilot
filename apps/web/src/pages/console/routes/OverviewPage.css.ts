@@ -64,6 +64,8 @@ export const overviewResultsHero = style({
   display: 'grid',
   gap: '8px',
   alignContent: 'center',
+  padding: '24px 24px',
+  background: 'var(--panel)',
 });
 
 globalStyle(`${overviewResultsHero} .kpi-value`, {
@@ -76,7 +78,8 @@ globalStyle(`${overviewResultsHero} .kpi-value`, {
 export const overviewResultsSecondary = style({
   display: 'grid',
   gridTemplateColumns: '1fr 1fr',
-  gap: '12px',
+  gap: '1px',
+  background: 'var(--line)',
   alignContent: 'start',
 });
 
