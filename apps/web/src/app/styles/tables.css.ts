@@ -212,7 +212,7 @@ globalStyle('.td-numeric', {
 } as any);
 
 globalStyle('.table-wrap tr:nth-child(even) td', {
-  background: 'rgba(34, 38, 58, 0.3)',
+  background: 'var(--row-stripe)',
 } as any);
 
 globalStyle('.table-row-hover', {
