@@ -48,7 +48,7 @@ globalStyle('.hero-grid', {
   display: 'grid',
   gridTemplateColumns: '1.9fr 1fr 1fr',
   gap: 'var(--gap-panel)',
-  background: 'var(--line)',
+
   marginTop: 0,
   '@media': {
     '(max-width: 1180px)': {
@@ -61,7 +61,7 @@ globalStyle('.overview-hero-grid', {
   display: 'grid',
   gridTemplateColumns: '1.8fr 0.8fr 0.8fr',
   gap: 'var(--gap-panel)',
-  background: 'var(--line)',
+
   marginTop: 0,
   '@media': {
     '(max-width: 1180px)': {
@@ -97,7 +97,7 @@ globalStyle('.overview-command-head', {
   display: 'flex',
   justifyContent: 'space-between',
   gap: 'var(--gap-panel)',
-  background: 'var(--line)',
+
   alignItems: 'flex-start',
 } as any);
 
@@ -277,7 +277,6 @@ globalStyle('.hero-headline', {
   display: 'flex',
   alignItems: 'baseline',
   gap: 'var(--gap-panel)',
-  background: 'var(--line)',
 } as any);
 
 globalStyle('.hero-value', {
@@ -294,7 +293,7 @@ globalStyle('.hero-foot', {
   display: 'flex',
   justifyContent: 'space-between',
   gap: 'var(--gap-panel)',
-  background: 'var(--line)',
+
   marginTop: 0,
   color: 'var(--muted)',
 } as any);
@@ -322,7 +321,7 @@ globalStyle('.metrics-grid', {
   display: 'grid',
   gridTemplateColumns: 'repeat(4, 1fr)',
   gap: 'var(--gap-panel)',
-  background: 'var(--line)',
+
   marginTop: 0,
   '@media': {
     '(max-width: 1180px)': {
@@ -388,7 +387,7 @@ globalStyle('.terminal-strip', {
   display: 'grid',
   gridTemplateColumns: '1.3fr repeat(4, minmax(0, 1fr))',
   gap: 'var(--gap-panel)',
-  background: 'var(--line)',
+
   marginTop: '24px',
   '@media': {
     '(max-width: 1180px)': {
@@ -446,7 +445,7 @@ globalStyle('.panel-grid', {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
   gap: 'var(--gap-panel)',
-  background: 'var(--line)',
+
   marginTop: 0,
   alignItems: 'start',
   '@media': {

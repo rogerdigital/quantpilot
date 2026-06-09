@@ -10,8 +10,8 @@ globalStyle(':root', {
   '--bg-canvas': '#ffffff',
   '--bg': 'var(--bg-canvas)',
   '--panel': '#ffffff',
-  '--panel-2': '#f8f9fb',
-  '--panel-3': '#f3f4f6',
+  '--panel-2': '#ffffff',
+  '--panel-3': '#ffffff',
   '--panel-frame': 'rgba(79, 70, 229, 0.06)',
 
   /* Lines & borders */
@@ -121,8 +121,8 @@ globalStyle(darkSelector, {
   '--bg-canvas': '#131722',
   '--bg': '#131722',
   '--panel': '#131722',
-  '--panel-2': '#1e222d',
-  '--panel-3': '#262b3d',
+  '--panel-2': '#131722',
+  '--panel-3': '#131722',
   '--panel-frame': 'rgba(99, 102, 241, 0.08)',
 
   '--line': '#2a2e39',
