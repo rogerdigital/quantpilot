@@ -18,6 +18,7 @@ globalStyle(':root', {
   '--line': '#e5e7eb',
   '--line-strong': '#d1d5db',
   '--line-vivid': '#9ca3af',
+  '--row-stripe': 'rgba(0, 0, 0, 0.02)',
 
   /* Typography */
   '--text': '#1f2937',
@@ -128,6 +129,7 @@ globalStyle(darkSelector, {
   '--line': '#2a2e39',
   '--line-strong': '#363a45',
   '--line-vivid': '#5b6078',
+  '--row-stripe': 'rgba(255, 255, 255, 0.03)',
 
   '--text': '#e5e7eb',
   '--text-strong': '#f9fafb',
