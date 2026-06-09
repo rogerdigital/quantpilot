@@ -5,8 +5,12 @@ import { globalStyle, style, styleVariants } from '@vanilla-extract/css';
 export const tradingShell = style({
   display: 'flex',
   flexDirection: 'column',
-  gap: '16px',
+  gap: '1px',
+  background: 'var(--line)',
   overflow: 'hidden',
+  maxWidth: 'none',
+  width: '100vw',
+  marginLeft: 'calc(-50vw + 50%)',
 });
 
 export const tradingHeader = style({
