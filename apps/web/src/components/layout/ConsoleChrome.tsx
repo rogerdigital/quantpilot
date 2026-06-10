@@ -176,7 +176,6 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
       )}
 
       <div className={sidebarBlock} style={collapsed ? { padding: '4px 2px' } : undefined}>
-        {!collapsed && <div className={sidebarLabel}>{copy[locale].labels.tacticalRoutes}</div>}
         <nav className={navStack}>
           {routes.map((route) => (
             <NavLink
