@@ -133,6 +133,11 @@ globalStyle(':root', {
 
 const darkSelector = `.${darkTheme[0]}`;
 
+globalStyle('.theme-switching *, .theme-switching *::before, .theme-switching *::after', {
+  transition: 'none !important',
+  animation: 'none !important',
+} as any);
+
 globalStyle(darkSelector, {
   '--bg-canvas': '#131722',
   '--bg': '#131722',

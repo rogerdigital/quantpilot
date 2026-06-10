@@ -26,8 +26,18 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     const root = document.documentElement;
     const appClass = theme.resolved === 'dark' ? darkClass : lightClass;
     const uiClass = theme.resolved === 'dark' ? uiDarkThemeClass : uiLightThemeClass;
+    root.classList.add('theme-switching');
     root.classList.remove(darkClass, lightClass, uiDarkThemeClass, uiLightThemeClass);
     root.classList.add(appClass, uiClass);
+
+    const frame = window.requestAnimationFrame(() => {
+      root.classList.remove('theme-switching');
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      root.classList.remove('theme-switching');
+    };
   }, [theme.resolved]);
 
   const value = useMemo(

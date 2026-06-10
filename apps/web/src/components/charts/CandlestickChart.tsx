@@ -161,6 +161,49 @@ export function CandlestickChart({ data, timeframe, indicators }: Props) {
       volumeRef.current = null;
       indicatorRefs.current = [];
     };
+  }, []);
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    chart.applyOptions({
+      layout: {
+        background: { color: 'transparent' },
+        textColor: colors.textColor,
+        fontFamily: '"JetBrains Mono", monospace',
+        fontSize: 10,
+      },
+      grid: {
+        vertLines: { color: colors.gridLight, style: 1 },
+        horzLines: { color: colors.gridMedium },
+      },
+      rightPriceScale: {
+        borderVisible: false,
+        textColor: colors.textColor,
+      },
+      timeScale: {
+        borderVisible: false,
+        timeVisible: true,
+      },
+      crosshair: {
+        vertLine: { color: colors.crosshairColor },
+        horzLine: { color: colors.crosshairColor },
+      },
+    });
+
+    candleRef.current?.applyOptions({
+      upColor: colors.candleUp,
+      downColor: colors.candleDown,
+      borderUpColor: colors.candleUp,
+      borderDownColor: colors.candleDown,
+      wickUpColor: colors.candleUp,
+      wickDownColor: colors.candleDown,
+    });
+
+    volumeRef.current?.applyOptions({
+      color: colors.volumeDefault,
+    });
   }, [colors]);
 
   useEffect(() => {
