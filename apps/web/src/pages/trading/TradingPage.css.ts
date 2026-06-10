@@ -3,12 +3,9 @@ import { globalStyle, style, styleVariants } from '@vanilla-extract/css';
 /* -- TRADING PAGE SHELL --------------------------------- */
 
 export const tradingShell = style({
-  display: 'flex',
-  flexDirection: 'column',
+  display: 'grid',
   gap: '1px',
-
-  overflow: 'hidden',
-  height: '100vh',
+  minHeight: '100%',
   width: '100%',
 });
 
@@ -97,11 +94,10 @@ globalStyle(`${tradingHeaderStat} strong`, {
 
 export const tradingGrid = style({
   display: 'grid',
-  gridTemplateColumns: '220px 1fr 280px',
+  gridTemplateColumns: 'minmax(180px, 220px) minmax(0, 1fr) minmax(260px, 280px)',
+  alignItems: 'start',
   gap: '1px',
 
-  flex: 1,
-  minHeight: 0,
   '@media': {
     '(max-width: 1180px)': {
       gridTemplateColumns: '1fr 280px',
@@ -120,7 +116,6 @@ export const watchlistPanel = style({
   background: 'var(--panel)',
   display: 'flex',
   flexDirection: 'column',
-  overflow: 'hidden',
   '@media': {
     '(max-width: 1180px)': {
       display: 'none',
@@ -129,8 +124,11 @@ export const watchlistPanel = style({
 });
 
 export const watchlistHead = style({
-  padding: '12px 16px',
+  minHeight: '96px',
+  padding: '0 16px',
   borderBottom: '1px solid var(--line)',
+  display: 'flex',
+  alignItems: 'center',
   fontSize: '11px',
   fontFamily: 'var(--font-data)',
   textTransform: 'uppercase',
@@ -139,8 +137,7 @@ export const watchlistHead = style({
 });
 
 export const watchlistList = style({
-  flex: 1,
-  overflowY: 'auto',
+  display: 'grid',
 });
 
 export const watchlistItem = style({
@@ -209,7 +206,8 @@ export const chartPanel = style({
 });
 
 export const chartPanelHead = style({
-  padding: '12px 16px',
+  minHeight: '96px',
+  padding: '0 16px',
   borderBottom: '1px solid var(--line)',
   display: 'flex',
   alignItems: 'center',
@@ -255,6 +253,19 @@ export const chartBody = style({
   padding: '16px',
   gap: '12px',
   minHeight: '320px',
+});
+
+export const chartFrame = style({
+  height: '360px',
+  border: '1px solid var(--line)',
+  borderRadius: 'var(--radius)',
+  background: 'var(--panel)',
+  overflow: 'hidden',
+  '@media': {
+    '(max-width: 640px)': {
+      height: '300px',
+    },
+  },
 });
 
 export const chartSignalStrip = style({
@@ -303,18 +314,21 @@ export const tradePanel = style({
   flexDirection: 'column',
   padding: '16px',
   gap: '16px',
-  overflow: 'auto',
 });
 
 export const tradePanelTitle = style({
+  minHeight: '96px',
+  margin: '-16px -16px 0',
+  padding: '0 16px',
+  borderBottom: '1px solid var(--line)',
+  display: 'flex',
+  alignItems: 'center',
   fontSize: '11px',
   fontFamily: 'var(--font-data)',
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: '0.12em',
   color: 'var(--muted)',
-  paddingBottom: '12px',
-  borderBottom: '1px solid var(--line)',
 });
 
 export const orderTypeTabs = style({
@@ -503,10 +517,8 @@ export const blotterPanel = style({
   overflow: 'hidden',
 });
 
-export const quickOrderBarWrap = style({
-  '@media': {
-    '(max-width: 640px)': {
-      display: 'none',
-    },
-  },
+export const blotterBody = style({
+  display: 'grid',
+  width: '100%',
+  padding: '14px',
 });

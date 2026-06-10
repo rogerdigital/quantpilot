@@ -99,19 +99,28 @@ export function CandlestickChart({ data, timeframe, indicators }: Props) {
         horzLines: { color: colors.gridMedium },
       },
       rightPriceScale: {
-        borderColor: colors.borderColor,
+        borderVisible: false,
         textColor: colors.textColor,
       },
       timeScale: {
-        borderColor: colors.borderColor,
+        borderVisible: false,
         timeVisible: true,
       },
       crosshair: {
         vertLine: { color: colors.crosshairColor },
         horzLine: { color: colors.crosshairColor },
       },
-      handleScroll: true,
-      handleScale: true,
+      handleScroll: {
+        mouseWheel: false,
+        pressedMouseMove: true,
+        horzTouchDrag: true,
+        vertTouchDrag: true,
+      },
+      handleScale: {
+        mouseWheel: false,
+        pinch: true,
+        axisPressedMouseMove: true,
+      },
     });
 
     const candleSeries = chart.addSeries(CandlestickSeries, {

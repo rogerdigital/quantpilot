@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { CandlestickChart } from '../../components/charts/CandlestickChart.tsx';
 import { PriceFlash, SignalAlert } from '../../components/common/index.ts';
 import { EmptyState, SectionHeader, TabPanel } from '../../components/layout/ConsoleChrome.tsx';
-import { QuickOrderBar } from '../../components/trading/QuickOrderBar.tsx';
 import { useOhlcvData } from '../../hooks/useOhlcvData.ts';
 import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
 import {
@@ -16,8 +15,10 @@ import {
 import { submitTerminalOrder } from '../../modules/console/trading.service.ts';
 import { useTradingSystem } from '../../store/trading-system/TradingSystemProvider.tsx';
 import {
+  blotterBody,
   blotterPanel,
   chartBody,
+  chartFrame,
   chartPanel,
   chartPanelHead,
   chartSignalCard,
@@ -28,7 +29,6 @@ import {
   orderTypeTab,
   orderTypeTabActive,
   orderTypeTabs,
-  quickOrderBarWrap,
   tradeBtnRow,
   tradeBuyBtn,
   tradeBuyBtnDisabled,
@@ -356,7 +356,9 @@ export function TradingPage() {
           </div>
 
           <div className={chartBody}>
-            <CandlestickChart data={ohlcvData} timeframe={timeframe} />
+            <div className={chartFrame}>
+              <CandlestickChart data={ohlcvData} timeframe={timeframe} />
+            </div>
 
             <div className={chartSignalStrip}>
               <div className={chartSignalCard}>
@@ -529,7 +531,7 @@ export function TradingPage() {
                   ? `持仓 (${allPositions.length})`
                   : `Positions (${allPositions.length})`,
               content: (
-                <div className="panel-body panel-body-sm">
+                <div className={blotterBody}>
                   {allPositions.length === 0 ? (
                     <EmptyState message={copy[locale].terms.noPositions} />
                   ) : (
@@ -568,7 +570,7 @@ export function TradingPage() {
               label:
                 locale === 'zh' ? `委托 (${allOrders.length})` : `Orders (${allOrders.length})`,
               content: (
-                <div className="panel-body panel-body-sm">
+                <div className={blotterBody}>
                   {allOrders.length === 0 ? (
                     <EmptyState message={copy[locale].terms.noOrders} />
                   ) : (
@@ -609,13 +611,6 @@ export function TradingPage() {
               ),
             },
           ]}
-        />
-      </div>
-      <div className={quickOrderBarWrap}>
-        <QuickOrderBar
-          onSubmit={(order) => {
-            handleSubmitOrder(order.direction);
-          }}
         />
       </div>
     </div>
