@@ -21,6 +21,7 @@
     "check:workspaces": "node --import tsx/esm scripts/check-workspace-integrity.ts",
     "check:lockfile": "node --import tsx/esm scripts/check-lockfile-sync.ts",
     "check:no-js-source": "node --import tsx/esm scripts/check-no-js-source.ts",
+    "check:no-root-artifacts": "node --import tsx/esm scripts/check-no-root-artifacts.ts",
     "check:runtime-env": "node --import tsx/esm scripts/check-runtime-env.ts",
     "test:api": "node --import tsx/esm --test apps/api/test/*.test.ts",
     "test:engine": "node --import tsx/esm --test packages/trading-engine/test/*.ts",
@@ -29,7 +30,7 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "typecheck": "node --import tsx/esm scripts/typecheck-all.ts",
-    "verify": "npm run check:workspaces && npm run check:lockfile && npm run check:no-js-source && npm run check:runtime-env && npm run lint && npm run test:engine && npm run test:api && npm run test:web && npm run typecheck && npm run build",
+    "verify": "npm run check:workspaces && npm run check:lockfile && npm run check:no-js-source && npm run check:no-root-artifacts && npm run check:runtime-env && npm run lint && npm run test:engine && npm run test:api && npm run test:web && npm run typecheck && npm run build",
     "gateway": "node --import tsx/esm apps/api/src/main.ts"
   },
   "keywords": [
