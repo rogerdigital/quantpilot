@@ -47,18 +47,18 @@ globalStyle('.order-status', {
 } as any);
 
 globalStyle('.order-status-open', {
-  background: 'rgba(99, 102, 241, 0.08)',
+  background: 'var(--info-subtle)',
   color: 'var(--info)',
   border: '1px solid rgba(99, 102, 241, 0.15)',
 } as any);
 
 globalStyle('.order-status-filled', {
-  background: 'rgba(16, 185, 129, 0.08)',
+  background: 'var(--success-subtle)',
   color: 'var(--buy)',
 } as any);
 
 globalStyle('.order-status-canceled', {
-  background: 'rgba(239, 68, 68, 0.08)',
+  background: 'var(--danger-subtle)',
   color: 'var(--sell)',
 } as any);
 
@@ -68,21 +68,21 @@ globalStyle('.order-status-muted', {
 } as any);
 
 globalStyle('.signal-buy', {
-  background: 'rgba(16, 185, 129, 0.08)',
+  background: 'var(--success-subtle)',
   color: 'var(--buy)',
-  border: '1px solid rgba(16, 185, 129, 0.18)',
+  border: '1px solid var(--success-subtle)',
 } as any);
 
 globalStyle('.signal-hold', {
-  background: 'rgba(245, 158, 11, 0.08)',
+  background: 'var(--warning-subtle)',
   color: 'var(--hold)',
-  border: '1px solid rgba(245, 158, 11, 0.15)',
+  border: '1px solid var(--warning-subtle)',
 } as any);
 
 globalStyle('.signal-sell', {
-  background: 'rgba(239, 68, 68, 0.08)',
+  background: 'var(--danger-subtle)',
   color: 'var(--sell)',
-  border: '1px solid rgba(239, 68, 68, 0.15)',
+  border: '1px solid var(--danger-subtle)',
 } as any);
 
 globalStyle('.text-up', {

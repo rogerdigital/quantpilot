@@ -25,6 +25,14 @@ describe('command-deck theme stylesheet', () => {
     expect(theme).toContain('--panel-frame');
     expect(theme).toContain('--accent-live');
     expect(theme).toContain('--text-strong');
+    expect(theme).toContain('--success-subtle');
+    expect(theme).toContain('--danger-subtle');
+    expect(theme).toContain('--warning-subtle');
+    expect(theme).toContain('--info-subtle');
+    expect(theme).toContain('--on-accent');
+    expect(theme).toContain('--on-buy');
+    expect(theme).toContain('--shadow-modal');
+    expect(theme).toContain('--text-shadow-subtle');
     expect(theme).toContain('--font-display');
     expect(animations).toContain('panelEnter');
   });

@@ -5,6 +5,7 @@ import {
   type ShortcutCategory,
 } from '../../hooks/useKeyboardShortcuts.ts';
 import { useLocale } from '../../modules/console/console.i18n.tsx';
+import { CloseIcon } from '../common/AppIcons.tsx';
 
 interface ShortcutHelpProps {
   open: boolean;
@@ -96,15 +97,22 @@ export function ShortcutHelp({ open, onClose }: ShortcutHelpProps) {
           <button
             type="button"
             onClick={onClose}
+            aria-label={locale === 'zh' ? '关闭快捷键帮助' : 'Close keyboard shortcuts'}
             style={{
+              width: '32px',
+              height: '32px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               background: 'transparent',
-              border: 'none',
+              border: '1px solid var(--line)',
+              borderRadius: 'var(--radius-sm)',
               color: 'var(--muted)',
               cursor: 'pointer',
-              fontSize: '16px',
+              padding: 0,
             }}
           >
-            ✕
+            <CloseIcon style={{ width: '18px', height: '18px' }} />
           </button>
         </div>
 

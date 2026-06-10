@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { copy as i18n } from '../../modules/console/console.i18n.tsx';
 import { listConsoleRoutes } from '../../modules/console/console.routes.tsx';
+import { CloseIcon, SearchIcon } from '../common/AppIcons.tsx';
 import {
   emptyState,
   footer,
@@ -210,7 +211,7 @@ export function CommandPalette({ locale, onClose }: Props) {
       <div className={panel} role="dialog" aria-label="Command palette" onKeyDown={handleKeyDown}>
         {/* Search input */}
         <div className={inputWrap}>
-          <span className={inputIcon}>⌘</span>
+          <SearchIcon className={inputIcon} />
           <input
             ref={inputRef}
             className={input}
@@ -219,7 +220,14 @@ export function CommandPalette({ locale, onClose }: Props) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <span className={kbdHint}>ESC</span>
+          <button
+            type="button"
+            className={kbdHint}
+            onClick={onClose}
+            aria-label="Close command palette"
+          >
+            <CloseIcon />
+          </button>
         </div>
 
         {/* Results */}

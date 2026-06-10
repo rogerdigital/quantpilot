@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocale } from '../../modules/console/console.i18n.tsx';
+import { CloseIcon } from '../common/AppIcons.tsx';
 
 interface Comment {
   id: string;
@@ -145,15 +146,21 @@ export function CommentThread({ strategyId, className = '' }: CommentThreadProps
             <button
               type="button"
               onClick={() => setReplyTo(null)}
+              aria-label={locale === 'zh' ? '取消回复' : 'Cancel reply'}
               style={{
+                width: '28px',
+                height: '28px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 background: 'none',
                 border: 'none',
                 color: 'var(--muted)',
                 cursor: 'pointer',
-                fontSize: '14px',
+                padding: 0,
               }}
             >
-              ×
+              <CloseIcon style={{ width: '16px', height: '16px' }} />
             </button>
           </div>
         )}
@@ -184,7 +191,7 @@ export function CommentThread({ strategyId, className = '' }: CommentThreadProps
               background: 'var(--accent)',
               border: 'none',
               borderRadius: 'var(--radius)',
-              color: '#fff',
+              color: 'var(--on-accent)',
               font: '600 12px/1 var(--font-ui)',
               cursor: submitting || !newComment.trim() ? 'not-allowed' : 'pointer',
               opacity: submitting || !newComment.trim() ? 0.6 : 1,
@@ -248,7 +255,7 @@ export function CommentThread({ strategyId, className = '' }: CommentThreadProps
                           background: 'var(--success)',
                           borderRadius: 'var(--radius-sm)',
                           font: '600 11px/1 var(--font-data)',
-                          color: '#fff',
+                          color: 'var(--on-buy)',
                         }}
                       >
                         {locale === 'zh' ? '已解决' : 'Resolved'}

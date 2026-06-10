@@ -77,7 +77,7 @@ export function QuickOrderBar({ onSubmit }: QuickOrderBarProps) {
           style={{
             padding: '6px 14px',
             background: direction === 'buy' ? 'var(--buy)' : 'transparent',
-            color: direction === 'buy' ? '#000' : 'var(--muted)',
+            color: direction === 'buy' ? 'var(--on-buy)' : 'var(--muted)',
             border: 'none',
             fontFamily: 'var(--font-ui)',
             fontSize: '11px',
@@ -95,7 +95,7 @@ export function QuickOrderBar({ onSubmit }: QuickOrderBarProps) {
           style={{
             padding: '6px 14px',
             background: direction === 'sell' ? 'var(--sell)' : 'transparent',
-            color: direction === 'sell' ? '#fff' : 'var(--muted)',
+            color: direction === 'sell' ? 'var(--on-sell)' : 'var(--muted)',
             border: 'none',
             fontFamily: 'var(--font-ui)',
             fontSize: '11px',
@@ -201,7 +201,7 @@ export function QuickOrderBar({ onSubmit }: QuickOrderBarProps) {
         style={{
           padding: '6px 20px',
           background: direction === 'buy' ? 'var(--buy)' : 'var(--sell)',
-          color: direction === 'buy' ? '#000' : '#fff',
+          color: direction === 'buy' ? 'var(--on-buy)' : 'var(--on-sell)',
           border: 'none',
           borderRadius: 'var(--radius)',
           fontFamily: 'var(--font-ui)',

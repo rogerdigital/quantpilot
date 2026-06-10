@@ -23,7 +23,7 @@ export const drawerPanel = style({
   border: '1px solid var(--hold)',
   background: 'var(--panel)',
   backdropFilter: 'blur(12px)',
-  boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.08), var(--shadow-panel)',
+  boxShadow: 'var(--shadow-modal)',
   overflow: 'hidden',
 });
 

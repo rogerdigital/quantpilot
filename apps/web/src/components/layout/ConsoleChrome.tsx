@@ -20,6 +20,13 @@ import { EquityChart } from '../charts/EquityChart.tsx';
 import { SignalBarChart } from '../charts/SignalBarChart.tsx';
 import { CommandPalette } from '../command-palette/CommandPalette.tsx';
 import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  SearchIcon,
+} from '../common/AppIcons.tsx';
+import {
   appShell,
   appShellCollapsed,
   brand,
@@ -141,7 +148,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
             aria-label="Collapse sidebar"
             title="Collapse sidebar"
           >
-            ‹
+            <ChevronLeftIcon className="sidebar-toggle-icon" />
           </button>
         </div>
       )}
@@ -163,7 +170,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
             aria-label="Expand sidebar"
             title="Expand sidebar"
           >
-            ›
+            <ChevronRightIcon className="sidebar-toggle-icon" />
           </button>
         </div>
       )}
@@ -259,7 +266,7 @@ const MonitorIcon = () => (
   </svg>
 );
 
-function GlobalToolbar() {
+function GlobalToolbar({ onCommandOpen }: { onCommandOpen: () => void }) {
   const { locale, setLocale } = useLocale();
   const { state } = useTradingSystem();
   const { status: marketStatus } = useMarketProviderStatus(state.controlPlane.lastSyncAt);
@@ -308,7 +315,6 @@ function GlobalToolbar() {
   return (
     <div className={globalToolbar}>
       <div className={toolbarCopy}>
-        <div className={toolbarKicker}>{copy[locale].labels.commandDeck}</div>
         <div className={toolbarTitle}>{copy[locale].product}</div>
         <div
           className={toolbarSub}
@@ -317,14 +323,15 @@ function GlobalToolbar() {
       <div className={toolbarActions}>
         <button
           type="button"
-          className="toolbar-pill toolbar-pill-button"
-          onClick={() =>
-            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))
-          }
-          aria-label="Search (⌘K)"
+          className="toolbar-pill toolbar-pill-button toolbar-search-pill"
+          onClick={onCommandOpen}
+          aria-label="Open command palette (⌘K)"
         >
           <span className="toolbar-pill-main">
-            <span className="toolbar-pill-label">⌘K</span>
+            <SearchIcon className="toolbar-search-icon" />
+            <span className="toolbar-pill-label">
+              {locale === 'zh' ? '搜索 (⌘K)' : 'Search (⌘K)'}
+            </span>
           </span>
         </button>
         <button
@@ -361,7 +368,7 @@ function GlobalToolbar() {
           >
             <span>{copy[locale].labels.language}</span>
             <strong>{localeLabel}</strong>
-            <span className={`locale-caret${localeOpen ? ' open' : ''}`}>▾</span>
+            <ChevronDownIcon className={`locale-caret${localeOpen ? ' open' : ''}`} />
           </button>
           {localeOpen ? (
             <div className="locale-menu" role="menu" aria-label={copy[locale].labels.language}>
@@ -374,7 +381,7 @@ function GlobalToolbar() {
                 }}
               >
                 <span>中文</span>
-                {locale === 'zh' ? <small className="locale-check">✓</small> : null}
+                {locale === 'zh' ? <CheckIcon className="locale-check" /> : null}
               </button>
               <button
                 type="button"
@@ -385,7 +392,7 @@ function GlobalToolbar() {
                 }}
               >
                 <span>English</span>
-                {locale === 'en' ? <small className="locale-check">✓</small> : null}
+                {locale === 'en' ? <CheckIcon className="locale-check" /> : null}
               </button>
             </div>
           ) : null}
@@ -413,7 +420,7 @@ function GlobalToolbar() {
                 <span>
                   <SunIcon /> Light
                 </span>
-                {mode === 'light' ? <small className="theme-check">✓</small> : null}
+                {mode === 'light' ? <CheckIcon className="theme-check" /> : null}
               </button>
               <button
                 type="button"
@@ -426,7 +433,7 @@ function GlobalToolbar() {
                 <span>
                   <MoonIcon /> Dark
                 </span>
-                {mode === 'dark' ? <small className="theme-check">✓</small> : null}
+                {mode === 'dark' ? <CheckIcon className="theme-check" /> : null}
               </button>
               <button
                 type="button"
@@ -439,7 +446,7 @@ function GlobalToolbar() {
                 <span>
                   <MonitorIcon /> System
                 </span>
-                {mode === 'system' ? <small className="theme-check">✓</small> : null}
+                {mode === 'system' ? <CheckIcon className="theme-check" /> : null}
               </button>
             </div>
           ) : null}
@@ -487,7 +494,7 @@ export function TabPanel({ tabs, defaultTab }: TabPanelProps) {
 }
 
 export type EmptyStateProps = {
-  icon?: string;
+  icon?: ReactNode;
   message: string;
   detail?: string;
   actionLabel?: string;
@@ -579,7 +586,7 @@ export function Layout() {
     <div className={`${appShell}${collapsed ? ` ${appShellCollapsed}` : ''}`}>
       <Sidebar collapsed={collapsed} onToggle={handleToggle} />
       <main className={mainPanel}>
-        <GlobalToolbar />
+        <GlobalToolbar onCommandOpen={() => setCmdOpen(true)} />
         <Outlet />
       </main>
       {cmdOpen && <CommandPalette locale={locale} onClose={() => setCmdOpen(false)} />}

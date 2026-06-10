@@ -7,5 +7,5 @@ export { Select } from './components/Select.js';
 export { Skeleton, SkeletonTable } from './components/Skeleton.js';
 export type { Column } from './components/Table.js';
 export { Table } from './components/Table.js';
-export { darkThemeClass, vars } from './theme.css.js';
+export { darkThemeClass, lightThemeClass, vars } from './theme.css.js';
 export * from './tokens/index.js';

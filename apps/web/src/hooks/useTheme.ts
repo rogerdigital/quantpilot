@@ -34,7 +34,7 @@ export function useTheme() {
   // Listen for system preference changes
   useEffect(() => {
     if (mode !== 'system') return;
-    const mq = window.matchMedia('(prefers-color-scheme: light)');
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = () => setMode('system'); // trigger re-render
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);

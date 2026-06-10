@@ -7,6 +7,7 @@ import {
   BrokerSnapshotPositionsTable,
   PositionsTable,
 } from '../../components/business/ConsoleTables.tsx';
+import { CheckIcon } from '../../components/common/AppIcons.tsx';
 import { EmptyState, SectionHeader, TopMeta } from '../../components/layout/ConsoleChrome.tsx';
 import { useSummary } from '../../modules/console/console.hooks.ts';
 import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
@@ -473,7 +474,7 @@ function RiskPage() {
             !workbench.reviewQueue.backtestRuns.length &&
             !workbench.reviewQueue.incidents.length ? (
               <EmptyState
-                icon="✓"
+                icon={<CheckIcon aria-hidden="true" />}
                 message={
                   locale === 'zh'
                     ? '当前没有服务端复核队列项。'
@@ -539,7 +540,7 @@ function RiskPage() {
             ))}
             {!workbench.runbook.length ? (
               <EmptyState
-                icon="✓"
+                icon={<CheckIcon aria-hidden="true" />}
                 message={
                   locale === 'zh'
                     ? '当前没有额外的 risk runbook 动作。'
@@ -625,7 +626,7 @@ function RiskPage() {
             ))}
             {!workbench.linkage.runbook.length ? (
               <EmptyState
-                icon="✓"
+                icon={<CheckIcon aria-hidden="true" />}
                 message={
                   locale === 'zh'
                     ? '当前没有额外的 risk/scheduler linkage 动作。'
@@ -730,7 +731,7 @@ function RiskPage() {
             ) : null}
             {!workbench.reviewQueue.schedulerTicks.length ? (
               <EmptyState
-                icon="✓"
+                icon={<CheckIcon aria-hidden="true" />}
                 message={
                   locale === 'zh'
                     ? '当前没有 scheduler attention。'

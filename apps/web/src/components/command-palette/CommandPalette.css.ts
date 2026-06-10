@@ -29,7 +29,7 @@ export const panel = style({
   borderRadius: 'var(--radius-lg)',
   border: '1px solid var(--line)',
   background: 'var(--panel)',
-  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--line)',
+  boxShadow: 'var(--shadow-modal)',
   overflow: 'hidden',
   animation: `${panelIn} 160ms cubic-bezier(0.16, 1, 0.3, 1) both`,
 });
@@ -43,11 +43,10 @@ export const inputWrap = style({
 });
 
 export const inputIcon = style({
+  width: '20px',
+  height: '20px',
   flexShrink: 0,
-  color: 'var(--accent)',
-  fontSize: '16px',
-  lineHeight: 1,
-  fontFamily: 'var(--font-data)',
+  color: 'var(--muted)',
   userSelect: 'none',
 });
 
@@ -66,14 +65,25 @@ export const input = style({
 
 export const kbdHint = style({
   flexShrink: 0,
-  font: '600 11px/1 var(--font-data)',
-  letterSpacing: '0.08em',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '34px',
+  height: '34px',
+  fontSize: '18px',
   color: 'var(--muted)',
   background: 'var(--panel-2)',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-sm)',
-  padding: '4px 7px',
-  userSelect: 'none',
+  cursor: 'pointer',
+  transition: 'border-color 120ms ease, background 120ms ease, color 120ms ease',
+  selectors: {
+    '&:hover': {
+      background: 'var(--panel-3)',
+      borderColor: 'var(--line-strong)',
+      color: 'var(--text)',
+    },
+  },
 });
 
 export const results = style({
@@ -92,11 +102,17 @@ export const sectionLabel = style({
 });
 
 export const resultItem = style({
+  appearance: 'none',
+  width: '100%',
   display: 'flex',
   alignItems: 'center',
   gap: '12px',
   padding: '10px 12px',
   borderRadius: 'var(--radius)',
+  background: 'transparent',
+  color: 'inherit',
+  font: 'inherit',
+  textAlign: 'left',
   cursor: 'pointer',
   transition: 'background 100ms ease',
   border: '1px solid transparent',

@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeftIcon } from '../../components/common/AppIcons.tsx';
 import { ChartCanvas, EmptyState } from '../../components/layout/ConsoleChrome.tsx';
 import { useLocale } from '../../modules/console/console.i18n.tsx';
 import { translateRuntimeText } from '../../modules/console/console.utils.ts';
@@ -70,7 +71,8 @@ export function StrategyDetailPage() {
     return (
       <div style={{ padding: '40px 24px' }}>
         <button type="button" className={detailBackRow} onClick={() => navigate('/strategies')}>
-          ← {locale === 'zh' ? '返回策略工作台' : 'Back to Strategies'}
+          <ArrowLeftIcon aria-hidden="true" />
+          <span>{locale === 'zh' ? '返回策略工作台' : 'Back to Strategies'}</span>
         </button>
         <EmptyState message={error || (locale === 'zh' ? '策略不存在' : 'Strategy not found')} />
       </div>
@@ -87,7 +89,8 @@ export function StrategyDetailPage() {
     <>
       <div className={detailHeader}>
         <button type="button" className={detailBackRow} onClick={() => navigate('/strategies')}>
-          ← {locale === 'zh' ? '策略工作台' : 'Strategies'}
+          <ArrowLeftIcon aria-hidden="true" />
+          <span>{locale === 'zh' ? '策略工作台' : 'Strategies'}</span>
         </button>
         <div className={detailHeaderMeta}>
           <div>

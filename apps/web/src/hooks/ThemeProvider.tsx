@@ -1,4 +1,8 @@
-import { createContext, type PropsWithChildren, useContext, useEffect, useMemo } from 'react';
+import {
+  darkThemeClass as uiDarkThemeClass,
+  lightThemeClass as uiLightThemeClass,
+} from '@quantpilot/ui';
+import { createContext, type PropsWithChildren, useContext, useLayoutEffect, useMemo } from 'react';
 import { darkTheme } from '../app/styles/themes/dark.css.ts';
 import { lightTheme } from '../app/styles/themes/light.css.ts';
 import { type ThemeMode, useTheme } from './useTheme.ts';
@@ -18,10 +22,12 @@ const [lightClass] = lightTheme;
 export function ThemeProvider({ children }: PropsWithChildren) {
   const theme = useTheme();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
-    root.classList.remove(darkClass, lightClass);
-    root.classList.add(theme.resolved === 'dark' ? darkClass : lightClass);
+    const appClass = theme.resolved === 'dark' ? darkClass : lightClass;
+    const uiClass = theme.resolved === 'dark' ? uiDarkThemeClass : uiLightThemeClass;
+    root.classList.remove(darkClass, lightClass, uiDarkThemeClass, uiLightThemeClass);
+    root.classList.add(appClass, uiClass);
   }, [theme.resolved]);
 
   const value = useMemo(

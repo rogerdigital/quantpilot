@@ -41,7 +41,18 @@ globalStyle(':root', {
   '--info': '#6366f1',
 
   /* Semantic aliases */
+  '--success': 'var(--buy)',
+  '--danger': 'var(--sell)',
   '--warning': 'var(--hold)',
+  '--success-subtle': 'rgba(16, 185, 129, 0.08)',
+  '--danger-subtle': 'rgba(239, 68, 68, 0.08)',
+  '--warning-subtle': 'rgba(245, 158, 11, 0.08)',
+  '--info-subtle': 'rgba(99, 102, 241, 0.06)',
+  '--muted-data': '#6b7280',
+  '--on-accent': '#ffffff',
+  '--on-buy': '#052e1b',
+  '--on-sell': '#ffffff',
+  '--on-danger': '#ffffff',
   '--accent-subtle': 'rgba(79, 70, 229, 0.06)',
   '--gradient-hero': 'linear-gradient(135deg, var(--panel) 0%, var(--panel-frame) 100%)',
 
@@ -63,8 +74,12 @@ globalStyle(':root', {
   /* Shadows */
   '--shadow': '0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06)',
   '--shadow-soft': '0 4px 16px rgba(0, 0, 0, 0.08)',
+  '--shadow-md': 'var(--shadow-soft)',
+  '--shadow-lg': 'var(--shadow)',
   '--shadow-panel': 'none',
   '--shadow-panel-hover': 'none',
+  '--shadow-modal': '0 20px 60px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--line)',
+  '--text-shadow-subtle': '0 2px 8px rgba(0, 0, 0, 0.06)',
 
   /* Glows — disabled */
   '--glow-indigo': 'none',
@@ -149,10 +164,26 @@ globalStyle(darkSelector, {
   '--hold': '#fbbf24',
   '--info': '#818cf8',
 
+  '--success': 'var(--buy)',
+  '--danger': 'var(--sell)',
+  '--warning': 'var(--hold)',
+  '--success-subtle': 'rgba(52, 211, 153, 0.10)',
+  '--danger-subtle': 'rgba(248, 113, 113, 0.10)',
+  '--warning-subtle': 'rgba(251, 191, 36, 0.10)',
+  '--info-subtle': 'rgba(129, 140, 248, 0.08)',
+  '--on-accent': '#ffffff',
+  '--on-buy': '#052e1b',
+  '--on-sell': '#ffffff',
+  '--on-danger': '#ffffff',
+
   '--shadow': '0 12px 40px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3)',
   '--shadow-soft': '0 4px 16px rgba(0, 0, 0, 0.3)',
+  '--shadow-md': 'var(--shadow-soft)',
+  '--shadow-lg': 'var(--shadow)',
   '--shadow-panel': 'none',
   '--shadow-panel-hover': 'none',
+  '--shadow-modal': '0 24px 70px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--line)',
+  '--text-shadow-subtle': 'none',
 
   '--glow-indigo': 'none',
   '--glow-indigo-strong': 'none',

@@ -15,6 +15,25 @@ interface SelectProps {
   className?: string;
 }
 
+function SelectChevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      style={{ opacity: 0.6, transform: open ? 'rotate(180deg)' : undefined }}
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
 export function Select({
   options,
   value,
@@ -54,7 +73,7 @@ export function Select({
         aria-expanded={open}
       >
         <span className={selected ? '' : placeholder}>{selected?.label ?? ph}</span>
-        <span style={{ fontSize: '10px', opacity: 0.6 }}>{open ? '▲' : '▼'}</span>
+        <SelectChevron open={open} />
       </button>
       {open && (
         <div className={dropdown}>

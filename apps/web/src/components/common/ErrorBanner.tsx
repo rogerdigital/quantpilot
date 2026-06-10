@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CloseIcon, WarningIcon } from './AppIcons.tsx';
 import {
   actions,
   banner,
@@ -38,7 +39,9 @@ export function ErrorBanner({
 
   return (
     <div className={`${banner} ${className}`} role="alert">
-      <span className={icon}>⚠</span>
+      <span className={icon}>
+        <WarningIcon />
+      </span>
       <div className={content}>
         <div className={message}>{title}</div>
         {detailText ? <div className={detail}>{detailText}</div> : null}
@@ -50,7 +53,7 @@ export function ErrorBanner({
           </button>
         ) : null}
         <button type="button" className={dismissBtn} onClick={handleDismiss} aria-label="Dismiss">
-          ×
+          <CloseIcon />
         </button>
       </div>
     </div>
