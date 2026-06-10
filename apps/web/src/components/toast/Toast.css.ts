@@ -59,7 +59,11 @@ export const toastWarn = style({
 
 export const toastIcon = style({
   flexShrink: 0,
-  font: '700 13px/1 var(--font-data)',
+  width: '18px',
+  height: '18px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   marginTop: '1px',
 });
 
@@ -78,13 +82,17 @@ export const toastDetail = style({
 
 export const toastClose = style({
   flexShrink: 0,
+  width: '28px',
+  height: '28px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   background: 'transparent',
   border: 'none',
   color: 'var(--muted)',
   cursor: 'pointer',
-  font: '16px/1 var(--font-ui)',
-  padding: '0 2px',
-  marginTop: '-1px',
+  padding: 0,
+  marginTop: '-5px',
   transition: 'color 140ms ease',
   ':hover': { color: 'var(--text)' },
 } as any);

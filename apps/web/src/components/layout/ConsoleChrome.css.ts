@@ -98,7 +98,6 @@ export const sidebarToggle = style({
   alignItems: 'center',
   justifyContent: 'center',
   cursor: 'pointer',
-  fontSize: '11px',
   transition: 'border-color 160ms ease, color 160ms ease, background 160ms ease',
   ':hover': {
     borderColor: 'var(--accent)',

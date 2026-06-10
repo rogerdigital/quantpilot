@@ -5,7 +5,7 @@ export const error = style({
   alignItems: 'flex-start',
   gap: '4px',
   marginTop: '4px',
-  color: 'var(--danger, #ff3358)',
+  color: 'var(--danger)',
   fontSize: '11px',
   lineHeight: 1.4,
   fontFamily: 'var(--font-ui)',

@@ -251,6 +251,30 @@ globalStyle('.toolbar-pill-button:hover', {
   background: 'var(--panel)',
 } as any);
 
+globalStyle('.toolbar-search-pill', {
+  minWidth: '190px',
+  minHeight: '38px',
+  justifyContent: 'flex-start',
+  borderRadius: 'var(--radius)',
+  borderColor: 'var(--line)',
+  background: 'var(--panel)',
+  color: 'var(--muted-strong)',
+} as any);
+
+globalStyle('.toolbar-search-pill:hover', {
+  borderColor: 'var(--line-strong)',
+  background: 'var(--panel)',
+  color: 'var(--text)',
+} as any);
+
+globalStyle('.toolbar-search-icon', {
+  display: 'inline-block',
+  width: '20px',
+  height: '20px',
+  flex: '0 0 20px',
+  color: 'var(--muted)',
+} as any);
+
 globalStyle('.toolbar-pill-button:active', {
   transform: 'scale(0.97)',
 } as any);
@@ -290,14 +314,14 @@ globalStyle('.status-dot', {
 
 globalStyle('.tone-ok', {
   color: 'var(--buy)',
-  borderColor: 'rgba(16, 185, 129, 0.2)',
-  background: 'rgba(16, 185, 129, 0.06)',
+  borderColor: 'var(--success-subtle)',
+  background: 'var(--success-subtle)',
 } as any);
 
 globalStyle('.tone-warn', {
   color: 'var(--hold)',
-  borderColor: 'rgba(245, 158, 11, 0.2)',
-  background: 'rgba(245, 158, 11, 0.06)',
+  borderColor: 'var(--warning-subtle)',
+  background: 'var(--warning-subtle)',
 } as any);
 
 globalStyle('.tone-muted', {
@@ -333,8 +357,10 @@ globalStyle('.locale-trigger strong', {
 } as any);
 
 globalStyle('.locale-caret', {
+  width: '16px',
+  height: '16px',
+  flexShrink: 0,
   color: 'var(--muted)',
-  fontSize: '12px',
   transition: 'transform 160ms ease',
 } as any);
 
@@ -389,11 +415,10 @@ globalStyle('.locale-option small', {
 } as any);
 
 globalStyle('.locale-check', {
+  width: '18px',
+  height: '18px',
+  flexShrink: 0,
   color: 'var(--accent)',
-  fontSize: '14px',
-  fontWeight: 700,
-  letterSpacing: 0,
-  textTransform: 'none',
 } as any);
 
 globalStyle('.locale-option.active', {
@@ -463,9 +488,10 @@ globalStyle('.theme-option span', {
 } as any);
 
 globalStyle('.theme-check', {
+  width: '18px',
+  height: '18px',
+  flexShrink: 0,
   color: 'var(--accent)',
-  fontSize: '14px',
-  fontWeight: 700,
 } as any);
 
 globalStyle('.theme-option.active', {

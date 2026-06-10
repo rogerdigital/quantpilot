@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
 import { listSidebarRoutes } from '../../modules/console/console.routes.tsx';
 import { bottomNav, bottomNavItem, bottomNavItemActive } from './ConsoleChrome.css.ts';
+import { NavIcon } from './NavIcons.tsx';
 
 export function MobileBottomNav() {
   const { locale } = useLocale();
@@ -17,24 +18,10 @@ export function MobileBottomNav() {
             `${bottomNavItem}${isActive ? ` ${bottomNavItemActive}` : ''}`
           }
         >
-          <span style={{ fontSize: '16px' }}>{getIcon(route.id)}</span>
+          <NavIcon id={route.id} size={18} color="currentColor" />
           <span>{copy[locale].nav[route.id]}</span>
         </NavLink>
       ))}
     </nav>
   );
-}
-
-function getIcon(id: string): string {
-  const icons: Record<string, string> = {
-    overview: '◈',
-    market: '◉',
-    trading: '⟡',
-    strategies: '◇',
-    backtest: '⟐',
-    execution: '⬡',
-    risk: '△',
-    settings: '⚙',
-  };
-  return icons[id] ?? '•';
 }

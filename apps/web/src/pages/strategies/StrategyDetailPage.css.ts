@@ -12,7 +12,7 @@ export const detailHeader = style({
 export const detailBackRow = style({
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '6px',
+  gap: '8px',
   marginBottom: '14px',
   padding: '6px 12px',
   borderRadius: 'var(--radius)',

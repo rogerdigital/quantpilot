@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocale } from '../../modules/console/console.i18n.tsx';
+import { CheckIcon, CircleIcon } from '../common/AppIcons.tsx';
 
 interface PromotionCheck {
   name: string;
@@ -207,7 +208,18 @@ export function PaperPerformancePanel({
                   border: `1px solid ${check.met ? 'var(--success)' : 'var(--line)'}`,
                 }}
               >
-                <span style={{ fontSize: '16px', lineHeight: 1 }}>{check.met ? '✓' : '○'}</span>
+                <span
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: check.met ? 'var(--success)' : 'var(--muted)',
+                  }}
+                >
+                  {check.met ? <CheckIcon /> : <CircleIcon />}
+                </span>
                 <div style={{ flex: 1 }}>
                   <div style={{ font: '500 13px/1.3 var(--font-ui)', color: 'var(--text)' }}>
                     {locale === 'zh' ? check.labelZh : check.label}
@@ -247,7 +259,7 @@ export function PaperPerformancePanel({
           background: ready ? 'var(--accent)' : 'var(--panel-2)',
           border: 'none',
           borderRadius: 'var(--radius)',
-          color: ready ? '#fff' : 'var(--muted)',
+          color: ready ? 'var(--on-accent)' : 'var(--muted)',
           font: '600 14px/1 var(--font-ui)',
           cursor: ready ? 'pointer' : 'not-allowed',
           transition: 'all 150ms ease',

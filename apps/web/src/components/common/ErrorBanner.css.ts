@@ -5,10 +5,10 @@ export const banner = style({
   alignItems: 'center',
   gap: '10px',
   padding: '10px 14px',
-  background: 'var(--danger-subtle, rgba(255, 51, 88, 0.12))',
-  border: '1px solid var(--danger, #ff3358)',
+  background: 'var(--danger-subtle)',
+  border: '1px solid var(--danger)',
   borderRadius: 'var(--radius)',
-  color: 'var(--danger, #ff3358)',
+  color: 'var(--danger)',
   fontSize: '13px',
   lineHeight: 1.4,
   fontFamily: 'var(--font-ui)',
@@ -16,8 +16,11 @@ export const banner = style({
 
 export const icon = style({
   flexShrink: 0,
-  fontSize: '16px',
-  lineHeight: 1,
+  width: '18px',
+  height: '18px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
 });
 
 export const content = style({
@@ -54,20 +57,23 @@ export const btn = style({
   selectors: {
     '&:hover': {
       background: 'currentColor',
-      color: '#fff',
+      color: 'var(--on-danger)',
     },
   },
 });
 
 export const dismissBtn = style({
-  padding: '4px 8px',
+  width: '28px',
+  height: '28px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 0,
   background: 'transparent',
   border: 'none',
   color: 'inherit',
   opacity: 0.6,
   cursor: 'pointer',
-  fontSize: '14px',
-  lineHeight: 1,
   transition: 'opacity 150ms ease',
   selectors: {
     '&:hover': {

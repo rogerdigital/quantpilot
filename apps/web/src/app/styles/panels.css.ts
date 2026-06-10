@@ -574,7 +574,7 @@ globalStyle('.empty-state-action', {
 
 globalStyle('.empty-state-action:hover', {
   background: 'var(--accent)',
-  color: '#fff',
+  color: 'var(--on-accent)',
 } as any);
 
 /* ============================================================

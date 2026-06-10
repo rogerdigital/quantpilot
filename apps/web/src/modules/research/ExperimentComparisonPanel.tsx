@@ -1,4 +1,5 @@
 import type { ExperimentRun } from '@shared-types/trading.ts';
+import { CheckIcon } from '../../components/common/AppIcons.tsx';
 
 export function ExperimentComparisonPanel({
   runs,
@@ -64,7 +65,13 @@ export function ExperimentComparisonPanel({
               <td>{run.snapshot.datasetVersionId}</td>
               <td>{run.snapshot.featureVersionId}</td>
               <td>{run.status}</td>
-              <td>{run.isCandidate ? '✓' : '—'}</td>
+              <td>
+                {run.isCandidate ? (
+                  <CheckIcon style={{ width: '16px', height: '16px', color: 'var(--success)' }} />
+                ) : (
+                  '—'
+                )}
+              </td>
               {allMetricNames.map((name) => {
                 const metric = run.metrics.find((m) => m.name === name);
                 const value = metric?.value.kind === 'scalar' ? metric.value.value.toFixed(4) : '—';

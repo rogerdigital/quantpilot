@@ -72,7 +72,7 @@ globalStyle(`${overviewResultsHero} .kpi-value`, {
   font: '700 clamp(40px, 5vw, 64px)/1 var(--font-data)',
   letterSpacing: '-0.04em',
   color: 'var(--text-strong)',
-  textShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+  textShadow: 'var(--text-shadow-subtle)',
 });
 
 export const overviewResultsSecondary = style({

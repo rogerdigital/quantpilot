@@ -32,7 +32,7 @@ export const variants = styleVariants({
     base,
     {
       background: colors.accent,
-      color: '#fff',
+      color: 'var(--on-accent)',
       boxShadow: shadows.sm,
       selectors: {
         '&:hover:not(:disabled)': {
@@ -76,7 +76,7 @@ export const variants = styleVariants({
     base,
     {
       background: colors.danger,
-      color: '#fff',
+      color: 'var(--on-danger)',
       boxShadow: shadows.sm,
       selectors: {
         '&:hover:not(:disabled)': {

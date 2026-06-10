@@ -1,12 +1,12 @@
 import { keyframes, style } from '@vanilla-extract/css';
 
 const flashUp = keyframes({
-  '0%': { backgroundColor: 'rgba(0, 232, 157, 0.35)' },
+  '0%': { backgroundColor: 'var(--success-subtle)' },
   '100%': { backgroundColor: 'transparent' },
 });
 
 const flashDown = keyframes({
-  '0%': { backgroundColor: 'rgba(255, 51, 88, 0.35)' },
+  '0%': { backgroundColor: 'var(--danger-subtle)' },
   '100%': { backgroundColor: 'transparent' },
 });
 

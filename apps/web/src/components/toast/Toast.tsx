@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useState } from 'react';
+import { type ComponentType, createContext, useCallback, useContext, useState } from 'react';
+import { CheckIcon, CloseIcon, ErrorIcon, InfoIcon, WarningIcon } from '../common/AppIcons.tsx';
 import {
   toast,
   toastBody,
@@ -42,11 +43,11 @@ export function useToast() {
 
 /* ── Icons ────────────────────────────────────────────── */
 
-const ICONS: Record<ToastKind, string> = {
-  success: '✓',
-  error: '✕',
-  info: 'ℹ',
-  warn: '⚠',
+const ICONS: Record<ToastKind, ComponentType> = {
+  success: CheckIcon,
+  error: ErrorIcon,
+  info: InfoIcon,
+  warn: WarningIcon,
 };
 
 const KIND_CLASS: Record<ToastKind, string> = {
@@ -65,15 +66,24 @@ function ToastEntry({
   item: ToastItem & { exiting?: boolean };
   onRemove: (id: string) => void;
 }) {
+  const Icon = ICONS[item.kind];
+
   return (
     <div className={`${toast} ${KIND_CLASS[item.kind]}${item.exiting ? ` ${toastExiting}` : ''}`}>
-      <span className={toastIcon}>{ICONS[item.kind]}</span>
+      <span className={toastIcon}>
+        <Icon />
+      </span>
       <div className={toastBody}>
         <div className={toastTitle}>{item.title}</div>
         {item.detail && <div className={toastDetail}>{item.detail}</div>}
       </div>
-      <button type="button" className={toastClose} onClick={() => onRemove(item.id)}>
-        ×
+      <button
+        type="button"
+        className={toastClose}
+        onClick={() => onRemove(item.id)}
+        aria-label="Dismiss notification"
+      >
+        <CloseIcon />
       </button>
     </div>
   );

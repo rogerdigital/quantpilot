@@ -61,27 +61,27 @@ const valueBadgeBase = {
 export const valueBadge = styleVariants({
   accent: {
     ...valueBadgeBase,
-    background: 'rgba(99, 102, 241, 0.08)',
+    background: 'var(--info-subtle)',
     color: 'var(--info)',
     border: '1px solid rgba(99, 102, 241, 0.14)',
   },
   success: {
     ...valueBadgeBase,
-    background: 'rgba(16, 185, 129, 0.08)',
+    background: 'var(--success-subtle)',
     color: 'var(--buy)',
-    border: '1px solid rgba(16, 185, 129, 0.15)',
+    border: '1px solid var(--success-subtle)',
   },
   warning: {
     ...valueBadgeBase,
-    background: 'rgba(245, 158, 11, 0.08)',
+    background: 'var(--warning-subtle)',
     color: 'var(--hold)',
-    border: '1px solid rgba(245, 158, 11, 0.15)',
+    border: '1px solid var(--warning-subtle)',
   },
   danger: {
     ...valueBadgeBase,
-    background: 'rgba(239, 68, 68, 0.08)',
+    background: 'var(--danger-subtle)',
     color: 'var(--sell)',
-    border: '1px solid rgba(239, 68, 68, 0.15)',
+    border: '1px solid var(--danger-subtle)',
   },
   neutral: {
     ...valueBadgeBase,

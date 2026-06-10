@@ -139,21 +139,21 @@ globalStyle('.badge-info', {
 } as any);
 
 globalStyle('.badge-ok, .badge-success', {
-  background: 'rgba(16, 185, 129, 0.08)',
+  background: 'var(--success-subtle)',
   color: 'var(--buy)',
-  borderColor: 'rgba(16, 185, 129, 0.15)',
+  borderColor: 'var(--success-subtle)',
 } as any);
 
 globalStyle('.badge-warn', {
-  background: 'rgba(245, 158, 11, 0.08)',
+  background: 'var(--warning-subtle)',
   color: 'var(--hold)',
-  borderColor: 'rgba(245, 158, 11, 0.15)',
+  borderColor: 'var(--warning-subtle)',
 } as any);
 
 globalStyle('.badge-danger', {
-  background: 'rgba(239, 68, 68, 0.08)',
+  background: 'var(--danger-subtle)',
   color: 'var(--sell)',
-  borderColor: 'rgba(239, 68, 68, 0.15)',
+  borderColor: 'var(--danger-subtle)',
 } as any);
 
 globalStyle('.badge-muted', {
@@ -256,8 +256,8 @@ globalStyle('.table-note', {
 globalStyle('.inline-action', {
   position: 'relative',
   overflow: 'hidden',
-  border: '1px solid rgba(239, 68, 68, 0.2)',
-  background: 'rgba(239, 68, 68, 0.06)',
+  border: '1px solid var(--danger-subtle)',
+  background: 'var(--danger-subtle)',
   color: 'var(--sell)',
   borderRadius: 'var(--radius-sm)',
   padding: '8px 12px',
@@ -268,8 +268,8 @@ globalStyle('.inline-action', {
 } as any);
 
 globalStyle('.inline-action:hover', {
-  background: 'rgba(239, 68, 68, 0.10)',
-  borderColor: 'rgba(239, 68, 68, 0.35)',
+  background: 'var(--danger-subtle)',
+  borderColor: 'var(--danger)',
   transform: 'translateY(-1px)',
 } as any);
 
@@ -287,14 +287,14 @@ globalStyle(
 );
 
 globalStyle('.inline-action-approve', {
-  borderColor: 'rgba(16, 185, 129, 0.2)',
-  background: 'rgba(16, 185, 129, 0.06)',
+  borderColor: 'var(--success-subtle)',
+  background: 'var(--success-subtle)',
   color: 'var(--buy)',
 } as any);
 
 globalStyle('.inline-action-approve:hover', {
-  background: 'rgba(16, 185, 129, 0.10)',
-  borderColor: 'rgba(16, 185, 129, 0.35)',
+  background: 'var(--success-subtle)',
+  borderColor: 'var(--success)',
 } as any);
 
 globalStyle('.action-group', {
@@ -370,15 +370,15 @@ globalStyle('.log-tag', {
 } as any);
 
 globalStyle('.log-tag.buy', {
-  background: 'rgba(16, 185, 129, 0.08)',
+  background: 'var(--success-subtle)',
   color: 'var(--buy)',
-  border: '1px solid rgba(16, 185, 129, 0.15)',
+  border: '1px solid var(--success-subtle)',
 } as any);
 
 globalStyle('.log-tag.sell', {
-  background: 'rgba(239, 68, 68, 0.08)',
+  background: 'var(--danger-subtle)',
   color: 'var(--sell)',
-  border: '1px solid rgba(239, 68, 68, 0.15)',
+  border: '1px solid var(--danger-subtle)',
 } as any);
 
 globalStyle('.log-tag.info', {
