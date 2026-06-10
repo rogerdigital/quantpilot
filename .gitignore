@@ -38,5 +38,4 @@ coverage/
 .quantpilot/
 test-results/
 playwright-report/
-*.png
 .playwright-mcp/
