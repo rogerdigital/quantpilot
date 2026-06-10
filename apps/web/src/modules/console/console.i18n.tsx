@@ -62,7 +62,6 @@ export const copy = {
       degraded: '回退中',
       localMirror: '本地镜像',
       commandDeck: '统一指挥甲板',
-      tacticalRoutes: '战术导航',
     },
     terms: {
       totalNav: '总资产',
@@ -154,6 +153,7 @@ export const copy = {
     desk: {
       dashboard: 'Command Deck',
       market: 'Market Desk',
+      trading: 'Trading Desk',
       strategies: 'Strategy Desk',
       backtest: 'Research Desk',
       risk: 'Risk Desk',
@@ -242,7 +242,6 @@ export const copy = {
       degraded: 'Degraded',
       localMirror: 'Local Mirror',
       commandDeck: 'Unified Command Deck',
-      tacticalRoutes: 'Tactical Routes',
     },
     terms: {
       totalNav: 'Total NAV',

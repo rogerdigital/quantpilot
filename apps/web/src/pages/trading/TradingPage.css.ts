@@ -67,6 +67,9 @@ export const tradingHeaderStats = style({
   alignItems: 'center',
   gap: '16px',
   flexWrap: 'wrap',
+  padding: '12px 20px',
+  borderBottom: '1px solid var(--line)',
+  background: 'var(--panel)',
 });
 
 export const tradingHeaderStat = style({

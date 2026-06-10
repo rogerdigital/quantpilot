@@ -69,7 +69,6 @@ describe('command-deck theme stylesheet', () => {
 
   it('keeps shared command-deck copy centralized', () => {
     expect(consoleI18n).toContain('commandDeck');
-    expect(consoleI18n).toContain('tacticalRoutes');
     expect(consoleI18n).toContain('deskBrief');
     expect(consoleI18n).toContain('autonomyControls');
     expect(consoleI18n).toContain('systemPulse');

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CandlestickChart } from '../../components/charts/CandlestickChart.tsx';
 import { PriceFlash, SignalAlert } from '../../components/common/index.ts';
-import { EmptyState, TabPanel } from '../../components/layout/ConsoleChrome.tsx';
+import { EmptyState, SectionHeader, TabPanel } from '../../components/layout/ConsoleChrome.tsx';
 import { QuickOrderBar } from '../../components/trading/QuickOrderBar.tsx';
 import { useOhlcvData } from '../../hooks/useOhlcvData.ts';
 import { copy, useLocale } from '../../modules/console/console.i18n.tsx';
@@ -41,12 +41,10 @@ import {
   tradeSellBtn,
   tradeSellBtnDisabled,
   tradingGrid,
-  tradingHeader,
   tradingHeaderChange,
   tradingHeaderPrice,
   tradingHeaderStat,
   tradingHeaderStats,
-  tradingHeaderSymbol,
   tradingShell,
   watchlistHead,
   watchlistItem,
@@ -170,93 +168,56 @@ export function TradingPage() {
 
   return (
     <div className={tradingShell}>
-      {/* Header bar */}
-      <div className={tradingHeader}>
-        <div className={tradingHeaderSymbol}>
-          <div>
-            <div className="eyebrow">{locale === 'zh' ? '交易终端' : 'Trading Terminal'}</div>
-            <h1
-              style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                gap: '10px',
-                marginTop: '4px',
-                margin: 0,
-                font: 'inherit',
-                lineHeight: 'inherit',
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: 'var(--font-data)',
-                  fontSize: '20px',
-                  fontWeight: 700,
-                  color: 'var(--accent-live)',
-                  letterSpacing: '0.04em',
-                }}
-              >
-                {selectedSymbol}
-              </span>
-              <span className={tradingHeaderPrice}>
-                {selectedStock ? <PriceFlash value={selectedStock.price} precision={2} /> : '--'}
-              </span>
-              <span className={tradingHeaderChange[changeTone]}>
-                {priceChange >= 0 ? '+' : ''}
-                {fmtPct(priceChange)}
-              </span>
-            </h1>
-          </div>
-        </div>
+      <SectionHeader routeKey="trading" />
 
-        <div className={tradingHeaderStats}>
-          <div className={tradingHeaderStat}>
-            <span>{locale === 'zh' ? '今日信号' : 'Signals'}</span>
-            <strong>
-              {buyCount}B / {holdCount}H / {sellCount}S
-            </strong>
-          </div>
-          <div className={tradingHeaderStat}>
-            <span>{locale === 'zh' ? '评分' : 'Score'}</span>
-            <strong>{selectedStock ? selectedStock.score.toFixed(1) : '--'}</strong>
-          </div>
-          <div className={tradingHeaderStat}>
-            <span>{locale === 'zh' ? '当前信号' : 'Signal'}</span>
-            <strong
-              style={{
-                color:
-                  selectedStock?.signal === 'BUY'
-                    ? 'var(--buy)'
-                    : selectedStock?.signal === 'SELL'
-                      ? 'var(--sell)'
-                      : 'var(--hold)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              {selectedStock && (
-                <SignalAlert
-                  variant={
-                    selectedStock.signal === 'BUY'
-                      ? 'buy'
-                      : selectedStock.signal === 'SELL'
-                        ? 'sell'
-                        : 'warning'
-                  }
-                  size={6}
-                />
-              )}
-              {selectedStock ? translateSignal(locale, selectedStock.signal) : '--'}
-            </strong>
-          </div>
-          <div className={tradingHeaderStat}>
-            <span>{locale === 'zh' ? '模拟 NAV' : 'Paper NAV'}</span>
-            <strong>{fmtCurrency(state.accounts.paper.nav)}</strong>
-          </div>
-          <div className={tradingHeaderStat}>
-            <span>{locale === 'zh' ? '实盘 NAV' : 'Live NAV'}</span>
-            <strong>{fmtCurrency(state.accounts.live.nav)}</strong>
-          </div>
+      <div className={tradingHeaderStats}>
+        <div className={tradingHeaderStat}>
+          <span>{locale === 'zh' ? '今日信号' : 'Signals'}</span>
+          <strong>
+            {buyCount}B / {holdCount}H / {sellCount}S
+          </strong>
+        </div>
+        <div className={tradingHeaderStat}>
+          <span>{locale === 'zh' ? '评分' : 'Score'}</span>
+          <strong>{selectedStock ? selectedStock.score.toFixed(1) : '--'}</strong>
+        </div>
+        <div className={tradingHeaderStat}>
+          <span>{locale === 'zh' ? '当前信号' : 'Signal'}</span>
+          <strong
+            style={{
+              color:
+                selectedStock?.signal === 'BUY'
+                  ? 'var(--buy)'
+                  : selectedStock?.signal === 'SELL'
+                    ? 'var(--sell)'
+                    : 'var(--hold)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            {selectedStock && (
+              <SignalAlert
+                variant={
+                  selectedStock.signal === 'BUY'
+                    ? 'buy'
+                    : selectedStock.signal === 'SELL'
+                      ? 'sell'
+                      : 'warning'
+                }
+                size={6}
+              />
+            )}
+            {selectedStock ? translateSignal(locale, selectedStock.signal) : '--'}
+          </strong>
+        </div>
+        <div className={tradingHeaderStat}>
+          <span>{locale === 'zh' ? '模拟 NAV' : 'Paper NAV'}</span>
+          <strong>{fmtCurrency(state.accounts.paper.nav)}</strong>
+        </div>
+        <div className={tradingHeaderStat}>
+          <span>{locale === 'zh' ? '实盘 NAV' : 'Live NAV'}</span>
+          <strong>{fmtCurrency(state.accounts.live.nav)}</strong>
         </div>
       </div>
 
@@ -307,18 +268,78 @@ export function TradingPage() {
         {/* Chart */}
         <div className={chartPanel}>
           <div className={chartPanelHead}>
-            <div
-              style={{
-                fontFamily: 'var(--font-data)',
-                fontSize: '13px',
-                fontWeight: 700,
-                color: 'var(--text-strong)',
-              }}
-            >
-              {selectedSymbol}
-              <span style={{ color: 'var(--muted)', marginLeft: '8px', fontWeight: 400 }}>
-                {locale === 'zh' ? 'K 线图' : 'Chart'}
-              </span>
+            <div style={{ display: 'grid', gap: '6px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: '10px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'var(--font-data)',
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    color: 'var(--accent-live)',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  {selectedSymbol}
+                </span>
+                <span className={tradingHeaderPrice}>
+                  {selectedStock ? <PriceFlash value={selectedStock.price} precision={2} /> : '--'}
+                </span>
+                <span className={tradingHeaderChange[changeTone]}>
+                  {priceChange >= 0 ? '+' : ''}
+                  {fmtPct(priceChange)}
+                </span>
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  color: 'var(--muted)',
+                  font: '600 11px/1 var(--font-data)',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                <span>{locale === 'zh' ? 'K 线图' : 'Chart'}</span>
+                <span>
+                  {locale === 'zh' ? '评分' : 'Score'}{' '}
+                  {selectedStock ? selectedStock.score.toFixed(1) : '--'}
+                </span>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    color:
+                      selectedStock?.signal === 'BUY'
+                        ? 'var(--buy)'
+                        : selectedStock?.signal === 'SELL'
+                          ? 'var(--sell)'
+                          : 'var(--hold)',
+                  }}
+                >
+                  {selectedStock && (
+                    <SignalAlert
+                      variant={
+                        selectedStock.signal === 'BUY'
+                          ? 'buy'
+                          : selectedStock.signal === 'SELL'
+                            ? 'sell'
+                            : 'warning'
+                      }
+                      size={6}
+                    />
+                  )}
+                  {selectedStock ? translateSignal(locale, selectedStock.signal) : '--'}
+                </span>
+              </div>
             </div>
             <div className={chartToolbar}>
               {TIMEFRAMES.map((tf) => (
