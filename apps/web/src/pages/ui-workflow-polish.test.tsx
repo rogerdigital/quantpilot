@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { OverviewPage } from './console/routes/OverviewPage.tsx';
+import { RiskCommandSummary } from './risk/RiskPage.tsx';
 import { TradingPage } from './trading/TradingPage.tsx';
 
 const mockGoToSettings = vi.fn();
@@ -187,5 +188,25 @@ describe('UI workflow polish', () => {
     expect(html).toContain('data-trading-decision-strip="true"');
     expect(html).toContain('风险预检');
     expect(html).not.toContain('今日信号');
+  });
+
+  it('summarizes the risk page as a decision and action queue', () => {
+    const html = renderToStaticMarkup(
+      <RiskCommandSummary
+        locale="zh"
+        postureStatus="NORMAL"
+        postureTitle="组合风险 healthy"
+        postureDetail="当前没有阻断项。"
+        approvalRequired={2}
+        incidentCount={1}
+        schedulerAttention={0}
+        liveExposurePct={28.4}
+      />
+    );
+
+    expect(html).toContain('data-risk-command-summary="true"');
+    expect(html).toContain('当前可交易');
+    expect(html).toContain('下一步');
+    expect(html).toContain('3');
   });
 });
