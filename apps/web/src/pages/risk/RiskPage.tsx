@@ -1,4 +1,8 @@
-import type { RiskPolicyActionResponse, RiskRunbookActionKey } from '@shared-types/trading.ts';
+import type {
+  AppLocale,
+  RiskPolicyActionResponse,
+  RiskRunbookActionKey,
+} from '@shared-types/trading.ts';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { runRiskPolicyAction } from '../../app/api/controlPlane.ts';
@@ -29,6 +33,83 @@ import {
   InspectionPanel,
   InspectionSelectableRow,
 } from '../console/components/InspectionPanels.tsx';
+import {
+  riskCommandKpi,
+  riskCommandPrimary,
+  riskCommandPrimaryDanger,
+  riskCommandPrimaryWarn,
+  riskCommandSummary,
+} from './RiskPage.css.ts';
+
+export type RiskCommandSummaryProps = {
+  locale: AppLocale;
+  postureStatus: string;
+  postureTitle: string;
+  postureDetail: string;
+  approvalRequired: number;
+  incidentCount: number;
+  schedulerAttention: number;
+  liveExposurePct: number;
+};
+
+export function RiskCommandSummary({
+  locale,
+  postureStatus,
+  postureTitle,
+  postureDetail,
+  approvalRequired,
+  incidentCount,
+  schedulerAttention,
+  liveExposurePct,
+}: RiskCommandSummaryProps) {
+  const normalizedStatus = postureStatus.toLowerCase();
+  const blocked = normalizedStatus.includes('risk') || normalizedStatus.includes('block');
+  const attentionCount = approvalRequired + incidentCount + schedulerAttention;
+  const primaryClass = `${riskCommandPrimary}${
+    blocked
+      ? ` ${riskCommandPrimaryDanger}`
+      : attentionCount > 0
+        ? ` ${riskCommandPrimaryWarn}`
+        : ''
+  }`;
+
+  return (
+    <section className={riskCommandSummary} data-risk-command-summary="true">
+      <article className={primaryClass}>
+        <span>{locale === 'zh' ? '交易状态' : 'Trading State'}</span>
+        <strong>
+          {blocked
+            ? locale === 'zh'
+              ? '暂停交易'
+              : 'Trading Paused'
+            : locale === 'zh'
+              ? '当前可交易'
+              : 'Trading Allowed'}
+        </strong>
+        <p>{postureDetail || postureTitle}</p>
+      </article>
+      <article className={riskCommandKpi}>
+        <span>{locale === 'zh' ? '下一步' : 'Next Actions'}</span>
+        <strong>{attentionCount}</strong>
+        <p>
+          {locale === 'zh'
+            ? '待审批、事件和调度注意项'
+            : 'Approvals, incidents, and scheduler items'}
+        </p>
+      </article>
+      <article className={riskCommandKpi}>
+        <span>{locale === 'zh' ? '实盘暴露' : 'Live Exposure'}</span>
+        <strong>{liveExposurePct.toFixed(1)}%</strong>
+        <p>{locale === 'zh' ? '按 workbench 聚合权益估算' : 'Estimated from workbench equity'}</p>
+      </article>
+      <article className={riskCommandKpi}>
+        <span>{locale === 'zh' ? '风险结论' : 'Risk Posture'}</span>
+        <strong>{postureStatus || '--'}</strong>
+        <p>{postureTitle}</p>
+      </article>
+    </section>
+  );
+}
 
 function RiskPage() {
   const { state, approveLiveIntent, rejectLiveIntent, hasPermission, actionGuardNotice } =
@@ -236,6 +317,17 @@ function RiskPage() {
             value: String(workbench.summary.approvalRequired),
           },
         ]}
+      />
+
+      <RiskCommandSummary
+        locale={locale}
+        postureStatus={selectedLaneStatus}
+        postureTitle={workbench.posture.title || state.riskLevel}
+        postureDetail={workbench.posture.detail}
+        approvalRequired={workbench.summary.approvalRequired}
+        incidentCount={riskIncidentCount}
+        schedulerAttention={workbench.summary.schedulerAttention}
+        liveExposurePct={liveExposure}
       />
 
       <section className="metrics-grid">

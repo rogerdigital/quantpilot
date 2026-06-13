@@ -122,6 +122,35 @@ export const overviewCommandCore = style({
 
 export const overviewCommandSummary = style({ display: 'grid', gap: '14px' });
 
+export const overviewCommandDecision = style({
+  display: 'grid',
+  gap: '8px',
+  padding: '16px',
+  borderLeft: '3px solid var(--accent)',
+  background: 'var(--accent-subtle)',
+});
+
+globalStyle(`${overviewCommandDecision} span`, {
+  color: 'var(--muted-strong)',
+  font: '600 11px/1 var(--font-data)',
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+});
+
+globalStyle(`${overviewCommandDecision} strong`, {
+  font: '700 clamp(22px, 3vw, 32px)/1.1 var(--font-display)',
+  letterSpacing: '-0.02em',
+  color: 'var(--text-strong)',
+});
+
+globalStyle(`${overviewCommandDecision} p`, {
+  margin: 0,
+  color: 'var(--muted-strong)',
+  fontSize: '13px',
+  lineHeight: '1.6',
+  maxWidth: '560px',
+});
+
 export const overviewCommandTitle = style({
   marginTop: '6px',
   font: '700 24px/1 var(--font-display)',

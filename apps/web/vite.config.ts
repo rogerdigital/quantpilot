@@ -12,6 +12,9 @@ const veMock = path.resolve(
 export default defineConfig({
   root: appRoot,
   plugins: [react(), vanillaExtractPlugin()],
+  build: {
+    target: 'es2022',
+  },
   resolve: {
     alias: {
       '@shared-types': sharedTypesRoot,

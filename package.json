@@ -25,7 +25,7 @@
     "check:runtime-env": "node --import tsx/esm scripts/check-runtime-env.ts",
     "test:api": "node --import tsx/esm --test apps/api/test/*.test.ts",
     "test:engine": "node --import tsx/esm --test packages/trading-engine/test/*.ts",
-    "test:web": "vitest run --config apps/web/vite.config.ts apps/web/src/modules/console/execution-collection-configs.test.ts apps/web/src/modules/console/execution-inspection-configs.test.ts apps/web/src/modules/console/execution-operations.test.ts apps/web/src/modules/console/execution-panels.test.tsx apps/web/src/modules/research/research-panels.test.tsx apps/web/src/modules/research/research-navigation.test.ts apps/web/src/modules/permissions/permissionCopy.test.ts apps/web/src/pages/research-pages.test.tsx apps/web/src/pages/settings-page.test.tsx apps/web/src/modules/risk/risk-workbench.test.tsx apps/web/src/app/styles/style.test.ts apps/web/src/hooks/useSSE.test.tsx apps/web/src/store/trading-system/TradingSystemProvider.test.tsx --environment node",
+    "test:web": "vitest run --config apps/web/vite.config.ts apps/web/src/modules/console/execution-collection-configs.test.ts apps/web/src/modules/console/execution-inspection-configs.test.ts apps/web/src/modules/console/execution-operations.test.ts apps/web/src/modules/console/execution-panels.test.tsx apps/web/src/modules/research/research-panels.test.tsx apps/web/src/modules/research/research-navigation.test.ts apps/web/src/modules/permissions/permissionCopy.test.ts apps/web/src/pages/research-pages.test.tsx apps/web/src/pages/settings-page.test.tsx apps/web/src/pages/ui-workflow-polish.test.tsx apps/web/src/modules/risk/risk-workbench.test.tsx apps/web/src/app/styles/style.test.ts apps/web/src/hooks/useSSE.test.tsx apps/web/src/store/trading-system/TradingSystemProvider.test.tsx --environment node",
     "lint": "biome check --diagnostic-level=error .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
@@ -45,11 +45,12 @@
   "dependencies": {
     "@vanilla-extract/css": "^1.20.1",
     "@vanilla-extract/vite-plugin": "^5.2.2",
-    "esbuild": "^0.27.7",
+    "esbuild": "^0.28.1",
+    "hono": "^4.12.25",
     "lightweight-charts": "^5.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.1"
+    "react-router-dom": "^6.30.4"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.11",
@@ -63,5 +64,7 @@
     "vite": "^5.4.14",
     "vitest": "^4.1.0"
   },
-  "overrides": {}
+  "overrides": {
+    "esbuild": "^0.28.1"
+  }
 }
