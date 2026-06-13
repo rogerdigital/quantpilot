@@ -288,6 +288,64 @@ export const chartSignalCard = style({
   textAlign: 'center',
 });
 
+export const chartDecisionStrip = style({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+  gap: '1px',
+  borderTop: '1px solid var(--line)',
+  borderBottom: '1px solid var(--line)',
+  background: 'var(--line)',
+  flexShrink: 0,
+  '@media': {
+    '(max-width: 720px)': {
+      gridTemplateColumns: '1fr 1fr',
+    },
+    '(max-width: 480px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+});
+
+export const chartDecisionItem = style({
+  display: 'grid',
+  gap: '6px',
+  padding: '12px 14px',
+  background: 'var(--panel)',
+  minWidth: 0,
+});
+
+globalStyle(`${chartDecisionItem} span`, {
+  color: 'var(--muted)',
+  font: '600 11px/1 var(--font-data)',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+});
+
+globalStyle(`${chartDecisionItem} strong`, {
+  color: 'var(--text-strong)',
+  font: '700 14px/1.15 var(--font-data)',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+});
+
+export const chartDecisionValue = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '6px',
+});
+
+export const tradeSection = style({
+  display: 'grid',
+  gap: '12px',
+  paddingTop: '16px',
+  borderTop: '1px solid var(--line)',
+  ':first-of-type': {
+    paddingTop: 0,
+    borderTop: 'none',
+  },
+});
+
 globalStyle(`${chartSignalCard} .sig-label`, {
   fontSize: '11px',
   fontFamily: 'var(--font-data)',

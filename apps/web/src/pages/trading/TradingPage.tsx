@@ -18,6 +18,9 @@ import {
   blotterBody,
   blotterPanel,
   chartBody,
+  chartDecisionItem,
+  chartDecisionStrip,
+  chartDecisionValue,
   chartFrame,
   chartPanel,
   chartPanelHead,
@@ -38,13 +41,12 @@ import {
   tradeInputLabel,
   tradePanel,
   tradePanelTitle,
+  tradeSection,
   tradeSellBtn,
   tradeSellBtnDisabled,
   tradingGrid,
   tradingHeaderChange,
   tradingHeaderPrice,
-  tradingHeaderStat,
-  tradingHeaderStats,
   tradingShell,
   watchlistHead,
   watchlistItem,
@@ -79,6 +81,20 @@ export function TradingPage() {
     ? ((selectedStock.price - selectedStock.prevClose) / selectedStock.prevClose) * 100
     : 0;
   const changeTone = priceChange > 0 ? 'up' : priceChange < 0 ? 'down' : 'neutral';
+  const signalTone =
+    selectedStock?.signal === 'BUY'
+      ? 'var(--buy)'
+      : selectedStock?.signal === 'SELL'
+        ? 'var(--sell)'
+        : 'var(--hold)';
+  const riskPrecheck =
+    state.riskLevel === 'NORMAL'
+      ? locale === 'zh'
+        ? '可提交审批'
+        : 'Ready for review'
+      : locale === 'zh'
+        ? '需风控复核'
+        : 'Needs risk review';
 
   const buyCount = state.stockStates.filter((s) => s.signal === 'BUY').length;
   const holdCount = state.stockStates.filter((s) => s.signal === 'HOLD').length;
@@ -169,57 +185,6 @@ export function TradingPage() {
   return (
     <div className={tradingShell}>
       <SectionHeader routeKey="trading" />
-
-      <div className={tradingHeaderStats}>
-        <div className={tradingHeaderStat}>
-          <span>{locale === 'zh' ? '今日信号' : 'Signals'}</span>
-          <strong>
-            {buyCount}B / {holdCount}H / {sellCount}S
-          </strong>
-        </div>
-        <div className={tradingHeaderStat}>
-          <span>{locale === 'zh' ? '评分' : 'Score'}</span>
-          <strong>{selectedStock ? selectedStock.score.toFixed(1) : '--'}</strong>
-        </div>
-        <div className={tradingHeaderStat}>
-          <span>{locale === 'zh' ? '当前信号' : 'Signal'}</span>
-          <strong
-            style={{
-              color:
-                selectedStock?.signal === 'BUY'
-                  ? 'var(--buy)'
-                  : selectedStock?.signal === 'SELL'
-                    ? 'var(--sell)'
-                    : 'var(--hold)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
-            {selectedStock && (
-              <SignalAlert
-                variant={
-                  selectedStock.signal === 'BUY'
-                    ? 'buy'
-                    : selectedStock.signal === 'SELL'
-                      ? 'sell'
-                      : 'warning'
-                }
-                size={6}
-              />
-            )}
-            {selectedStock ? translateSignal(locale, selectedStock.signal) : '--'}
-          </strong>
-        </div>
-        <div className={tradingHeaderStat}>
-          <span>{locale === 'zh' ? '模拟 NAV' : 'Paper NAV'}</span>
-          <strong>{fmtCurrency(state.accounts.paper.nav)}</strong>
-        </div>
-        <div className={tradingHeaderStat}>
-          <span>{locale === 'zh' ? '实盘 NAV' : 'Live NAV'}</span>
-          <strong>{fmtCurrency(state.accounts.live.nav)}</strong>
-        </div>
-      </div>
 
       {/* Three-column grid */}
       <div className={tradingGrid}>
@@ -317,12 +282,7 @@ export function TradingPage() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '5px',
-                    color:
-                      selectedStock?.signal === 'BUY'
-                        ? 'var(--buy)'
-                        : selectedStock?.signal === 'SELL'
-                          ? 'var(--sell)'
-                          : 'var(--hold)',
+                    color: signalTone,
                   }}
                 >
                   {selectedStock && (
@@ -395,6 +355,44 @@ export function TradingPage() {
                 </div>
               </div>
             </div>
+            <div className={chartDecisionStrip} data-trading-decision-strip="true">
+              <div className={chartDecisionItem}>
+                <span>{locale === 'zh' ? '信号分布' : 'Signal Mix'}</span>
+                <strong>
+                  {buyCount}B / {holdCount}H / {sellCount}S
+                </strong>
+              </div>
+              <div className={chartDecisionItem}>
+                <span>{locale === 'zh' ? '当前信号' : 'Current Signal'}</span>
+                <strong className={chartDecisionValue} style={{ color: signalTone }}>
+                  {selectedStock && (
+                    <SignalAlert
+                      variant={
+                        selectedStock.signal === 'BUY'
+                          ? 'buy'
+                          : selectedStock.signal === 'SELL'
+                            ? 'sell'
+                            : 'warning'
+                      }
+                      size={6}
+                    />
+                  )}
+                  {selectedStock ? translateSignal(locale, selectedStock.signal) : '--'}
+                </strong>
+              </div>
+              <div className={chartDecisionItem}>
+                <span>{locale === 'zh' ? '评分' : 'Score'}</span>
+                <strong>{selectedStock ? selectedStock.score.toFixed(1) : '--'}</strong>
+              </div>
+              <div className={chartDecisionItem}>
+                <span>{locale === 'zh' ? '风险预检' : 'Risk Precheck'}</span>
+                <strong
+                  style={{ color: state.riskLevel === 'NORMAL' ? 'var(--buy)' : 'var(--hold)' }}
+                >
+                  {riskPrecheck}
+                </strong>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -402,68 +400,72 @@ export function TradingPage() {
         <div className={tradePanel}>
           <div className={tradePanelTitle}>{locale === 'zh' ? '下单' : 'Place Order'}</div>
 
-          <div className={orderTypeTabs}>
-            {(['limit', 'market', 'stop'] as OrderType[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                className={`${orderTypeTab}${t === orderType ? ` ${orderTypeTabActive}` : ''}`}
-                onClick={() => setOrderType(t)}
-              >
-                {orderTypeLabel[t]}
-              </button>
-            ))}
-          </div>
+          <div className={tradeSection}>
+            <div className={orderTypeTabs}>
+              {(['limit', 'market', 'stop'] as OrderType[]).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className={`${orderTypeTab}${t === orderType ? ` ${orderTypeTabActive}` : ''}`}
+                  onClick={() => setOrderType(t)}
+                >
+                  {orderTypeLabel[t]}
+                </button>
+              ))}
+            </div>
 
-          {orderType === 'limit' || orderType === 'stop' ? (
-            <div className={tradeInputGroup}>
-              <div className={tradeInputLabel}>
-                {orderType === 'stop'
-                  ? locale === 'zh'
-                    ? '止损价'
-                    : 'Stop Price'
-                  : locale === 'zh'
-                    ? '限价'
-                    : 'Limit Price'}
+            {orderType === 'limit' || orderType === 'stop' ? (
+              <div className={tradeInputGroup}>
+                <div className={tradeInputLabel}>
+                  {orderType === 'stop'
+                    ? locale === 'zh'
+                      ? '止损价'
+                      : 'Stop Price'
+                    : locale === 'zh'
+                      ? '限价'
+                      : 'Limit Price'}
+                </div>
+                <input
+                  type="number"
+                  className={tradeInput}
+                  placeholder={selectedStock ? selectedStock.price.toFixed(2) : '0.00'}
+                  value={limitPrice}
+                  onChange={(e) => setLimitPrice(e.target.value)}
+                />
               </div>
+            ) : null}
+
+            <div className={tradeInputGroup}>
+              <div className={tradeInputLabel}>{locale === 'zh' ? '数量 (股)' : 'Quantity'}</div>
               <input
                 type="number"
                 className={tradeInput}
-                placeholder={selectedStock ? selectedStock.price.toFixed(2) : '0.00'}
-                value={limitPrice}
-                onChange={(e) => setLimitPrice(e.target.value)}
+                placeholder="100"
+                value={qty}
+                onChange={(e) => setQty(e.target.value)}
               />
             </div>
-          ) : null}
-
-          <div className={tradeInputGroup}>
-            <div className={tradeInputLabel}>{locale === 'zh' ? '数量 (股)' : 'Quantity'}</div>
-            <input
-              type="number"
-              className={tradeInput}
-              placeholder="100"
-              value={qty}
-              onChange={(e) => setQty(e.target.value)}
-            />
           </div>
 
-          <div className={tradeBtnRow}>
-            <button
-              type="button"
-              className={isSubmitting ? tradeBuyBtnDisabled : tradeBuyBtn}
-              disabled={isSubmitting}
-              onClick={() => handleSubmitOrder('buy')}
-            >
-              {isSubmitting ? '…' : locale === 'zh' ? '买入' : 'BUY'}
-            </button>
-            <button
-              type="button"
-              className={isSubmitting ? tradeSellBtnDisabled : tradeSellBtn}
-              disabled={isSubmitting}
-              onClick={() => handleSubmitOrder('sell')}
-            >
-              {isSubmitting ? '…' : locale === 'zh' ? '卖出' : 'SELL'}
-            </button>
+          <div className={tradeSection}>
+            <div className={tradeBtnRow}>
+              <button
+                type="button"
+                className={isSubmitting ? tradeBuyBtnDisabled : tradeBuyBtn}
+                disabled={isSubmitting}
+                onClick={() => handleSubmitOrder('buy')}
+              >
+                {isSubmitting ? '…' : locale === 'zh' ? '买入' : 'BUY'}
+              </button>
+              <button
+                type="button"
+                className={isSubmitting ? tradeSellBtnDisabled : tradeSellBtn}
+                disabled={isSubmitting}
+                onClick={() => handleSubmitOrder('sell')}
+              >
+                {isSubmitting ? '…' : locale === 'zh' ? '卖出' : 'SELL'}
+              </button>
+            </div>
           </div>
 
           {submitFeedback && (
@@ -484,7 +486,7 @@ export function TradingPage() {
             </div>
           )}
 
-          <div style={{ display: 'grid', gap: '0' }}>
+          <div className={tradeSection}>
             <div className={tradeInfoRow}>
               <span>{locale === 'zh' ? '标的' : 'Symbol'}</span>
               <strong style={{ color: 'var(--accent-live)' }}>{selectedSymbol}</strong>
@@ -495,16 +497,7 @@ export function TradingPage() {
             </div>
             <div className={tradeInfoRow}>
               <span>{locale === 'zh' ? '信号' : 'Signal'}</span>
-              <strong
-                style={{
-                  color:
-                    selectedStock?.signal === 'BUY'
-                      ? 'var(--buy)'
-                      : selectedStock?.signal === 'SELL'
-                        ? 'var(--sell)'
-                        : 'var(--hold)',
-                }}
-              >
+              <strong style={{ color: signalTone }}>
                 {selectedStock ? translateSignal(locale, selectedStock.signal) : '--'}
               </strong>
             </div>

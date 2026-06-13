@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { OverviewPage } from './console/routes/OverviewPage.tsx';
+import { TradingPage } from './trading/TradingPage.tsx';
 
 const mockGoToSettings = vi.fn();
 
@@ -141,7 +142,34 @@ vi.mock('../hooks/useMonitoringStatus.ts', () => ({
 vi.mock('../components/layout/ConsoleChrome.tsx', () => ({
   ChartCanvas: ({ kind }: { kind: string }) => <div data-chart-kind={kind} />,
   EmptyState: ({ message }: { message: string }) => <div>{message}</div>,
+  SectionHeader: ({ routeKey }: { routeKey: string }) => <header>{routeKey}</header>,
+  TabPanel: ({ tabs }: { tabs: Array<{ key: string; label: string; content: JSX.Element }> }) => (
+    <div>
+      {tabs.map((tab) => (
+        <section key={tab.key}>
+          <h2>{tab.label}</h2>
+          {tab.content}
+        </section>
+      ))}
+    </div>
+  ),
   TopMeta: () => <div data-testid="top-meta" />,
+}));
+
+vi.mock('../hooks/useOhlcvData.ts', () => ({
+  useOhlcvData: () => ({
+    bars: [],
+    loading: false,
+    error: null,
+  }),
+}));
+
+vi.mock('../components/charts/CandlestickChart.tsx', () => ({
+  CandlestickChart: () => <div data-testid="candlestick-chart" />,
+}));
+
+vi.mock('../modules/console/trading.service.ts', () => ({
+  submitTerminalOrder: vi.fn(),
 }));
 
 describe('UI workflow polish', () => {
@@ -151,5 +179,13 @@ describe('UI workflow polish', () => {
     expect(html).toContain('data-overview-primary-summary="true"');
     expect(html.match(/¥200,000/g) || []).toHaveLength(1);
     expect(html).toContain('运行指令');
+  });
+
+  it('renders trading context inside the chart decision strip instead of a separate stats row', () => {
+    const html = renderToStaticMarkup(<TradingPage />);
+
+    expect(html).toContain('data-trading-decision-strip="true"');
+    expect(html).toContain('风险预检');
+    expect(html).not.toContain('今日信号');
   });
 });
