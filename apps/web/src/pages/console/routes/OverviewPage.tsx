@@ -33,6 +33,7 @@ import {
   overviewCommandAside,
   overviewCommandCard,
   overviewCommandCopy,
+  overviewCommandDecision,
   overviewCommandCore,
   overviewCommandFrame,
   overviewCommandHead,
@@ -136,7 +137,11 @@ export function OverviewPage() {
         />
       </header>
 
-      <section className={overviewResultsBanner} aria-label="Portfolio Summary">
+      <section
+        className={overviewResultsBanner}
+        aria-label="Portfolio Summary"
+        data-overview-primary-summary="true"
+      >
         <div className={overviewResultsHero}>
           <span className="kpi-label">{locale === 'zh' ? '总资产' : 'Total NAV'}</span>
           <span className="kpi-value">{fmtCurrency(totalNav)}</span>
@@ -209,11 +214,10 @@ export function OverviewPage() {
             </div>
             <div className={overviewCommandCore}>
               <div className={overviewCommandSummary}>
-                <div className="hero-headline">
-                  <div className="hero-value">{fmtCurrency(totalNav)}</div>
-                  <div className={`hero-change ${totalPnlPct >= 0 ? 'text-up' : 'text-down'}`}>
-                    {fmtPct(totalPnlPct)}
-                  </div>
+                <div className={overviewCommandDecision}>
+                  <span>{locale === 'zh' ? '运行指令' : 'Run Directive'}</span>
+                  <strong>{translateRuntimeText(locale, state.decisionSummary)}</strong>
+                  <p>{translateRuntimeText(locale, state.decisionCopy)}</p>
                 </div>
                 <div className={overviewCommandNote}>
                   <span>{copy[locale].terms.tradeDecision}</span>
