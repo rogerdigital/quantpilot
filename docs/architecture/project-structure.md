@@ -1,6 +1,6 @@
-# QuantPilot Lite Project Structure
+# QuantPilot Project Structure
 
-QuantPilot Lite is a focused core console. The active architecture keeps only the web console, API gateway, core trading engine, shared types and a small shared UI package placeholder.
+QuantPilot is a focused core console. The active architecture keeps the web console, API gateway, core trading engine, shared types and a small shared UI component package.
 
 ## Target Structure
 
@@ -38,22 +38,22 @@ quantpilot/
 ## Active Responsibilities
 
 - `apps/web`
-  - React console for Dashboard, Market, Strategies, Backtest, Execution, Risk and Settings.
+  - React console for Dashboard, Market, Trading, Strategies, Backtest, Execution, Risk and Settings.
   - Owns route rendering, layout, charts and user-visible state.
 - `apps/api`
-  - Node API gateway for health, session, market, strategies, backtests, execution, risk and settings.
-  - Owns server-side simulated/paper boundaries and in-process Lite data.
+  - Node API gateway for health, session, market, strategies, backtests, execution, trading, risk and settings.
+  - Owns server-side simulated/paper/live boundaries, Alpaca + custom-http broker adapters and in-process data.
 - `packages/shared-types`
   - Core contracts shared by web, API and engine.
   - Active type surface is limited to market, strategy, backtest, execution, risk and settings.
 - `packages/trading-engine`
   - Backtest, cost/slippage, basic market simulation, execution state and risk checks.
 - `packages/ui`
-  - Shared UI package placeholder retained for future extracted components.
+  - Shared vanilla-extract UI components (Button, Card, Input, Select, Table, Skeleton).
 
 ## Removed Scope
 
-The following systems are not active QuantPilot Lite scope and should be deleted from runtime code during simplification:
+The following systems are not active QuantPilot scope and should not be reintroduced into runtime code unless the scope is explicitly changed first:
 
 - Background task platform.
 - Autonomous assistant and LLM provider runtime.
@@ -63,6 +63,5 @@ The following systems are not active QuantPilot Lite scope and should be deleted
 - Data, feature, experiment and model registries.
 - Compliance reports and operations workbench.
 - Connector marketplace and strategy package marketplace.
-- Live trading approval flow.
 
 Archived documents may still mention these systems for historical context, but active docs and runtime code should not depend on them.
