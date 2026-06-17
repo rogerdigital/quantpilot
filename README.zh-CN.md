@@ -18,7 +18,7 @@ QuantPilot 是本地优先的量化研究与执行控制台。项目聚焦策略
 
 ## 快速开始
 
-**环境要求：** Node.js >=20.5.0、npm >=10
+**环境要求：** Node.js >=20.19.0、npm >=10
 
 ```bash
 npm install
