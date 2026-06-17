@@ -1,5 +1,4 @@
 import { createServer } from 'node:http';
-import { handleControlPlaneRoutes } from '../app/routes/control-plane-routes.js';
 import { handlePlatformRoutes } from '../app/routes/platform-routes.js';
 import type { GatewayRouteContext } from '../app/routes/types.js';
 import { createChildLogger } from '../lib/logger.js';
@@ -131,13 +130,6 @@ export function createGatewayHandler(options: Record<string, unknown> = {}) {
       }
 
       if (await handlePlatformRoutes(routeContext)) {
-        if (isCacheable && cachedResponse) {
-          const ttl = getCacheTtl(reqUrl.pathname);
-          apiCache.set(cacheKey, cachedResponse, ttl);
-        }
-        return;
-      }
-      if (await handleControlPlaneRoutes(routeContext)) {
         if (isCacheable && cachedResponse) {
           const ttl = getCacheTtl(reqUrl.pathname);
           apiCache.set(cacheKey, cachedResponse, ttl);
