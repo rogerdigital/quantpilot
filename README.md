@@ -18,7 +18,7 @@ QuantPilot is a local-first quantitative research and execution console. It keep
 
 ## Quick Start
 
-**Prerequisites:** Node.js >=20.5.0, npm >=10
+**Prerequisites:** Node.js >=20.19.0, npm >=10
 
 ```bash
 npm install
