@@ -9,11 +9,9 @@ import {
   reportOperatorAction,
   runStateCycle,
 } from '../../app/api/controlPlane.ts';
-import { API_PREFIX } from '../../app/api/http.ts';
 import { runtimeConfig } from '../../app/config/runtime.ts';
 import { createBrokerProvider } from '../../app/providers/broker.ts';
 import { createMarketDataProvider } from '../../app/providers/marketData.ts';
-import { useSSE } from '../../hooks/useSSE.ts';
 import {
   APP_CONFIG,
   applyBrokerSnapshot,
@@ -39,7 +37,6 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
   const stateRef = useRef(state);
   const busyRef = useRef(false);
   const timerRef = useRef<number | null>(null);
-  const sseConnectedRef = useRef(false);
 
   const refreshSession = async () => {
     try {
@@ -60,7 +57,7 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
     refreshSession().catch(() => null);
   }, []);
 
-  // Core state cycle runner (shared by polling and SSE-triggered paths)
+  // Core state cycle runner (polling path)
   const runCycle = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
@@ -74,21 +71,6 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
     }
   }, []);
 
-  // SSE: trigger runCycle immediately on server-push notification
-  const sseHandlers = useCallback(
-    () => ({
-      'state-update': () => {
-        runCycle();
-      },
-    }),
-    [runCycle]
-  );
-  const { connected: sseConnected } = useSSE(`${API_PREFIX}/sse/state`, sseHandlers());
-
-  useEffect(() => {
-    sseConnectedRef.current = sseConnected;
-  }, [sseConnected]);
-
   useEffect(() => {
     let cancelled = false;
 
@@ -97,17 +79,12 @@ export function TradingSystemProvider({ children }: { children: React.ReactNode 
       await runCycle();
     };
 
-    // Initial fetch regardless of SSE state
+    // Initial fetch
     pollCycle();
 
-    // When SSE is connected, skip polling — SSE pushes trigger runCycle directly.
-    // When SSE is disconnected, poll at APP_CONFIG.refreshMs as fallback.
+    // Poll at APP_CONFIG.refreshMs.
     const scheduleNext = () => {
       if (cancelled) return;
-      if (sseConnectedRef.current) {
-        timerRef.current = window.setTimeout(scheduleNext, 30_000);
-        return;
-      }
       timerRef.current = window.setTimeout(async () => {
         await pollCycle();
         scheduleNext();

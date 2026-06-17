@@ -16,17 +16,6 @@ vi.mock('../../app/api/controlPlane.ts', () => ({
   runStateCycle: (...args: unknown[]) => mockRunStateCycle(...args),
 }));
 
-vi.mock('../../hooks/useSSE.ts', () => ({
-  useSSE: vi.fn(() => ({ connected: false })),
-}));
-
-vi.mock('../../app/api/http.ts', () => ({
-  API_PREFIX: '/api/v1',
-  fetchJson: vi.fn(),
-  jsonHeaders: vi.fn(() => ({})),
-  assertOk: vi.fn(),
-}));
-
 vi.mock('../../app/config/runtime.ts', () => ({
   runtimeConfig: {
     refreshMs: 5000,
