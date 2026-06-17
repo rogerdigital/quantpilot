@@ -2,7 +2,7 @@
   "name": "quantpilot",
   "version": "0.1.0",
   "private": true,
-  "description": "QuantPilot Lite core console for quantitative research and paper execution",
+  "description": "QuantPilot core console for quantitative research and execution",
   "type": "module",
   "engines": {
     "node": ">=20.5.0",
