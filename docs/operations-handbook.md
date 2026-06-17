@@ -1,18 +1,18 @@
-# QuantPilot Lite Operations Handbook
+# QuantPilot Operations Handbook
 
-This handbook covers the lightweight local development and smoke-test flow for QuantPilot Lite.
+This handbook covers the lightweight local development and smoke-test flow for QuantPilot.
 
 ## Scope
 
-QuantPilot Lite operations are intentionally small:
+QuantPilot operations are intentionally small:
 
 - Start the API gateway.
 - Start the web console.
 - Confirm the API gateway is reachable.
-- Confirm simulated or paper mode is selected.
+- Confirm the runtime mode (`simulated`, `paper`, or `live`) is selected.
 - Use the kill switch when execution should be blocked.
 
-This handbook does not cover background task processes, compute queues, reporting services, team administration or live trading operations.
+This handbook does not cover background task processes, compute queues, reporting services or team administration.
 
 ## Startup Checklist
 
@@ -33,8 +33,8 @@ Expected:
 
 - Dashboard renders.
 - API health route returns ok.
-- Settings shows `simulated` or `paper`.
-- No UI exposes live trading.
+- Settings shows `simulated`, `paper`, or `live`.
+- Live trading is exposed only when all live gates are satisfied.
 
 ## Verification Commands
 
@@ -60,12 +60,9 @@ Supported:
 
 - `simulated`
 - `paper`
+- `live` (off by default; requires `QUANTPILOT_TRADING_MODE=live`, `ALPACA_USE_PAPER=false`, valid Alpaca credentials, and `QUANTPILOT_LIVE_TRADING_ACK=I_UNDERSTAND_LIVE_TRADING_RISK`)
 
-Unsupported:
-
-- `live`
-
-If any active UI or runtime path still offers live trading, treat it as a simplification bug.
+If live trading activates without all four gates satisfied, treat it as a safety bug.
 
 ## Recovery
 
