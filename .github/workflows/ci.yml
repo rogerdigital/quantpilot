@@ -65,7 +65,9 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npm audit --audit-level=high
+      # Audit production dependencies only; dev-only build tooling (vite, etc.)
+      # is not shipped in the SPA bundle and is tracked via routine upgrades.
+      - run: npm audit --omit=dev --audit-level=high
 
   # ── 4. Build + bundle size ───────────────────────────────────────────────
   build:
