@@ -24,7 +24,6 @@ import type {
   RiskEventDetailResponse,
   RiskPolicyActionResponse,
   RiskWorkbenchResponse,
-  SchedulerOrchestrationActionResponse,
   SchedulerWorkbenchResponse,
   StateCycleResult,
   TradingState,
@@ -37,7 +36,6 @@ import type {
   UserBrokerBindingsSnapshot,
   UserPreferencesUpdateSnapshot,
   UserProfileUpdateSnapshot,
-  WorkflowRunDetailResponse,
   WorkflowRunsSnapshot,
 } from '@shared-types/trading.ts';
 
@@ -437,21 +435,6 @@ export async function fetchSchedulerWorkbench(
   });
 }
 
-export async function runSchedulerOrchestrationAction(payload: {
-  actionKey: string;
-  actor?: string;
-  hours?: number | null;
-  limit?: number;
-}): Promise<SchedulerOrchestrationActionResponse> {
-  const response = await fetch(`${API_PREFIX}/scheduler/actions`, {
-    method: 'POST',
-    headers: jsonHeaders(),
-    body: JSON.stringify(payload),
-  });
-  await assertOk(response);
-  return response.json();
-}
-
 type OperatorActionsQuery = {
   hours?: number | null;
   level?: string;
@@ -494,12 +477,6 @@ export async function fetchOperatorActions(options: OperatorActionsQuery = {}): 
 
 export async function fetchTaskWorkflows(): Promise<WorkflowRunsSnapshot> {
   return { ok: true, workflows: [] };
-}
-
-export async function fetchWorkflowRunDetail(
-  workflowRunId: string
-): Promise<WorkflowRunDetailResponse> {
-  return { ok: Boolean(workflowRunId), workflow: null };
 }
 
 export async function fetchExecutionRuntime(): Promise<{
