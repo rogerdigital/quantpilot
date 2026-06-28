@@ -50,6 +50,7 @@ export function createAccount(
     id,
     label,
     cash,
+    initialCapital: cash,
     buyingPower: cash,
     holdings: { ...holdings },
     orders: [],
@@ -94,7 +95,10 @@ export function computeAccount(account: any, stockStates: any) {
   if (account.equitySeries.length > 36) {
     account.equitySeries.shift();
   }
-  const base = account.equitySeries[0]?.value || account.nav;
+  // PnL percentage is measured against the initial capital, not the first
+  // point of the (truncated) equity series — otherwise the base drifts once
+  // the series is trimmed past 36 entries.
+  const base = account.initialCapital ?? account.equitySeries[0]?.value ?? account.nav;
   account.pnlPct = base ? (account.nav / base - 1) * 100 : 0;
 }
 

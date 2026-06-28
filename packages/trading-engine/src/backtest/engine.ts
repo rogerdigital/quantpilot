@@ -182,24 +182,35 @@ export function runBacktestEngine(config: BacktestConfig): BacktestResult {
             slippageConfig
           );
           const execPrice = slippageResult.executionPrice;
-          const commissionResult = calcCommission(
+          // Solve qty + commission so they stay consistent: commission depends
+          // on the final filled qty, so iterate once (commission models are
+          // linear in qty, a single recompute is sufficient).
+          const provisionalCommission = calcCommission(
             { quantity: estimatedQty, price: execPrice, side: 'buy' },
             commissionConfig
-          );
-          const commission = commissionResult.commission;
-          const qty = Math.floor((buyValue - commission) / execPrice);
+          ).commission;
+          const qty = Math.floor((buyValue - provisionalCommission) / execPrice);
           if (qty > 0) {
+            // Recompute commission against the actual filled qty, then verify
+            // the total cost still fits within the budget (and available cash).
+            const commission = calcCommission(
+              { quantity: qty, price: execPrice, side: 'buy' },
+              commissionConfig
+            ).commission;
             const cost = qty * execPrice + commission;
-            cash -= cost;
-            const existing = holdings.get(ss.symbol);
-            if (existing) {
-              const totalQty = existing.qty + qty;
-              existing.avgCost = (existing.qty * existing.avgCost + qty * execPrice) / totalQty;
-              existing.qty = totalQty;
-            } else {
-              holdings.set(ss.symbol, { qty, avgCost: execPrice });
+            if (cost <= cash) {
+              cash -= cost;
+              portfolioValue -= cost;
+              const existing = holdings.get(ss.symbol);
+              if (existing) {
+                const totalQty = existing.qty + qty;
+                existing.avgCost = (existing.qty * existing.avgCost + qty * execPrice) / totalQty;
+                existing.qty = totalQty;
+              } else {
+                holdings.set(ss.symbol, { qty, avgCost: execPrice });
+              }
+              trades.push({ date, symbol: ss.symbol, side: 'buy', qty, price: execPrice, pnl: 0 });
             }
-            trades.push({ date, symbol: ss.symbol, side: 'buy', qty, price: execPrice, pnl: 0 });
           }
         }
       } else if (signal === 'SELL' && holding && holding.qty > 0) {
