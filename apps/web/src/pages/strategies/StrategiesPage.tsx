@@ -99,11 +99,16 @@ function StrategiesPage() {
     sharpe: '1',
     summary: '',
   });
-  const { requestRefresh } = useResearchPollingPolicy({
-    onRefresh: () => setRefreshKey((current) => current + 1),
-  });
   const { data, loading, error, auditItems, auditLoading, executionEntries, workspaceLoading } =
     useResearchWorkspaceData({ refreshKey });
+  const hasActiveRuns = Boolean(
+    data?.runs.some((run) => run.status === 'queued' || run.status === 'running')
+  );
+  const { requestRefresh } = useResearchPollingPolicy({
+    enabled: true,
+    active: hasActiveRuns,
+    onRefresh: () => setRefreshKey((current) => current + 1),
+  });
   const buyCount = state.stockStates.filter((stock) => stock.signal === 'BUY').length;
   const sellCount = state.stockStates.filter((stock) => stock.signal === 'SELL').length;
   const canWriteStrategy = hasPermission('strategy:write');

@@ -2,10 +2,10 @@
   "name": "@quantpilot/trading-engine",
   "private": true,
   "type": "module",
-  "main": "./src/runtime.js",
+  "main": "./src/runtime.ts",
   "exports": {
-    ".": "./src/runtime.js",
-    "./runtime": "./src/runtime.js"
+    ".": "./src/runtime.ts",
+    "./runtime": "./src/runtime.ts"
   },
   "scripts": {
     "test": "node --import tsx/esm --test test/*.ts"
