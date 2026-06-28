@@ -15,12 +15,26 @@ export function writeJson(res: ServerResponse, statusCode: number, payload: unkn
 
 export function readJsonBody(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
+    const MAX_BYTES = 1024 * 1024;
     let raw = '';
-    req.on('data', (chunk: Buffer) => {
+    let bytes = 0;
+    let aborted = false;
+    const onData = (chunk: Buffer) => {
+      if (aborted) return;
+      bytes += chunk.length;
+      if (bytes > MAX_BYTES) {
+        aborted = true;
+        req.off('data', onData);
+        req.off('end', onEnd);
+        req.off('error', onError);
+        req.destroy();
+        reject(new Error('body too large'));
+        return;
+      }
       raw += chunk;
-      if (raw.length > 1024 * 1024) reject(new Error('body too large'));
-    });
-    req.on('end', () => {
+    };
+    const onEnd = () => {
+      if (aborted) return;
       if (!raw) {
         resolve({});
         return;
@@ -30,8 +44,14 @@ export function readJsonBody(req: IncomingMessage): Promise<unknown> {
       } catch {
         reject(new Error('invalid json'));
       }
-    });
-    req.on('error', reject);
+    };
+    const onError = (err: Error) => {
+      if (aborted) return;
+      reject(err);
+    };
+    req.on('data', onData);
+    req.on('end', onEnd);
+    req.on('error', onError);
   });
 }
 
@@ -450,10 +470,13 @@ export async function handleCancelOrder(
     writeJson(res, 503, { message: 'Alpaca credentials are not configured on gateway.' });
     return;
   }
-  const response = await fetch(`${config.alpacaTradingBase}/v2/orders/${orderId}`, {
-    method: 'DELETE',
-    headers: alpacaHeaders(config, false),
-  });
+  const response = await fetch(
+    `${config.alpacaTradingBase}/v2/orders/${encodeURIComponent(orderId)}`,
+    {
+      method: 'DELETE',
+      headers: alpacaHeaders(config, false),
+    }
+  );
   if (!response.ok && response.status !== 204) {
     writeJson(res, response.status, { message: `alpaca cancel error: HTTP ${response.status}` });
     return;
@@ -522,10 +545,13 @@ async function handleCustomBrokerCancel(
     writeJson(res, 503, { message: 'Custom broker upstream is not configured on gateway.' });
     return;
   }
-  const response = await fetch(`${config.brokerUpstreamUrl}/orders/${orderId}`, {
-    method: 'DELETE',
-    headers: customBrokerHeaders(config, false),
-  });
+  const response = await fetch(
+    `${config.brokerUpstreamUrl}/orders/${encodeURIComponent(orderId)}`,
+    {
+      method: 'DELETE',
+      headers: customBrokerHeaders(config, false),
+    }
+  );
   const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
   writeJson(res, response.ok ? 200 : response.status, {
     message:

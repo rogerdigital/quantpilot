@@ -9,8 +9,18 @@ function loadEnvFile(pathname: string) {
     if (!trimmed || trimmed.startsWith('#')) return;
     const index = trimmed.indexOf('=');
     if (index === -1) return;
-    const key = trimmed.slice(0, index).trim();
-    const value = trimmed.slice(index + 1).trim();
+    // Support `export KEY=VALUE` shell-style lines.
+    let key = trimmed.slice(0, index).trim();
+    if (key.startsWith('export ')) key = key.slice('export '.length).trim();
+    let value = trimmed.slice(index + 1).trim();
+    // Strip a single pair of surrounding single or double quotes.
+    if (
+      value.length >= 2 &&
+      ((value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'")))
+    ) {
+      value = value.slice(1, -1);
+    }
     if (key && !process.env[key]) process.env[key] = value;
   });
 }
