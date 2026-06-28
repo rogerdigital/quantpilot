@@ -1,10 +1,14 @@
-import { style, styleVariants } from '@vanilla-extract/css';
+import { keyframes, style, styleVariants } from '@vanilla-extract/css';
 import { colors } from '../tokens/colors.css.js';
 import { duration, easing } from '../tokens/motion.css.js';
 import { radii } from '../tokens/radii.css.js';
 import { shadows } from '../tokens/shadows.css.js';
 import { spacing } from '../tokens/spacing.css.js';
 import { fontSize, fontWeight } from '../tokens/typography.css.js';
+
+const spin = keyframes({
+  to: { transform: 'rotate(360deg)' },
+});
 
 const base = style({
   display: 'inline-flex',
@@ -118,10 +122,13 @@ export const loading = style({
       position: 'absolute',
       width: '14px',
       height: '14px',
-      border: '2px solid currentColor',
+      // Use an explicit color rather than currentColor: the parent sets
+      // color: transparent to hide the label, which would also hide a
+      // currentColor-based spinner.
+      border: `2px solid ${colors.text}`,
       borderTopColor: 'transparent',
       borderRadius: radii.full,
-      animation: 'spin 0.6s linear infinite',
+      animation: `${spin} 0.6s linear infinite`,
     },
   },
 });
