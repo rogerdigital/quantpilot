@@ -25,6 +25,11 @@ export function QuickOrderBar({ onSubmit }: QuickOrderBarProps) {
 
   const handleSubmit = useCallback(() => {
     if (!symbol.trim()) return;
+    // Guard against non-finite/zero/negative quantities (Number('') === 0,
+    // Number('abc') === NaN) and limit orders without a valid positive price.
+    if (!Number.isFinite(quantity) || quantity <= 0) return;
+    const limitPrice = Number(price);
+    if (orderType === 'limit' && !(Number.isFinite(limitPrice) && limitPrice > 0)) return;
     setShowConfirm(true);
     if (confirmTimerRef.current !== null) {
       window.clearTimeout(confirmTimerRef.current);
@@ -34,7 +39,7 @@ export function QuickOrderBar({ onSubmit }: QuickOrderBarProps) {
       direction,
       symbol: symbol.toUpperCase(),
       quantity,
-      price: orderType === 'limit' ? Number(price) : null,
+      price: orderType === 'limit' ? limitPrice : null,
       type: orderType,
     });
   }, [direction, symbol, quantity, price, orderType, onSubmit]);
@@ -147,7 +152,12 @@ export function QuickOrderBar({ onSubmit }: QuickOrderBarProps) {
       <input
         type="number"
         value={quantity}
-        onChange={(e) => setQuantity(Number(e.target.value))}
+        onChange={(e) => {
+          const parsed = Number(e.target.value);
+          // Keep the box usable when cleared (NaN) without committing an invalid
+          // quantity; only accept finite positive values.
+          setQuantity(Number.isFinite(parsed) && parsed > 0 ? parsed : 0);
+        }}
         min={1}
         style={{
           width: '70px',

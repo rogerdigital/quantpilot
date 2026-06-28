@@ -60,8 +60,9 @@ export function useRetryableAction<T>(
         const delay = baseDelay * 2 ** attempt;
         await new Promise((resolve) => setTimeout(resolve, delay));
 
+        // If superseded by a newer execute(), drop this attempt without
+        // touching loading state — the newer request owns the spinner.
         if (abortRef.current?.signal.aborted || myRequestId !== requestIdRef.current) {
-          setState((prev) => ({ ...prev, loading: false }));
           return;
         }
       }

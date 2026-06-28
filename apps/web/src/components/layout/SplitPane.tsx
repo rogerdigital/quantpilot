@@ -29,20 +29,19 @@ export function SplitPane({
   onResize,
 }: SplitPaneProps) {
   const [size, setSize] = useState(defaultSize);
-  const dragging = useRef(false);
+  const [dragging, setDragging] = useState(false);
   const startRef = useRef({ pos: 0, size: 0 });
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
-      dragging.current = true;
+      setDragging(true);
       startRef.current = {
         pos: direction === 'horizontal' ? e.clientX : e.clientY,
         size,
       };
 
       const handleMouseMove = (ev: MouseEvent) => {
-        if (!dragging.current) return;
         const delta = (direction === 'horizontal' ? ev.clientX : ev.clientY) - startRef.current.pos;
         const newSize = Math.max(minSize, Math.min(maxSize, startRef.current.size + delta));
         setSize(newSize);
@@ -50,7 +49,7 @@ export function SplitPane({
       };
 
       const handleMouseUp = () => {
-        dragging.current = false;
+        setDragging(false);
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
       };
@@ -82,7 +81,7 @@ export function SplitPane({
       <div className={pane} style={{ flex: 1 }}>
         {children[1]}
       </div>
-      {dragging.current && (
+      {dragging && (
         <div
           className={dragOverlay}
           style={{ cursor: isHorizontal ? 'col-resize' : 'row-resize' }}

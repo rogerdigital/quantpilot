@@ -65,12 +65,16 @@ export function ApprovalDrawer({ locale, queue, onApprove, onReject }: Props) {
         </div>
 
         <div className={drawerBody}>
-          {queue.map((order) => {
-            const key = order.clientOrderId ?? order.id ?? `${order.symbol}-${order.side}`;
+          {queue.map((order, index) => {
+            // React list key may fall back to symbol-side, but the approve/reject
+            // callbacks must receive the real clientOrderId the store matches on;
+            // passing the synthetic key silently no-ops when clientOrderId is absent.
+            const reactKey =
+              order.clientOrderId ?? order.id ?? `${order.symbol}-${order.side}-${index}`;
             const isBuy = order.side?.toUpperCase() === 'BUY';
 
             return (
-              <div key={key} className={orderCard}>
+              <div key={reactKey} className={orderCard}>
                 <div className={orderMeta}>
                   <div className={orderSymbol}>{order.symbol}</div>
                   <div className={orderDetail}>
@@ -83,10 +87,18 @@ export function ApprovalDrawer({ locale, queue, onApprove, onReject }: Props) {
                   </div>
                 </div>
                 <div className={orderActions}>
-                  <button type="button" className={approveBtn} onClick={() => onApprove(key)}>
+                  <button
+                    type="button"
+                    className={approveBtn}
+                    onClick={() => onApprove(order.clientOrderId ?? '')}
+                  >
                     {t.approve}
                   </button>
-                  <button type="button" className={rejectBtn} onClick={() => onReject(key)}>
+                  <button
+                    type="button"
+                    className={rejectBtn}
+                    onClick={() => onReject(order.clientOrderId ?? '')}
+                  >
                     {t.reject}
                   </button>
                 </div>

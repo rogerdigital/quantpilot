@@ -36,7 +36,7 @@ export function UniverseTable() {
         </thead>
         <tbody>
           {rows.map((stock) => {
-            const pct = (stock.price / stock.prevClose - 1) * 100;
+            const pct = stock.prevClose > 0 ? (stock.price / stock.prevClose - 1) * 100 : 0;
             return (
               <tr className="table-row-hover" key={stock.symbol}>
                 <td>
