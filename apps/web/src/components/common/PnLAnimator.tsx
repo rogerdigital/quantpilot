@@ -20,12 +20,14 @@ export function PnLAnimator({
 }: PnLAnimatorProps) {
   const [display, setDisplay] = useState(target);
   const rafRef = useRef<number>();
-  const startRef = useRef(target);
+  // Track the value currently shown so a new animation can start from the
+  // visible midpoint rather than a stale completed target.
+  const displayRef = useRef(target);
   const fromRef = useRef(target);
   const startTimeRef = useRef(0);
 
   useEffect(() => {
-    fromRef.current = startRef.current;
+    fromRef.current = displayRef.current;
     startTimeRef.current = performance.now();
 
     const animate = (now: number) => {
@@ -34,12 +36,11 @@ export function PnLAnimator({
       // ease-out cubic
       const eased = 1 - (1 - progress) ** 3;
       const current = fromRef.current + (target - fromRef.current) * eased;
+      displayRef.current = current;
       setDisplay(current);
 
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(animate);
-      } else {
-        startRef.current = target;
       }
     };
 
