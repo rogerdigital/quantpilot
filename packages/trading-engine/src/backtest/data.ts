@@ -19,6 +19,18 @@ function isWeekday(date: Date): boolean {
   return d !== 0 && d !== 6;
 }
 
+/**
+ * Format a Date as a local YYYY-MM-DD key. Avoids `toISOString()` (UTC), which
+ * can shift a local-midnight date to the previous calendar day in timezones
+ * east of UTC and desync the backtest date axis from local trading sessions.
+ */
+function formatDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function addDays(date: Date, days: number): Date {
   const d = new Date(date);
   d.setDate(d.getDate() + days);
@@ -78,7 +90,7 @@ export function generateHistoricalOhlcv(
     const volume = Math.round(1e6 * (1 + noise5 * 0.5));
 
     bars.push({
-      time: current.toISOString().split('T')[0],
+      time: formatDateKey(current),
       open: parseFloat(open.toFixed(2)),
       high: parseFloat(high.toFixed(2)),
       low: parseFloat(low.toFixed(2)),

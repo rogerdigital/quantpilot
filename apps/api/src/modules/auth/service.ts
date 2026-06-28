@@ -47,6 +47,30 @@ export function getSession() {
   };
 }
 
-export async function hasPermission(permission: string, _authHeader?: string): Promise<boolean> {
-  return CORE_PERMISSIONS.includes(permission);
+/**
+ * Check whether a request may perform `permission`.
+ *
+ * Local-first policy:
+ *  - No Authorization header → treated as the local operator, granted all
+ *    core permissions. This keeps the unauthenticated local console working.
+ *  - Bearer token present → the token must validate AND its `permissions`
+ *    claim must include the requested permission. An invalid/expired token is
+ *    rejected (returns false) rather than silently downgraded to local.
+ *
+ * Note: the gateway `authenticate()` middleware enforces token validity and
+ * rejects bad tokens with 401 before routes run. This function performs the
+ * additional permission-claim check for token-bearing requests.
+ */
+export async function hasPermission(permission: string, authHeader?: string): Promise<boolean> {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return CORE_PERMISSIONS.includes(permission);
+  }
+  try {
+    const { verifyToken } = await import('./jwt-service.js');
+    const payload = await verifyToken(authHeader.slice(7));
+    const granted = Array.isArray(payload.permissions) ? (payload.permissions as string[]) : [];
+    return granted.includes(permission);
+  } catch {
+    return false;
+  }
 }

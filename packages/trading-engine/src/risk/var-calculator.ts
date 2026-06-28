@@ -22,6 +22,17 @@ const Z_SCORES: Record<number, number> = {
   0.99: 2.326,
 };
 
+/** Standard normal probability density function. */
+function normPDF(x: number): number {
+  return Math.exp(-(x * x) / 2) / Math.sqrt(2 * Math.PI);
+}
+
+function sampleMoments(returns: number[]): { mean: number; stdDev: number } {
+  const mean = returns.reduce((s, v) => s + v, 0) / returns.length;
+  const variance = returns.reduce((s, v) => s + (v - mean) ** 2, 0) / (returns.length - 1);
+  return { mean, stdDev: Math.sqrt(variance) };
+}
+
 /**
  * Historical VaR at given confidence level.
  * Returns the loss at the confidence percentile as a positive decimal (e.g. 0.023 = 2.3%).
@@ -51,11 +62,20 @@ export function calcCVaR(returns: number[], confidence = 0.95): number {
  */
 export function calcParametricVaR(returns: number[], confidence = 0.95): number {
   if (returns.length < 2) return 0;
-  const mean = returns.reduce((s, v) => s + v, 0) / returns.length;
-  const variance = returns.reduce((s, v) => s + (v - mean) ** 2, 0) / (returns.length - 1);
-  const stdDev = Math.sqrt(variance);
+  const { mean, stdDev } = sampleMoments(returns);
   const z = Z_SCORES[confidence] ?? 1.645;
   return -(mean - z * stdDev);
+}
+
+/**
+ * Parametric Conditional VaR (Expected Shortfall) under a normal distribution.
+ * ES = -mean + stdDev * φ(z) / (1 - confidence), where φ is the normal pdf.
+ */
+export function calcParametricCVaR(returns: number[], confidence = 0.95): number {
+  if (returns.length < 2) return 0;
+  const { mean, stdDev } = sampleMoments(returns);
+  const z = Z_SCORES[confidence] ?? 1.645;
+  return -(mean - (stdDev * normPDF(z)) / (1 - confidence));
 }
 
 /**
@@ -68,11 +88,27 @@ export function calcMonteCarloVaR(
   simulations = 10_000,
   seed?: number
 ): number {
-  if (returns.length < 2) return 0;
+  const simulated = simulateReturns(returns, simulations, seed);
+  return simulated.length ? calcHistoricalVaR(simulated, confidence) : 0;
+}
 
-  const mean = returns.reduce((s, v) => s + v, 0) / returns.length;
-  const variance = returns.reduce((s, v) => s + (v - mean) ** 2, 0) / (returns.length - 1);
-  const stdDev = Math.sqrt(variance);
+/**
+ * Monte Carlo Conditional VaR, computed over the same simulated path used for
+ * VaR so the two metrics share a consistent distribution.
+ */
+export function calcMonteCarloCVaR(
+  returns: number[],
+  confidence = 0.95,
+  simulations = 10_000,
+  seed?: number
+): number {
+  const simulated = simulateReturns(returns, simulations, seed);
+  return simulated.length ? calcCVaR(simulated, confidence) : 0;
+}
+
+function simulateReturns(returns: number[], simulations = 10_000, seed?: number): number[] {
+  if (returns.length < 2) return [];
+  const { mean, stdDev } = sampleMoments(returns);
 
   let state = seed ?? 42;
   const nextRandom = () => {
@@ -90,8 +126,7 @@ export function calcMonteCarloVaR(
   for (let i = 0; i < simulations; i++) {
     simulated.push(mean + stdDev * boxMuller());
   }
-
-  return calcHistoricalVaR(simulated, confidence);
+  return simulated;
 }
 
 /**
@@ -112,28 +147,35 @@ export function calcPortfolioVaR(
 ): VaRResult {
   let var95: number;
   let var99: number;
+  let cvar95: number;
+  let cvar99: number;
 
+  // Compute VaR and CVaR under the SAME method so the two metrics share a
+  // consistent loss distribution. Previously CVaR was always historical.
   switch (method) {
     case 'parametric':
       var95 = calcParametricVaR(returns, 0.95);
       var99 = calcParametricVaR(returns, 0.99);
+      cvar95 = calcParametricCVaR(returns, 0.95);
+      cvar99 = calcParametricCVaR(returns, 0.99);
       break;
     case 'monte_carlo':
       var95 = calcMonteCarloVaR(returns, 0.95, simulations);
       var99 = calcMonteCarloVaR(returns, 0.99, simulations);
+      cvar95 = calcMonteCarloCVaR(returns, 0.95, simulations);
+      cvar99 = calcMonteCarloCVaR(returns, 0.99, simulations);
       break;
     default:
       var95 = calcHistoricalVaR(returns, 0.95);
       var99 = calcHistoricalVaR(returns, 0.99);
+      cvar95 = calcCVaR(returns, 0.95);
+      cvar99 = calcCVaR(returns, 0.99);
   }
 
   if (horizon > 1) {
     var95 = scaleVaRHorizon(var95, horizon);
     var99 = scaleVaRHorizon(var99, horizon);
   }
-
-  const cvar95 = calcCVaR(returns, 0.95);
-  const cvar99 = calcCVaR(returns, 0.99);
 
   return {
     var95: parseFloat(var95.toFixed(6)),

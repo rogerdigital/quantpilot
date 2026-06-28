@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { handlePlatformRoutes } from '../app/routes/platform-routes.js';
 import type { GatewayRouteContext } from '../app/routes/types.js';
 import { createChildLogger } from '../lib/logger.js';
+import { authenticate, writeAuthFailure } from '../middleware/authenticate.js';
 import {
   apiCache,
   buildCacheKey,
@@ -11,6 +12,8 @@ import {
   shouldCache,
   shouldInvalidate,
 } from '../middleware/cache.js';
+import { rateLimitHttp } from '../middleware/rate-limit-http.js';
+import { requestIdHttp } from '../middleware/request-id-http.js';
 import {
   executeBrokerCycle,
   getBrokerHealthSnapshot,
@@ -57,9 +60,13 @@ export function createGatewayHandler(options: Record<string, unknown> = {}) {
     req: import('node:http').IncomingMessage,
     res: import('node:http').ServerResponse
   ) {
+    const reqId = requestIdHttp(req, res);
     try {
       if (req.method === 'OPTIONS') {
         writeJson(res, 204, {});
+        return;
+      }
+      if (!rateLimitHttp(req, res)) {
         return;
       }
       const originalUrl = new URL(req.url || '/', `http://${req.headers.host || '127.0.0.1'}`);
@@ -72,6 +79,13 @@ export function createGatewayHandler(options: Record<string, unknown> = {}) {
       const reqUrl = originalUrl;
       const versionedPathname = pathname;
       Object.defineProperty(reqUrl, 'pathname', { value: versionedPathname, writable: false });
+
+      const authResult = await authenticate(req, reqUrl.pathname);
+      if (!authResult.ok) {
+        writeAuthFailure(res, authResult);
+        return;
+      }
+
       const routeContext: GatewayRouteContext = {
         req,
         method: req.method || 'GET',
@@ -82,7 +96,7 @@ export function createGatewayHandler(options: Record<string, unknown> = {}) {
         readJsonBody,
         writeJson,
         gatewayDependencies,
-        userAccount: null,
+        userAccount: authResult.user,
       };
       if (!isVersioned && reqUrl.pathname.startsWith('/api/')) {
         res.setHeader('Deprecation', 'true');
@@ -106,7 +120,7 @@ export function createGatewayHandler(options: Record<string, unknown> = {}) {
       let cacheKey = '';
       const isCacheable = shouldCache(req.method!, reqUrl.pathname);
       if (isCacheable) {
-        cacheKey = buildCacheKey(req.method!, reqUrl.pathname, reqUrl.search);
+        cacheKey = buildCacheKey(req.method!, reqUrl.pathname, reqUrl.search, authResult.user?.id);
         const cached = apiCache.get(cacheKey);
         if (cached) {
           res.setHeader('X-Cache', 'HIT');
@@ -183,9 +197,9 @@ export function createGatewayHandler(options: Record<string, unknown> = {}) {
       }
       writeJson(res, 404, { message: 'not found' });
     } catch (error) {
-      writeJson(res, 500, {
-        message: error instanceof Error ? error.message : 'unknown gateway error',
-      });
+      log.error({ err: error, reqId, path: req.url, method: req.method }, 'request error');
+      // Never leak internal error details to the client on 5xx responses.
+      writeJson(res, 500, { message: 'Internal server error', ...(reqId ? { reqId } : {}) });
     }
   };
 }

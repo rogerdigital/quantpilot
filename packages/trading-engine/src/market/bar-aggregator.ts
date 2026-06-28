@@ -161,6 +161,15 @@ export function getIntervalMs(interval: BarInterval): number {
 export function isMarketHours(timestamp: string, config?: Partial<BarAggregatorConfig>): boolean {
   const cfg = { ...DEFAULT_CONFIG, ...config };
   const date = new Date(timestamp);
-  const hour = date.getHours();
+  // Resolve the hour in the configured market timezone instead of the host's
+  // local timezone — otherwise the open/close window shifts when deployed
+  // outside America/New_York.
+  const hour = Number(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: cfg.timezone,
+      hour: 'numeric',
+      hour12: false,
+    }).format(date)
+  );
   return hour >= cfg.marketOpenHour && hour < cfg.marketCloseHour;
 }

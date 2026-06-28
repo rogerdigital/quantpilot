@@ -180,7 +180,7 @@ function BacktestPage() {
       );
     }) || [];
   const filteredRuns =
-    data?.runs.filter((run) => {
+    data?.runs?.filter((run) => {
       if (runFilter !== 'all' && run.status !== runFilter) {
         return false;
       }

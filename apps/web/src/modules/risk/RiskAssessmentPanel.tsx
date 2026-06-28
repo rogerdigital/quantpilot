@@ -56,8 +56,8 @@ export function RiskAssessmentPanel({
           </div>
           {a.findings.length > 0 ? (
             <ul className="assessment-findings">
-              {a.findings.map((f, i) => (
-                <li key={i} className={`finding-${f.severity}`}>
+              {a.findings.map((f) => (
+                <li key={`${f.severity}-${f.message}`} className={`finding-${f.severity}`}>
                   {f.message}
                 </li>
               ))}

@@ -55,8 +55,8 @@ export function RiskPolicyEditor({
               </tr>
             </thead>
             <tbody>
-              {p.rules.map((r, i) => (
-                <tr key={i}>
+              {p.rules.map((r) => (
+                <tr key={`${r.dimension}-${r.severity}`}>
                   <td>{r.dimension}</td>
                   <td>{Array.isArray(r.limit) ? r.limit.join(', ') : String(r.limit)}</td>
                   <td className={`severity-${r.severity}`}>{r.severity}</td>

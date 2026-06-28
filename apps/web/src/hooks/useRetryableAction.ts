@@ -25,20 +25,30 @@ export function useRetryableAction<T>(
     attempt: 0,
   });
   const abortRef = useRef<AbortController | null>(null);
+  // Monotonic id so a slow in-flight action() that resolves after a newer
+  // execute() started cannot overwrite the fresh result.
+  const requestIdRef = useRef(0);
 
   const execute = useCallback(async () => {
     abortRef.current?.abort();
     abortRef.current = new AbortController();
+    const myRequestId = ++requestIdRef.current;
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         const data = await action();
+        // Stale guard: a newer execute() has started, drop this result.
+        if (myRequestId !== requestIdRef.current) return data;
         setState({ data, error: null, loading: false, attempt });
         return data;
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
+
+        if (myRequestId !== requestIdRef.current) {
+          return;
+        }
 
         if (attempt === maxRetries) {
           setState({ data: null, error, loading: false, attempt });
@@ -50,7 +60,7 @@ export function useRetryableAction<T>(
         const delay = baseDelay * 2 ** attempt;
         await new Promise((resolve) => setTimeout(resolve, delay));
 
-        if (abortRef.current?.signal.aborted) {
+        if (abortRef.current?.signal.aborted || myRequestId !== requestIdRef.current) {
           setState((prev) => ({ ...prev, loading: false }));
           return;
         }

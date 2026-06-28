@@ -261,10 +261,10 @@ export function calculateCaptureRatio(strategyReturns: number[], benchmarkReturn
   }
 
   const upCapture =
-    upCount > 0 && upBenchmark !== 0 ? (upStrategy / upBenchmark) * (upCount / upCount) : 0;
+    upCount > 0 && upBenchmark !== 0 ? upStrategy / upCount / (upBenchmark / upCount) : 0;
   const downCapture =
     downCount > 0 && downBenchmark !== 0
-      ? (downStrategy / downBenchmark) * (downCount / downCount)
+      ? downStrategy / downCount / (downBenchmark / downCount)
       : 0;
 
   return { upCapture, downCapture };

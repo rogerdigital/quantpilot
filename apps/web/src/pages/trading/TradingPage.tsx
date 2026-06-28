@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { CandlestickChart } from '../../components/charts/CandlestickChart.tsx';
 import { PriceFlash, SignalAlert } from '../../components/common/index.ts';
 import { EmptyState, SectionHeader, TabPanel } from '../../components/layout/ConsoleChrome.tsx';
@@ -72,6 +72,10 @@ export function TradingPage() {
   const [limitPrice, setLimitPrice] = useState('');
   const [qty, setQty] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Synchronous re-entry guard. isSubmitting is async state, so a rapid second
+  // click (e.g. BUY then SELL) would both pass the disabled check before the
+  // first setState flushed, submitting two execution plans concurrently.
+  const submittingRef = useRef(false);
   const [submitFeedback, setSubmitFeedback] = useState<{ ok: boolean; message: string } | null>(
     null
   );
@@ -134,6 +138,7 @@ export function TradingPage() {
   };
 
   async function handleSubmitOrder(side: 'buy' | 'sell') {
+    if (submittingRef.current) return;
     const parsedQty = Number(qty);
     const parsedPrice = limitPrice ? Number(limitPrice) : undefined;
 
@@ -152,33 +157,37 @@ export function TradingPage() {
       return;
     }
 
+    submittingRef.current = true;
     setIsSubmitting(true);
     setSubmitFeedback(null);
 
-    const result = await submitTerminalOrder({
-      symbol: selectedSymbol,
-      side,
-      orderType,
-      qty: parsedQty,
-      price: parsedPrice,
-      source: 'trading-terminal',
-    });
-
-    setIsSubmitting(false);
-
-    if (result.ok) {
-      const msg =
-        locale === 'zh'
-          ? `执行计划已创建 (${result.handoffId?.slice(-8)})，请在执行台审批`
-          : `Execution plan created (${result.handoffId?.slice(-8)}), review in Execution tab`;
-      setSubmitFeedback({ ok: true, message: msg });
-      setQty('');
-      setLimitPrice('');
-    } else {
-      setSubmitFeedback({
-        ok: false,
-        message: result.message || (locale === 'zh' ? '提交失败' : 'Submission failed'),
+    try {
+      const result = await submitTerminalOrder({
+        symbol: selectedSymbol,
+        side,
+        orderType,
+        qty: parsedQty,
+        price: parsedPrice,
+        source: 'trading-terminal',
       });
+
+      if (result.ok) {
+        const msg =
+          locale === 'zh'
+            ? `执行计划已创建 (${result.handoffId?.slice(-8)})，请在执行台审批`
+            : `Execution plan created (${result.handoffId?.slice(-8)}), review in Execution tab`;
+        setSubmitFeedback({ ok: true, message: msg });
+        setQty('');
+        setLimitPrice('');
+      } else {
+        setSubmitFeedback({
+          ok: false,
+          message: result.message || (locale === 'zh' ? '提交失败' : 'Submission failed'),
+        });
+      }
+    } finally {
+      submittingRef.current = false;
+      setIsSubmitting(false);
     }
   }
 
@@ -507,7 +516,7 @@ export function TradingPage() {
             </div>
             <div className={tradeInfoRow}>
               <span>{locale === 'zh' ? '模拟现金' : 'Paper Cash'}</span>
-              <strong>{fmtCurrency(state.accounts.paper.cash)}</strong>
+              <strong>{fmtCurrency(state.accounts.paper.cash, locale)}</strong>
             </div>
           </div>
         </div>

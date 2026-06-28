@@ -18,8 +18,13 @@ function getStored(): ThemeMode {
 
 export function useTheme() {
   const [mode, setMode] = useState<ThemeMode>(getStored);
+  // Track the system preference as state so a change re-renders the tree when
+  // mode === 'system'. Deriving `resolved` purely during render does not work:
+  // the matchMedia listener called setMode('system') but the value was already
+  // 'system', so React bailed out and `resolved` was never recomputed.
+  const [systemPref, setSystemPref] = useState<'dark' | 'light'>(getSystemPreference);
 
-  const resolved = mode === 'system' ? getSystemPreference() : mode;
+  const resolved = mode === 'system' ? systemPref : mode;
 
   const setTheme = useCallback((newMode: ThemeMode) => {
     setMode(newMode);
@@ -35,7 +40,7 @@ export function useTheme() {
   useEffect(() => {
     if (mode !== 'system') return;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => setMode('system'); // trigger re-render
+    const handler = (e: MediaQueryListEvent) => setSystemPref(e.matches ? 'dark' : 'light');
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, [mode]);
