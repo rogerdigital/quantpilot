@@ -1,6 +1,5 @@
 import type { BrokerAdapter } from './broker-adapter.js';
 import type { AlgoOrder } from './order-lifecycle.js';
-import { createRetryState, shouldRetry } from './retry-handler.js';
 
 export type RecoveryCase =
   | 'submit_failed'
@@ -119,14 +118,14 @@ export async function executeRecoveryAction(
   order: AlgoOrder,
   adapter: BrokerAdapter
 ): Promise<{ success: boolean; detail: string }> {
-  const retryState = createRetryState();
-
   switch (action.action) {
     case 'retry_submit': {
-      const { retry } = shouldRetry(retryState, 'submit_failed');
-      if (!retry) {
-        return { success: false, detail: 'Max retries exhausted for submit' };
-      }
+      // The retry_submit recovery action attempts a single resubmission of the
+      // remaining order quantity. Whether to keep retrying is driven by the
+      // caller's retry scheduler (which maintains a persistent RetryState);
+      // previously this branch created a throwaway state and gated the attempt
+      // on 'submit_failed' not being a retryable error, so the resubmission
+      // never ran.
       try {
         const status = await adapter.submitOrder({
           clientOrderId: order.clientOrderId,

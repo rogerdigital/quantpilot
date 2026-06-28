@@ -121,6 +121,9 @@ export function createSimulatedBrokerAdapter(opts?: {
           symbol,
           qty: pos.qty,
           avgCost: pos.avgCost,
+          // This simulated adapter has no live price feed, so marketValue is
+          // reported as cost basis (qty * avgCost). Callers needing true mark-
+          // to-market exposure should not rely on this field from the simulator.
           marketValue: pos.qty * pos.avgCost,
           side: pos.side,
         });

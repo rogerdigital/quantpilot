@@ -48,12 +48,15 @@ export function createTwapOrder(params: TwapParams): AlgoOrder {
     timeout
   );
 
-  const sliceQty = Math.floor(totalQty / numSlices);
-  const remainder = totalQty - sliceQty * numSlices;
-  const intervalMs = (durationMinutes * 60 * 1000) / numSlices;
+  // Never produce more slices than shares: otherwise floor(totalQty/numSlices)
+  // is 0 and the order would be littered with zero-quantity legs.
+  const effectiveSlices = Math.max(1, Math.min(numSlices, totalQty));
+  const sliceQty = Math.floor(totalQty / effectiveSlices);
+  const remainder = totalQty - sliceQty * effectiveSlices;
+  const intervalMs = (durationMinutes * 60 * 1000) / effectiveSlices;
 
-  for (let i = 0; i < numSlices; i++) {
-    const qty = i === numSlices - 1 ? sliceQty + remainder : sliceQty;
+  for (let i = 0; i < effectiveSlices; i++) {
+    const qty = i === effectiveSlices - 1 ? sliceQty + remainder : sliceQty;
     order.legs.push({
       symbol,
       side,
@@ -141,10 +144,14 @@ export function createIcebergOrder(params: IcebergParams): AlgoOrder {
     const baseQty = Math.min(displayQty, remaining);
 
     let qty = baseQty;
-    if (variancePct && variancePct > 0) {
+    if (variancePct && variancePct > 0 && i < numLegs - 1) {
       const variance = baseQty * (variancePct / 100);
       qty = Math.max(1, Math.round(baseQty + (Math.random() - 0.5) * 2 * variance));
       qty = Math.min(qty, remaining);
+    } else {
+      // Final leg absorbs whatever remains so the legs always sum to totalQty
+      // (otherwise order-lifecycle can never reach 'filled').
+      qty = remaining;
     }
 
     allocated += qty;
