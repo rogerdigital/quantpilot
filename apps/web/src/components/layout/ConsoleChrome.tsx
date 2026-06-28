@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useThemeContext } from '../../hooks/ThemeProvider.tsx';
 import { useMarketProviderStatus } from '../../hooks/useMarketProviderStatus.ts';
 import { useSettingsNavigation } from '../../modules/console/console.hooks.ts';
@@ -517,6 +517,7 @@ export function EmptyState({ icon, message, detail, actionLabel, onAction }: Emp
 
 export function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { locale } = useLocale();
   const { state, approveLiveIntent, rejectLiveIntent } = useTradingSystem();
   const [collapsed, setCollapsed] = useState(() => {
@@ -571,7 +572,9 @@ export function Layout() {
         const routes = listSidebarRoutes();
         const idx = Number(e.key) - 1;
         if (routes[idx]) {
-          window.location.hash = `#${routes[idx].path}`;
+          // Use the router navigate() — setting location.hash does not change
+          // the path under BrowserRouter, so navigation silently no-ops.
+          navigate(routes[idx].path);
         }
         return;
       }
@@ -579,7 +582,7 @@ export function Layout() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [navigate]);
 
   return (
     <div className={`${appShell}${collapsed ? ` ${appShellCollapsed}` : ''}`}>
