@@ -1,12 +1,21 @@
 import type { AccountState, AppLocale, StockState } from '@shared-types/trading.ts';
 import { copy } from './console.i18n.tsx';
 
-export function fmtCurrency(value: number) {
+export function fmtCurrency(value: number, locale: AppLocale = 'zh') {
+  if (locale === 'en') {
+    return `$${Math.round(value).toLocaleString('en-US')}`;
+  }
   return `¥${Math.round(value).toLocaleString('zh-CN')}`;
 }
 
-export function fmtCurrencyCompact(value: number) {
+export function fmtCurrencyCompact(value: number, locale: AppLocale = 'zh') {
   const abs = Math.abs(value);
+  if (locale === 'en') {
+    if (abs >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(1)}B`;
+    if (abs >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+    if (abs >= 1_000) return `$${(value / 1_000).toFixed(1)}K`;
+    return `$${Math.round(value).toLocaleString('en-US')}`;
+  }
   if (abs >= 100_000_000) return `¥${(value / 100_000_000).toFixed(1)}亿`;
   if (abs >= 10_000) return `¥${(value / 10_000).toFixed(1)}万`;
   return `¥${Math.round(value).toLocaleString('zh-CN')}`;

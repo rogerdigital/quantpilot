@@ -164,7 +164,9 @@ export function BrokerSnapshotPositionsTable({
                 </td>
                 <td>{row.qty}</td>
                 <td>{row.avgCost.toFixed(2)}</td>
-                <td>{fmtCurrency(Number(row.marketValue || row.qty * row.avgCost || 0))}</td>
+                <td>
+                  {fmtCurrency(Number(row.marketValue || row.qty * row.avgCost || 0), locale)}
+                </td>
                 <td>
                   <span className="table-note">{locale === 'zh' ? 'broker' : 'broker'}</span>
                 </td>

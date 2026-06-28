@@ -144,7 +144,7 @@ export function OverviewPage() {
       >
         <div className={overviewResultsHero}>
           <span className="kpi-label">{locale === 'zh' ? '总资产' : 'Total NAV'}</span>
-          <span className="kpi-value">{fmtCurrency(totalNav)}</span>
+          <span className="kpi-value">{fmtCurrency(totalNav, locale)}</span>
           <span className="kpi-sub">{locale === 'zh' ? '实时净值' : 'Real-time net value'}</span>
         </div>
         <div className={overviewResultsSecondary}>
@@ -243,11 +243,11 @@ export function OverviewPage() {
             <div className={overviewCommandStrip}>
               <div className={overviewStat}>
                 <span>{copy[locale].terms.paperNav}</span>
-                <strong>{fmtCurrency(paper.nav)}</strong>
+                <strong>{fmtCurrency(paper.nav, locale)}</strong>
               </div>
               <div className={overviewStat}>
                 <span>{copy[locale].terms.liveMirror}</span>
-                <strong>{fmtCurrency(liveMirrorNav)}</strong>
+                <strong>{fmtCurrency(liveMirrorNav, locale)}</strong>
               </div>
               <div className={overviewStat}>
                 <span>{copy[locale].terms.signalSummary}</span>

@@ -344,12 +344,12 @@ function RiskPage() {
         <article className="metric-tile">
           <div className="tile-label">{locale === 'zh' ? '模拟盘暴露' : 'Paper Exposure'}</div>
           <div className="tile-value">{paper.exposure.toFixed(1)}%</div>
-          <div className="tile-sub">{fmtCurrency(paper.nav)}</div>
+          <div className="tile-sub">{fmtCurrency(paper.nav, locale)}</div>
         </article>
         <article className="metric-tile">
           <div className="tile-label">{locale === 'zh' ? '实盘暴露' : 'Live Exposure'}</div>
           <div className="tile-value">{liveExposure.toFixed(1)}%</div>
-          <div className="tile-sub">{fmtCurrency(liveEquity)}</div>
+          <div className="tile-sub">{fmtCurrency(liveEquity, locale)}</div>
         </article>
         <article className="metric-tile">
           <div className="tile-label">{locale === 'zh' ? '接入健康' : 'Connectivity'}</div>

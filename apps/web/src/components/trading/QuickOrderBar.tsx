@@ -21,11 +21,15 @@ export function QuickOrderBar({ onSubmit }: QuickOrderBarProps) {
   const [orderType, setOrderType] = useState<OrderType>('market');
   const [showConfirm, setShowConfirm] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const confirmTimerRef = useRef<number | null>(null);
 
   const handleSubmit = useCallback(() => {
     if (!symbol.trim()) return;
     setShowConfirm(true);
-    setTimeout(() => setShowConfirm(false), 3000);
+    if (confirmTimerRef.current !== null) {
+      window.clearTimeout(confirmTimerRef.current);
+    }
+    confirmTimerRef.current = window.setTimeout(() => setShowConfirm(false), 3000);
     onSubmit?.({
       direction,
       symbol: symbol.toUpperCase(),
@@ -34,6 +38,14 @@ export function QuickOrderBar({ onSubmit }: QuickOrderBarProps) {
       type: orderType,
     });
   }, [direction, symbol, quantity, price, orderType, onSubmit]);
+
+  useEffect(() => {
+    return () => {
+      if (confirmTimerRef.current !== null) {
+        window.clearTimeout(confirmTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
